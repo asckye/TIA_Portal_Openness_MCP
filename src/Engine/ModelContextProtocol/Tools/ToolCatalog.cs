@@ -46,6 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "HmiInspectionTools",
             "HmiTagDeletionTools",
             "ImportOrderTools",
+            "ImportStagingTools",
             "LibraryTools",
             "McpServer",
             "MigrationReadTools",
@@ -192,7 +193,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static bool IsWrite(string name)
         {
             string operation = ToolTaxonomy.OperationOf(name, null).Operation;
-            return operation == "WRITE" || operation == "ONLINE-WRITE";
+            return operation == "WRITE" || operation == "ONLINE-WRITE" || name == "StageImportFiles" || name == "CleanupStagedImportFiles";
         }
 
         internal ToolCatalog(IEnumerable<Type> types)
@@ -285,6 +286,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
             var properties = schema["properties"]!.AsObject();
             var required = schema["required"] as JsonArray ?? new JsonArray();
+            if (protocol.Name == "StageImportFiles") properties["files"] = TiaMcp.Logic.ModelContextProtocol.ImportStagingSchema.Files();
             foreach (var input in inputs)
             {
                 string name = input.Parameter.Name!;

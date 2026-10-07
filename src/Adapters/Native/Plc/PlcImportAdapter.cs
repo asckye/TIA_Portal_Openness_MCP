@@ -91,13 +91,47 @@ namespace TiaMcp.Adapters.Native.Plc
             if (!object.Equals(((IEngineeringObject)value).Parent, parent)) throw new InvalidDataException("Native object parent mismatch.");
             return new PlcImportObject { Id = Id(value), Name = name, Kind = kind, Number = number, GroupPath = path };
         }
-        public IReadOnlyList<PlcImportObject> ReadInventory()
+        public IReadOnlyList<PlcImportObject> ReadInventory() => Inventory(true);
+        public IReadOnlyList<PlcImportObject> ReadBatchInventory() => Inventory(false);
+        public IReadOnlyList<PlcImportObject> ReadRecoveryTargets(string kind, string groupPath, IEnumerable<string> names)
+        {
+            // Single imports resolve only their destination group and named objects.
+            // Unrelated groups and the complete batch-inventory budget do not apply.
+            var software = Software();
+            object group;
+            if (kind == "UDT")
+            {
+                PlcTypeGroup current = software.TypeGroup;
+                foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment)) ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination type group is unavailable.", "groupPath");
+                group = current;
+            }
+            else if (kind == "TagTable")
+            {
+                PlcTagTableGroup current = software.TagTableGroup;
+                foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment)) ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination tag group is unavailable.", "groupPath");
+                group = current;
+            }
+            else
+            {
+                PlcBlockGroup current = software.BlockGroup;
+                foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment)) ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination block group is unavailable.", "groupPath");
+                group = current;
+            }
+            var result = new List<PlcImportObject>();
+            foreach (var name in names.Distinct(StringComparer.Ordinal))
+            {
+                object? item = group is PlcTypeGroup types ? types.Types.Find(name) : group is PlcTagTableGroup tags ? tags.TagTables.Find(name) : ((PlcBlockGroup)group).Blocks.Find(name);
+                if (item != null) result.Add(Describe(item, group, groupPath));
+            }
+            return result;
+        }
+        private IReadOnlyList<PlcImportObject> Inventory(bool content)
         {
             RefreshGroups(); var result = new List<PlcImportObject>();
             void Add(object item, object parent, string path)
             {
                 if (result.Count >= 4096) throw new InvalidOperationException("Complete import inventory exceeds 4096 rows.");
-                var row = Describe(item, parent, path); row.ContentHash = XmlReadback(item); result.Add(row);
+                var row = Describe(item, parent, path); if (content) row.ContentHash = XmlReadback(item); result.Add(row);
             }
             foreach (var pair in groups.OrderBy(p => p.Key, StringComparer.Ordinal))
             {
@@ -128,6 +162,16 @@ namespace TiaMcp.Adapters.Native.Plc
             else imported = ((PlcBlockGroup)group).Blocks.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option).Take(2).Cast<object>().ToArray();
             if (imported.Length != 1) throw new InvalidDataException("Native import must return exactly one reviewed object.");
             return Describe(imported[0], group, input.Target.GroupPath);
+        }
+        public void ExportRecovery(PlcImportObject item, FileInfo file)
+        {
+            TiaMcp.PlcFoundation.PlcExportPublication.Publish(file, output =>
+            {
+                var value = objects[item.Id];
+                if (value is PlcBlock block) block.Export(output, ExportOptions.None);
+                else if (value is PlcType type) type.Export(output, ExportOptions.None);
+                else ((PlcTagTable)value).Export(output, ExportOptions.None);
+            });
         }
         private static string AuditDirectory()
         {

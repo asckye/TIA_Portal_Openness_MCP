@@ -165,6 +165,7 @@ FOUNDATION_MARKERS = {
     'InitializeEnvironment': 'INVALID_ARGUMENT',
     'RunCapabilitySelfTest': 'INVALID_ARGUMENT',
 }
+FOUNDATION_MARKERS.update({name: 'INVALID_ARGUMENT' for name in ('StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles')})
 
 # Pure in-memory tools beyond check_usage's ten builders/planners. Exact inputs
 # come from GetToolUsage, not another independently maintained example catalog.
@@ -1063,7 +1064,7 @@ def compare_migration(args):
         old, new = baseline[release], current[release]
         a, b = ({identity(call): call for call in snapshot['calls']} for snapshot in (old, new))
         members = phase6_groups.group(args.migration, release, {key[1] for key in a})
-        allowed = members | {phase6_groups.mapped(name, members) for name in members}
+        allowed = members | {phase6_groups.mapped(name, members) for name in members} | phase6_groups.additions(args.migration)
 
         def catalog(key):
             # Usage, search and category responses render the generated examples (Generate-ToolUsage --check), the schemas
@@ -1073,6 +1074,12 @@ def compare_migration(args):
                 arguments = json.loads(key[2])
             except ValueError:
                 return False
+            # These two passive Foundation calls include the registered-tool roster.
+            # P6-67 adds exactly three tools; verify() and the coverage assertions
+            # below still require the complete, exact refusal and contract rosters.
+            if (args.migration == 'P6-67' and release not in ('20', '21')
+                    and key[1] in ('InitializeEnvironment', 'RunCapabilitySelfTest') and not arguments):
+                return True
             if key[1] == 'GetToolUsage':
                 return set(arguments) <= {'toolName', 'operation', 'limit', 'offset', 'exampleKind'}
             return (key[1] == 'FindTools' and set(arguments) <= {'query', 'limit'}) or (key[1] == 'ListToolCategories' and not arguments)
@@ -1105,8 +1112,8 @@ def compare_migration(args):
             assert old.get(key) == new.get(key), (release, key)
         assert new['rawMaskRules'] == RAW_MASK_RULES
         merged = len(members) - len({phase6_groups.mapped(name, members) for name in members})
-        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged, (release, 'registered tool count')
-        expected = {phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']}
+        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged + len(phase6_groups.additions(args.migration)), (release, 'registered tool count')
+        expected = {phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']} | phase6_groups.additions(args.migration)
         assert set(new['coverage']['directRejectedTools']) == expected, (release, 'direct refusal roster')
         if old['coverage'].get('bridgeRejectedTools'):
             assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}, (release, 'bridge refusal roster')

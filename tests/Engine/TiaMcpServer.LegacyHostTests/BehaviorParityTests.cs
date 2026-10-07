@@ -8,6 +8,7 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.BehaviorParity;
 using TiaMcp.LegacyHost;
 using TiaMcp.PlcFoundation;
+using TiaMcp.Logic.ModelContextProtocol;
 using TiaOpenness.Shared;
 using Xunit;
 
@@ -22,6 +23,8 @@ public sealed class BehaviorParityTests
         {
             bool preview = (bool?)args["dryRun"] == true || operation == "ListTags";
             if (preview) Previews++; else Writes++;
+            if (scenario == "batch-stale") return Task.FromResult(JsonSerializer.SerializeToNode(new PlcBatchImportResult { Executed = !preview, ProjectFile = "C:/fixture.ap19", SoftwarePath = "CPU/PLC_1", Release = "19", PlanHash = new string('a', 64),
+                Items = new[] { new PlcBatchImportItem { RelativePath = "A.xml", InputSha256 = new string('a',64), Planned = new PlcBatchImportObject { Name = "A", Kind = "FC", Number = 1 } } } }));
             if (Followup && operation == "ListTags") return Task.FromResult<JsonNode?>(new JsonArray());
             if (Followup) return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = !preview, ["ProjectFile"] = "C:/fixture.ap19" });
             Exception? error = scenario switch {
@@ -74,6 +77,24 @@ public sealed class BehaviorParityTests
         engine.AsObject().Remove("engineRelease");
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
         {
+            if (scenario.StartsWith("staging-", StringComparison.Ordinal))
+            {
+                string bundle = Path.GetFullPath(Path.Combine("bin-build/P6-67r/parity-stage", Guid.NewGuid().ToString("N"))); Directory.CreateDirectory(bundle);
+                var store = new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); int approvals = 0;
+                try
+                {
+                    string source = scenario == "staging-cleanup" ? "CleanupStagedImportFiles" : "StageImportFiles";
+                    var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new Worker(scenario), store);
+                    var tool = new FoundationV4Tool(inner, release, null, () => new(true, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "staging-refused" ? "denied" : null)); });
+                    var body = (await tool.InvokeAsync(Request(source, BehaviorParityCases.Arguments(scenario)))).StructuredContent!;
+                    var row = BehaviorParityCases.Project(body);
+                    Assert.Equal(code, (string?)row["code"]); Assert.Equal(outcome, (string?)row["outcome"]); Assert.Equal(execution, (string?)row["execution"]);
+                    var stagedFoundation = new JsonObject { ["results"] = new JsonArray(row), ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 };
+                    Assert.True(JsonNode.DeepEquals(engine, stagedFoundation), scenario + " " + release + "\nengine=" + engine + "\nfoundation=" + stagedFoundation);
+                }
+                finally { Directory.Delete(bundle, true); }
+                continue;
+            }
             var worker = new Worker(scenario); int waits = 0;
             FoundationV4Tool Tool(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), release, null,
                 () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "refused-approval" ? "denied" : null)); });
@@ -83,7 +104,7 @@ public sealed class BehaviorParityTests
                 return BehaviorParityCases.Project((await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args))).StructuredContent!);
             }
             var results = new JsonArray(await Call(scenario == "native-read" ? "ReadPlcTags"
-                : scenario == "missing-directory" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
+                : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
             Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
             if (scenario.StartsWith("blocked-export", StringComparison.Ordinal) || scenario == "typed-export-refusal")
             {

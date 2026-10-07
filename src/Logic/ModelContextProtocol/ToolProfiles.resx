@@ -4509,6 +4509,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ClearExportHandles",
         "currentName": "ClearExportHandles",
         "sourceName": "ClearExports",
@@ -7490,9 +7503,12 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$"
         },
         "envelopeVersion": 4
       },
@@ -7519,9 +7535,13 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "sourceDir": "C:\\Examples\\exports",
-          "dryRun": true
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$",
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -8129,6 +8149,16 @@
         "arguments": {
           "category": "screens"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -10790,6 +10820,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SynchronizeLibrary",
         "currentName": "SynchronizeLibrary",
         "sourceName": "SynchronizeLibrary",
@@ -11931,6 +11980,19 @@
           "full"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
         "envelopeVersion": 4
       },
       {
@@ -14915,9 +14977,12 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$"
         },
         "envelopeVersion": 4
       },
@@ -14944,9 +15009,13 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "sourceDir": "C:\\Examples\\exports",
-          "dryRun": true
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$",
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -15578,6 +15647,16 @@
         "arguments": {
           "category": "screens"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -18386,6 +18465,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SynchronizeLibrary",
         "currentName": "SynchronizeLibrary",
         "sourceName": "SynchronizeLibrary",
@@ -18846,6 +18944,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -19424,7 +19535,9 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -19466,6 +19579,16 @@
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
         "profiles": [
           "plc-foundation"
         ],
@@ -19614,6 +19737,25 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4
       }
@@ -19773,6 +19915,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -20363,7 +20518,9 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -20405,6 +20562,16 @@
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
         "profiles": [
           "plc-foundation"
         ],
@@ -20553,6 +20720,25 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4
       }
@@ -20712,6 +20898,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -21334,7 +21533,9 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -21376,6 +21577,16 @@
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
         "profiles": [
           "plc-foundation"
         ],
@@ -21524,6 +21735,25 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4
       }
@@ -21683,6 +21913,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -22305,7 +22548,9 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -22347,6 +22592,16 @@
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
         "profiles": [
           "plc-foundation"
         ],
@@ -22495,6 +22750,25 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4
       }
@@ -22654,6 +22928,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -23276,7 +23563,9 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -23318,6 +23607,16 @@
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
         "profiles": [
           "plc-foundation"
         ],
@@ -23466,6 +23765,25 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4
       }
@@ -23642,6 +23960,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "currentName": "CleanupStagedImportFiles",
+        "sourceName": "CleanupStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "batchId": "&lt;batchId from StageImportFiles or ListStagedImportFiles&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -24264,7 +24595,9 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "envelopeVersion": 4
       },
@@ -24306,6 +24639,16 @@
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "currentName": "ListStagedImportFiles",
+        "sourceName": "ListStagedImportFiles",
         "profiles": [
           "plc-foundation"
         ],
@@ -24466,6 +24809,25 @@
         ],
         "arguments": {
           "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "StageImportFiles",
+        "currentName": "StageImportFiles",
+        "sourceName": "StageImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4
       }

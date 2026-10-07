@@ -11,7 +11,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 FOUNDATION_RELEASES = ('14sp1', '15.1', '16', '17', '18', '19')
-TASKS = tuple(f'P6-{i:02}' for i in range(7, 25))
+TASKS = tuple(f'P6-{i:02}' for i in range(7, 25)) + ('P6-67',)
+P6_67_ADDITIONS = {'StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles'}
+P6_67_NAMES = P6_67_ADDITIONS | {'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory', 'ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable'}
+
+def additions(task):
+    return P6_67_ADDITIONS if task == 'P6-67' else set()
 
 
 @lru_cache(maxsize=1)
@@ -28,6 +33,8 @@ def group(task, release, baseline_names):
     """3.x names of `release` that `task` migrates."""
     if task not in TASKS:
         raise ValueError('Unknown migration task: ' + task)
+    if task == 'P6-67':
+        return P6_67_NAMES & set(baseline_names)
     if release in FOUNDATION_RELEASES:
         return set(baseline_names) if task == 'P6-08' else set()
     if task == 'P6-08':
@@ -43,6 +50,8 @@ def names(task):
     """Every 3.x and V4 name `task` migrates in any release; usage-catalog responses about them belong to the group."""
     if task not in TASKS:
         raise ValueError('Unknown migration task: ' + task)
+    if task == 'P6-67':
+        return P6_67_NAMES
     if task == 'P6-08':
         old = set()
         for release in FOUNDATION_RELEASES:

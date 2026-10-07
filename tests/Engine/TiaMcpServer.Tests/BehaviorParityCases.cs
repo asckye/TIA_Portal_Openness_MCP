@@ -32,11 +32,34 @@ namespace TiaMcp.BehaviorParity
             new object[] { "blocked-export-preview", "", "succeeded", "read-only" },
             new object[] { "blocked-export-apply", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
             new object[] { "typed-export-refusal", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
-            new object[] { "cancellation", "CANCELLED", "rejected-before-operation", "not-started" }
+            new object[] { "cancellation", "CANCELLED", "rejected-before-operation", "not-started" },
+            new object[] { "staging-name", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "staging-size", "LIMIT_EXCEEDED", "rejected-before-operation", "not-started" },
+            new object[] { "staging-preview", "", "succeeded", "read-only" },
+            new object[] { "staging-apply", "", "succeeded", "completed" },
+            new object[] { "staging-refused", "CONFIRMATION_REQUIRED", "rejected-before-operation", "not-started" },
+            new object[] { "staging-cleanup", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "batch-confirm", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "batch-order", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "batch-hash", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "batch-project", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "batch-stale", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" }
         };
 
         public static JsonObject Arguments(string scenario)
         {
+            if (scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias")
+            {
+                string dir = System.IO.Path.GetFullPath("bin-build/P6-67r/parity-batch"); System.IO.Directory.CreateDirectory(dir);
+                var batch = new JsonObject { ["softwarePath"] = "CPU/PLC_1", ["groupPath"] = "", ["dir"] = dir, ["overwrite"] = true,
+                    ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = "C:/fixture.ap19", ["expectedPlanHash"] = new string(scenario == "batch-stale" ? 'b' : 'a', 64), ["importOrder"] = new JsonArray("A.xml") };
+                string? missing = scenario == "batch-confirm" ? "confirm" : scenario == "batch-order" ? "importOrder" : scenario == "batch-hash" ? "expectedPlanHash" : scenario == "batch-project" ? "expectedProjectFile" : null;
+                if (missing != null) batch.Remove(missing);
+                return batch;
+            }
+            if (scenario == "staging-cleanup") return new JsonObject { ["batchId"] = Guid.NewGuid().ToString("N"), ["dryRun"] = false };
+            if (scenario.StartsWith("staging-", StringComparison.Ordinal)) return new JsonObject { ["dryRun"] = scenario == "staging-preview",
+                ["files"] = new JsonArray(new JsonObject { ["fileName"] = scenario == "staging-name" ? "../bad.scl" : "Main.scl", ["kind"] = "scl", ["content"] = scenario == "staging-size" ? new string('x', 4194305) : "FUNCTION Main : Void\nBEGIN\nEND_FUNCTION" }) };
             if (scenario == "native-read") return new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" };
             var args = new JsonObject { ["plc"] = scenario == "exact" ? "CPU/PLC_1" : "PLC_1", ["table"] = "T",
                 ["name"] = "Ready", ["dataType"] = "Bool", ["address"] = "%M0.0", ["dryRun"] = false,

@@ -92,6 +92,7 @@ namespace TiaMcpServer.Tests
                 case "IMcpServer": return typeof(IMcpServer);
                 case "RequestContext<CallToolRequestParams>": return typeof(RequestContext<CallToolRequestParams>);
                 case "JsonObject": return typeof(JsonObject);
+                case "StagedTextFile": return typeof(TiaMcp.Logic.ModelContextProtocol.StagedTextFile);
             }
             int generic = name.IndexOf('<');
             if (generic >= 0)

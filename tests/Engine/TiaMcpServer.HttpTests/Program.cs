@@ -35,6 +35,16 @@ internal static partial class Program
         throw new TypeLoadException("Could not find type '" + name + "' in the engine or any of its referenced assemblies.");
     }
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 };
+    internal static int ExpectedFullToolCount(int major)
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("VersionTools.json")
+            ?? throw new InvalidOperationException("Generated release catalog is missing from the harness.");
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        var catalog = Json.Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
+        var releases = (Dictionary<string, object>)catalog["releases"];
+        var release = (Dictionary<string, object>)releases[major.ToString(System.Globalization.CultureInfo.InvariantCulture)];
+        return Convert.ToInt32(release["toolCount"], System.Globalization.CultureInfo.InvariantCulture);
+    }
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     internal static bool HasChinese(string? value) => !String.IsNullOrEmpty(value)

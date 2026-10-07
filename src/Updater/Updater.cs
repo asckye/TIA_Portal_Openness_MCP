@@ -665,7 +665,7 @@ namespace TiaMcp.Updater
         private static bool IsProtectedRoot(string relative)
         {
             string first = relative.Split('/')[0];
-            return new[] { "data", ".previous", ".update", "TiaMcp_Output", ".git", "bin-build" }.Contains(first, StringComparer.OrdinalIgnoreCase);
+            return new[] { "data", "staging", ".previous", ".update", "TiaMcp_Output", ".git", "bin-build" }.Contains(first, StringComparer.OrdinalIgnoreCase);
         }
 
         private static bool IsValidRepository(string value) { return !String.IsNullOrWhiteSpace(value) && Regex.IsMatch(value.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$") && !value.Contains(".."); }

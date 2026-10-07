@@ -44,15 +44,60 @@ namespace TiaOpenness.Shared
             string digest = Hash(Canonical(new JsonObject { ["releaseKey"] = release, ["tool"] = tool,
                 ["identity"] = target.DeepClone(), ["arguments"] = args.DeepClone() }));
             string? plan = args["expectedPlanHash"] is JsonValue value && value.TryGetValue<string>(out var hash) && IsHash(hash) ? hash : null;
-            var display = JsonNode.Parse(ApprovalDisplayPayload.Sanitize(args.ToJsonString()))!.AsObject();
+            var display = Display(args, tool);
             var objects = display.Where(p => p.Key.EndsWith("Path", StringComparison.Ordinal) || p.Key.EndsWith("Name", StringComparison.Ordinal)
                 || p.Key == "plc" || p.Key == "target").Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
-                Tool = tool, PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity = ApprovalDisplayPayload.Sanitize(target.ToJsonString()),
-                ParametersJson = ApprovalDisplayPayload.Sanitize(args.ToJsonString()), TimeoutSeconds = seconds,
+                Tool = tool, PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity = Display(target, "identity").ToJsonString(),
+                ParametersJson = display.ToJsonString(), TimeoutSeconds = seconds,
                 Deadline = DateTimeOffset.UtcNow.AddSeconds(seconds),
                 Operations = new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
                     Target = string.Join(" · ", objects) } } };
+        }
+        // The digest above binds the complete arguments. Human review never carries
+        // file contents, and every display is bounded independently of the transport.
+        private static JsonObject Display(JsonObject args, string tool)
+        {
+            JsonNode? Summarize(JsonNode? node, string key = "", int depth = 0)
+            {
+                if (depth > 16) return JsonValue.Create("<display depth limit>");
+                if (node is JsonValue value && value.TryGetValue<string>(out var text))
+                {
+                    if (key.EndsWith("content", StringComparison.OrdinalIgnoreCase) || key.EndsWith("text", StringComparison.OrdinalIgnoreCase)
+                        || key.Equals("base64", StringComparison.OrdinalIgnoreCase) || text.Length > 4096)
+                        return new JsonObject { ["byteLength"] = Encoding.UTF8.GetByteCount(text), ["sha256"] = Hash(text) };
+                    return JsonValue.Create(text);
+                }
+                if (node is JsonArray array) return new JsonArray(array.Take(128).Select(n => Summarize(n, key, depth + 1)).ToArray());
+                if (node is JsonObject obj)
+                {
+                    var result = new JsonObject();
+                    foreach (var pair in obj.Take(128)) result[pair.Key.Length > 128 ? Hash(pair.Key) : pair.Key] = Summarize(pair.Value, pair.Key, depth + 1);
+                    return result;
+                }
+                return node?.DeepClone();
+            }
+            var compact = Summarize(args)!.AsObject();
+            if (tool == "StageImportFiles")
+            {
+                var files = new JsonArray();
+                foreach (var file in (args["files"] as JsonArray ?? new JsonArray()).OfType<JsonObject>().Take(128))
+                {
+                    string content = (string?)file["content"] ?? "";
+                    files.Add(new JsonObject { ["fileName"] = Summarize(file["fileName"]), ["kind"] = Summarize(file["kind"]),
+                        ["byteLength"] = Encoding.UTF8.GetByteCount(content), ["sha256"] = Hash(content) });
+                }
+                compact["files"] = files;
+                try { compact["stagingLocation"] = Path.Combine(BundleLayout.RequireRoot(AppContext.BaseDirectory), "staging"); }
+                catch (IOException) /* swallow(privacy): the staging precheck reports the unavailable bundle before approval */
+                { compact["stagingLocation"] = Path.Combine(AppContext.BaseDirectory, "staging"); }
+            }
+            string json = compact.ToJsonString();
+            if (Encoding.UTF8.GetByteCount(json) > 64 * 1024)
+                compact = new JsonObject { ["displayTruncated"] = true, ["argumentByteLength"] = Encoding.UTF8.GetByteCount(args.ToJsonString()) };
+            try { return JsonNode.Parse(ApprovalDisplayPayload.Sanitize(compact.ToJsonString()))!.AsObject(); }
+            catch (Exception error) when (error is JsonException || error is InvalidOperationException)
+            { return new JsonObject { ["displayUnavailable"] = true }; }
         }
         internal void Validate()
         {

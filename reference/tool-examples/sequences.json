@@ -1785,5 +1785,501 @@
         "expect": "Approve real compilation and inspect compiler state/errors."
       }
     ]
+  },
+  {
+    "id": "sequence/stage-scl-function-plc-foundation",
+    "topic": "stage-scl-function",
+    "purpose": "Send caller text from the AI host to TIA and generate a function.",
+    "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline contracts/fixtures only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "expect": "Validate ASCII without BOM and quota; no files or approval."
+      },
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve FILE write; retain batchId and files[0].path/sha256 on the TIA machine."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "filePath": "<files[0].path from staging>",
+          "dryRun": true
+        },
+        "expect": "Review source planHash for this ASCII file and project."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "filePath": "<files[0].path from staging>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from source import preview>"
+        },
+        "expect": "Import once; retain actual sourceName including extension."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "externalSourceName": "<sourceName from import>",
+          "dryRun": true
+        },
+        "expect": "Review generation plan/inventory; generation can replace blocks or types."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "externalSourceName": "<sourceName from import>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from generation preview>"
+        },
+        "expect": "Approve generation; V14 SP1 reports inventory observations, V15.1+ reports native returned objects."
+      },
+      {
+        "tool": "CleanupStagedImportFiles",
+        "arguments": {
+          "batchId": "<batchId from staging>",
+          "dryRun": false
+        },
+        "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      }
+    ]
+  },
+  {
+    "id": "sequence/stage-scl-udt-plc-foundation",
+    "topic": "stage-scl-udt",
+    "purpose": "Send caller text from the AI host to TIA and generate a UDT from SCL TYPE.",
+    "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline contracts/fixtures only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "ExampleUDT.scl",
+              "kind": "udt",
+              "content": "TYPE \"ExampleUDT\"\nVERSION : 0.1\n   STRUCT\n      Ready : Bool;\n   END_STRUCT;\nEND_TYPE\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "expect": "Validate ASCII without BOM and quota; no files or approval."
+      },
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "ExampleUDT.scl",
+              "kind": "udt",
+              "content": "TYPE \"ExampleUDT\"\nVERSION : 0.1\n   STRUCT\n      Ready : Bool;\n   END_STRUCT;\nEND_TYPE\n"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve FILE write; retain batchId and files[0].path/sha256 on the TIA machine."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "filePath": "<files[0].path from staging>",
+          "dryRun": true
+        },
+        "expect": "Review source planHash for this ASCII file and project."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "filePath": "<files[0].path from staging>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from source import preview>"
+        },
+        "expect": "Import once; retain actual sourceName including extension."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "externalSourceName": "<sourceName from import>",
+          "dryRun": true
+        },
+        "expect": "Review generation plan/inventory; generation can replace blocks or types."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "externalSourceName": "<sourceName from import>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from generation preview>"
+        },
+        "expect": "Approve generation; V14 SP1 reports inventory observations, V15.1+ reports native returned objects."
+      },
+      {
+        "tool": "CleanupStagedImportFiles",
+        "arguments": {
+          "batchId": "<batchId from staging>",
+          "dryRun": false
+        },
+        "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      }
+    ]
+  },
+  {
+    "id": "sequence/stage-program-overwrite-plc-foundation",
+    "topic": "stage-program-overwrite",
+    "purpose": "Stage a mixed program directory, review create/replace plan and import with recovery backups.",
+    "preconditions": "Use complete exact-release Openness XML; ordinary blocks/types/tag tables and exact existing destination groups. Safety/protected objects, V14 SP1 interface-only SCL XML and technology objects are refused.",
+    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline fixture/contract checked; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "ExampleUDT.xml",
+              "kind": "udt",
+              "content": "<complete exact-release native Document XML for ExampleUDT>"
+            },
+            {
+              "fileName": "Main.xml",
+              "kind": "simaticml",
+              "content": "<complete exact-release native Document XML for Main>"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve staging of both files in one owned directory; retain directory and hashes."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
+          "overwrite": true,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": true,
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Review data.planHash, each create/replace, file hashes, destinations and explicit dependency order."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
+          "overwrite": true,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from program preview>",
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Approve once; exports of every replacement precede imports. On failure inspect recoveryDirectory, restored, remainingChanged and each restoreStatus. OUTCOME_UNKNOWN remains unknown."
+      },
+      {
+        "tool": "ListStagedImportFiles",
+        "arguments": {},
+        "expect": "Review retained staged batches; cleanup the selected batchId explicitly after inspection."
+      }
+    ]
+  },
+  {
+    "id": "sequence/stage-scl-function",
+    "topic": "stage-scl-function",
+    "purpose": "Send caller text from the AI host to TIA and generate a function.",
+    "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Offline contracts/fixtures only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "expect": "Validate ASCII without BOM and quota; no files or approval."
+      },
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve FILE write; retain batchId and files[0].path/sha256 on the TIA machine."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "filePath": "<files[0].path from staging>"
+        },
+        "expect": "Current full-engine source import is a separate approved write; retain source name from ListPlcExternalSources."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "externalSourceName": "<exact imported source name>"
+        },
+        "expect": "Current full-engine generation is a separate approved write; inspect returned objects, then compile separately."
+      },
+      {
+        "tool": "CleanupStagedImportFiles",
+        "arguments": {
+          "batchId": "<batchId from staging>",
+          "dryRun": false
+        },
+        "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      }
+    ]
+  },
+  {
+    "id": "sequence/stage-scl-udt",
+    "topic": "stage-scl-udt",
+    "purpose": "Send caller text from the AI host to TIA and generate a UDT from SCL TYPE.",
+    "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Offline contracts/fixtures only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "ExampleUDT.scl",
+              "kind": "udt",
+              "content": "TYPE \"ExampleUDT\"\nVERSION : 0.1\n   STRUCT\n      Ready : Bool;\n   END_STRUCT;\nEND_TYPE\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "expect": "Validate ASCII without BOM and quota; no files or approval."
+      },
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "ExampleUDT.scl",
+              "kind": "udt",
+              "content": "TYPE \"ExampleUDT\"\nVERSION : 0.1\n   STRUCT\n      Ready : Bool;\n   END_STRUCT;\nEND_TYPE\n"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve FILE write; retain batchId and files[0].path/sha256 on the TIA machine."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "filePath": "<files[0].path from staging>"
+        },
+        "expect": "Current full-engine source import is a separate approved write; retain source name from ListPlcExternalSources."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "externalSourceName": "<exact imported source name>"
+        },
+        "expect": "Current full-engine generation is a separate approved write; inspect returned objects, then compile separately."
+      },
+      {
+        "tool": "CleanupStagedImportFiles",
+        "arguments": {
+          "batchId": "<batchId from staging>",
+          "dryRun": false
+        },
+        "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      }
+    ]
+  },
+  {
+    "id": "sequence/stage-program-overwrite",
+    "topic": "stage-program-overwrite",
+    "purpose": "Stage a mixed program directory, review create/replace plan and import with recovery backups.",
+    "preconditions": "Use complete exact-release Openness XML; ordinary blocks/types/tag tables and exact existing destination groups. Safety/protected objects, V14 SP1 interface-only SCL XML and technology objects are refused.",
+    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Offline fixture/contract checked; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "ExampleUDT.xml",
+              "kind": "udt",
+              "content": "<complete exact-release native Document XML for ExampleUDT>"
+            },
+            {
+              "fileName": "Main.xml",
+              "kind": "simaticml",
+              "content": "<complete exact-release native Document XML for Main>"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve staging of both files in one owned directory; retain directory and hashes."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
+          "overwrite": true,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": true,
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Review data.planHash, each create/replace, file hashes, destinations and explicit dependency order."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from staging>",
+          "overwrite": true,
+          "importOrder": [
+            "ExampleUDT.xml",
+            "Main.xml"
+          ],
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file>",
+          "expectedPlanHash": "<planHash from program preview>",
+          "regexName": "^(ExampleUDT|Main)\\.xml$"
+        },
+        "expect": "Approve once; exports of every replacement precede imports. On failure inspect recoveryDirectory, restored, remainingChanged and each restoreStatus. OUTCOME_UNKNOWN remains unknown."
+      },
+      {
+        "tool": "ListStagedImportFiles",
+        "arguments": {},
+        "expect": "Review retained staged batches; cleanup the selected batchId explicitly after inspection."
+      }
+    ]
   }
 ]

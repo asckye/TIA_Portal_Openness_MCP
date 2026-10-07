@@ -13,6 +13,9 @@ RESOURCE = 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
 REJECTIONS = 'tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json'
 # Reviewed additions, independent of the frozen 3.x rename baseline. No implicit new names.
 NEW_V4_TOOLS = {
+    'StageImportFiles': {'owner': 'P6-67', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'ListStagedImportFiles': {'owner': 'P6-67', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'CleanupStagedImportFiles': {'owner': 'P6-67', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'RenderPlcBlock': {'owner': 'P6-48', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'RenderPlcProgramAtlas': {'owner': 'P6-48', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
 }
@@ -21,10 +24,8 @@ keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
 snap = {k: json.loads(read(f"manifest/history/contracts-v3/baseline/{k}.json")) for k in keys}
 tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
 names = sorted(set().union(*(set(t) for t in tools.values())))
-catalog = dict(re.findall(r"^\| " + chr(96) + r"([^" + chr(96) + r"]+)" + chr(96) + r" \| ([^|]+) \|$", read("docs/reference/version-tool-catalog.md"), re.M))
-assert set(catalog) == set(names)
-for n in names:
-    assert catalog[n].strip().split(", ") == [k for k in keys if n in tools[k]], n
+# The frozen contract captures own the historical roster; the current version
+# catalog is an output and cannot be an input to its own generation.
 for n, entry in NEW_V4_TOOLS.items():
     assert n not in names
     for k in entry['releases']:
@@ -89,7 +90,7 @@ behavior_policies = behavior_records(ledger)
 sys.path.insert(0, str(root / "scripts/checks"))
 import engine_sources
 engine = engine_sources.EngineSources(root)
-VERBS = set("Analyze Apply Archive Attach Audit Bind Build Call Check Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Synchronize Trace Upgrade Upload Validate Write".split())
+VERBS = set("Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage Synchronize Trace Upgrade Upload Validate Write".split())
 VERB_RENAMES = {"Read": "Get", "Compose": "Build", "Update": "Set", "Sync": "Synchronize", "Preflight": "Preview", "Dump": "Get", "Add": "Create"}
 SPECIAL_NAMES = {
     "AddDevice": "CreateDevice", "AddDeviceWithFallback": "CreateHardwareDevice",
@@ -392,7 +393,8 @@ def validate_parameter_transition(name, current, target, actual, expected, v4, t
 for n, sig in signatures.items():
     actual = parameters(sig)
     if n in NEW_V4_TOOLS:
-        assert actual == {'inputPath': 'string', 'outputPath': 'string'} and envelope_versions[n] == 4, (n, 'new V4 contract differs')
+        expected_new = {'StageImportFiles': {'files': 'StagedTextFile[]', 'dryRun': 'bool'}, 'ListStagedImportFiles': {}, 'CleanupStagedImportFiles': {'batchId': 'string', 'dryRun': 'bool'}}.get(n, {'inputPath': 'string', 'outputPath': 'string'})
+        assert actual == expected_new and envelope_versions[n] == 4, (n, 'new V4 contract differs', actual)
     expected = {p for p in typed.get(n, {}) if '21' in typed[n][p]}
     validate_parameter_transition(n, current_names[n], renames[n], actual, expected,
                                   envelope_versions[n] == 4, {p: shape(n, p) for p in expected})
@@ -599,6 +601,7 @@ def source(n):
     return sorted(candidates)[0]
 
 MIGRATION_GROUPS = {
+    "P6-67": "ImportStagingTools",
     "P6-07": "McpServer.ToolBridge McpServer.Batch McpServer.CallDiscipline McpServer.Exports ToolUsageTools",
     "P6-09": "EcosystemTools V21EcosystemTools EngineeringAuditTools GitWorkflowTools ImportOrderTools OfflineAnalysisTools OfflineSuiteTools QualityAuditTools TemplateTools XmlBuilderTools PlcBuildTools PlcDocumentationTools",
     "P6-10": "PlcBlocksTools PlcSoftwareTools TypesTools PlcTablesTools McpServer.BlockLogic McpServer.BlockImportVerification",
@@ -681,6 +684,8 @@ TASK_PATHS = {
     "P6-67": ["src/Shared", "src/Logic", "src/FoundationHost", "src/Adapters", "src/Adapters.Contracts", "src/WorkerChannel", "src/Worker", "tests/Engine", E+"ModelContextProtocol", E+"Siemens", "reference/tool-examples", "manifest", "scripts/checks", "scripts/generate", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.HttpTests", "docs/reference", "docs/getting-started"],
 }
 for task in MIGRATION_GROUPS:
+    if task == "P6-67":
+        continue
     paths = sorted(p for p in owners if owners[p] == task)
     services = [E + "Siemens/Services/" + pathlib.PurePosixPath(p).stem.removesuffix("Tools") + "Service.cs" for p in paths]
     TASK_PATHS[task] = paths + sorted(p for p in services if p in files)
@@ -927,7 +932,7 @@ def self_test():
     assert usage_generator['new_v4_tools'](root) == NEW_V4_TOOLS
     for n in NEW_V4_TOOLS:
         assert envelope_versions[n] == 4 and renames[n] == n
-        assert parameters(signatures[n]) == {'inputPath': 'string', 'outputPath': 'string'}
+        assert parameters(signatures[n]) == {'StageImportFiles': {'files': 'StagedTextFile[]', 'dryRun': 'bool'}, 'ListStagedImportFiles': {}, 'CleanupStagedImportFiles': {'batchId': 'string', 'dryRun': 'bool'}}.get(n, {'inputPath': 'string', 'outputPath': 'string'})
     for registered in ({'RenderPlcBlock'}, set(NEW_V4_TOOLS) | {'RenderPlcOther'}):
         try: usage_generator['resolve_names'](NEW_V4_TOOLS, registered, {n: n for n in NEW_V4_TOOLS})
         except AssertionError: pass
@@ -992,9 +997,33 @@ def self_test():
     assert rejected == 6
     print("Self-check: 6 mapping/inventory and 6 full-engine migration negative cases rejected; 8 release mappings, typed coverage, lite examples, 48 task paths, 5 static native proofs and 8 behavior families passed.")
 
+def version_catalog_outputs():
+    groups = []
+    for name in sorted(set().union(*registered_rosters.values())):
+        releases = [key for key in keys if name in registered_rosters[key]]
+        groups.append({'name': name, 'releases': releases,
+            'group': 'all-releases' if len(releases) == 8 else 'release-only' if len(releases) == 1 else 'shared-subset',
+            'contract': 'consult selected host schema; equal names do not guarantee equal contracts'})
+    record = {'schemaVersion': 1, 'basis': 'registered Foundation definitions and full-engine ToolCatalog; verified by eight exact contract captures',
+        'nativeAcceptance': 'NOT RUN for the newly enabled targets',
+        'releases': {key: {'profile': 'full-engine' if key in ('20', '21') else 'plc-foundation',
+            'toolCount': len(registered_rosters[key]), 'tools': sorted(registered_rosters[key])} for key in keys},
+        'groupCounts': dict(collections.Counter(t['group'] for t in groups)), 'tools': groups}
+    lines = ['# Generated release tool catalog', '',
+        'Generated by `Generate-Phase6Plan.py` from registered host catalogs. See [scope and contracts](version-tools.md).',
+        'Groups compare current V4 tool names. Read the selected host schema; shared names do not certify identical parameters or native behavior.', '']
+    for group, title in [('all-releases', 'All eight releases'), ('shared-subset', 'Shared by some releases'), ('release-only', 'One release only')]:
+        selected = [t for t in groups if t['group'] == group]
+        lines += [f'## {title} ({len(selected)})', '', '| Tool | Release keys |', '|---|---|']
+        lines += [f'| `{t["name"]}` | {", ".join(t["releases"])} |' for t in selected]
+        lines.append('')
+    return {root / 'manifest/version-tools.json': json.dumps(record, ensure_ascii=False, indent=2) + '\n',
+        root / 'docs/reference/version-tool-catalog.md': '\n'.join(lines)}
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='compare generated text without writing (ignore checkout CRLF)')
+    parser.add_argument('--catalog-only', action='store_true', help='refresh runtime catalogue, rejection fixtures and package counts without development planning documents')
     parser.add_argument('--self-test', action='store_true', help='exercise coverage and invalid-map rejection')
     args = parser.parse_args()
     if args.self_test: self_test()
@@ -1004,8 +1033,9 @@ def main():
     a = content.index(begin) + len(begin)
     b = content.index(endmark, a)
     generated = content[:a] + '\n\n' + '\n'.join(out) + '\n' + content[b:]
-    outputs = {doc: generated, root / RESOURCE: resource_text(),
-               root / REJECTIONS: rejections_text}
+    outputs = {root / RESOURCE: resource_text(), root / REJECTIONS: rejections_text}
+    outputs.update(version_catalog_outputs())
+    if not args.catalog_only: outputs[doc] = generated
     # Refresh derived package counts only; retain all build/source hash evidence.
     package_path = root / 'manifest/package-manifest.json'
     package = json.loads(package_path.read_text(encoding='utf-8-sig'))
@@ -1022,7 +1052,7 @@ def main():
     matrix_path = root / 'reference/version-feature-matrix.json'
     matrix = json.loads(read('reference/version-feature-matrix.json'))
     matrix['behaviorCapabilities'] = behavior_capabilities
-    outputs[matrix_path] = json.dumps(matrix, ensure_ascii=False, indent=2) + '\n'
+    if not args.catalog_only: outputs[matrix_path] = json.dumps(matrix, ensure_ascii=False, indent=2) + '\n'
     ledger_path = root / 'docs/reference/real-machine-ledger.md'
     ledger_begin, ledger_end = '<!-- behavior-capabilities:start -->', '<!-- behavior-capabilities:end -->'
     ledger_lines = ['逐版行为能力由 `Generate-Phase6Plan.py` 从上面的 L5 台账与实际入口目录生成。空入口数组表示该宿主无此族 MCP 入口；不授予原生验收。', '',
@@ -1038,12 +1068,12 @@ def main():
         marker = '| P6-PRODUCT '
         finish = ledger.index('\n', ledger.index(marker))
         ledger_output = ledger[:finish] + '\n\n' + ledger_block + ledger[finish:]
-    outputs[ledger_path] = ledger_output
+    if not args.catalog_only: outputs[ledger_path] = ledger_output
     for path, value in outputs.items():
         expected = value.encode('utf-8')
         if args.check:
             assert path.read_bytes().replace(b'\r\n', b'\n') == expected, 'stale generated output: ' + str(path.relative_to(root))
-        else:
+        elif not path.exists() or path.read_bytes().replace(b'\r\n', b'\n') != expected:
             path.write_bytes(expected)
     print(f"{'Checked' if args.check else 'Generated'}: {len(names)} current names, {len(set(renames.values()))} V4 names, {sum(totals.values())} typed inputs, {len(lite_proposal['releases']['21'])} lite tools per full release, {len(scan)} layout files.")
 

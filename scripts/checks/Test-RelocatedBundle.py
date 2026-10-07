@@ -1007,8 +1007,10 @@ def run_bundle_check(args: argparse.Namespace) -> int:
 class RelocationCheckTests(unittest.TestCase):
     def test_baseline_rosters_and_deferred_policy(self):
         counts = baseline_counts()
-        self.assertEqual(counts, {"14sp1": 59, "15.1": 60, "16": 62, "17": 62,
-                                  "18": 62, "19": 64, "20": 477, "21": 488})
+        generated = json.loads((ROOT / "manifest/version-tools.json").read_text(encoding="utf-8"))["releases"]
+        self.assertEqual(counts, {key: generated[key]["toolCount"] for key in RELEASE_KEYS})
+        for key in RELEASE_KEYS:
+            self.assertEqual(counts[key], len(set(generated[key]["tools"])))
 
     def test_product_paths(self):
         root = Path("X:/candidate")

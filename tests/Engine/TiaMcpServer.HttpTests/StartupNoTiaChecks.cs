@@ -55,6 +55,7 @@ internal static class StartupNoTiaChecks
             "BuildPlcFbBlock", "BuildPlcFcBlock", "BuildPlcGlobalDb", "BuildPlcLadFcBlock", "BuildPlcSymbolManifestFromPath",
             "BuildPlcTagTable", "BuildPlcUdt", "BuildReleaseDiagnosticReport", "BuildReleaseManifest", "BuildReleaseRunbook",
             "BuildStructuredText", "DecodePlcSimaticMl", "ValidatePlcDocumentSchemas",
+            "StageImportFiles", "ListStagedImportFiles", "CleanupStagedImportFiles",
             "RenderPlcBlock", "RenderPlcProgramAtlas", "RenderPlcVisualDiff",
             "ScanPlcSourceAnnotations", "GetExportContent", "ListExportHandles",
             "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
@@ -147,7 +148,7 @@ internal static class StartupNoTiaChecks
                 pass("V" + major + " " + profile + " no-TIA SessionTools factory resolved and returned bootstrap data");
             }
             var names = ProfileToolNames(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!, profile);
-            int fullExpected = major == 20 ? 477 : 488;
+            int fullExpected = Program.ExpectedFullToolCount(major);
             Check(profile == "full" ? names.Length == fullExpected : names.Length > 0 && names.Length < fullExpected,
                 "V" + major + " " + transport + (isolate ? " isolation parent" : " host")
                 + " has " + names.Length + " " + profile + " tools.");

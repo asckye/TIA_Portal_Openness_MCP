@@ -7848,6 +7848,29 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "8d552a6e23f9f8bd0f92b09f6cd33830f75114af2e2e374eddce1c2cd69ea064",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "batchId": {
+            "description": "Exact batchId from ListStagedImportFiles in this session.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Preview only by default; false applies after approval.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "batchId"
+        ],
+        "type": "object"
+      },
+      "name": "CleanupStagedImportFiles",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "82bea17e6e906cc6074a9e1438c6c77a553da7d73c5563722ba194c2c78a3018",
       "inputSchema": {
         "additionalProperties": false,
@@ -19624,30 +19647,62 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "01c1fa4dd1d9a623b713ca9d0067be09ecad3a863ea10b25c2544047633823fc",
+      "descriptionSha256": "cc3597ce77bddbf17ead58d9109fa1a8b4229e22d1807eddc33af58cf897a410",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Explicit confirmation for project mutation.",
+            "type": "boolean"
+          },
           "dir": {
-            "description": "dir: directory that contains block .xml files",
+            "description": "Absolute TIA-machine XML directory, for example from StageImportFiles.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Preview only by default; false applies after approval.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact planHash from the reviewed preview.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact absolute bound project path.",
             "type": "string"
           },
           "groupPath": {
-            "description": "groupPath: defines the path in the project structure to the group, where to import blocks",
+            "description": "Exact destination block group; empty selects root.",
             "type": "string"
           },
+          "importOrder": {
+            "description": "Complete explicit relative-file manifest from preview.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Selected file limit 1..256; no truncation.",
+            "type": "integer"
+          },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override, false=None (reject existing objects; no rename)",
+            "default": false,
+            "description": "Allow reviewed replacements with recovery export before any import.",
             "type": "boolean"
           },
           "regexName": {
             "default": "",
-            "description": "regexName: optional regex filter applied to filename without extension",
+            "description": "Bounded filename regex; empty selects every XML file.",
             "type": "string"
           },
           "softwarePath": {
-            "description": "softwarePath: defines the path in the project structure to the plc software",
+            "description": "Exact PLC software path.",
             "type": "string"
           }
         },
@@ -19690,56 +19745,88 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "f7aa73a4e13e842a3639375ca37f755ec76ed638a447b49e586274e9cd64b2ef",
+      "descriptionSha256": "840a988589a564c064f1e75f541a8ba91d19a8cad77bfa6aac50ccb2289eb066",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockGroupPath": {
             "default": "",
-            "description": "blockGroupPath: PLC block group path; use empty for root Program blocks",
+            "description": "Exact destination block group; empty selects root.",
             "type": "string"
           },
           "compileAfter": {
-            "default": true,
-            "description": "compileAfter: compile PLC software after imports",
+            "default": false,
+            "description": "Must be false; compilation is a separate call.",
+            "type": "boolean"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Explicit confirmation for project mutation.",
             "type": "boolean"
           },
           "dryRun": {
+            "default": true,
+            "description": "Preview only by default; false applies after approval.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact planHash from the reviewed preview.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact absolute bound project path.",
+            "type": "string"
+          },
+          "importOrder": {
+            "description": "Complete explicit relative-file manifest from preview.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Selected file limit 1..256; no truncation.",
+            "type": "integer"
+          },
+          "overwrite": {
             "default": false,
-            "description": "dryRun: only classify and return discovered objects; do not import or compile",
+            "description": "Allow reviewed replacements with recovery export before any import.",
             "type": "boolean"
           },
           "regexName": {
             "default": "",
-            "description": "regexName: optional regex filter applied to file name without extension",
+            "description": "Bounded filename regex; empty selects every XML file.",
             "type": "string"
           },
           "softwarePath": {
-            "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
+            "description": "Exact PLC software path.",
             "type": "string"
           },
           "sourceDir": {
-            "description": "sourceDir: root directory containing exported PLC XML files",
+            "description": "Absolute staged program XML directory.",
             "type": "string"
           },
           "stopOnImportFailure": {
-            "default": false,
-            "description": "stopOnImportFailure: skip remaining imports after first import failure",
+            "default": true,
+            "description": "Must be true; stop and recover after the first failure.",
             "type": "boolean"
           },
           "tagFolderPath": {
             "default": "",
-            "description": "tagFolderPath: PLC tag table group path; use empty for root",
+            "description": "Exact destination tag group; empty selects root.",
             "type": "string"
           },
           "technologyFolderPath": {
             "default": "",
-            "description": "technologyFolderPath: PLC technology object group path; use empty for root",
+            "description": "Must be empty; technology import is outside this batch policy.",
             "type": "string"
           },
           "typeGroupPath": {
             "default": "",
-            "description": "typeGroupPath: PLC data type group path; use empty for root",
+            "description": "Exact destination type group; empty selects root.",
             "type": "string"
           }
         },
@@ -21881,6 +21968,16 @@
         "type": "object"
       },
       "name": "ListSivarcRules",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "d69dc6a4cfd663099a893bb15341ae14d080e55a3844d3ab58933a002a44983f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ListStagedImportFiles",
       "outputSchema": null
     },
     {
@@ -33706,6 +33803,63 @@
         "type": "object"
       },
       "name": "ShowObjectInEditor",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f887a7aee6f2eb9f99423dcf15f42d9b758c9b12983b862c32ddd3c73211aa01",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "Preview only by default; false applies after approval.",
+            "type": "boolean"
+          },
+          "files": {
+            "description": "One batch of fileName, kind and text content; server owns the destination.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content": {
+                  "maxLength": 4194304,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "fileName": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "scl",
+                    "simaticml",
+                    "tagtable",
+                    "udt",
+                    "s7dcl",
+                    "s7res"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fileName",
+                "kind",
+                "content"
+              ],
+              "type": "object"
+            },
+            "maxItems": 128,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "type": "object"
+      },
+      "name": "StageImportFiles",
       "outputSchema": null
     },
     {

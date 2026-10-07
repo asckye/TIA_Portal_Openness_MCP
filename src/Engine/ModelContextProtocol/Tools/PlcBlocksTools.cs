@@ -356,7 +356,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the block")] string importPath)
-            => PlcToolContract.Run("ImportPlcBlock", true, true, () => ImportBlock(softwarePath, groupPath, importPath));
+            => PlcSingleImportRecovery.Run(_session, "ImportPlcBlock", softwarePath, groupPath, importPath, "block",
+                () => PlcToolContract.Run("ImportPlcBlock", true, true, () => ImportBlock(softwarePath, groupPath, importPath)));
 
         public ResponseImportBlock ImportBlock(
             string softwarePath,
@@ -411,14 +412,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ImportBlocksFromDirectoryV4(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("groupPath: defines the path in the project structure to the group, where to import blocks")] string groupPath,
-            [Description("dir: directory that contains block .xml files")] string dir,
-            [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override, false=None (reject existing objects; no rename)")] bool overwrite = true)
-            => PlcToolContract.Run("ImportPlcBlocksFromDirectory", true, true, () => ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, overwrite));
+        [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), Description("[L2][PLC-Software][WRITE] Same-release XML directory import. Use dryRun=true to review each create/replace action in planHash. overwrite=false apply without a plan retains the existing None import route. Apply requires importOrder, expectedPlanHash, confirm and exact expectedProjectFile. overwrite=true exports every replacement before imports; failure stops and restores known earlier replacements in dependency order. Unknown native outcomes retain recoveryDirectory and require session reset. No compile/save or retry. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        public CallToolResult ImportBlocksFromDirectoryV4([Description("Exact PLC software path.")] string softwarePath, [Description("Exact destination block group; empty selects root.")] string groupPath, [Description("Absolute TIA-machine XML directory, for example from StageImportFiles.")] string dir, [Description("Bounded filename regex; empty selects every XML file.")] string regexName = "", [Description("Allow reviewed replacements with recovery export before any import.")] bool overwrite = false,
+            [Description("Preview only by default; false applies after approval.")] bool dryRun = true, [Description("Complete explicit relative-file manifest from preview.")] string[]? importOrder = null, [Description("Exact planHash from the reviewed preview.")] string expectedPlanHash = "", [Description("Explicit confirmation for project mutation.")] bool confirm = false, [Description("Exact absolute bound project path.")] string expectedProjectFile = "", [Description("Selected file limit 1..256; no truncation.")] int maxItems = 128)
+            => !overwrite && !dryRun && string.IsNullOrEmpty(expectedPlanHash)
+                ? PlcToolContract.Run("ImportPlcBlocksFromDirectory", true, true, () => ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, false))
+                : PlcBatchImportService.Run(_session, "ImportPlcBlocksFromDirectory", new TiaMcp.PlcFoundation.PlcBatchImportRequest(
+                software: softwarePath, blockGroup: groupPath, directory: dir, regex: regexName, overwrite: overwrite, dryRun: dryRun,
+                order: importOrder, expectedHash: expectedPlanHash, confirm: confirm, expectedProject: expectedProjectFile, maxItems: maxItems), softwarePath, dryRun);
 
         public ResponseImportBatch ImportBlocksFromDirectory(
             string softwarePath,
@@ -444,19 +445,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: ConnectPortal + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ImportPlcProgramFromDirectoryV4(
-            [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
-            [Description("sourceDir: root directory containing exported PLC XML files")] string sourceDir,
-            [Description("typeGroupPath: PLC data type group path; use empty for root")] string typeGroupPath = "",
-            [Description("tagFolderPath: PLC tag table group path; use empty for root")] string tagFolderPath = "",
-            [Description("technologyFolderPath: PLC technology object group path; use empty for root")] string technologyFolderPath = "",
-            [Description("blockGroupPath: PLC block group path; use empty for root Program blocks")] string blockGroupPath = "",
-            [Description("regexName: optional regex filter applied to file name without extension")] string regexName = "",
-            [Description("compileAfter: compile PLC software after imports")] bool compileAfter = true,
-            [Description("stopOnImportFailure: skip remaining imports after first import failure")] bool stopOnImportFailure = false,
-            [Description("dryRun: only classify and return discovered objects; do not import or compile")] bool dryRun = false)
-            => PlcToolContract.Run("ImportPlcProgramFromDirectory", !dryRun, true, () => ImportPlcProgramFromDirectory(softwarePath, sourceDir, typeGroupPath, tagFolderPath, technologyFolderPath, blockGroupPath, regexName, compileAfter, stopOnImportFailure, dryRun));
+        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software][WRITE] Bounded recursive same-release block/UDT/tag-table XML program import. Preview defaults true and lists create/replace actions in planHash. Apply requires a complete explicit importOrder, expectedPlanHash, confirm and exact expectedProjectFile. overwrite=true exports all replacements before imports; first failure stops and restores known replacements in dependency order. Unknown outcomes retain recoveryDirectory and require session reset. compileAfter/technology/continuation refused. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        public CallToolResult ImportPlcProgramFromDirectoryV4([Description("Exact PLC software path.")] string softwarePath, [Description("Absolute staged program XML directory.")] string sourceDir, [Description("Exact destination type group; empty selects root.")] string typeGroupPath = "", [Description("Exact destination tag group; empty selects root.")] string tagFolderPath = "",
+            [Description("Must be empty; technology import is outside this batch policy.")] string technologyFolderPath = "", [Description("Exact destination block group; empty selects root.")] string blockGroupPath = "", [Description("Bounded filename regex; empty selects every XML file.")] string regexName = "", [Description("Must be false; compilation is a separate call.")] bool compileAfter = false, [Description("Must be true; stop and recover after the first failure.")] bool stopOnImportFailure = true,
+            [Description("Preview only by default; false applies after approval.")] bool dryRun = true, [Description("Complete explicit relative-file manifest from preview.")] string[]? importOrder = null, [Description("Exact planHash from the reviewed preview.")] string expectedPlanHash = "", [Description("Explicit confirmation for project mutation.")] bool confirm = false, [Description("Exact absolute bound project path.")] string expectedProjectFile = "", [Description("Allow reviewed replacements with recovery export before any import.")] bool overwrite = false, [Description("Selected file limit 1..256; no truncation.")] int maxItems = 128)
+            => PlcBatchImportService.Run(_session, "ImportPlcProgramFromDirectory", new TiaMcp.PlcFoundation.PlcBatchImportRequest(
+                software: softwarePath, directory: sourceDir, program: true, typeGroup: typeGroupPath, tagGroup: tagFolderPath, technologyGroup: technologyFolderPath,
+                blockGroup: blockGroupPath, regex: regexName, compileAfter: compileAfter, stopOnImportFailure: stopOnImportFailure, dryRun: dryRun,
+                order: importOrder, expectedHash: expectedPlanHash, confirm: confirm, expectedProject: expectedProjectFile, overwrite: overwrite, maxItems: maxItems), softwarePath, dryRun);
 
         public ResponsePlcProgramImport ImportPlcProgramFromDirectory(
             string softwarePath,

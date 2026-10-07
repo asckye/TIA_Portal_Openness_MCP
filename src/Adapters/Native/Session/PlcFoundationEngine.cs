@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -305,7 +306,7 @@ namespace TiaMcp.PlcFoundation
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(BlockGroups(selected.Value.BlockGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
             return ImportXml("ImportBlocks",input,dryRun,()=>WithTargetOffline(selected,()=>target.Blocks.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(b=>b.Name)),()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Blocks.", overwrite,
-                name => BlockGroups(selected.Value.BlockGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))));
+                name => BlockGroups(selected.Value.BlockGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))), backups: !overwrite ? null : document => target.Blocks.Where(b => ImportNames(document).Contains(b.Name)).Select(b => (Action<FileInfo>)(file => WithTargetOffline(selected, () => { b.Export(file, ExportOptions.None); return true; }))));
         }
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
@@ -313,16 +314,17 @@ namespace TiaMcp.PlcFoundation
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(TypeGroups(selected.Value.TypeGroup), x => x.Path, PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),"groupPath").Value;
             return ImportXml("ImportTypes",input,dryRun,()=>WithTargetOffline(selected,()=>target.Types.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name)), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Types.", overwrite,
-                name => TypeGroups(selected.Value.TypeGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))));
+                name => TypeGroups(selected.Value.TypeGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Types, selectedName => g.Value.Types.Find(selectedName), t => t.Name, name))), backups: !overwrite ? null : document => target.Types.Where(t => ImportNames(document).Contains(t.Name)).Select(t => (Action<FileInfo>)(file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.None); return true; }))));
         }
         public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true)
         {
             var input = PlcFoundationPolicy.XmlInput(importPath);
             var target = PlcExchangePolicy.Exact(TagGroups(ReadPlc(softwarePath).TagTableGroup), x => x.Path, PlcExchangePolicy.ObjectPath(folderPath,true,"folderPath"),"folderPath").Value;
             return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input,overwrite ? ImportOptions.Override : ImportOptions.None).Select(t=>t.Name), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Tags.PlcTagTable", overwrite,
-                name => TagGroups(ReadPlc(softwarePath).TagTableGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))));
+                name => TagGroups(ReadPlc(softwarePath).TagTableGroup).Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))), backups: !overwrite ? null : document => target.TagTables.Where(t => ImportNames(document).Contains(t.Name)).Select(t => (Action<FileInfo>)(file => t.Export(file, ExportOptions.None))));
         }
-        private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null, Action<System.Xml.Linq.XDocument>? precheck=null)
+        private static string[] ImportNames(System.Xml.Linq.XDocument document) => document.Root!.Elements().Where(e => e.Name.LocalName.StartsWith("SW.", StringComparison.Ordinal)).SelectMany(e => e.Elements("AttributeList").Elements("Name")).Select(e => e.Value).ToArray();
+        private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=null, Action<System.Xml.Linq.XDocument>? precheck=null, Func<System.Xml.Linq.XDocument, IEnumerable<Action<FileInfo>>>? backups=null)
         {
             using(var stream=TiaOpenness.Shared.NativeInputPolicy.OpenRead(input.FullName,"importPath"))
             using(var sha=System.Security.Cryptography.SHA256.Create())
@@ -331,17 +333,30 @@ namespace TiaMcp.PlcFoundation
                 PlcFoundationPolicy.XmlInput(input.FullName, out var document);
                 precheck?.Invoke(document);
                 var hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
+                string? recoveryDirectory=null,recoveryWarning=null; var recoveryFiles=new Dictionary<string,string>();
                 try
                 {
                     var capability=format?.Invoke();
                     if(!dryRun) capability?.RequireImport();
+                    if(!dryRun && backups!=null)
+                    {
+                        var recovery=TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(backups(document),PlcBatchImportRecovery.Directory,TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath);
+                        recoveryDirectory=recovery.Directory; recoveryWarning=recovery.Warning; recoveryFiles=recovery.Files;
+                    }
                     var result=Mutation(operation,dryRun,dryRun ? null : import());
                     capability?.Apply(result);
-                    result.InputFile=input.FullName; result.InputSha256=hash;
+                    result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles; result.RecoveryStatus=recoveryWarning!=null ? "unavailable-import-without-backup" : recoveryDirectory!=null ? "backup-ready" : "not-needed";
+                    if(recoveryWarning!=null) result.Warnings=result.Warnings.Concat(new[]{recoveryWarning}).ToArray();
                     return result;
                 }
                 catch(Exception ex)
-                { ex.Data["inputFile"]=input.FullName; ex.Data["inputSha256"]=hash; throw; }
+                {
+                    ex.Data["inputFile"]=input.FullName; ex.Data["inputSha256"]=hash;
+                    if(recoveryDirectory!=null) ex.Data["recoveryDirectory"]=recoveryDirectory;
+                    if(!ex.Data.Contains("recoveryFiles")) ex.Data["recoveryFiles"]=recoveryFiles;
+                    if(recoveryWarning!=null) { ex.Data["recoveryStatus"]="unavailable-import-without-backup";ex.Data["attemptedPath"]=TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath; }
+                    throw;
+                }
             }
         }
         public PlcMutationResult CreateTagTable(string plc, string group, string name, bool dryRun = true)

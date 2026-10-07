@@ -26,11 +26,12 @@ def new_v4_tools(root=ROOT):
                and any(isinstance(t, ast.Name) and t.id == 'NEW_V4_TOOLS' for t in node.targets)]
     assert len(entries) == 1, 'Exactly one reviewed new-in-4.0 list is required'
     result = entries[0]
+    expected = {'RenderPlcBlock': ('P6-48', 'FILE'), 'RenderPlcProgramAtlas': ('P6-48', 'FILE'),
+                'StageImportFiles': ('P6-67', 'FILE'), 'ListStagedImportFiles': ('P6-67', 'READ'), 'CleanupStagedImportFiles': ('P6-67', 'FILE')}
+    assert set(result) == set(expected), 'Reviewed new V4 list differs'
     for name, entry in result.items():
-        assert re.fullmatch(r'RenderPlc(?:Block|ProgramAtlas)', name), ('Unreviewed new V4 name', name)
-        assert entry['owner'] == 'P6-48' and entry['operation'] == 'FILE', ('Unreviewed owner/category', name)
+        assert (entry['owner'], entry['operation']) == expected[name], ('Unreviewed owner/category', name)
         assert entry['releases'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], name
-    assert set(result) == {'RenderPlcBlock', 'RenderPlcProgramAtlas'}, 'Reviewed new V4 list differs'
     return result
 
 
@@ -120,7 +121,7 @@ def validate_foundation_examples(calls, sequences):
         if name in batch:
             path = arguments.get('softwarePath', '')
             assert path.startswith('devices/') or ('exact softwarePath' in path and 'GetProjectTree' in path), (location, 'batch requires exact software path')
-        if arguments.get('dryRun') is False or arguments.get('confirm') is True:
+        if (arguments.get('dryRun') is False or arguments.get('confirm') is True) and name not in ('StageImportFiles', 'CleanupStagedImportFiles'):
             assert arguments.get('expectedProjectFile'), (location, 'real call requires expectedProjectFile')
         if name in imports:
             pattern = arguments.get('regexName', '')
@@ -466,7 +467,7 @@ class RosterTests(unittest.TestCase):
 
     def test_reviewed_additions_are_exact(self):
         additions = new_v4_tools()
-        self.assertEqual(set(additions), {'RenderPlcBlock', 'RenderPlcProgramAtlas'})
+        self.assertEqual(set(additions), {'RenderPlcBlock', 'RenderPlcProgramAtlas', 'StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles'})
         targets = {'Old': 'New', **{n: n for n in additions}}
         resolve_names(targets, {'New', *additions}, targets)
         for names in ({'New', 'RenderPlcBlock'}, {'New', *additions, 'RenderPlcOther'}):

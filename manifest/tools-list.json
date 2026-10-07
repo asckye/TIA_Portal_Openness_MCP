@@ -1,21 +1,21 @@
 {
-  "package": "TIA_MCP_Delivery_v3.3.0_20261006",
-  "generatedAt": "2026-10-06T15:38:22.4241788+00:00",
+  "package": "manifest/package-manifest.json",
+  "generatedAt": "2026-10-07T11:35:07.6524683+00:00",
   "source": "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
   "fileVersion": "3.3.0.0",
-  "exeSha256": "0788a9e4604cfd6c0831a78e190e76299cdfbfb5962eb2b83d9bd08a3aa568a3",
-  "toolCount": 488,
+  "exeSha256": "699a39b81b22864fa4d3ae1c65fc3ee82188b788969fa6665f372c4efebfa933",
+  "toolCount": 491,
   "note": "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2354,
+    "parameters": 2370,
     "parametersUndocumented": 856,
     "parametersFromVocabulary": 718,
     "toolsWithUndocumentedParameters": 196,
     "toolsWithEnumHints": 146,
     "enumHints": 228,
-    "defaultHints": 1268,
+    "defaultHints": 1280,
     "examplesCurated": 87,
-    "recipes": 13
+    "recipes": 17
   },
   "categories": [
     {
@@ -1447,26 +1447,6 @@
       "example": null
     },
     {
-      "name": "ManagePlcUserGroup",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManagePlcUserGroupV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "family",
-        "groupPath",
-        "action",
-        "newName",
-        "dryRun"
-      ],
-      "description": "[L2][PLC-Software][WRITE] Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed row). groupPath is relative to the family's root. newName is one segment for rename. Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors. Current native policy; V4 safety behavior is not yet accepted.",
-      "example": null
-    },
-    {
       "name": "ListUnifiedEngineeringObjects",
       "layer": "L2",
       "category": "hmi",
@@ -1486,6 +1466,22 @@
       "example": null
     },
     {
+      "name": "ListTransferRoutes",
+      "layer": "L2",
+      "category": "plc-online",
+      "domain": "PLC-Online",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ReadTransferRoutesV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "maxItems"
+      ],
+      "description": "[L2][PLC-Online][READ] The PG/PC route tree of the exact PLC's DownloadProvider.Configuration: Modes (ConfigurationMode.Name) -> PcInterfaces (Name, Number, Addresses, Subnets with Addresses and Gateways, TargetInterfaces with Addresses), plus availability of RHDownloadProvider / RHOnlineProvider (R/H systems, with PrimaryState/BackupState), OnlineProvider (State) and CompileProvider. Nothing is applied or changed; use it to pick pgPcInterface/targetIpAddress for DownloadPlc / ConnectOnlinePlc. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\"}"
+    },
+    {
       "name": "ListTransferAreas",
       "layer": "L2",
       "category": "hardware",
@@ -1503,6 +1499,24 @@
         "limit"
       ],
       "description": "[L2][Hardware][READ] NetworkInterface.TransferAreas (I-device / DP slave / CP 16xx / PN/PN coupler: Name, Type, Direction, PositionNumber, ExtendedPositionNumber, LocalToPartnerLength, PartnerToLocalLength, LocalAddresses/PartnerAddresses rows, TransferAreaMappingRules, dynamic Comment/TransferUpdateTime/SharedDeviceAccessConfigured/UpdateAlarm/RecordIndex) and MulticastableTransferAreas (CCDX: DataLength, Comment, PartnerTransferAreas) of the exact interface device item; positionNumber[/extendedPositionNumber] uses native Find. Paginated, no modification.",
+      "example": null
+    },
+    {
+      "name": "ListClassicHmiScripts",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Classic",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ListClassicHmiScripts",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "folderPath",
+        "offset",
+        "limit"
+      ],
+      "description": "[L2][HMI-Classic][READ] Classic (non-Unified) WinCC VB scripts under an exact script folder path: folder tree, script names and every readable attribute advertised by the object. Script source is not a typed Openness property; export it with ManageClassicHmiScript. Live pagination; Unified targets are refused.",
       "example": null
     },
     {
@@ -1723,24 +1737,6 @@
       "example": null
     },
     {
-      "name": "ListClassicHmiScripts",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Classic",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ListClassicHmiScripts",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "folderPath",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][HMI-Classic][READ] Classic (non-Unified) WinCC VB scripts under an exact script folder path: folder tree, script names and every readable attribute advertised by the object. Script source is not a typed Openness property; export it with ManageClassicHmiScript. Live pagination; Unified targets are refused.",
-      "example": null
-    },
-    {
       "name": "ImportSinumerikAlarmTexts",
       "layer": "L2",
       "category": "plc",
@@ -1755,6 +1751,23 @@
         "dryRun"
       ],
       "description": "[L2][PLC-Software][WRITE] V20 SINUMERIK NCU Device.GetService<SinumerikAlarmTextProvider>().AlarmTextImporter.ImportAlarmTexts. devicePath exact device path array; files array of absolute .ts/.csv files on server. DB2 alarm texts can replace existing contents; project languages must be active. Default dryRun=true. Reports native completion, not unverified content fidelity. No save; requires SINUMERIK option; supplied V21 SDK unsupported. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": null
+    },
+    {
+      "name": "ImportProjectTexts",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Project",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ImportProjectTextsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "filePath",
+        "updateSourceLanguage",
+        "dryRun"
+      ],
+      "description": "[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
       "example": null
     },
     {
@@ -1847,9 +1860,15 @@
         "regexName",
         "compileAfter",
         "stopOnImportFailure",
-        "dryRun"
+        "dryRun",
+        "importOrder",
+        "expectedPlanHash",
+        "confirm",
+        "expectedProjectFile",
+        "overwrite",
+        "maxItems"
       ],
-      "description": "[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: ConnectPortal + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] Bounded recursive same-release block/UDT/tag-table XML program import. Preview defaults true and lists create/replace actions in planHash. Apply requires a complete explicit importOrder, expectedPlanHash, confirm and exact expectedProjectFile. overwrite=true exports all replacements before imports; first failure stops and restores known replacements in dependency order. Unknown outcomes retain recoveryDirectory and require session reset. compileAfter/technology/continuation refused. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": null
     },
     {
@@ -1883,9 +1902,15 @@
         "groupPath",
         "dir",
         "regexName",
-        "overwrite"
+        "overwrite",
+        "dryRun",
+        "importOrder",
+        "expectedPlanHash",
+        "confirm",
+        "expectedProjectFile",
+        "maxItems"
       ],
-      "description": "[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportPlcBlocksDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] Same-release XML directory import. Use dryRun=true to review each create/replace action in planHash. overwrite=false apply without a plan retains the existing None import route. Apply requires importOrder, expectedPlanHash, confirm and exact expectedProjectFile. overwrite=true exports every replacement before imports; failure stops and restores known earlier replacements in dependency order. Unknown native outcomes retain recoveryDirectory and require session reset. No compile/save or retry. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": null
     },
     {
@@ -1985,23 +2010,6 @@
       "example": null
     },
     {
-      "name": "ImportProjectTexts",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Project",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ImportProjectTextsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "filePath",
-        "updateSourceLanguage",
-        "dryRun"
-      ],
-      "description": "[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
-      "example": null
-    },
-    {
       "name": "ListCommunicationConnections",
       "layer": "L2",
       "category": "hardware",
@@ -2017,6 +2025,26 @@
         "limit"
       ],
       "description": "[L2][Hardware][READ] List Siemens.Engineering.HW.CommunicationConnections (S7/ISO/ISO-on-TCP/TCP/UDP/FDL/PtP/HMI) owned by one exact hardware object (devicePath/itemPath name arrays, e.g. the CPU). Scalar properties (LocalConnectionName, TSAPs, addresses, ports) plus local/partner target and interface names; offset/limit pagination. NotSupported on TIA V20. Nothing modified.",
+      "example": null
+    },
+    {
+      "name": "ManagePlcUserGroup",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManagePlcUserGroupV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "family",
+        "groupPath",
+        "action",
+        "newName",
+        "dryRun"
+      ],
+      "description": "[L2][PLC-Software][WRITE] Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed row). groupPath is relative to the family's root. newName is one segment for rename. Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors. Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -2043,26 +2071,18 @@
       "example": null
     },
     {
-      "name": "ListDeviceItemChannels",
-      "layer": "L2",
+      "name": "ListDevices",
+      "layer": "L1",
       "category": "hardware",
       "domain": "Hardware",
       "operation": "READ",
-      "operationInferred": false,
-      "method": "ListDeviceItemChannels",
+      "operationInferred": true,
+      "method": "ListDevicesV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "devicePath",
-        "itemPath",
-        "channelType",
-        "channelIoType",
-        "channelNumber",
-        "attributeNames",
-        "offset",
-        "limit",
-        "includeLinkedTags"
+        "includePlcSoftware"
       ],
-      "description": "[L2][Hardware][READ] DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNames (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. includeLinkedTags=true adds linkedTags per channel (PlcTagProvider.GetLinkedTags, V21: tag name, data type, logical address, tag table; V20 answers null with a note).",
+      "description": "[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute.",
       "example": null
     },
     {
@@ -2110,6 +2130,19 @@
         "softwarePath"
       ],
       "description": "[L2][Category:PLC-TechnologyObjects][PreCondition:ConnectPortal+OpenProject] List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc. - root group AND user folders (Folder = '' for the root). Returns each TO's Name, type (OfSystemLibElement), and firmware version (OfSystemLibVersion). Use this to discover TO names before ExportTechnologyObject. No tool returns axis/TO parameter values directly — export the TO with ExportTechnologyObject and read the XML file. TOs are stored as TechnologicalInstanceDB instances in the TechnologicalObjectGroup. Current native policy; V4 safety behavior is not yet accepted.",
+      "example": null
+    },
+    {
+      "name": "ListStagedImportFiles",
+      "layer": "L1",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ListStagedImportFiles",
+      "returnType": "CallToolResult",
+      "parameters": [],
+      "description": "[L1][PLC-Software][READ] List retained staged import batches in this MCP session, including absolute TIA-machine paths and SHA-256. No TIA calls or file writes.",
       "example": null
     },
     {
@@ -2498,35 +2531,27 @@
       "example": "{\"devicePath\":[\"\\u003Cexact drive device\\u003E\"],\"itemPath\":[\"\\u003Cexact drive/control unit item\\u003E\"],\"includeTelegrams\":false,\"includeFunctions\":false,\"includeTechnologyExtensions\":false,\"includeDcc\":false}"
     },
     {
-      "name": "ListDevices",
-      "layer": "L1",
+      "name": "ListDeviceItemChannels",
+      "layer": "L2",
       "category": "hardware",
       "domain": "Hardware",
       "operation": "READ",
-      "operationInferred": true,
-      "method": "ListDevicesV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "includePlcSoftware"
-      ],
-      "description": "[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: ConnectPortal + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like CreateDevice or SetDeviceItemAttribute.",
-      "example": null
-    },
-    {
-      "name": "ListTransferRoutes",
-      "layer": "L2",
-      "category": "plc-online",
-      "domain": "PLC-Online",
-      "operation": "READ",
       "operationInferred": false,
-      "method": "ReadTransferRoutesV4",
+      "method": "ListDeviceItemChannels",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "maxItems"
+        "devicePath",
+        "itemPath",
+        "channelType",
+        "channelIoType",
+        "channelNumber",
+        "attributeNames",
+        "offset",
+        "limit",
+        "includeLinkedTags"
       ],
-      "description": "[L2][PLC-Online][READ] The PG/PC route tree of the exact PLC's DownloadProvider.Configuration: Modes (ConfigurationMode.Name) -> PcInterfaces (Name, Number, Addresses, Subnets with Addresses and Gateways, TargetInterfaces with Addresses), plus availability of RHDownloadProvider / RHOnlineProvider (R/H systems, with PrimaryState/BackupState), OnlineProvider (State) and CompileProvider. Nothing is applied or changed; use it to pick pgPcInterface/targetIpAddress for DownloadPlc / ConnectOnlinePlc. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\"}"
+      "description": "[L2][Hardware][READ] DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNames (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. includeLinkedTags=true adds linkedTags per channel (PlcTagProvider.GetLinkedTags, V21: tag name, data type, logical address, tag table; V20 answers null with a note).",
+      "example": null
     },
     {
       "name": "ImportOpcUaInterface",
@@ -2580,6 +2605,24 @@
         "dryRun"
       ],
       "description": "[L2][Project][WRITE] Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness.",
+      "example": null
+    },
+    {
+      "name": "SetOpcUaInterfaceEnabled",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-OpcUA",
+      "operation": "WRITE",
+      "operationInferred": true,
+      "method": "SetOpcUaInterfaceEnabledV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "interfaceName",
+        "enabled",
+        "interfaceType"
+      ],
+      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -2779,6 +2822,22 @@
       "example": null
     },
     {
+      "name": "SetPlcCpuSettings",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "WRITE",
+      "operationInferred": true,
+      "method": "SetPlcCpuSettingsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "cpuPath",
+        "settings"
+      ],
+      "description": "[L2][Hardware] Set CPU common settings using exactAttributes object only after reading exact attribute names from GetDeviceItemInfo/GetDeviceItemNetworkInfo. The tool writes only those exact attributes, rejects missing/non-writable attributes, and returns readback evidence.",
+      "example": null
+    },
+    {
       "name": "SaveExportContent",
       "layer": "L1",
       "category": "session",
@@ -2797,43 +2856,21 @@
       "example": "{\"exportId\":\"\\u003CexportId from response\\u003E\",\"outputPath\":\"C:\\\\Temp\\\\blocks.json\"}"
     },
     {
-      "name": "SetOpcUaInterfaceEnabled",
+      "name": "RunToolTransaction",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-OpcUA",
+      "category": "project",
+      "domain": "Project",
       "operation": "WRITE",
-      "operationInferred": true,
-      "method": "SetOpcUaInterfaceEnabledV4",
+      "operationInferred": false,
+      "method": "RunToolTransactionV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "interfaceName",
-        "enabled",
-        "interfaceType"
+        "calls",
+        "text",
+        "confirmChange",
+        "dryRun"
       ],
-      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetPlcOpcUaConfiguration → SetOpcUaInterfaceEnabled → DownloadPlc. Current native policy; V4 safety behavior is not yet accepted.",
-      "example": null
-    },
-    {
-      "name": "SamplePlcLiveValuesS7",
-      "layer": "L2",
-      "category": "runtime",
-      "domain": "Online-Monitoring",
-      "operation": "ONLINE",
-      "operationInferred": true,
-      "method": "SamplePlcLiveValuesS7V4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "ip",
-        "items",
-        "intervalMs",
-        "durationMs",
-        "maxSamples",
-        "rack",
-        "slot",
-        "expectModuleContains"
-      ],
-      "description": "[L2][Online-Monitoring] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as GetPlcLiveValuesS7.",
+      "description": "[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save.",
       "example": null
     },
     {
@@ -3021,55 +3058,25 @@
       "example": "{\"expectedPlcSoftwarePath\":\"PLC_1\",\"expectedHmiSoftwarePath\":\"HMI_RT_1\",\"connectIfNeeded\":false,\"includeProjectTree\":false,\"inspectPortalProcesses\":false}"
     },
     {
-      "name": "RetrieveProjectArchive",
+      "name": "SamplePlcLiveValuesS7",
       "layer": "L2",
-      "category": "project",
-      "domain": "Project",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "RetrieveProjectArchiveV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "archivePath",
-        "destinationDirectory",
-        "upgrade",
-        "dryRun"
-      ],
-      "description": "[L2][Project][WRITE] Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
-      "example": null
-    },
-    {
-      "name": "RunToolTransaction",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Project",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "RunToolTransactionV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "calls",
-        "text",
-        "confirmChange",
-        "dryRun"
-      ],
-      "description": "[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save.",
-      "example": null
-    },
-    {
-      "name": "SetPlcCpuSettings",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "WRITE",
+      "category": "runtime",
+      "domain": "Online-Monitoring",
+      "operation": "ONLINE",
       "operationInferred": true,
-      "method": "SetPlcCpuSettingsV4",
+      "method": "SamplePlcLiveValuesS7V4",
       "returnType": "CallToolResult",
       "parameters": [
-        "cpuPath",
-        "settings"
+        "ip",
+        "items",
+        "intervalMs",
+        "durationMs",
+        "maxSamples",
+        "rack",
+        "slot",
+        "expectModuleContains"
       ],
-      "description": "[L2][Hardware] Set CPU common settings using exactAttributes object only after reading exact attribute names from GetDeviceItemInfo/GetDeviceItemNetworkInfo. The tool writes only those exact attributes, rejects missing/non-writable attributes, and returns readback evidence.",
+      "description": "[L2][Online-Monitoring] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as GetPlcLiveValuesS7.",
       "example": null
     },
     {
@@ -3103,6 +3110,26 @@
         "enable"
       ],
       "description": "[L2][Category:Hardware][WRITE][PreCondition:ConnectPortal+OpenProject] Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads). This is a hardware-configuration change — you must run DownloadPlc afterwards for it to take effect on the live CPU. Returns before/after readback evidence. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": null
+    },
+    {
+      "name": "SetPlcUnitObjectAccess",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "SetPlcUnitObjectAccessV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "unitName",
+        "objectKind",
+        "objectPath",
+        "access",
+        "dryRun"
+      ],
+      "description": "[L2][PLC-Software][WRITE] Publish/unpublish a block or PLC type inside an exact software unit using official Access attribute. access=Published/Unpublished. objectPath includes nested groups relative to the unit's block/type root; OB publication is refused by native API. dryRun=true default; writes require Offline and readback. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -3376,6 +3403,22 @@
       "example": null
     },
     {
+      "name": "StageImportFiles",
+      "layer": "L1",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "StageImportFiles",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "files",
+        "dryRun"
+      ],
+      "description": "[L1][PLC-Software][FILE] Stage caller text on the TIA machine under the installed bundle staging/session folder next to runtime. files contains fileName, kind and content; kinds scl, simaticml, tagtable, udt, and V20/V21 s7dcl/s7res (V20 requires pairs; V21 resources are optional). ASCII without BOM for external sources, UTF-8 Document XML otherwise. Preview by default, dryRun=false requires Workbench approval when enabled. Up to 128 files/32 MiB per session, 4 MiB per file, no overwrite or caller destination. Returns directory, file paths and SHA-256 for reviewed imports. Import/generation requires separate calls. Use ListStagedImportFiles and CleanupStagedImportFiles before ending the session.",
+      "example": null
+    },
+    {
       "name": "ShowObjectInEditor",
       "layer": "L2",
       "category": "project",
@@ -3596,23 +3639,21 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"tableName\":\"MCP_W/MCP_WT\",\"address\":\"%M0.0\",\"modifyValue\":\"TRUE\",\"trigger\":\"OnceOnlyAtStart\"}"
     },
     {
-      "name": "SetPlcUnitObjectAccess",
+      "name": "RetrieveProjectArchive",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
+      "category": "project",
+      "domain": "Project",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "SetPlcUnitObjectAccessV4",
+      "method": "RetrieveProjectArchiveV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "unitName",
-        "objectKind",
-        "objectPath",
-        "access",
+        "archivePath",
+        "destinationDirectory",
+        "upgrade",
         "dryRun"
       ],
-      "description": "[L2][PLC-Software][WRITE] Publish/unpublish a block or PLC type inside an exact software unit using official Access attribute. access=Published/Unpublished. objectPath includes nested groups relative to the unit's block/type root; OB publication is refused by native API. dryRun=true default; writes require Offline and readback. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.",
+      "description": "[L2][Project][WRITE] Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.",
       "example": null
     },
     {
@@ -3628,23 +3669,6 @@
         "confirmRestart"
       ],
       "description": "[L0][Diagnostics][WRITE] Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or replays a write. After confirmation, explicitly connect to the intended project again. Does not kill TIA; an interrupted native operation can have an unknown outcome.",
-      "example": null
-    },
-    {
-      "name": "ManageProjectCompilationSettings",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Project",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageProjectCompilationSettingsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "action",
-        "properties",
-        "dryRun"
-      ],
-      "description": "[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -3671,20 +3695,43 @@
       "example": null
     },
     {
-      "name": "RenderPlcVisualDiff",
+      "name": "RepairAndReimportPlcBlock",
       "layer": "L2",
-      "category": "project",
-      "domain": "Validation",
-      "operation": "FILE",
-      "operationInferred": false,
-      "method": "RenderPlcVisualDiffV4",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": true,
+      "method": "RepairAndReimportBlockV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "leftFilePath",
-        "rightFilePath",
-        "outputPath"
+        "softwarePath",
+        "importPath",
+        "groupPath",
+        "compileAfter"
       ],
-      "description": "[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download.",
+      "description": "[L2][PLC-Software]Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). Current native policy; V4 safety behavior is not yet accepted.",
+      "example": null
+    },
+    {
+      "name": "ManageUnifiedEvent",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Unified",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageUnifiedEventV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "objectPath",
+        "eventType",
+        "action",
+        "propertyName",
+        "scriptProperties",
+        "expectedToken",
+        "dryRun"
+      ],
+      "description": "[L2][HMI-Unified][WRITE] Exact screen/control event or property event read/create/update/delete. Object JSON path. Updates preserve omitted script fields. Mutations need preview token. No Script SyntaxCheck, script execution, save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": null
     },
     {
@@ -3984,28 +4031,6 @@
       "example": null
     },
     {
-      "name": "ManageUnifiedEvent",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Unified",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageUnifiedEventV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "objectPath",
-        "eventType",
-        "action",
-        "propertyName",
-        "scriptProperties",
-        "expectedToken",
-        "dryRun"
-      ],
-      "description": "[L2][HMI-Unified][WRITE] Exact screen/control event or property event read/create/update/delete. Object JSON path. Updates preserve omitted script fields. Mutations need preview token. No Script SyntaxCheck, script execution, save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": null
-    },
-    {
       "name": "ManageStartdriveParameter",
       "layer": "L2",
       "category": "hardware",
@@ -4026,6 +4051,34 @@
       ],
       "description": "[L2][Hardware][WRITE] dryRun=true still performs native reads; never replay a known failing parameter after TIA/channel loss. Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read follows Parameters.Find(name).Value for BICO, using ReadParameters only when absent in Parameters; returns name, parameterClass and value (including BICO source). Reads the selected Value once without expanding bits, limits or enum tables; use GetDriveParameters for an explicitly requested detailed view. A reported p2051[0] TIA crash remains pending native retest; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with value {\"bicoSource\":\"r2050[1]\"} (Value = Parameters.Find(source); bit sources such as r722.0 resolve through the parent's Bits). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Real project (G120C, 2.7.39): p1120[0] 10 -> 11 -> 10 and p1070[0] <- r2050[1] verified. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive. Current native policy; V4 native acceptance is pending.",
       "example": "{\"devicePath\":[\"\\u003Cexact drive device\\u003E\"],\"itemPath\":[\"\\u003Cexact drive/control unit item\\u003E\"],\"driveObjectNumber\":0,\"parameter\":\"p1070[0]\",\"driveObjectIndex\":0,\"action\":\"read\",\"dryRun\":true}"
+    },
+    {
+      "name": "ManageSivarcTableRule",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageSivarcTableRuleV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "category",
+        "tablePath",
+        "rulePath",
+        "kind",
+        "action",
+        "properties",
+        "references",
+        "deviceSelection",
+        "deviceNames",
+        "libraryName",
+        "masterCopyPath",
+        "createOption",
+        "confirmDelete",
+        "dryRun"
+      ],
+      "description": "[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSivarcRule supports arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). properties holds typed scalars (Name, Comment, Condition, ConditionOperator None|And|Equal|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). references assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} | {kind:masterCopy|libraryType|masterCopyFolder|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null is passed through, but TIA refuses it for ProgramBlock ('may not be null', 2.7.39 real project) - assign another block instead}. deviceSelection {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNames reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves. Current native policy; V4 native acceptance is pending.",
+      "example": null
     },
     {
       "name": "ManageSivarcScreenLayout",
@@ -4300,34 +4353,6 @@
       "example": null
     },
     {
-      "name": "ManageSivarcTableRule",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageSivarcTableRuleV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "category",
-        "tablePath",
-        "rulePath",
-        "kind",
-        "action",
-        "properties",
-        "references",
-        "deviceSelection",
-        "deviceNames",
-        "libraryName",
-        "masterCopyPath",
-        "createOption",
-        "confirmDelete",
-        "dryRun"
-      ],
-      "description": "[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSivarcRule supports arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). properties holds typed scalars (Name, Comment, Condition, ConditionOperator None|And|Equal|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). references assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} | {kind:masterCopy|libraryType|masterCopyFolder|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null is passed through, but TIA refuses it for ProgramBlock ('may not be null', 2.7.39 real project) - assign another block instead}. deviceSelection {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNames reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves. Current native policy; V4 native acceptance is pending.",
-      "example": null
-    },
-    {
       "name": "ManageUnifiedHmiGroup",
       "layer": "L2",
       "category": "hmi",
@@ -4345,6 +4370,23 @@
         "dryRun"
       ],
       "description": "[L2][HMI-Unified][WRITE] Create, rename or deleteEmpty a user folder. family=screens/tags; groupPath is an exact relative nested path. newName is one segment for rename. Default dryRun=true. Missing parents created, root/nonempty deletion refused. No save/compile/download. Unified script folders are not exposed by the supported API. Current native policy; V4 safety behavior is not yet accepted.",
+      "example": null
+    },
+    {
+      "name": "ManageProjectCompilationSettings",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Project",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageProjectCompilationSettingsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "action",
+        "properties",
+        "dryRun"
+      ],
+      "description": "[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -4370,23 +4412,44 @@
       "example": null
     },
     {
-      "name": "ManageUnifiedLoggingTag",
+      "name": "ManageUnifiedObjectParts",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI-Unified",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageUnifiedLoggingTagV4",
+      "method": "ManageUnifiedObjectPartsV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "tagPath",
+        "objectPath",
         "action",
-        "name",
+        "collectionProperty",
+        "partName",
+        "partIndex",
+        "partKind",
         "properties",
+        "confirmDelete",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Read/create/update/delete LoggingTags under exact ordinary Unified tag. DataLog name validated. Public scalar configuration, TimeSpan c strings, no implicit save/compile/download. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Unified][WRITE] UI.Parts sub-objects (trend areas, trends, axes, thresholds, columns, selection items, help lines, scaling entries, pressed-state tags...) of one exact object path. read without collectionProperty lists collections; read with exact collectionProperty lists parts with partIndex. create uses the native Create(string)/Create() of that composition (partName only for named parts; columns/thresholds have no Create). update writes public scalar/Color (#AARRGGBB) properties via properties; delete needs exact partName or partIndex plus confirmDelete=true. Default preview; readback verified; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.",
+      "example": null
+    },
+    {
+      "name": "RenderPlcVisualDiff",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Validation",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "RenderPlcVisualDiffV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "leftFilePath",
+        "rightFilePath",
+        "outputPath"
+      ],
+      "description": "[L2][Validation][FILE] Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download.",
       "example": null
     },
     {
@@ -4858,45 +4921,45 @@
       "example": null
     },
     {
-      "name": "ManageUnifiedObjectParts",
+      "name": "ManageUnifiedLoggingTag",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI-Unified",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageUnifiedObjectPartsV4",
+      "method": "ManageUnifiedLoggingTagV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "objectPath",
+        "tagPath",
         "action",
-        "collectionProperty",
-        "partName",
-        "partIndex",
-        "partKind",
+        "name",
         "properties",
-        "confirmDelete",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] UI.Parts sub-objects (trend areas, trends, axes, thresholds, columns, selection items, help lines, scaling entries, pressed-state tags...) of one exact object path. read without collectionProperty lists collections; read with exact collectionProperty lists parts with partIndex. create uses the native Create(string)/Create() of that composition (partName only for named parts; columns/thresholds have no Create). update writes public scalar/Color (#AARRGGBB) properties via properties; delete needs exact partName or partIndex plus confirmDelete=true. Default preview; readback verified; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.",
+      "description": "[L2][HMI-Unified][WRITE] Read/create/update/delete LoggingTags under exact ordinary Unified tag. DataLog name validated. Public scalar configuration, TimeSpan c strings, no implicit save/compile/download. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": null
     },
     {
-      "name": "RepairAndReimportPlcBlock",
+      "name": "WritePlcWebVars",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
-      "operationInferred": true,
-      "method": "RepairAndReimportBlockV4",
+      "category": "runtime",
+      "domain": "Online-Monitoring",
+      "operation": "ONLINE-WRITE",
+      "operationInferred": false,
+      "method": "WritePlcWebVarsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "importPath",
-        "groupPath",
-        "compileAfter"
+        "host",
+        "username",
+        "password",
+        "writes",
+        "ignoreCertificateErrors",
+        "timeoutMs",
+        "confirmWrite",
+        "dryRun"
       ],
-      "description": "[L2][PLC-Software]Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). Current native policy; V4 safety behavior is not yet accepted.",
+      "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": null
     },
     {
@@ -4918,30 +4981,6 @@
         "top"
       ],
       "description": "[L2][HMI-Library] Import one MasterCopy from a TIA global library into a real Unified HMI screen and return ScreenItems readback evidence. This modifies the project, must be tried in a temporary project first, and reports failure unless the imported item is visible after readback. Current native policy; V4 native acceptance is pending.",
-      "example": null
-    },
-    {
-      "name": "ImportLibraryTypeDocuments",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Library",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ImportLibraryTypeDocumentsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "filePath",
-        "folderPath",
-        "libraryName",
-        "importOptions",
-        "typePath",
-        "createOptions",
-        "targetSoftwarePath",
-        "targetGroupKind",
-        "targetGroupPath",
-        "dryRun"
-      ],
-      "description": "[L2][Library][WRITE] Native library document import (SimaticML / WinCC ML / S7DCL / SCL / STL / UDT / NVT): without typePath, LibraryTypeComposition.CreateFromDocuments creates a new type with an InWork default version in the exact library folder; with typePath, LibraryTypeVersionComposition.CreateFromDocuments adds a version to that type (createOptions None fails natively if an in-work version exists, Override replaces it). STEP 7 documents need targetSoftwarePath + targetGroupKind (blocks/types) + targetGroupPath as target environment. importOptions None/SkipInactiveCultures/ActivateInactiveCultures. Returns TransferResultState, messages and the created type/version. Project library only (global libraries throw natively); default preview; no automatic save. Current native policy; V4 native acceptance is pending.",
       "example": null
     },
     {
@@ -6030,25 +6069,6 @@
       "example": null
     },
     {
-      "name": "ExportAlarmInstanceTexts",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Alarms",
-      "operation": "FILE",
-      "operationInferred": true,
-      "method": "ExportAlarmInstanceTextsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "exportPath",
-        "includeInfoText",
-        "includeAdditionalTexts",
-        "includeAlarmClass"
-      ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx). Current native policy; V4 safety behavior is not yet accepted.",
-      "example": null
-    },
-    {
       "name": "ConnectPortal",
       "layer": "L1",
       "category": "session",
@@ -6065,6 +6085,28 @@
       "example": "{\"projectName\":\"\\u9879\\u76EE1\"}"
     },
     {
+      "name": "ConnectOnlinePlc",
+      "layer": "L1",
+      "category": "plc-online",
+      "domain": "PLC-Online",
+      "operation": "ONLINE",
+      "operationInferred": false,
+      "method": "GoOnlineV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "ipAddress",
+        "password",
+        "userName",
+        "userType",
+        "rhTarget",
+        "pgPcInterface",
+        "trustDeviceCertificate"
+      ],
+      "description": "[L1][Category:PLC-Online][ONLINE][PreCondition:ConnectPortal+OpenProject] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project's hardware configuration. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and OnlineProvider.GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=true (default) answers Trusted - the same prompt TIA shows in the UI - and Meta.tlsVerification records PlcName / VerificationInfo / the selection; with false the connection is refused by TIA ('The device is not trusted'). Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"}"
+    },
+    {
       "name": "ConnectIsolatedPortal",
       "layer": "L1",
       "category": "session",
@@ -6075,6 +6117,21 @@
       "returnType": "CallToolResult",
       "parameters": [],
       "description": "[L1][Portal] Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": null
+    },
+    {
+      "name": "BuildPlcTagTable",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Builders",
+      "operation": "OFFLINE",
+      "operationInferred": false,
+      "method": "BuildPlcTagTableXmlV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "tagTable"
+      ],
+      "description": "[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC tag table XML document from structured JSON. Input: {tableName,tags:[{name,dataTypeName,logicalAddress}]}. It only returns XML; it does not connect to TIA Portal, import tag tables, write files, or modify projects.",
       "example": null
     },
     {
@@ -6089,7 +6146,7 @@
       "parameters": [
         "path"
       ],
-      "description": "[L2][PLC-Builders]Offline-only helper: extract a PLC symbol manifest from PLC tag table and GlobalDB XML files or directories. It does not connect to TIA Portal or modify projects.",
+      "description": "[L2][PLC-Builders] Offline-only helper: extract PLC tag and GlobalDB declarations from XML files or directories. Empty tag tables are valid, tag comments are ignored, user constants include their raw value, and system constants are skipped with a warning. It does not connect to TIA Portal or modify projects.",
       "example": null
     },
     {
@@ -6270,21 +6327,6 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"kind\":\"fc\",\"dryRun\":true,\"spec\":{\"blockName\":\"FC_DryRun\",\"blockNumber\":12,\"inputs\":[{\"name\":\"Start\",\"datatype\":\"Bool\"}],\"outputs\":[{\"name\":\"Run\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"if\",\"condition\":\"Start\"},{\"op\":\"assign\",\"target\":\"Run\",\"indent\":2,\"literalValue\":\"TRUE\"},{\"op\":\"endif\"}]}}}"
     },
     {
-      "name": "BuildPlcTagTable",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Builders",
-      "operation": "OFFLINE",
-      "operationInferred": false,
-      "method": "BuildPlcTagTableXmlV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "tagTable"
-      ],
-      "description": "[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC tag table XML document from structured JSON. Input: {tableName,tags:[{name,dataTypeName,logicalAddress}]}. It only returns XML; it does not connect to TIA Portal, import tag tables, write files, or modify projects.",
-      "example": null
-    },
-    {
       "name": "BindUnifiedHmiTagDynamization",
       "layer": "L2",
       "category": "hmi",
@@ -6304,6 +6346,24 @@
         "address"
       ],
       "description": "[L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. Current native policy; V4 safety behavior is not yet accepted.",
+      "example": null
+    },
+    {
+      "name": "BindUnifiedHmiButtonPressedTag",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Unified",
+      "operation": "WRITE",
+      "operationInferred": true,
+      "method": "BindUnifiedHmiButtonPressedTagV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "hmiSoftwarePath",
+        "screenName",
+        "buttonName",
+        "tagName"
+      ],
+      "description": "[L2][HMI-Unified]Bind a Unified HMI button PressedStateTags entry to an HMI tag (momentary press behavior, best-effort). Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -6512,24 +6572,6 @@
       "example": null
     },
     {
-      "name": "BindUnifiedHmiButtonPressedTag",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Unified",
-      "operation": "WRITE",
-      "operationInferred": true,
-      "method": "BindUnifiedHmiButtonPressedTagV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "hmiSoftwarePath",
-        "screenName",
-        "buttonName",
-        "tagName"
-      ],
-      "description": "[L2][HMI-Unified]Bind a Unified HMI button PressedStateTags entry to an HMI tag (momentary press behavior, best-effort). Current native policy; V4 safety behavior is not yet accepted.",
-      "example": null
-    },
-    {
       "name": "BuildPlcUdt",
       "layer": "L2",
       "category": "plc",
@@ -6543,6 +6585,25 @@
         "outputReleaseKey"
       ],
       "description": "[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.",
+      "example": null
+    },
+    {
+      "name": "ExportAlarmInstanceTexts",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Alarms",
+      "operation": "FILE",
+      "operationInferred": true,
+      "method": "ExportAlarmInstanceTextsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "exportPath",
+        "includeInfoText",
+        "includeAdditionalTexts",
+        "includeAlarmClass"
+      ],
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx). Current native policy; V4 safety behavior is not yet accepted.",
       "example": null
     },
     {
@@ -6562,18 +6623,19 @@
       "example": "{\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true}"
     },
     {
-      "name": "BuildReleaseDiagnosticReport",
+      "name": "BuildReleaseHandoffArtifacts",
       "layer": "L2",
       "category": "session",
       "domain": "Reports",
-      "operation": "OFFLINE",
+      "operation": "FILE",
       "operationInferred": true,
-      "method": "BuildReleaseDiagnosticReportV4",
+      "method": "RebuildReleaseHandoffArtifactsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "offlineReleaseSuiteJsonPath"
+        "offlineReleaseSuiteJsonPath",
+        "outputDirectory"
       ],
-      "description": "[L2][Reports]Build an offline diagnostic report from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.",
+      "description": "[L2][Reports]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal.",
       "example": null
     },
     {
@@ -6834,6 +6896,22 @@
       "example": "{\"olderThanHours\":0}"
     },
     {
+      "name": "CleanupStagedImportFiles",
+      "layer": "L1",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "CleanupStagedImportFiles",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "batchId",
+        "dryRun"
+      ],
+      "description": "[L1][PLC-Software][FILE] Delete one server-owned staged batch selected by batchId from this session's list. Preview by default; dryRun=false requires Workbench approval when enabled. No caller filesystem path or recursive deletion. Import recovery exports are separate and retained.",
+      "example": null
+    },
+    {
       "name": "CheckProductUpdate",
       "layer": "L0",
       "category": "session",
@@ -7027,42 +7105,43 @@
       "example": null
     },
     {
-      "name": "BuildReleaseHandoffArtifacts",
+      "name": "BuildReleaseDiagnosticReport",
       "layer": "L2",
       "category": "session",
       "domain": "Reports",
-      "operation": "FILE",
+      "operation": "OFFLINE",
       "operationInferred": true,
-      "method": "RebuildReleaseHandoffArtifactsV4",
+      "method": "BuildReleaseDiagnosticReportV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "offlineReleaseSuiteJsonPath",
-        "outputDirectory"
+        "offlineReleaseSuiteJsonPath"
       ],
-      "description": "[L2][Reports]Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal.",
+      "description": "[L2][Reports]Build an offline diagnostic report from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.",
       "example": null
     },
     {
-      "name": "ConnectOnlinePlc",
-      "layer": "L1",
-      "category": "plc-online",
-      "domain": "PLC-Online",
-      "operation": "ONLINE",
+      "name": "ImportLibraryTypeDocuments",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Library",
+      "operation": "WRITE",
       "operationInferred": false,
-      "method": "GoOnlineV4",
+      "method": "ImportLibraryTypeDocumentsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "ipAddress",
-        "password",
-        "userName",
-        "userType",
-        "rhTarget",
-        "pgPcInterface",
-        "trustDeviceCertificate"
+        "filePath",
+        "folderPath",
+        "libraryName",
+        "importOptions",
+        "typePath",
+        "createOptions",
+        "targetSoftwarePath",
+        "targetGroupKind",
+        "targetGroupPath",
+        "dryRun"
       ],
-      "description": "[L1][Category:PLC-Online][ONLINE][PreCondition:ConnectPortal+OpenProject] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project's hardware configuration. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and OnlineProvider.GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=true (default) answers Trusted - the same prompt TIA shows in the UI - and Meta.tlsVerification records PlcName / VerificationInfo / the selection; with false the connection is refused by TIA ('The device is not trusted'). Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"}"
+      "description": "[L2][Library][WRITE] Native library document import (SimaticML / WinCC ML / S7DCL / SCL / STL / UDT / NVT): without typePath, LibraryTypeComposition.CreateFromDocuments creates a new type with an InWork default version in the exact library folder; with typePath, LibraryTypeVersionComposition.CreateFromDocuments adds a version to that type (createOptions None fails natively if an in-work version exists, Override replaces it). STEP 7 documents need targetSoftwarePath + targetGroupKind (blocks/types) + targetGroupPath as target environment. importOptions None/SkipInactiveCultures/ActivateInactiveCultures. Returns TransferResultState, messages and the created type/version. Project library only (global libraries throw natively); default preview; no automatic save. Current native policy; V4 native acceptance is pending.",
+      "example": null
     },
     {
       "name": "ExportAlarmTextLists",
@@ -7078,22 +7157,6 @@
         "exportPath"
       ],
       "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted.",
-      "example": null
-    },
-    {
-      "name": "ExportDeviceAml",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "FILE",
-      "operationInferred": true,
-      "method": "ExportDeviceAmlV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "devicePath",
-        "exportPath"
-      ],
-      "description": "[L2][Hardware] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be a folder (file named <device>.aml) or a full .aml path. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.",
       "example": null
     },
     {
@@ -8489,7 +8552,7 @@
         "regexName",
         "preservePath"
       ],
-      "description": "[L2][PLC-Software]Export types from the plc software to path Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software] Export all (or regexName-filtered) PLC types as SimaticML XML into an existing directory; exportPath must already exist. This XML export does not create a new directory. Use the document export tools for a new directory. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": null
     },
     {
@@ -8584,7 +8647,7 @@
         "regexName",
         "preservePath"
       ],
-      "description": "[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments; a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software] Export all (or regexName-filtered) blocks to an existing directory as SimaticML XML; exportPath must already exist. This XML export does not create a new directory. Pick the right tool: readable SCL/.s7dcl text → ExportPlcBlocksDocuments (which requires a new directory); a single block → ExportPlcBlock. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"regexName\":\"\"}"
     },
     {
@@ -8714,25 +8777,19 @@
       "example": null
     },
     {
-      "name": "WritePlcWebVars",
+      "name": "ExportDeviceAml",
       "layer": "L2",
-      "category": "runtime",
-      "domain": "Online-Monitoring",
-      "operation": "ONLINE-WRITE",
-      "operationInferred": false,
-      "method": "WritePlcWebVarsV4",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "FILE",
+      "operationInferred": true,
+      "method": "ExportDeviceAmlV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "host",
-        "username",
-        "password",
-        "writes",
-        "ignoreCertificateErrors",
-        "timeoutMs",
-        "confirmWrite",
-        "dryRun"
+        "devicePath",
+        "exportPath"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Hardware] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be a folder (file named <device>.aml) or a full .aml path. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.",
       "example": null
     },
     {

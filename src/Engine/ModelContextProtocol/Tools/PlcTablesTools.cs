@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using TiaMcpServer.Siemens;
+using TiaMcpServer.Siemens.Services;
 
 
 using TiaMcpServer.Siemens.Services;
@@ -129,7 +130,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
             [Description("importPath: full file path of PLC tag table XML")] string importPath)
-            => PlcToolContract.Run("ImportPlcTagTable", true, true, () => ImportPlcTagTable(softwarePath, folderPath, importPath));
+            => PlcSingleImportRecovery.Run(_session, "ImportPlcTagTable", softwarePath, folderPath, importPath, "TagTable",
+                () => PlcToolContract.Run("ImportPlcTagTable", true, true, () => ImportPlcTagTable(softwarePath, folderPath, importPath)));
 
         public ResponseMessage ImportPlcTagTable(
             string softwarePath,

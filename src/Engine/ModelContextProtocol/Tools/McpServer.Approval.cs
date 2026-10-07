@@ -76,12 +76,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return TargetFailure(name, error, false); }
             }
             var args = JsonNode.Parse(arguments)!.AsObject();
+            if (HostBehavior.LegacyBatchImport(name, args)) return null;
             bool candidate = BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || candidate)) return null;
             string? identity = null; ApprovalBindingIdentity(ref identity);
             AuditInvocation.RecordCurrentRequest(PendingApproval.Create("engine", ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId).PlanHash);
             CallToolResult? result = null;
+            var batchRefusal = HostBehavior.BatchApplyRefusal(name, args);
+            if (batchRefusal != null) result = V4Reject(name, batchRefusal);
             if (candidate)
             {
                 string? missing = HostBehavior.MissingApplyArgument(args,
@@ -100,6 +103,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 { result = TargetFailure(name, ex, false); }
             }
             var blocked = HostBehavior.PreviewApplyRefusal(ResultBody(result));
+            blocked ??= HostBehavior.BatchPreviewRefusal(name, JsonNode.Parse(arguments)!.AsObject(), ResultBody(result));
             if (blocked != null) result = V4Reject(name, blocked);
             if (ResultSucceeded(ResultBody(result)) == true) return PreviewHasNoEffect(ResultBody(result)) ? result : null;
             var body = ApprovalPrecheck.Mark(ResultBody(result)!, AuditInvocation.CurrentRequestId);

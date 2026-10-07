@@ -4,6 +4,8 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using TiaMcp.Logic.ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
@@ -55,8 +57,12 @@ namespace TiaMcpServer.Tests
             public static CallToolResult Import(string softwarePath, string groupPath, string filePath, bool dryRun = true)
                 => McpServer.V4Result("ImportPlcExternalSource", new JsonObject());
             [McpServerTool(Name = "ImportPlcBlocksFromDirectory"), ToolClassification("L1", "PLC-Software", "WRITE", batchWrite: true)]
-            public static CallToolResult ImportDirectory(string softwarePath, string groupPath, string dir, bool dryRun = true)
-                => McpServer.V4Result("ImportPlcBlocksFromDirectory", new JsonObject());
+            public static CallToolResult ImportDirectory(string softwarePath, string groupPath, string dir, bool dryRun = true, bool overwrite = false,
+                string[]? importOrder = null, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
+            {
+                if (dryRun) previews++; else writes++;
+                return McpServer.V4Result("ImportPlcBlocksFromDirectory", new JsonObject { ["projectFile"] = "C:/fixture.ap19", ["planHash"] = new string('a', 64) });
+            }
             [McpServerTool(Name = "ListPlcTags"), ToolClassification("L1", "PLC-Software", "READ")]
             public static CallToolResult Read(string plc, string table)
             {
@@ -69,6 +75,7 @@ namespace TiaMcpServer.Tests
 
         public static string Run(string value)
         {
+            if (value.StartsWith("staging-", StringComparison.Ordinal)) return RunStaging(value);
             using var fixture = new InfrastructureContractsTests();
             scenario = value; writes = previews = waits = 0;
             McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(Probe) }), () => false, new HashSet<string>());
@@ -84,7 +91,7 @@ namespace TiaMcpServer.Tests
                 JsonNode Call(string tool, JsonObject args) => McpServer.ResultBody(McpServer.CallTool(tool,
                     new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
                 var results = new JsonArray(BehaviorParityCases.Project(Call(value == "native-read" ? "ListPlcTags"
-                    : value == "missing-directory" ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(value))));
+                    : value == "missing-directory" || value.StartsWith("batch-", StringComparison.Ordinal) && value != "batch-alias" ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(value))));
                 if (value.StartsWith("blocked-export", StringComparison.Ordinal) || value == "typed-export-refusal")
                 {
                     scenario = "followup";
@@ -100,6 +107,26 @@ namespace TiaMcpServer.Tests
             }
             finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalWaitOverrideForTests = wait;
                 McpServer.ApprovalSessionKeyForTests = session; settings.Save(ApprovalSettings.SettingsPath); }
+        }
+        private static string RunStaging(string value)
+        {
+            using var fixture = new InfrastructureContractsTests();
+            string bundle = Path.GetFullPath(Path.Combine("bin-build/P6-67r/parity-stage", Guid.NewGuid().ToString("N"))); Directory.CreateDirectory(bundle);
+            var store = new ImportStagingStore(bundle, McpServer.ReleaseKey, Guid.NewGuid().ToString("N"));
+            var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ImportStagingTools) });
+            McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
+            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ImportStagingTools(store)).AddEngine(false, catalog).BuildServiceProvider());
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath); var wait = McpServer.ApprovalWaitOverrideForTests;
+            bool context = McpServer.EnterMcpApprovalContext(); int approvals = 0;
+            try
+            {
+                new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
+                McpServer.ApprovalWaitOverrideForTests = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, value == "staging-refused" ? "denied" : null)); };
+                var body = McpServer.ResultBody(McpServer.CallTool(value == "staging-cleanup" ? "CleanupStagedImportFiles" : "StageImportFiles", new ToolArguments(JsonSerializer.SerializeToElement(BehaviorParityCases.Arguments(value)))))!;
+                return new JsonObject { ["engineRelease"] = McpServer.ReleaseKey, ["results"] = new JsonArray(BehaviorParityCases.Project(body)),
+                    ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 }.ToJsonString();
+            }
+            finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalWaitOverrideForTests = wait; settings.Save(ApprovalSettings.SettingsPath); Directory.Delete(bundle, true); }
         }
     }
 }

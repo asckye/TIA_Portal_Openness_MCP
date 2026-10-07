@@ -41,8 +41,8 @@ namespace TiaMcp.PlcWorker
             parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
             isArgument = cause is AdapterPreconditionException precondition ? precondition.IsArgument : (bool?)null,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],
-            stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],exportPhase=cause.Data["exportPhase"],
-            stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"] });
+            stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],recoveryFiles=cause.Data["recoveryFiles"],exportPhase=cause.Data["exportPhase"],
+            stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"],attemptedPath=cause.Data["attemptedPath"],recoveryStatus=cause.Data["recoveryStatus"] });
 
         internal static Dictionary<string, JsonElement> ParseArguments(string json)
         {

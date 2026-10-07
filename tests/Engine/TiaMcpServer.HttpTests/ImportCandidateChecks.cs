@@ -62,7 +62,7 @@ internal static class ImportCandidateChecks
                 new object[] { method, JsonSerializer.SerializeToElement(sample), schema }) == null, name + " usage example satisfies the selected schema");
             var found = facade.GetMethod("FindTools", All)!.Invoke(null, new object[] { name, 1, "", "" })!;
             var lines = ((IEnumerable<string>)found.GetType().GetProperty("Items")!.GetValue(found)!).ToArray();
-            check(lines[0].Contains("expectedPlanHash") == safe && lines[0].Contains(name), name + " FindTools signature matches registration");
+            check(lines[0].Contains("expectedPlanHash") == properties.TryGetProperty("expectedPlanHash", out _) && lines[0].Contains(name), name + " FindTools signature matches registration");
             var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "dryRun" : "versionPolicy"] = "obsolete-schema";
             foreach (var call in new[] {
                 (Name: name, Args: invalid),

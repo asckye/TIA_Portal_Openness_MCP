@@ -216,7 +216,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         IDisposable? lane = null;
         try
         {
-            var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
+            var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles" ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
                 .Read(JsonSerializer.SerializeToElement(args), "arguments");
             if (validation.Error != null && compileCandidate) return Recorded(FoundationV4Result.ImportCandidate(CompileSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
             if (validation.Error != null && sourceCandidate) return Recorded(FoundationV4Result.ImportCandidate(SourceSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)));
@@ -278,6 +278,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                             finally { request.Params = originalRequest; }
                         }
                         var blocked = HostBehavior.PreviewApplyRefusal(refusal.StructuredContent);
+                        blocked ??= HostBehavior.BatchApplyRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
+                        blocked ??= HostBehavior.BatchPreviewRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject(), refusal.StructuredContent);
                         if (blocked != null) refusal = FoundationV4Result.Reject(release, tool.Name, id, blocked, true);
                         if (refusal.StructuredContent?["ok"]?.GetValue<bool>() != true)
                         {

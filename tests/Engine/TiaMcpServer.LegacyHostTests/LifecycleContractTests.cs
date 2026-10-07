@@ -11,7 +11,7 @@ internal static class LifecycleContractTests
         PlcLifecyclePolicy.RequireLocalSessionExecution(true,true); check(true,"Local-session preview allowed without granting mutation");
         try { PlcLifecyclePolicy.RequireLocalSessionExecution(true,false); throw new Exception("Unreviewed server lock effects permitted"); }
         catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException ex) { check(ex.Message.Contains("lock") && !ex.IsArgument,"Unverified local-session kind/lock behavior blocks execution before native mutation"); }
-        check(TiaMcp.PlcWorker.WorkerOperations.Names.SetEquals(FoundationTools.Definitions.Select(d=>d.Operation)),"Worker allowlist matches actual public tool operations");
+        check(TiaMcp.PlcWorker.WorkerOperations.Names.SetEquals(FoundationTools.Definitions.Where(d=>d.ResponseMember!="ImportStaging").Select(d=>d.Operation)),"Worker allowlist matches actual public tool operations");
         foreach(var internalMethod in new[]{"Dispose","UnbindProject","RequireProjectIdentity","ListPlcs","ListBlocks"}) check(!TiaMcp.PlcWorker.WorkerOperations.Names.Contains(internalMethod),"Internal facade method not exposed on worker wire: "+internalMethod);
         void Reject(Action action,string message) { try { action(); throw new Exception(message); } catch(Exception ex) when(ex is ArgumentException or InvalidOperationException or NotSupportedException) { check(true,message); } }
         // Spelled out rather than derived: the file names TIA itself writes for each release.

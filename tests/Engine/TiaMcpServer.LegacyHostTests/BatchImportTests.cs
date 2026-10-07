@@ -37,7 +37,7 @@ internal static class BatchImportTests
             bad=Apply(preview);bad.Order=new[]{"../A.xml","B.xml","C.xml"};Reject(()=>Run(bad),"Traversal order rejected");
             bad=Apply(preview);bad.ExpectedProject="C:/Projects/other.ap17";Reject(()=>Run(bad),"Exact project mismatch refused");
             bad=Apply(preview);bad.Confirm=false;Reject(()=>Run(bad),"Confirmation required");
-            foreach(var change in new Action<PlcBatchImportRequest>[] {r=>r.Overwrite=true,r=>r.CompileAfter=true,r=>r.StopOnImportFailure=false,r=>r.TechnologyGroup="technology"}) {bad=Apply(preview);change(bad);bad.Directory="missing";Reject(()=>Run(bad),"Unsupported option rejected before directory/native access");}
+            foreach(var change in new Action<PlcBatchImportRequest>[] {r=>r.CompileAfter=true,r=>r.StopOnImportFailure=false,r=>r.TechnologyGroup="technology"}) {bad=Apply(preview);change(bad);bad.Directory="missing";Reject(()=>Run(bad),"Unsupported option rejected before directory/native access");}
             check(imports==0 && gates==0,"All invalid apply options stop before native callback");
             File.AppendAllText(Path.Combine(root,"A.xml")," ");Reject(()=>Run(Apply(preview)),"Changed file bytes invalidate consent");File.WriteAllBytes(Path.Combine(root,"A.xml"),original[Path.Combine(root,"A.xml")]);
             File.WriteAllText(Path.Combine(root,"D.xml"),Xml("Added"));Reject(()=>Run(Apply(preview)),"Added file invalidates complete order");File.Delete(Path.Combine(root,"D.xml"));

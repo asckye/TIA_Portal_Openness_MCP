@@ -1407,6 +1407,28 @@
         "typedParameters": {}
       },
       {
+        "name": "CleanupStagedImportFiles",
+        "parameters": {
+          "batchId": {
+            "type": "string",
+            "default": null,
+            "description": "Exact batchId from ListStagedImportFiles in this session."
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "true",
+            "description": "Preview only by default; false applies after approval.",
+            "value": true
+          }
+        },
+        "arguments": {
+          "batchId": "<batchId from StageImportFiles or ListStagedImportFiles>",
+          "dryRun": true
+        },
+        "renamedFrom": [],
+        "typedParameters": {}
+      },
+      {
         "name": "ClearExportHandles",
         "parameters": {
           "olderThanHours": {
@@ -8670,35 +8692,74 @@
           "softwarePath": {
             "type": "string",
             "default": null,
-            "description": "softwarePath: defines the path in the project structure to the plc software"
+            "description": "Exact PLC software path."
           },
           "groupPath": {
             "type": "string",
             "default": null,
-            "description": "groupPath: defines the path in the project structure to the group, where to import blocks"
+            "description": "Exact destination block group; empty selects root."
           },
           "dir": {
             "type": "string",
             "default": null,
-            "description": "dir: directory that contains block .xml files"
+            "description": "Absolute TIA-machine XML directory, for example from StageImportFiles."
           },
           "regexName": {
             "type": "string",
             "default": "\"\"",
-            "description": "regexName: optional regex filter applied to filename without extension",
+            "description": "Bounded filename regex; empty selects every XML file.",
             "value": ""
           },
           "overwrite": {
             "type": "bool",
+            "default": "false",
+            "description": "Allow reviewed replacements with recovery export before any import.",
+            "value": false
+          },
+          "dryRun": {
+            "type": "bool",
             "default": "true",
-            "description": "overwrite: true=Override, false=None (reject existing objects; no rename)",
+            "description": "Preview only by default; false applies after approval.",
             "value": true
+          },
+          "importOrder": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "Complete explicit relative-file manifest from preview.",
+            "value": null
+          },
+          "expectedPlanHash": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact planHash from the reviewed preview.",
+            "value": ""
+          },
+          "confirm": {
+            "type": "bool",
+            "default": "false",
+            "description": "Explicit confirmation for project mutation.",
+            "value": false
+          },
+          "expectedProjectFile": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact absolute bound project path.",
+            "value": ""
+          },
+          "maxItems": {
+            "type": "int",
+            "default": "128",
+            "description": "Selected file limit 1..256; no truncation.",
+            "value": 128
           }
         },
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$"
         },
         "renamedFrom": [
           "ImportBlocksFromDirectory"
@@ -8738,66 +8799,106 @@
           "softwarePath": {
             "type": "string",
             "default": null,
-            "description": "softwarePath: PLC software path, e.g. 'PLC_1'"
+            "description": "Exact PLC software path."
           },
           "sourceDir": {
             "type": "string",
             "default": null,
-            "description": "sourceDir: root directory containing exported PLC XML files"
+            "description": "Absolute staged program XML directory."
           },
           "typeGroupPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "typeGroupPath: PLC data type group path; use empty for root",
+            "description": "Exact destination type group; empty selects root.",
             "value": ""
           },
           "tagFolderPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "tagFolderPath: PLC tag table group path; use empty for root",
+            "description": "Exact destination tag group; empty selects root.",
             "value": ""
           },
           "technologyFolderPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "technologyFolderPath: PLC technology object group path; use empty for root",
+            "description": "Must be empty; technology import is outside this batch policy.",
             "value": ""
           },
           "blockGroupPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "blockGroupPath: PLC block group path; use empty for root Program blocks",
+            "description": "Exact destination block group; empty selects root.",
             "value": ""
           },
           "regexName": {
             "type": "string",
             "default": "\"\"",
-            "description": "regexName: optional regex filter applied to file name without extension",
+            "description": "Bounded filename regex; empty selects every XML file.",
             "value": ""
           },
           "compileAfter": {
             "type": "bool",
-            "default": "true",
-            "description": "compileAfter: compile PLC software after imports",
-            "value": true
+            "default": "false",
+            "description": "Must be false; compilation is a separate call.",
+            "value": false
           },
           "stopOnImportFailure": {
             "type": "bool",
-            "default": "false",
-            "description": "stopOnImportFailure: skip remaining imports after first import failure",
-            "value": false
+            "default": "true",
+            "description": "Must be true; stop and recover after the first failure.",
+            "value": true
           },
           "dryRun": {
             "type": "bool",
+            "default": "true",
+            "description": "Preview only by default; false applies after approval.",
+            "value": true
+          },
+          "importOrder": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "Complete explicit relative-file manifest from preview.",
+            "value": null
+          },
+          "expectedPlanHash": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact planHash from the reviewed preview.",
+            "value": ""
+          },
+          "confirm": {
+            "type": "bool",
             "default": "false",
-            "description": "dryRun: only classify and return discovered objects; do not import or compile",
+            "description": "Explicit confirmation for project mutation.",
             "value": false
+          },
+          "expectedProjectFile": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact absolute bound project path.",
+            "value": ""
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "Allow reviewed replacements with recovery export before any import.",
+            "value": false
+          },
+          "maxItems": {
+            "type": "int",
+            "default": "128",
+            "description": "Selected file limit 1..256; no truncation.",
+            "value": 128
           }
         },
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "sourceDir": "C:\\Examples\\exports",
-          "dryRun": true
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$",
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "renamedFrom": [],
         "typedParameters": {}
@@ -10173,6 +10274,13 @@
         "typedParameters": {
           "objectPathJson": "objectPath"
         }
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "parameters": {},
+        "arguments": {},
+        "renamedFrom": [],
+        "typedParameters": {}
       },
       {
         "name": "ListTechnologyObjects",
@@ -18364,6 +18472,34 @@
         }
       },
       {
+        "name": "StageImportFiles",
+        "parameters": {
+          "files": {
+            "type": "StagedTextFile[]",
+            "default": null,
+            "description": "One batch of fileName, kind and text content; server owns the destination."
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "true",
+            "description": "Preview only by default; false applies after approval.",
+            "value": true
+          }
+        },
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "renamedFrom": [],
+        "typedParameters": {}
+      },
+      {
         "name": "SynchronizeLibrary",
         "parameters": {
           "action": {
@@ -20458,6 +20594,28 @@
         "renamedFrom": [
           "CheckForUpdate"
         ],
+        "typedParameters": {}
+      },
+      {
+        "name": "CleanupStagedImportFiles",
+        "parameters": {
+          "batchId": {
+            "type": "string",
+            "default": null,
+            "description": "Exact batchId from ListStagedImportFiles in this session."
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "true",
+            "description": "Preview only by default; false applies after approval.",
+            "value": true
+          }
+        },
+        "arguments": {
+          "batchId": "<batchId from StageImportFiles or ListStagedImportFiles>",
+          "dryRun": true
+        },
+        "renamedFrom": [],
         "typedParameters": {}
       },
       {
@@ -27724,35 +27882,74 @@
           "softwarePath": {
             "type": "string",
             "default": null,
-            "description": "softwarePath: defines the path in the project structure to the plc software"
+            "description": "Exact PLC software path."
           },
           "groupPath": {
             "type": "string",
             "default": null,
-            "description": "groupPath: defines the path in the project structure to the group, where to import blocks"
+            "description": "Exact destination block group; empty selects root."
           },
           "dir": {
             "type": "string",
             "default": null,
-            "description": "dir: directory that contains block .xml files"
+            "description": "Absolute TIA-machine XML directory, for example from StageImportFiles."
           },
           "regexName": {
             "type": "string",
             "default": "\"\"",
-            "description": "regexName: optional regex filter applied to filename without extension",
+            "description": "Bounded filename regex; empty selects every XML file.",
             "value": ""
           },
           "overwrite": {
             "type": "bool",
+            "default": "false",
+            "description": "Allow reviewed replacements with recovery export before any import.",
+            "value": false
+          },
+          "dryRun": {
+            "type": "bool",
             "default": "true",
-            "description": "overwrite: true=Override, false=None (reject existing objects; no rename)",
+            "description": "Preview only by default; false applies after approval.",
             "value": true
+          },
+          "importOrder": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "Complete explicit relative-file manifest from preview.",
+            "value": null
+          },
+          "expectedPlanHash": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact planHash from the reviewed preview.",
+            "value": ""
+          },
+          "confirm": {
+            "type": "bool",
+            "default": "false",
+            "description": "Explicit confirmation for project mutation.",
+            "value": false
+          },
+          "expectedProjectFile": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact absolute bound project path.",
+            "value": ""
+          },
+          "maxItems": {
+            "type": "int",
+            "default": "128",
+            "description": "Selected file limit 1..256; no truncation.",
+            "value": 128
           }
         },
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "Examples",
-          "dir": "C:\\Examples\\exports"
+          "dir": "C:\\Examples\\exports",
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$"
         },
         "renamedFrom": [
           "ImportBlocksFromDirectory"
@@ -27792,66 +27989,106 @@
           "softwarePath": {
             "type": "string",
             "default": null,
-            "description": "softwarePath: PLC software path, e.g. 'PLC_1'"
+            "description": "Exact PLC software path."
           },
           "sourceDir": {
             "type": "string",
             "default": null,
-            "description": "sourceDir: root directory containing exported PLC XML files"
+            "description": "Absolute staged program XML directory."
           },
           "typeGroupPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "typeGroupPath: PLC data type group path; use empty for root",
+            "description": "Exact destination type group; empty selects root.",
             "value": ""
           },
           "tagFolderPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "tagFolderPath: PLC tag table group path; use empty for root",
+            "description": "Exact destination tag group; empty selects root.",
             "value": ""
           },
           "technologyFolderPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "technologyFolderPath: PLC technology object group path; use empty for root",
+            "description": "Must be empty; technology import is outside this batch policy.",
             "value": ""
           },
           "blockGroupPath": {
             "type": "string",
             "default": "\"\"",
-            "description": "blockGroupPath: PLC block group path; use empty for root Program blocks",
+            "description": "Exact destination block group; empty selects root.",
             "value": ""
           },
           "regexName": {
             "type": "string",
             "default": "\"\"",
-            "description": "regexName: optional regex filter applied to file name without extension",
+            "description": "Bounded filename regex; empty selects every XML file.",
             "value": ""
           },
           "compileAfter": {
             "type": "bool",
-            "default": "true",
-            "description": "compileAfter: compile PLC software after imports",
-            "value": true
+            "default": "false",
+            "description": "Must be false; compilation is a separate call.",
+            "value": false
           },
           "stopOnImportFailure": {
             "type": "bool",
-            "default": "false",
-            "description": "stopOnImportFailure: skip remaining imports after first import failure",
-            "value": false
+            "default": "true",
+            "description": "Must be true; stop and recover after the first failure.",
+            "value": true
           },
           "dryRun": {
             "type": "bool",
+            "default": "true",
+            "description": "Preview only by default; false applies after approval.",
+            "value": true
+          },
+          "importOrder": {
+            "type": "string[]?",
+            "default": "null",
+            "description": "Complete explicit relative-file manifest from preview.",
+            "value": null
+          },
+          "expectedPlanHash": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact planHash from the reviewed preview.",
+            "value": ""
+          },
+          "confirm": {
+            "type": "bool",
             "default": "false",
-            "description": "dryRun: only classify and return discovered objects; do not import or compile",
+            "description": "Explicit confirmation for project mutation.",
             "value": false
+          },
+          "expectedProjectFile": {
+            "type": "string",
+            "default": "\"\"",
+            "description": "Exact absolute bound project path.",
+            "value": ""
+          },
+          "overwrite": {
+            "type": "bool",
+            "default": "false",
+            "description": "Allow reviewed replacements with recovery export before any import.",
+            "value": false
+          },
+          "maxItems": {
+            "type": "int",
+            "default": "128",
+            "description": "Selected file limit 1..256; no truncation.",
+            "value": 128
           }
         },
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "sourceDir": "C:\\Examples\\exports",
-          "dryRun": true
+          "dryRun": true,
+          "overwrite": false,
+          "regexName": "^Main\\.xml$",
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "renamedFrom": [],
         "typedParameters": {}
@@ -29311,6 +29548,13 @@
         "typedParameters": {
           "objectPathJson": "objectPath"
         }
+      },
+      {
+        "name": "ListStagedImportFiles",
+        "parameters": {},
+        "arguments": {},
+        "renamedFrom": [],
+        "typedParameters": {}
       },
       {
         "name": "ListTechnologyObjects",
@@ -38112,6 +38356,34 @@
           "devicePathJson": "devicePath",
           "itemPathJson": "itemPath"
         }
+      },
+      {
+        "name": "StageImportFiles",
+        "parameters": {
+          "files": {
+            "type": "StagedTextFile[]",
+            "default": null,
+            "description": "One batch of fileName, kind and text content; server owns the destination."
+          },
+          "dryRun": {
+            "type": "bool",
+            "default": "true",
+            "description": "Preview only by default; false applies after approval.",
+            "value": true
+          }
+        },
+        "arguments": {
+          "files": [
+            {
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
+            }
+          ],
+          "dryRun": true
+        },
+        "renamedFrom": [],
+        "typedParameters": {}
       },
       {
         "name": "SynchronizeLibrary",

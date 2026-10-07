@@ -149,8 +149,9 @@ class Checks(unittest.TestCase):
         generator = runpy.run_path(str(ROOT / 'scripts/generate/Generate-ToolUsage.py'))
         additions = generator['new_v4_tools'](ROOT)
         for name in additions:
-            compare_operation(name, 'FILE', {}, additions)
-            for wrong in ('ONLINE-WRITE', 'READ', 'WRITE', 'OFFLINE'):
+            expected = additions[name]['operation']
+            compare_operation(name, expected, {}, additions)
+            for wrong in set(('ONLINE-WRITE', 'READ', 'FILE', 'WRITE', 'OFFLINE')) - {expected}:
                 with self.assertRaises(AssertionError): compare_operation(name, wrong, {}, additions)
         with self.assertRaises(KeyError): compare_operation('RenderPlcOther', 'FILE', {}, additions)
 

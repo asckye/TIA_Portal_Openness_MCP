@@ -74,6 +74,11 @@ internal static class FoundationV4Result
             var retained = JsonNode.Parse(worker.EvidenceJson);
             data ??= new JsonObject();
             data["evidence"] = retained;
+            if ((string?)retained?["recoveryStatus"] == "unavailable-import-without-backup")
+            {
+                data["recoveryStatus"] = "unavailable-import-without-backup";
+                data["warnings"] = new JsonArray("No recovery backup was available for this import; inspect the attempted recovery location in data.evidence.");
+            }
             exceptionType = (string?)retained?["exceptionType"];
         }
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
@@ -98,12 +103,13 @@ internal static class FoundationV4Result
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
         bool reset = Flag(data, "requiresSessionReset") == true;
+        if (definition.ResponseMember == "BatchImport") return ImportCandidate(PlcBatchImportResultMapping.Result(data, release, name, id, preview));
         string? status = Text(data, "status");
         if (raw == null || mutation && Flag(data, "executed") == null && definition.ResponseMember is not ("Connection" or "Disconnect"))
             return Failure(release, name, id, true, mutation, raw);
         Outcome outcome = HostBehavior.OperationOutcome(status != "failed", status == "outcome-unknown", false, mutation);
         Error? error = null;
-        if (definition.ResponseMember is "BatchImport" or "BatchExport")
+        if (definition.ResponseMember == "BatchExport")
         {
             var items = data["items"]!.AsArray();
             int succeeded = 0, failed = 0, skipped = 0;

@@ -350,7 +350,7 @@ def compare_migration(args):
         old, new = baseline[release], current[release]
         a, b = ({t['name']: t for t in snapshot['tools']} for snapshot in (old, new))
         members = phase6_groups.group(args.migration, release, a)
-        expected = {phase6_groups.mapped(name, members) for name in a}
+        expected = {phase6_groups.mapped(name, members) for name in a} | phase6_groups.additions(args.migration)
         problems = []
         if set(b) != expected:
             problems.append('roster differs: ' + ', '.join(sorted(set(b) ^ expected)))

@@ -320,6 +320,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 nativeRead: InvocationJournal.NativeCallIssued);
             var evidence = HostBehavior.FailureEvidence(error.GetType().Name);
             var data = new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) };
+            foreach (var retained in HostBehavior.RetainedRecoveryEvidence(error)) data[retained.Key] = retained.Value?.DeepClone();
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(error);
             string? message = HostBehavior.AdmissionDiagnostic(error);
             return V4Result(tool, data, HostBehavior.FailureError(kind, parameter, evidence, message),

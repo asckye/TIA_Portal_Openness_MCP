@@ -38,6 +38,25 @@ namespace TiaMcp.Logic.V4
             return args["confirm"] is JsonValue confirm && confirm.TryGetValue<bool>(out var accepted) && accepted ? null : "confirm";
         }
 
+        internal static bool IsBatchImport(string tool) => tool is "ImportPlcBlocksFromDirectory" or "ImportPlcProgramFromDirectory";
+        internal static bool LegacyBatchImport(string tool, JsonObject args) => tool == "ImportPlcBlocksFromDirectory"
+            && (bool?)args["overwrite"] != true && (bool?)args["dryRun"] == false && string.IsNullOrEmpty((string?)args["expectedPlanHash"]);
+        internal static Error? BatchApplyRefusal(string tool, JsonObject args)
+        {
+            if (!IsBatchImport(tool)) return null;
+            string? missing = MissingApplyArgument(args, false);
+            if (missing == null && args["importOrder"] is not JsonArray { Count: > 0 }) missing = "importOrder";
+            if (missing == null && !PendingApproval.IsHash((string?)args["expectedPlanHash"])) missing = "expectedPlanHash";
+            return missing == null ? null : new Error("Apply requires " + missing + " from a reviewed preview.", new InvalidArgumentDetails(missing, Array.Empty<string>()));
+        }
+        internal static Error? BatchPreviewRefusal(string tool, JsonObject args, JsonNode? body)
+        {
+            if (!IsBatchImport(tool) || body?["ok"]?.GetValue<bool>() != true) return null;
+            string? key = (string?)body["data"]?["projectFile"] != (string?)args["expectedProjectFile"] ? "expectedProjectFile"
+                : (string?)body["data"]?["planHash"] != (string?)args["expectedPlanHash"] ? "expectedPlanHash" : null;
+            return key == null ? null : new Error("Plan or project changed; review a fresh preview before applying.", new InvalidArgumentDetails(key, Array.Empty<string>()));
+        }
+
         internal static bool PreviewHasNoEffect(JsonNode? body)
         {
             if (body?["ok"] is not JsonValue ok || !ok.TryGetValue<bool>(out var succeeded) || !succeeded || body["data"] is not JsonObject data) return false;
@@ -105,6 +124,13 @@ namespace TiaMcp.Logic.V4
             => new Dictionary<string, JsonElement> {
                 ["exceptionType"] = JsonSerializer.SerializeToElement(exceptionType),
                 ["workerMessage"] = JsonSerializer.SerializeToElement<string?>(null) };
+        internal static JsonObject RetainedRecoveryEvidence(Exception error)
+        {
+            var retained = new JsonObject();
+            foreach (string key in new[] { "recoveryDirectory", "recoveryFiles", "recoveryStatus", "attemptedPath" })
+                if (error.Data[key] != null) retained[key] = JsonSerializer.SerializeToNode(error.Data[key]);
+            return retained;
+        }
 
         internal static Error SessionReset() => new Error(SessionBehavior.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"));
         internal static Error Confirmation(string reason, string? hash, string? id)

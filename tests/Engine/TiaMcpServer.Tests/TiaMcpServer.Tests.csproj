@@ -153,6 +153,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs" Link="EcosystemTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ImportStagingTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs" Link="OfflineSuiteTools.cs" />
@@ -190,5 +191,7 @@
   <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SessionToolContract.cs" Link="SessionToolContract.cs" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
+    <Compile Include="../../../src/Updater/Updater.cs" Link="Updater/Updater.cs" />
+    <Compile Include="../../../src/Updater/UpdaterText.cs" Link="Updater/UpdaterText.cs" />
   </ItemGroup>
 </Project>

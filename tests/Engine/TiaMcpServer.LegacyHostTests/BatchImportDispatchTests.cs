@@ -44,7 +44,7 @@ internal static class BatchImportDispatchTests
                 var preview=Payload(await tool.InvokeAsync(Request()));
                 check(worker.Calls==1 && worker.Writes==0 && preview["Items"]!.AsArray().Count==3,name+": actual facade preview has no fake writes");
                 check(tool.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("importOrder").GetProperty("items").GetProperty("type").GetString()=="string",name+": explicit string-array schema");
-                args["overwrite"]=JsonSerializer.SerializeToElement(true);await Reject("overwrite rejected before dispatch");args.Remove("overwrite");
+                args["overwrite"]=JsonSerializer.SerializeToElement(true);var overwritePreview=Payload(await tool.InvokeAsync(Request()));check(worker.Writes==0, name+": overwrite preview dispatches without writes");args.Remove("overwrite");
                 if(name=="ImportPlcProgramFromDirectory")
                 {
                     args["compileAfter"]=JsonSerializer.SerializeToElement(true);await Reject("compileAfter rejected before dispatch");args.Remove("compileAfter");
@@ -53,11 +53,11 @@ internal static class BatchImportDispatchTests
                 }
                 args["importOrder"]=JsonSerializer.SerializeToElement(new[]{1,2});await Reject("nonstring manifest rejected");args.Remove("importOrder");
                 args["dryRun"]=JsonSerializer.SerializeToElement(false);args["confirm"]=JsonSerializer.SerializeToElement(true);args["expectedProjectFile"]=JsonSerializer.SerializeToElement("C:/Projects/project.ap17");await Reject("missing manifest/hash refused");
-                check(worker.Calls==1 && worker.Writes==0,name+": every wrapper rejection avoided dispatch");
+                check(worker.Calls==2 && worker.Writes==0,name+": every wrapper rejection avoided dispatch");
                 args["importOrder"]=JsonSerializer.SerializeToElement(new[]{"A.xml","B.xml","C.xml"});args["expectedPlanHash"]=JsonSerializer.SerializeToElement(preview["PlanHash"]!.GetValue<string>());
                 worker.FailSecond=true;var partial=Payload(await tool.InvokeAsync(Request()));
                 check(partial["ImportedCount"]!.GetValue<int>()==1 && partial["FailedCount"]!.GetValue<int>()==1 && worker.Writes==2 && worker.State.Poisoned,name+": partial result retained and host poisoned");
-                await Reject("replay denied while worker remains available");check(worker.Calls==2 && worker.Writes==2,name+": no replay or third write after uncertainty");
+                await Reject("replay denied while worker remains available");check(worker.Calls==3 && worker.Writes==2,name+": no replay or third write after uncertainty");
             }
         }
         finally{Directory.Delete(root,true);}

@@ -71,3 +71,5 @@ TIA_V21_PublicAPI/
 *.ap14
 *.zap14
 /data/
+
+/staging/

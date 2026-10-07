@@ -18,6 +18,9 @@ internal static class FoundationTools
         new("RenderPlcProgramAtlas", "RenderPlcProgramAtlas", "[L2][PLC-Software][FILE] Render a block XML file or recursive export directory as a self-contained static HTML atlas with call links. Called-by counts include only atlas blocks. Offline local file output; never overwrites, no Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),
     };
     internal static readonly Definition[] Definitions = {
+        new("StageImportFiles", "StageImportFiles", "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source or UTF-8 Document XML. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; V20 document imports require pairs, V21 resources are optional). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session.", new[]{new Argument("files","array"),Dry()}, "ImportStaging"),
+        new("ListStagedImportFiles", "ListStagedImportFiles", "[L1][PLC-Software][READ] List this session staged batches, paths and SHA-256. No TIA calls.", Array.Empty<Argument>(), "ImportStaging"),
+        new("CleanupStagedImportFiles", "CleanupStagedImportFiles", "[L1][PLC-Software][FILE] Delete one staged batchId listed in this session. Preview defaults true; apply dryRun=false is approved and audited. No caller paths or recursive deletion; recovery exports are retained.", new[]{S("batchId"),Dry()}, "ImportStaging"),
         new("GetState","ReadState","[runtime-query-candidate] Cached attachment/project state only; IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("ListPortalProcessProjects","ReadPortalProcessProjects","[runtime-query-candidate] Detached read of this release's process metadata; acquisition time is snapshot time, not process start. Separate OS start UTC is observation-only and may be unknown; no attach, launch or stable identity guarantee.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("DiagnosePortalConnectReadiness","ReadPortalConnectReadiness","[runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open.",new[]{new Argument("processId","integer")},"RuntimeQuery"),
@@ -50,8 +53,8 @@ internal static class FoundationTools
         new("ReadPlcTags","ListTags","[declaration-read-v1; ordinary PLC manual closed] Read tag declaration Name/DataType and logical address in Value; no online values. Exact case-sensitive PLC and root/user-group table paths required. Returns the existing PascalCase array; malformed worker results are errors. Software units and special ownership excluded.",new[]{S("plc"),S("table")},"Declarations"),
         new("ReadPlcUserConstants","ListUserConstants","[declaration-read-v1; ordinary PLC manual closed] Read user-constant Name/DataType and raw Value text; no expression evaluation. Exact case-sensitive PLC and root/user-group table paths required. Returns the existing PascalCase array; malformed worker results are errors. Software units and special ownership excluded.",new[]{S("plc"),S("table")},"Declarations"),
         new("ReadPlcSystemConstants","ListSystemConstants","[declaration-read-v1; ordinary PLC manual closed] Read system-constant Name/DataType and raw Value text; no hardware enumeration or online access. Exact case-sensitive PLC and root/user-group table paths required. Returns the existing PascalCase array; malformed worker results are errors. Software units and special ownership excluded.",new[]{S("plc"),S("table")},"Declarations"),
-        new("ImportBlocksFromDirectory","ImportBlocksFromDirectory","[bounded-batch-import-candidate] Top directory XML only, exact ordinary PLC/group. One object per file; no overwrite, repair, inferred dependencies or rollback. Preview defaults true; apply requires complete importOrder, expectedPlanHash, confirmation and exact project. Native None; first failure stops with partial results. Windows SDK/native unverified.",new[]{S("softwarePath"),S("groupPath"),S("dir"),new Argument("regexName","string",false,""),new Argument("overwrite","boolean",false,false),Dry(),new Argument("importOrder","array",false,Array.Empty<string>()),new Argument("expectedPlanHash","string",false,""),new Argument("maxItems","integer",false,128)},"BatchImport"),
-        new("ImportPlcProgramFromDirectory","ImportPlcProgramFromDirectory","[bounded-batch-import-candidate] Recursive bounded ordinary block/UDT/tag-table XML import, not a complete program restore. Exact existing target groups; one object per file; native None. Preview=true and compileAfter=false defaults differ from upstream. compileAfter, overwrite, technology and failure continuation are refused before imports. Caller order is dependency-unverified; native acceptance pending.",new[]{S("softwarePath"),S("sourceDir"),new Argument("typeGroupPath","string",false,""),new Argument("tagFolderPath","string",false,""),new Argument("technologyFolderPath","string",false,""),new Argument("blockGroupPath","string",false,""),new Argument("regexName","string",false,""),new Argument("compileAfter","boolean",false,false),new Argument("stopOnImportFailure","boolean",false,true),Dry(),new Argument("importOrder","array",false,Array.Empty<string>()),new Argument("expectedPlanHash","string",false,""),new Argument("overwrite","boolean",false,false),new Argument("maxItems","integer",false,128)},"BatchImport"),
+        new("ImportBlocksFromDirectory","ImportBlocksFromDirectory","[bounded-batch-import-candidate] Top directory XML only, exact ordinary PLC/group. One object per file; preview identifies create/replace. overwrite=true backs up every replacement before imports and restores known earlier replacements on failure. Unknown outcomes retain recovery files and require reset. No repair or inferred dependencies. Preview defaults true; apply requires complete importOrder, expectedPlanHash, confirmation and exact project. Native None/Override; first failure stops with recovery evidence. Windows SDK/native unverified.",new[]{S("softwarePath"),S("groupPath"),S("dir"),new Argument("regexName","string",false,""),new Argument("overwrite","boolean",false,false),Dry(),new Argument("importOrder","array",false,Array.Empty<string>()),new Argument("expectedPlanHash","string",false,""),new Argument("maxItems","integer",false,128)},"BatchImport"),
+        new("ImportPlcProgramFromDirectory","ImportPlcProgramFromDirectory","[bounded-batch-import-candidate] Recursive bounded ordinary block/UDT/tag-table XML import, not a complete program restore. Exact existing target groups; one object per file; native None. Preview=true and compileAfter=false defaults differ from upstream. compileAfter, technology and failure continuation are refused before imports. overwrite=true exports backups before replacement and restores known changes on failure; unknown outcomes retain recoveryDirectory. Caller order is dependency-unverified; native acceptance pending.",new[]{S("softwarePath"),S("sourceDir"),new Argument("typeGroupPath","string",false,""),new Argument("tagFolderPath","string",false,""),new Argument("technologyFolderPath","string",false,""),new Argument("blockGroupPath","string",false,""),new Argument("regexName","string",false,""),new Argument("compileAfter","boolean",false,false),new Argument("stopOnImportFailure","boolean",false,true),Dry(),new Argument("importOrder","array",false,Array.Empty<string>()),new Argument("expectedPlanHash","string",false,""),new Argument("overwrite","boolean",false,false),new Argument("maxItems","integer",false,128)},"BatchImport"),
         new("ExportBlocksAsDocuments","ExportBlocksAsDocuments","[batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. V20 resources required, V21 optional. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending.",new[]{S("softwarePath"),S("groupPath"),S("exportPath"),new Argument("recursive","boolean",false,false),new Argument("maxItems","integer",false,128),new Argument("preservePath","boolean",false,false),new Argument("expectedPlanHash","string",false,""),Dry()},"BatchDocumentExport"),
         new("ImportBlocksFromDocuments","ImportBlocksFromDocuments","[batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, poison session; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN.",new[]{S("softwarePath"),S("groupPath"),S("importPath"),new Argument("fileNamesWithoutExtension","array",true,null),new Argument("overwrite","boolean",false,false),new Argument("expectedPlanHash","string",false,""),Dry()},"BatchDocumentImport"),
         new("ImportFromDocuments","ImportFromDocuments","[document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. Every uncertain attempted outcome may have changed project, poisons session and is never replayed. Syntax/content validity and native acceptance NOT RUN.",new[]{S("softwarePath"),S("groupPath"),S("importPath"),S("fileNameWithoutExtension"),new Argument("overwrite","boolean",false,false),new Argument("expectedPlanHash","string",false,""),Dry()},"DocumentImport"),
@@ -89,10 +92,12 @@ internal static class FoundationTools
 
 internal sealed partial class FoundationTool : McpServerTool
 {
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IFoundationWorker, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore> StagingStores = new();
     private readonly Definition definition;
     private readonly IFoundationWorker worker;
+    private readonly TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest;
     private readonly Tool tool;
-    internal bool IsNative => definition.ResponseMember != "PlcRender";
+    internal bool IsNative => definition.ResponseMember is not ("PlcRender" or "ImportStaging");
     internal bool RequiresTia => IsNative && definition.ResponseMember != "RuntimeQuery";
     internal bool UsesProductionWorker => worker is WorkerClient { Bundled: true };
     internal string? ApprovalIdentity => (worker as WorkerClient)?.ApprovalIdentity;
@@ -100,12 +105,14 @@ internal sealed partial class FoundationTool : McpServerTool
         => IsNative && worker is WorkerClient client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
     internal bool JournalIsWrite => definition.Arguments.Any(a => a.Name == "dryRun")
         || definition.ResponseMember is "Connection" or "Bind" or "Disconnect" or "PlcRender";
-    internal FoundationTool(Definition definition, IFoundationWorker worker)
+    internal FoundationTool(Definition definition, IFoundationWorker worker, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest = null)
     {
-        if(definition.Arguments.Any(a=>a.Name=="dryRun")) definition=definition with { Arguments=definition.Arguments.Concat(new[]{new Argument("confirm","boolean",false,false),new Argument("expectedProjectFile","string",false,"")}).ToArray() };
+        if(definition.ResponseMember != "ImportStaging" && definition.Arguments.Any(a=>a.Name=="dryRun")) definition=definition with { Arguments=definition.Arguments.Concat(new[]{new Argument("confirm","boolean",false,false),new Argument("expectedProjectFile","string",false,"")}).ToArray() };
         this.definition=definition; this.worker=worker;
+        this.stagingForTest=stagingForTest;
         var properties=new JsonObject();
         foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]="Exact foundation argument: "+p.Name }; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
+        if (definition.Name == "StageImportFiles") properties["files"] = TiaMcp.Logic.ModelContextProtocol.ImportStagingSchema.Files();
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
         tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
     }
@@ -115,7 +122,7 @@ internal sealed partial class FoundationTool : McpServerTool
         get
         {
             string operation = TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(FoundationV4Tool.Name(definition.Name), definition.Description).Operation;
-            return operation == "WRITE" || operation == "ONLINE-WRITE";
+            return operation == "WRITE" || operation == "ONLINE-WRITE" || definition.Name is "StageImportFiles" or "CleanupStagedImportFiles";
         }
     }
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)
@@ -209,12 +216,12 @@ internal sealed partial class FoundationTool : McpServerTool
         {
             var spec=definition.Arguments.SingleOrDefault(p=>p.Name==pair.Key) ?? throw new ArgumentException("Unknown/case-mismatched argument: "+pair.Key,pair.Key);
             var value=pair.Value;
-            bool valid=spec.Type=="string" ? value.ValueKind==JsonValueKind.String : spec.Type=="boolean" ? value.ValueKind is JsonValueKind.True or JsonValueKind.False : spec.Type=="array" ? value.ValueKind==JsonValueKind.Array && value.GetArrayLength()<=256 && value.EnumerateArray().All(x=>x.ValueKind==JsonValueKind.String) : value.ValueKind==JsonValueKind.Number && value.TryGetInt32(out _);
+            bool valid=spec.Type=="string" ? value.ValueKind==JsonValueKind.String : spec.Type=="boolean" ? value.ValueKind is JsonValueKind.True or JsonValueKind.False : spec.Type=="array" ? value.ValueKind==JsonValueKind.Array && value.GetArrayLength()<=256 && (definition.ResponseMember=="ImportStaging" || value.EnumerateArray().All(x=>x.ValueKind==JsonValueKind.String)) : value.ValueKind==JsonValueKind.Number && value.TryGetInt32(out _);
             if(!valid) throw new ArgumentException("Invalid argument type: "+pair.Key,pair.Key);
             values[pair.Key]=JsonNode.Parse(value.GetRawText());
         }
         foreach(var p in definition.Arguments) if(!values.ContainsKey(p.Name)) { if(p.Required) throw new ArgumentException("Missing argument: "+p.Name,p.Name); values[p.Name]=JsonSerializer.SerializeToNode(p.Default); }
-        if(values["dryRun"] is JsonValue dry && !dry.GetValue<bool>())
+        if(definition.ResponseMember!="ImportStaging" && values["dryRun"] is JsonValue dry && !dry.GetValue<bool>())
         {
             if(values["confirm"]?.GetValue<bool>()!=true) throw new ArgumentException("Execution requires confirm=true; preview is the default.","confirm");
             if(string.IsNullOrWhiteSpace(values["expectedProjectFile"]?.GetValue<string>())) throw new ArgumentException("Execution requires the exact expectedProjectFile.","expectedProjectFile");
@@ -232,7 +239,12 @@ internal sealed partial class FoundationTool : McpServerTool
         }
         if(definition.ResponseMember=="BatchImport")
         {
-            if(values["overwrite"]!.GetValue<bool>()) throw new ArgumentException("Batch import supports overwrite=false only.","overwrite");
+            if(values["dryRun"]?.GetValue<bool>()==false)
+            {
+                var refusal=TiaMcp.Logic.V4.HostBehavior.BatchApplyRefusal(FoundationV4Tool.Name(definition.Name),values);
+                if(refusal?.Details is TiaMcp.Logic.V4.InvalidArgumentDetails argument) throw new ArgumentException(refusal.Message,argument.Parameter);
+            }
+
             if(values["compileAfter"]?.GetValue<bool>() ?? false) throw new ArgumentException("Batch import does not support compileAfter.","compileAfter");
             if(!(values["stopOnImportFailure"]?.GetValue<bool>() ?? true)) throw new ArgumentException("Batch import stops on the first failure.","stopOnImportFailure");
             if(!string.IsNullOrEmpty(values["technologyFolderPath"]?.GetValue<string>())) throw new ArgumentException("Technology objects are outside bounded batch import scope.","technologyFolderPath");
@@ -256,6 +268,15 @@ internal sealed partial class FoundationTool : McpServerTool
         {
             ReadArguments(request.Params?.Arguments, values);
             if (release != null) TiaMcp.Logic.V4.CallerInputFiles.Validate(FoundationV4Tool.Name(definition.Name), values);
+            if (definition.ResponseMember == "ImportStaging")
+            {
+                TiaMcp.Logic.ModelContextProtocol.ImportStagingStore store;
+                try { store = stagingForTest ?? StagingStores.GetValue(worker, _ => TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!)); }
+                catch (IOException ex) { return FoundationV4Result.ImportCandidate(TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Unavailable(definition.Name, release!, ex, id)); }
+                var files = values["files"]?.Deserialize<TiaMcp.Logic.ModelContextProtocol.StagedTextFile[]>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow });
+                var mapped = TiaMcp.Logic.V4.McpResult.From(store.Run(definition.Name, files, (string?)values["batchId"] ?? "", (bool?)values["dryRun"] ?? true, id));
+                return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()), Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
+            }
             if (definition.ResponseMember == "PlcRender")
             {
                 var mapped = TiaMcp.Logic.V4.McpResult.From(TiaMcpServer.ModelContextProtocol.PlcProgramRenderer.Write(

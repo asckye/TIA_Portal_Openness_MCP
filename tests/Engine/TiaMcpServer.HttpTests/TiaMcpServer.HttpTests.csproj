@@ -10,6 +10,9 @@
     <TiaMcpTestWorkerDouble Condition="'$(TiaMcpTestWorkerDouble)' == ''">true</TiaMcpTestWorkerDouble>
     <TiaMcpTestWorkerIsolationDefault Condition="'$(TiaMcpTestWorkerIsolationDefault)' == ''">true</TiaMcpTestWorkerIsolationDefault>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../../manifest/version-tools.json" LogicalName="VersionTools.json" />
+  </ItemGroup>
   <ItemGroup Condition="'$(TiaMcpTestWorkerDouble)' == 'true'">
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>TiaMcpTestWorkerDouble</_Parameter1>

@@ -94,7 +94,7 @@ internal static class PackagedStdioStartupChecks
                         count += AsArray(result["tools"]).Count;
                         cursor = result.ContainsKey("nextCursor") ? Convert.ToString(result["nextCursor"]) : null;
                     } while (!String.IsNullOrEmpty(cursor));
-                    Check(count == (major == 20 ? 477 : 488), "Packaged V" + major + " STDIO roster has " + count + " tools.");
+                    Check(count == (Program.ExpectedFullToolCount(major)), "Packaged V" + major + " STDIO roster has " + count + " tools.");
 
                     var bootstrap = Call(process, id++, "InitializeEnvironment", null, errors);
                     var bootstrapData = AsObject(bootstrap["data"]);

@@ -84,23 +84,46 @@ internal static class BatchImportContract
         {
             if(node is not JsonObject item || item["Planned"] is not JsonObject planned || item["ReturnedObjects"] is not JsonArray returned) throw new InvalidDataException("Malformed batch item.");
             var path=Text(item,"RelativePath"); if(!paths.Add(path) || Path.IsPathRooted(path) || path.Contains('\\') || path.Split('/').Any(x=>x is "" or "." or "..")) throw new InvalidDataException("Invalid manifest path.");
+            if(item["Action"] is JsonValue action)
+            {
+                string value=action.GetValue<string>();
+                if(value is not ("create" or "replace") || value=="replace" && item["Replaced"] is not JsonObject) throw new InvalidDataException("Invalid replacement action/evidence.");
+                if(item["Replaced"] is JsonObject replaced) Object(replaced);
+                if(value=="replace" && item["Replaced"] is JsonObject old)
+                    foreach(var key in new[]{"Name","Kind","GroupPath"}) if(Text(old,key)!=Text(planned,key)) throw new InvalidDataException("Replacement identity differs from the planned namespace target.");
+                if(item["RecoverySha256"] is JsonValue recoveryHash && recoveryHash.GetValue<string>()!="") Hash(recoveryHash.GetValue<string>());
+                if((string?)item["RestoreStatus"]=="restored" && (value!="replace" || (string?)item["RecoveryPath"]=="" || (string?)item["RecoverySha256"]=="")) throw new InvalidDataException("Restoration lacks backup evidence.");
+                if(item["RestoreStatus"] is JsonValue restore && restore.GetValue<string>() is not ("not-needed" or "backup-ready" or "restored" or "restore-failed" or "not-attempted-unknown-outcome" or "not-attempted-dependency-unverified")) throw new InvalidDataException("Unknown restoration state.");
+                if((string?)item["RecoveryPath"] is string backup && backup!="")
+                {
+                    var directory=(string?)result["RecoveryDirectory"];
+                    if(string.IsNullOrEmpty(directory) || !Path.IsPathRooted(directory) || !Path.IsPathRooted(backup)
+                        || !Path.GetFullPath(backup).StartsWith(Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar)+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Backup path escapes its recovery directory.");
+                }
+            }
             Object(planned);Hash(Text(item,"InputSha256"));var status=Text(item,"Status");var attempted=Flag(item,"Attempted");var failure=Text(item,"Failure");
             foreach(var actual in returned) {if(actual==null && status=="failed" && attempted) continue;if(actual is not JsonObject obj) throw new InvalidDataException("Malformed returned identity.");Object(obj,status!="failed");}
             if(dryRun) {if(status!="planned" || attempted || returned.Count!=0 || failure!="") throw new InvalidDataException("Preview mutated.");continue;}
-            if(status=="imported")
+            if(status=="imported" || status=="rolled-back")
             {
                 if(failed || !attempted || returned.Count!=1 || failure!="") throw new InvalidDataException("Invalid import success sequence.");
                 var actual=returned[0]!.AsObject();
                 foreach(var key in new[]{"Name","Kind","GroupPath"}) if(Text(actual,key)!=Text(planned,key)) throw new InvalidDataException("Returned identity mismatch.");
                 if((Text(planned,"Kind") is "FC" or "FB" or "OB" or "GlobalDB" or "InstanceDB" && actual["Number"]==null) || (planned["Number"]!=null && !JsonNode.DeepEquals(planned["Number"],actual["Number"]))) throw new InvalidDataException("Returned number mismatch.");
-                imported++;
+                if(status=="rolled-back" && (string?)item["RestoreStatus"]!="restored") throw new InvalidDataException("Rolled-back item lacks verified restoration.");
+                if(status=="imported") imported++;
             }
-            else if(status=="failed") {if(failed || failure!=(attempted ? "native-outcome-uncertain" : "target-recheck-failed")) throw new InvalidDataException("Invalid failure sequence.");failed=true;failures++;}
-            else if(status=="not-attempted") {if(!failed || attempted || returned.Count!=0 || failure!="") throw new InvalidDataException("Invalid skipped outcome.");}
+            else if(status=="failed") {if(failed || (attempted ? failure is not ("native-outcome-uncertain" or "native-import-or-verification-failed") : failure is not ("target-recheck-failed" or "backup-failed"))) throw new InvalidDataException("Invalid failure sequence.");failed=true;failures++;}
+            else if(status=="not-attempted") {if(!failed && string.IsNullOrEmpty((string?)result["RecoveryFailure"]) || attempted || returned.Count!=0 || failure!="") throw new InvalidDataException("Invalid skipped outcome.");}
             else throw new InvalidDataException("Invalid batch status.");
         }
-        if(Count("ImportedCount")!=imported || Count("FailedCount")!=failures || Flag(result,"RequiresSessionReset")!=failed) throw new InvalidDataException("Batch counts/reset disagree with outcomes.");
+        if(Count("ImportedCount")!=imported || Count("FailedCount")!=failures) throw new InvalidDataException("Batch counts/reset disagree with outcomes.");
+        if((bool?)result["NativeOutcomeUnknown"]==true && !Flag(result,"RequiresSessionReset")) throw new InvalidDataException("Unknown native outcome requires session reset.");
+        if(items.Any(x=>(string?)x?["Failure"]=="native-outcome-uncertain" || (string?)x?["RestoreStatus"]=="restore-failed") && !Flag(result,"RequiresSessionReset")) throw new InvalidDataException("Unknown item outcome requires session reset.");
+        if(result["Items"]!.AsArray().Any(x=>(string?)x?["Action"]=="replace" && (bool?)x?["Attempted"]==true) && string.IsNullOrWhiteSpace((string?)result["RecoveryDirectory"])) throw new InvalidDataException("Replacement lacks recovery directory.");
         if(result["Imported"] is not JsonArray importedNames || !importedNames.Select(x=>x?.GetValue<string>()).SequenceEqual(items.OfType<JsonObject>().Where(x=>Text(x,"Status")=="imported").SelectMany(x=>x["ReturnedObjects"]!.AsArray().Select(o=>o!["Name"]!.GetValue<string>())))) throw new InvalidDataException("Imported names disagree with actual returned objects.");
+        if(result["Restored"] is JsonArray restored && !JsonNode.DeepEquals(restored,new JsonArray(items.Where(x=>(string?)x?["RestoreStatus"]=="restored").Select(x=>x!["Replaced"]!.DeepClone()).ToArray()))) throw new InvalidDataException("Restored summary disagrees with item evidence.");
+        if(result["RemainingChanged"] is JsonArray remaining && !JsonNode.DeepEquals(remaining,new JsonArray(items.Where(x=>(bool?)x?["Attempted"]==true && (string?)x?["RestoreStatus"]!="restored").Select(x=>x!["Planned"]!.DeepClone()).ToArray()))) throw new InvalidDataException("Remaining-change summary disagrees with item evidence.");
         if(result["Failed"] is not JsonArray failedItems || failedItems.Count!=failures) throw new InvalidDataException("Failure summary disagrees with outcomes.");
         foreach(var node in failedItems)
         {

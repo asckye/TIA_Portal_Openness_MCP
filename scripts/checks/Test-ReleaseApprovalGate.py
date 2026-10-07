@@ -26,6 +26,8 @@ KEYS = ("14sp1", "15.1", "16", "17", "18", "19")
 # Catalog WRITE tools with arguments valid against the released schemas (reference/tool-examples), so admission passes
 # and the default-on approval is what refuses the write. SaveProject is SESSION in the catalog and is not approval-gated;
 # safe-v4 candidate arguments (mode, expectedPlanHash) are not in the released schemas.
+STAGING_WRITE = ("StageImportFiles", {"files": [{"fileName": "ApprovalProbe.scl", "kind": "scl",
+    "content": "FUNCTION ApprovalProbe : Void\nBEGIN\nEND_FUNCTION\n"}], "dryRun": False})
 ENGINE_WRITE = ("CreateDevice", {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2"})
 FOUNDATION_WRITE = ("CreatePlcTagTable", {"plc": "PLC_1", "group": "", "name": "ExampleTags", "dryRun": True, "confirm": False})
 
@@ -237,6 +239,8 @@ def run_engine(args) -> dict:
             require(ENGINE_WRITE[0] in names, f"V{args.major}: {ENGINE_WRITE[0]} is missing from the full roster")
             assert_refused(rpc_call(rpc, ENGINE_WRITE[0], ENGINE_WRITE[1], "write"), f"V{args.major} direct {ENGINE_WRITE[0]}")
             count += 1
+            assert_refused(rpc_call(rpc, STAGING_WRITE[0], STAGING_WRITE[1], "stage-write"), f"V{args.major} direct staging")
+            count += 1
             assert_engine_read(rpc_call(rpc, "GetSessionState", {}, "read"), f"V{args.major} direct GetSessionState")
             count += 1
         results["direct"] = "refused-before-dispatch; read-succeeded"
@@ -253,6 +257,8 @@ def run_engine(args) -> dict:
             require("CallTool" in names, f"V{args.major}: CallTool is missing from the lite roster")
             bridge_args = {"name": ENGINE_WRITE[0], "arguments": ENGINE_WRITE[1]}
             assert_refused(rpc_call(rpc, "CallTool", bridge_args, "bridge-write"), f"V{args.major} CallTool {ENGINE_WRITE[0]}")
+            count += 1
+            assert_refused(rpc_call(rpc, "CallTool", {"name": STAGING_WRITE[0], "arguments": STAGING_WRITE[1]}, "bridge-stage"), f"V{args.major} CallTool staging")
             count += 1
         results["CallTool"] = "refused-before-dispatch"
 
@@ -274,9 +280,11 @@ def run_engine(args) -> dict:
             assert_readiness_refused(rpc_call(rpc, ENGINE_WRITE[0], ENGINE_WRITE[1], "readiness-write"),
                                      f"V{args.major} real EXE readiness-before-approval")
             count += 1
+            assert_refused(rpc_call(rpc, STAGING_WRITE[0], STAGING_WRITE[1], "readiness-stage"), f"V{args.major} real EXE staging without Openness")
+            count += 1
         results["realExeReadiness"] = "readiness refused before approval; default approval.settings absent"
 
-    return {"product": "engine", "major": args.major, "checksPassed": count, "checksExpected": 4, "results": results}
+    return {"product": "engine", "major": args.major, "checksPassed": count, "checksExpected": 7, "results": results}
 
 
 def run_foundation(args) -> dict:
@@ -301,13 +309,17 @@ def run_foundation(args) -> dict:
                 require(refused is not None, f"{key}: direct write received no response")
                 stopped_by = assert_foundation_write_stopped(refused, f"Foundation {key} direct {FOUNDATION_WRITE[0]}")
                 count += 1
+                staged = host.rpc("tools/call", {"name": STAGING_WRITE[0], "arguments": STAGING_WRITE[1]})
+                require(staged is not None, f"{key}: staging write received no response")
+                assert_refused(staged, f"Foundation {key} staging approval")
+                count += 1
                 read = host.rpc("tools/call", {"name": "GetToolUsage", "arguments": {"toolName": "SaveProject"}})
                 require(read is not None, f"{key}: Foundation read received no response")
                 assert_engine_read(read, f"Foundation {key} GetToolUsage")
                 count += 1
-        per_release[key] = {"checksPassed": 3, "directWrite": "refused-before-dispatch", "stoppedBy": stopped_by,
+        per_release[key] = {"checksPassed": 4, "stagingWrite": "approval-refused-before-filesystem-write", "directWrite": "refused-before-dispatch", "stoppedBy": stopped_by,
                             "read": "succeeded", "CallTool": "not-advertised-by-Foundation-V4"}
-    return {"product": "foundation", "checksPassed": count, "checksExpected": len(KEYS) * 3,
+    return {"product": "foundation", "checksPassed": count, "checksExpected": len(KEYS) * 4,
             "callToolUnsupportedReleases": list(KEYS), "releases": per_release}
 
 

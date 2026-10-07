@@ -217,7 +217,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the type")] string importPath)
-            => PlcToolContract.Run("ImportPlcType", true, true, () => ImportType(softwarePath, groupPath, importPath));
+            => PlcSingleImportRecovery.Run(_session, "ImportPlcType", softwarePath, groupPath, importPath, "UDT",
+                () => PlcToolContract.Run("ImportPlcType", true, true, () => ImportType(softwarePath, groupPath, importPath)));
 
         public ResponseImportType ImportType(
             string softwarePath,

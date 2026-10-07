@@ -20,6 +20,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus",
             "GetNativeInvocationLog", "GetOpennessCompatibility", "InspectSimaticSdCompatibility", "FindTools",
             "ListToolCategories", "GetToolUsage", "PreviewToolCall",
+            "StageImportFiles", "ListStagedImportFiles", "CleanupStagedImportFiles",
             "GetOpennessGuidance", "GetV21EcosystemCatalog", "PlanArtifactImportOrder",
             "BuildClassicHmiMinimalPackage", "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildFlgNetCall",
             "BuildPlcAliasAlarmLad", "BuildPlcFbBlock", "BuildPlcFcBlock", "BuildPlcGlobalDb",

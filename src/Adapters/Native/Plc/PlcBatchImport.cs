@@ -58,7 +58,7 @@ namespace TiaMcp.PlcFoundation
         private PlcBatchImportResult BatchImport(PlcBatchImportRequest request)
         {
             // Reject unsupported switches before any filesystem/native lookup.
-            if(request.Overwrite || request.CompileAfter || !request.StopOnImportFailure || request.TechnologyGroup!="")
+            if(request.CompileAfter || !request.StopOnImportFailure || request.TechnologyGroup!="")
             {
                 var validation=new PlcBatchImportRequest {Release=ReleaseKey,Overwrite=request.Overwrite,CompileAfter=request.CompileAfter,StopOnImportFailure=request.StopOnImportFailure,TechnologyGroup=request.TechnologyGroup};
                 PlcBatchImportPolicy.ValidateOptions(validation);
@@ -83,13 +83,23 @@ namespace TiaMcp.PlcFoundation
                    (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
                 RequireTargetOffline(fresh);
             };
-            return PlcBatchImportPolicy.Run(request,inventory,check,(file,planned)=>
+            PlcBatchImportObject[] Import(FileInfo file,PlcBatchImportObject planned,ImportOptions option)
             {
-                // Native None throws on existing objects. No filename-derived identity, repair, renumber or Override fallback.
-                if(planned.Kind=="UDT") return PlcNative.Types(types!).Import(file,ImportOptions.None).Select(t=>new PlcBatchImportObject {Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
-                if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,ImportOptions.None).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
-                return PlcNative.Import(PlcNative.Blocks(blocks),file,ImportOptions.None).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
-            });
+                if(planned.Kind=="UDT") return PlcNative.Types(types!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
+                if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
+                return PlcNative.Import(PlcNative.Blocks(blocks),file,option).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
+            }
+            void Backup(PlcBatchImportObject target,FileInfo file)
+            {
+                PlcExportPublication.Publish(file,output=>
+                {
+                    if(target.Kind=="UDT") PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).Export(output,ExportOptions.None);
+                    else if(target.Kind=="TagTable") PlcNative.TagTables(tags!).Single(t=>t.Name==target.Name).Export(output,ExportOptions.None);
+                    else PlcNative.Export(PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name),output,ExportOptions.None);
+                });
+            }
+            return PlcBatchImportPolicy.Run(request,inventory,check,(file,target)=>Import(file,target,request.Overwrite ? ImportOptions.Override : ImportOptions.None),
+                Backup,(file,target)=>Import(file,target,ImportOptions.Override),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck);
         }
     }
 }
