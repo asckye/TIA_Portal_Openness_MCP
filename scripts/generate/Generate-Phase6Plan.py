@@ -676,6 +676,8 @@ TASK_PATHS = {
     "P6-62": ["src/Logic/ModelContextProtocol/Builders/PlcProgramRenderer.cs", "tests/Engine/TiaMcpServer.Tests/PlcProgramRendererTests.cs", "tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender", "manifest/contracts/v4", "docs/reference"],
     "P6-63": ["reference/tool-examples", "src/Shared/ToolUsageData.json", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "manifest/tool-usage-coverage.json", "manifest/contracts/v4", "scripts/generate/Generate-ToolUsage.py", "scripts/checks", "tests/Engine/TiaMcpServer.Tests", "tests/Engine/TiaMcpServer.LegacyHostTests", "tests/Engine/TiaMcpServer.HttpTests", "docs/reference"],
     "P6-64": ["src/Adapters/Native/Plc", "src/Adapters/Native/Session", "src/FoundationHost", "src/Shared", "src/Logic/ModelContextProtocol", E+"ModelContextProtocol/McpHints.cs", E+"ModelContextProtocol/Tools/McpServer.Approval.cs", E+"ModelContextProtocol/Tools/McpServer.SerializedCalls.cs", "reference/tool-examples", "src/Shared/ToolUsageData.json", "src/Logic/ModelContextProtocol/ToolProfiles.resx", "manifest/tool-usage-coverage.json", "manifest/contracts/v4", "scripts/checks", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.HttpTests", "docs/reference"],
+    "P6-65": ["src/Shared", "src/Logic", E+"ModelContextProtocol", E+"Siemens", E+"Isolation", "src/FoundationHost", "src/Worker", "src/Adapters/Native", "manifest/contracts/v4", "scripts/checks", "build-tools/release", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.HttpTests", "docs/reference"],
+    "P6-66": ["build-tools/release", "tests/Release", "scripts/build/Package-Release.py", "scripts/checks", "docs/development/release-workflow.md", "docs/development/validation.md"],
 }
 for task in MIGRATION_GROUPS:
     paths = sorted(p for p in owners if owners[p] == task)
@@ -686,7 +688,7 @@ TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
 
 def validate_inventory(inventory):
-    expected = {f"P6-{i:02}" for i in range(1, 65)}
+    expected = {f"P6-{i:02}" for i in range(1, 67)}
     plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
     assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
     for task, paths in inventory.items():
