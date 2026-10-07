@@ -98,7 +98,7 @@ namespace TiaOpenness.Openness
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("A workspace name is required.");
             if (string.IsNullOrWhiteSpace(folderPath)) throw new ArgumentException("A folder path is required.");
 
-            var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(folderPath.Trim()));
+            var directory = new DirectoryInfo(TiaOpenness.Shared.NativePathSelection.FullPath(folderPath.Trim()));
             if (!directory.Exists)
             {
                 throw new DirectoryNotFoundException(
@@ -236,7 +236,7 @@ namespace TiaOpenness.Openness
                 flat += "_" + BitConverter.ToString(digest, 0, 4).Replace("-", "").ToLowerInvariant();
             }
 #if STUDIO_VCI_MODERN
-            VersionControlPrimitives.Export(workspace, node.Object, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(rootPath)), flat, format);
+            VersionControlPrimitives.Export(workspace, node.Object, new DirectoryInfo(TiaOpenness.Shared.NativePathSelection.FullPath(rootPath)), flat, format);
 #else
             var mapping = Keep(Keep(workspace.Mappings).Create(flat + ".xml", node.Object));
             var service = Keep(mapping.GetService<IndividualObjectSynchronizationStatus>());

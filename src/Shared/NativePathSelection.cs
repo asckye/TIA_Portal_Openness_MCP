@@ -5,6 +5,11 @@ namespace TiaOpenness.Shared
 {
     internal static class NativePathSelection
     {
+        // Caller paths reach the SDK as full paths with native separators (V14 SP1 refuses forward slashes).
+        internal static string NormalizeSeparators(string path)
+            => path.Replace(System.IO.Path.AltDirectorySeparatorChar, System.IO.Path.DirectorySeparatorChar);
+        internal static string FullPath(string path) => System.IO.Path.GetFullPath(NormalizeSeparators(path));
+
         internal static bool ShortAlias(string[] parts, params string[] names)
         {
             if(parts.Length!=1) return false;

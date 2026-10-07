@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcBlockPrimitives.cs" Link="PlcBlockPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/PlcNavigator.cs" Link="PlcNavigator.cs" />
     <Compile Include="StudioRelease.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />
     <Reference Include="@(NativeApi)"><Private>false</Private><SpecificVersion>true</SpecificVersion></Reference>
   </ItemGroup>

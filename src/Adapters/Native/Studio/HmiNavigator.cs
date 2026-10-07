@@ -146,7 +146,7 @@ namespace TiaOpenness.Openness
                     "This TIA version's " + item.GetType().Name + " has no Export(FileInfo, ExportOptions).");
             }
 
-            var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directory, fileName + ".xml")));
+            var file = new FileInfo(TiaOpenness.Shared.NativePathSelection.FullPath(Path.Combine(directory, fileName + ".xml")));
             if (file.Exists) file.Delete();
 
             var options = method.GetParameters()[1].ParameterType;

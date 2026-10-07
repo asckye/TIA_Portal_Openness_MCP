@@ -8,9 +8,8 @@ namespace TiaOpenness.Shared
     // and native exceptions must retain their uncertain/partial outcome.
     internal static class NativeInputPolicy
     {
-        internal static string NormalizeSeparators(string path)
-            => path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-        internal static string FullPath(string path) => Path.GetFullPath(NormalizeSeparators(path));
+        internal static string NormalizeSeparators(string path) => NativePathSelection.NormalizeSeparators(path);
+        internal static string FullPath(string path) => NativePathSelection.FullPath(path);
 
         internal static T Read<T>(string parameter, Func<T> read)
         {
