@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -10,12 +11,33 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
+        private static readonly AsyncLocal<RequestContext<CallToolRequestParams>?> ProgressRequest = new AsyncLocal<RequestContext<CallToolRequestParams>?>();
+        internal static IDisposable UseProgressRequest(RequestContext<CallToolRequestParams> request, CancellationToken token)
+        {
+            var previous = ProgressRequest.Value;
+            var previousToken = McpDispatchCancellation.Value;
+            ProgressRequest.Value = request; McpDispatchCancellation.Value = token;
+            return new ProgressScope(previous, previousToken);
+        }
+        private sealed class ProgressScope : IDisposable
+        {
+            private readonly RequestContext<CallToolRequestParams>? previous;
+            private readonly CancellationToken previousToken;
+            internal ProgressScope(RequestContext<CallToolRequestParams>? previous, CancellationToken token) { this.previous = previous; previousToken = token; }
+            public void Dispose() { ProgressRequest.Value = previous; McpDispatchCancellation.Value = previousToken; }
+        }
+        static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane)
+            => lane = Isolation.ToolDispatchLanes.Enter(name, McpDispatchCancellation.Value);
         static partial void ApprovalBindingIdentity(ref string? identity) => identity = InvocationJournal.BindingSnapshot?.Invoke()?.ToJsonString();
         static partial void ApprovalWaitSignal(string phase, int seconds)
         {
-            if (Isolation.IsolatedWorkerHost.IsChild)
-                System.Console.WriteLine(new System.Text.Json.Nodes.JsonObject { ["jsonrpc"] = "2.0", ["method"] = "notifications/progress",
-                    ["params"] = new System.Text.Json.Nodes.JsonObject { ["tiaApprovalWait"] = phase, ["seconds"] = seconds } }.ToJsonString());
+            if (Isolation.IsolatedWorkerHost.IsChild && ProgressRequest.Value is { } request)
+            {
+                var meta = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(request.Params?.Meta));
+                request.Server.SendNotificationAsync("notifications/progress", new System.Text.Json.Nodes.JsonObject {
+                    ["tiaApprovalWait"] = phase, ["seconds"] = seconds,
+                    ["tiaMcpWorkerRequestId"] = (string?)meta?["tiaMcpWorkerRequestId"] }).GetAwaiter().GetResult();
+            }
         }
         static partial void RecordBridgeEvent(string id, string name, string phase) => InvocationJournal.Write(id, name, phase);
         static partial void StartCallProjection(string id, System.Reflection.MethodInfo method, object?[] arguments, ref System.IDisposable? observation)
@@ -131,20 +153,22 @@ namespace TiaMcpServer.ModelContextProtocol
     }
     internal sealed class SerializedCallTool : McpServerTool
     {
-        // All transports share this gate; session leases coordinate separate MCP processes.
-        private static readonly SemaphoreSlim Gate = new SemaphoreSlim(1, 1);
         private readonly McpServerTool _inner;
         public SerializedCallTool(McpServerTool inner) { _inner = inner; }
         public override Tool ProtocolTool => _inner.ProtocolTool;
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
+            using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
             var approval = await McpServer.WaitForApproval(ProtocolTool.Name,
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()), cancellationToken).ConfigureAwait(false);
             if (approval?.Reason != null) return McpServer.ApprovalRefusal(approval);
-            try { await Gate.WaitAsync(cancellationToken).ConfigureAwait(false); }
+            IDisposable? lane;
+            try { lane = await Isolation.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false); }
             catch (System.OperationCanceledException) /* swallow(privacy): report typed cancellation before dispatch without exposing exception text */
             { return McpServer.FinishApproval(McpServer.V4TargetReject(ProtocolTool.Name, new TiaMcp.Logic.V4.Error("The request was cancelled before dispatch.", new TiaMcp.Logic.V4.CancelledDetails("tool-queue")),
                 McpServer.CurrentBehaviorTargets(ProtocolTool.Name, System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()))), approval, completion: "unknown"); }
+            using var dispatchLane = lane;
+            Isolation.ToolDispatchLanes.Activate(lane);
             bool previousContext = McpServer.EnterMcpApprovalContext();
             string? correlation = null;
             if (Isolation.IsolatedWorkerHost.IsChild)
@@ -166,8 +190,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (approval != null && !McpServer.ApprovalStillMatches(approval,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())))
                     return McpServer.ChangedApprovalRefusal(approval);
-                McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
-                TiaOpenness.Shared.AuditInvocation.StartCurrent();
+                if (!ToolTaxonomy.DispatchesTargets(ProtocolTool.Name))
+                {
+                    McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
+                    TiaOpenness.Shared.AuditInvocation.StartCurrent();
+                }
+                else
+                {
+                    // A batch's read-only session prelude ends before target approval.
+                    // Pure local batches do not need a project/session validation.
+                    bool sessionPrelude = RequiresSessionPrelude(request);
+                    using var auditLane = Isolation.ToolDispatchLanes.Enter(sessionPrelude ? "GetSessionState" : "GetToolUsage", cancellationToken);
+                    if (sessionPrelude) McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
+                    TiaOpenness.Shared.AuditInvocation.StartCurrent();
+                }
                 issued = true;
                 var result = McpServer.DiscloseTargets(McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)), ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
@@ -186,7 +222,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 return McpServer.FinishApproval(result, approval, completion: "unknown");
             }
-            finally { McpServer.LeaveMcpApprovalContext(previousContext); Gate.Release(); }
+            finally { McpServer.LeaveMcpApprovalContext(previousContext); }
+        }
+        private bool RequiresSessionPrelude(RequestContext<CallToolRequestParams> request)
+        {
+            if (ProtocolTool.Name == "PreviewToolBatch" || ProtocolTool.Name == "ApplyToolBatch") return true;
+            if (ProtocolTool.Name != "RunReadOnlyToolBatch" || request.Params?.Arguments == null) return false;
+            var arguments = request.Params.Arguments;
+            if (arguments.TryGetValue("expectedProject", out var project) && project.ValueKind == System.Text.Json.JsonValueKind.String
+                && !string.IsNullOrEmpty(project.GetString())) return true;
+            if (arguments.TryGetValue("operations", out var calls) && calls.ValueKind == System.Text.Json.JsonValueKind.Array)
+                foreach (var call in calls.EnumerateArray())
+                    if (call.TryGetProperty("name", out var name) && name.ValueKind == System.Text.Json.JsonValueKind.String
+                        && ToolTaxonomy.UsesOpennessLane(name.GetString() ?? "")) return true;
+            return false;
         }
         private void ExitFaultedWorker(string id, TiaOpenness.Shared.ApprovalOutcome? approval)
         {

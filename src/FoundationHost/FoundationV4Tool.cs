@@ -219,6 +219,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             journal.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }
+        IDisposable? lane = null;
         try
         {
             var validation = new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), new InputBudget())
@@ -241,24 +242,31 @@ internal sealed class FoundationV4Tool : McpServerTool
             bool preview = Candidate
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
             bool sessionApprovalApply = SessionApprovalApply(JsonSerializer.SerializeToNode(args) as JsonObject ?? new JsonObject());
+            TiaOpenness.Shared.PendingApproval? pending = null;
+            TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if (write && !preview)
             {
-                var pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
+                pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
-                var approval = approvalWait == null
+                approval = approvalWait == null
                     ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
                     : await approvalWait(pending, settings, cancellationToken);
                 capture(approval);
                 if (approval.Reason != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(approval.Reason, pending.PlanHash, id))));
-                if (!approval.Disabled && pending.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
+            }
+            if (inner is FoundationTool targetLaneTool)
+            {
+                lane = await targetLaneTool.AcquireLane(cancellationToken);
+                WorkerClient.ActivateLane(lane);
+            }
+            if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
-                {
-                    await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");
-                    return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                        new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
-                }
+            {
+                await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
             }
             if (Candidate) audit?.Start();
             if (compileCandidate) return Recorded(await ((FoundationTool)inner).InvokeCompileCandidateAsync(args, release, tool.Name, id, cancellationToken));
@@ -303,5 +311,6 @@ internal sealed class FoundationV4Tool : McpServerTool
         { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
         { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
+        finally { lane?.Dispose(); }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -7,6 +8,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace TiaOpenness.Shared
 {
@@ -43,6 +46,13 @@ namespace TiaOpenness.Shared
         private static readonly string[] Events = { "request", "start", "end", "approval-granted", "approval-denied", "approval-timeout", "approval-switch" };
         private readonly string directory;
         private readonly long maxBytes;
+        private static readonly ConcurrentDictionary<string, TailState> Tails = new ConcurrentDictionary<string, TailState>(StringComparer.Ordinal);
+        private sealed class TailState
+        {
+            internal string? Path, Identity, Hash;
+            internal long Length, Index;
+            internal DateTime LastWrite;
+        }
         internal static AuditLog Current => new AuditLog(DataLocations.Current.WritableAuditDirectory);
         internal AuditLog(string directory, long maxBytes = 10 * 1024 * 1024)
         {
@@ -59,30 +69,63 @@ namespace TiaOpenness.Shared
             {
                 var files = Files();
                 string? path = files.LastOrDefault();
-                AuditRecord? previous = null;
+                var tail = Tails.GetOrAdd(directory, _ => new TailState());
+                long previousIndex = 0;
+                string previousHash = Genesis;
                 if (path != null)
                 {
                     using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         if (stream.Length == 0) throw new InvalidDataException("The current audit file is empty.");
-                        stream.Position = stream.Length - 1;
-                        if (stream.ReadByte() != '\n') throw new InvalidDataException("The audit tail is interrupted; verify before repair.");
-                        previous = Parse(JournalRetention.LastCompleteLine(stream));
+                        string? identity = Identity(stream);
+                        var written = File.GetLastWriteTimeUtc(path);
+                        if (identity != null && path == tail.Path && identity == tail.Identity && stream.Length == tail.Length && written == tail.LastWrite)
+                        { previousIndex = tail.Index; previousHash = tail.Hash!; }
+                        else
+                        {
+                            stream.Position = stream.Length - 1;
+                            if (stream.ReadByte() != '\n') throw new InvalidDataException("The audit tail is interrupted; verify before repair.");
+                            var previous = Parse(JournalRetention.LastCompleteLine(stream));
+                            previousIndex = previous.Index; previousHash = Hash(previous);
+                        }
                     }
                 }
-                var row = new AuditRecord { Index = previous == null ? 1 : checked(previous.Index + 1),
+                var row = new AuditRecord { Index = checked(previousIndex + 1),
                     Utc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture), Event = kind,
                     RequestId = requestId, Host = host, Release = release, Tool = tool, Outcome = outcome,
                     PlanHash = planHash, ApprovalEnabled = approvalEnabled, ProcessId = Process.GetCurrentProcess().Id,
-                    PreviousHash = previous == null ? Genesis : Hash(previous) };
+                    PreviousHash = previousHash };
                 byte[] bytes = Encoding.UTF8.GetBytes(Canonical(row) + "\n");
                 if (path == null || new FileInfo(path).Length + bytes.Length > maxBytes)
                     path = Path.Combine(directory, "audit-" + row.Index.ToString("D20", CultureInfo.InvariantCulture) + ".jsonl");
                 using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
                 { stream.Write(bytes, 0, bytes.Length); stream.Flush(true); }
+                // Publish the cache only after durable append and handle close. Check
+                // identity, size and write time again on every append, under the file lock.
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    tail.Path = path; tail.Identity = Identity(stream); tail.Length = stream.Length;
+                    tail.LastWrite = File.GetLastWriteTimeUtc(path); tail.Index = row.Index; tail.Hash = Hash(row);
+                }
                 return row;
             }
         }
+
+        private static string? Identity(FileStream stream)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || !GetFileInformationByHandle(stream.SafeFileHandle, out var info)) return null;
+            return info.Volume.ToString("x8", CultureInfo.InvariantCulture) + ":" + info.IndexHigh.ToString("x8", CultureInfo.InvariantCulture)
+                + info.IndexLow.ToString("x8", CultureInfo.InvariantCulture) + ":" + info.CreatedHigh.ToString("x8", CultureInfo.InvariantCulture)
+                + info.CreatedLow.ToString("x8", CultureInfo.InvariantCulture);
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct FileInformation
+        {
+            internal uint Attributes, CreatedLow, CreatedHigh, AccessLow, AccessHigh, WrittenLow, WrittenHigh,
+                Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow;
+        }
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetFileInformationByHandle(SafeFileHandle file, out FileInformation information);
 
         // Public-to-the-host API for P6-44; no approval decision or channel is implemented here.
         internal void Approval(string requestId, string host, string release, string tool, string decision, string? planHash = null)

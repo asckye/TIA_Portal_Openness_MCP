@@ -56,10 +56,13 @@ namespace TiaMcpServer
                 provider.GetRequiredService<TiaMcpServer.Siemens.Portal>());
             services.TryAddSingleton<TiaMcpServer.Siemens.IHmiToolSession>(provider =>
                 provider.GetRequiredService<TiaMcpServer.Siemens.Portal>());
-            foreach (var type in ToolCatalog.LoadableTypes(typeof(TiaMcpServer.Siemens.Portal).Assembly, "EngineRegistration"))
+            var assembly = typeof(Siemens.Portal).Assembly;
+            var types = ToolCatalog.UsesRegistrationMetadata
+                ? ToolCatalog.ServiceTypeNames.Select(name => assembly.GetType("TiaMcpServer.Siemens.Services." + name, throwOnError: true)!)
+                : ToolCatalog.LoadableTypes(assembly, "EngineRegistration").Where(type => type.IsClass && !type.IsAbstract
+                    && type.Namespace == "TiaMcpServer.Siemens.Services" && type.Name.EndsWith("Service", StringComparison.Ordinal));
+            foreach (var type in types)
             {
-                if (!type.IsClass || type.IsAbstract || type.Namespace != "TiaMcpServer.Siemens.Services"
-                    || !type.Name.EndsWith("Service", StringComparison.Ordinal)) continue;
                 Register(services, type, "Engine singleton service must not be disposable: ");
             }
         }

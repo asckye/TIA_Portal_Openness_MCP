@@ -16,30 +16,10 @@ namespace TiaMcpServer.Isolation
 {
     internal static class OpennessReadinessGuard
     {
-        // These are the only calls admitted before TIA is ready. They are local diagnostics,
-        // discovery/usage/catalog helpers, offline builders and export-handle storage. Keep this
-        // fixed: changing catalog metadata alone must never admit a new tool without review.
-        private static readonly HashSet<string> SafeWithoutTia = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus",
-            "GetNativeInvocationLog", "GetOpennessCompatibility", "InspectSimaticSdCompatibility", "FindTools",
-            "ListToolCategories", "GetToolUsage", "PreviewToolCall",
-            "GetOpennessGuidance", "GetV21EcosystemCatalog", "PlanArtifactImportOrder",
-            "BuildClassicHmiMinimalPackage",
-            "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildFlgNetCall",
-            "BuildPlcAliasAlarmLad", "BuildPlcFbBlock", "BuildPlcFcBlock", "BuildPlcGlobalDb",
-            "BuildPlcLadFcBlock", "BuildPlcSymbolManifestFromPath", "BuildPlcTagTable", "BuildPlcUdt",
-            "BuildReleaseDiagnosticReport", "BuildReleaseManifest", "BuildReleaseRunbook", "BuildStructuredText",
-            "DecodePlcSimaticMl", "ValidatePlcDocumentSchemas",
-            "RenderPlcBlock", "RenderPlcProgramAtlas", "RenderPlcVisualDiff",
-            "ScanPlcSourceAnnotations",
-            "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
-        };
-
         internal static IList<McpServerTool> Wrap(IList<McpServerTool> tools)
             => tools.Select(tool => (McpServerTool)new GuardedTool(tool)).ToList();
 
-        internal static bool IsSafeWithoutTia(string name) => SafeWithoutTia.Contains(name);
+        internal static bool IsSafeWithoutTia(string name) => ToolTaxonomy.IsSafeWithoutTia(name);
 
         private static bool RequiresOpenness(string name) => !IsSafeWithoutTia(name);
 

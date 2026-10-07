@@ -2,6 +2,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -15,9 +16,160 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal sealed class ToolCatalog
     {
+        // Reviewed registration metadata avoids loading unrelated embedded SDK/model types.
+        // HttpTests compares this roster with the attributed types in the built assembly.
+        internal static readonly string[] ToolTypeNames = {
+            "AddressesTools",
+            "AlarmsTools",
+            "CertificateManagementTools",
+            "CfcTools",
+            "ClassicHmiFoldersTools",
+            "CompileCandidateTools",
+            "DccTools",
+            "DevicesTools",
+            "DiagnosticsTools",
+            "DocumentsTools",
+            "EcosystemTools",
+            "EngineeringAuditTools",
+            "EngineeringDiagnosticsTools",
+            "ExportTools",
+            "FallbackCandidateTools",
+            "GitWorkflowTools",
+            "GlobalScriptEditTools",
+            "GraphicSelectionTools",
+            "HardwareAmlTools",
+            "HardwareManagementTools",
+            "HardwareNetworkTools",
+            "HardwareServicesTools",
+            "HmiDescribeTools",
+            "HmiExchangeTools",
+            "HmiInspectionTools",
+            "HmiTagDeletionTools",
+            "ImportOrderTools",
+            "LibraryTools",
+            "McpServer",
+            "MigrationReadTools",
+            "ModulesTools",
+            "MotionProDiagClassicHmiTools",
+            "NativeExchangeTools",
+            "OfflineAnalysisTools",
+            "OfflineSuiteTools",
+            "OnlineDownloadTools",
+            "OpcUaTools",
+            "OptionalEngineeringTools",
+            "PlcBlocksTools",
+            "PlcBuildTools",
+            "PlcDocumentationTools",
+            "PlcExportCandidateTools",
+            "PlcExternalSourcesTools",
+            "PlcImportCandidateTools",
+            "PlcSimAdvancedTools",
+            "PlcSoftwareTools",
+            "PlcSourceCandidateTools",
+            "PlcTablesTools",
+            "ProjectSecurityTools",
+            "ProjectSessionTools",
+            "QualityAuditTools",
+            "ReflectionTools",
+            "RuntimeChannelTools",
+            "RuntimeSettingsTools",
+            "RuntimeTools",
+            "SafetyManagementTools",
+            "SafetyValidationTools",
+            "SaveCloseCandidateTools",
+            "SecurityDeepTools",
+            "SessionCandidateTools",
+            "SessionTools",
+            "SivarcTools",
+            "SoftwareUnitDeepTools",
+            "SoftwareUnitManagementTools",
+            "SpecializedExchangeTools",
+            "StartdriveTools",
+            "TeamcenterTools",
+            "TechnologyObjectsTools",
+            "TemplateTools",
+            "TestSuiteTools",
+            "ToolUsageTools",
+            "TypesTools",
+            "UnifiedEngineeringTools",
+            "UnifiedEventsTools",
+            "UnifiedExchangeTools",
+            "UnifiedHmiGroupsTools",
+            "UnifiedHmiTools",
+            "UnifiedObjectServicesTools",
+            "UnifiedScreenItemsTools",
+            "UnifiedUiModelTools",
+            "V20OptionsTools",
+            "V21EcosystemTools",
+            "VersionControlTools",
+            "XmlBuilderTools",
+        };
+        internal static readonly string[] ServiceTypeNames = {
+            "AddressesService",
+            "AlarmsService",
+            "CertificateManagementService",
+            "CfcService",
+            "ClassicHmiFoldersService",
+            "DccService",
+            "DevicesService",
+            "DocumentsService",
+            "EngineeringAuditService",
+            "GlobalScriptEditService",
+            "GraphicSelectionService",
+            "HardwareAmlService",
+            "HardwareManagementService",
+            "HardwareNetworkService",
+            "HardwareServicesService",
+            "HmiDescribeService",
+            "HmiExchangeService",
+            "HmiInspectionService",
+            "HmiTagDeletionService",
+            "LibraryService",
+            "MigrationReadService",
+            "ModulesService",
+            "MotionProDiagClassicHmiService",
+            "NativeExchangeService",
+            "OnlineDownloadService",
+            "OpcUaService",
+            "OptionalEngineeringService",
+            "PlcBlocksService",
+            "PlcExportCandidateService",
+            "PlcExternalSourcesService",
+            "PlcImportCandidateService",
+            "PlcSoftwareService",
+            "PlcSourceCandidateService",
+            "PlcTablesService",
+            "ProjectSecurityService",
+            "ReflectionService",
+            "RuntimeSettingsService",
+            "SafetyManagementService",
+            "SafetyValidationService",
+            "SecurityDeepService",
+            "SivarcService",
+            "SoftwareUnitDeepService",
+            "SoftwareUnitManagementService",
+            "SpecializedExchangeService",
+            "StartdriveService",
+            "TeamcenterService",
+            "TechnologyObjectsService",
+            "TestSuiteService",
+            "TypesService",
+            "UnifiedEngineeringService",
+            "UnifiedEventsService",
+            "UnifiedExchangeService",
+            "UnifiedHmiGroupsService",
+            "UnifiedHmiService",
+            "UnifiedObjectServicesService",
+            "UnifiedScreenItemsService",
+            "UnifiedUiModelService",
+            "V20OptionsService",
+            "VersionControlService",
+        };
+        internal static bool UsesRegistrationMetadata => typeof(ToolCatalog).Assembly.GetName().Name!.StartsWith("TiaMcp.Engine.", StringComparison.Ordinal);
         private static readonly Lazy<ToolCatalog> engine = new Lazy<ToolCatalog>(() =>
-            new ToolCatalog(LoadableTypes(typeof(ToolCatalog).Assembly, "ToolCatalog")
-                .Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() != null)));
+            new ToolCatalog(UsesRegistrationMetadata
+                ? ToolTypeNames.Select(name => typeof(ToolCatalog).Assembly.GetType("TiaMcpServer.ModelContextProtocol." + name, throwOnError: true)!)
+                : LoadableTypes(typeof(ToolCatalog).Assembly, "ToolCatalog").Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() != null)));
 
         // A type whose optional dependency is absent must not take every tool down: tool types only
         // reference the engine and its shipped libraries, so they are among the types that do load.
@@ -67,7 +219,35 @@ namespace TiaMcpServer.ModelContextProtocol
             Methods = methods.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToList().AsReadOnly();
         }
 
+        private static readonly McpServerToolCreateOptions DefaultOptions = new McpServerToolCreateOptions();
+        private static readonly ConcurrentDictionary<(MethodInfo Method, string? Name, string? Description), Lazy<McpServerTool>> MetadataTools =
+            new ConcurrentDictionary<(MethodInfo, string?, string?), Lazy<McpServerTool>>();
         internal static McpServerTool CreateTool(MethodInfo method, McpServerToolCreateOptions? options = null)
+        {
+            // Standard discovery calls differ only in name/description. The SDK
+            // function resolves its instance from each request; it owns no session.
+            // Custom provider, serializer and schema options retain separate tools.
+            if (options == null || options.Title == null && options.Services == null && options.SchemaCreateOptions == null
+                && options.SerializerOptions == null && options.Destructive == DefaultOptions.Destructive
+                && options.Idempotent == DefaultOptions.Idempotent && options.OpenWorld == DefaultOptions.OpenWorld
+                && options.ReadOnly == DefaultOptions.ReadOnly && options.UseStructuredContent == DefaultOptions.UseStructuredContent)
+                return MetadataTools.GetOrAdd((method, options?.Name, options?.Description), _ => new Lazy<McpServerTool>(() =>
+                {
+                    string declaredName = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
+                    if (options == null || options.Name != null && options.Name != declaredName) return CreateToolCore(method, options);
+                    var source = CreateTool(method).ProtocolTool;
+                    // Discovery prose does not require constructing the SDK's function
+                    // and its parameter schema a second time for the same method.
+                    return new SchemaHintedTool(CreateTool(method), new Tool {
+                        Name = source.Name, Title = source.Title, Description = options.Description ?? source.Description,
+                        InputSchema = source.InputSchema, OutputSchema = source.OutputSchema,
+                        Annotations = source.Annotations, Meta = source.Meta,
+                    });
+                })).Value;
+            return CreateToolCore(method, options);
+        }
+
+        private static McpServerTool CreateToolCore(MethodInfo method, McpServerToolCreateOptions? options)
         {
             // Exclude custom input contracts from SDK inference before it serializes
             // optional null defaults. Their null-rejecting converters are unchanged.

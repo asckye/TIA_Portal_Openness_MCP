@@ -15,6 +15,21 @@ internal interface IFoundationWorker : IDisposable
 internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled) : IFoundationWorker
 {
     private readonly SemaphoreSlim serial = new(1, 1);
+    private static readonly AsyncLocal<WorkerClient?> Held = new();
+    internal async Task<IDisposable?> AcquireLane(CancellationToken token)
+    {
+        if (ReferenceEquals(Held.Value, this)) return null;
+        await serial.WaitAsync(token);
+        return new Lane(this);
+    }
+    internal static void ActivateLane(IDisposable? lane) { if (lane is Lane held) held.Activate(); }
+    private sealed class Lane(WorkerClient owner) : IDisposable
+    {
+        private WorkerClient? previous;
+        private bool disposed;
+        internal void Activate() { previous = Held.Value; Held.Value = owner; }
+        public void Dispose() { if (!disposed) { disposed = true; Held.Value = previous; owner.serial.Release(); } }
+    }
     private Process? process;
     private ChannelClient? channel;
     private bool attachAttempted;
@@ -29,7 +44,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
     {
-        await serial.WaitAsync(token);
+        bool acquired = !ReferenceEquals(Held.Value, this);
+        if (acquired) await serial.WaitAsync(token);
         bool sent = false;
         try
         {
@@ -132,7 +148,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if(outcome.Poisoned) channel?.Invalidate(ex);
             throw;
         }
-        finally { serial.Release(); }
+        finally { if (acquired) serial.Release(); }
     }
 
     public void Dispose()
@@ -156,12 +172,13 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     internal void InvalidateCandidateSession()
     {
-        serial.Wait();
+        bool acquired = !ReferenceEquals(Held.Value, this);
+        if (acquired) serial.Wait();
         try
         {
             var failure = new IOException("The candidate outcome is unknown; inspect TIA before a new session.");
             outcome.Failed(true, failure); channel?.Invalidate(failure);
         }
-        finally { serial.Release(); }
+        finally { if (acquired) serial.Release(); }
     }
 }

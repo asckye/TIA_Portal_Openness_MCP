@@ -66,36 +66,50 @@ namespace TiaMcpServer.ModelContextProtocol
         // separately compiled adapter assemblies; step H will supply the engine's sink and id.
         internal static void ConfigureOutput(Action<string>? write, Func<string>? correlation = null)
         {
-            lock (Sync) { sink = write == null ? (IJournalSink)new FileJournalSink() : new CallbackJournalSink(write); correlationSource = correlation; }
+            lock (Sync) { (sink as IDisposable)?.Dispose(); sink = write == null ? (IJournalSink)new FileJournalSink() : new CallbackJournalSink(write); correlationSource = correlation; }
         }
 
-        internal interface IJournalSink { void Write(Func<string> row); }
+        internal interface IJournalSink { void Write(Func<string> row, bool flush); }
         private sealed class CallbackJournalSink : IJournalSink
         {
             private readonly Action<string> write;
             internal CallbackJournalSink(Action<string> write) { this.write = write; }
-            public void Write(Func<string> row) => write(row());
+            public void Write(Func<string> row, bool flush) => write(row());
         }
-        private sealed class FileJournalSink : IJournalSink
+        private sealed class FileJournalSink : IJournalSink, IDisposable
         {
             private TiaOpenness.Shared.JournalRetention retention = new TiaOpenness.Shared.JournalRetention();
             private long settingsRead;
-            public void Write(Func<string> row)
+            private long length;
+            private string? currentPath;
+            public void Write(Func<string> row, bool flush)
             {
                 var root = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 if (!Path.IsPathRooted(root)) throw new IOException("Diagnostic path must be absolute: " + root);
                 Directory.CreateDirectory(root);
                 string path = Path.Combine(root, "calls-" + ProcessKey + ".jsonl");
                 string text = row();
+                RequireDiskFlush(text, ref flush);
                 long now = Stopwatch.GetTimestamp();
-                if (settingsRead == 0 || now - settingsRead >= Stopwatch.Frequency)
+                bool checkRetention = settingsRead == 0 || now - settingsRead >= Stopwatch.Frequency;
+                if (checkRetention)
                 { retention = TiaOpenness.Shared.JournalRetention.Load(TiaOpenness.Shared.JournalRetention.SettingsPath); settingsRead = now; }
-                retention.Rotate(path, Encoding.UTF8.GetByteCount(text + Environment.NewLine));
-                // Flush BEFORE before calling into native code, even if the native process later crashes.
-                using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
-                using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) { writer.WriteLine(text); writer.Flush(); stream.Flush(true); }
+                byte[] bytes = Encoding.UTF8.GetBytes(text + Environment.NewLine);
+                if (currentPath != path || !File.Exists(path) || checkRetention || length + bytes.Length > (long)retention.FileSizeMb * 1024 * 1024)
+                {
+                    retention.Rotate(path, bytes.Length);
+                    currentPath = path;
+                }
+                // Projection BEFORE, native boundaries and completion force the disk.
+                // Begin's introductory row is coalesced with the projection BEFORE.
+                // Keep reader/recovery compatibility: close the handle after every row.
+                // Retention copies need scanning only at refresh/rotation boundaries.
+                using var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                stream.Write(bytes, 0, bytes.Length); if (flush) stream.Flush(true); else stream.Flush(); length = stream.Length;
             }
+            public void Dispose() { currentPath = null; }
         }
+        static partial void RequireDiskFlush(string row, ref bool flush);
 
         internal static JsonLineObject HealthRow()
         {
@@ -106,7 +120,10 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string Begin(string name, string? correlation = null)
         {
             string id = Guid.TryParseExact(correlation ?? correlationSource?.Invoke(), "N", out var parsed) ? parsed.ToString("N") : Guid.NewGuid().ToString("N");
-            Current.Value = id; WriteRow(id, name, "BEFORE"); return id;
+            Current.Value = id;
+            Emit(() => FormatRow(DateTime.UtcNow, id, name, "BEFORE", ProcessId, null, null,
+                ReadBinding(), Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.GetApartmentState().ToString(), null), flush: false);
+            return id;
         }
         internal static T Native<T>(string stage, Func<T> call, string? objectType = null, string? objectPath = null)
         {
@@ -121,11 +138,15 @@ namespace TiaMcpServer.ModelContextProtocol
             => Emit(() => FormatRow(DateTime.UtcNow, id, name, phase, ProcessId, objectType, objectPath,
                 ReadBinding(), Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.GetApartmentState().ToString(), details?.Invoke()));
         internal static void WriteLine(string row) => Emit(() => row);
-        private static void Emit(Func<string> row)
+        private static void Emit(Func<string> row, bool flush = true)
         {
             try
             {
-                lock (Sync) sink.Write(row);
+                // Projection and redaction are per-call managed work. Only the
+                // append/flush needs the shared writer lock; native BEFORE still
+                // completes synchronously on the dispatching thread.
+                string text = row();
+                lock (Sync) sink.Write(() => text, flush);
             }
             catch (Exception ex) { lock (Sync) { failedWrites++; lastWriteFailure = ex.GetType().Name; } try { Console.Error.WriteLine("DIAGNOSTIC_WRITE_FAILED: " + ex.Message); } catch /* swallow(logging-failure): stderr may be unavailable while reporting a journal write failure */ { } }
         }

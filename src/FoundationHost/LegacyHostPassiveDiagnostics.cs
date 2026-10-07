@@ -249,12 +249,14 @@ internal static class LegacyHostToolRegistry
         Func<JsonObject> readiness = () => LegacyHostPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource);
         tools.AddRange(LegacyHostPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools, readiness));
         tools.Add(new ToolUsageTool(releaseKey, () => tools));
-        for (int i = 0; i < tools.Count; i++)
+        var wrapped = new McpServerTool[tools.Count];
+        Parallel.For(0, tools.Count, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
         {
             // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
             Func<JsonObject>? readinessForTool = worker is WorkerClient { Bundled: true } ? readiness : null;
-            tools[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool));
-        }
+            wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool));
+        });
+        tools.Clear(); tools.AddRange(wrapped);
         return tools.AsReadOnly();
     }
 }

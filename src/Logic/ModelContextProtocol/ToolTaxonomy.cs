@@ -13,6 +13,31 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class ToolTaxonomy
     {
+        // Reviewed admission and dispatch policy. Catalog descriptions cannot make a
+        // new tool local; unknown tools always use the exclusive Openness lane.
+        private static readonly HashSet<string> WithoutTia = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus",
+            "GetNativeInvocationLog", "GetOpennessCompatibility", "InspectSimaticSdCompatibility", "FindTools",
+            "ListToolCategories", "GetToolUsage", "PreviewToolCall",
+            "GetOpennessGuidance", "GetV21EcosystemCatalog", "PlanArtifactImportOrder",
+            "BuildClassicHmiMinimalPackage", "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildFlgNetCall",
+            "BuildPlcAliasAlarmLad", "BuildPlcFbBlock", "BuildPlcFcBlock", "BuildPlcGlobalDb",
+            "BuildPlcLadFcBlock", "BuildPlcSymbolManifestFromPath", "BuildPlcTagTable", "BuildPlcUdt",
+            "BuildReleaseDiagnosticReport", "BuildReleaseManifest", "BuildReleaseRunbook", "BuildStructuredText",
+            "DecodePlcSimaticMl", "ValidatePlcDocumentSchemas", "RenderPlcBlock", "RenderPlcProgramAtlas", "RenderPlcVisualDiff",
+            "ScanPlcSourceAnnotations", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
+        };
+        private static readonly HashSet<string> SessionReaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "InitializeEnvironment", "GetEnvironmentDiagnostics", "PreviewToolCall" };
+
+        public static bool IsSafeWithoutTia(string name) => WithoutTia.Contains(name);
+        public static bool UsesOpennessLane(string name) => !WithoutTia.Contains(name) || SessionReaders.Contains(name);
+        public static bool DispatchesTargets(string name) => string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "RunReadOnlyToolBatch", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "PreviewToolBatch", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "ApplyToolBatch", StringComparison.OrdinalIgnoreCase);
+
         public sealed class Category
         {
             public string Key { get; }

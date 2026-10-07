@@ -31,7 +31,13 @@ namespace TiaMcpServer.Isolation
     internal sealed class OpennessWorkerSupervisor : IDisposable
     {
         private readonly object sync = new object();
-        private readonly SemaphoreSlim gate = new SemaphoreSlim(1, 1);
+        // The child takes the exclusive portal lane after approval. The parent
+        // serializes only short pipe writes and startup, so local worker tools
+        // (including worker-owned exports) can complete during a native call.
+        private readonly SemaphoreSlim gate = new SemaphoreSlim(8, 8);
+        private readonly SemaphoreSlim localGate = new SemaphoreSlim(8, 8);
+        private readonly SemaphoreSlim startup = new SemaphoreSlim(1, 1);
+        private readonly Dictionary<string, string> active = new Dictionary<string, string>();
         private readonly Func<ProcessStartInfo> start;
         private readonly int major;
         private readonly string hash;
@@ -132,22 +138,29 @@ namespace TiaMcpServer.Isolation
                     new LimitExceededDetails("workerQueue", QueueLimit, admitted));
                 admitted++; ticket = epoch;
             }
-            bool entered = false, dispatched = false, firstAttach = false;
+            bool entered = false, dispatched = false, firstAttach = false, startingWorker = false;
             var elapsed = Stopwatch.StartNew();
             string id = Guid.NewGuid().ToString("N");
             string name = parameters["name"]?.GetValue<string>() ?? "unknown";
+            var lane = ToolTaxonomy.UsesOpennessLane(effectiveName) ? gate : localGate;
             try
             {
-                entered = await gate.WaitAsync(deadline, cancellation).ConfigureAwait(false);
+                entered = await lane.WaitAsync(deadline, cancellation).ConfigureAwait(false);
                 if (!entered) throw new WorkerCallException("Request expired while queued; not dispatched.", false, new TimeoutDetails("worker-queue"));
                 lock (sync)
                 {
                     if (disposed || state == "Faulted" || ticket != epoch) throw new WorkerCallException("Worker generation changed while queued; not dispatched.", false,
                         new SessionResetRequiredDetails("openness-worker-generation"));
-                    activeTool = name;
+                    active[id] = name; activeTool = name;
                 }
                 cancellation.ThrowIfCancellationRequested();
-                await EnsureStarted(elapsed, cancellation).ConfigureAwait(false);
+                await startup.WaitAsync(cancellation).ConfigureAwait(false);
+                try
+                {
+                    lock (sync) startingWorker = state == "NotStarted";
+                    await EnsureStarted(elapsed, cancellation).ConfigureAwait(false);
+                }
+                finally { startup.Release(); }
                 cancellation.ThrowIfCancellationRequested();
                 if (elapsed.Elapsed >= deadline) throw new WorkerCallException("Request expired before dispatch.", false, new TimeoutDetails("worker-dispatch"));
                 WorkerConnection worker;
@@ -197,7 +210,7 @@ namespace TiaMcpServer.Isolation
             catch (OperationCanceledException)
             {
                 if (dispatched) Fault("CancelledAfterDispatch");
-                else if (entered && state == "Starting") Fault("StartupCancelled");
+                else if (startingWorker && state == "Starting") Fault("StartupCancelled");
                 throw new WorkerCallException(dispatched ? "Caller cancelled after dispatch; native outcome unknown. No replay." : "Cancelled before dispatch.", dispatched,
                     new CancelledDetails("worker-dispatch"));
             }
@@ -210,8 +223,8 @@ namespace TiaMcpServer.Isolation
             }
             finally
             {
-                lock (sync) { admitted--; if (entered) activeTool = null; }
-                if (entered) gate.Release();
+                lock (sync) { admitted--; active.Remove(id); activeTool = active.Values.LastOrDefault(); }
+                if (entered) lane.Release();
             }
         }
 

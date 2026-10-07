@@ -96,6 +96,8 @@ internal sealed partial class FoundationTool : McpServerTool
     internal bool RequiresTia => IsNative && definition.ResponseMember != "RuntimeQuery";
     internal bool UsesProductionWorker => worker is WorkerClient { Bundled: true };
     internal string? ApprovalIdentity => (worker as WorkerClient)?.ApprovalIdentity;
+    internal Task<IDisposable?> AcquireLane(CancellationToken token)
+        => IsNative && worker is WorkerClient client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
     internal bool JournalIsWrite => definition.Arguments.Any(a => a.Name == "dryRun")
         || definition.ResponseMember is "Connection" or "Bind" or "Disconnect" or "PlcRender";
     internal FoundationTool(Definition definition, IFoundationWorker worker)

@@ -14,6 +14,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         private static readonly AsyncLocal<bool> McpApprovalContext = new AsyncLocal<bool>();
+        private static readonly AsyncLocal<CancellationToken> McpDispatchCancellation = new AsyncLocal<CancellationToken>();
         private static readonly AsyncLocal<int> ApprovalPreviewDepth = new AsyncLocal<int>();
         private static readonly AsyncLocal<Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>?> ApprovalWaitOverride =
             new AsyncLocal<Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>?>();
@@ -113,18 +114,30 @@ namespace TiaMcpServer.ModelContextProtocol
             return new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
         }
-        internal static CallToolResult ApprovedBridgeCall(string name, string arguments, Func<CallToolResult> invoke)
+        internal static CallToolResult ApprovedBridgeCall(string name, string arguments, Func<CallToolResult> invoke,
+            Func<CallToolResult?>? beforeDispatch = null)
         {
-            if (!McpApprovalContext.Value) { TiaOpenness.Shared.AuditInvocation.StartCurrent(); return invoke(); } // Local user's CLI is outside MCP.
+            // Target approval must finish before acquiring its lane. The identity
+            // check and audit start belong inside that lane, immediately before dispatch.
+            var approval = McpApprovalContext.Value && ApprovalPreviewDepth.Value == 0
+                ? WaitForApproval(name, arguments, McpDispatchCancellation.Value).GetAwaiter().GetResult() : null;
+            if (approval?.Reason != null) return ApprovalRefusal(approval);
+            IDisposable? lane = null;
+            EnterTargetLane(beforeDispatch == null ? name : "GetSessionState", arguments, ref lane);
+            using var dispatchLane = lane;
+            IDisposable? targetLane = null;
+            if (beforeDispatch != null) EnterTargetLane(name, arguments, ref targetLane);
+            using var boundedTargetLane = targetLane;
+            if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
+            var rejection = beforeDispatch?.Invoke();
+            if (rejection != null) return FinishApproval(rejection, approval);
             if (ApprovalPreviewDepth.Value > 0) return FinishApproval(invoke(), null,
                 ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
-            var approval = WaitForApproval(name, arguments, CancellationToken.None).GetAwaiter().GetResult();
-            if (approval?.Reason != null) return ApprovalRefusal(approval);
-            if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
-            try { return FinishApproval(invoke(), approval, ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
+            try { return FinishApproval(invoke(), approval, McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled); }
             catch { if (approval != null) ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult(); throw; }
         }
+        static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane);
         internal static bool ApprovalStillMatches(ApprovalOutcome approval, string arguments)
         {
             if (approval.Disabled) return true;

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace TiaMcpServer.Isolation
 {
-    // One reader, one outstanding request, strict IDs. A broken channel is never reused.
+    // One reader, bounded outstanding requests, strict IDs. A broken channel is never reused.
     // The owner kills only this process, never the TIA process or its process tree.
     internal sealed class WorkerConnection : IDisposable
     {
@@ -18,9 +20,9 @@ namespace TiaMcpServer.Isolation
         private readonly StreamWriter stdin;
         private readonly Action<string> failed;
         private readonly TaskCompletionSource<JsonObject> hello = NewCompletion();
-        private TaskCompletionSource<JsonObject>? pending;
-        private string? pendingId;
-        private Action<JsonObject>? notification;
+        private readonly Dictionary<string, (TaskCompletionSource<JsonObject> Completion, Action<JsonObject>? Notification)> pending =
+            new Dictionary<string, (TaskCompletionSource<JsonObject>, Action<JsonObject>?)>();
+        private readonly SemaphoreSlim writes = new SemaphoreSlim(1, 1);
         private bool disposed;
         private string? error;
         private long nextId;
@@ -61,21 +63,31 @@ namespace TiaMcpServer.Isolation
             lock (sync)
             {
                 if (error != null || disposed) throw new IOException("Worker channel is unavailable.");
-                if (pending != null) throw new InvalidOperationException("Only one worker request may be in flight.");
                 string id = "worker_" + (++nextId);
+                if (method == "tools/call")
+                {
+                    var meta = parameters["_meta"] as JsonObject ?? new JsonObject();
+                    parameters["_meta"] = meta;
+                    meta["tiaMcpWorkerRequestId"] = id;
+                }
                 line = new JsonObject { ["jsonrpc"] = "2.0", ["id"] = id, ["method"] = method, ["params"] = parameters }.ToJsonString();
                 if (line.Length > MaxFrameChars) throw new ArgumentException("Worker request exceeds the frame limit.");
-                pendingId = id;
-                pending = completion = NewCompletion();
-                notification = onNotification;
+                completion = NewCompletion();
+                pending.Add(id, (completion, onNotification));
                 _ = completion.Task.ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
             }
-            try { await stdin.WriteLineAsync(line).ConfigureAwait(false); }
+            try { await WriteLine(line).ConfigureAwait(false); }
             catch { Fail("RequestPipeFailed"); throw new IOException("Worker request pipe failed; outcome may be unknown."); }
             return await completion.Task.ConfigureAwait(false);
         }
 
-        internal Task NotifyInitializedAsync() => stdin.WriteLineAsync("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+        internal Task NotifyInitializedAsync() => WriteLine("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+        private async Task WriteLine(string line)
+        {
+            await writes.WaitAsync().ConfigureAwait(false);
+            try { await stdin.WriteLineAsync(line).ConfigureAwait(false); }
+            finally { writes.Release(); }
+        }
 
         private static string? ReadLine(TextReader reader)
         {
@@ -115,16 +127,27 @@ namespace TiaMcpServer.Isolation
                         {
                             if (frame.ContainsKey("id")) throw new IOException("Unexpected worker-to-host request.");
                             // Only progress is forwarded; no child-originated sampling, requests or control actions.
-                            if (frame["method"]!.GetValue<string>() == "notifications/progress") progress = notification;
+                            if (frame["method"]!.GetValue<string>() == "notifications/progress")
+                            {
+                                string? requestId = (string?)frame["params"]?["tiaMcpWorkerRequestId"];
+                                if (requestId != null && pending.TryGetValue(requestId, out var target)) progress = target.Notification;
+                                else
+                                {
+                                    // Older/test workers send uncorrelated progress. Keep that
+                                    // protocol compatible, without holding the reader lock during callbacks.
+                                    var callbacks = pending.Values.Select(p => p.Notification).Where(p => p != null).ToArray();
+                                    progress = value => { foreach (var callback in callbacks) callback!(value); };
+                                }
+                            }
                         }
                         else
                         {
-                            if (pending == null || frame["id"]?.GetValue<string>() != pendingId ||
+                            string? id = frame["id"]?.GetValue<string>();
+                            if (id == null || !pending.TryGetValue(id, out var waiter) ||
                                 frame.ContainsKey("result") == frame.ContainsKey("error"))
                                 throw new IOException("Worker response ID or envelope mismatch.");
-                            var waiter = pending;
-                            pending = null; pendingId = null; notification = null;
-                            waiter.TrySetResult(frame);
+                            pending.Remove(id);
+                            waiter.Completion.TrySetResult(frame);
                         }
                     }
                     if (progress != null) progress(frame);
@@ -141,8 +164,8 @@ namespace TiaMcpServer.Isolation
                 if (disposed || error != null) return;
                 error = reason;
                 hello.TrySetException(new IOException(reason));
-                pending?.TrySetException(new IOException(reason));
-                pending = null; pendingId = null; notification = null;
+                foreach (var waiter in pending.Values) waiter.Completion.TrySetException(new IOException(reason));
+                pending.Clear();
             }
             failed(reason);
         }
@@ -154,8 +177,8 @@ namespace TiaMcpServer.Isolation
                 if (disposed) return;
                 disposed = true;
                 hello.TrySetException(new ObjectDisposedException(nameof(WorkerConnection)));
-                pending?.TrySetException(new ObjectDisposedException(nameof(WorkerConnection)));
-                pending = null; notification = null;
+                foreach (var waiter in pending.Values) waiter.Completion.TrySetException(new ObjectDisposedException(nameof(WorkerConnection)));
+                pending.Clear();
             }
             try { if (!process.HasExited) process.Kill(); } catch (InvalidOperationException) /* swallow(teardown): the owned worker may exit before disposal reaches the kill request */ { } catch (System.ComponentModel.Win32Exception) /* swallow(teardown): failure to kill the owned worker must not replace the already terminated request outcome */ { }
             // Do not wait for TIA or dispose a writer while another thread is blocked in a large write.

@@ -400,6 +400,22 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if (args.Length >= 2 && args[1] == "concurrency-only") {
+                if (args.Length >= 3) AppDomain.CurrentDomain.AssemblyResolve += (_, e) => {
+                    string dependency = Path.Combine(Path.GetFullPath(args[2]), new AssemblyName(e.Name).Name + ".dll");
+                    return File.Exists(dependency) ? Assembly.LoadFrom(dependency) : null;
+                };
+                await ConcurrencyPerformanceChecks.RegressionChecks(Server);
+                return 0;
+            }
+            if (args.Length >= 4 && args[1] == "performance-host") {
+                await ConcurrencyPerformanceChecks.Host(Server, args[2], int.Parse(args[3]));
+                return 0;
+            }
+            if (args.Length >= 4 && args[1] == "concurrency-performance") {
+                await ConcurrencyPerformanceChecks.Run(Server, args[2], args[3] == "baseline");
+                return 0;
+            }
             if(args.Length >= 3 && args[1] == "host-build-no-tia") {
                 StartupNoTiaChecks.Run(Server, int.Parse(args[2]), label => { Passed++; Console.WriteLine("PASS " + label); });
                 Console.WriteLine("COMPLETE: " + Passed + " no-TIA host-build checks passed");

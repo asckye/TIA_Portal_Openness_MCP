@@ -102,6 +102,12 @@ internal static partial class Program
                     requestId = "fixture-request", outcome = ok ? "succeeded" : "rejected-before-operation", execution = ok ? "read-only" : "not-started",
                     requiresSessionReset = false, behaviorPolicy = "not-applicable", completeness = ok ? "complete" : "none", paging = (object?)null, warnings = new object[0] }
             };
+            if (mode == "parallel-local" && tool == "GetSessionState") {
+                string response = Reply(id, new { content = new[] { new { type = "text", text = Json.Serialize(payload) } },
+                    structuredContent = payload, isError = false });
+                Task.Run(async () => { await Task.Delay(750); Console.WriteLine(response); });
+                continue;
+            }
             Console.WriteLine(Reply(mode == "wrong-id" ? "wrong" : id, new {
                 content = new[] { new { type = "text", text = Json.Serialize(payload) } },
                 structuredContent = mode == "mismatched-envelope" ? (object)new { schemaVersion = 4 } : payload,
@@ -528,9 +534,19 @@ internal static partial class Program
             for(int i=0;i<100 && f.Dispatches==0;i++) await Task.Delay(10);
             cancel.Cancel(); await WorkerFailure(call,true); Check((string)f.State["state"]=="Faulted","Cancellation did not invalidate child");
         });
-        await Test("faulted queued callers are not dispatched into a new generation", async () => {
+        await Test("faulted pending callers are not dispatched into a new generation", async () => {
             using var f=new WorkerFixture("hang",.6); var first=f.Call(); await Task.Delay(80); var queued=f.Call();
-            await WorkerFailure(first,true); await WorkerFailure(queued,false); Check(f.Dispatches==1,"Queued operation replayed");
+            await WorkerFailure(first,true); await WorkerFailure(queued,true); Check(f.Dispatches==1,"Queued operation replayed");
+        });
+        await Test("worker-owned local export completes during another worker request", async () => {
+            using var fixture = new WorkerFixture("parallel-local");
+            var native = fixture.Call();
+            for (int i = 0; i < 200 && fixture.Dispatches == 0; i++) await Task.Delay(10);
+            Check(fixture.Dispatches == 1, "Native fixture did not start");
+            var local = await Bounded(fixture.Call("GetExportContent"), 500);
+            Check(local.ContainsKey("result") && !native.IsCompleted, "Worker local call waited for the native request");
+            await native;
+            Check(fixture.Starts == 1 && fixture.Dispatches == 2, "Export used another worker or was replayed");
         });
         Console.WriteLine("COMPLETE: " + (Passed-before) + " worker supervisor checks passed; no TIA connection attempted");
     }

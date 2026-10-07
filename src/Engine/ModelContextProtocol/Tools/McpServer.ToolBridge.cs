@@ -274,6 +274,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public static CallToolResult CallTool(
             [Description("Exact currently registered tool name from FindTools.")] string name,
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
+            => CallToolCore(name, arguments);
+
+        private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {
             bool write = AllToolMethods(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
             bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
@@ -288,10 +291,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
+            bool issued = false;
             try { return AuditBridgeResult(audit, ApprovedBridgeCall(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
-                () => ToolResult(InvokeToolMethod(method!, call!))), disabled); }
+                () => { issued = true; return ToolResult(InvokeToolMethod(method!, call!)); }, beforeDispatch), disabled); }
+            catch (OperationCanceledException) when (!issued) /* swallow(privacy): typed cancellation before dispatch does not expose exception text */
+            { return AuditBridgeResult(audit, V4TargetReject(name, new Error("The request was cancelled before dispatch.",
+                new CancelledDetails("tool-queue")), CurrentBehaviorTargets(name, (arguments ?? EmptyArguments()).Json)), disabled); }
             catch (Exception ex)
-            { return AuditBridgeResult(audit, TargetFailure(name, ex, true), disabled); }
+            { return AuditBridgeResult(audit, TargetFailure(name, ex, issued), disabled); }
         }
 
         private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result, bool disabled = false)

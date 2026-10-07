@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -25,7 +26,12 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!IsInfrastructureV4(name)) throw new InvalidOperationException("Registered tool has no generated V4 contract: " + name);
         }
 
+        private static readonly ConcurrentDictionary<(string Name, MethodInfo Method), JsonElement> InputSchemas =
+            new ConcurrentDictionary<(string, MethodInfo), JsonElement>();
         internal static JsonElement ToolInputSchema(string name, MethodInfo method)
+            => InputSchemas.GetOrAdd((name, method), key => CreateInputSchema(key.Name, key.Method));
+
+        private static JsonElement CreateInputSchema(string name, MethodInfo method)
         {
             var raw = ToolCatalog.CreateTool(method).ProtocolTool.InputSchema;
             var schema = (JsonObject)JsonNode.Parse(raw.GetRawText())!;

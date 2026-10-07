@@ -30,8 +30,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 CallToolResult result;
                 try
                 {
-                    if (expectedProject.Length > 0) BatchState(expectedProject);
-                    result = CallTool(call.Name, call.Arguments);
+                    result = CallToolCore(call.Name, call.Arguments, expectedProject.Length == 0 ? null : () =>
+                    {
+                        try { BatchState(expectedProject); return null; }
+                        catch (Exception) /* swallow(privacy): retain the original batch identity rejection before target dispatch */
+                        { return V4Reject(tool, new Error("Batch project identity is unavailable or changed.", new PreconditionFailedDetails("batch-identity", expectedProject))); }
+                    });
                 }
                 catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { result = V4Reject(tool, new Error("Batch project identity is unavailable or changed.", new PreconditionFailedDetails("batch-identity", expectedProject))); }
                 rows.Add(BatchRow(rows.Count, call.Name, result));
@@ -111,10 +115,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     try
                     {
-                        if (BatchState(plan.Project) != plan.State) throw new InvalidOperationException();
                         var args = (JsonObject)op["arguments"]!.DeepClone(); args["dryRun"] = false;
                         issued = true;
-                        result = CallTool(name, new ToolArguments(JsonSerializer.SerializeToElement(args)));
+                        result = CallToolCore(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), () =>
+                        {
+                            try { if (BatchState(plan.Project) == plan.State) return null; }
+                            catch (Exception) /* swallow(privacy): an unavailable binding refuses this item before dispatch */ { }
+                            return V4Reject(name, new Error("Batch identity changed before this write.", new PreconditionFailedDetails("batch-identity", plan.Project)));
+                        });
                         if (ResultSucceeded(ResultBody(result)) != true) cause = rows.Count;
                     }
                     catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */
@@ -211,6 +219,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private static string BatchState(string project)
         {
+            IDisposable? lane = null;
+            EnterTargetLane("GetSessionState", "{}", ref lane);
+            using var stateLane = lane;
             if (string.IsNullOrWhiteSpace(project)) throw new ArgumentException("expectedProject is required.");
             EngineServices.Get<Siemens.Portal>().EnsureBoundProjectUnchanged("Batch identity");
             var state = EngineServices.Get<SessionTools>().GetState();
