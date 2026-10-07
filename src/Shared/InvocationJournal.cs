@@ -80,7 +80,6 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             private TiaOpenness.Shared.JournalRetention retention = new TiaOpenness.Shared.JournalRetention();
             private long settingsRead;
-            private long length;
             private string? currentPath;
             public void Write(Func<string> row, bool flush)
             {
@@ -95,7 +94,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (checkRetention)
                 { retention = TiaOpenness.Shared.JournalRetention.Load(TiaOpenness.Shared.JournalRetention.SettingsPath); settingsRead = now; }
                 byte[] bytes = Encoding.UTF8.GetBytes(text + Environment.NewLine);
-                if (currentPath != path || !File.Exists(path) || checkRetention || length + bytes.Length > (long)retention.FileSizeMb * 1024 * 1024)
+                // The size check reads the open handle, so a file changed outside this writer still rotates on time.
+                bool rotate = currentPath != path || checkRetention || !File.Exists(path);
+                FileStream? stream = rotate ? null : new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                if (stream != null && stream.Length + bytes.Length > (long)retention.FileSizeMb * 1024 * 1024) { stream.Dispose(); stream = null; rotate = true; }
+                if (rotate)
                 {
                     retention.Rotate(path, bytes.Length);
                     currentPath = path;
@@ -104,8 +107,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 // Begin's introductory row is coalesced with the projection BEFORE.
                 // Keep reader/recovery compatibility: close the handle after every row.
                 // Retention copies need scanning only at refresh/rotation boundaries.
-                using var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
-                stream.Write(bytes, 0, bytes.Length); if (flush) stream.Flush(true); else stream.Flush(); length = stream.Length;
+                using (stream ??= new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
+                { stream.Write(bytes, 0, bytes.Length); if (flush) stream.Flush(true); else stream.Flush(); }
             }
             public void Dispose() { currentPath = null; }
         }

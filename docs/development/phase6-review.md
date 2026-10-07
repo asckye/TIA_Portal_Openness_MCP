@@ -1892,7 +1892,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Core/Abstractions/SessionFactoryLoader.cs](../../src/Studio/Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
 | [Launcher/Launcher.cs](../../src/Studio/Launcher/Launcher.cs):29 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
 | [src/Shared/DataLocations.cs](../../src/Shared/DataLocations.cs):69 `TIA_MCP_DATA_DIRECTORY` | 显式数据根或 bundle/data；不可写时按用途回退用户目录 | 沿用数据根政策；logs 按发布键/studio 分组 |
-| [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):87 `DiagnosticsDirectory` | P6-39：调用/原生证据仍在 data/diagnostics；PID + 启动时间 + GUID 独立日志流 | P6-45 读取；P6-46 保留与时间窗口，logs/audit 为每数据根单链 |
+| [src/Shared/InvocationJournal.cs](../../src/Shared/InvocationJournal.cs):86 `DiagnosticsDirectory` | P6-39：调用/原生证据仍在 data/diagnostics；PID + 启动时间 + GUID 独立日志流 | P6-45 读取；P6-46 保留与时间窗口，logs/audit 为每数据根单链 |
 | [Program.cs](../../src/Engine/Program.cs):1023 `AppendLog` | P6-39：启动与主日志合为 logs/<releaseKey>/TiaMcpServer-<processKey>.log | 只读安装回退 TEMP/TiaMcp/logs；每用途保留最新 32 份；失败每进程报一次 IO_FAILED |
 | [Gui/App.xaml.cs](../../src/Studio/Gui/App.xaml.cs):14 `.crash.log` | P6-39：Studio 崩溃日志在 logs/studio，PID/启动时间文件名 | Workbench 根政策；无可写位置报 IO_FAILED |
 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs):87 `EcosystemPythonExecutable` | P6-39：LocalAppData/TiaMcp/ecosystem-python，显式 Python 优先 | 不执行或迁移旧私有环境；缺失/不可写报 IO_FAILED |
