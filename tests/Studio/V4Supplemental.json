@@ -566,6 +566,43 @@
     "schemaVersion": 4,
     "ok": false,
     "data": {
+      "executed": true,
+      "state": "Error",
+      "errorCount": 6,
+      "warningCount": 0
+    },
+    "error": {
+      "code": "COMPILE_ERRORS",
+      "message": "Compile finished with 6 errors and 0 warnings; first: ASIS (DB1): The input address of the drive telegram is not set.",
+      "details": {
+        "errorCount": 6,
+        "warningCount": 0,
+        "errors": [
+          {
+            "path": "ASIS (DB1)",
+            "description": "The input address of the drive telegram is not set."
+          }
+        ]
+      }
+    },
+    "meta": {
+      "timestamp": "2026-10-03T00:00:00Z",
+      "releaseKey": "16",
+      "tool": "CompilePlcSoftware",
+      "requestId": "request-1",
+      "outcome": "failed",
+      "execution": "completed",
+      "requiresSessionReset": false,
+      "behaviorPolicy": "not-applicable",
+      "completeness": "complete",
+      "paging": null,
+      "warnings": []
+    }
+  },
+  {
+    "schemaVersion": 4,
+    "ok": false,
+    "data": {
       "summary": "Evidence retained."
     },
     "error": {
