@@ -178,6 +178,31 @@ public sealed class BuildOutputCacheTests
     }
 
     [Fact]
+    public void OutputsThatRecordTheWorktreePathAreDetected()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "tia-embedded-" + Guid.NewGuid().ToString("N"));
+        var output = Path.Combine(root, "bin");
+        System.IO.Directory.CreateDirectory(output);
+        try
+        {
+            byte[] Pe(params byte[][] parts) => parts.SelectMany(part => part).ToArray();
+            var codeView = Pe(System.Text.Encoding.ASCII.GetBytes("RSDS"), new byte[20], System.Text.Encoding.UTF8.GetBytes(Path.Combine(root, "obj", "a.pdb")));
+            File.WriteAllBytes(Path.Combine(output, "clean.dll"), Pe(new byte[64], codeView, new byte[8]));
+            File.WriteAllBytes(Path.Combine(output, "a.pdb"), System.Text.Encoding.UTF8.GetBytes(root));
+            File.WriteAllText(Path.Combine(output, ".msCoverageSourceRootsMapping_Unit"), root);
+            Assert.Null(BuildOutputCache.EmbeddedPath(output, root));
+
+            File.WriteAllBytes(Path.Combine(output, "literal.dll"), Pe(new byte[16], System.Text.Encoding.Unicode.GetBytes(Path.Combine(root, "tests", "x.cs"))));
+            Assert.EndsWith("literal.dll", BuildOutputCache.EmbeddedPath(output, root));
+            File.Delete(Path.Combine(output, "literal.dll"));
+
+            File.WriteAllText(Path.Combine(output, "settings.json"), "{\"root\":\"" + root.Replace('\\', '/') + "/src\"}");
+            Assert.EndsWith("settings.json", BuildOutputCache.EmbeddedPath(output, root));
+        }
+        finally { System.IO.Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void WeaverBytesUnderAnotherUnitsOutputAreKeyInputs()
     {
         // Woven assemblies embed the weaver's SHA-256; reusing one woven by other weaver bytes fails verification.

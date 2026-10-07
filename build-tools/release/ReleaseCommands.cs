@@ -849,7 +849,9 @@ internal static partial class ReleaseCommands
             {
                 Directory.CreateDirectory(cacheOutput);
                 File.Copy(output, Path.Combine(cacheOutput, "TiaOpenness.exe"), true);
-                new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).Populate(cacheKey, cacheOutput);
+                if (BuildOutputCache.EmbeddedPath(cacheOutput, Root) is null)
+                    new BuildOutputCache(cacheDirectory, "configurator", CacheLimit()).Populate(cacheKey, cacheOutput);
+                else Console.WriteLine("Cache not populated: output records the worktree path: configurator");
             }
         }
         if (cacheDirectory is not null) CacheEvent(new("configurator", cacheKey, hit ? "hit" : "miss", hit ? "verified payload" : "cold compiler invocation"));

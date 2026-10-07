@@ -26,8 +26,46 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
     internal static string Key(IEnumerable<ReleaseArtifact> inputs, IEnumerable<string> properties) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
         {
-            schema = 3, inputs = inputs.OrderBy(row => row.Path, StringComparer.Ordinal), properties = properties.ToArray()
+            schema = 4, inputs = inputs.OrderBy(row => row.Path, StringComparer.Ordinal), properties = properties.ToArray()
         }, JsonOptions)))).ToLowerInvariant();
+
+    // Keys ignore the worktree location, so an output that records that location (for example a [CallerFilePath]
+    // literal in a test assembly) would point into another, possibly deleted, worktree when reused. Such units are
+    // not cached. The PDB path inside a PE CodeView record is excluded: it does not change behaviour.
+    internal static string? EmbeddedPath(string output, string root)
+    {
+        var trimmed = Path.GetFullPath(root).TrimEnd('\\', '/');
+        var spellings = new[] { trimmed, trimmed.Replace('\\', '/') }.SelectMany(p => new[] { p, p.ToLowerInvariant(), p.ToUpperInvariant() })
+            .Distinct(StringComparer.Ordinal).ToArray();
+        var utf16 = spellings.Select(Encoding.Unicode.GetBytes).ToArray();
+        var utf8 = spellings.Select(Encoding.UTF8.GetBytes).ToArray();
+        foreach (var file in Directory.EnumerateFiles(output, "*", SearchOption.AllDirectories))
+        {
+            var extension = Path.GetExtension(file).ToLowerInvariant();
+            // Coverage source-root maps are only read when collecting coverage, which the release chain never does.
+            if (extension == ".pdb" || Path.GetFileName(file).StartsWith(".msCoverageSourceRootsMapping_", StringComparison.Ordinal)) continue;
+            var bytes = File.ReadAllBytes(file);
+            bool pe = extension is ".dll" or ".exe";
+            foreach (var needle in utf16) if (IndexOf(bytes, needle, 0) >= 0) return file;
+            foreach (var needle in utf8)
+                for (var at = IndexOf(bytes, needle, 0); at >= 0; at = IndexOf(bytes, needle, at + 1))
+                    if (!pe || !(at >= 24 && bytes[at - 24] == (byte)'R' && bytes[at - 23] == (byte)'S' && bytes[at - 22] == (byte)'D' && bytes[at - 21] == (byte)'S'))
+                        return file;
+        }
+        return null;
+    }
+
+    private static int IndexOf(byte[] haystack, byte[] needle, int start)
+    {
+        for (var i = start; i <= haystack.Length - needle.Length; i++)
+        {
+            if (haystack[i] != needle[0]) continue;
+            var match = true;
+            for (var j = 1; j < needle.Length && match; j++) match = haystack[i + j] == needle[j];
+            if (match) return i;
+        }
+        return -1;
+    }
 
     internal bool Restore(string key, string output)
     {
@@ -351,8 +389,10 @@ internal static partial class ReleaseCommands
             try
             {
                 var after = BuildKey(executable, project, arguments, environment: environment);
-                if (after.Key == key) new BuildOutputCache(cacheDirectory!, unit, CacheLimit()).Populate(key, output);
-                else Console.WriteLine("Cache not populated: build inputs changed during compilation: " + unit);
+                if (after.Key != key) Console.WriteLine("Cache not populated: build inputs changed during compilation: " + unit);
+                else if (BuildOutputCache.EmbeddedPath(output, Root) is { } embedded)
+                    Console.WriteLine("Cache not populated: output records the worktree path (" + Path.GetRelativePath(output, embedded) + "): " + unit);
+                else new BuildOutputCache(cacheDirectory!, unit, CacheLimit()).Populate(key, output);
             }
             catch (Exception ex) { Console.WriteLine("Cache not populated: " + ex.Message); }
         }
