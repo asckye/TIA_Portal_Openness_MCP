@@ -55,6 +55,22 @@ public sealed class SessionCandidateTests
         string directory = Path.Combine(AppContext.BaseDirectory, "session-fixtures", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
         string path = Path.Combine(directory, "Project" + extension); File.WriteAllText(path, "original"); return path;
     }
+    [Theory]
+    [InlineData("borrowed",false)][InlineData("owned",false)][InlineData("none",true)]
+    public void OpenRefusalNamesAlreadyOpenOrBorrowedProject(string ownership,bool processOnly)
+    {
+        var a=new Adapter();Attached(a);string path=SessionCandidateSession.PathValue(@"C:\Fixture\Project.ap21");
+        if(processOnly) a.Value.Processes[0].ProjectFiles=new[]{path};
+        else { a.Value.State.ProjectFile=path;a.Value.State.Ownership=ownership; }
+        foreach(string mode in new[]{"preview","apply"})
+        {
+            var result=Run(new SessionCandidateSession(),a,Request("open",path),mode,new string('a',64));
+            Assert.Equal(ErrorCode.PreconditionFailed,result.Error!.Code);Assert.Contains("already open",result.Error.Message);
+            if(ownership=="borrowed") Assert.Contains("borrowed",result.Error.Message);
+            Assert.Equal(Execution.NotStarted,result.Meta.Execution);Assert.Equal(0,a.Calls);Assert.False(a.Poisoned);
+        }
+    }
+
     [Fact]
     public void AttachDoesNotBindOrStartAndConsumesOnce()
     {

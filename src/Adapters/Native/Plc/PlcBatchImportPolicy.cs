@@ -68,9 +68,7 @@ namespace TiaMcp.PlcFoundation
         }
         internal static void ValidateOptions(PlcBatchImportRequest request)
         {
-            if(request.CompileAfter) throw new AdapterPreconditionException("compileAfter is blocked before import: project-wide compile coverage is not established.","compileAfter",false);
-            if(!request.StopOnImportFailure) throw new AdapterPreconditionException("This candidate stops on every failure; continuation is not supported.","stopOnImportFailure",false);
-            if(!string.IsNullOrEmpty(request.TechnologyGroup)) throw new AdapterPreconditionException("Technology objects are outside bounded batch import scope.","technologyFolderPath",false);
+            TiaOpenness.Shared.NativeExportPolicy.RequireBatchOptions(request.CompileAfter,request.StopOnImportFailure,request.TechnologyGroup);
             if(request.MaxItems<1 || request.MaxItems>256) throw new AdapterPreconditionException("maxItems must be 1..256.","maxItems");
             if(request.Regex.Length>1024) throw new AdapterPreconditionException("Regex exceeds bounded length.","regexName");
             if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(request.Release)) throw new AdapterPreconditionException("Unknown exact release.","releaseKey");
@@ -79,7 +77,7 @@ namespace TiaMcp.PlcFoundation
                 if(!request.Confirm) throw new AdapterPreconditionException("Apply requires confirm=true.","confirm");
                 if(!string.Equals(request.ExpectedProject,request.Project,StringComparison.Ordinal)) throw new AdapterPreconditionException("Apply requires the exact expected project identity.","expectedProjectFile");
                 if(request.Order.Length==0) throw new AdapterPreconditionException("Apply requires an explicit complete importOrder.","importOrder");
-                if(request.ExpectedHash.Length!=64) throw new AdapterPreconditionException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
+                if(request.ExpectedHash.Length!=64 || request.ExpectedHash.Any(c=>!"0123456789abcdef".Contains(c))) throw new AdapterPreconditionException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
             }
         }
         private static PlcBatchImportObject Parse(Stream stream,PlcBatchImportRequest request,out PlcBatchImportDependency[] dependencies)
@@ -140,6 +138,18 @@ namespace TiaMcp.PlcFoundation
         internal static PlcBatchImportResult Run(PlcBatchImportRequest request,IEnumerable<PlcBatchImportObject> existing,Action recheck,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]> import,
             Action<PlcBatchImportObject,FileInfo>? backup=null,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore=null,Func<string>? recoveryDirectory=null,Action? recoveryPrecheck=null,Func<PlcBatchImportObject,string>? inspectBlocker=null)
         {
+            bool issued=false;
+            try
+            {
+                return RunCore(request,existing,recheck,(file,item)=>{issued=true;return import(file,item);},backup,restore,recoveryDirectory,recoveryPrecheck,inspectBlocker);
+            }
+            catch(AdapterPreconditionException) { throw; }
+            catch(Exception error) when(!issued)
+            { throw new AdapterPreconditionException("Batch import admission failed before any import: "+error.Message,request.InputParameter,false,error); }
+        }
+        private static PlcBatchImportResult RunCore(PlcBatchImportRequest request,IEnumerable<PlcBatchImportObject> existing,Action recheck,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]> import,
+            Action<PlcBatchImportObject,FileInfo>? backup,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore,Func<string>? recoveryDirectory,Action? recoveryPrecheck,Func<PlcBatchImportObject,string>? inspectBlocker)
+        {
             ValidateOptions(request);
             var inventory=existing.Take(4097).ToArray(); if(inventory.Length>4096) throw new AdapterPreconditionException("Target inventory exceeds 4096 objects.","maxItems");
             var files=TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>Scan(request)); if(files.Length==0) throw new AdapterPreconditionException("No selected XML inputs.",request.InputParameter);
@@ -192,10 +202,15 @@ namespace TiaMcp.PlcFoundation
                 canonical+=string.Concat(inventory.Select(Identity).OrderBy(x=>x,StringComparer.Ordinal).Select(Field));
                 canonical+=string.Concat(items.Select(x=>Field(x.RelativePath)+Field(x.InputSha256)+Field(Identity(x.Planned))+(request.Overwrite ? Field(x.Action)+Field(x.Replaced==null ? "" : Identity(x.Replaced))+Field(x.Replaced?.BackupBlocker ?? "") : "")));
                 result.PlanHash=Hash(Encoding.UTF8.GetBytes(canonical));
-                if(items.Any(x=>x.Status=="replace-blocked")) { result.Executed=false; return result; }
+                // Approval is optional. Apply admission must precede recovery access and every native export/import.
+                if(!request.DryRun && !string.Equals(result.PlanHash,request.ExpectedHash,StringComparison.Ordinal)) throw new AdapterPreconditionException("Plan or project changed; review a fresh preview before applying.","expectedPlanHash");
+                if(items.Any(x=>x.Status=="replace-blocked"))
+                {
+                    if(!request.DryRun) throw new AdapterPreconditionException("Batch replacement backup is blocked: "+string.Join(", ",items.Where(x=>x.Status=="replace-blocked").Select(x=>x.Planned.Name+" ("+x.Failure+")"))+". Run CompilePlcSoftware first and resolve protection before previewing overwrite again.","overwrite",false);
+                    result.Executed=false;return result;
+                }
                 if(items.Any(x=>x.Action=="replace")) recoveryPrecheck?.Invoke();
                 if(request.DryRun) return result;
-                if(!string.Equals(result.PlanHash,request.ExpectedHash,StringComparison.Ordinal)) throw new AdapterPreconditionException("Plan changed; preview and review the full manifest again.","expectedPlanHash");
                 // All original files remain read locked through every native call. Re-scan prevents added/deleted selections before first mutation.
                 if(!files.SequenceEqual(TiaOpenness.Shared.NativeInputPolicy.Read(request.InputParameter,()=>Scan(request)),StringComparer.Ordinal)) throw new AdapterPreconditionException("Input selection changed during planning.",request.InputParameter);
                 var replacements=items.Where(x=>x.Action=="replace").ToArray();
@@ -254,7 +269,7 @@ namespace TiaMcp.PlcFoundation
                             Verify(actual,item.Planned);
                             item.Status="imported";
                         }
-                        catch(AdapterPreconditionException) when(i==0 && !item.Attempted) { throw; }
+                        catch(Exception) when(i==0 && !item.Attempted) { throw; }
                         catch(Exception error) /* swallow(native-fallback): a failed recheck after prior imports or an issued import stops the batch and retains recovery evidence */
                         {
                             bool unknown=item.Attempted && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailure));

@@ -47,7 +47,7 @@ namespace TiaMcpServer.Tests
                     new Error("Fixture rejected.", new PreconditionFailedDetails("fixture", null)));
                 if (!dryRun && outcome == "failure") return TiaMcpServer.ModelContextProtocol.McpServer.V4Result("CreateApprovalFixture", null,
                     new Error("Fixture failed.", new InternalErrorDetails(null)), Outcome.Failed, Execution.Completed, Completeness.None);
-                if (!dryRun && outcome == "unknown") return TiaMcpServer.ModelContextProtocol.McpServer.TargetFailure("CreateApprovalFixture", new IOException("private fixture input"), true);
+                if (!dryRun && outcome == "unknown") return TiaMcpServer.ModelContextProtocol.McpServer.TargetFailure("CreateApprovalFixture", new IOException("Fixture I/O interruption; token=private-fixture-input"), true);
                 return TiaMcpServer.ModelContextProtocol.McpServer.V4Result("CreateApprovalFixture", new System.Text.Json.Nodes.JsonObject { ["target"] = target }, completed: !dryRun);
             }
         }
@@ -218,6 +218,8 @@ namespace TiaMcpServer.Tests
                 Assert.Equal(expected, (string?)direct["meta"]?["outcome"]);
                 Assert.Single(direct["meta"]!["warnings"]!.AsArray(), row => (string?)row?["code"] == "APPROVAL_DISABLED");
                 Assert.DoesNotContain("private fixture input", direct.ToJsonString());
+                Assert.DoesNotContain("private-fixture-input",direct.ToJsonString());
+                if(outcome=="unknown") Assert.Contains("Fixture I/O interruption",(string?)direct["error"]?["details"]?["evidence"]?["workerMessage"]);
                 var operation = new TiaMcp.Logic.V4.Inputs.ToolCall("CreateApprovalFixture", args);
                 var second = new TiaMcp.Logic.V4.Inputs.ToolCall("CreateApprovalFixture", new TiaMcp.Logic.V4.Inputs.ToolArguments(
                     System.Text.Json.JsonSerializer.SerializeToElement(new { target = "second" })));

@@ -8,7 +8,7 @@ namespace TiaMcp.BehaviorParity
 {
     public static class BehaviorParityCases
     {
-        public static IEnumerable<object[]> All => new[] {
+        private static IEnumerable<object[]> Enabled => new[] {
             new object[] { "argument", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "binding-argument", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "wrapped-argument", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
@@ -65,13 +65,25 @@ namespace TiaMcp.BehaviorParity
             new object[] { "batch-stale", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" }
         };
 
+        public static IEnumerable<object[]> All => Enabled.Concat(Enabled.Where(row => new[] {
+            "argument", "binding-argument", "wrapped-argument", "existing-no-overwrite", "precondition",
+            "inconsistent-types-apply", "inconsistent-blocks-apply", "batch-alias", "blocked-export-apply", "typed-export-refusal",
+            "single-legacy-group-missing", "single-group-missing", "staging-name", "staging-size", "staging-cleanup", "staging-live-cleanup"
+        }.Contains((string)row[0])).Select(row => new object[] { row[0]+"-disabled", row[1], row[2], row[3] })).Concat(
+            new[] { false,true }.SelectMany(program => new[] { "inconsistent-stale", "stale", "inconsistent", "protected", "unknown-consistency", "backup-io", "precheck-io", "inventory-io", "recheck-io", "confirm", "hash", "malformed-hash", "project", "order" }
+                .Concat(program ? new[] { "compile", "continue", "technology" } : Array.Empty<string>()).Select(scenario => new object[] {
+                    "disabled-"+(program ? "program-" : "batch-")+scenario,
+                    new[] { "inconsistent-stale", "stale", "confirm", "hash", "malformed-hash", "project", "order" }.Contains(scenario) ? "INVALID_ARGUMENT" : "PRECONDITION_FAILED", "rejected-before-operation", "not-started" }))).Concat(new[] {
+                new object[] { "single-type-group-missing-disabled","PRECONDITION_FAILED","rejected-before-operation","not-started" },
+                new object[] { "single-table-group-missing-disabled","PRECONDITION_FAILED","rejected-before-operation","not-started" } });
+
         public static JsonObject Arguments(string scenario)
         {
-            if (scenario == "single-legacy-group-missing")
+            if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing")
             {
                 string path = System.IO.Path.GetFullPath("bin-build/P6-68/parity-single.xml"); System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
                 System.IO.File.WriteAllText(path, "<Document/>");
-                return new JsonObject { ["softwarePath"] = "PLC_1", ["groupPath"] = "Missing", ["importPath"] = path };
+                return new JsonObject { ["softwarePath"] = "PLC_1", [scenario=="single-table-group-missing" ? "folderPath" : "groupPath"] = "Missing", ["importPath"] = path };
             }
             if (scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias")
             {

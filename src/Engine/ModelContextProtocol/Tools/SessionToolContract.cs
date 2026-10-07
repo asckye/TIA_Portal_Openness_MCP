@@ -48,12 +48,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 var portalStateFailure = ContainsInvalidPortalState(exception);
                 var details = new PreconditionFailedDetails(portalStateFailure ? "engine-state" : "native-call-not-issued", null);
                 return Result(tool, new JsonObject { ["evidence"] = new JsonObject { ["exceptionType"] = exception.GetType().Name } },
-                    new Error("The session precondition was not satisfied; no native operation was started.", details),
+                    new Error(HostBehavior.AdmissionDiagnostic(exception) ?? "The session precondition was not satisfied; no native operation was started.", details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             }
             // A thrown lifecycle action can follow an issued native call, including
             // closing an old project. Exception text cannot establish its post-state.
-            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name);
+            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name, exception.Message);
             string? reason = new[] { "ConnectPortal", "ConnectProject", "AttachOpenProject" }.Contains(tool, StringComparer.Ordinal)
                 ? TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception) : null;
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);

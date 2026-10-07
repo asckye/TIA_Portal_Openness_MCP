@@ -53,6 +53,24 @@ namespace TiaMcpServer.Tests
         }
 
         [Theory]
+        [InlineData("A borrowed project/session is already open and bound; OpenProject cannot replace it.")]
+        [InlineData("A project/session is already open and bound; close it explicitly before opening another.")]
+        public void Open_project_keeps_typed_refusal_reason_before_native_operation(string reason)
+        {
+            var body=Body(SessionToolContract.Run("OpenProject",true,true,()=>throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(reason,isArgument:false)));
+            Assert.Equal("PRECONDITION_FAILED",(string?)body["error"]?["code"]);Assert.Equal(reason,(string?)body["error"]?["message"]);
+            Assert.Equal("not-started",(string?)body["meta"]?["execution"]);Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        }
+        [Fact]
+        public void Io_failure_retains_bounded_redacted_diagnostic()
+        {
+            var body=Body(McpServer.TargetFailure("ShowObjectInEditor",new IOException(@"Recovery export refused at C:\Users\Private\P.ap21; token=private-secret "+new string('x',6000)),true));
+            string diagnostic=(string)body["error"]!["details"]!["evidence"]!["workerMessage"]!;
+            Assert.Contains("Recovery export refused",diagnostic);Assert.Contains("<path>",diagnostic);Assert.True(diagnostic.Length<=CallJournalPayload.Limit);
+            Assert.DoesNotContain("Private",diagnostic);Assert.DoesNotContain("private-secret",diagnostic);
+        }
+
+        [Theory]
         [InlineData("GetObjectIdentifier", "{\"devicePathJson\":\"[]\"}")]
         [InlineData("GetObjectIdentifier", "{\"devicePath\":\"[]\"}")]
         [InlineData("GetObjectIdentifier", "{\"itemPath\":\"[]\"}")]

@@ -55,8 +55,8 @@ public sealed class BatchOverwriteTests : IDisposable
         Assert.Equal(Execution.NotStarted, envelope.Meta.Execution); Assert.Contains("B", envelope.Error.Message);
         Assert.Contains("CompilePlcSoftware", envelope.Error.Message);
         var apply = Apply(preview); apply.Program = program;
-        var rejected = Run(apply); Assert.Empty(calls); Assert.False(rejected.Executed);
-        BatchImportContract.Validate(Wire(rejected), false); Assert.Equal(envelope.Error.Message, Envelope(rejected).Error!.Message);
+        var rejected = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(()=>Run(apply)); Assert.Empty(calls);
+        Assert.False(rejected.IsArgument);Assert.StartsWith(envelope.Error.Message,rejected.Message);
         inventory[1].BackupBlocker = "";
         Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => Run(apply)); Assert.Empty(calls);
     }

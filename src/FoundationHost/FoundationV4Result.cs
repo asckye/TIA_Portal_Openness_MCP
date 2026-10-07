@@ -89,7 +89,7 @@ internal static class FoundationV4Result
         exception ??= new InvalidOperationException();
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
-        var details = HostBehavior.FailureEvidence(exceptionType);
+        var details = HostBehavior.FailureEvidence(exceptionType, exception.Message);
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         return Wire(release, name, id, data, HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,

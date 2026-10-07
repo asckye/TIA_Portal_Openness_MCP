@@ -74,7 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // Exceptions after a write may have been issued cannot establish its outcome.
             // The original exception remains in the existing diagnostic log, not the wire data.
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, true, !writes, nativeRead: InvocationJournal.NativeCallIssued);
-            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name);
+            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name, exception.Message);
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
             return Result(tool, new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) },
                 HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception)),

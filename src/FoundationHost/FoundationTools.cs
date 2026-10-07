@@ -245,9 +245,8 @@ internal sealed partial class FoundationTool : McpServerTool
                 if(refusal?.Details is TiaMcp.Logic.V4.InvalidArgumentDetails argument) throw new ArgumentException(refusal.Message,argument.Parameter);
             }
 
-            if(values["compileAfter"]?.GetValue<bool>() ?? false) throw new ArgumentException("Batch import does not support compileAfter.","compileAfter");
-            if(!(values["stopOnImportFailure"]?.GetValue<bool>() ?? true)) throw new ArgumentException("Batch import stops on the first failure.","stopOnImportFailure");
-            if(!string.IsNullOrEmpty(values["technologyFolderPath"]?.GetValue<string>())) throw new ArgumentException("Technology objects are outside bounded batch import scope.","technologyFolderPath");
+            TiaOpenness.Shared.NativeExportPolicy.RequireBatchOptions(values["compileAfter"]?.GetValue<bool>() ?? false,
+                values["stopOnImportFailure"]?.GetValue<bool>() ?? true,values["technologyFolderPath"]?.GetValue<string>() ?? "");
             if(!values["dryRun"]!.GetValue<bool>())
             {
                 if(values["importOrder"]!.AsArray().Count==0) throw new ArgumentException("Apply requires importOrder from a reviewed preview.","importOrder");

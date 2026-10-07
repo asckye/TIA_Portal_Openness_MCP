@@ -318,7 +318,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(error, issued, readOnly,
                 reportedCode: error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams ? -32602 : (int?)null,
                 nativeRead: InvocationJournal.NativeCallIssued);
-            var evidence = HostBehavior.FailureEvidence(error.GetType().Name);
+            var evidence = HostBehavior.FailureEvidence(error.GetType().Name, error.Message);
             var data = new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) };
             foreach (var retained in HostBehavior.RetainedRecoveryEvidence(error)) data[retained.Key] = retained.Value?.DeepClone();
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(error);

@@ -64,6 +64,12 @@ namespace TiaOpenness.Shared
             internal Func<string>? InspectBlocker;
             internal Action<FileInfo> Export = _ => { };
         }
+        internal static void RequireBatchOptions(bool compileAfter,bool stopOnImportFailure,string technologyGroup)
+        {
+            if(compileAfter) throw new AdapterPreconditionException("compileAfter is blocked before import: project-wide compile coverage is not established.","compileAfter",false);
+            if(!stopOnImportFailure) throw new AdapterPreconditionException("This candidate stops on every failure; continuation is not supported.","stopOnImportFailure",false);
+            if(!string.IsNullOrEmpty(technologyGroup)) throw new AdapterPreconditionException("Technology objects are outside bounded batch import scope.","technologyFolderPath",false);
+        }
         internal static string ExportBlocker(bool consistent, bool protectedObject = false) =>
             !consistent ? "inconsistent" : protectedObject ? "know-how-protected" : "";
         internal static string InspectBlocker(Func<string> inspect)

@@ -57,56 +57,64 @@ namespace TiaMcp.PlcFoundation
         }
         private PlcBatchImportResult BatchImport(PlcBatchImportRequest request)
         {
-            // Reject unsupported switches before any filesystem/native lookup.
-            if(request.CompileAfter || !request.StopOnImportFailure || request.TechnologyGroup!="")
+            bool prepared=false;
+            try
             {
-                var validation=new PlcBatchImportRequest {Release=ReleaseKey,Overwrite=request.Overwrite,CompileAfter=request.CompileAfter,StopOnImportFailure=request.StopOnImportFailure,TechnologyGroup=request.TechnologyGroup};
-                PlcBatchImportPolicy.ValidateOptions(validation);
-            }
-            var selected=ReadSelection(request.Software);
-            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(request.Software,selected.ExactPath,true);
-            PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
-            foreach(var item in new[]{(Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),(Path:request.TagGroup,Parameter:"tagFolderPath")})
-                if(item.Path!=PlcExchangePolicy.ObjectPath(item.Path,true,item.Parameter)) throw new AdapterPreconditionException("Exact canonical group path required.",item.Parameter);
-            var blocks=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),request.BlockGroup);
-            var types=request.Program ? BatchGroup(TypeGroups(PlcNative.TypeGroup(selected.Value)),request.TypeGroup) : null;
-            var tags=request.Program ? BatchGroup(TagGroups(selected.Value.TagTableGroup),request.TagGroup) : null;
-            var inventory=BatchImportInventory(selected.Value).Take(4097).ToArray();
-            Action check=()=>
-            {
-                RequireProjectIdentity(request.Project);
-                if(lifecycle.ProcessId!=request.ProcessId) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Process identity changed.","softwarePath",false);
-                var fresh=ReadSelection(request.Software);
-                if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Selected target identity changed.","softwarePath",false);
-                if(!object.Equals(BatchGroup(BlockGroups(PlcNative.BlockGroup(fresh.Value)),request.BlockGroup),blocks) ||
-                   (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
-                RequireTargetOffline(fresh);
-            };
-            PlcBatchImportObject[] Import(FileInfo file,PlcBatchImportObject planned,ImportOptions option)
-            {
-                if(planned.Kind=="UDT") return PlcNative.Types(types!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
-                if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
-                return PlcNative.Import(PlcNative.Blocks(blocks),file,option).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
-            }
-            string Blocker(PlcBatchImportObject target)
-            {
-                if(target.Kind=="UDT") return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).IsConsistent);
-                if(target.Kind=="TagTable") return "";
-                var block=PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name);
-                return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent,block.IsKnowHowProtected);
-            }
-            void Backup(PlcBatchImportObject target,FileInfo file)
-            {
-                PlcExportPublication.Publish(file,output=>
+                // Reject unsupported switches before any filesystem/native lookup.
+                if(request.CompileAfter || !request.StopOnImportFailure || request.TechnologyGroup!="")
                 {
-                    if(target.Kind=="UDT") PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).Export(output,ExportOptions.None);
-                    else if(target.Kind=="TagTable") PlcNative.TagTables(tags!).Single(t=>t.Name==target.Name).Export(output,ExportOptions.None);
-                    else PlcNative.Export(PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name),output,ExportOptions.None);
-                });
+                    var validation=new PlcBatchImportRequest {Release=ReleaseKey,Overwrite=request.Overwrite,CompileAfter=request.CompileAfter,StopOnImportFailure=request.StopOnImportFailure,TechnologyGroup=request.TechnologyGroup};
+                    PlcBatchImportPolicy.ValidateOptions(validation);
+                }
+                var selected=ReadSelection(request.Software);
+                TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(request.Software,selected.ExactPath,true);
+                PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
+                request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
+                foreach(var item in new[]{(Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),(Path:request.TagGroup,Parameter:"tagFolderPath")})
+                    if(item.Path!=PlcExchangePolicy.ObjectPath(item.Path,true,item.Parameter)) throw new AdapterPreconditionException("Exact canonical group path required.",item.Parameter);
+                var blocks=BatchGroup(BlockGroups(PlcNative.BlockGroup(selected.Value)),request.BlockGroup);
+                var types=request.Program ? BatchGroup(TypeGroups(PlcNative.TypeGroup(selected.Value)),request.TypeGroup) : null;
+                var tags=request.Program ? BatchGroup(TagGroups(selected.Value.TagTableGroup),request.TagGroup) : null;
+                var inventory=BatchImportInventory(selected.Value).Take(4097).ToArray();
+                Action check=()=>
+                {
+                    RequireProjectIdentity(request.Project);
+                    if(lifecycle.ProcessId!=request.ProcessId) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Process identity changed.","softwarePath",false);
+                    var fresh=ReadSelection(request.Software);
+                    if(fresh.ExactPath!=selected.ExactPath || !object.Equals(fresh.Value,selected.Value) || !object.Equals(fresh.Context,selected.Context)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Selected target identity changed.","softwarePath",false);
+                    if(!object.Equals(BatchGroup(BlockGroups(PlcNative.BlockGroup(fresh.Value)),request.BlockGroup),blocks) ||
+                       (request.Program && (!object.Equals(BatchGroup(TypeGroups(PlcNative.TypeGroup(fresh.Value)),request.TypeGroup),types) || !object.Equals(BatchGroup(TagGroups(fresh.Value.TagTableGroup),request.TagGroup),tags)))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
+                    RequireTargetOffline(fresh);
+                };
+                PlcBatchImportObject[] Import(FileInfo file,PlcBatchImportObject planned,ImportOptions option)
+                {
+                    if(planned.Kind=="UDT") return PlcNative.Types(types!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,types!,request.TypeGroup)}).ToArray();
+                    if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option).Select(t=>new PlcBatchImportObject {Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=BatchReturnedGroup(t,tags!,request.TagGroup)}).ToArray();
+                    return PlcNative.Import(PlcNative.Blocks(blocks),file,option).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
+                }
+                string Blocker(PlcBatchImportObject target)
+                {
+                    if(target.Kind=="UDT") return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).IsConsistent);
+                    if(target.Kind=="TagTable") return "";
+                    var block=PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name);
+                    return TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(block.IsConsistent,block.IsKnowHowProtected);
+                }
+                void Backup(PlcBatchImportObject target,FileInfo file)
+                {
+                    PlcExportPublication.Publish(file,output=>
+                    {
+                        if(target.Kind=="UDT") PlcNative.Types(types!).Single(t=>PlcNative.Name(t)==target.Name).Export(output,ExportOptions.None);
+                        else if(target.Kind=="TagTable") PlcNative.TagTables(tags!).Single(t=>t.Name==target.Name).Export(output,ExportOptions.None);
+                        else PlcNative.Export(PlcNative.Blocks(blocks).Single(b=>PlcNative.Name(b)==target.Name),output,ExportOptions.None);
+                    });
+                }
+                prepared=true;
+                return PlcBatchImportPolicy.Run(request,inventory,check,(file,target)=>Import(file,target,request.Overwrite ? ImportOptions.Override : ImportOptions.None),
+                    Backup,(file,target)=>Import(file,target,ImportOptions.Override),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,Blocker);
             }
-            return PlcBatchImportPolicy.Run(request,inventory,check,(file,target)=>Import(file,target,request.Overwrite ? ImportOptions.Override : ImportOptions.None),
-                Backup,(file,target)=>Import(file,target,ImportOptions.Override),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,Blocker);
+            catch(AdapterPreconditionException) { throw; }
+            catch(Exception error) when(!prepared)
+            { throw new AdapterPreconditionException("Batch target admission failed before any import: "+error.Message,request.InputParameter,false,error); }
         }
     }
 }

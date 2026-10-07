@@ -53,6 +53,30 @@ namespace TiaMcpServer.Tests
             Probe.Previews = Probe.Writes = 0; Probe.Fault = "";
         }
         [Fact]
+        public void Every_registered_preview_write_keeps_input_admission_when_approval_is_disabled()
+        {
+            using var fixture=new InfrastructureContractsTests();ToolBridgeFixture.Configure();
+            var settings=ApprovalSettings.Load(ApprovalSettings.SettingsPath);bool context=McpServer.EnterMcpApprovalContext();int checkedTools=0;
+            try
+            {
+                new ApprovalSettings(false,1).Save(ApprovalSettings.SettingsPath);
+                foreach(var pair in McpServer.AllToolMethods())
+                {
+                    var parameter=pair.Value.GetParameters().FirstOrDefault(p=>!p.IsOptional && p.ParameterType==typeof(string));
+                    if(parameter==null) continue;
+                    var args=new JsonObject { ["dryRun"]=false,[parameter.Name!]=new JsonObject() };
+                    if(!McpServer.ApprovalWrite(pair.Key,args.ToJsonString())) continue;
+                    if(!pair.Value.GetParameters().Any(p=>p.Name=="dryRun") && !HostBehavior.IsSingleXmlImport(pair.Key)) continue;
+                    var body=McpServer.ResultBody(McpServer.CallTool(pair.Key,new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
+                    Assert.Contains((string?)body["error"]?["code"],new[]{"INVALID_ARGUMENT","UNSUPPORTED_CAPABILITY"});Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
+                    Assert.False((bool?)body["meta"]?["requiresSessionReset"]);checkedTools++;
+                }
+                Assert.True(checkedTools>=10,"The registered preview-write inventory was unexpectedly empty: "+checkedTools);
+            }
+            finally { McpServer.LeaveMcpApprovalContext(context);settings.Save(ApprovalSettings.SettingsPath); }
+        }
+
+        [Fact]
         public void Bridge_no_effect_preview_finishes_without_approval_or_apply()
         {
             using var fixture = new InfrastructureContractsTests(); Configure();

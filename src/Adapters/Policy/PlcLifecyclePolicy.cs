@@ -15,7 +15,10 @@ namespace TiaMcp.PlcFoundation
         { if(processId<=0 || ProcessId.HasValue) throw new AdapterPreconditionException("Select one positive process ID while detached; repeated attach is refused.","processId"); }
         internal void Attached(int processId) { RequireAttach(processId); ProcessId=processId; }
         internal void RequireUnbound()
-        { if(!ProcessId.HasValue || ProjectFile!=null) throw new AdapterPreconditionException("An attached process with no bound project/session is required.",isArgument:false); }
+        {
+            if(!ProcessId.HasValue) throw new AdapterPreconditionException("ConnectPortal before opening a project/session.",isArgument:false);
+            if(ProjectFile!=null) throw new AdapterPreconditionException(OwnsProject ? "A project/session is already open and bound; close it explicitly before opening another." : "A borrowed project/session is already open and bound; OpenProject cannot replace it. Disconnect and reconnect without attaching before opening another project.",isArgument:false);
+        }
         internal void Bound(string file,bool owns,bool local)
         { RequireUnbound(); ProjectFile=MutationIdentityPolicy.AbsoluteFile(file); OwnsProject=owns; IsLocalSession=local; }
         internal void RequireBound()

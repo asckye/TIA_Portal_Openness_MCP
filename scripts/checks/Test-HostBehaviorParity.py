@@ -42,11 +42,11 @@ def main():
     if exit_code:
         errors.append(f'dotnet test exited {exit_code}')
     if trx.is_file():
-        counts, trx_errors = gate.evaluate_trx(trx, 54, 0)
+        counts, trx_errors = gate.evaluate_trx(trx, 103, 0)
         errors.extend(trx_errors)
     else:
         errors.append('missing TRX')
-    summary.write_text(json.dumps(dict(suite='host-behavior-parity', engineRelease=args.engine_major, minimumPassed=54, maximumSkipped=0,
+    summary.write_text(json.dumps(dict(suite='host-behavior-parity', engineRelease=args.engine_major, minimumPassed=103, maximumSkipped=0,
                                       exitCode=exit_code, **counts, errors=errors), indent=2) + '\n', encoding='utf-8')
     if errors:
         print('FAIL host-behavior-parity: ' + '; '.join(errors))

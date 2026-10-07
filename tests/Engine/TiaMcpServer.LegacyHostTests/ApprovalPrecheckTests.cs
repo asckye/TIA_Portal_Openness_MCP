@@ -35,6 +35,25 @@ public sealed class ApprovalPrecheckTests
         "ExportBlock" => JsonNode.Parse("{\"softwarePath\":\"PLC_1\",\"blockPath\":\"B\",\"exportPath\":\"C:/Output\"}")!.AsObject(),
         _ => new()
     };
+    public static IEnumerable<object[]> PreviewWriteTools => FoundationTools.Definitions.Where(d=>d.Arguments.Any(a=>a.Name=="dryRun")
+        && new FoundationTool(d,new Worker()).IsNative && new FoundationTool(d,new Worker()).IsWrite).Select(d=>new object[]{d.Name});
+    [Theory]
+    [MemberData(nameof(PreviewWriteTools))]
+    public async Task Every_current_preview_write_refuses_missing_confirmation_with_approval_disabled(string source)
+    {
+        var definition=FoundationTools.Definitions.Single(d=>d.Name==source);var worker=new Worker();
+        var tool=new FoundationV4Tool(new FoundationTool(definition,worker),"18",_=>TiaMcp.Logic.V4.BehaviorPolicy.Current,
+            ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
+        var args=new JsonObject();
+        foreach(var a in definition.Arguments) args[a.Name]=a.Required ? a.Type=="array" ? new JsonArray("A") : a.Type=="integer" ? JsonValue.Create(1) : a.Type=="boolean" ? JsonValue.Create(false) : JsonValue.Create("fixture") : JsonSerializer.SerializeToNode(a.Default);
+        args["dryRun"]=false;args["confirm"]=false;args["expectedProjectFile"]="C:/fixture.ap18";
+        var body=(await tool.InvokeAsync(Request(tool.ProtocolTool.Name,args))).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT",(string?)body["error"]?["code"]);Assert.Equal("confirm",(string?)body["error"]?["details"]?["parameter"]);
+        Assert.Equal("not-started",(string?)body["meta"]?["execution"]);Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        Assert.Equal(0,worker.Previews+worker.Writes+worker.Reads);
+        Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
+    }
+
     [Theory]
     [InlineData("CreatePlcTag", "plc")][InlineData("CreatePlcTag", "table")][InlineData("CreatePlcTag", "name")]
     [InlineData("ImportPlcTagTable", "overwrite")][InlineData("ImportPlcTagTable", "importPath")]

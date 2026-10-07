@@ -51,7 +51,9 @@ namespace TiaMcp.Logic.V4
                 if (selected == null) Refuse(new NotFoundDetails("processId"));
                 if (!selected!.Complete || selected.ProcessStartUtc != request.ProcessStartUtc) Mismatch();
                 if (before.State.Ownership == "unknown") Refuse(new PreconditionFailedDetails("known-project-ownership", before.State.ProjectFile));
-                if (before.State.ProjectFile != null) Refuse(new PreconditionFailedDetails("explicitly-unbound-session", before.State.ProjectFile));
+                if (before.State.ProjectFile != null) Refuse(new PreconditionFailedDetails("explicitly-unbound-session", before.State.ProjectFile),
+                    before.State.Ownership == "borrowed" ? "A borrowed project/session is already open and bound; OpenProject cannot replace it. Disconnect and reconnect without attaching before opening another project."
+                    : "A project/session is already open and bound; close it explicitly before opening another.");
                 if (request.Action == "attach")
                 { if (before.State.ProcessId != null) Refuse(new PreconditionFailedDetails("detached-session", null)); }
                 else
@@ -64,7 +66,7 @@ namespace TiaMcp.Logic.V4
                     }
                     else
                     {
-                        if (selected.ProjectFiles.Length > 0) Refuse(new PreconditionFailedDetails("empty-selected-process-before-open", request.ProjectPath));
+                        if (selected.ProjectFiles.Length > 0) Refuse(new PreconditionFailedDetails("empty-selected-process-before-open", request.ProjectPath), "A project/session is already open in the selected TIA Portal process; use AttachOpenProject to borrow it explicitly.");
                         string suffix = ".ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release);
                         bool local = Path.GetExtension(request.ProjectPath).StartsWith(".als", StringComparison.OrdinalIgnoreCase);
                         if (local && (!before.LocalSessionOpenSupported || release == "14sp1" || release == "15.1" || release == "16" || request.Upgrade == "allow"))

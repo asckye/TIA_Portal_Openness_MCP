@@ -64,6 +64,28 @@ public sealed class FoundationV4ContractsTests
         Assert.Equal(0, worker.Calls);
     }
 
+    [Theory]
+    [InlineData("A borrowed project/session is already open and bound; OpenProject cannot replace it.")]
+    [InlineData("A project/session is already open and bound; close it explicitly before opening another.")]
+    public void OpenProjectKeepsWorkerRefusalReason(string reason)
+    {
+        var result=Body(FoundationV4Result.Failure("18","OpenProject","fixture",true,true,null,
+            new WorkerOperationException(reason,-32603,"rejected-before-operation","{\"exceptionType\":\"AdapterPreconditionException\",\"isArgument\":false}")));
+        Assert.Equal("PRECONDITION_FAILED",(string?)result["error"]?["code"]);Assert.Equal(reason,(string?)result["error"]?["message"]);
+        Assert.Equal("not-started",(string?)result["meta"]?["execution"]);Assert.False((bool?)result["meta"]?["requiresSessionReset"]);
+    }
+    [Fact]
+    public void WorkerIOExceptionCarriesSanitizedBoundedMessage()
+    {
+        string text=@"Recovery export refused at C:\Users\Private\P.ap18; token=private-secret "+new string('x',6000);
+        var result=Body(FoundationV4Result.Failure("18","ImportPlcBlocksFromDirectory","fixture",true,true,null,
+            new WorkerOperationException(text,-32603,"unknown","{\"exceptionType\":\"IOException\"}")));
+        string diagnostic=(string)result["error"]!["details"]!["evidence"]!["workerMessage"]!;
+        Assert.Contains("Recovery export refused",diagnostic);Assert.Contains("<path>",diagnostic);Assert.True(diagnostic.Length<=4096);
+        Assert.DoesNotContain("Private",diagnostic);Assert.DoesNotContain("private-secret",diagnostic);
+        Assert.Equal("OUTCOME_UNKNOWN",(string?)result["error"]?["code"]);Assert.True((bool?)result["meta"]?["requiresSessionReset"]);
+    }
+
     [Fact]
     public async Task CandidateKeepsOutputReleaseAndValidationEvidence()
     {

@@ -98,13 +98,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var foreign = _session.ForeignOpenProjectName();
                 if (foreign != null && !closeForeignProject)
-                    throw new McpException(
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
                         "OpenProject refused: TIA Portal already has the project '" + foreign + "' open and this " +
                         "session did not open it - it belongs to the user. OpenProject closes the current project " +
                         "first, which would discard any unsaved edits. To work on that project call " +
                         "AttachOpenProject(projectName=\"" + foreign + "\"). To close it anyway pass " +
                         "closeForeignProject=true - ask the user before you do.",
-                        McpErrorCode.InvalidRequest);
+                        isArgument: false);
 
                 if (_session.ProjectIsValid)
                 {

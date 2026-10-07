@@ -100,6 +100,9 @@ public sealed class BehaviorParityTests
         if (Environment.GetEnvironmentVariable("TIA_MCP_PARITY_ENGINE_RELEASE") is string expectedRelease)
             Assert.Equal(expectedRelease, (string?)engine["engineRelease"]);
         engine.AsObject().Remove("engineRelease");
+        if(scenario.StartsWith("disabled-",StringComparison.Ordinal)) { await DisabledBatch(engine,scenario,code);return; }
+        bool enabled=!scenario.EndsWith("-disabled",StringComparison.Ordinal);
+        if(!enabled) scenario=scenario.Substring(0,scenario.Length-9);
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
         {
             if (scenario.StartsWith("staging-", StringComparison.Ordinal))
@@ -111,13 +114,13 @@ public sealed class BehaviorParityTests
                     string source = BehaviorParityCases.StagingTool(scenario);
                     var arguments = BehaviorParityCases.StagingArguments(scenario, store, bundle, release);
                     var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new Worker(scenario), store);
-                    var tool = new FoundationV4Tool(inner, release, null, () => new(true, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "staging-refused" ? "denied" : null)); });
+                    var tool = new FoundationV4Tool(inner, release, null, () => new(enabled, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, scenario == "staging-refused" ? "denied" : null)); });
                     var body = (await tool.InvokeAsync(Request(source, arguments))).StructuredContent!;
                     var row = BehaviorParityCases.Project(body);
                     Assert.Equal(code, (string?)row["code"]); Assert.Equal(outcome, (string?)row["outcome"]); Assert.Equal(execution, (string?)row["execution"]);
                     Assert.False((bool?)row["nativeWarning"]);
                     if (scenario is "staging-extra-cleanup" or "staging-modified-cleanup") Assert.NotNull(row["stagingWarning"]);
-                    if (scenario is "staging-name" or "staging-cleanup" or "staging-live-cleanup") Assert.NotNull(row["precheckWarning"]);
+                    if (enabled && scenario is ("staging-name" or "staging-cleanup" or "staging-live-cleanup")) Assert.NotNull(row["precheckWarning"]);
                     var stagedFoundation = new JsonObject { ["results"] = new JsonArray(row), ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 };
                     Assert.True(JsonNode.DeepEquals(engine, stagedFoundation), scenario + " " + release + "\nengine=" + engine + "\nfoundation=" + stagedFoundation);
                 }
@@ -126,20 +129,20 @@ public sealed class BehaviorParityTests
             }
             var worker = new Worker(scenario); int waits = 0;
             FoundationV4Tool Tool(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), release, null,
-                () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, scenario == "refused-approval" ? "denied" : null)); });
+                () => new(enabled, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, scenario == "refused-approval" ? "denied" : null)); });
             async Task<JsonObject> Call(string source, JsonObject args)
             {
-                if (scenario == "single-legacy-group-missing") { args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
+                if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing") { args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
                 if (source == "CompileSoftware") { args["confirm"] = true; args["expectedProjectFile"] = "C:/fixture.ap19"; }
                 var tool = Tool(source);
                 var body = (await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args))).StructuredContent!;
                 if (source == "CompileSoftware") Assert.True((string?)body["error"]?["code"] == "COMPILE_ERRORS", body.ToJsonString());
                 return BehaviorParityCases.Project(body);
             }
-            var results = new JsonArray(await Call(scenario == "single-legacy-group-missing" ? "ImportBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
+            var results = new JsonArray(await Call(scenario=="single-type-group-missing" ? "ImportType" : scenario=="single-table-group-missing" ? "ImportPlcTagTable" : scenario == "single-legacy-group-missing" ? "ImportBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
                 : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
             Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
-            if (scenario is "argument" or "single-group-missing" or "single-legacy-group-missing" or "batch-inconsistent")
+            if (enabled && scenario is ("argument" or "single-group-missing" or "single-legacy-group-missing" or "batch-inconsistent"))
             { Assert.NotNull(results[0]?["precheckWarning"]); Assert.False((bool?)results[0]?["nativeWarning"]); }
             if (scenario is "single-inconsistent" or "single-export-refused" or "single-import-failed" or "single-native-warning")
             {
@@ -167,4 +170,52 @@ public sealed class BehaviorParityTests
             Assert.True(JsonNode.DeepEquals(engine, foundation), scenario + " " + release + "\nengine=" + engine + "\nfoundation=" + foundation);
         }
     }
+    private sealed class LocalBatchWorker(TiaMcpServer.Tests.BatchReplacementPolicyTests.AdmissionFixture fixture) : IFoundationWorker
+    {
+        public Task<JsonNode?> Call(string operation,JsonObject args,CancellationToken token)
+        {
+            if(operation=="ListTags") return Task.FromResult<JsonNode?>(new JsonArray());
+            if(operation=="CreateTag") return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"]=true,["ProjectFile"]="C:/fixture.ap19" });
+            try
+            {
+                var result=JsonSerializer.SerializeToNode(fixture.Execute(args));WorkerProtocol.ValidateExchangeResult(operation,args,result);
+                return Task.FromResult(result);
+            }
+            catch(Exception cause)
+            {
+                var classified=WorkerFailurePolicy.Classify(cause,true,false);
+                throw new WorkerOperationException(cause.Message,classified.Code,classified.Outcome==TiaMcp.WorkerChannel.ChannelOutcome.Unknown ? "unknown" : "rejected-before-operation",
+                    JsonSerializer.Serialize(new { exceptionType=cause.GetType().Name,parameter=HostFailurePolicy.Parameter(cause),isArgument=cause is AdapterPreconditionException p ? p.IsArgument : (bool?)null }));
+            }
+        }
+        public void Dispose() { }
+    }
+    private static async Task DisabledBatch(JsonNode engine,string value,string code)
+    {
+        bool program=value.StartsWith("disabled-program-",StringComparison.Ordinal);
+        foreach(string release in new[]{"14sp1","15.1","16","17","18","19"})
+        {
+            // Foundation compiles its own policy copy: do not route execution through the engine fixture assembly.
+            using var fixture=new TiaMcpServer.Tests.BatchReplacementPolicyTests.AdmissionFixture(value.Substring(program ? 17 : 15),program);
+            using var worker=new LocalBatchWorker(fixture);
+            async Task<JsonNode> Call(string source,JsonObject args)
+            {
+                var tool=new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d=>d.Name==source),worker),release,null,
+                    ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
+                return (await tool.InvokeAsync(Request(tool.ProtocolTool.Name,args))).StructuredContent!;
+            }
+            var body=await Call(program ? "ImportPlcProgramFromDirectory" : "ImportBlocksFromDirectory",fixture.Arguments());
+            Assert.Equal(code,(string?)body["error"]?["code"]);Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
+            Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
+            Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");
+            Assert.Equal(value.EndsWith("backup-io",StringComparison.Ordinal) ? new[]{"directory","backup"} : value.Substring(program ? 17 : 15)=="recheck-io" ? new[]{"directory"} : Array.Empty<string>(),fixture.Calls);
+            var results=new JsonArray(BehaviorParityCases.Project(body));
+            results.Add(BehaviorParityCases.Project(await Call("ReadPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" })));
+            results.Add(BehaviorParityCases.Project(await Call("CreatePlcTag",BehaviorParityCases.Arguments("followup"))));
+            Assert.All(results.Skip(1),row=> { Assert.Equal("",(string?)row?["code"]);Assert.False((bool?)row?["reset"]); });
+            var foundation=new JsonObject { ["results"]=results,["calls"]=JsonSerializer.SerializeToNode(fixture.Calls) };
+            Assert.True(JsonNode.DeepEquals(engine,foundation),value+" "+release+"\nengine="+engine+"\nfoundation="+foundation);
+        }
+    }
+
 }

@@ -1,9 +1,9 @@
 {
   "package": "D:\\Code\\TIA_wt\\P6-68\\manifest\\package-manifest.json",
-  "generatedAt": "2026-10-07T16:41:10.6240446+00:00",
+  "generatedAt": "2026-10-07T17:18:13.7471454+00:00",
   "source": "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
   "fileVersion": "3.3.0.0",
-  "exeSha256": "096290a2e15fa3492a1224eb4009a124d75fe4607a9cdd568909994393136ab3",
+  "exeSha256": "e3e2a5b715aeea59dac48b9cb985edc1b1e3503e316fbc0e16b1f1bfb3215c42",
   "toolCount": 491,
   "note": "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
   "callDiscipline": {

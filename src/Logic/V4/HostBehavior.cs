@@ -119,12 +119,11 @@ namespace TiaMcp.Logic.V4
             return reportedCode == -32602 || reportedOutcome == "rejected-before-operation" ? SafeDiagnostic(error.Message) : null;
         }
 
-        // Arbitrary exception text can contain caller inputs and credentials. Retain
-        // structured evidence, and disclose diagnostic text only for typed admission.
-        internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType)
+        // Retain bounded, redacted I/O diagnostics; other untyped exceptions remain value-free.
+        internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null)
             => new Dictionary<string, JsonElement> {
                 ["exceptionType"] = JsonSerializer.SerializeToElement(exceptionType),
-                ["workerMessage"] = JsonSerializer.SerializeToElement<string?>(null) };
+                ["workerMessage"] = JsonSerializer.SerializeToElement(exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
         internal static JsonObject RetainedRecoveryEvidence(Exception error)
         {
             var retained = new JsonObject();
