@@ -682,6 +682,7 @@ TASK_PATHS = {
     "P6-65": ["src/Shared", "src/Logic", E+"ModelContextProtocol", E+"Siemens", E+"Isolation", "src/FoundationHost", "src/Worker", "src/Adapters/Native", "manifest/contracts/v4", "scripts/checks", "build-tools/release", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.HttpTests", "docs/reference"],
     "P6-66": ["build-tools/release", "tests/Release", "scripts/build/Package-Release.py", "scripts/checks", "docs/development/release-workflow.md", "docs/development/validation.md"],
     "P6-67": ["src/Shared", "src/Logic", "src/FoundationHost", "src/Adapters", "src/Adapters.Contracts", "src/WorkerChannel", "src/Worker", "tests/Engine", E+"ModelContextProtocol", E+"Siemens", "reference/tool-examples", "manifest", "scripts/checks", "scripts/generate", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.HttpTests", "docs/reference", "docs/getting-started"],
+    "P6-68": ["src", "tests", "reference/tool-examples", "scripts/checks", "scripts/generate", "manifest", "docs/reference", "docs/getting-started", "docs/development/phase6-review.md", "docs/releases/v4.0.0-tool-migration.md"],
 }
 for task in MIGRATION_GROUPS:
     if task == "P6-67":
@@ -694,7 +695,7 @@ TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
 
 def validate_inventory(inventory):
-    expected = {f"P6-{i:02}" for i in range(1, 68)}
+    expected = {f"P6-{i:02}" for i in range(1, 69)}
     plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
     assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
     for task, paths in inventory.items():
