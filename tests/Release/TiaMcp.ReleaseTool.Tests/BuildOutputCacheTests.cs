@@ -177,6 +177,42 @@ public sealed class BuildOutputCacheTests
         finally { if (System.IO.Directory.Exists(parent)) System.IO.Directory.Delete(parent, true); }
     }
 
+    [Fact]
+    public void WeaverBytesUnderAnotherUnitsOutputAreKeyInputs()
+    {
+        // Woven assemblies embed the weaver's SHA-256; reusing one woven by other weaver bytes fails verification.
+        var repo = new DirectoryInfo(AppContext.BaseDirectory);
+        while (repo is not null && !File.Exists(Path.Combine(repo.FullName, "TiaPortalOpenness.slnx"))) repo = repo.Parent;
+        var parent = Path.Combine(repo!.FullName, "bin-build/P6-66/key-tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            string Key(string root, string weaverBytes)
+            {
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools/release"));
+                File.WriteAllText(Path.Combine(root, "build-tools/release/orchestrator.cs"), "// identical orchestrator\n");
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "scripts/build"));
+                File.WriteAllText(Path.Combine(root, "scripts/build/bundled-dotnet.json"), "{}");
+                File.WriteAllText(Path.Combine(root, "nuget.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
+                var weaver = Path.Combine(root, "weaver/bin/Release/net10.0/Weaver.dll");
+                System.IO.Directory.CreateDirectory(Path.GetDirectoryName(weaver)!);
+                File.WriteAllText(weaver, weaverBytes);
+                var folder = Path.Combine(root, "unit");
+                System.IO.Directory.CreateDirectory(folder);
+                File.WriteAllText(Path.Combine(folder, "input.cs"), "public class Input {}\n");
+                File.WriteAllText(Path.Combine(folder, "unit.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>" +
+                    "<ItemGroup><CustomAdditionalCompileInputs Include=\"$(NativeCallWeaverPath)\" /></ItemGroup></Project>");
+                var project = Path.Combine(folder, "unit.csproj");
+                ProcessRunner.RequireSuccess(ProcessRunner.Run("dotnet", ["restore", project, "--configfile", Path.Combine(root, "nuget.config"), "-p:NuGetAudit=false"], root), "Restore weaver key fixture");
+                return ReleaseCommands.BuildKey("dotnet", project, ["build", project, "-c", "Release", "-p:NativeCallWeaverPath=" + weaver,
+                    "-p:RestoreConfigFile=" + Path.Combine(root, "nuget.config")], root).Key;
+            }
+            var first = Key(Path.Combine(parent, "first"), "weaver A");
+            Assert.Equal(first, Key(Path.Combine(parent, "second"), "weaver A"));
+            Assert.NotEqual(first, Key(Path.Combine(parent, "third"), "weaver B"));
+        }
+        finally { if (System.IO.Directory.Exists(parent)) System.IO.Directory.Delete(parent, true); }
+    }
+
     [Theory]
     [InlineData("change")]
     [InlineData("remove")]

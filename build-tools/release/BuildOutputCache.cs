@@ -454,7 +454,7 @@ internal static partial class ReleaseCommands
             Add(file);
             var probe = ProcessRunner.Run(dotnet, ["msbuild", file, "-nologo", .. props,
                 "-getProperty:TargetDir,TargetFramework,TargetFrameworks,ProjectAssetsFile,MSBuildAllProjects,MSBuildSDKsPath,NetCoreTargetingPackRoot",
-                "-getItem:Compile,EmbeddedResource,Resource,Page,ApplicationDefinition,Content,None,Reference,ProjectReference,AdditionalFiles,Analyzer,KnownFrameworkReference"], root, environment);
+                "-getItem:Compile,EmbeddedResource,Resource,Page,ApplicationDefinition,Content,None,Reference,ProjectReference,AdditionalFiles,Analyzer,KnownFrameworkReference,CustomAdditionalCompileInputs"], root, environment);
             ProcessRunner.RequireSuccess(probe, "Evaluate build cache inputs");
             using var doc = JsonDocument.Parse(probe.StandardOutput);
             var values = doc.RootElement.GetProperty("Properties");
@@ -516,6 +516,9 @@ internal static partial class ReleaseCommands
                     {
                         if (item.TryGetProperty("HintPath", out var hint) && hint.GetString() is { Length: > 0 } reference) Add(Path.GetFullPath(reference, Path.GetDirectoryName(file)!));
                     }
+                    // Tools that rewrite the output (the native call weaver) are build outputs of another
+                    // unit; hash their bytes, because woven assemblies embed the weaver's own fingerprint.
+                    else if (group.Name == "CustomAdditionalCompileInputs") Add(path);
                     else if (File.Exists(path) && !IsBuildOutput(path)) Add(path);
                 }
             return values.GetProperty("TargetDir").GetString()!;
