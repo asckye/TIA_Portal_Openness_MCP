@@ -26,6 +26,7 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
             host.Approval("r3", "engine", "20", "WriteFixture", "timeout");
             new ApprovalSettings(false).Save(Path.Combine(root, "config", "approval.settings"), workbench);
             using var view = new AuditLogService(directory, Path.Combine(root, "diagnostics"), Path.Combine(root, "config", "retention"), _ => { });
+            WpfContext.Complete(view.RefreshAsync());
             Assert.Equal(new[] { AuditEventType.Request, AuditEventType.Approve, AuditEventType.Reject, AuditEventType.Timeout, AuditEventType.Toggle },
                 view.Events.Select(row => row.Type));
             var report = view.Verify(); Assert.True(report.Passed); Assert.Single(report.Chains); Assert.Equal(5, report.Count);
@@ -45,10 +46,12 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
             log.Append("end", "r", "engine", "21", "WriteFixture", "partial");
             string? opened = null;
             using var service = new AuditLogService(directory, calls, settings, path => opened = path);
+            WpfContext.Complete(service.RefreshAsync());
             Assert.Equal(3, service.TotalCount); Assert.True(service.Verify().Passed); Assert.Equal(AuditEventType.End, service.Events.Last().Type);
             int notifications = 0; service.PropertyChanged += (_, _) => notifications++;
             service.FileSizeMb = 50; service.Copies = 3;
             using var reopened = new AuditLogService(directory, calls, settings, _ => { });
+            WpfContext.Complete(reopened.RefreshAsync());
             Assert.Equal(50, reopened.FileSizeMb); Assert.Equal(3, reopened.Copies); Assert.True(notifications > 0);
             Assert.Throws<ArgumentOutOfRangeException>(() => service.Copies = 0);
             service.OpenFolder(); Assert.Equal(directory, opened);
@@ -56,7 +59,7 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
             File.WriteAllText(file, File.ReadAllText(file).Replace("WriteFixture", "Changed", StringComparison.Ordinal));
             Assert.False(service.Verify().Passed); Assert.Equal(2, service.Verify().BreakIndex);
             service.Dispose(); log.Append("request", "after", "engine", "21", "WriteFixture");
-            service.Refresh(); Assert.Equal(3, service.TotalCount);
+            WpfContext.Complete(service.RefreshAsync()); Assert.Equal(3, service.TotalCount);
         });
     }
     [Theory]
@@ -68,12 +71,13 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
         {
             string root = Path.GetFullPath(Path.Combine("bin-build", "P6-46", "gui-fixtures", Guid.NewGuid().ToString("N")));
             using var service = new AuditLogService(Path.Combine(root, "audit"), Path.Combine(root, "diagnostics"), Path.Combine(root, "config", "retention"), _ => { });
+            WpfContext.Complete(service.RefreshAsync());
             Assert.Equal(empty, service.Coverage.Resolve());
             var row = new AuditRow(new AuditEvent(1, DateTimeOffset.UtcNow, AuditEventType.End, "WriteFixture", "partial", "abc"), false);
             Assert.Equal(partial, row.Result);
             Directory.CreateDirectory(Path.Combine(root, "diagnostics"));
             File.WriteAllText(Path.Combine(root, "diagnostics", "calls-test.jsonl"), "{\"utc\":\"2026-10-05T08:00:00.0000000+00:00\"}\n{\"utc\":\"2026-10-05T16:00:00.0000000+00:00\"}\n");
-            service.Refresh(); Assert.DoesNotContain(empty, service.Coverage.Resolve()); Assert.Contains("2026-10-05", service.Coverage.Resolve());
+            WpfContext.Complete(service.RefreshAsync()); Assert.DoesNotContain(empty, service.Coverage.Resolve()); Assert.Contains("2026-10-05", service.Coverage.Resolve());
         });
     }
 }

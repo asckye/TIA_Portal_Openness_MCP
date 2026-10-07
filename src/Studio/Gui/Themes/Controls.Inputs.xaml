@@ -282,7 +282,7 @@
                        IsHitTestVisible="False" Visibility="Collapsed" />
 
             <Popup x:Name="PART_Popup" Placement="Bottom" VerticalOffset="4"
-                   AllowsTransparency="True" Focusable="False" PopupAnimation="Fade"
+                   AllowsTransparency="True" Focusable="False" PopupAnimation="{DynamicResource Glass.PopupAnimation}"
                    IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}">
               <Border Background="{DynamicResource Ui.CardBackground}"
                       BorderBrush="{DynamicResource Ui.Separator}"

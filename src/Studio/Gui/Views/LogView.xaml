@@ -16,9 +16,8 @@
           <TextBlock Text="{Binding Tag.LogCount,ElementName=PageRoot}" Style="{StaticResource Glass.Muted}" FontSize="12" Margin="12,0,0,0" />
         </StackPanel>
       </DockPanel>
-      <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" ScrollChanged="OnLogScrollChanged">
-        <ItemsControl ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}">
-          <ItemsControl.ItemTemplate>
+      <ListBox x:Name="LogList" Grid.Row="2" Style="{StaticResource Feature.VirtualList}" ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
+          <ListBox.ItemTemplate>
             <DataTemplate>
               <Grid Margin="10,5">
                 <Grid.ColumnDefinitions>
@@ -49,9 +48,8 @@
                 </TextBlock>
               </Grid>
             </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
+          </ListBox.ItemTemplate>
+      </ListBox>
     </Grid>
   </Border>
 </UserControl>

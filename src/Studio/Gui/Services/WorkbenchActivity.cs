@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Collections.ObjectModel;
+using System.Windows.Threading;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,8 +17,12 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 {
     public enum Severity { Default, Info, Warning, Error, Debug }
     public sealed record Entry(string Time, string Message, Severity Level, string? Key, object?[] Arguments);
-    private readonly List<Entry> _entries = new();
-    public IReadOnlyList<Entry> Entries => _entries.AsReadOnly();
+    public const int MaximumEntries = 1000;
+    private readonly ObservableCollection<Entry> _entries = new();
+    private bool _logQueued, _disposed;
+    private readonly ConcurrentQueue<Entry> _pendingEntries = new();
+    private int _appendQueued;
+    public IReadOnlyList<Entry> Entries => _entries;
     private string? _statusKey;
     private object?[] _statusArgs = Array.Empty<object?>();
     private LocalizedText _status = LocalizedText.Key("Status.NotConnected");
@@ -34,9 +42,13 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
         get => _log;
         private set
         {
-            if (!Set(ref _log, value)) return;
-            Raise(nameof(HasLog));
-            Raise(nameof(LogLineCount));
+            if (_log == value) return;
+            _log = value;
+            if (_logQueued) return;
+            _logQueued = true;
+            var dispatcher = Application.Current?.Dispatcher;
+            void Notify() { _logQueued = false; if (_disposed) return; Raise(nameof(Log)); Raise(nameof(HasLog)); Raise(nameof(LogLineCount)); }
+            if (dispatcher == null) Notify(); else dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(Notify));
         }
     }
 
@@ -111,26 +123,38 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     private void AppendEntry(string line, Severity severity, string? key, object?[] args)
     {
-        string time = DateTime.Now.ToString("HH:mm:ss");
-        var stamped = $"{time}  {line}{System.Environment.NewLine}";
-        void Add()
-        {
-            _entries.Add(new Entry(time, line, severity, key, (object?[])args.Clone()));
-            Log += stamped;
-        }
-
-        // Bridge log lines arrive on a background reader thread.
+        var entry = new Entry(DateTime.Now.ToString("HH:mm:ss"), line, severity, key, (object?[])args.Clone());
         if (Application.Current?.Dispatcher.CheckAccess() == false)
         {
-            Application.Current.Dispatcher.Invoke(Add);
-            return;
+            _pendingEntries.Enqueue(entry);
+            while (_pendingEntries.Count > MaximumEntries) _pendingEntries.TryDequeue(out _);
+            if (Interlocked.Exchange(ref _appendQueued, 1) == 0)
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(FlushEntries));
         }
-        Add();
+        else AddEntry(entry);
+    }
+    private void FlushEntries()
+    {
+        Interlocked.Exchange(ref _appendQueued, 0);
+        while (_pendingEntries.TryDequeue(out var entry)) AddEntry(entry);
+    }
+    private void AddEntry(Entry entry)
+    {
+        if (_disposed) return;
+        _entries.Add(entry);
+        string next = _log + $"{entry.Time}  {entry.Message}{System.Environment.NewLine}";
+        while (_entries.Count > MaximumEntries || next.Length > 40000 && _entries.Count > 1)
+        {
+            var first = _entries[0]; _entries.RemoveAt(0);
+            int length = first.Time.Length + 2 + first.Message.Length + System.Environment.NewLine.Length;
+            next = next[Math.Min(length, next.Length)..];
+        }
+        Log = next.Length > 40000 ? next[^40000..] : next;
     }
 
-    public void ClearLog() { _entries.Clear(); Log = string.Empty; }
+    public void ClearLog() { while (_pendingEntries.TryDequeue(out _)) { } _entries.Clear(); Log = string.Empty; }
 
     private void OnLanguageChanged(object? sender, EventArgs e) => Raise(nameof(Status));
 
-    public void Dispose() => Loc.Current.LanguageChanged -= OnLanguageChanged;
+    public void Dispose() { _disposed = true; Loc.Current.LanguageChanged -= OnLanguageChanged; }
 }

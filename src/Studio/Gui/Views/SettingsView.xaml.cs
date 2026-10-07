@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -57,6 +58,7 @@ public partial class SettingsView : UserControl
     internal void Dispose() { if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null; }
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.TimeoutSeconds))) return;
         if (Dispatcher.CheckAccess()) UpdateApproval();
         else Dispatcher.BeginInvoke(UpdateApproval);
     }
@@ -70,17 +72,25 @@ public partial class SettingsView : UserControl
         Timeout300.IsChecked = _approvals.TimeoutSeconds == 300;
     }
 
-    private void OnApprovalClick(object sender, RoutedEventArgs e)
+    private async void OnApprovalClick(object sender, RoutedEventArgs e)
     {
         if (_approvals == null) return;
-        if (sender == ApprovalOn) _approvals.Enabled = true;
+        if (sender == ApprovalOn) await SaveApproval(() => _approvals.Enabled = true);
         else if (_approvals.Enabled) DisableApprovalRequested?.Invoke(this, EventArgs.Empty);
         UpdateApproval();
     }
 
-    private void OnTimeoutClick(object sender, RoutedEventArgs e)
+    private async void OnTimeoutClick(object sender, RoutedEventArgs e)
     {
-        if (_approvals != null) _approvals.TimeoutSeconds = int.Parse((string)((RadioButton)sender).Tag);
+        int value = int.Parse((string)((RadioButton)sender).Tag);
+        if (_approvals != null) await SaveApproval(() => _approvals.TimeoutSeconds = value);
+    }
+
+    private async Task SaveApproval(Action action)
+    {
+        try { await Task.Run(action); }
+        catch (Exception ex) { Controls.GlassMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        UpdateApproval();
     }
 
     private void OnOpenPath(object sender, RoutedEventArgs e)

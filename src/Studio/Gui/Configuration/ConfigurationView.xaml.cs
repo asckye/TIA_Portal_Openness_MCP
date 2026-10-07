@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -53,6 +55,8 @@ namespace TiaMcpConfigurator
         private UpdateInfo latest;   // last successful update check
         private string runningKey;
         private int logEntries;
+        private readonly ConcurrentQueue<string> pendingLog = new();
+        private int logQueued;
         private bool tiaDetected;
         private string lastTestResult;
         private bool lastTestFailed;
@@ -115,11 +119,11 @@ namespace TiaMcpConfigurator
             Click("GenerateKey", delegate { byte[] bytes = new byte[24]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(bytes); SetSecret(Convert.ToBase64String(bytes)); });
             Click("SaveBoth", OnSaveBoth);
             Click("StartServer", OnStartServer);
-            Click("StopServer", OnStopServer);
+            ClickAsync("StopServer", OnStopServer);
             Click("Network", async delegate { await OnNetwork(); });
             Click("TestClient", async delegate { await OnTestClient(); });
             Click("SaveClient", delegate { SaveClients(Remote); });
-            Click("ClearLog", delegate { activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount(); });
+            Click("ClearLog", delegate { while (pendingLog.TryDequeue(out _)) { } activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount(); });
             Click("CheckUpdate", async delegate { await OnCheckUpdate(true); });
             Click("RunUpdate", OnRunUpdate);
             Click("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
@@ -195,6 +199,7 @@ namespace TiaMcpConfigurator
         { Find<TextBlock>("LogCount").Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries); }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
+        private void ClickAsync(string name, Func<Task> action) { Find<Button>(name).Click += async (_, _) => { try { await action(); } catch (Exception ex) { Report(ex); } }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
         private void SetStatus(string key, params object[] args) { SetLocalizedText("Status", TextBlock.TextProperty, key, args); }
         private void ServiceStatus(bool active)
@@ -254,12 +259,27 @@ namespace TiaMcpConfigurator
         private void Append(string message)
         {
             if (closing) return;
-            if (!Window.Dispatcher.CheckAccess()) { Window.Dispatcher.BeginInvoke(new Action<string>(Append), message); return; }
+            pendingLog.Enqueue(DateTime.Now.ToString("HH:mm:ss") + "   " + message + Environment.NewLine);
+            while (pendingLog.Count > 1000) pendingLog.TryDequeue(out _);
+            if (Interlocked.Exchange(ref logQueued, 1) == 0)
+                Window.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(FlushLog));
+        }
+        private void FlushLog()
+        {
+            Interlocked.Exchange(ref logQueued, 0);
+            if (closing) return;
+            var batch = new StringBuilder();
+            while (pendingLog.TryDequeue(out var line)) batch.Append(line);
+            string message = batch.ToString();
             if (!String.IsNullOrEmpty(runningKey)) message = message.Replace(runningKey, "[redacted]");
-            if (activityLog.Length > 40000) { activityLog = ""; logEntries = 0; }
-            activityLog += DateTime.Now.ToString("HH:mm:ss") + "   " + message + Environment.NewLine;
+            activityLog += message;
+            if (activityLog.Length > 40000)
+            {
+                int start = activityLog.IndexOf('\n', activityLog.Length - 40000);
+                activityLog = start < 0 ? "" : activityLog[(start + 1)..];
+            }
             ActivityLog.LogText = activityLog;
-            logEntries++; UpdateLogCount();
+            logEntries = activityLog.Count(c => c == '\n'); UpdateLogCount();
         }
         private void Report(Exception ex)
         {
@@ -498,18 +518,26 @@ namespace TiaMcpConfigurator
             ServiceStatus(true);
             Append(Loc.Current["Config.CheckListening"]);
         }
-        private void OnStopServer()
+        private async Task OnStopServer()
         {
             if (server == null || server.HasExited) return;
             if (TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
-            server.Kill(); server.WaitForExit();
+            var process = server;
+            SetBusy(true);
+            try { await Task.Run(() => { process.Kill(); process.WaitForExit(); }); }
+            finally { SetBusy(false); }
         }
-        private void OnClosing(object sender, CancelEventArgs e)
+        private async void OnClosing(object sender, CancelEventArgs e)
         {
-            if (e.Cancel) return;
+            if (e.Cancel || closing) return;
             if (busy) { e.Cancel = true; Append(Loc.Current["Config.WaitBeforeClosing"]); return; }
-            try { OnStopServer(); if (server != null && !server.HasExited) { e.Cancel = true; return; } }
-            catch (Exception ex) { e.Cancel = true; Report(ex); return; }
+            if (server != null && !server.HasExited)
+            {
+                e.Cancel = true;
+                try { await OnStopServer(); if (server != null && !server.HasExited) return; }
+                catch (Exception ex) { Report(ex); return; }
+                closing = true; Window.Close(); return;
+            }
             closing = true;
         }
         public void CapturePage(string path, int mode, bool scrollToBottom = false)

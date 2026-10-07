@@ -151,7 +151,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 address.Text = "192.0.2.77";
                 var secret = (PasswordBox)page.FindName("Key");
                 secret.Password = "language-switch-fixture";
-                var log = (TiaDesktop.Glass.GlassLogView)page.FindName("ActivityLog");
+                var log = (TiaDesktop.Glass.GlassLogView)page.FindName("ActivityLog"); WpfContext.Drain();
                 string history = log.LogText;
                 int entries = history.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length;
                 var brush = ((Border)page.FindName("InstallationCard")).Background;
@@ -220,7 +220,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
             {
                 window.ShowConfiguration(false);
                 var page = window.Configuration!;
-                var log = (TiaDesktop.Glass.GlassLogView)page.FindName("ActivityLog");
+                var log = (TiaDesktop.Glass.GlassLogView)page.FindName("ActivityLog"); WpfContext.Drain();
                 Assert.Contains(detection, log.LogText);
                 Assert.Contains(ready, log.LogText);
                 string history = log.LogText;
@@ -316,7 +316,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 Assert.False(closed);
                 typeof(TiaOpenness.Gui.Services.WorkbenchActivity).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model.Activity, false);
                 page.GetType().GetMethod("Append", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(page, new object[] { "operation completed after cancelled close" });
-                Assert.Contains("operation completed after cancelled close", page.ActivityLogText);
+                WpfContext.Drain(); Assert.Contains("operation completed after cancelled close", page.ActivityLogText);
                 window.Close();
                 Assert.True(closed);
             }

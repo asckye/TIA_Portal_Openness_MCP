@@ -1,8 +1,15 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
 
 namespace TiaOpenness.Gui.Themes;
+
+public enum LowEffectsMode { Auto, On, Off }
 
 public enum AppTheme
 {
@@ -39,6 +46,10 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     private AppTheme _theme = AppTheme.Auto;
     private bool _systemIsDark;
+    private LowEffectsMode _lowEffects;
+    private bool _virtualMachine;
+    private readonly Dictionary<string, object> _normalShadows = new();
+    private static readonly string[] ShadowKeys = ["Glass.AccentShadow", "Glass.PopupShadow", "Glass.DrawerShadow", "Glass.SurfaceShadow", "Glass.RailShadow"];
 
     private ThemeManager() { }
 
@@ -59,6 +70,63 @@ public sealed class ThemeManager : INotifyPropertyChanged
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             }
         }
+    }
+
+    public LowEffectsMode LowEffects
+    {
+        get => _lowEffects;
+        set
+        {
+            if (_lowEffects == value) return;
+            _lowEffects = value; ApplyEffects();
+            foreach (string name in new[] { nameof(LowEffects), nameof(IsEffectsAuto), nameof(IsEffectsOn), nameof(IsEffectsOff), nameof(UseLowEffects) })
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+    }
+    public bool IsEffectsAuto { get => LowEffects == LowEffectsMode.Auto; set { if (value) LowEffects = LowEffectsMode.Auto; } }
+    public bool IsEffectsOn { get => LowEffects == LowEffectsMode.On; set { if (value) LowEffects = LowEffectsMode.On; } }
+    public bool IsEffectsOff { get => LowEffects == LowEffectsMode.Off; set { if (value) LowEffects = LowEffectsMode.Off; } }
+    public bool UseLowEffects => ResolveLowEffects(LowEffects, RenderCapability.Tier >> 16, SystemParameters.IsRemoteSession, _virtualMachine);
+    internal static bool ResolveLowEffects(LowEffectsMode mode, int tier, bool remote, bool vm)
+        => mode == LowEffectsMode.On || mode == LowEffectsMode.Auto && (tier == 0 || remote || vm);
+    private void ApplyEffects()
+    {
+        var app = Application.Current;
+        if (app == null || app.Resources.MergedDictionaries.Count == 0) return;
+        var palette = app.Resources.MergedDictionaries[PaletteSlot];
+        foreach (string key in ShadowKeys)
+        {
+            if (!_normalShadows.ContainsKey(key)) _normalShadows[key] = palette[key];
+            palette[key] = UseLowEffects ? null : _normalShadows[key];
+        }
+        app.Resources["Glass.PopupAnimation"] = UseLowEffects ? PopupAnimation.None : PopupAnimation.Fade;
+        foreach (string key in new[] { "Ui.CardBackground", "Ui.MenuBackground" })
+        {
+            var brush = (SolidColorBrush)palette[key];
+            var color = brush.Color;
+            var background = ((SolidColorBrush)palette["Ui.WindowBackground"]).Color;
+            double alpha = color.A / (double)byte.MaxValue * brush.Opacity;
+            color.R = (byte)Math.Round(color.R * alpha + background.R * (1 - alpha));
+            color.G = (byte)Math.Round(color.G * alpha + background.G * (1 - alpha));
+            color.B = (byte)Math.Round(color.B * alpha + background.B * (1 - alpha));
+            color.A = byte.MaxValue;
+            app.Resources[key] = UseLowEffects ? new SolidColorBrush(color) : brush;
+        }
+    }
+    private void OnRenderingChanged(object? sender, EventArgs e) => Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+    { ApplyEffects(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseLowEffects))); }));
+    private void OnSystemParametersChanged(object? sender, PropertyChangedEventArgs e)
+    { if (e.PropertyName == nameof(SystemParameters.IsRemoteSession)) OnRenderingChanged(sender, EventArgs.Empty); }
+    private static bool DetectVirtualMachine()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\BIOS");
+            string identity = Convert.ToString(key?.GetValue("SystemManufacturer")) + " " + Convert.ToString(key?.GetValue("SystemProductName"));
+            return new[] { "VMware", "VirtualBox", "Virtual Machine", "QEMU", "KVM", "Xen", "Parallels" }
+                .Any(value => identity.Contains(value, StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception ex) { System.Diagnostics.Trace.TraceInformation("VM rendering hint unavailable: " + ex.GetType().Name); return false; }
     }
 
     // Three one-way-ish flags so the appearance segmented control can bind without a converter.
@@ -93,10 +161,13 @@ public sealed class ThemeManager : INotifyPropertyChanged
     /// Called once at startup, after App.xaml's dictionaries exist. Subscribes to the Windows
     /// appearance setting so Auto keeps tracking it rather than sampling it once.
     /// </summary>
-    public void Initialize(AppTheme theme)
+    public void Initialize(AppTheme theme, LowEffectsMode lowEffects = LowEffectsMode.Auto)
     {
         _systemIsDark = ReadSystemIsDark();
         _theme = theme;
+        _lowEffects = lowEffects; _virtualMachine = DetectVirtualMachine();
+        RenderCapability.TierChanged -= OnRenderingChanged; RenderCapability.TierChanged += OnRenderingChanged;
+        SystemParameters.StaticPropertyChanged -= OnSystemParametersChanged; SystemParameters.StaticPropertyChanged += OnSystemParametersChanged;
 
         try
         {
@@ -135,6 +206,8 @@ public sealed class ThemeManager : INotifyPropertyChanged
         var palette = new ResourceDictionary { Source = wanted };
         if (merged.Count > PaletteSlot) merged[PaletteSlot] = palette;
         else merged.Insert(PaletteSlot, palette);
+        foreach (string key in ShadowKeys) _normalShadows[key] = palette[key];
+        ApplyEffects();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectivelyDark)));
     }
 

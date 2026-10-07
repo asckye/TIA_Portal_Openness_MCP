@@ -76,6 +76,19 @@ public sealed class WpfContext : IDisposable
         }
     });
 
+    internal static void Drain() => Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+    internal static void Complete(System.Threading.Tasks.Task task)
+    {
+        if (!task.IsCompleted)
+        {
+            var frame = new DispatcherFrame();
+            var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(5), DispatcherPriority.Background, (_, _) =>
+            { if (task.IsCompleted) frame.Continue = false; }, Dispatcher.CurrentDispatcher);
+            Dispatcher.PushFrame(frame); timer.Stop();
+        }
+        task.GetAwaiter().GetResult(); Drain();
+    }
+
     private Dispatcher Ui()
         => _dispatcher ?? throw new InvalidOperationException("The WPF test thread has no dispatcher.");
 

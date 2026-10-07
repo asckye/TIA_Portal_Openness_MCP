@@ -4,6 +4,10 @@ internal static partial class Strings
 {
     private static (string Key, string En, string Zh)[] FeaturePageCatalogue =>
     [
+        ("Settings.LowEffects", "Low effects", "低效果模式"),
+        ("Settings.EffectsAuto", "Auto", "自动"),
+        ("Audit.Older", "Older 1,000", "前 1,000 条"),
+        ("Audit.Latest", "Latest 1,000", "最近 1,000 条"),
         ("Feature.NotConnected", "Not connected yet.", "尚未接入。"),
         ("Approval.EnabledStatus", "Approval on", "审批开启"),
         ("Feature.Count", "{0} events", "{0} 条"),

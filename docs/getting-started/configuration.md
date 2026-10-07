@@ -151,3 +151,26 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待 Workbench 审批后才
 从源码构建时，兼容启动器位于 `src/Studio/Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/repository-layout.md)。
 
 原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md#软件自身的数据目录)。
+
+## Workbench rendering and history
+
+Settings → **Low effects** offers **Auto / On / Off**. Auto is the default: software
+rendering (WPF tier 0), a remote Windows session, or a detected virtual-machine BIOS
+uses opaque card surfaces, removes shadows and blur, and disables hover animations.
+On always uses this mode; Off keeps the normal appearance. The choice takes effect
+immediately and is saved with language and appearance when the Workbench closes.
+VM detection is a local hint; choose On if your VM is not detected.
+
+The AI calls, approvals, audit and activity lists use recycling virtualization.
+Following calls keeps the newest entries visible while at the top; scrolling down
+keeps your position through tool-call bursts. Pause still freezes journal history
+while new approvals remain available. The audit page displays up to 1,000 rows;
+**Older 1,000** pages backward and **Latest 1,000** returns to the live tail. Audit
+files are retained in full. Verify runs the complete hash-chain check in the
+background with a progress indicator; jumping to a break loads its page.
+
+Activity and engine output are batched and bounded in memory (40 KB, up to 1,000
+entries/visible engine-log rows). Copy copies the retained text; persistent engine
+and audit files are unaffected. Hidden call and audit pages suspend their readers
+and catch up when opened. Approval reception and decisions stay available on every
+page. Engine logging remains at level 1 so existing diagnostics are preserved.

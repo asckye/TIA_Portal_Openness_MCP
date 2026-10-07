@@ -16,7 +16,8 @@ public partial class AuditLogView : UserControl
         if (e.OldValue is FeaturePagesViewModel old) old.PropertyChanged -= OnChanged;
         if (e.NewValue is FeaturePagesViewModel model) { model.PropertyChanged += OnChanged; UpdateRetention(); }
     }
-    private void OnChanged(object? sender, PropertyChangedEventArgs e) => UpdateRetention();
+    private void OnChanged(object? sender, PropertyChangedEventArgs e)
+    { if (e.PropertyName is nameof(Model.RetentionSize) or nameof(Model.RetentionCopies)) UpdateRetention(); }
     private void UpdateRetention()
     {
         foreach (var button in new[] { Size50, Size128, Size256 }) button.IsChecked = int.Parse((string)button.Tag) == Model.Audit.FileSizeMb;
@@ -26,10 +27,10 @@ public partial class AuditLogView : UserControl
     private void OnJump(object sender, RoutedEventArgs e)
     {
         var row = Model.JumpToBreak();
-        AuditList.UpdateLayout();
-        int index = Model.AuditRows.ToList().FindIndex(r => r.Record.Index == row?.Record.Index);
-        if (index >= 0 && AuditList.ItemContainerGenerator.ContainerFromIndex(index) is FrameworkElement item) item.BringIntoView();
+        if (row != null) AuditList.ScrollIntoView(row);
     }
+    private async void OnOlder(object sender, RoutedEventArgs e) { if (Model.Audit is Services.AuditLogService audit) await audit.OlderAsync(); }
+    private async void OnLatest(object sender, RoutedEventArgs e) { if (Model.Audit is Services.AuditLogService audit) await audit.LatestAsync(); }
     private void OnSize(object sender, RoutedEventArgs e) => Model.SetRetention(int.Parse((string)((RadioButton)sender).Tag), true);
     private void OnCopies(object sender, RoutedEventArgs e) => Model.SetRetention(int.Parse((string)((RadioButton)sender).Tag), false);
     private void OnOpenFolder(object sender, RoutedEventArgs e) => Model.Run(Model.Audit.OpenFolder);

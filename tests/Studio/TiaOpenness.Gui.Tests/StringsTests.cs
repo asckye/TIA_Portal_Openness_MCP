@@ -279,7 +279,7 @@ public class StringsTests(WpfContext wpf)
             string history = model.Activity.Log;
             foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
             {
-                Loc.Current.Language = language;
+                Loc.Current.Language = language; WpfContext.Drain();
                 Assert.Equal(language == AppLanguage.English ? "Warnings" : "警告", results.CompileState);
                 Assert.Equal(language == AppLanguage.English ? "Checked 5 blocks, found 1 issues." : "检查 5 个块，发现 1 个问题。", results.InspectionSummary);
                 Assert.Contains(language == AppLanguage.English ? "Naming · 1" : "命名 · 1", results.Rules);

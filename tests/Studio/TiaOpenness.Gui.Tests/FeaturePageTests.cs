@@ -125,10 +125,10 @@ public sealed class FeaturePageTests(WpfContext wpf)
         {
             var audit = new FeaturePageFixtures.Audit();
             using var model = Model(audit: audit);
-            model.Verify(); Assert.False(model.VerificationBroken); Assert.Equal(FeatureTone.Success, model.VerificationTone);
-            audit.Broken = true; model.Verify(); Assert.True(model.VerificationBroken);
+            WpfContext.Complete(model.VerifyAsync()); Assert.False(model.VerificationBroken); Assert.Equal(FeatureTone.Success, model.VerificationTone);
+            audit.Broken = true; WpfContext.Complete(model.VerifyAsync()); Assert.True(model.VerificationBroken);
             Assert.Equal(532, model.JumpToBreak()!.Record.Index); Assert.Single(model.AuditRows, r => r.Selected);
-            model.SetRetention(50, true); model.SetRetention(10, false); Assert.Equal(50, audit.FileSizeMb); Assert.Equal(10, audit.Copies);
+            WpfContext.Complete(model.SetRetentionAsync(50, true)); WpfContext.Complete(model.SetRetentionAsync(10, false)); Assert.Equal(50, audit.FileSizeMb); Assert.Equal(10, audit.Copies);
             model.Run(audit.OpenFolder); Assert.Equal(1, audit.OpenCount);
         });
     }
@@ -188,7 +188,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
             window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), notification, () => FeaturePageFixtures.Now);
             try
             {
-                approvals.Receive(FeaturePageFixtures.Request("normal"));
+                approvals.Receive(FeaturePageFixtures.Request("normal")); WpfContext.Drain();
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility); Assert.Equal(0, notification.Count);
                 window.WindowState = WindowState.Minimized;
@@ -236,9 +236,9 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), audit, environment);
                 window.Navigate("Audit"); var host = Detach(window); Layout(host);
                 var view = (Views.AuditLogView)window.FindName("AuditContent");
-                UnifiedDesktopTests.ClickControl((Button)view.FindName("VerifyButton")); Layout(host);
+                UnifiedDesktopTests.ClickControl((Button)view.FindName("VerifyButton")); WpfContext.Complete(window.Features.VerifyAsync()); Layout(host);
                 UnifiedDesktopTests.ClickControl((Button)view.FindName("JumpButton")); Layout(host);
-                Assert.True(((ScrollViewer)view.FindName("AuditScroll")).VerticalOffset > 0);
+                Assert.True(Descendants<ScrollViewer>(view).First().VerticalOffset > 0);
                 Assert.Equal(532, Assert.Single(window.Features.AuditRows, r => r.Selected).Record.Index);
                 window.Navigate("Environment"); Layout(host);
                 var envView = (Views.EnvironmentView)window.FindName("EnvironmentContent");

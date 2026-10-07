@@ -48,7 +48,7 @@ public class GlassViewTests(WpfContext wpf)
             Assert.Equal("—", results.Errors);
             Assert.Empty(results.Diagnostics);
             Assert.Empty(results.Rules);
-            model.Activity.AppendLocalized("Status.CompileResult", "Error", 99, 8, "1.0");
+            model.Activity.AppendLocalized("Status.CompileResult", "Error", 99, 8, "1.0"); WpfContext.Drain();
             Assert.Equal("99", results.Errors);
         });
     }
@@ -61,7 +61,7 @@ public class GlassViewTests(WpfContext wpf)
             using var model = new MainViewModel();
             using var results = new GlassResults(model);
             Assert.Equal("—", results.Errors);
-            RecordCompile(model.Activity);
+            RecordCompile(model.Activity); WpfContext.Drain();
             Assert.Equal("0", results.Errors);
             Assert.Equal("3", results.Warnings);
             Assert.Equal(3, results.Diagnostics.Count);
@@ -69,7 +69,7 @@ public class GlassViewTests(WpfContext wpf)
             Assert.Equal(4, results.Rules.Count);
             Assert.Contains("Naming · 3", results.Rules);
             Assert.Contains("Know-how · 0", results.Rules);
-            model.Activity.ClearLog();
+            model.Activity.ClearLog(); WpfContext.Drain();
             Assert.Equal("—", results.Errors);
             Assert.Empty(results.Diagnostics);
             Assert.Equal("Not run", results.InspectionSummary);
@@ -104,7 +104,7 @@ public class GlassViewTests(WpfContext wpf)
                     Name = names[i], Kind = kinds[i], Number = numbers[i], ProgrammingLanguage = languages[i],
                     Path = "Program blocks" + (i == 0 ? "" : "/" + names[i]), IsConsistent = i != 4, IsKnowHowProtected = i == 4,
                 }) { Selected = i is 0 or 1 or 3 or 5 });
-                RecordCompile(model.Activity);
+                RecordCompile(model.Activity); WpfContext.Drain();
                 if (vci)
                 {
                     model.IsVcTab = true;
@@ -117,7 +117,7 @@ public class GlassViewTests(WpfContext wpf)
                     Set(model.VersionControl, "VcDiffCaption", "Conveyor_Ctrl_FB.xml");
                     foreach (string line in new[] { "@@ -212,7 +212,18 @@", "   <Member Name=\"Speed_SP\"", "-    Datatype=\"Int\" />", "+    Datatype=\"Real\">", "+    <Comment>Setpoint mm/min</Comment>", "+  </Member>", "+  <Member Name=\"Ramp_Up\"", "+    Datatype=\"Time\" />", "+  <Member Name=\"Enable\"", "+    Datatype=\"Bool\" />" }) model.VersionControl.VcDiffLines.Add(new DiffLine
                     { Text = line, Kind = line.StartsWith('+') ? DiffLineKind.Added : line.StartsWith('-') ? DiffLineKind.Removed : DiffLineKind.Context });
-                    model.Activity.ClearLog();
+                    model.Activity.ClearLog(); WpfContext.Drain();
                     model.Activity.AppendLocalized("Status.VcMapApplied", 128, 0, 6, 0);
                     model.Activity.AppendLocalized("Status.VcSyncDry", 4, "ProjectToWorkspace", 124);
                 }

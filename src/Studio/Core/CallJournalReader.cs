@@ -50,11 +50,11 @@ namespace TiaOpenness.Core
         public IReadOnlyList<JournalCall> Calls => Volatile.Read(ref calls);
         public event EventHandler Changed;
 
-        public CallJournalReader(string directory = null, bool live = true)
+        public CallJournalReader(string directory = null, bool live = true, bool initialRead = true)
         {
             this.directory = directory ?? DataLocations.Current.DiagnosticsDirectory;
             if (!Path.IsPathRooted(this.directory)) throw new ArgumentException("Journal directory must be absolute.", nameof(directory));
-            Poll();
+            if (initialRead) Poll();
             if (live) timer = new Timer(_ => Poll(), null, PollMilliseconds, PollMilliseconds);
         }
 
@@ -67,7 +67,8 @@ namespace TiaOpenness.Core
                 try { paths = Directory.GetFiles(directory, "calls-*.jsonl*"); }
                 catch (IOException) /* swallow(probe-optional): absent or rotating directories are retried at the next bounded poll */ { paths = Array.Empty<string>(); }
                 catch (UnauthorizedAccessException) /* swallow(probe-optional): inaccessible journals cannot be consumed */ { paths = Array.Empty<string>(); }
-                foreach (string missing in files.Keys.Except(paths, StringComparer.OrdinalIgnoreCase).ToArray()) files.Remove(missing);
+                bool changed = false;
+                foreach (string missing in files.Keys.Except(paths, StringComparer.OrdinalIgnoreCase).ToArray()) { files.Remove(missing); changed = true; }
                 foreach (string path in paths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
                 {
                     try
@@ -75,13 +76,16 @@ namespace TiaOpenness.Core
                         var info = new FileInfo(path);
                         if (!files.TryGetValue(path, out var cursor) || info.Length < cursor.Position || info.CreationTimeUtc != cursor.Created
                             || info.Length == cursor.Position && info.LastWriteTimeUtc != cursor.Modified)
-                            files[path] = cursor = new FileCursor { Created = info.CreationTimeUtc };
-                        Read(path, cursor);
+                        { files[path] = cursor = new FileCursor { Created = info.CreationTimeUtc }; changed = true; }
+                        long position = cursor.Position;
+                        if (info.Length > position) Read(path, cursor);
+                        changed |= cursor.Position != position;
                         cursor.Modified = info.LastWriteTimeUtc;
                     }
-                    catch (IOException) /* swallow(probe-optional): deletion, replacement and sharing conflicts are retried on the next poll */ { files.Remove(path); }
-                    catch (UnauthorizedAccessException) /* swallow(probe-optional): a file can become inaccessible during enumeration */ { files.Remove(path); }
+                    catch (IOException) /* swallow(probe-optional): deletion, replacement and sharing conflicts are retried on the next poll */ { changed |= files.Remove(path); }
+                    catch (UnauthorizedAccessException) /* swallow(probe-optional): a file can become inaccessible during enumeration */ { changed |= files.Remove(path); }
                 }
+                if (!changed) return;
                 var next = files.Values.SelectMany(f => f.Rows.Values).GroupBy(c => c.Identity, StringComparer.Ordinal)
                     .Select(g => g.OrderByDescending(c => c.Updated).ThenBy(c => c.DisplayOutcome == "executing" ? 1 : 0).First())
                     .OrderByDescending(c => c.Time).ThenBy(c => c.Identity, StringComparer.Ordinal).Take(MaximumCalls).ToArray();

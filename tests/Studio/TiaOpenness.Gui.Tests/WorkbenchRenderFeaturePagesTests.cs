@@ -45,7 +45,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     window.ShowConfiguration(false);
                     if (state == "calls-zh-light") approvals.Receive(FeaturePageFixtures.Request());
                     window.Navigate(state.StartsWith("audit", StringComparison.Ordinal) ? "Audit" : state.StartsWith("env", StringComparison.Ordinal) ? "Environment" : "Calls");
-                    if (state.StartsWith("audit", StringComparison.Ordinal)) window.Features.Verify();
+                    if (state.StartsWith("audit", StringComparison.Ordinal)) WpfContext.Complete(window.Features.VerifyAsync());
                     if (state.StartsWith("approvals", StringComparison.Ordinal)) window.Features.OpenApprovals();
                     if (state.StartsWith("call-detail", StringComparison.Ordinal)) window.Features.OpenCall(window.Features.Calls.Single(c => c.Tool == "ExportBlock"));
                     var host = Detach(window);
@@ -77,6 +77,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
     }
     internal static void Layout(FrameworkElement host)
     {
+        WpfContext.Drain();
         host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
         host.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render); host.UpdateLayout();
     }

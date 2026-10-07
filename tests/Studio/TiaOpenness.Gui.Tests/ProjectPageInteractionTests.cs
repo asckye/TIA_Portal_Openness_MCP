@@ -86,7 +86,7 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
             try
             {
                 model.Session.Connect.Execute(null);
-                model.Engineering.Compile.Execute(null);
+                model.Engineering.Compile.Execute(null); WpfContext.Drain();
                 var results = (GlassResults)((FrameworkElement)window.FindName("Root")).Tag;
                 Assert.True(results.HasCompile);
                 window.Navigate("Blocks");
@@ -110,7 +110,7 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
                 Assert.True(model.Session.IsConnected);
                 Assert.False(results.HasCompile);
                 model.Activity.ClearLog();
-                model.Engineering.Compile.Execute(null);
+                model.Engineering.Compile.Execute(null); WpfContext.Drain();
                 Assert.True(results.HasCompile);
             }
             finally { window.Close(); }

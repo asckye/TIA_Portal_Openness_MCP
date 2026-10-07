@@ -35,7 +35,7 @@ public sealed class CallJournalPanelTests(WpfContext wpf)
                 Assert.Equal(TiaMcpConfigurator.ClientProfiles.ConnectionSnippet("127.0.0.1", 8765), service.Connection.ConfigurationJson);
                 Assert.Contains("Bearer ••••", service.Connection.ConfigurationJson); Assert.DoesNotContain("private-", service.Connection.ConfigurationJson);
                 File.WriteAllText(Path.Combine(root, "http-v20.json"), "{broken private-key");
-                service.SetRelease("20"); Assert.Empty(service.Connection.Address);
+                service.SetRelease("20"); service.Refresh(); Assert.Empty(service.Connection.Address);
             }
             finally { Directory.Delete(root, true); }
         });
@@ -49,14 +49,14 @@ public sealed class CallJournalPanelTests(WpfContext wpf)
             var approvals = FeaturePageFixtures.Approvals(false);
             var journal = new FeaturePageFixtures.Journal(); journal.Replace(journal.Calls.Where(c => c.Result != CallResult.Pending).ToArray());
             using var model = Model(approvals, journal);
-            model.ToggleFollow(); approvals.Receive(FeaturePageFixtures.Request("fresh"));
+            model.ToggleFollow(); approvals.Receive(FeaturePageFixtures.Request("fresh")); WpfContext.Drain();
             Assert.True(model.Calls[0].Pending); Assert.Equal("fresh", model.Calls[0].Record.RequestId);
             model.WriteOnly = true; Assert.Single(model.Calls);
             model.FailOnly = true; Assert.Empty(model.Calls);
             model.WriteOnly = false; Assert.Single(model.Calls);
             model.FailOnly = false; model.ReleaseOnly = true; model.Release = "21"; Assert.Empty(model.Calls);
             model.Release = "14sp1"; Assert.Equal(4, model.Calls.Count);
-            approvals.Deny("fresh"); Assert.Equal(3, model.Calls.Count);
+            approvals.Deny("fresh"); WpfContext.Drain(); Assert.Equal(3, model.Calls.Count);
         });
     }
 

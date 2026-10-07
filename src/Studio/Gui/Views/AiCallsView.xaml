@@ -32,8 +32,7 @@
             <TextBlock Grid.Column="10" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Duration}"/>
             <TextBlock Grid.Column="12" Style="{StaticResource Feature.Header}" Margin="0" Text="{l:Tr Calls.Target}"/>
           </Grid>
-          <ScrollViewer x:Name="CallScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl x:Name="CallList" ItemsSource="{Binding Calls}"><ItemsControl.ItemTemplate><DataTemplate>
+          <ListBox x:Name="CallList" Grid.Row="1" Style="{StaticResource Feature.VirtualList}" ItemsSource="{Binding Calls}"><ListBox.ItemTemplate><DataTemplate>
               <Button Style="{StaticResource Feature.Row}" Click="OnCall" ToolTip="{Binding Tool}">
                 <Grid>
                   <Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="44"/><ColumnDefinition Width="10"/><ColumnDefinition Width="90"/><ColumnDefinition Width="10"/><ColumnDefinition Width="54"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.4*"/></Grid.ColumnDefinitions>
@@ -46,8 +45,7 @@
                   <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Glass.Muted}" ToolTip="{Binding Target}"/>
                 </Grid>
               </Button>
-            </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-          </ScrollViewer>
+            </DataTemplate></ListBox.ItemTemplate></ListBox>
           <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="390" Visibility="{Binding CallsEmpty, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Text="{Binding CallEmptyTitle}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
             <TextBlock Text="{l:Tr Calls.EmptyHelp}" Style="{StaticResource Glass.Muted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"/>

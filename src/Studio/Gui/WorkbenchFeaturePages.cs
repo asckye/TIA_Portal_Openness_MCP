@@ -39,6 +39,7 @@ public partial class MainWindow
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext = CallDetailContent.DataContext = Features;
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
+        Features.SetVisibility(_page == "Calls", _page == "Audit", _drawer == "Approvals", _drawer == "CallDetail");
     }
 
     private void OnFeatureReleaseChanged(object? sender, PropertyChangedEventArgs e)

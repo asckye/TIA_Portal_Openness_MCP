@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Threading.Tasks;
+using System.Windows.Threading;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services.Stubs;
 
@@ -14,6 +16,7 @@ public partial class MainWindow
     private IDiagnosticBundleService _diagnostics = null!;
     private string _page = "Engineering";
     private string? _drawer;
+    private bool _shellQueued;
     private bool HasProject => _model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.ProjectName);
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
@@ -47,8 +50,10 @@ public partial class MainWindow
 
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (Dispatcher.CheckAccess()) UpdateShell();
-        else Dispatcher.BeginInvoke(UpdateShell);
+        if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.PendingCount))) return;
+        if (_shellQueued) return;
+        _shellQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { _shellQueued = false; UpdateShell(); }));
     }
     private void OnEnvironmentRequested(object? sender, EventArgs e) => NavigateGuarded("Environment");
     private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e)
@@ -56,6 +61,7 @@ public partial class MainWindow
         if (!HasProject && _page is "Blocks" or "VersionControl") Navigate("Engineering");
         UpdateShell();
         UpdateMcpStatus();
+        CommandManager.InvalidateRequerySuggested();
     }
     private void OnShellLanguageChanged(object? sender, EventArgs e) => UpdateShell();
     private void UpdateShell()
@@ -76,7 +82,7 @@ public partial class MainWindow
         }
         Features.Release = _model.SelectedReleaseKey;
         UpdateFeatureToast();
-        CommandManager.InvalidateRequerySuggested();
+
     }
 
     internal void Navigate(string page)
@@ -84,6 +90,7 @@ public partial class MainWindow
         if (page is "Blocks" or "VersionControl" && !HasProject) return;
         if (page == "Mcp") EnsureConfiguration();
         _page = page;
+        Features.SetVisibility(page == "Calls", page == "Audit", _drawer == "Approvals", _drawer == "CallDetail");
         OperationsContent.HideOptions();
         BlocksContent.HideOptions();
         VersionControlContent.HideOptions();
@@ -124,6 +131,7 @@ public partial class MainWindow
     private void OpenDrawer(string name)
     {
         _drawer = name;
+        Features.SetVisibility(_page == "Calls", _page == "Audit", name == "Approvals", name == "CallDetail");
         DrawerCount.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
         DrawerCallResult.Visibility = name == "CallDetail" ? Visibility.Visible : Visibility.Collapsed;
         DrawerPanel.Width = name == "Settings" ? 400 : 440;
@@ -148,20 +156,27 @@ public partial class MainWindow
     private void CloseDrawer()
     {
         _drawer = null;
+        Features.SetVisibility(_page == "Calls", _page == "Audit", false);
         DrawerOverlay.Visibility = Visibility.Collapsed;
         SettingsButton.SetResourceReference(Control.BackgroundProperty, "Ui.ControlBackground");
         SettingsButton.SetResourceReference(Control.ForegroundProperty, "Ui.Label");
     }
     private void OnDisableApprovalRequested(object? sender, EventArgs e) => ConfirmOverlay.Visibility = Visibility.Visible;
     private void OnMcpMenu(object sender, MouseButtonEventArgs e) { ((FrameworkElement)sender).ContextMenu.IsOpen = true; e.Handled = true; }
-    private void OnApprovalMenu(object sender, RoutedEventArgs e)
+    private async void OnApprovalMenu(object sender, RoutedEventArgs e)
     {
         if (Approvals.Enabled) OnDisableApprovalRequested(sender, EventArgs.Empty);
-        else Approvals.Enabled = true;
+        else await SetApprovalEnabled(true);
         McpApprovalSwitch.IsChecked = Approvals.Enabled;
     }
     private void OnCancelApprovalOff(object sender, RoutedEventArgs e) { ConfirmOverlay.Visibility = Visibility.Collapsed; SettingsContent.UpdateApproval(); }
-    private void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { Approvals.Enabled = false; ConfirmOverlay.Visibility = Visibility.Collapsed; }
+    private async void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { await SetApprovalEnabled(false); ConfirmOverlay.Visibility = Visibility.Collapsed; }
+    private async Task SetApprovalEnabled(bool enabled)
+    {
+        try { await Task.Run(() => Approvals.Enabled = enabled); }
+        catch (Exception ex) { Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+        SettingsContent.UpdateApproval();
+    }
     private void OnDiagnostics(object sender, RoutedEventArgs e)
     {
         Features.Export();

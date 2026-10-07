@@ -7,9 +7,9 @@ using TiaOpenness.Gui.Themes;
 namespace TiaOpenness.Gui.Settings;
 
 /// <summary>
-/// The two choices worth remembering between runs: language and appearance.
+/// Preferences remembered between runs: language, appearance and rendering effects.
 ///
-/// Deliberately a two-line key=value file rather than JSON or the registry - it has no schema to
+/// Deliberately a key=value file rather than JSON or the registry - it has no schema to
 /// version, a corrupt or half-written file costs nothing because every read falls back to the
 /// system default, and an operator can read or delete it without tooling. Nothing here is worth
 /// a dependency.
@@ -24,6 +24,7 @@ public sealed class UiSettings
     public AppLanguage Language { get; set; } = Loc.FromSystem();
 
     public AppTheme Theme { get; set; } = AppTheme.Auto;
+    public LowEffectsMode LowEffects { get; set; } = LowEffectsMode.Auto;
 
     public static string FilePath { get; } = TiaOpenness.Shared.DataLocations.Current.UiFilePath;
 
@@ -51,6 +52,7 @@ public sealed class UiSettings
                 {
                     settings.Language = language;
                 }
+                else if (key == "lowEffects" && Enum.TryParse<LowEffectsMode>(value, true, out var effects) && Enum.IsDefined(effects)) settings.LowEffects = effects;
                 else if (key == ThemeKey && Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme))
                 {
                     settings.Theme = theme;
@@ -78,6 +80,7 @@ public sealed class UiSettings
             {
                 $"{LanguageKey}={Language}",
                 $"{ThemeKey}={Theme}",
+                $"lowEffects={LowEffects}",
             });
         }
         catch (Exception) /* swallow(ui): failure to persist language and theme preferences must not prevent the window from closing */

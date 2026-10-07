@@ -36,6 +36,7 @@ public sealed class LogLocationReaderTests(WpfContext wpf)
             Assert.Equal(inputs.Count, inputs.Select(input => input.Entry).Distinct().Count());
             using var service = new AuditLogService(data.AuditDirectory, data.DiagnosticsDirectory,
                 Path.Combine(data.ConfigDirectory, "journal-retention.settings"), _ => { });
+            WpfContext.Complete(service.RefreshAsync());
             Assert.Equal(2, service.TotalCount); Assert.True(service.Verify().Passed);
             Assert.Equal(2, service.Verify().Count);
         });
@@ -68,6 +69,7 @@ public sealed class LogLocationReaderTests(WpfContext wpf)
             Assert.Equal(inputs.Count, inputs.Select(input => input.Entry).Distinct().Count());
             using var service = new AuditLogService(primary, data.DiagnosticsDirectory,
                 Path.Combine(data.ConfigDirectory, "journal-retention.settings"), _ => { }, new[] { primary, fallback });
+            WpfContext.Complete(service.RefreshAsync());
             Assert.Single(service.Events); Assert.True(service.Verify().Passed); Assert.Equal(3, service.Verify().Count);
             string file = Directory.GetFiles(fallback, "audit-*.jsonl").Single();
             File.WriteAllText(file, File.ReadAllText(file).Replace("WriteB", "Changed", StringComparison.Ordinal));

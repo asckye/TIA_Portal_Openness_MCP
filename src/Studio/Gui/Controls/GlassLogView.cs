@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -21,6 +22,8 @@ namespace TiaDesktop.Glass
         public GlassLogView()
         {
             IsReadOnly = true;
+            IsVisibleChanged += (_, _) => { if (IsVisible) Schedule(); };
+            Loaded += (_, _) => Schedule();
             BorderThickness = new Thickness(0);
             Background = Brushes.Transparent;
             Padding = new Thickness(0);
@@ -38,15 +41,49 @@ namespace TiaDesktop.Glass
             Document.PagePadding = new Thickness(0);
         }
 
-        private static void Refresh(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        private string _rendered = "";
+        private TableRowGroup? _rows;
+        private bool _queued;
+        private static void Refresh(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((GlassLogView)sender).Schedule();
+        private void Schedule()
         {
-            var view = (GlassLogView)sender;
-            view.Document.Blocks.Clear();
-            var table = new Table { CellSpacing = 0, Margin = new Thickness(0) };
-            table.Columns.Add(new TableColumn { Width = new GridLength(72) });
-            table.Columns.Add(new TableColumn());
-            var rows = new TableRowGroup();
-            foreach (string raw in (view.LogText ?? "").Split('\n'))
+            if (_queued || IsLoaded && !IsVisible) return;
+            _queued = true;
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(FlushPending));
+        }
+        internal void FlushPending()
+        {
+            _queued = false;
+            string text = LogText ?? "";
+            int drop = text.Count(c => c == '\n') - 1000, start = 0;
+            while (drop-- > 0) start = text.IndexOf('\n', start) + 1;
+            if (start > 0) text = text[start..];
+            if (text == _rendered) return;
+            bool follow = VerticalOffset >= ExtentHeight - ViewportHeight - 2;
+            int retained = 0, removed = 0;
+            if (_rows != null && text.StartsWith(_rendered, StringComparison.Ordinal)) retained = _rendered.Length;
+            else if (_rows != null && text.Length > 0)
+            {
+                int end = text.IndexOf('\n');
+                string first = end < 0 ? text : text[..(end + 1)];
+                int offset = _rendered.IndexOf(first, StringComparison.Ordinal);
+                if (offset >= 0 && text.StartsWith(_rendered[offset..], StringComparison.Ordinal))
+                {
+                    removed = _rendered[..offset].Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+                    retained = _rendered.Length - offset;
+                }
+                else _rows = null;
+            }
+            else _rows = null;
+            if (_rows == null)
+            {
+                Document.Blocks.Clear();
+                var table = new Table { CellSpacing = 0, Margin = new Thickness(0) };
+                table.Columns.Add(new TableColumn { Width = new GridLength(72) }); table.Columns.Add(new TableColumn());
+                _rows = new TableRowGroup(); table.RowGroups.Add(_rows); Document.Blocks.Add(table);
+            }
+            while (removed-- > 0 && _rows.Rows.Count > 0) _rows.Rows.RemoveAt(0);
+            foreach (string raw in text[retained..].Split('\n'))
             {
                 string line = raw.TrimEnd('\r');
                 if (line.Length == 0) continue;
@@ -58,12 +95,11 @@ namespace TiaDesktop.Glass
                 var body = new Paragraph(new Run(message)) { Margin = new Thickness(0), LineHeight = 17 };
                 var row = new TableRow();
                 row.Cells.Add(new TableCell(stamp) { Padding = new Thickness(0, 0, 12, 6) });
-                row.Cells.Add(new TableCell(body) { Padding = new Thickness(0, 0, 0, 6) });
-                rows.Rows.Add(row);
+                row.Cells.Add(new TableCell(body) { Padding = new Thickness(0, 0, 0, 6) }); _rows.Rows.Add(row);
             }
-            table.RowGroups.Add(rows);
-            view.Document.Blocks.Add(table);
-            view.ScrollToEnd();
+            while (_rows.Rows.Count > 1000) _rows.Rows.RemoveAt(0);
+            _rendered = text;
+            if (follow) Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(ScrollToEnd));
         }
     }
 }

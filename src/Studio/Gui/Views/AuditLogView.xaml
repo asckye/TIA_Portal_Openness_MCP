@@ -10,6 +10,8 @@
           <Ellipse Style="{StaticResource Feature.Dot}" Tag="{Binding VerificationTone}" Margin="0,0,10,0"/>
           <TextBlock Text="{Binding VerificationText}" Style="{StaticResource Feature.Text}" Tag="{Binding VerificationTone}" FontWeight="Bold" FontSize="12"/>
         </DockPanel></Border>
+        <ProgressBar Value="{Binding VerificationProgress, Mode=OneWay}" Maximum="100" Height="4" Margin="0,8,0,0" IsIndeterminate="True" Visibility="{Binding Verifying, Converter={StaticResource BoolToVisibility}}"/>
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0"><Button Content="{l:Tr Audit.Older}" Style="{StaticResource Glass.Quiet}" Click="OnOlder"/><Button Content="{l:Tr Audit.Latest}" Style="{StaticResource Glass.Quiet}" Margin="14,0,0,0" Click="OnLatest"/></StackPanel>
         <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Glass.Muted}" Foreground="{DynamicResource Ui.TertiaryLabel}" Margin="0,10,0,0" TextWrapping="Wrap"/>
       </StackPanel></Border>
       <Border Grid.Row="2" Style="{StaticResource Glass.Card}" Padding="16,14"><Grid>
@@ -17,7 +19,7 @@
         <Grid Margin="10,0"><Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.6*"/><ColumnDefinition Width="10"/><ColumnDefinition Width=".8*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
           <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="2" Text="{l:Tr Audit.Event}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="4" Text="{l:Tr Audit.Object}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="6" Text="{l:Tr Calls.Result}" Style="{StaticResource Feature.Header}" Margin="0"/><TextBlock Grid.Column="8" Text="{l:Tr Audit.Hash}" Style="{StaticResource Feature.Header}" Margin="0"/>
         </Grid>
-        <ScrollViewer x:Name="AuditScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><ItemsControl x:Name="AuditList" ItemsSource="{Binding AuditRows}"><ItemsControl.ItemTemplate><DataTemplate>
+        <ListBox x:Name="AuditList" Grid.Row="1" Style="{StaticResource Feature.VirtualList}" ItemsSource="{Binding AuditRows}"><ListBox.ItemTemplate><DataTemplate>
           <Border CornerRadius="10" Padding="10,0" Height="34">
             <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="Transparent"/><Style.Triggers><DataTrigger Binding="{Binding Selected}" Value="True"><Setter Property="Background" Value="{DynamicResource Ui.WarningSoft}"/></DataTrigger></Style.Triggers></Style></Border.Style>
             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="62"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.6*"/><ColumnDefinition Width="10"/><ColumnDefinition Width=".8*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
@@ -28,7 +30,7 @@
               <TextBlock Grid.Column="8" Text="{Binding Record.Hash}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.TertiaryLabel}"/>
             </Grid>
           </Border>
-        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+        </DataTemplate></ListBox.ItemTemplate></ListBox>
         <TextBlock Grid.Row="1" Text="{l:Tr Shell.AuditEmpty}" Style="{StaticResource Glass.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
       </Grid></Border>
     </Grid>

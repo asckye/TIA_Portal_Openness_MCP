@@ -50,7 +50,7 @@ public partial class App : Application
         ApplyCommandLineOverrides(args);
 
         Loc.Current.Language = Settings.Language;
-        ThemeManager.Current.Initialize(Settings.Theme);
+        ThemeManager.Current.Initialize(Settings.Theme, Settings.LowEffects);
 
         // Persist whatever the window is showing when it closes, not at the moment of the click,
         // so a language toggled and then toggled back does not write twice.
@@ -58,6 +58,7 @@ public partial class App : Application
         {
             Settings.Language = Loc.Current.Language;
             Settings.Theme = ThemeManager.Current.Theme;
+            Settings.LowEffects = ThemeManager.Current.LowEffects;
             Settings.Save();
         };
 

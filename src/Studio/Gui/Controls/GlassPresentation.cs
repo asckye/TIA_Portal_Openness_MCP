@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Collections.Specialized;
 using System.Globalization;
@@ -62,10 +63,23 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 {
     private readonly MainViewModel model;
     private int _resultLogStart;
+    private readonly ObservableCollection<LogRow> _logRows = [];
+    private readonly Dictionary<WorkbenchActivity.Entry, List<LogRow>> _entryRows = new();
+    private readonly Dictionary<string, object?> _resultValues = new();
+    private static readonly System.Reflection.PropertyInfo[] ResultProperties = new[]
+    {
+        nameof(LogCount), nameof(HasCompile), nameof(HasInspection), nameof(CompileCardHeight), nameof(InspectionCardHeight), nameof(CompileBadge),
+        nameof(InspectionDisplay), nameof(CompileOperationState), nameof(InspectionOperationState), nameof(CompileSummary), nameof(Errors), nameof(Warnings),
+        nameof(CompileState), nameof(InspectionTime), nameof(InspectionSummary), nameof(Mapped), nameof(Unsupported), nameof(Failed),
+        nameof(MappingSummary), nameof(SyncSummary), nameof(Diagnostics), nameof(Rules)
+    }.Select(name => typeof(GlassResults).GetProperty(name)!).ToArray();
+    private static readonly string[] PresentationProperties = typeof(GlassResults).GetProperties().Select(p => p.Name).Where(name => name != nameof(LogRows)).ToArray();
     public GlassResults(MainViewModel model)
     {
         this.model = model;
         model.Activity.PropertyChanged += Changed;
+        ((INotifyCollectionChanged)model.Activity.Entries).CollectionChanged += LogChanged;
+        foreach (var entry in model.Activity.Entries) AddLog(entry);
         model.Session.PropertyChanged += Changed;
         model.Engineering.PropertyChanged += Changed;
         model.VersionControl.PropertyChanged += Changed;
@@ -91,8 +105,7 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
     public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];
     public sealed record LogRow(string Time, string Message, LogLevel Level = LogLevel.Default);
-    public IReadOnlyList<LogRow> LogRows => model.Activity.Entries.SelectMany(entry => entry.Message.Split('\n')
-        .Where(line => !string.IsNullOrWhiteSpace(line)).Select((line, index) => new LogRow(index == 0 ? entry.Time : "", line.TrimEnd('\r'), (LogLevel)entry.Level))).ToArray();
+    public IReadOnlyList<LogRow> LogRows => _logRows;
     public IReadOnlyList<LogRow> LogTail => LogRows.TakeLast(12).ToArray();
     public bool HasCompile => Errors != "—";
     public bool HasInspection => InspectionTime.Length > 0;
@@ -135,18 +148,41 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public IReadOnlyList<string> Rules { get; private set; } = [];
     public sealed record Diagnostic(string Name, string Message);
 
+    private void AddLog(WorkbenchActivity.Entry entry)
+    {
+        var rows = entry.Message.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select((line, index) => new LogRow(index == 0 ? entry.Time : "", line.TrimEnd('\r'), (LogLevel)entry.Level)).ToList();
+        _entryRows[entry] = rows;
+        foreach (var row in rows) _logRows.Add(row);
+    }
+    private void LogChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Reset) { _logRows.Clear(); _entryRows.Clear(); _resultLogStart = 0; }
+        if (e.OldItems != null) foreach (WorkbenchActivity.Entry entry in e.OldItems)
+        {
+            if (_entryRows.Remove(entry, out var rows)) foreach (var row in rows) _logRows.Remove(row);
+            _resultLogStart = Math.Max(0, _resultLogStart - 1);
+        }
+        if (e.NewItems != null) foreach (WorkbenchActivity.Entry entry in e.NewItems) AddLog(entry);
+    }
+    private void NotifyPresentation()
+    {
+        foreach (string name in PresentationProperties) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
     private void Changed(object? sender, PropertyChangedEventArgs e)
     {
+        if (sender == model.Activity && e.PropertyName != nameof(WorkbenchActivity.Log)) return;
         if (sender == model.Session && e.PropertyName == nameof(SessionViewModel.IsConnected) && !model.Session.IsConnected)
         {
             _resultLogStart = model.Activity.Entries.Count;
             Refresh();
         }
         else if (e.PropertyName is nameof(WorkbenchActivity.Log) or nameof(SessionViewModel.ProjectPath)) Refresh();
-        else PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        else NotifyPresentation();
     }
-    private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
-    private void OperationChanged(object? sender, EventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => NotifyPresentation();
+    private void OperationChanged(object? sender, EventArgs e) => NotifyPresentation();
     private void LanguageChanged(object? sender, EventArgs e) => Refresh();
 
     private static string RuleLabel(string id) => id switch
@@ -213,14 +249,21 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
                     break;
             }
         }
-        Diagnostics = diagnostics;
-        Rules = rules;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        if (!Diagnostics.SequenceEqual(diagnostics)) Diagnostics = diagnostics;
+        if (!Rules.SequenceEqual(rules)) Rules = rules;
+        foreach (var property in ResultProperties)
+        {
+            object? value = property.GetValue(this);
+            if (_resultValues.TryGetValue(property.Name, out var previous) && Equals(previous, value)) continue;
+            _resultValues[property.Name] = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property.Name));
+        }
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LogTail)));
     }
 
     public void Dispose()
     {
         model.Activity.PropertyChanged -= Changed;
+        ((INotifyCollectionChanged)model.Activity.Entries).CollectionChanged -= LogChanged;
         model.Session.PropertyChanged -= Changed;
         model.Engineering.PropertyChanged -= Changed;
         model.VersionControl.PropertyChanged -= Changed;

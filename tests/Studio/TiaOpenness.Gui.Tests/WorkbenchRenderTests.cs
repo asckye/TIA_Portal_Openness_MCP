@@ -117,6 +117,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
 
     internal static Border CreateHost(MainWindow window)
     {
+        WpfContext.Drain();
         var content = (FrameworkElement)window.Content;
         window.Content = null;
         var host = new Border { Child = content, DataContext = window.DataContext, Width = 1200, Height = 780 };

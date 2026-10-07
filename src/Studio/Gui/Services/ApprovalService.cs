@@ -17,6 +17,10 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
 {
     private sealed record Pending(PendingApproval Request, TaskCompletionSource<ApprovalDecision> Decision);
     private readonly object sync = new();
+    private readonly object saveSync = new();
+    private readonly Timer expiry;
+    private int pendingCount;
+    private ApprovalRequest[] published = [];
     private readonly Dictionary<string, Pending> pending = new(StringComparer.Ordinal);
     private readonly List<ApprovalRequest> requests = [];
     private readonly Dictionary<string, string> seen = new(StringComparer.Ordinal);
@@ -32,23 +36,39 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     {
         this.settingsPath = settingsPath; this.pipeName = pipeName; this.audit = audit;
         sid = ApprovalPipe.CurrentSid; settings = ApprovalSettings.Load(settingsPath);
+        expiry = new Timer(_ => Refresh(), null, Timeout.Infinite, Timeout.Infinite);
         try { listener = ApprovalPipe.CreateServer(pipeName, sid, true); _ = Listen(); }
         catch (Exception ex) { Trace.TraceWarning("Approval listener unavailable: " + ex.GetType().Name); }
     }
     public bool Enabled
     {
         get { lock (sync) return settings.Enabled; }
-        set { lock (sync) { if (settings.Enabled == value) return; var next = new ApprovalSettings(value, settings.TimeoutSeconds); next.Save(settingsPath, audit); settings = next; } Raise(nameof(Enabled)); }
+        set => Save(value, null);
     }
     public int TimeoutSeconds
     {
         get { lock (sync) return settings.TimeoutSeconds; }
-        set { lock (sync) { if (settings.TimeoutSeconds == value) return; var next = new ApprovalSettings(settings.Enabled, value); next.Save(settingsPath, audit); settings = next; } Raise(nameof(TimeoutSeconds)); }
+        set => Save(null, value);
     }
-    public int PendingCount { get { lock (sync) return requests.Count(r => r.State == ApprovalState.Pending); } }
-    public IReadOnlyList<ApprovalRequest> Requests { get { lock (sync) return requests.ToArray(); } }
+    private void Save(bool? enabled, int? seconds)
+    {
+        lock (saveSync)
+        {
+            ApprovalSettings next;
+            lock (sync)
+            {
+                next = new ApprovalSettings(enabled ?? settings.Enabled, seconds ?? settings.TimeoutSeconds);
+                if (next.Enabled == settings.Enabled && next.TimeoutSeconds == settings.TimeoutSeconds) return;
+            }
+            next.Save(settingsPath, audit);
+            lock (sync) settings = next;
+        }
+        Raise(enabled.HasValue ? nameof(Enabled) : nameof(TimeoutSeconds));
+    }
+    public int PendingCount { get { lock (sync) return pendingCount; } }
+    public IReadOnlyList<ApprovalRequest> Requests { get { lock (sync) return published; } }
     public event EventHandler<ApprovalRequest>? NewRequest;
-    public bool CanDecide(string id) { lock (sync) return pending.ContainsKey(id) && requests.Any(r => r.Id == id && r.State == ApprovalState.Pending && r.Deadline > DateTimeOffset.UtcNow); }
+    public bool CanDecide(string id) { lock (sync) return pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > DateTimeOffset.UtcNow; }
     public bool Approve(string id) => Decide(id, true);
     public bool Deny(string id) => Decide(id, false);
     private bool Decide(string id, bool approve)
@@ -132,21 +152,38 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     private void SetState(string id, ApprovalState state)
     { int index = requests.FindIndex(r => r.Id == id); if (index >= 0) requests[index] = requests[index] with { State = state }; }
     private void SetStateSafe(string id, ApprovalState state) { lock (sync) SetState(id, state); Changed(); }
-    private void Changed() { Raise(nameof(Requests)); Raise(nameof(PendingCount)); }
-    public void Refresh()
+    private void Changed()
     {
+        bool countChanged, rowsChanged;
         lock (sync)
         {
-            foreach (var row in requests.Where(r => r.State == ApprovalState.Pending && r.Deadline <= DateTimeOffset.UtcNow).ToArray()) SetState(row.Id, ApprovalState.TimedOut);
-            foreach (var row in requests.Where(r => r.State == ApprovalState.Approved && r.Deadline.AddMinutes(2) <= DateTimeOffset.UtcNow).ToArray()) SetState(row.Id, ApprovalState.Unknown);
+            rowsChanged = !published.SequenceEqual(requests);
+            if (rowsChanged) published = requests.ToArray();
+            int count = requests.Count(r => r.State == ApprovalState.Pending);
+            countChanged = pendingCount != count; pendingCount = count;
+            var deadline = requests.Where(r => r.State == ApprovalState.Approved).Select(r => r.Deadline.AddMinutes(2)).DefaultIfEmpty(DateTimeOffset.MaxValue).Min();
+            if (!disposed) expiry.Change(deadline == DateTimeOffset.MaxValue ? Timeout.InfiniteTimeSpan
+                : TimeSpan.FromMilliseconds(Math.Max(1, (deadline - DateTimeOffset.UtcNow).TotalMilliseconds)), Timeout.InfiniteTimeSpan);
         }
-        Changed();
+        if (rowsChanged) Raise(nameof(Requests)); if (countChanged) Raise(nameof(PendingCount));
+    }
+    public void Refresh()
+    {
+        bool changed = false;
+        lock (sync)
+        {
+            foreach (var row in requests.Where(r => r.State == ApprovalState.Pending && r.Deadline <= DateTimeOffset.UtcNow).ToArray())
+            { SetState(row.Id, ApprovalState.TimedOut); changed = true; }
+            foreach (var row in requests.Where(r => r.State == ApprovalState.Approved && r.Deadline.AddMinutes(2) <= DateTimeOffset.UtcNow).ToArray())
+            { SetState(row.Id, ApprovalState.Unknown); changed = true; }
+        }
+        if (changed) Changed();
     }
     public void Dispose()
     {
         lock (sync)
         {
-            if (disposed) return; disposed = true; stop.Cancel(); listener?.Dispose();
+            if (disposed) return; disposed = true; expiry.Dispose(); stop.Cancel(); listener?.Dispose();
             foreach (var row in requests.Where(r => r.State is ApprovalState.Pending or ApprovalState.Approved).ToArray())
                 SetState(row.Id, row.State == ApprovalState.Pending ? ApprovalState.Disconnected : ApprovalState.Unknown);
         }

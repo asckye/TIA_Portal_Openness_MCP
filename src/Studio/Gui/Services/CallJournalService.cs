@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using TiaMcpConfigurator;
 using TiaOpenness.Core;
 using TiaOpenness.Gui.Common;
@@ -15,10 +16,13 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
 {
     private readonly object _sync = new();
     private readonly CallJournalReader _reader;
-    private readonly Timer? _timer;
+    private ChangeMonitor? _monitor;
+    private volatile bool _active = true;
+    private string _connectionStamp = "";
+    private readonly Dictionary<string, (JournalCall Source, CallRecord Row)> _rows = new(StringComparer.Ordinal);
     private readonly string _configDirectory;
-    private string _release;
-    private bool _disposed;
+    private volatile string _release;
+    private volatile bool _disposed;
     private IReadOnlyList<CallRecord> _calls = Array.Empty<CallRecord>();
     private ConnectionInfo _connection = new("", "", "{}");
     public IReadOnlyList<CallRecord> Calls => Volatile.Read(ref _calls);
@@ -27,14 +31,24 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
     public CallJournalService(string release = "21", string? directory = null, string? configDirectory = null, bool live = true)
     {
         _release = release; _configDirectory = configDirectory ?? ConfigCore.StateDirectory;
-        _reader = new CallJournalReader(directory, false);
+        _reader = new CallJournalReader(directory, false, false);
         _reader.Changed += OnChanged;
-        OnChanged(this, EventArgs.Empty);
-        Refresh();
-        if (live) _timer = new Timer(_ => Refresh(), null, CallJournalReader.PollMilliseconds, CallJournalReader.PollMilliseconds);
+        if (!live) Refresh();
+        else _ = Task.Run(() =>
+        {
+            lock (_sync)
+            {
+                if (_disposed) return;
+                _monitor = new ChangeMonitor(Refresh, directory ?? TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory, _configDirectory);
+                if (_disposed) { _monitor.Dispose(); return; }
+                _monitor.SetActive(_active);
+            }
+            if (_active) Refresh();
+        });
     }
 
-    public void SetRelease(string release) { lock (_sync) { _release = release; Refresh(); } }
+    public void SetRelease(string release) { if (_release == release) return; _release = release; _ = Task.Run(Refresh); }
+    public void SetActive(bool active) { _active = active; _monitor?.SetActive(active); }
     public void Refresh()
     {
         lock (_sync)
@@ -51,7 +65,11 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
         try
         {
             string path = Path.Combine(_configDirectory, "http-v" + _release + ".json");
-            if (!File.Exists(path)) return new("", "", "{}");
+            var file = new FileInfo(path);
+            string stamp = path + ":" + (file.Exists ? file.Length + ":" + file.LastWriteTimeUtc.Ticks : "missing");
+            if (stamp == _connectionStamp) return _connection;
+            _connectionStamp = stamp;
+            if (!file.Exists) return new("", "", "{}");
             using var document = JsonDocument.Parse(File.ReadAllText(path));
             var settings = document.RootElement;
             string address = settings.GetProperty("Address").GetString()!;
@@ -64,7 +82,10 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
 
     private void OnChanged(object? sender, EventArgs e)
     {
-        Volatile.Write(ref _calls, _reader.Calls.Select(c => new CallRecord(c.RequestId, c.Time, c.Host, c.Release, c.Tool,
+        Volatile.Write(ref _calls, _reader.Calls.Select(c =>
+        {
+            if (_rows.TryGetValue(c.Identity, out var old) && ReferenceEquals(old.Source, c)) return old.Row;
+            var row = new CallRecord(c.RequestId, c.Time, c.Host, c.Release, c.Tool,
             c.IsWrite, c.DisplayOutcome switch
             {
                 "succeeded" => CallResult.Success, "rejected-before-operation" => CallResult.Rejected,
@@ -75,12 +96,16 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
         {
             JournalKey = c.Identity, ResultJson = c.Result, Outcome = c.Outcome, Execution = c.Execution, Completeness = c.Completeness,
             ParametersTruncated = c.ArgumentsTruncated, ResultTruncated = c.ResultTruncated
+        };
+            _rows[c.Identity] = (c, row); return row;
         }).ToArray());
+        var keep = _reader.Calls.Select(c => c.Identity).ToHashSet(StringComparer.Ordinal);
+        foreach (string key in _rows.Keys.Where(k => !keep.Contains(k)).ToArray()) _rows.Remove(key);
         Raise(nameof(Calls));
     }
 
     public void Dispose()
     {
-        lock (_sync) { _disposed = true; _timer?.Dispose(); _reader.Changed -= OnChanged; _reader.Dispose(); }
+        _disposed = true; _monitor?.Dispose(); _reader.Changed -= OnChanged; _ = Task.Run(_reader.Dispose);
     }
 }

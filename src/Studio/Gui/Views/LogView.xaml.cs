@@ -11,7 +11,9 @@ public partial class LogView : UserControl
     private MainViewModel _model => (MainViewModel)DataContext;
     private void OnLogScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (e.ExtentHeightChange > 0) ((ScrollViewer)sender).ScrollToEnd();
+        if (e.OriginalSource is ScrollViewer scroll && e.ExtentHeightChange > 0
+            && scroll.VerticalOffset >= scroll.ExtentHeight - e.ExtentHeightChange - scroll.ViewportHeight - 2
+            && LogList.Items.Count > 0) LogList.ScrollIntoView(LogList.Items[^1]);
     }
     private void OnCopyLog(object sender, RoutedEventArgs e)
     {
