@@ -834,10 +834,11 @@ internal static partial class ReleaseCommands
             foreach (var folder in new[] { "Gui", "Client", "Core", "Contracts", "Bridge" })
             {
                 var path = Path.Combine(Root, "src/Studio", folder);
-                if (Directory.Exists(path)) foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Where(IsBuildSource)) inputs.Add(file);
+                // Generated sources under bin/obj are build output, not inputs (as Build-Configurator.ps1 and Package-Release.py define them).
+                if (Directory.Exists(path)) foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).Where(file => IsBuildSource(file) && !IsBuildOutput(file))) inputs.Add(file);
             }
             var testsFolder = Path.Combine(Root, "tests/Studio/TiaOpenness.Configuration.Tests");
-            foreach (var file in Directory.EnumerateFiles(testsFolder, "*", SearchOption.TopDirectoryOnly).Where(IsBuildSource)) inputs.Add(file);
+            foreach (var file in Directory.EnumerateFiles(testsFolder, "*", SearchOption.TopDirectoryOnly).Where(file => Path.GetExtension(file) is ".cs" or ".csproj")) inputs.Add(file);
             foreach (var relative in new[] { "src/Studio/Launcher/Launcher.cs", "Version.props", "src/Studio/Directory.Build.props", "tests/Studio/Directory.Build.props", "src/Shared/LocalProcess.cs", "src/Logic/Siemens/TiaVersionCatalog.cs", "src/Shared/ProcessArguments.cs", "src/Shared/OpennessEnvironment.cs", "src/Shared/BundleLayout.cs" })
                 if (File.Exists(Path.Combine(Root, relative))) inputs.Add(Path.Combine(Root, relative));
             var fonts = Path.Combine(Root, "src/Studio/Gui/Fonts");
