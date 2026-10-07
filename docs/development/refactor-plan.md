@@ -226,6 +226,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-61 | 工作台 Primer 视觉重建（设计交接 design_handoff_tia_workbench_primer，取代 Glass Layers）：只重建视图层，ViewModel、命令与引擎调用不变；README“组件词汇”作为唯一的共享样式（容器/标题条/页脚条、分区标签、列表行、表格、按钮四类、分段控件、状态标签、计数徽标、输入框、代码块、提示框、复选框），页面不再自带颜色与尺寸；外壳（两行页眉+下划线标签、子标签、状态栏、抽屉、提示、确认框）与页面 01–03、06–11；浅色/深色、中文/英文；保持 P6-57 的流畅度；[路径清单](phase6-review.md#phase6-path-p6-61) | 57 | T、V；组件词汇来源检查（视图中无十六进制颜色和临时样式）；各页四种主题/语言渲染图对照 screens；P6-57 性能测试不退化 | todo |
 | P6-62 | 生成的梯形图页与程序图册目录页按 Primer 设计重绘（设计交接 screens 04/05）：令牌、文书面板、块头、接口表、网络卡片、梯形图几何、SCL 代码块、检查高亮、目录表；离线绘制说明不变；[路径清单](phase6-review.md#phase6-path-p6-62) | 48 | T；渲染黄金样例经生成工具更新；响应快照只含预期变化 | todo |
 | P6-63 | 示例库补充 V14 SP1 新包复验结论：单文件导入 overwrite=false 遇已有对象在原生调用前拒绝、导入路径正反斜杠均可、导出→修改→overwrite=true 导入的往返流程（V14 SP1 已真机验证）、预检拒绝不进入审批的真机结论；防回归检查；[路径清单](phase6-review.md#phase6-path-p6-63) | 60 | 八版检索与功能检查；GetToolUsage 响应快照经捕获工具更新 | todo |
+| P6-64 | V14 SP1 工具覆盖补全中的 Foundation 修复（发现 14–18）：PlanPlcExternalSourceImport 身份检查改用 Openness 值相等（真机恒失败）；外部源工具接受正斜杠与 PLC 短名；参数/前置条件错误不再报原生读取失败，统一为 INVALID_ARGUMENT/PRECONDITION_FAILED 操作前拒绝；预演确认无变化时不请求审批；重名符号预检提速；外部源示例；[路径清单](phase6-review.md#phase6-path-p6-64) | 60 | T、V；夹具覆盖每次返回新代理对象的身份比较；L5：V14 SP1 复测 PlanPlcExternalSourceImport | todo |
 
 并行边界：02 完成后 03/04/05/06 可各建独立 DTO/测试文件；项目公共引用由 02 预置、后续缺项由 07 集成。
 07 完成且 I 合并后，08–23 按规范附表 G 的工具文件所有权并行。
