@@ -29,6 +29,8 @@ internal static class SpecialExportShapeTests
         Check(nestedTable.ExportCalls==1,"Nested user groups preserve escaped canonical paths.");
         Reject(()=>Export(engine,"folder/one/same/name"),"Noncanonical path was accepted.");
         Reject(()=>engine.ExportPlcWatchTable("alias","same%2Fname","unused.xml"),"Software alias was accepted.");
+        engine.ExportPlcWatchTable("CPU","same%2Fname","unused.xml");
+        Check(rootTable.ExportCalls==1,"The unique short PLC name selects the software; a preview exports nothing.");
         child.Groups.Add(child);
         Reject(()=>Export(engine,"same%2Fname"),"Cyclic user group was accepted."); child.Groups.Remove(child);
         root.Groups.Add(new PlcWatchAndForceTableUserGroup { Name=child.Name });

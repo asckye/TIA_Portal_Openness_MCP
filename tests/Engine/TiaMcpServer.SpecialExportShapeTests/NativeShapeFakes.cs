@@ -50,7 +50,9 @@ namespace TiaMcp.PlcFoundation
     {
         internal Siemens.Engineering.SW.PlcSoftware Software { get; } = new();
         private string ReleaseKey => "20";
-        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath) ReadSelection(string path) => (Software, "devices/D/CPU");
+        // Mirrors the shared selection rule: the exact path or the PLC's unique short name; anything else is refused.
+        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath) ReadSelection(string path) =>
+            path is "devices/D/CPU" or "CPU" ? (Software, "devices/D/CPU") : throw new ArgumentException("Software path not found.", "softwarePath");
         private readonly FakeLifecycle lifecycle = new();
         private sealed class FakeLifecycle { public bool IsLocalSession => true; }
         private sealed class FakeProject { public FileInfo Path => new("project.ap20"); }
