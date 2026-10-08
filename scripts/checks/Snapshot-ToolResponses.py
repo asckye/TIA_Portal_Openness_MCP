@@ -121,12 +121,16 @@ REJECT_ARGUMENTS = {'SnapshotReject': True, 'snapshotReject': True}
 SELF_MARKER = "CallTool cannot invoke itself. Pass the target tool's own name."
 
 
-def v4_tools(release=None):
-    """Current and archived source names with V4 envelopes; preserve the reviewed masks for both capture paths."""
+def v4_tools(release=None, engine_source=False):
+    """Current and archived source names with V4 envelopes; preserve the reviewed masks for both capture paths.
+    With a release: the product roster, or the retired engine's own source roster for the A/B capture."""
     import xml.etree.ElementTree as ET
     resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
     data = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)
-    releases = [*data['releases'].items(), *(data.get('engineSourceReleases', {}).items() if release is None else [])]
+    if release is None:
+        releases = [*data['releases'].items(), *data.get('engineSourceReleases', {}).items()]
+    else:
+        releases = list((data.get('engineSourceReleases', {}) if engine_source else data['releases']).items())
     return {row['currentName'] for key, rows in releases if release in (None, key)
             for row in rows if row.get('envelopeVersion') == 4}
 
@@ -735,7 +739,7 @@ def capture_release(args, release, exe, public_api):
             selected_operations = sorted({(entry['tool'], str(entry['arguments'][key]))
                 for entry in entries.values() for key in ('action', 'operation')
                 if key in entry['arguments'] and entry['tool'] != 'GetToolUsage'})
-            resources.require(registered == v4_tools(release), 'Every full-engine entry must have a generated V4 contract')
+            resources.require(registered == v4_tools(release, args.engine_source), 'Every full-engine entry must have a generated V4 contract')
             for name in sorted(registered):
                 reply = call(name, REJECT_ARGUMENTS)
                 # Invalid-argument probes keep their ordinary V4 rejection;

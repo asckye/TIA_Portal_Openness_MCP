@@ -558,9 +558,11 @@ def write_approval_probe(root: Path, temp_root: Path, installation: Path, expect
         })
         rpc("notifications/initialized", notification=True)
         # The readiness admission guard must stop this TIA write before dispatch on this
-        # no-TIA machine. It still exercises the production engine's user config/audit bootstrap.
+        # no-TIA machine. It still exercises the user config/audit bootstrap. SaveProject is a shared
+        # Foundation tool on V21 since P7-04 and is not audited when refused before approval, so the
+        # probe uses an engine-only write that keeps the engine audit chain.
         result = rpc("tools/call", "approval-probe", {
-            "name": "SaveProject", "arguments": {},
+            "name": "CreatePlcBlockGroup", "arguments": {"softwarePath": "PLC_1", "groupPath": "RelocationProbe"},
         })
         body = extract_v4_body(result)
         if (body.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
@@ -585,11 +587,11 @@ def write_approval_probe(root: Path, temp_root: Path, installation: Path, expect
                 row = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if row.get("release") == key and row.get("tool") == "SaveProject" and row.get("requestId") == request_id:
+            if row.get("release") == key and row.get("tool") == "CreatePlcBlockGroup" and row.get("requestId") == request_id:
                 events.append((row.get("event"), row.get("outcome")))
     # A write stopped by readiness is audited as request then end; it never started.
     if [event for event, _ in events] != ["request", "end"] or events[-1][1] != "rejected-before-operation":
-        raise CheckFailure(f"Audit fallback has no request/end rows for the refused SaveProject ({request_id}): {events}")
+        raise CheckFailure(f"Audit fallback has no request/end rows for the refused CreatePlcBlockGroup ({request_id}): {events}")
     config_lock = paths["config"] / "approval.settings.lock"
     if not config_lock.is_file():
         raise CheckFailure(f"Approval settings did not resolve to the user config fallback: {config_lock}")

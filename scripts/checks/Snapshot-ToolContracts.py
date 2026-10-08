@@ -298,7 +298,17 @@ def capture(args):
         snapshots[release] = snapshot
         print(f'Captured V{release}: {len(snapshot["tools"])} tools', flush=True)
     if args.harness is None:
-        shutil.rmtree(fixture_root)
+        # An HTTP host is terminated; its engine worker exits when its channel closes and can hold
+        # the fixture SDK files for a moment longer.
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                shutil.rmtree(fixture_root)
+                break
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(.5)
     # Do not leave a partially captured baseline when a host fails.
     args.output.mkdir(parents=True, exist_ok=True)
     for release, snapshot in snapshots.items():
