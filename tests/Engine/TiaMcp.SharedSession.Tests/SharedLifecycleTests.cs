@@ -39,7 +39,7 @@ public sealed class SharedLifecycleTests
                 });
                 Refresh();
             },Refresh,reason => {
-                Foundation.Detached(); Project=null; Session=null; Engine.ClearFoundationSession(reason);
+                Engine.ClearFoundationSession(reason);
             });
             Engine.UseSharedLifecycle(Lifecycle,() => { Foundation.Detached(); Project=null; Session=null; });
         }
@@ -144,7 +144,7 @@ public sealed class SharedLifecycleTests
             calls++; InvocationJournal.NativeCallStarted(); throw new IOException(tool+" lost acknowledgement");
         }));
         Assert.NotNull(f.Lifecycle.Fault); Assert.Equal(f.Lifecycle.Fault,f.Engine.Fault);
-        Assert.Null(f.Foundation.ProcessId); Assert.Null(f.Engine.Attachment); Assert.Null(f.Engine.Binding); Assert.Null(f.Engine.Lease);
+        Assert.Equal(1234,f.Foundation.ProcessId); Assert.Null(f.Engine.Attachment); Assert.Null(f.Engine.Binding); Assert.Null(f.Engine.Lease);
         Assert.Throws<InvalidOperationException>(() => f.Lifecycle.Engine(() => ++calls));
         Assert.Throws<InvalidOperationException>(() => f.Lifecycle.Foundation(() => ++calls));
         Assert.Equal(1,calls); Assert.Equal(0,f.Tia.Disposes); Assert.Equal(0,f.Lease.Disposes);
@@ -167,7 +167,7 @@ public sealed class SharedLifecycleTests
         Assert.Throws<IOException>(() => f.Lifecycle.Foundation<bool>(() => {
             InvocationJournal.NativeCallStarted(); throw new IOException("foundation unknown");
         }));
-        Assert.NotNull(f.Engine.Fault); Assert.Null(f.Foundation.ProjectFile);
+        Assert.NotNull(f.Engine.Fault); Assert.Equal(MutationIdentityPolicy.AbsoluteFile(f.Path()),f.Foundation.ProjectFile);
         var broken=new Fixture(release); broken.Attach();
         Assert.Throws<InvalidOperationException>(() => broken.Lifecycle.Engine(() => {
             broken.Engine.NativeBinding(broken.Tia,new ProjectBase("P"),null,broken.Lease); return true;
@@ -186,6 +186,35 @@ public sealed class SharedLifecycleTests
             Assert.Throws<InvalidOperationException>(() => lifecycle!.Lock("unknown"));
         });
     }
+
+    [Theory, InlineData(20), InlineData(21)]
+    public void Recovery_disconnect_keeps_the_original_attachment_and_runs_only_on_the_idle_owner_thread(int release) => Owner(() => {
+        var f = new Fixture(release); f.Attach(); f.Bind(owns: false);
+        f.Lifecycle.Lock("unknown native export");
+        Assert.Equal(1234, f.Foundation.ProcessId);
+        var disconnect = new PlcDisconnectState(); int owner = Thread.CurrentThread.ManagedThreadId;
+        var ack = f.Lifecycle.Disconnect(() => {
+            var result = disconnect.Execute(f.Foundation.ProcessId, false, () => {
+                Assert.Equal(owner, Thread.CurrentThread.ManagedThreadId); f.Tia.Disposes++;
+            });
+            f.Foundation.Detached(); f.Project = null; f.Session = null;
+            return result;
+        });
+        Assert.True(ack.Detached);
+        Assert.Equal("non-owning-attachment-only", ack.Strategy); Assert.Equal("never", ack.LaunchMode);
+        Assert.Null(f.Engine.Attachment); Assert.Null(f.Foundation.ProcessId);
+        Assert.Equal(1, f.Tia.Disposes);
+        Assert.Throws<InvalidOperationException>(() => f.Lifecycle.Foundation(() => true));
+        Owner(() => Assert.Throws<InvalidOperationException>(() => f.Lifecycle.Disconnect(() => true)));
+    });
+
+    [Fact]
+    public void Recovery_disconnect_cannot_reenter_an_executing_native_lane() => Owner(() => {
+        var lifecycle = new SharedSessionLifecycle(() => { }, () => { }, _ => { });
+        lifecycle.Foundation(() => {
+            Assert.Throws<InvalidOperationException>(() => lifecycle.Disconnect(() => true)); return true;
+        });
+    });
 
     [Fact]
     public void Nested_operation_guard_cannot_bypass_the_owner_thread() => Owner(() => {
@@ -230,7 +259,7 @@ public sealed class SharedLifecycleTests
         Assert.Throws<IOException>(() => f.Lifecycle.Foundation(() => disconnect.Execute(1234,true,() => {
             InvocationJournal.NativeCallStarted(); f.Tia.Disposes++; throw new IOException("disconnect acknowledgement lost");
         },sharedPortal:true)));
-        Assert.Null(f.Engine.Binding); Assert.Null(f.Foundation.ProcessId); Assert.NotNull(f.Lifecycle.Fault);
+        Assert.Null(f.Engine.Binding); Assert.Equal(1234,f.Foundation.ProcessId); Assert.NotNull(f.Lifecycle.Fault);
         Assert.Throws<InvalidOperationException>(() => f.Lifecycle.Foundation(() => disconnect.Execute(1234,true,() => f.Tia.Disposes++,true)));
         Assert.Equal(1,f.Tia.Disposes); Assert.Equal(0,f.Lease.Disposes);
     });

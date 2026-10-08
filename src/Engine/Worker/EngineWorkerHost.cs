@@ -89,8 +89,9 @@ namespace TiaMcpServer.Worker
             portal = (Portal)EngineServices.Get(typeof(Portal));
             lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {
                 nativeFault = reason;
-                foundationDispatch.InvalidateSharedSession();
-                foundation.InvalidateSharedSession();
+                // Keep the original attachment solely for an owner-thread recovery
+                // Disconnect. The lifecycle fault blocks every other native operation.
+                foundationDispatch.SessionOutcome.MarkUncertain();
                 portal.ClearFoundationSession(reason);
             });
             lifecycle.AttachProcess = (pid, ticks, lease) => {
@@ -106,13 +107,13 @@ namespace TiaMcpServer.Worker
 
         private void RefreshFromFoundation()
         {
-            if (foundationDispatch!.SessionOutcome.RequiresReset || nativeFault != null)
-            { lifecycle!.Lock(nativeFault ?? TiaOpenness.Shared.SessionBehavior.Recovery); return; }
-            if (foundationDispatch.Ended)
+            if (foundationDispatch!.Detached)
             {
                 portal!.ClearFoundationSession();
                 processLease?.ReleaseCleanly(); processLease = null; processStartTicks = 0; ownedPortal = false;
             }
+            else if (foundationDispatch.SessionOutcome.RequiresReset || nativeFault != null)
+            { lifecycle!.Lock(nativeFault ?? TiaOpenness.Shared.SessionBehavior.Recovery); return; }
             else foundation!.BorrowSharedSession((tia, project, session, state) =>
                 portal!.AdoptFoundationSession(tia, project, session, state, processStartTicks, processLease, ownedPortal));
         }
@@ -142,7 +143,13 @@ namespace TiaMcpServer.Worker
         private void ReleaseFoundation()
         {
             if (foundation == null) return;
-            try { foundation.Dispose(); if (nativeFault == null) processLease?.ReleaseCleanly(); }
+            try
+            {
+                // An uncertain worker exiting without a recovery acknowledgement
+                // abandons its handles and ACTIVE lease; it never retries disposal.
+                if (nativeFault != null) foundation.InvalidateSharedSession();
+                foundation.Dispose(); if (nativeFault == null) processLease?.ReleaseCleanly();
+            }
             finally { processLease?.Dispose(); portal?.ClearFoundationSession(); }
         }
 
@@ -152,7 +159,8 @@ namespace TiaMcpServer.Worker
             using var correlation = InvocationJournal.UseCorrelation(request.CorrelationId ?? InvocationJournal.CorrelationId);
             if (foundationDispatch == null) return ChannelResponse.Error(new ChannelFailure(
                 OpennessReadiness.Cause + " " + OpennessReadiness.FixEn, -32603, ChannelOutcome.RejectedBeforeNative));
-            if (nativeFault != null) return ChannelResponse.Error(new ChannelFailure(
+            bool disconnect = request.Method == "adapter.Disconnect";
+            if (nativeFault != null && !disconnect) return ChannelResponse.Error(new ChannelFailure(
                 TiaOpenness.Shared.SessionBehavior.Recovery, -32603, ChannelOutcome.RejectedBeforeNative));
             bool reserved = false, dispatched = false;
             try
@@ -173,8 +181,10 @@ namespace TiaMcpServer.Worker
                     reserved = true;
                 }
                 dispatched = true;
-                var response = lifecycle!.Foundation(() => foundationDispatch.Dispatch(request));
-                if (nativeFault != null || foundationDispatch.SessionOutcome.RequiresReset || response.Failure?.Outcome == ChannelOutcome.Unknown)
+                var response = disconnect ? lifecycle!.Disconnect(() => foundationDispatch.Dispatch(request))
+                    : lifecycle!.Foundation(() => foundationDispatch.Dispatch(request));
+                if (disconnect && response.Failure == null && foundationDispatch.Detached) RefreshFromFoundation();
+                else if (nativeFault != null || foundationDispatch.SessionOutcome.RequiresReset || response.Failure?.Outcome == ChannelOutcome.Unknown)
                 {
                     nativeFault ??= response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery;
                     foundationDispatch.SessionOutcome.MarkUncertain();
@@ -264,7 +274,8 @@ namespace TiaMcpServer.Worker
                 result = McpServer.ToolResult(McpServer.InvokeToolMethod(method!, call!));
             }
             if (TiaOpenness.Shared.SessionBehavior.LocksSession(nativeCalls.NativeCallIssued,
-                (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)))
+                (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)
+                    || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE"))
             {
                 lifecycle?.Lock("Engine native outcome is unknown.");
             }

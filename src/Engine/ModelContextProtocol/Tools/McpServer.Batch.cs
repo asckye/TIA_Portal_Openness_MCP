@@ -13,7 +13,11 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
+#if TIA_ENGINE_HOST
+        private static BatchPlanStore BatchPlans => TiaMcp.LegacyHost.EngineHostConfiguration.Current.BatchPlans;
+#else
         private static readonly BatchPlanStore BatchPlans = new BatchPlanStore();
+#endif
 
         [McpServerTool(Name = "RunReadOnlyToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot.")]
         public static CallToolResult ReadToolBatch(

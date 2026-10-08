@@ -46,6 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (InputFailure ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None); }
             catch (Exception ex)
             {
+                CallerInputFiles.RecordExportFailure(ex);
                 var cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 if (cause is PortalException portal && (portal.Code == PortalErrorCode.NotFound || portal.Code == PortalErrorCode.InvalidParams
@@ -59,6 +60,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 return PlcToolContract.Failure(tool, ex, writes, true);
             }
+        }
+        internal static CallToolResult Export(string tool, string path, Func<object> operation)
+        {
+            var arguments = new JsonObject { ["exportPath"] = path };
+            try { CallerInputFiles.ValidateNativeFile(tool, arguments); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            { return Result(tool, null, new Error(error.Message, new InvalidArgumentDetails("exportPath", Array.Empty<string>())), Outcome.RejectedBeforeOperation, Completeness.None); }
+            using var export = CallerInputFiles.ObserveExport(tool, arguments);
+            return McpServer.ExportFailureResult(tool, Run(tool, true, operation), export);
         }
         private static bool? Flag(JsonObject obj, string key)
             => obj[key] is JsonValue v && v.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
@@ -185,8 +195,8 @@ namespace TiaMcpServer.ModelContextProtocol
             " Use before bulk alarm class updates to create a backup. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ExportAlarmClassesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("exportPath: full file path for the export, e.g. 'C:\\Temp\\AlarmClasses.xml'")] string exportPath)
-            => EngineeringToolContract.Run("ExportAlarmClasses", true, () => ExportAlarmClasses(softwarePath, exportPath));
+            [Description("exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat'")] string exportPath)
+            => EngineeringToolContract.Export("ExportAlarmClasses", exportPath, () => ExportAlarmClasses(softwarePath, exportPath));
 
         public ResponseMessage ExportAlarmClasses(
             string softwarePath,
@@ -203,7 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
             " Overwrites existing alarm class definitions. Run CompilePlcSoftware after import. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportAlarmClassesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("importPath: full file path to import from")] string importPath)
+            [Description("importPath: existing absolute DAT file written by ExportAlarmClasses")] string importPath)
             => EngineeringToolContract.Run("ImportAlarmClasses", true, () => ImportAlarmClasses(softwarePath, importPath));
 
         public ResponseMessage ImportAlarmClasses(
@@ -224,7 +234,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult ExportAlarmTextListsV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("exportPath: full file path for the XLSX output, e.g. 'C:\\Temp\\AlarmTexts.xlsx'")] string exportPath)
-            => EngineeringToolContract.Run("ExportAlarmTextLists", true, () => ExportAlarmTextLists(softwarePath, exportPath));
+            => EngineeringToolContract.Export("ExportAlarmTextLists", exportPath, () => ExportAlarmTextLists(softwarePath, exportPath));
 
         public ResponseMessage ExportAlarmTextLists(
             string softwarePath,
@@ -266,7 +276,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("includeInfoText: include the Info Text column (default: true)")] bool includeInfoText = true,
             [Description("includeAdditionalTexts: include Additional Texts columns (default: true)")] bool includeAdditionalTexts = true,
             [Description("includeAlarmClass: include the Alarm Class column (default: true)")] bool includeAlarmClass = true)
-            => EngineeringToolContract.Run("ExportAlarmInstanceTexts", true, () => ExportAlarmInstanceTexts(softwarePath, exportPath, includeInfoText, includeAdditionalTexts, includeAlarmClass));
+            => EngineeringToolContract.Export("ExportAlarmInstanceTexts", exportPath, () => ExportAlarmInstanceTexts(softwarePath, exportPath, includeInfoText, includeAdditionalTexts, includeAlarmClass));
 
         public ResponseMessage ExportAlarmInstanceTexts(
             string softwarePath,
@@ -311,7 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ImportPlcAlarmInstanceTexts"), Description("[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ImportPlcAlarmInstanceTextsV4(
             string softwarePath,
-            string filePath,
+            [Description("filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts.")] string filePath,
             [Description("cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).")] string[] cultures,
             bool dryRun=true)
             => EngineeringToolContract.Run("ImportPlcAlarmInstanceTexts", !dryRun, () => ImportPlcAlarmInstanceTexts(softwarePath, filePath, EngineeringToolContract.Json(cultures), dryRun));

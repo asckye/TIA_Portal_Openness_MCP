@@ -43,7 +43,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ExportSafetyPrintout"), Description("[L2][Safety][FILE] Official STEP 7 Safety printout of one exact F-PLC via native SafetyPrintout.Print on the CPU device item: printer MicrosoftPrintToPdf (.pdf) or MicrosoftXpsDocumentWriter (.xps/.oxps), option All or Compact, documentLayout default DocuInfo_ISO_A4_Portrait. filePath is absolute on the MCP server, must not exist (native Print would overwrite) and its parent must exist; the Windows printer driver must be enabled on the TIA machine. dryRun=true default; execution returns the native bool, byte size and SHA-256. No project change.")]
         public CallToolResult ExportSafetyPrintout(
             string softwarePath,
-            string filePath,
+            [Description("filePath: new absolute PDF for MicrosoftPrintToPdf, or XPS/OXPS for MicrosoftXpsDocumentWriter, in an existing directory.")] string filePath,
             [Description("printer: printer name ('' = the default printer).")] string printer="MicrosoftPrintToPdf",
             [Description("option: Openness print / export option name ('' = default).")] string option="All",
             [Description("documentLayout: document layout name ('' = default).")] string documentLayout="",

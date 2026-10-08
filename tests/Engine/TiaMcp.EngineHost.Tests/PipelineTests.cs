@@ -14,6 +14,48 @@ using Xunit.Abstractions;
 
 public sealed class PipelineTests(ITestOutputHelper output)
 {
+    [Fact]
+    public async Task Session_context_flows_across_await_and_nested_calls_restore_the_caller()
+    {
+        var a = new EngineSessionContext(new Worker()); var b = new EngineSessionContext(new Worker());
+        using var first = EngineHostConfiguration.Enter(a);
+        await Task.Run(async () => {
+            Assert.Same(a.Worker, McpServer.Worker);
+            using (EngineHostConfiguration.Enter(b)) { await Task.Yield(); Assert.Same(b.Worker, McpServer.Worker); }
+            Assert.Same(a.Worker, McpServer.Worker);
+        });
+        Assert.Same(a.Worker, McpServer.Worker);
+        a.Ended = true;
+        Assert.Throws<InvalidOperationException>(() => McpServer.Worker);
+    }
+
+    [Fact]
+    public void Export_access_and_cleanup_are_owned_by_the_current_MCP_session()
+    {
+        var a = new EngineSessionContext(new Worker()); var b = new EngineSessionContext(new Worker());
+        string id;
+        using (EngineHostConfiguration.Enter(a)) id = SessionExportStore.PutAndSlice("fixture", "A", "retained", 4).id;
+        using (EngineHostConfiguration.Enter(b))
+        {
+            Assert.Null(SessionExportStore.Get(id)); Assert.Empty(SessionExportStore.List(null, 10));
+            Assert.False(SessionExportStore.Delete(id)); Assert.Equal(0, SessionExportStore.Clear(0));
+        }
+        using (EngineHostConfiguration.Enter(a))
+        {
+            Assert.Equal("retained", SessionExportStore.Get(id)!.Content);
+            Assert.Equal(1, SessionExportStore.Stats().count);
+        }
+        a.Exports.Dispose(); Assert.Null(ExportStore.Get(id)); b.Exports.Dispose();
+    }
+
+    [Fact]
+    public void Preview_plan_store_belongs_to_the_worker_generation()
+    {
+        var worker = new Worker(); var session = new EngineSessionContext(worker);
+        var previous = session.BatchPlans; worker.SessionKey = new object();
+        Assert.NotSame(previous, session.BatchPlans);
+    }
+
     [Theory]
     [InlineData("20")] [InlineData("21")]
     public void Shared_catalog_restores_lifecycle_descriptors_without_adding_them_to_lite(string release)
@@ -236,7 +278,7 @@ public sealed class PipelineTests(ITestOutputHelper output)
         internal readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public bool Faulted { get; set; }
         public JsonNode? Binding { get; set; }
-        public object SessionKey { get; } = new();
+        public object SessionKey { get; set; } = new();
         public JsonObject Snapshot() => new() { ["readiness"] = new JsonObject { ["ready"] = Ready, ["cause"] = "fixture-worker-cause",
             ["recommendedFix"] = "fixture-worker-fix", ["recommendedFixZh"] = "fixture-worker-fix-zh" } };
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());

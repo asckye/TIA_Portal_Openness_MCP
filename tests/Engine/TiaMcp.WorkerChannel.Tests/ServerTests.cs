@@ -7,6 +7,22 @@ namespace TiaMcp.WorkerChannel.Tests;
 
 public sealed class ServerTests
 {
+    [Fact]
+    public void Answered_unknown_allows_one_recovery_disconnect_on_the_original_owner_thread()
+    {
+        using var output = new MemoryStream(); int calls = 0, owner = Environment.CurrentManagedThreadId;
+        var server = Server(output, request => {
+            Assert.Equal(owner, Environment.CurrentManagedThreadId); calls++;
+            return request.Method == "adapter.Disconnect" ? ChannelResponse.Success("{}")
+                : ChannelResponse.Error(new ChannelFailure("unknown", -32603, ChannelOutcome.Unknown));
+        });
+        server.WriteHello(); server.Handle(Encoding.UTF8.GetBytes(Request()));
+        Assert.False(server.Poisoned);
+        server.Handle(Encoding.UTF8.GetBytes(Request(2).Replace("adapter.ReadState", "adapter.Disconnect")));
+        Assert.Equal(2, calls);
+        Assert.Throws<ChannelFault>(() => server.Handle(Encoding.UTF8.GetBytes(Request(3))));
+        Assert.Equal(2, calls);
+    }
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void EmitFailureTerminal(bool oversized)

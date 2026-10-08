@@ -112,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult GeneratePlcSourceFromBlocksV4(
             string softwarePath,
             [Description("blockPaths: Array of block paths.")] string[] blockPaths,
-            string filePath,
+            [Description("filePath: new absolute native source file in an existing directory, e.g. FC_Ready.scl; the selected blocks determine the source language.")] string filePath,
             bool dryRun=true)
         {
             var validated = PlcExchangeContract.Paths.Validate(blockPaths, "blockPaths");
@@ -146,7 +146,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ExportProjectTexts"), Description("[L2][Project][FILE] Native project text export for explicit source/target cultures to a new absolute file. Returns API completion and file hash; default preview." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult ExportProjectTextsV4(
-            string filePath,
+            [Description("filePath: new absolute XLSX file in an existing directory.")] string filePath,
             [Description("sourceCulture: source language tag, e.g. 'en-US'.")] string sourceCulture,
             [Description("targetCulture: target language tag, e.g. 'zh-CN'.")] string targetCulture,
             bool dryRun=true)
@@ -156,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportProjectTexts"), Description("[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult ImportProjectTextsV4(
-            string filePath,
+            [Description("filePath: existing absolute XLSX file exported by ExportProjectTexts.")] string filePath,
             [Description("updateSourceLanguage: true also writes the source-language texts.")] bool updateSourceLanguage,
             bool dryRun=true)
         {

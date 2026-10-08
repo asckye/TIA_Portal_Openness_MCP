@@ -42,13 +42,39 @@ namespace TiaMcp.LegacyHost
     internal static class EngineHostConfiguration
     {
         internal static string ReleaseKey = "21";
-        internal static IEngineWorker Worker = null!;
-        internal static Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingOwner = null!;
+        private static readonly AsyncLocal<EngineSessionContext?> Session = new();
+        internal static EngineSessionContext Current => Session.Value is { Ended: false } context ? context
+            : throw new InvalidOperationException("The MCP engine session is unavailable; initialize a new session.");
+        internal static IEngineWorker Worker { get => Current.Worker; set => Session.Value = new EngineSessionContext(value); }
+        internal static Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingOwner { get => Current.StagingOwner!; set => Current.StagingOwner = value; }
+        internal static IDisposable Enter(EngineSessionContext context)
+        {
+            var previous = Session.Value;
+            Session.Value = context;
+            return new SessionScope(() => Session.Value = previous);
+        }
+        private sealed class SessionScope(Action restore) : IDisposable { public void Dispose() => restore(); }
+    }
+
+    internal sealed class EngineSessionContext(IEngineWorker worker)
+    {
+        internal IEngineWorker Worker { get; } = worker;
+        internal Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession>? StagingOwner;
+        internal IToolCatalogView? Catalog;
+        internal IToolInvoker? Invoker;
+        internal Func<bool> IsLiteProfile = () => false;
+        internal ISet<string> LiteToolNames = new HashSet<string>(StringComparer.Ordinal);
+        private readonly ConditionalWeakTable<object, BatchPlanStore> batchPlans = new();
+        internal BatchPlanStore BatchPlans => batchPlans.GetValue(Worker.SessionKey, _ => new BatchPlanStore());
+        internal SessionExports Exports { get; } = new();
+        internal string? HttpSessionId;
+        internal volatile bool Ended;
     }
 
     public sealed class EngineHostPipeline : IDisposable
     {
         private readonly ImportStagingHostLifetime stagingLifetime = new();
+        private readonly EngineSessionContext context;
         public string Instructions { get; }
         public JsonArray BehaviorCapabilities { get; }
         public IList<McpServerTool> Tools { get; }
@@ -58,8 +84,9 @@ namespace TiaMcp.LegacyHost
             IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
         {
             EngineHostConfiguration.ReleaseKey = releaseKey;
-            EngineHostConfiguration.Worker = worker;
-            EngineHostConfiguration.StagingOwner = () => ImportStagingTools.CurrentOwner ?? stagingLifetime.Session;
+            context = new EngineSessionContext(worker);
+            using var session = EnterSession();
+            EngineHostConfiguration.StagingOwner = () => stagingLifetime.Session;
             var catalog = new EngineCatalog(path, workerPath, releaseKey);
             IToolCatalogView published = sharedTools == null ? catalog : new SharedToolCatalog(catalog, sharedTools, sharedEssentials!);
             Instructions = catalog.Instructions;
@@ -67,19 +94,42 @@ namespace TiaMcp.LegacyHost
             McpServer.SetProfileOverride(profile);
             McpServer.ConfigureToolBridge(published, new WorkerToolInvoker(published, worker, stagingLifetime, sharedTools), McpServer.IsLiteProfile,
                 new HashSet<string>(published.Lite.Select(t => t.Name), StringComparer.Ordinal));
-            InvocationJournal.BindingSnapshot = () => worker.Binding as JsonObject;
+            InvocationJournal.BindingSnapshot = () => EngineHostConfiguration.Worker.Binding as JsonObject;
             var selected = McpServer.IsLiteProfile() ? published.Lite : published.All.Values.ToArray();
             Tools = selected.SelectMany(t => t.Execution == "foundation"
                 ? new[] { sharedTools!.Single(s => s.ProtocolTool.Name == t.Name) }
-                : McpServer.WrapTools(new[] { McpServer.ToolInvoker.CreateTool(t) })).ToList();
+                : McpServer.WrapTools(new[] { McpServer.ToolInvoker.CreateTool(t) })).Select(t => (McpServerTool)new SessionTool(this, t)).ToList();
             AllTools = published.All.Values.Select(t => t.Execution == "foundation"
-                ? sharedTools!.Single(s => s.ProtocolTool.Name == t.Name) : McpServer.ToolInvoker.CreateTool(t)).ToArray();
+                ? sharedTools!.Single(s => s.ProtocolTool.Name == t.Name) : McpServer.ToolInvoker.CreateTool(t))
+                .Select(t => (McpServerTool)new SessionTool(this, t)).ToArray();
         }
 
+        internal IDisposable EnterSession()
+        {
+            if (context.Ended) throw new InvalidOperationException("The MCP engine session has ended; initialize a new session.");
+            return EngineHostConfiguration.Enter(context);
+        }
+        internal bool SessionLocked
+        {
+            get { using var session = EnterSession(); return McpServer.SessionPrecheckRefusal("GetSessionState") != null; }
+        }
+        private sealed class SessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
+        {
+            public override Tool ProtocolTool => inner.ProtocolTool;
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            {
+                if (owner.context.HttpSessionId != null && request.Server.SessionId != owner.context.HttpSessionId)
+                    throw new InvalidOperationException("The tool belongs to a different MCP engine session.");
+                using var session = owner.EnterSession();
+                return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            }
+        }
         public IDisposable RegisterHttpSession(string id)
         {
             ImportStagingTools.HttpTransport = true;
+            context.HttpSessionId = id;
             var session = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession(id);
+            context.StagingOwner = () => session;
             ImportStagingTools.RegisterHttpSession(session);
             return new HttpSession(session);
         }
@@ -87,7 +137,7 @@ namespace TiaMcp.LegacyHost
         {
             public void Dispose() { ImportStagingTools.RemoveHttpSession(session); session.Dispose(); }
         }
-        public void Dispose() => stagingLifetime.Dispose();
+        public void Dispose() { context.Ended = true; context.Exports.Dispose(); stagingLifetime.Dispose(); }
 
         public void RegisterHandlers(IMcpServerBuilder builder)
         {

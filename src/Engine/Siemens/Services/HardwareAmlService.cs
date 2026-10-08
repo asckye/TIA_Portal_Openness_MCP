@@ -70,9 +70,8 @@ namespace TiaMcpServer.Siemens.Services
                 filePath = exportPath;
             }
 
-            var dir = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            if (File.Exists(filePath)) File.Delete(filePath);
+            TiaMcp.Logic.V4.CallerInputFiles.ValidateNativeFile("ExportDeviceAml", new JsonObject { ["exportPath"] = filePath });
+            TiaMcp.Logic.V4.CallerInputFiles.ResolveExportTarget(filePath);
 
             var cax = _session.CurrentProject!.GetService<CaxProvider>();
             if (cax == null)

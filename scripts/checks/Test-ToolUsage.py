@@ -57,6 +57,7 @@ def coverage(records, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--foundation-host', type=Path, required=True)
+    parser.add_argument('--engine-host', type=Path, help='Use the unified Foundation engine host for V20/V21; engine paths select SDK fixture workers with sibling catalogs')
     parser.add_argument('--engine-v20', type=Path, required=True)
     parser.add_argument('--engine-v21', type=Path, required=True)
     parser.add_argument('--harness', type=Path, required=True)
@@ -66,6 +67,10 @@ def main():
     args = parser.parse_args()
     snapshots = helper('Snapshot-ToolResponses')
     resources = snapshots.resources
+    if args.engine_host:
+        args.repo_root, args.transport = ROOT, 'stdio'
+        args.engine_worker = [f'{key}={exe.resolve()}' for key, exe in (('20', args.engine_v20), ('21', args.engine_v21))]
+        args.engine_catalog = [f'{key}={exe.resolve().parent / "tool-catalog.json"}' for key, exe in (('20', args.engine_v20), ('21', args.engine_v21))]
     evidence = args.evidence.resolve()
     evidence.relative_to(ROOT)
     evidence.mkdir(parents=True, exist_ok=False)
@@ -87,8 +92,10 @@ def main():
             profile = 'full'
         else:
             exe, installation, options, profile = args.foundation_host, case, {}, 'plc-foundation'
-        with resources.server(exe.resolve(), installation, release, 'stdio', profile,
-                              env_overrides=env, **options) as (rpc, _, _):
+        server = (snapshots.contracts.engine_host_server(args, release, installation, profile, env)
+                  if args.engine_host and release in ('20', '21') else
+                  resources.server(exe.resolve(), installation, release, 'stdio', profile, env_overrides=env, **options))
+        with server as (rpc, _, _):
             tools = snapshots.initialize(rpc)
 
             def call(name, arguments):

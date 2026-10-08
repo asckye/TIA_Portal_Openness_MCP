@@ -8,6 +8,19 @@ namespace TiaMcp.WorkerChannel.Tests;
 
 public sealed class ProtocolTests
 {
+    [Fact]
+    public async Task Answered_unknown_keeps_only_the_idle_disconnect_channel_available()
+    {
+        using var wire = new Wire(); await wire.Connect();
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(payload: "\"error\":{\"code\":-32603,\"message\":\"unknown\",\"data\":{\"outcome\":\"Unknown\",\"evidence\":null}}"));
+        await Assert.ThrowsAsync<ChannelFailure>(() => wire.Call(readOnly: false));
+        Assert.True(wire.Client.Poisoned); Assert.True(wire.Client.CanDisconnect);
+        await Assert.ThrowsAsync<ChannelFault>(() => wire.Call());
+        Assert.Single(wire.Output.Writes);
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(2, payload: "\"result\":{\"detached\":true}"));
+        Assert.Equal("{\"detached\":true}", await wire.Client.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false, Budget));
+        Assert.Equal(2, wire.Output.Writes.Count);
+    }
     internal static readonly TimeSpan Budget = TimeSpan.FromSeconds(3);
     internal static readonly ChannelIdentity Identity = new("19",new string('a',64),new string('b',64),42,new string('c',64));
     internal static string Hello => "{\"jsonrpc\":\"2.0\",\"method\":\"hello\",\"params\":{\"protocol\":2,\"releaseKey\":\"19\",\"workerSha256\":\""+Identity.WorkerSha256+"\",\"adapterSha256\":\""+Identity.AdapterSha256+"\",\"pid\":42,\"nonce\":\""+Identity.Nonce+"\",\"bindingEpoch\":0,\"bound\":false}}";

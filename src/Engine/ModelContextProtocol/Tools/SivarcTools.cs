@@ -193,7 +193,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string softwarePath,
             [Description("screenName: exact screen name.")] string screenName,
             [Description("action: the operation to perform - export | import.")] string action,
-            string filePath,
+            [Description("filePath: absolute YML (.yml) layout file; new output or existing import file.")] string filePath,
             bool dryRun=true)
             => LibraryToolContract.Run("ManageSivarcScreenLayout", action == "export" || !dryRun, true, () =>
             {

@@ -234,10 +234,10 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (validation.Error != null) return Recorded(deviceCandidate
                 ? FoundationV4Result.DeviceCandidate(DeviceCreationSession.Result(release, tool.Name, id, null, validation.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted))
                 : FoundationV4Result.Reject(release, tool.Name, id, validation.Error, inner is FoundationTool { IsNative: true }));
-            if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
-            if (inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
                 var readiness = readinessForTest?.Invoke() ?? LegacyHostPassiveDiagnostics.Readiness(release);
                 if (!readiness["ready"]!.GetValue<bool>())
@@ -310,7 +310,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 lane = await targetLaneTool.AcquireLane(cancellationToken);
                 targetLaneTool.ActivateLane(lane);
             }
-            if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,

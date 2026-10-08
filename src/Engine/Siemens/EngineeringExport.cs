@@ -53,6 +53,7 @@ namespace TiaMcpServer.Siemens
             }
             catch (Exception ex)
             {
+                TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(ex);
                 result["error"] = (ex.InnerException ?? ex).Message;
                 result["partialArtifactExists"] = temporary != null && File.Exists(temporary);
                 // A failed artifact is retained at a unique path for inspection. Never

@@ -22,6 +22,7 @@ namespace TiaMcp.PlcWorker
         private PlcRuntimeState? observed;
         private long bindingEpoch;
         internal bool Ended => disconnectAttempted;
+        internal bool Detached => disconnected;
         internal void EndSharedSession() { disconnectAttempted=true; disconnected=true; }
         internal void InvalidateSharedSession() { SessionOutcome.MarkUncertain(); sharedInvalidated=true; }
         internal PlcRuntimeState State => disconnected || sharedInvalidated ? new PlcRuntimeState() : disconnectAttempted ? observed! : engine.ReadState();
@@ -79,7 +80,7 @@ namespace TiaMcp.PlcWorker
                 if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                 if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
                 readOnly=readOnly || (WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.True);
-                sessionOutcome.RequireUsable(readOnly);
+                if (name != "Disconnect") sessionOutcome.RequireUsable(readOnly);
                 var confirm=WorkerJson.Get(values,"confirm");
                 var expected=WorkerJson.Get(values,"expectedProjectFile");
                 if(!method.GetParameters().Any(p=>p.Name=="confirm")) values.Remove("confirm");

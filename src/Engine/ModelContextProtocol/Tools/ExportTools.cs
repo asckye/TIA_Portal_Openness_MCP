@@ -15,6 +15,9 @@ using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaMcpServer.Siemens;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
+#if TIA_ENGINE_HOST
+using ExportStore = TiaMcp.LegacyHost.SessionExportStore;
+#endif
 
 namespace TiaMcpServer.ModelContextProtocol
 {

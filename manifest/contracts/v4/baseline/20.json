@@ -16271,7 +16271,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "27cbd610137b12ad0cf00e6d8f7550f15feb0c9f4923317d29f22c4e3900f6b3",
+      "descriptionSha256": "73ab0149727014457706f7951d76f85dc7a76cc735c2187617aa9c15bf54932e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -16951,7 +16951,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: absolute ZIP containing the native chart XML (e.g. Charts.xml.zip); exportInstructionData writes a plain file. New output or existing import file.",
             "type": "string"
           },
           "filter": {
@@ -17011,7 +17011,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: absolute cam data file. Text/point-list actions use the selected format and separator (e.g. Cam_1.txt); binary actions use the native binary format. New output or existing import file.",
             "type": "string"
           },
           "format": {
@@ -17159,7 +17159,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: absolute XLSX file for native ProDiag supervision exchange; new output or existing import file.",
             "type": "string"
           },
           "importOptions": {
@@ -17402,7 +17402,7 @@
         "additionalProperties": false,
         "properties": {
           "exportPath": {
-            "description": "exportPath: full file path for the export, e.g. 'C:\\Temp\\AlarmClasses.xml'",
+            "description": "exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat'",
             "type": "string"
           },
           "softwarePath": {
@@ -17481,7 +17481,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "7ce2340f0ab6c9c135625d326d16d12201e6a3b886b2fa534b780e5bb74b9739",
+      "descriptionSha256": "7760028c2bf5c9d6bcaa146fe9752179df491c0b76c9ce6a204f2d23661e2143",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19079,7 +19079,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: new absolute XLSX file in an existing directory.",
             "type": "string"
           },
           "sourceCulture": {
@@ -19117,7 +19117,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: new absolute PDF for MicrosoftPrintToPdf, or XPS/OXPS for MicrosoftXpsDocumentWriter, in an existing directory.",
             "type": "string"
           },
           "option": {
@@ -19918,7 +19918,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: new absolute native source file in an existing directory, e.g. FC_Ready.scl; the selected blocks determine the source language.",
             "type": "string"
           },
           "softwarePath": {
@@ -24198,7 +24198,7 @@
         "additionalProperties": false,
         "properties": {
           "importPath": {
-            "description": "importPath: full file path to import from",
+            "description": "importPath: existing absolute DAT file written by ExportAlarmClasses",
             "type": "string"
           },
           "softwarePath": {
@@ -24254,7 +24254,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: existing absolute AutomationML (.aml) file.",
             "type": "string"
           },
           "importOption": {
@@ -24620,7 +24620,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts.",
             "type": "string"
           },
           "softwarePath": {
@@ -26176,7 +26176,7 @@
             "type": "boolean"
           },
           "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "description": "filePath: existing absolute XLSX file exported by ExportProjectTexts.",
             "type": "string"
           },
           "updateSourceLanguage": {
@@ -39283,7 +39283,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "55c28ee7fd4ff77e96282730b0a4cf24eb5c4114cdaf4f9a41862264a9fe726f",
+      "descriptionSha256": "72087065feaf1915e3407fb11a4892768968fe10947fc4df54cd6625b90e80d4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

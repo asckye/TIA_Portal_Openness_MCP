@@ -14,7 +14,7 @@ namespace TiaMcp.WorkerChannel
         private readonly Func<ChannelRequest, ChannelResponse> dispatch;
         private readonly ChannelProfile profile;
         private long lastId;
-        private bool hello;
+        private bool hello, recoveryOnly;
         private volatile bool active;
         private volatile bool dispatched;
         private int busy, faulted;
@@ -67,6 +67,7 @@ namespace TiaMcp.WorkerChannel
                     if (id <= lastId) throw new IOException("Duplicate or stale worker request id.");
                     var method = ChannelCodec.Text(root, "method");
                     if (!ChannelCodec.ValidMethod(method, profile)) throw new IOException("Unknown worker method namespace.");
+                    if (recoveryOnly && method != "adapter.Disconnect") throw new IOException("Unknown native outcome permits only Disconnect.");
                     var args = root.GetProperty("params");
                     if (args.ValueKind != System.Text.Json.JsonValueKind.Object) throw new IOException("Worker parameters must be an object.");
                     var before = observe();
@@ -109,7 +110,7 @@ namespace TiaMcp.WorkerChannel
                     catch (ChannelLimitException) when (profile == ChannelProfile.Engine && response.OversizedResultJson != null) /* swallow(native-fallback): use the bounded engine refusal before emitting any response bytes */
                     { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.OversizedResultJson), profile); }
                     Emit(reply);
-                    if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown) throw new IOException("Worker native outcome is unknown; session stopped.");
+                    if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown) recoveryOnly = true;
                 }
             }
             catch (Exception ex) { throw Fault(ex); }

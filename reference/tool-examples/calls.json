@@ -5567,7 +5567,7 @@
       "ExportAlarmClasses": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "parameters": {},
         "operations": {},
@@ -5576,7 +5576,7 @@
       "ExportAlarmInstanceTexts": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
         },
         "parameters": {
           "includeInfoText": {
@@ -5595,7 +5595,7 @@
       "ExportAlarmTextLists": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xml"
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "parameters": {},
         "operations": {},
@@ -7181,7 +7181,7 @@
       "ImportAlarmClasses": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
         },
         "parameters": {},
         "operations": {},
@@ -7191,7 +7191,7 @@
       "ImportAlarmTextLists": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "parameters": {},
         "operations": {},
@@ -18257,7 +18257,7 @@
       },
       "BuildUnifiedHmiTemplateApplyDesign": {
         "arguments": {
-          "templateFile": "C:\\Examples\\templates\\Screen.xml"
+          "templateFile": "C:\\Examples\\templates\\Screen.json"
         },
         "parameters": {
           "fallbackWidth": {

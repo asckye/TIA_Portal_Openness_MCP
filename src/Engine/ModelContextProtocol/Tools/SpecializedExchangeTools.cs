@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult ExchangePlcSupervisions(
             string softwarePath,
             [Description("action: the operation to perform - export | import | importSettings.")] string action,
-            string filePath,
+            [Description("filePath: absolute XLSX file for native ProDiag supervision exchange; new output or existing import file.")] string filePath,
             string importOptions="None",
             bool dryRun=true)
             => OptionalPackageContract.Run("ExchangePlcSupervisions", !dryRun, () => _specializedExchange.ExchangePlcSupervisions(softwarePath,action,filePath,importOptions,dryRun));

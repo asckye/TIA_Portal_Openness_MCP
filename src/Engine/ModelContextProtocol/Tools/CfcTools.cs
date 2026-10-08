@@ -161,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult ExchangeCfcCharts(
             string softwarePath,
             [Description("action: the operation to perform - export | selectiveExport | import | exportInstructionData.")] string action,
-            string filePath,
+            [Description("filePath: absolute ZIP containing the native chart XML (e.g. Charts.xml.zip); exportInstructionData writes a plain file. New output or existing import file.")] string filePath,
             [Description("modelVersion: CFC data-model version string, e.g. 'V2.0'.")] string modelVersion="",
             [Description("filter: filter text ('' = all).")] long filter=0,
             [Description("unattended: true answers CFC prompts automatically.")] bool unattended=true,

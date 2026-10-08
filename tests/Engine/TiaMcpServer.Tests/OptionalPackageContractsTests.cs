@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -198,7 +199,8 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void OmittedCollectionsUseEmptyDefaultsAndSegmentsRemainExact()
         {
-            Body(McpServer.CallTool("ExchangeCfcCharts", Arguments("{\"softwarePath\":\"PLC\",\"action\":\"export\",\"filePath\":\"C:/a.zip\"}")));
+            var input = new JsonObject { ["softwarePath"] = "PLC", ["action"] = "export", ["filePath"] = Path.Combine(Path.GetTempPath(), "tia-cfc-" + Guid.NewGuid().ToString("N") + ".xml.zip") };
+            Body(McpServer.CallTool("ExchangeCfcCharts", Arguments(input.ToJsonString())));
             Assert.Equal("[]", cfc.Arguments.Last());
             var path = new[] { "Group/with,separator", "Exact\\Name" };
             Body(new V20OptionsTools(options).ManageSinumerikArchive("archive", "C:/a.dsf", devicePath: path));

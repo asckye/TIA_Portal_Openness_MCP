@@ -97,6 +97,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
+                TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(ex);
                 _session.Logger?.LogError(ex, "ExportAlarmClasses failed for {SoftwarePath}", softwarePath);
                 return new ResponseMessage { Message = $"Export failed: {ex.Message}" };
             }
@@ -159,6 +160,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
+                TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(ex);
                 _session.Logger?.LogError(ex, "ExportAlarmTextLists failed for {SoftwarePath}", softwarePath);
                 return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message} (a PLC without any alarm text list answers TextListNotFoundException - create one in TIA or via ManagePlcAlarmTextList createFromMasterCopy first).", Meta = ResponseMeta.Unstamped(false) };
             }
@@ -217,6 +219,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
+                TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(ex);
                 _session.Logger?.LogError(ex, "ExportAlarmInstanceTexts failed for {SoftwarePath}", softwarePath);
                 return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false) };
             }

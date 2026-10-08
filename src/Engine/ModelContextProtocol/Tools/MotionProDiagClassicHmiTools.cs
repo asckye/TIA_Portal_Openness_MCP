@@ -270,7 +270,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string softwarePath,
             string objectPath,
             [Description("export | import | exportBinary | importBinary | exportPoints. Text, native binary or point-list exchange.")] string action,
-            string filePath,
+            [Description("filePath: absolute cam data file. Text/point-list actions use the selected format and separator (e.g. Cam_1.txt); binary actions use the native binary format. New output or existing import file.")] string filePath,
             [Description("MCD | Scout | PointList. Native CamDataFormat for text export.")] string format="",
             [Description("Comma | Tab. Native CamDataFormatSeparator name for text import/export and point lists; do not pass a literal separator character.")] string separator="",
             [Description("pointCount: number of points to export.")] int pointCount=0,

@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public HardwareAmlTools(HardwareAmlService service) => _service = service;
 
-        [McpServerTool(Name = "ExportDeviceAml"), Description("[L2][Hardware] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be a folder (file named <device>.aml) or a full .aml path. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name = "ExportDeviceAml"), Description("[L2][Hardware] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance.")]
         public CallToolResult ExportDeviceAmlV4(
             [Description("devicePath: station/device path from GetProjectTree, e.g. 'S7-1200 station_3'")] string devicePath,
             [Description("exportPath: target folder or full .aml file path")] string exportPath)
@@ -55,16 +55,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
+                CallerInputFiles.RecordExportFailure(pex);
                 throw new McpException($"CAx/AML export failed for '{devicePath}': {pex.Message}", pex, McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {
+                if (ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException) throw;
+                CallerInputFiles.RecordExportFailure(ex);
                 throw new McpException($"Unexpected error exporting AML from '{devicePath}': {ex.Message}", ex, McpErrorCode.InternalError);
             }
         }
         [McpServerTool(Name="ImportDeviceAml"), Description("[L2][Hardware][FILE] Import an AutomationML/CAx (.aml) file into the open project via CaxProvider.Import(file, logFile, option). filePath must exist (absolute); logFilePath is a NEW absolute file; importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns native bool result, device counts and the log file sha256. Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
         public CallToolResult ImportDeviceAmlV4(
-            string filePath,
+            [Description("filePath: existing absolute AutomationML (.aml) file.")] string filePath,
             [Description("logFilePath: full path of the log file to write on the TIA machine ('' = no log).")] string logFilePath,
             [Description("importOption: import option - MoveToParkingLot | OverwriteTiaDevice | RetainTiaDevice.")] string importOption="RetainTiaDevice",
             [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,

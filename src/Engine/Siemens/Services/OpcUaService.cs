@@ -213,6 +213,7 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
+                TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(ex);
                 _session.Logger?.LogError(ex, "ExportOpcUaInterface failed");
                 return new ResponseMessage { Message = $"Export failed: {ex.Message}" };
             }

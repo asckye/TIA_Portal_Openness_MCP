@@ -19,10 +19,17 @@ namespace TiaMcpServer.ModelContextProtocol
     // read its signature, then invoke it. Tools outside the advertised list remain discoverable and callable.
     public static partial class McpServer
     {
+#if TIA_ENGINE_HOST
+        private static IToolCatalogView? _bridgeCatalog { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Catalog = value; }
+        private static IToolInvoker? _bridgeInvoker { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Invoker = value; }
+        private static Func<bool> _bridgeIsLiteProfile { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.IsLiteProfile = value; }
+        private static ISet<string> _bridgeLiteToolNames { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.LiteToolNames = value; }
+#else
         private static IToolCatalogView? _bridgeCatalog;
         private static IToolInvoker? _bridgeInvoker;
         private static Func<bool> _bridgeIsLiteProfile = () => false;
         private static ISet<string> _bridgeLiteToolNames = new HashSet<string>(StringComparer.Ordinal);
+#endif
 
         static McpServer() { ConfigureToolBridgeProfile(); }
         static partial void ConfigureToolBridgeProfile();

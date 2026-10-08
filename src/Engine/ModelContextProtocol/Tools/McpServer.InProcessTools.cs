@@ -86,6 +86,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var schema = ToolInputSchema(name, method);
             var error = ValidateReflectedArguments(method, arguments.Json, schema);
             if (error != null) return error;
+            try { CallerInputFiles.ValidateNativeFile(name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), checkOutput: false); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException refusal)
+            { return new Error(refusal.Message, new InvalidArgumentDetails(refusal.ParamName ?? "arguments", Array.Empty<string>())); }
             var parameters = method.GetParameters();
             call = new object?[parameters.Length];
             for (int i = 0; i < parameters.Length; i++)
@@ -140,6 +143,11 @@ namespace TiaMcpServer.ModelContextProtocol
             StartCallProjection(id, method, call, ref observation);
             bool issued = false;
             string toolName = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
+            var input = new JsonObject();
+            var specs = method.GetParameters();
+            for (int i = 0; i < specs.Length; i++)
+                if (specs[i].ParameterType == typeof(string)) input[specs[i].Name!] = (string?)call[i];
+            using var export = CallerInputFiles.ObserveExport(toolName, input);
             try
             {
                 var parameters = method.GetParameters();
@@ -149,6 +157,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return index < 0 ? null : call[index]?.ToString();
                 });
                 if (problem.Length != 0) throw new NotSupportedException(problem);
+                CallerInputFiles.ValidateNativeFile(toolName, input);
                 ValidateRuntimeBinding(method);
                 object? target = method.IsStatic ? null : EngineServices.Get(method.DeclaringType!);
                 issued = true;
@@ -161,6 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var resultProperty = task.GetType().GetProperty("Result");
                     result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
                 }
+                if (result is CallToolResult returned) result = ExportFailureResult(toolName, returned, export);
                 RecordBridgeEvent(id, method.Name, "RETURNED");
                 EndCallProjection(observation, result);
                 return result;
@@ -168,11 +178,30 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex)
             {
                 RecordBridgeEvent(id, method.Name, "THREW");
-                var result = TargetFailure(toolName, ex, issued);
+                CallerInputFiles.RecordExportFailure(ex);
+                var result = ExportFailureResult(toolName, TargetFailure(toolName, ex, issued), export);
                 EndCallProjection(observation, result);
                 return result;
             }
             finally { observation?.Dispose(); }
+        }
+
+        internal static CallToolResult ExportFailureResult(string tool, CallToolResult result, CallerInputFiles.ExportObservation? export)
+        {
+            if (export?.NativeMessage == null || !InvocationJournal.NativeCallIssued || result.StructuredContent is not JsonObject original
+                || (string?)original["meta"]?["outcome"] is not ("unknown" or "failed")) return result;
+            var data = original["data"]?.DeepClone() as JsonObject ?? new JsonObject();
+            data["nativeMessage"] = export.NativeMessage;
+            if (!export.NoFileWritten)
+            {
+                data["mayHaveChanged"] = true;
+                return V4Result(tool, data, new Error("The export failed and its target may have changed. " + export.NativeMessage,
+                    new OutcomeUnknownDetails("export-file", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: true);
+            }
+            data["mayHaveChanged"] = false; data["mayHaveWrittenFiles"] = false;
+            if (data["evidence"] is JsonObject evidence) { evidence["mayHaveChanged"] = false; evidence["mayHaveWrittenFiles"] = false; }
+            return V4Result(tool, data, new Error("The native export failed without writing its target. " + export.NativeMessage,
+                new NativeOperationFailedDetails(null, export.NativeMessage, new Dictionary<string, JsonElement>())), Outcome.Failed, Execution.Completed, Completeness.Complete, current: true);
         }
 
         static partial void RecordBridgeEvent(string id, string name, string phase);

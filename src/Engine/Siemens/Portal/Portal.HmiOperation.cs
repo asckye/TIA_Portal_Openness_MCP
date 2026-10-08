@@ -86,6 +86,7 @@ namespace TiaMcpServer.Siemens
             }
             catch (Exception ex)
             {
+                TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(ex);
                 meta["error"] = ex.ToString();
                 AddExceptionMessageData(ex, meta);
                 ResponseMeta.Failed(meta);

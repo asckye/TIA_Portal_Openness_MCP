@@ -105,8 +105,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             get
             {
+#if !TIA_ENGINE_HOST
                 lock (ToolCatalogSync)
                     if (_bridgeCatalog == null) InitializeToolCatalog(ref _bridgeCatalog, ref _bridgeInvoker);
+#endif
                 return _bridgeCatalog ?? throw new InvalidOperationException("Tool catalog is not configured.");
             }
         }

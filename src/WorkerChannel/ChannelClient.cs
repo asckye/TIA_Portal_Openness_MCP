@@ -17,10 +17,11 @@ namespace TiaMcp.WorkerChannel
         private readonly Task receiver;
         private Pending? pending;
         private long sequence, epoch;
-        private bool verified, poisoned, unknown, disposed;
+        private bool verified, poisoned, recoveryOnly, unknown, disposed;
         private Exception? lastFault;
         public Exception? LastFault { get { lock (gate) return lastFault; } }
-        public bool Poisoned { get { lock (gate) return poisoned; } }
+        public bool Poisoned { get { lock (gate) return poisoned || recoveryOnly; } }
+        public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
         public long LastRequestId { get { lock (gate) return sequence; } }
@@ -55,7 +56,7 @@ namespace TiaMcp.WorkerChannel
             byte[] bytes;
             lock (gate)
             {
-                RequireUsable();
+                RequireUsable(method);
                 if (!verified) throw Poison(new IOException("Worker hello has not been verified."));
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
                 if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
@@ -78,13 +79,13 @@ namespace TiaMcp.WorkerChannel
                 var response = await Bounded(exchange, timeout, token, firstAttach).ConfigureAwait(false);
                 lock (gate)
                 {
-                    if (profile == ChannelProfile.Studio || response.Failure?.Outcome != ChannelOutcome.Unknown) RequireUsable();
+                    if (profile == ChannelProfile.Studio || response.Failure?.Outcome != ChannelOutcome.Unknown) RequireUsable(method);
                 }
                 if (response.Failure != null) throw response.Failure;
                 return response.ResultJson;
             }
             catch (ChannelFailure ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
-            catch (ChannelFailure) { throw; } // Foundation and Engine treat a channel-level Unknown reply as terminal.
+            catch (ChannelFailure) { throw; } // An answered unknown reply permits only an idle detach.
             catch (Exception ex) { throw Poison(ex); }
             finally { lock (gate) if (ReferenceEquals(pending, call)) pending = null; }
         }
@@ -111,7 +112,7 @@ namespace TiaMcp.WorkerChannel
                         string? progressPayload = null;
                         lock (gate)
                         {
-                            RequireUsable();
+                            RequireUsable("adapter.Disconnect");
                             if (!verified)
                             {
                                 ChannelCodec.VerifyHello(root, identity);
@@ -142,7 +143,8 @@ namespace TiaMcp.WorkerChannel
                                 if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id) throw new IOException("Unknown, old or duplicate worker reply id.");
                                 var response = ChannelCodec.Response(root, profile);
                                 long before = ChannelCodec.Number(root, "bindingEpochBefore"), after = ChannelCodec.Number(root, "bindingEpochAfter");
-                                var change = response.Failure == null ? pending.Change : BindingChange.None;
+                                var change = response.Failure == null ? pending.Change
+                                    : response.Failure.Outcome == ChannelOutcome.Unknown && pending.Change != BindingChange.None ? BindingChange.MayAdvance : BindingChange.None;
                                 if (before != pending.Before || after < before ||
                                     (change == BindingChange.None && after != before) ||
                                     (change == BindingChange.Advance && after != checked(before + 1)) ||
@@ -154,8 +156,9 @@ namespace TiaMcp.WorkerChannel
                                 pending.Completion.TrySetResult(response);
                                 if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown)
                                 {
-                                    Poison(new IOException("Worker reported an unknown native outcome."));
-                                    return;
+                                    recoveryOnly = true;
+                                    unknown = true;
+                                    lastFault ??= new IOException("Worker reported an unknown native outcome.");
                                 }
                             }
                         }
@@ -167,9 +170,9 @@ namespace TiaMcp.WorkerChannel
             catch (Exception ex) { Poison(ex); }
         }
 
-        private void RequireUsable()
+        private void RequireUsable(string? method = null)
         {
-            if (poisoned || disposed) throw new ChannelFault("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
+            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect") throw new ChannelFault("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
         }
 
         private ChannelFault Poison(Exception cause)

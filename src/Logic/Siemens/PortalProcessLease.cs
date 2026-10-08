@@ -20,14 +20,14 @@ namespace TiaMcpServer.Siemens
             string key = pid.ToString(CultureInfo.InvariantCulture) + "-" + startUtcTicks.ToString(CultureInfo.InvariantCulture);
             FileStream handle;
             try { handle = new FileStream(Path.Combine(root, key + ".lease"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
-            catch (IOException ex) { throw new InvalidOperationException("TIA instance is already reserved by another MCP, or its lease is inaccessible. Use a separate TIA instance; no attachment attempted.", ex); }
+            catch (IOException ex) { throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.LeaseReserved, ex); }
             var lease = new PortalProcessLease(handle, key);
             try
             {
                 string previous;
                 using (var reader = new StreamReader(handle, Encoding.UTF8, false, 1024, true)) previous = reader.ReadToEnd();
                 if (previous.Length != 0 && previous != "RELEASED\n")
-                    throw new InvalidOperationException("The prior MCP owner did not release this TIA instance cleanly. Native outcome is unknown. Inspect diagnostics and restart that TIA instance before reconnecting; do not erase the lease to bypass this guard.");
+                    throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.LeaseNotReleased);
                 lease.Write("ACTIVE\n");
                 return lease;
             }

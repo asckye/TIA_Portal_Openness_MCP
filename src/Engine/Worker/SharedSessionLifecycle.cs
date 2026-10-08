@@ -39,6 +39,21 @@ namespace TiaMcpServer.Worker
 
         internal T Engine<T>(Func<T> operation) => Execute(operation, fromEngine);
         internal T Foundation<T>(Func<T> operation) => Execute(operation, fromFoundation);
+        internal T Disconnect<T>(Func<T> operation)
+        {
+            RequireOwner();
+            if (depth != 0) throw new InvalidOperationException("Disconnect requires an idle native lane.");
+            depth++;
+            using var native = InvocationJournal.BeginNativeCallScope();
+            try
+            {
+                var result = operation();
+                fromFoundation();
+                return result;
+            }
+            catch (Exception error) { Lock(error.Message); throw; }
+            finally { depth--; }
+        }
 
         private T Execute<T>(Func<T> operation, Action synchronize)
         {

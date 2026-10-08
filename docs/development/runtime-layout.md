@@ -12,6 +12,8 @@ V20/V21 MCP host startup no longer exits solely because TIA is absent, the detec
 
 八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，默认 lite 为 73 个工具，full 分别为 487/498 个工具。旧引擎 stdio/HTTP 宿主仍编译用于 A/B 检查，产品配置不再指向它。
 
+V20/V21 每个 MCP 会话拥有一个独立 engine worker：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion 和 full-engine profile；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
+
 ```text
 runtime/v20|v21/
   TiaMcp.FoundationHost.exe + .dll/.deps.json/.runtimeconfig.json

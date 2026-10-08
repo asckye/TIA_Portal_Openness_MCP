@@ -47,11 +47,14 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         internal void Activate() { previous = Held.Value; Held.Value = owner; }
         public void Dispose() { if (!disposed) { disposed = true; Held.Value = previous; owner.serial.Release(); } }
     }
+    private readonly object stateSync = new();
     private Process? process;
     private ChannelClient? channel;
     private bool attachAttempted;
     private int? attachedProcessId;
     private JsonObject? disconnectAcknowledgement;
+    private volatile bool disconnecting;
+    private string? priorUnknownRequestId, activeRequestId;
     private readonly WorkerOutcomeState outcome=new();
     private readonly Queue<string> diagnostics = new();
     private JsonObject approvalIdentity = new();
@@ -71,6 +74,11 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
     {
+        if (operation == "Disconnect")
+        {
+            if (arguments.Count != 0) throw new ArgumentException("Disconnect takes no arguments.");
+            return await Disconnect(token);
+        }
         bool acquired = !ReferenceEquals(Held.Value, this);
         if (acquired) await serial.WaitAsync(token);
         bool sent = false;
@@ -84,6 +92,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 if (operation=="Disconnect" && arguments.Count==0) return disconnectAcknowledgement.DeepClone();
                 throw new InvalidOperationException("Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.");
             }
+            if (disconnecting) throw new InvalidOperationException("Disconnect is ending this session; a new host session is required.");
             if (operation=="Disconnect")
             {
                 if(arguments.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
@@ -95,25 +104,31 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             // Idle Disconnect above must not launch a worker, even in native-disabled discovery.
             if (!nativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
-            if (process == null)
+            lock (stateSync)
             {
-                if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
-                var adapterFile=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(workerExe))!,"TiaMcp.Adapter."+releaseKey+".dll");
-                var workerHash=ArgumentRules.HashFile(workerExe,FileShare.Read);
-                var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
-                var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
-                var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
-                start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
-                start.ArgumentList.Add(nonce);
-                process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process);
-                attachAttempted = false;
-                process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
-                process.BeginErrorReadLine();
-                channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
-                    new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
+                if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
+                if (process == null)
+                {
+                    if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
+                    var adapterFile=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(workerExe))!,"TiaMcp.Adapter."+releaseKey+".dll");
+                    var workerHash=ArgumentRules.HashFile(workerExe,FileShare.Read);
+                    var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
+                    var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+                    var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
+                    start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
+                    start.ArgumentList.Add(nonce);
+                    process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process);
+                    attachAttempted = false;
+                    process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
+                    process.BeginErrorReadLine();
+                    channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
+                        new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
+                }
             }
             await channel!.ConnectAsync(TimeSpan.FromMinutes(2),token);
             token.ThrowIfCancellationRequested();
+            if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
+            activeRequestId = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
             var change = BindingChangeFor(operation, arguments);
             string response;
             try
@@ -134,6 +149,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
+            if (outcome.Poisoned) priorUnknownRequestId ??= activeRequestId;
             if (operation == "Disconnect") approvalIdentity = new JsonObject();
             else if (result is JsonObject values)
             {
@@ -173,10 +189,55 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             ex.Data["foundationRequestSent"] = sent;
             outcome.Failed(sent,ex);
             ex.Data["foundationSessionPoisoned"] = outcome.Poisoned;
-            if(outcome.Poisoned) channel?.Invalidate(ex);
+            if(outcome.Poisoned) priorUnknownRequestId ??= activeRequestId;
             throw;
         }
-        finally { if (acquired) serial.Release(); }
+        finally { activeRequestId = null; if (acquired) serial.Release(); }
+    }
+
+    private async Task<JsonNode?> Disconnect(CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
+        disconnecting = true;
+        bool acquired = !ReferenceEquals(Held.Value, this);
+        bool idle = !acquired || serial.Wait(0);
+        try
+        {
+            if (process != null && (process.HasExited || channel?.CanDisconnect != true))
+                return TerminateForDisconnect();
+            if (process == null) disconnectAcknowledgement = DisconnectContract.Idle();
+            else
+            {
+                try
+                {
+                    var wire = await channel!.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false, TimeSpan.FromMinutes(2), CancellationToken.None);
+                    disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
+                }
+                catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome and requires TIA restart */ { return TerminateForDisconnect(); }
+            }
+            approvalIdentity = new JsonObject(); attachedProcessId = null;
+            if (outcome.Poisoned) DisconnectContract.Recovery(disconnectAcknowledgement, false, priorUnknownRequestId);
+            return disconnectAcknowledgement.DeepClone();
+        }
+        finally { if (idle && acquired) serial.Release(); }
+    }
+
+    private JsonNode TerminateForDisconnect()
+    {
+        lock (stateSync)
+        {
+            priorUnknownRequestId ??= activeRequestId;
+            disconnectAcknowledgement = DisconnectContract.Recovery(DisconnectContract.Idle(), true, priorUnknownRequestId);
+            approvalIdentity = new JsonObject(); attachedProcessId = null;
+            channel?.Dispose();
+            if (process != null)
+            {
+                try { if (!process.HasExited) process.Kill(); }
+                catch (InvalidOperationException) /* swallow(teardown): already exited workers still require an unacknowledged terminal result */ { }
+            }
+        }
+        return disconnectAcknowledgement.DeepClone();
     }
 
     public void Dispose()
@@ -205,7 +266,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         try
         {
             var failure = new IOException("The candidate outcome is unknown; inspect TIA before a new session.");
-            outcome.Failed(true, failure); channel?.Invalidate(failure);
+            outcome.Failed(true, failure);
+            priorUnknownRequestId ??= TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
         }
         finally { if (acquired) serial.Release(); }
     }

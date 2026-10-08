@@ -63,11 +63,15 @@ public sealed class EngineProfileTests
     }
 
     [Fact]
-    public void ChannelUnknownRemainsTerminal()
+    public void ChannelUnknownPermitsOnlyARecoveryDisconnect()
     {
-        using var output = new MemoryStream();
-        var server = new ChannelServer(Stream.Null, output, Identity, () => new(0, false), _ => ChannelResponse.Error(new("lost", -32603, ChannelOutcome.Unknown)), ChannelProfile.Engine);
-        server.WriteHello(); Assert.Throws<ChannelFault>(() => server.Handle(Frame("engine.invoke"))); Assert.True(server.Poisoned);
+        using var output = new MemoryStream(); int calls = 0;
+        var server = new ChannelServer(Stream.Null, output, Identity, () => new(0, false), request => {
+            calls++; return request.Method == "adapter.Disconnect" ? ChannelResponse.Success("{}") : ChannelResponse.Error(new("lost", -32603, ChannelOutcome.Unknown));
+        }, ChannelProfile.Engine);
+        server.WriteHello(); server.Handle(Frame("engine.invoke")); Assert.False(server.Poisoned);
+        server.Handle(Frame("adapter.Disconnect", id: 2)); Assert.Equal(2, calls);
+        Assert.Throws<ChannelFault>(() => server.Handle(Frame("engine.status", id: 3)));
     }
 
     [Fact]

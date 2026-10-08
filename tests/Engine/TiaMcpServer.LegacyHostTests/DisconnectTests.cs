@@ -5,6 +5,7 @@ using TiaMcp.PlcFoundation;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using Xunit;
 
 internal static class DisconnectTests
 {
@@ -67,9 +68,11 @@ internal static class DisconnectTests
             var serial=(SemaphoreSlim)typeof(WorkerClient).GetField("serial",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(worker)!;
             await serial.WaitAsync();
             var pending=worker.Call("Disconnect",new JsonObject(),CancellationToken.None);
-            check(!pending.IsCompleted,"Disconnect waits behind in-flight serialization gate");
+            check(pending.IsCompleted,"Disconnect does not wait behind an in-flight serialization gate");
             serial.Release();
-            DisconnectContract.Validate(await pending,false,null,true);
+            var terminal = await pending;
+            DisconnectContract.Validate(terminal,false,null,true);
+            check(terminal?["RequiresTiaRestart"]?.GetValue<bool>() != true,"A held host gate without a native call does not require TIA restart");
         }
         using(var worker=new WorkerClient("17","/missing/never-launch-worker","/missing/no-api",false))
         {
@@ -82,5 +85,43 @@ internal static class DisconnectTests
         var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams{Name="Disconnect",Arguments=new Dictionary<string,JsonElement>()} };
         await tool.InvokeAsync(request);
         check(fake.Operation=="Disconnect" && fake.Arguments!.Count==0,"Public Disconnect requires no project or dryRun");
+    }
+}
+
+public sealed class FoundationRecoveryTests
+{
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach(string release)
+    {
+        string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.LegacyHostTests.exe");
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
+        await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+        using (TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("prior-foundation-unknown"))
+            await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("FixtureUnknown", new JsonObject(), CancellationToken.None));
+        Assert.True(worker.Poisoned);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => worker.Call("ReadState", new JsonObject(), CancellationToken.None));
+        var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+        Assert.True((bool?)ack?["WorkerAcknowledged"]); Assert.True((bool?)ack?["Detached"]);
+        Assert.False((bool?)ack?["RequiresTiaRestart"]);
+        Assert.Equal("prior-foundation-unknown", (string?)ack?["PriorUnknownRequestId"]);
+        Assert.True(JsonNode.DeepEquals(ack, await worker.Call("Disconnect", new JsonObject(), CancellationToken.None)));
+        using var next = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
+        await next.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+        await next.Call("Disconnect", new JsonObject(), CancellationToken.None);
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("19")]
+    public async Task Foundation_in_flight_disconnect_does_not_wait_for_a_hung_native_call(string release)
+    {
+        string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.LegacyHostTests.exe");
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
+        await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
+        var running = worker.Call("FixtureHang", new JsonObject(), CancellationToken.None);
+        var ack = await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+        Assert.True((bool?)ack?["RequiresTiaRestart"]); Assert.False((bool?)ack?["WorkerAcknowledged"]);
+        Assert.Contains("restart that TIA instance", (string?)ack?["RecoveryMessage"]);
+        await Assert.ThrowsAnyAsync<Exception>(() => running);
     }
 }

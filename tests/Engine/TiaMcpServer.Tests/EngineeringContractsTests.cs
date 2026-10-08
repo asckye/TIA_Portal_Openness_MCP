@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -28,6 +29,40 @@ namespace TiaMcpServer.Tests
 {
     public sealed class EngineeringContractsTests : IDisposable
     {
+        [Fact]
+        public void Alarm_instance_export_rejects_the_wrong_extension_before_the_service()
+        {
+            var result = Body(new AlarmsTools(alarms).ExportAlarmInstanceTextsV4("PLC", Path.GetFullPath("AlarmTexts.xml")));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+            Assert.Equal("exportPath", (string?)result["error"]?["details"]?["parameter"]);
+            Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+            Assert.Equal(0, Calls);
+        }
+
+        [Theory, InlineData(false), InlineData(true)]
+        public void Native_export_exception_distinguishes_an_absent_target_from_a_partial_file(bool wroteFile)
+        {
+            string directory = Path.Combine(Path.GetTempPath(), "tia-alarm-export-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, "AlarmTexts.xlsx");
+            try
+            {
+                using var native = InvocationJournal.BeginNativeCallScope();
+                var result = Body(EngineeringToolContract.Export("ExportAlarmInstanceTexts", path, () => {
+                    InvocationJournal.NativeCallStarted();
+                    if (wroteFile) File.WriteAllText(path, "partial native file");
+                    CallerInputFiles.RecordExportFailure(new IOException("Export failed: native format refused at C:\\private\\secret.xlsx"));
+                    return new ResponseMessage { Message = "Export failed", Meta = new JsonObject { ["success"] = false } };
+                }));
+                Assert.Equal(wroteFile ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)result["error"]?["code"]);
+                Assert.Equal(wroteFile ? "unknown" : "failed", (string?)result["meta"]?["outcome"]);
+                Assert.Equal(wroteFile, (bool?)result["meta"]?["requiresSessionReset"]);
+                Assert.Equal(wroteFile, (bool?)result["data"]?["mayHaveChanged"]);
+                Assert.Contains("native format refused", (string?)result["error"]?["message"]);
+                Assert.DoesNotContain("private", result.ToJsonString());
+            }
+            finally { Directory.Delete(directory, true); }
+        }
         private readonly AlarmsService alarms = new AlarmsService();
         private readonly OpcUaService opc = new OpcUaService();
         private readonly SoftwareUnitDeepService units = new SoftwareUnitDeepService();
@@ -144,7 +179,8 @@ namespace TiaMcpServer.Tests
             const string name = "ExchangePlcAlarmTextLists";
             var schema = tools[name].ProtocolTool.InputSchema.GetRawText();
             Assert.DoesNotContain("\"default\":null", schema);
-            Assert.True((bool)Body(McpServer.CallTool(name, Arguments("{\"softwarePath\":\"PLC\",\"action\":\"export\",\"filePath\":\"C:/a.xlsx\"}")))["ok"]!);
+            var args = new JsonObject { ["softwarePath"] = "PLC", ["action"] = "export", ["filePath"] = Path.Combine(Path.GetTempPath(), "tia-optional-" + Guid.NewGuid().ToString("N") + ".xlsx") };
+            Assert.True((bool)Body(McpServer.CallTool(name, Arguments(args.ToJsonString())))["ok"]!);
             Assert.Equal(1, Calls);
         }
         [Fact]

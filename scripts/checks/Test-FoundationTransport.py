@@ -5,6 +5,7 @@ import ctypes
 from ctypes import wintypes
 from tool_usage_checks import check_usage
 import json
+import hashlib
 import os
 from pathlib import Path
 import queue
@@ -135,7 +136,7 @@ def exercise(client, key, logfile, expected_before):
     return len(names)
 
 
-def exercise_engine(client, key):
+def exercise_engine(client, key, close=True, ready=False):
     client.call('initialize', INIT)
     tools = client.call('tools/list', {})['tools']
     expected = json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))
@@ -148,8 +149,9 @@ def exercise_engine(client, key):
         assert body['meta']['execution'] == 'not-started', (entry['name'], body)
     result = client.call('tools/call', {'name': 'InitializeEnvironment', 'arguments': {}})
     body = json.loads(result['content'][0]['text'])
-    assert body['schemaVersion'] == 4 and not body['data']['ready']
-    client.close()
+    assert body['schemaVersion'] == 4 and body['data']['ready'] == ready
+    if close:
+        client.close()
     return len(tools)
 
 
@@ -160,19 +162,28 @@ class ProcessEntry(ctypes.Structure):
                 ('szExeFile', ctypes.c_wchar * 260)]
 
 
-def worker_handles(host_pid):
+def worker_handles(host_pid, worker_name=None):
     """Open a wait handle on every engine worker the host started."""
     kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
     kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    kernel.Process32FirstW.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessEntry)]
+    kernel.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessEntry)]
+    kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
     kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
     snapshot = kernel.CreateToolhelp32Snapshot(2, 0)
     entry, handles = ProcessEntry(), []
     entry.dwSize = ctypes.sizeof(ProcessEntry)
     try:
         more = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
         while more:
-            if entry.th32ParentProcessID == host_pid and entry.szExeFile.lower().startswith('tiamcp.engine.'):
-                handles.append(kernel.OpenProcess(0x00100000, False, entry.th32ProcessID))
+            if entry.th32ParentProcessID == host_pid and (entry.szExeFile.lower().startswith('tiamcp.engine.')
+                    or worker_name and entry.szExeFile.lower() == worker_name.lower()):
+                handle = kernel.OpenProcess(0x00101000, False, entry.th32ProcessID)
+                assert handle, ('Cannot query/wait on worker', entry.th32ProcessID, ctypes.get_last_error())
+                handles.append(handle)
             more = kernel.Process32NextW(snapshot, ctypes.byref(entry))
     finally:
         kernel.CloseHandle(snapshot)
@@ -207,27 +218,60 @@ def engine_transports(args, temp, counts):
             port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
         url = f'http://127.0.0.1:{number}'
         with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
-            process = subprocess.Popen(command + ['--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key'],
+            http_command = command.copy()
+            if args.engine_fixture:
+                fixture = args.engine_fixture.resolve()
+                (fixture.parent / f'TiaMcp.Adapter.{key}.dll').write_text('offline session fixture', encoding='utf-8')
+                catalog = json.loads((ROOT / f'runtime/v{key}/worker/tool-catalog.json').read_text('utf-8'))
+                catalog['workerSha256'] = hashlib.sha256(fixture.read_bytes()).hexdigest()
+                catalog_path = temp / f'engine-fixture-catalog-{key}.json'
+                catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
+                http_command += ['--engine-worker', str(fixture), '--engine-catalog', str(catalog_path)]
+                config = data / 'config'
+                config.mkdir(exist_ok=True)
+                (config / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=1\n', encoding='utf-8')
+            process = subprocess.Popen(http_command + ['--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key'],
                                        env=env, stdout=stderr, stderr=stderr)
             try:
                 deadline = time.monotonic() + 60
                 while True:
                     try:
                         with Http(url).request('/mcp/health', auth=False) as response:
-                            assert json.load(response)['releaseKey'] == key
+                            health = json.load(response)
+                            assert health['releaseKey'] == key and health['fileVersion']
+                            assert health['profile'] == 'full-engine'
                         break
                     except urllib.error.URLError:
                         assert process.poll() is None and time.monotonic() < deadline
                         time.sleep(.1)
                 first, second = Http(url), Http(url)
-                exercise_engine(first, key)
-                exercise_engine(second, key)
-                assert first.sid and second.sid and first.sid != second.sid
-                # The host's job object ends its workers with it, even when the host is killed.
-                kernel, handles = worker_handles(process.pid)
-                assert handles, 'Engine worker not found under the HTTP host'
-                process.kill(); process.wait(10)
                 try:
+                    first.request('/mcp/ready', auth=False)
+                    raise AssertionError('Unauthenticated readiness accepted')
+                except urllib.error.HTTPError as error:
+                    assert error.code == 401
+                with first.request('/mcp/ready') as response:
+                    assert json.load(response) == {'mcpHostReady': True, 'releaseKey': key, 'nativeAcceptance': 'NOT RUN'}
+                exercise_engine(first, key, close=False, ready=bool(args.engine_fixture))
+                exercise_engine(second, key, close=False, ready=bool(args.engine_fixture))
+                assert first.sid and second.sid and first.sid != second.sid
+                kernel, handles = worker_handles(process.pid, args.engine_fixture.name if args.engine_fixture else None)
+                try:
+                    kernel.GetProcessId.argtypes = [wintypes.HANDLE]
+                    pids = [kernel.GetProcessId(handle) for handle in handles]
+                    assert len(pids) == 2 and len(set(pids)) == 2, ('Expected two session workers', pids)
+                    if args.engine_fixture:
+                        tool(first, 'ConnectPortal', {'processId': 123})
+                        tool(first, 'DisconnectPortal')
+                        tool(second, 'GetSessionState')
+                        tool(second, 'ListPortalProcessProjects')
+                    first.close()
+                    deadline = time.monotonic() + 10
+                    while sum(kernel.WaitForSingleObject(handle, 0) == 0 for handle in handles) != 1:
+                        assert time.monotonic() < deadline, 'Session deletion did not terminate exactly one worker'
+                        time.sleep(.05)
+                    # The remaining session's worker is still bound to the host job.
+                    process.kill(); process.wait(10)
                     assert all(kernel.WaitForSingleObject(handle, 5000) == 0 for handle in handles), 'Engine worker outlived the killed host'
                 finally:
                     for handle in handles:
@@ -243,6 +287,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
+    parser.add_argument('--engine-fixture', type=Path, help='LegacyHostTests fixture executable for successful native-shaped engine HTTP calls without TIA; stdio still uses the real no-TIA worker')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     counts = {}
