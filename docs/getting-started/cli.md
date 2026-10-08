@@ -20,23 +20,23 @@ MCP `WRITE` / `ONLINE-WRITE` 实际执行默认须由 Workbench 审批后才派�
 
 ## 选择匹配的引擎
 
-从完整交付包根目录打开 PowerShell。下列命令以 V21 为例；V20 使用 `runtime\v20\TiaMcp.Engine.V20.exe` 并核对 spec 中各输入格式是否支持 V20。非默认安装位置使用该引擎支持的 `--tia-portal-location` 和匹配的 `--tia-major-version`。
+从完整交付包根目录打开 PowerShell。下列命令以 V21 为例；V20 使用 `runtime\v20\worker\TiaMcp.Engine.V20.exe` 并核对 spec 中各输入格式是否支持 V20。非默认安装位置使用该引擎支持的 `--tia-portal-location` 和匹配的 `--tia-major-version`。
 
 ```powershell
-.\runtime\v21\TiaMcp.Engine.V21.exe doctor
-.\runtime\v21\TiaMcp.Engine.V21.exe schema
-.\runtime\v21\TiaMcp.Engine.V21.exe gen .\spec.json --dry-run
-.\runtime\v21\TiaMcp.Engine.V21.exe gen .\spec.json --json
-runtime\v21\TiaMcp.Engine.V21.exe install-plc-tools
+.\runtime\v21\worker\TiaMcp.Engine.V21.exe doctor
+.\runtime\v21\worker\TiaMcp.Engine.V21.exe schema
+.\runtime\v21\worker\TiaMcp.Engine.V21.exe gen .\spec.json --dry-run
+.\runtime\v21\worker\TiaMcp.Engine.V21.exe gen .\spec.json --json
+runtime\v21\worker\TiaMcp.Engine.V21.exe install-plc-tools
 ```
 
 直接使用 V21 CLI 的生成和预热命令：
 
 ```text
-runtime\v21\TiaMcp.Engine.V21.exe gen <spec>
-runtime\v21\TiaMcp.Engine.V21.exe prewarm
-runtime\v20\TiaMcp.Engine.V20.exe gen <spec>
-runtime\v20\TiaMcp.Engine.V20.exe prewarm
+runtime\v21\worker\TiaMcp.Engine.V21.exe gen <spec>
+runtime\v21\worker\TiaMcp.Engine.V21.exe prewarm
+runtime\v20\worker\TiaMcp.Engine.V20.exe gen <spec>
+runtime\v20\worker\TiaMcp.Engine.V20.exe prewarm
 ```
 
 `schema` 输出当前 spec 字段；`--dry-run` 离线校验输入，不创建工程。实际生成后查看每个步骤结果、实际工程位置及编译诊断，不能只根据进程有输出判断成功。

@@ -103,6 +103,9 @@ def load_delivery(root):
                 if (not isinstance(path, str) or not plain_path(path.rstrip('/'))
                         or path.endswith('/') != (kind == 'prefixes')):
                     raise ValueError('Invalid delivery path: ' + str(path))
+    required = rules.get("requiredFiles", [])
+    if not required or len(required) != len(set(required)) or any(not plain_path(path) or not delivered(path, rules) for path in required):
+        raise ValueError("Invalid required delivery files")
     return rules
 
 
@@ -294,7 +297,7 @@ class LayoutChecks(unittest.TestCase):
 
     def test_delivery_includes_runtime_resources_and_plugin(self):
         rules = load_delivery(ROOT)
-        for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.Engine.V21.exe',
+        for path in ('TiaOpenness.exe', 'runtime/v21/TiaMcp.FoundationHost.exe', 'runtime/v21/worker/TiaMcp.Engine.V21.exe',
                      'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
                      'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt',
                      '.claude-plugin/plugin.json', 'hooks/hooks.json',

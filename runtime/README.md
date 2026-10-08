@@ -7,7 +7,7 @@
 | V14 SP1 | `runtime/v14sp1/TiaMcp.FoundationHost.exe` | PLC foundation |
 | V15.1 | `runtime/v15.1/TiaMcp.FoundationHost.exe` | PLC foundation |
 | V16–V19 | `runtime/v16` through `runtime/v19`, `TiaMcp.FoundationHost.exe` | PLC foundation |
-| V20/V21 | `runtime/v20/TiaMcp.Engine.V20.exe` and `runtime/v21/TiaMcp.Engine.V21.exe` | Full engine |
+| V20/V21 | `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` | Full catalog, engine worker in `worker/` |
 | Unified desktop | Root `TiaOpenness.exe` launches `runtime/studio/TiaOpenness.exe` | Engineering and MCP configuration in one window; eight Openness adapters |
 
 Keep each runtime's dependencies and `worker` directory together. V14 SP1 and V15.1
@@ -26,3 +26,5 @@ the worker starts on demand when a native tool is called.
 [build hashes](../manifest/multi-version-build.json) describe the built package.
 Native acceptance for the new version routes is still pending.
 v3.2.0 and later complete release archives include all eight runtimes and Studio; older archives retain their original scope.
+
+V20/V21 keep net48 dependencies, the matching adapter and `tool-catalog.json` in `runtime/v<key>/worker/`. The catalog is generated from the woven worker and its hash is checked by the host. CLI verbs (`doctor`, `gen`, `prewarm`) remain available through `worker/TiaMcp.Engine.V<key>.exe`.

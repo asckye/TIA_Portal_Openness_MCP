@@ -547,6 +547,16 @@ internal static partial class ReleaseCommands
                         if (paths.Distinct(StringComparer.Ordinal).Count() != paths.Count) errors.Add($"Invalid duplicate delivery rule: {group}/{kind}");
                     }
                 }
+                var requiredFiles = JsonStringArray(rules.RootElement, "requiredFiles");
+                if (requiredFiles.Count == 0 || requiredFiles.Distinct(StringComparer.Ordinal).Count() != requiredFiles.Count)
+                    errors.Add("Invalid required delivery file list");
+                foreach (var path in requiredFiles)
+                {
+                    if (!IsDeliveryFile(path, rules.RootElement)) { errors.Add("Required file outside delivery set: " + path); continue; }
+                    if (noBinaries && (path == "TiaOpenness.exe" || path.StartsWith("runtime/", StringComparison.Ordinal))) continue;
+                    if (!File.Exists(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar))) && !GeneratedDeliveryResourceAvailable(root, path, package))
+                        errors.Add("Missing required delivery file: " + path);
+                }
                 foreach (var path in JsonStringArray(rules.RootElement.GetProperty("include"), "files").Concat(JsonStringArray(rules.RootElement.GetProperty("include"), "prefixes")))
                 {
                     if (noBinaries && (path == "TiaOpenness.exe" || path.StartsWith("runtime/", StringComparison.Ordinal) && path != "runtime/README.md")) continue;
@@ -991,7 +1001,7 @@ internal static partial class ReleaseCommands
         var output = Path.GetFullPath(options.Get("EvidenceDirectory", Path.Combine(Root, "bin-build/plc-adapter-workers")));
         Directory.CreateDirectory(output);
         var keys = options.All("ReleaseKeys").ToArray();
-        if (keys.Length == 0) keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+        if (keys.Length == 0) keys = ["14sp1", "15.1", "16", "17", "18", "19"];
         var results = new List<object>();
         foreach (var key in keys)
         {
@@ -1050,8 +1060,10 @@ internal static partial class ReleaseCommands
         var fileVersion = ReleaseRecordsProperty(build.RootElement, "fileVersion");
         if (ReleaseRecordsProperty(build.RootElement, "release") != release || fileVersion != release + ".0") throw new ReleaseException("Engine build record differs from the requested release; run build-release first");
         foreach (var major in new[] { 20, 21 })
-            if (!File.Exists(Path.Combine(Root, $"runtime/v{major}/TiaMcp.Engine.V{major}.exe"))) throw new ReleaseException($"V{major} engine output missing; run build-release first");
-        var code = RunSelfCommand(ReleasePlan(options).Includes("gui-tests") ? ["build-configurator", "-Test"] : ["build-configurator"], "Configurator validation");
+            if (!File.Exists(Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe"))) throw new ReleaseException($"V{major} engine output missing; run build-release first");
+        var configuratorArgs = new List<string> { "build-configurator", "-Tier", ReleasePlan(options).Tier };
+        if (ReleasePlan(options).Includes("gui-tests")) configuratorArgs.Add("-Test");
+        var code = RunSelfCommand(configuratorArgs.ToArray(), "Configurator validation");
         if (code != 0) return code;
         var package = $"TIA_MCP_Delivery_v{release}_{releaseDate}";
         var timestamp = DateTimeOffset.UtcNow.ToString("o");
@@ -1072,11 +1084,17 @@ internal static partial class ReleaseCommands
         manifest["refreshedAt"] = timestamp;
         var entrypoints = manifest["entrypoints"]?.AsObject() ?? throw new ReleaseException("package-manifest.json lacks entrypoints");
         entrypoints["configurator"] = "TiaOpenness.exe";
-        entrypoints["mcpServerExe"] = "runtime/v21/TiaMcp.Engine.V21.exe";
+        entrypoints["mcpServerExe"] = "runtime/v21/TiaMcp.FoundationHost.exe";
+        entrypoints["mcpServerArgs"] = new JsonArray("--release-key", "21");
+        if (manifest["target"] is JsonObject target)
+        {
+            target["runtimeRequirement"] = "All eight Foundation hosts and Workbench use bundled .NET 10; per-release workers and the Openness bridge require .NET Framework 4.8";
+            target["newCliFlags"] = new JsonArray("--tia-portal-location <path>", "--release-key {14sp1|15.1|16|17|18|19|20|21}");
+        }
         if (manifest["cli"] is JsonObject cli)
         {
-            cli["exe"] = "runtime/v21/TiaMcp.Engine.V21.exe";
-            cli["description"] = "Call runtime/v21/TiaMcp.Engine.V21.exe or runtime/v20/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.";
+            cli["exe"] = "runtime/v21/worker/TiaMcp.Engine.V21.exe";
+            cli["description"] = "Call runtime/v21/worker/TiaMcp.Engine.V21.exe or runtime/v20/worker/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.";
         }
         manifest["validationStatus"] = $"Delivery {release}; engine {fileVersion} validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending";
         WriteJson(manifestPath, manifest);
@@ -1090,6 +1108,20 @@ internal static partial class ReleaseCommands
     {
         return BuildReleasePipeline(options);
     }
+    private static void CleanLegacyEngineLayout(string key)
+    {
+        using var rules = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "scripts/operations/delivery-files.json")));
+        var runtime = Path.GetFullPath(Path.Combine(Root, "runtime/v" + key));
+        foreach (var relative in JsonStringArray(rules.RootElement.GetProperty("legacyCleanup"), "files"))
+        {
+            if (!relative.StartsWith("runtime/v" + key + "/", StringComparison.Ordinal)) continue;
+            var file = Path.GetFullPath(Path.Combine(Root, relative));
+            if (!string.Equals(Path.GetDirectoryName(file), runtime, StringComparison.OrdinalIgnoreCase))
+                throw new ReleaseException("Legacy engine cleanup escaped its runtime directory: " + relative);
+            if (File.Exists(file)) File.Delete(file);
+        }
+    }
+
     private static int BuildMultiVersion(Options options)
     {
         EnsureWindows("build-multi-version");
@@ -1210,14 +1242,21 @@ internal static partial class ReleaseCommands
             ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, publishArgs, logs, "host.log", nuget), "Foundation host publication failed");
 
             var releaseRows = new List<object>();
-            foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+            foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
             {
                 var runtime = Path.Combine(Root, $"runtime/v{key}");
+                if (key is "20" or "21") CleanLegacyEngineLayout(key);
                 var worker = Path.Combine(runtime, "worker");
                 Directory.CreateDirectory(worker);
                 foreach (var file in Directory.EnumerateFiles(publish).Where(file => new[] { ".exe", ".dll", ".config", ".json" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)))
                     File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
                 File.WriteAllText(Path.Combine(runtime, "release-key.txt"), key, new System.Text.UTF8Encoding(false));
+                if (key is "20" or "21")
+                {
+                    using var baseline = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, $"manifest/contracts/v4/baseline/{key}.json")));
+                    releaseRows.Add(new { releaseKey = key, profile = "full-engine", toolCount = baseline.RootElement.GetProperty("tools").GetArrayLength(), nativeAcceptance = "NOT RUN" });
+                    continue; // The engine build installs the woven worker and its exact catalog.
+                }
                 var workerBuild = Path.Combine(Root, $"src/Worker/bin/{key}/Release/net48");
                 if (!Directory.Exists(workerBuild)) throw new ReleaseException($"Worker build output missing: {workerBuild}");
                 foreach (var file in Directory.EnumerateFiles(workerBuild).Where(file => new[] { ".exe", ".dll", ".config" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)))
@@ -1333,7 +1372,7 @@ internal static partial class ReleaseCommands
                     ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, ["build", fixture, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], logs, "fixture-build.log", nuget), "Transport fixture build failed");
                     WithIsolatedHost(runTemp, "foundation-transport", approvalEnabled: false, _ =>
                     {
-                        var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
+                        var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
                         ProcessRunner.RequireSuccess(result, "Foundation transport test failed");
                         return 0;
                     });
@@ -1368,6 +1407,7 @@ internal static partial class ReleaseCommands
                 foreach (var row in releaseRows)
                 {
                     var key = (string)row.GetType().GetProperty("releaseKey")!.GetValue(row)!;
+                    if (key is "20" or "21") continue;
                     var releaseApproval = approvalRoot.GetProperty("releases").GetProperty(key);
                     if (GetJsonInt(releaseApproval, "checksPassed") != 4 || GetJsonString(releaseApproval, "directWrite") != "refused-before-dispatch" ||
                         GetJsonString(releaseApproval, "stagingWrite") != "approval-refused-before-filesystem-write" ||
@@ -1383,6 +1423,7 @@ internal static partial class ReleaseCommands
                 {
                     var row = releaseRows[index];
                     var key = (string)row.GetType().GetProperty("releaseKey")!.GetValue(row)!;
+                    if (key is "20" or "21") continue;
                     releaseRows[index] = new
                     {
                         releaseKey = key, profile = "plc-foundation", toolCount = (int)row.GetType().GetProperty("toolCount")!.GetValue(row)!, nativeAcceptance = "NOT RUN",

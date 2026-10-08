@@ -10,7 +10,20 @@ P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 V20/V21 MCP host startup no longer exits solely because TIA is absent, the detected major version differs, or Openness initialization/user-group checks fail. It records a shared readiness state for Bootstrap, the environment doctor, and tool admission. `RESOURCE_UNAVAILABLE` with resource `tia-openness-environment` is returned before a TIA-dependent native call; the V4 outcome is `rejected-before-operation` and execution is `not-started`. Diagnostic and offline-classified tools remain available. Explicit CLI verbs, `doctor`, and syntax/runtime exit codes keep their command behavior.
 
-Isolation uses one build property, `TiaMcpWorkerIsolationDefault`, recorded as `workerIsolation.enabledByDefault` in the release build record. Release builds set it to `false` until the V20/V21 real-machine acceptance in `docs/reference/real-machine-ledger.md` passes. `--isolate-openness` and `--no-isolate-openness` override that default for MCP host invocations. Client config generation does not add either switch. The Workbench environment page distinguishes a running engine from a ready Openness environment, and the call panel identifies calls dispatched to `engine-worker`.
+八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，默认 lite 为 73 个工具，full 分别为 487/498 个工具。旧引擎 stdio/HTTP 宿主仍编译用于 A/B 检查，产品配置不再指向它。
+
+```text
+runtime/v20|v21/
+  TiaMcp.FoundationHost.exe + .dll/.deps.json/.runtimeconfig.json
+  release-key.txt
+  net10 dependencies
+  worker/
+    TiaMcp.Engine.V20|V21.exe + .exe.config
+    TiaMcp.Adapter.20|21.dll + net48 dependencies
+    tool-catalog.json
+```
+
+主机按所选发布键定位 worker 和构建时由同一织入二进制生成的目录，并验证 worker 哈希。net10 与 net48 依赖须分目录，不能混放。开发时仍可同时传入 `--engine-worker` 和 `--engine-catalog` 覆盖路径。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径，V20/V21 的审批 host tag 保持 `engine`。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口并清理旧的 V20/V21 根目录引擎文件；用户数据和配置保持原位。
 
 ## G7：运行时资源定位
 
@@ -86,7 +99,7 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 `TMP_EXPORT` 或 cwd 推断包根。私人工作区及输出缺省的后续收口属于 P6-39。
 
 同级路由统一调用 `BundleLayout.RequireEngine`：安装布局使用
-`runtime/v<key>/TiaMcp.FoundationHost.exe` 或 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`；
+`runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`；
 正式开发锚点使用对应 Release/Debug 输出。目标缺失即拒绝，不改用当前 EXE，也不接受任意 `bin` 或 `v数字` 目录。
 Foundation 保留 EXE 旁 `release-key.txt` 的版本选择/一致性校验，显式 `--worker-exe` 保持优先；
 默认 worker 位于选定根的 `runtime/v<key>/worker/TiaMcp.PlcWorker.<key>.exe`。

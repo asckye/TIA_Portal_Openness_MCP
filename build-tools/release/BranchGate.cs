@@ -52,6 +52,17 @@ internal static partial class ReleaseCommands
             Build("build-tools/native-call-weaver/NativeCallWeaver.csproj");
             var weaverOutput = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0");
             CopyDirectoryContents(weaverOutput, Path.Combine(Root, "runtime/verification"));
+            Build("src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
+            foreach (var key in new[] { "20", "21" })
+            {
+                CleanLegacyEngineLayout(key);
+                var runtime = Path.Combine(Root, "runtime/v" + key);
+                Directory.CreateDirectory(runtime);
+                foreach (var file in Directory.EnumerateFiles(Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0"))
+                    .Where(file => Path.GetExtension(file) is ".exe" or ".dll" or ".json" or ".config"))
+                    File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
+                File.WriteAllText(Path.Combine(runtime, "release-key.txt"), key, new System.Text.UTF8Encoding(false));
+            }
             Build("tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
             Build("tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj");
             var fixture = Path.Combine(Root, "tests/Engine/TiaMcpServer.DiagnosticsTests/bin/Release/net48/DiagnosticsTests.exe");
@@ -62,23 +73,27 @@ internal static partial class ReleaseCommands
                 var api = ResolveReleaseApi(null, apiRoot, major);
                 Build($"src/Engine/TiaMcpServer.V{major}.csproj", [$"-p:SiemensEngineeringDirectory={api}"]);
                 var built = Path.Combine(Root, major == 20 ? "src/Engine/bin-v20/Release/net48" : "src/Engine/bin/Release/net48");
-                var runtime = Path.Combine(Root, $"runtime/v{major}");
+                var runtime = Path.Combine(Root, $"runtime/v{major}/worker");
                 Directory.CreateDirectory(runtime);
                 foreach (var file in Directory.EnumerateFiles(built).Where(file => Path.GetExtension(file) is ".exe" or ".dll" or ".config" && !Path.GetFileName(file).StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase)))
                     File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
+                RunBuildRaw(Path.Combine(runtime, $"TiaMcp.Engine.V{major}.exe"), ["--write-tool-catalog", Path.Combine(runtime, "tool-catalog.json")],
+                    Path.Combine(logs, $"tool-catalog-v{major}.log"), temp, cli, apiRoot, nuget, "Engine worker catalog");
             }
             var jobs = new[] { 20, 21 }.Select(major => ("branch-v" + major, (Func<PipelineResult>)(() =>
             {
                 var majorLogs = Path.Combine(logs, "v" + major);
                 Directory.CreateDirectory(majorLogs);
                 var api = ResolveReleaseApi(null, apiRoot, major);
-                var exe = Path.Combine(Root, $"runtime/v{major}/TiaMcp.Engine.V{major}.exe");
+                var exe = Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe");
                 VerifyNativeJit(dotnet, harness, exe, api, majorLogs, temp, cli, apiRoot, major);
                 var worker = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], majorLogs, temp, cli, apiRoot, major);
                 RequireCount("worker supervisor", worker, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
                 VerifyHttpConcurrency(harness, exe, api, majorLogs, temp, cli, apiRoot, major);
                 VerifyEngineApproval(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major);
                 foreach (var isolated in new[] { false, true }) VerifyStability(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, rounds.ToString(), isolated);
+                RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
+                    "--releases", major.ToString(), "--output", Path.Combine(majorLogs, "foundation-transport")], majorLogs, temp, cli, apiRoot, major);
                 return new PipelineResult("branch-v" + major, 0, "Branch engine checks passed.\n", "");
             }))).ToArray();
             ParallelPipeline.Run(jobs, Path.Combine(logs, "pipeline"), GetMaxParallelism(options));

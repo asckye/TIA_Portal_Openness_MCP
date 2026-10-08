@@ -54,15 +54,15 @@ namespace TiaMcpConfigurator
             foreach (var version in TiaVersionCatalog.Runnable)
             {
                 Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, version.Key), version.DisplayName + " missing runtime is rejected");
-                if (version.IsFullEngine) {
-                string sourceEngine = Path.Combine(temp, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcp.Engine.V" + version.MajorVersion + ".exe");
+                if (version.HostKind == "foundation") {
+                string sourceEngine = Path.Combine(temp, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(sourceEngine)); File.WriteAllText(sourceEngine, "stub");
                 Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, version.Key), version.DisplayName + " missing install never probes source output");
                 string gui = Path.Combine(temp, "src", "Studio", "Gui", "bin", "Release", "net10.0-windows");
                 Directory.CreateDirectory(gui);
                 Assert(ConfigCore.Engine(temp, version.Key, gui) == sourceEngine, version.DisplayName + " formal GUI output selects matching engine development output");
                 }
-                string runtimeEngine = Path.Combine(temp, "runtime", version.RuntimeDirectory, version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe");
+                string runtimeEngine = Path.Combine(temp, "runtime", version.RuntimeDirectory, "TiaMcp.FoundationHost.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(runtimeEngine)); File.WriteAllText(runtimeEngine, "stub");
                 Assert(ConfigCore.Engine(temp, version.Key) == runtimeEngine, version.DisplayName + " packaged runtime takes precedence over source output");
                 var settings = new ServerSettings { Version = version.MajorVersion, ReleaseKey = version.Key };

@@ -11,7 +11,7 @@
 
 ## 工具、版本与示例
 
-当前 4.0 产品入口为根 `TiaOpenness.exe`、V14 SP1–V19 的 `TiaMcp.FoundationHost.exe`，以及 V20/V21 的 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`。当前能力页说明 V4 结果、写入审批、审计位置和原生验收边界。
+当前 4.0 产品入口为根 `TiaOpenness.exe` 和八版 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；V20/V21 的完整工具目录由 `worker/` 子目录中的引擎 worker 提供。当前能力页说明 V4 结果、写入审批、审计位置和原生验收边界。
 
 - [4.0 源码版本范围](reference/version-tools.md) · [上一版生成的工具目录](reference/version-tool-catalog.md) · [上一版生成的完整引擎矩阵](reference/tool-matrix.md)
 - [当前能力与验收边界](reference/capabilities.md) · [运行时布局、日志和审计目录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md)

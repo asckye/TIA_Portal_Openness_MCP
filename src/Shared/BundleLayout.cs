@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TiaMcp.Versioning;
 
 namespace TiaOpenness.Shared
@@ -159,6 +160,8 @@ namespace TiaOpenness.Shared
             {
                 var root = FromAnchor(directory, "runtime/" + version.RuntimeDirectory);
                 if (root != null) return root;
+                root = FromAnchor(directory, "runtime/" + version.RuntimeDirectory + "/worker");
+                if (root != null) return root;
             }
             var studioRoot = FromAnchor(directory, "runtime/studio");
             if (studioRoot != null) return studioRoot;
@@ -169,7 +172,7 @@ namespace TiaOpenness.Shared
             {
                 foreach (var version in TiaVersionCatalog.Runnable)
                 {
-                    if (!version.IsFullEngine) continue;
+                    if (version.WorkerKind != "engine") continue;
                     var root = FromAnchor(directory, "src/Engine/"
                         + version.EngineOutputDirectory + "/" + configuration + "/net48");
                     if (root != null) return root;
@@ -220,20 +223,18 @@ namespace TiaOpenness.Shared
         public static string EngineExecutablePath(string root, string releaseKey, string baseDirectory)
         {
             var version = TiaVersionCatalog.RequireRunnable(releaseKey);
-            string name = version.IsFullEngine ? "TiaMcp.Engine.V" + version.MajorVersion + ".exe" : "TiaMcp.FoundationHost.exe";
+            string name = GetProduct(releaseKey).Executable;
             var output = new DirectoryInfo(baseDirectory);
             foreach (var configuration in new[] { "Release", "Debug" })
             {
                 foreach (var sourceVersion in TiaVersionCatalog.Runnable)
                 {
-                    if (!sourceVersion.IsFullEngine) continue;
+                    if (sourceVersion.WorkerKind != "engine") continue;
                     if (SameRoot(FromAnchor(output, "src/Engine/" + sourceVersion.EngineOutputDirectory + "/" + configuration + "/net48"), root))
-                        return version.IsFullEngine ? Combine(root, "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + name)
-                            : Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
+                        return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
                 }
                 if (SameRoot(FromAnchor(output, "src/FoundationHost/bin/" + configuration + "/net10.0"), root))
-                    return version.IsFullEngine ? Combine(root, "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + name)
-                        : Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
+                    return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
             }
             return Combine(root, "runtime/" + version.RuntimeDirectory + "/" + name);
         }
@@ -251,7 +252,8 @@ namespace TiaOpenness.Shared
             public string RuntimeDirectory { get; private set; }
             public string Executable { get; private set; }
             public string VersionOption { get; private set; }
-            public string WorkerExecutable { get { return "TiaMcp.PlcWorker." + ReleaseKey + ".exe"; } }
+            public string WorkerExecutable { get { return TiaVersionCatalog.Get(ReleaseKey).WorkerKind == "engine"
+                ? "TiaMcp.Engine.V" + ReleaseKey + ".exe" : "TiaMcp.PlcWorker." + ReleaseKey + ".exe"; } }
             internal Product(string key, string executable, string option)
             {
                 ReleaseKey = key;
@@ -270,8 +272,8 @@ namespace TiaOpenness.Shared
             { "17", new Product("17", "TiaMcp.FoundationHost.exe", "--release-key") },
             { "18", new Product("18", "TiaMcp.FoundationHost.exe", "--release-key") },
             { "19", new Product("19", "TiaMcp.FoundationHost.exe", "--release-key") },
-            { "20", new Product("20", "TiaMcp.Engine.V20.exe", "--tia-major-version") },
-            { "21", new Product("21", "TiaMcp.Engine.V21.exe", "--tia-major-version") }
+            { "20", new Product("20", "TiaMcp.FoundationHost.exe", "--release-key") },
+            { "21", new Product("21", "TiaMcp.FoundationHost.exe", "--release-key") }
         };
         public const string StudioBridgeExecutable = "TiaOpenness.Bridge.exe";
 
@@ -335,9 +337,7 @@ namespace TiaOpenness.Shared
             foreach (var configuration in new[] { "Release", "Debug" })
             foreach (var variant in new[] { "", "shared-adapter/" })
                 if (SameRoot(WorkbenchDevelopmentRoot(baseDirectory, configuration, variant), root))
-                    return Combine(root, version.IsFullEngine
-                        ? "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + product.Executable
-                        : "src/FoundationHost/bin/" + configuration + "/net10.0/" + product.Executable);
+                    return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + product.Executable);
             // Preserve the engine/CLI's formal development anchors as well.
             var enginePath = EngineExecutablePath(root, releaseKey, baseDirectory);
             return Path.Combine(Path.GetDirectoryName(enginePath), product.Executable);
@@ -347,6 +347,24 @@ namespace TiaOpenness.Shared
         {
             var product = GetProduct(releaseKey);
             return Combine(root, "runtime/" + product.RuntimeDirectory + "/worker/" + product.WorkerExecutable);
+        }
+
+        public static string EngineWorkerPath(string root, string releaseKey, string baseDirectory)
+        {
+            var version = TiaVersionCatalog.RequireRunnable(releaseKey);
+            foreach (var configuration in new[] { "Release", "Debug" })
+                if (SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), "src/FoundationHost/bin/" + configuration + "/net10.0"), root)
+                    || TiaVersionCatalog.Runnable.Any(source => source.WorkerKind == "engine"
+                        && SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), "src/Engine/" + source.EngineOutputDirectory + "/" + configuration + "/net48"), root)))
+                    return Combine(root, "src/Engine/" + version.EngineOutputDirectory + "/" + configuration + "/net48/" + GetProduct(releaseKey).WorkerExecutable);
+            return WorkerPath(root, releaseKey);
+        }
+
+        public static string RequireWorker(string releaseKey, string baseDirectory, string explicitRoot = null)
+        {
+            var path = EngineWorkerPath(RequireRoot(baseDirectory, explicitRoot), releaseKey, baseDirectory);
+            if (!File.Exists(path)) throw new BundleResourceUnavailableException(path);
+            return path;
         }
 
         public static string WorkbenchBridgePath(string root, string baseDirectory)

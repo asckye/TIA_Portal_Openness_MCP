@@ -91,7 +91,7 @@ namespace TiaMcpServer.Cli
             var entry = new JsonObject();
             if (style == HostStyle.VsCode) entry["type"] = "stdio";
             entry["command"] = exePath;
-            entry["args"] = new JsonArray("--tia-major-version", tiaMajorVersion.ToString());
+            entry["args"] = new JsonArray("--release-key", tiaMajorVersion.ToString());
             // The engine defaults to the ~48-tool lite roster on its own, so the normal config
             // needs no env at all. Only the opt-out is worth writing — and it is an opt-out with
             // consequences: the full roster exceeds what VS Code/Copilot (128) and Windsurf (100) load.
@@ -194,7 +194,7 @@ namespace TiaMcpServer.Cli
             var sb = new StringBuilder();
             sb.AppendLine("[mcp_servers." + ServerKey + "]");
             sb.AppendLine("command = " + TomlString(exePath));
-            sb.AppendLine("args = [\"--tia-major-version\", \"" + tiaMajorVersion + "\"]");
+            sb.AppendLine("args = [\"--release-key\", \"" + tiaMajorVersion + "\"]");
             // TIA needs far longer to come up than Codex's 10s default; without this Codex kills
             // the server mid-startup and reports it as a crash.
             sb.AppendLine("startup_timeout_sec = 120");

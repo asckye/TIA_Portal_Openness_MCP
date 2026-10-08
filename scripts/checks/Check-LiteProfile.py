@@ -24,7 +24,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from mcp_results import successful
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-EXE = ROOT / "runtime" / "v21" / "TiaMcp.Engine.V21.exe"
+EXE = ROOT / "runtime" / "v21" / "TiaMcp.FoundationHost.exe"
 HOST = None
 PUBLIC_API = None
 MAJOR = 21
@@ -63,7 +63,7 @@ def tools_for_profile(profile):
     env = dict(os.environ)
     env.pop("TIA_MCP_PROFILE", None)
     args = ([str(HOST), str(EXE), 'protocol-host', str(PUBLIC_API), '--tia-major-version', str(MAJOR), '--transport', 'stdio']
-            if HOST else [str(EXE)]) + ['--logging', '0']
+            if HOST and EXE.name != 'TiaMcp.FoundationHost.exe' else [str(EXE), '--release-key', str(MAJOR)]) + ['--logging', '0']
     if profile:
         args += ["--profile", profile]
     p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,

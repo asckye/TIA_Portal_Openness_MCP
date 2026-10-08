@@ -40,8 +40,8 @@ def engine_overrides(values, option):
 def engine_host_server(args, release, portal_root, profile, env_overrides):
     workers = engine_overrides(args.engine_worker, '--engine-worker')
     catalogs = engine_overrides(args.engine_catalog, '--engine-catalog')
-    if release not in workers or release not in catalogs:
-        raise ValueError('EngineHost capture requires a worker and catalog for V' + release)
+    if (release in workers) != (release in catalogs):
+        raise ValueError('EngineHost overrides require both worker and catalog for V' + release)
     transport = args.transport
     key = secrets.token_urlsafe(24)
     port = 0
@@ -51,14 +51,16 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
             port = sock.getsockname()[1]
     endpoint = f'http://127.0.0.1:{port}/mcp'
     command = [str(args.engine_host.resolve()), '--bundle-root', str(args.repo_root.resolve()),
-               '--release-key', release, '--engine-worker', str(workers[release]), '--engine-catalog', str(catalogs[release]),
-               '--profile', profile, '--transport', transport]
+               '--release-key', release, '--profile', profile, '--transport', transport]
+    if release in workers:
+        command += ['--engine-worker', str(workers[release]), '--engine-catalog', str(catalogs[release])]
     if portal_root is not None:
         command += ['--tia-portal-location', str(portal_root)]
     if transport == 'http':
         command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
     environment = dict(os.environ, **env_overrides)
-    environment['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
+    if release in workers:
+        environment['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                text=True, encoding='utf-8', env=environment, creationflags=subprocess.CREATE_NO_WINDOW)
     output, errors = queue.Queue(), []
@@ -224,10 +226,12 @@ def capture(args):
     if args.harness is None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         fixture_root.mkdir()
+    requested_host = args.engine_host
     for release in args.releases:
-        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'worker/TiaMcp.Engine.V{release}.exe' if args.engine_source and release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
         snapshot = {'formatVersion': FORMAT_VERSION, 'release': release}
         if release in ('20', '21'):
+            args.engine_host = requested_host or (None if args.engine_source else exe)
             public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if release == '21':
                 public_api /= 'net48'
@@ -564,6 +568,7 @@ def main():
     commands.add_parser('self-test', help='Exercise capability/output/schema negative cases').set_defaults(run=self_test)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', type=Path, required=True)
+    capture_parser.add_argument('--engine-source', action='store_true', help='A/B capture through the retired engine host')
     capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through the opt-in FoundationHost')
     capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH', help='SDK fixture engine worker built with TiaMcpEngineWorkerSdkFixture=true')
     capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')

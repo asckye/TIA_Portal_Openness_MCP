@@ -46,6 +46,7 @@ namespace TiaMcp.Updater
         [DataMember(Name = "include")] public RuleSet Include { get; set; }
         [DataMember(Name = "exclude")] public RuleSet Exclude { get; set; }
         [DataMember(Name = "legacyCleanup")] public RuleSet LegacyCleanup { get; set; }
+        [DataMember(Name = "requiredFiles")] public List<string> RequiredFiles { get; set; }
     }
 
     [DataContract]
@@ -99,7 +100,6 @@ namespace TiaMcp.Updater
         private static readonly Regex ZipPattern = new Regex(@"^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private const string UpdaterPath = "runtime/tools/TiaMcp.Updater.exe";
         private const string UpdaterConfigPath = UpdaterPath + ".config";
-        private static readonly string[] RuntimeProcessNames = BuildProcessNames();
 
         public static int Run(UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses = null)
         {
@@ -199,7 +199,7 @@ namespace TiaMcp.Updater
         {
             var result = new List<string>();
             string normalized = NormalizeForCompare(root);
-            foreach (string name in RuntimeProcessNames)
+            foreach (string name in BuildProcessNames(normalized))
             {
                 foreach (Process process in Process.GetProcessesByName(name))
                 {
@@ -213,11 +213,17 @@ namespace TiaMcp.Updater
             return result;
         }
 
-        private static string[] BuildProcessNames()
+        private static string[] BuildProcessNames(string root)
         {
-            var names = new List<string> { "TiaMcp.Engine.V20", "TiaMcp.Engine.V21", "TiaMcp.FoundationHost", "TiaMcpServer", "TiaOpenness", "TiaOpenness.Bridge", "TiaMcpConfigurator" };
-            foreach (string key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }) names.Add("TiaMcp.PlcWorker." + key);
-            return names.ToArray();
+            string path = Combine(root, "scripts/operations/delivery-files.json");
+            if (!ExistsFile(path)) return new[] { "TiaOpenness", "TiaMcpServer", "TiaMcpConfigurator" };
+            var rules = ReadJson<DeliveryRules>(path);
+            var files = (rules.RequiredFiles ?? new List<string>()).Concat(rules.Include.Files ?? new List<string>())
+                .Concat(rules.LegacyCleanup.Files ?? new List<string>());
+            string runtime = Combine(root, "runtime");
+            if (Directory.Exists(runtime)) files = files.Concat(GetFilesRecursive(runtime).Select(file => RelativeTo(root, file)));
+            return files.Where(file => IsSafeRelativePath(file) && file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                .Select(file => Path.GetFileNameWithoutExtension(file)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
         private static ReleaseInfo FindRelease(UpdaterOptions options, string installed, Action<string> say)
@@ -377,8 +383,9 @@ namespace TiaMcp.Updater
 
         private static void ValidatePackage(string package, DeliveryRules rules)
         {
-            foreach (string must in new[] { "TiaOpenness.exe", UpdaterPath, UpdaterConfigPath, "runtime/v20/TiaMcp.Engine.V20.exe", "runtime/v21/TiaMcp.Engine.V21.exe", "manifest/package-manifest.json", "manifest/delivery.json" })
-                if (!ExistsFile(Combine(package, must))) throw new InvalidOperationException("Package is incomplete: missing " + must);
+            if (rules.RequiredFiles == null || rules.RequiredFiles.Count == 0) throw new InvalidOperationException("The package has no required delivery files.");
+            foreach (string must in rules.RequiredFiles)
+                if (!IsSafeRelativePath(must) || !InDelivery(must, rules) || !ExistsFile(Combine(package, must))) throw new InvalidOperationException("Package is incomplete: missing " + must);
             foreach (string file in GetFilesRecursive(package))
             {
                 string relative = RelativeTo(package, file);

@@ -3,15 +3,14 @@
 Run from the source checkout with --bundle-root pointing at an extracted package.
 The checker copies it to a path containing spaces and Chinese characters, applies
 a temporary read-only ACL, and enumerates every packaged product through MCP.
-Foundation hosts are explicitly started with --offline. V20/V21 run as real EXEs over
-STDIO and local HTTP with isolation off and on. A copied PublicAPI SDK-only fixture
+Foundation hosts are explicitly started with --offline. V20/V21 run through their
+default engine workers over STDIO and local HTTP. A copied PublicAPI SDK-only fixture
 resolves API assemblies; it contains no TIA executable and never connects to TIA or a
-PLC. The approval probe uses RestartOpennessWorker, a local diagnostic write that does
-not reach Openness.
+PLC. The approval probe calls SaveProject and proves refusal before native dispatch.
 
 The packaged no-TIA matrix separately stages V20/V21 runtime directories without
-Siemens.Engineering*.dll and starts those EXEs over STDIO and HTTP, with isolation
-off and on. It runs only when no TIA installation path is detected.
+Siemens.Engineering*.dll and starts FoundationHost over STDIO and HTTP. It runs only
+when no TIA installation path is detected.
 
 The check also probes the root launcher with a temporary target executable, verifies
 that an invalid explicit bundle root does not fall back to the environment, checks
@@ -90,8 +89,6 @@ def baseline_counts(repo: Path = ROOT) -> dict[str, int]:
 
 
 def product_executable(root: Path, key: str) -> Path:
-    if key in ("20", "21"):
-        return root / "runtime" / f"v{key}" / f"TiaMcp.Engine.V{key}.exe"
     return root / "runtime" / f"v{key}" / "TiaMcp.FoundationHost.exe"
 
 
@@ -379,7 +376,7 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
             return extract_v4_body(reply)
 
         status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
-        if status.get("enabled") is not isolate or status.get("enabledByDefault") is not False:
+        if status.get("enabled") is not True or status.get("state") != "Ready":
             raise CheckFailure(f"V{key} {transport} {mode}: unexpected worker default/state: {status}")
         bootstrap = call("InitializeEnvironment")
         reason = bootstrap.get("data", {}).get("recommendedReason") or ""
@@ -391,13 +388,11 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
             raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted the Openness cause/fix: {doctor}")
         if not any(check.get("fix") for check in doctor_checks if isinstance(check, dict)):
             raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted repair steps: {doctor}")
-        # P6-54b: session services are not registered while Openness is not ready, so the session
-        # diagnostic reports the same readiness refusal (with cause) before dispatch.
+        # P7: engine reads stop at native admission without a ready TIA environment.
         diagnostic = call("GetSessionState")
-        if (diagnostic.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
-                or diagnostic.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
-                or diagnostic.get("meta", {}).get("execution") != "not-started"
-                or not diagnostic.get("data", {}).get("environment", {}).get("cause")):
+        if (diagnostic.get("error", {}).get("code") != "PRECONDITION_FAILED"
+                or diagnostic.get("error", {}).get("details", {}).get("condition") != "native-admission"
+                or diagnostic.get("meta", {}).get("execution") != "not-started"):
             raise CheckFailure(f"V{key} {transport} {mode}: session diagnostic did not report the readiness refusal: {diagnostic}")
 
         refusal = call("SaveProject")
@@ -410,7 +405,7 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
         if not evidence.get("cause") or not evidence.get("recommendedFix"):
             raise CheckFailure(f"V{key} {transport} {mode}: refusal omitted cause/fix: {refusal}")
         status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
-        if status.get("environmentReady") is not False or not status.get("environmentCause"):
+        if status.get("readiness", {}).get("ready") is not False or not status.get("readiness", {}).get("cause"):
             raise CheckFailure(f"V{key} {transport} {mode}: status did not retain environment-not-ready state: {status}")
         return len(roster)
 
@@ -488,15 +483,16 @@ def check_packaged_no_tia(root: Path, key: str, expected: int, temp_root: Path,
 
         bootstrap = call("InitializeEnvironment")
         if (bootstrap.get("data", {}).get("ready") is not False
-                or "no TIA Portal V" not in bootstrap.get("data", {}).get("recommendedReason", "")):
+                or not bootstrap.get("data", {}).get("cause")
+                or not bootstrap.get("data", {}).get("recommendedFix")):
             raise CheckFailure(f"V{key} packaged {transport} {mode}: InitializeEnvironment omitted no-TIA readiness: {bootstrap}")
         doctor = call("GetEnvironmentDiagnostics", {"fix": False})
         if (doctor.get("data", {}).get("ready") is not False
-                or "no TIA Portal V" not in json.dumps(doctor.get("data", {}), ensure_ascii=False)):
+                or not any(check.get("fix") for check in doctor.get("data", {}).get("checks", []))):
             raise CheckFailure(f"V{key} packaged {transport} {mode}: diagnostics omitted no-TIA readiness: {doctor}")
         refusal = call("GetSessionState")
-        if (refusal.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
-                or refusal.get("error", {}).get("details", {}).get("resource") != "tia-openness-environment"
+        if (refusal.get("error", {}).get("code") != "PRECONDITION_FAILED"
+                or refusal.get("error", {}).get("details", {}).get("condition") != "native-admission"
                 or refusal.get("meta", {}).get("outcome") != "rejected-before-operation"
                 or refusal.get("meta", {}).get("execution") != "not-started"):
             raise CheckFailure(f"V{key} packaged {transport} {mode}: GetSessionState was not refused before dispatch: {refusal}")
@@ -564,8 +560,7 @@ def write_approval_probe(root: Path, temp_root: Path, installation: Path, expect
         # The readiness admission guard must stop this TIA write before dispatch on this
         # no-TIA machine. It still exercises the production engine's user config/audit bootstrap.
         result = rpc("tools/call", "approval-probe", {
-            "name": "CreateDevice",
-            "arguments": {"orderNumber": "6ES7 515-2AM02-0AB0", "version": "V2.9", "deviceName": "PLC_2"},
+            "name": "SaveProject", "arguments": {},
         })
         body = extract_v4_body(result)
         if (body.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
@@ -590,11 +585,11 @@ def write_approval_probe(root: Path, temp_root: Path, installation: Path, expect
                 row = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if row.get("release") == key and row.get("tool") == "CreateDevice" and row.get("requestId") == request_id:
+            if row.get("release") == key and row.get("tool") == "SaveProject" and row.get("requestId") == request_id:
                 events.append((row.get("event"), row.get("outcome")))
     # A write stopped by readiness is audited as request then end; it never started.
     if [event for event, _ in events] != ["request", "end"] or events[-1][1] != "rejected-before-operation":
-        raise CheckFailure(f"Audit fallback has no request/end rows for the refused CreateDevice ({request_id}): {events}")
+        raise CheckFailure(f"Audit fallback has no request/end rows for the refused SaveProject ({request_id}): {events}")
     config_lock = paths["config"] / "approval.settings.lock"
     if not config_lock.is_file():
         raise CheckFailure(f"Approval settings did not resolve to the user config fallback: {config_lock}")
@@ -947,7 +942,7 @@ def run_bundle_check(args: argparse.Namespace) -> int:
         for key in ("20", "21"):
             engine_modes[key] = []
             for transport in ("stdio", "http"):
-                for isolate in (False, True):
+                for isolate in (False,):
                     count = check_engine_startup(destination, key, counts[key], user_temp,
                                                  installations[key], transport, isolate)
                     engine_modes[key].append(f"{transport}/{'isolation-on' if isolate else 'default-off'}={count}")
@@ -959,7 +954,7 @@ def run_bundle_check(args: argparse.Namespace) -> int:
             for key in ("20", "21"):
                 packaged_modes[key] = []
                 for transport in ("stdio", "http"):
-                    for isolate in (False, True):
+                    for isolate in (False,):
                         count = check_packaged_no_tia(destination, key, counts[key], user_temp, transport, isolate)
                         mode = f"{transport}/{'isolation-on' if isolate else 'isolation-off'}={count}"
                         packaged_modes[key].append(mode)
@@ -1015,7 +1010,7 @@ class RelocationCheckTests(unittest.TestCase):
     def test_product_paths(self):
         root = Path("X:/candidate")
         self.assertEqual(product_executable(root, "19"), root / "runtime/v19/TiaMcp.FoundationHost.exe")
-        self.assertEqual(product_executable(root, "21"), root / "runtime/v21/TiaMcp.Engine.V21.exe")
+        self.assertEqual(product_executable(root, "21"), root / "runtime/v21/TiaMcp.FoundationHost.exe")
 
     def test_v4_reply_envelope(self):
         value = {"schemaVersion": 4, "ok": False, "data": None,

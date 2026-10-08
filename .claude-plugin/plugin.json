@@ -9,8 +9,8 @@
   "hooks": "./hooks/hooks.json",
   "mcpServers": {
     "tia-portal": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/runtime/v21/TiaMcp.Engine.V21.exe",
-      "args": ["--tia-major-version", "21"]
+      "command": "${CLAUDE_PLUGIN_ROOT}/runtime/v21/TiaMcp.FoundationHost.exe",
+      "args": ["--release-key", "21"]
     }
   }
 }

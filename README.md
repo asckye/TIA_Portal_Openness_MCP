@@ -28,10 +28,10 @@ The [beginner guide](docs/getting-started/beginners.zh-CN.md) explains installat
 | V15.1 | 60 | PLC foundation |
 | V16 / V17 / V18 | 62 each | PLC foundation |
 | V19 | 64 | PLC foundation |
-| V20 | 477 | Full engine |
-| V21 | 488 | Full engine |
+| V20 | 487 | FoundationHost + engine worker |
+| V21 | 498 | FoundationHost + engine worker |
 
-V20/V21 expose 60 tools in the default lite profile; use `FindTools` and `CallTool` for the rest, or configure `--profile full`. The bundle uses `TiaOpenness.exe` as its root launcher, `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe` for V20/V21, and `TiaMcp.FoundationHost.exe` for V14 SP1–V19. Foundation hosts expose their own complete subset and have different contracts. Read [version scope](docs/reference/version-tools.md) and the connected server's `tools/list`. Original V14/V15 are not aliases for V14 SP1/V15.1. The V4 envelope uses `ok`, `data`, `error` and `meta`; unknown write outcomes require inspection before any retry. Workbench approval applies to MCP write calls by default, and audit records are kept in `data/logs/audit`.
+V20/V21 expose 73 tools in the default lite profile; use `FindTools` and `CallTool` for the rest, or configure `--profile full`. The bundle uses `TiaOpenness.exe` as its root launcher and `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` for every release. V20/V21 retain the full catalog through their engine worker and generated catalog in `worker/`; the shared Foundation tools use the same contracts across releases. Read [version scope](docs/reference/version-tools.md) and the connected server's `tools/list`. Original V14/V15 are not aliases for V14 SP1/V15.1. The V4 envelope uses `ok`, `data`, `error` and `meta`; unknown write outcomes require inspection before any retry. Workbench approval applies to MCP write calls by default, and audit records are kept in `data/logs/audit`.
 
 Before an unfamiliar operation, `GetToolUsage(toolName, operation)` supplies the current release's arguments, examples and result interpretation. Use `language` to list programming examples and `exampleId` to retrieve complete files or call sequences. Official API patterns and project-authored wrappers are identified separately.
 

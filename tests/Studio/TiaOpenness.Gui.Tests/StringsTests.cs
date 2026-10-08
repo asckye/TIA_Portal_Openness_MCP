@@ -223,7 +223,7 @@ public class StringsTests(WpfContext wpf)
                 File.WriteAllText(Path.Combine(bundle, "manifest", "package-manifest.json"), "{}");
                 var error = Assert.Throws<FileNotFoundException>(() => ConfigCore.Engine(bundle, "21", bundle));
                 Assert.StartsWith(Loc.Current.T("Config.EngineNotFound", "V21"), error.Message);
-                Assert.Equal(Path.Combine(bundle, "runtime", "v21", "TiaMcp.Engine.V21.exe"), error.FileName);
+                Assert.Equal(Path.Combine(bundle, "runtime", "v21", "TiaMcp.FoundationHost.exe"), error.FileName);
             }
             finally { Directory.Delete(bundle, true); }
             Check<DirectoryNotFoundException>(() => ConfigCore.ValidateTia(missing, "21"), "Config.TiaApiNotFound", "V21", "Siemens.Engineering.Base.dll");

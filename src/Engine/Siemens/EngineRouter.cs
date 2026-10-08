@@ -41,7 +41,9 @@ namespace TiaMcpServer.Siemens
             try
             {
                 string own = ownExePath();
-                string candidate = TiaOpenness.Shared.BundleLayout.RequireEngine(target.Key, Path.GetDirectoryName(own)!, bundleRoot);
+                string candidate = target.WorkerKind == "engine"
+                    ? TiaOpenness.Shared.BundleLayout.RequireWorker(target.Key, Path.GetDirectoryName(own)!, bundleRoot)
+                    : TiaOpenness.Shared.BundleLayout.RequireEngine(target.Key, Path.GetDirectoryName(own)!, bundleRoot);
                 return string.Equals(Path.GetFullPath(candidate), Path.GetFullPath(own), StringComparison.OrdinalIgnoreCase) ? null : candidate;
             }
             catch (IOException) { /* swallow(env-probe): missing bundle or sibling paths are unavailable routes; callers fail closed */ return null; }
@@ -63,8 +65,13 @@ namespace TiaMcpServer.Siemens
 
             string? sibling = FindSiblingExe(version);
             if (sibling == null)
-                sibling = TiaOpenness.Shared.BundleLayout.RequireEngine(TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version).Key,
-                    Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)!);
+            {
+                var target = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version);
+                var directory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)!;
+                sibling = target.WorkerKind == "engine"
+                    ? TiaOpenness.Shared.BundleLayout.RequireWorker(target.Key, directory)
+                    : TiaOpenness.Shared.BundleLayout.RequireEngine(target.Key, directory);
+            }
 
             log($"EngineRouter: TIA V{version} requested but this exe is built for V{CompiledTiaMajorVersion}; rerouting to {sibling}");
             var psi = new ProcessStartInfo

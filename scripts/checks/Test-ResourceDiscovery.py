@@ -57,7 +57,8 @@ def self_test():
 
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
-           *, env_overrides=None, process_observer=None, isolate=False, evidence_directory=None):
+           *, env_overrides=None, process_observer=None, isolate=False, evidence_directory=None,
+           engine_worker=None, engine_catalog=None):
     port = 0
     if transport == 'http':
         with socket.socket() as sock:
@@ -65,7 +66,12 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
             port = sock.getsockname()[1]
     endpoint = f'http://127.0.0.1:{port}/mcp'
     key = secrets.token_urlsafe(24)
-    args = [str(exe), '--tia-major-version', str(major)]
+    foundation = exe.name == 'TiaMcp.FoundationHost.exe'
+    args = [str(exe), '--release-key' if foundation else '--tia-major-version', str(major)]
+    if engine_worker is not None or engine_catalog is not None:
+        require(foundation and engine_worker is not None and engine_catalog is not None,
+                'SDK worker capture requires FoundationHost and both worker/catalog paths')
+        args += ['--engine-worker', str(engine_worker.resolve()), '--engine-catalog', str(engine_catalog.resolve())]
     if portal_root is not None:
         args += ['--tia-portal-location', str(portal_root)]
     args += ['--transport', transport, '--logging', '1']
@@ -73,10 +79,12 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
         args += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
     if isolate:
         args += ['--isolate-openness', '--worker-timeout-seconds', '10']
-    if harness:
+    if harness and not foundation:
         require(public_api is not None, '--public-api is required with --host-harness')
         args = [str(harness), str(exe), 'protocol-host', str(public_api)] + args[1:]
     env = dict(os.environ, TIA_MCP_PROFILE=profile)
+    if engine_worker is not None:
+        env['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
     if env_overrides:
         env.update(env_overrides)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -100,13 +108,20 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
         reader.start()
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
+    session_id = None
     def http(body, authorized=True):
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        nonlocal session_id
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' if foundation else 'application/json'}
         if authorized:
             headers['Authorization'] = 'Bearer ' + key
+        if foundation and session_id:
+            headers['Mcp-Session-Id'] = session_id
         request = urllib.request.Request(endpoint, json.dumps(body).encode('utf-8'), headers)
-        with opener.open(request, timeout=20) as response:
-            raw = response.read()
+        with opener.open(request, timeout=25) as response:
+            session_id = response.headers.get('Mcp-Session-Id', session_id)
+            raw = response.read().decode('utf-8')
+            if response.headers.get('Content-Type', '').startswith('text/event-stream'):
+                raw = next(line[6:] for line in raw.splitlines() if line.startswith('data: '))
             return json.loads(raw) if raw else None
 
     def rpc(method, request_id=1, params=None, include_params=True, notification=False):
@@ -143,10 +158,10 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
             while True:
                 require(process.poll() is None, 'HTTP server exited at startup: ' + ''.join(errors))
                 try:
-                    request = urllib.request.Request(endpoint + '/ready',
-                                                     headers={'X-API-Key': key})
+                    request = urllib.request.Request(endpoint + ('/health' if foundation else '/ready'),
+                                                     headers={'Authorization': 'Bearer ' + key} if foundation else {'X-API-Key': key})
                     with opener.open(request, timeout=2) as response:
-                        if json.load(response).get('mcpHostReady'):
+                        if json.load(response).get('status' if foundation else 'mcpHostReady'):
                             break
                 except (urllib.error.URLError, TimeoutError):
                     pass
@@ -176,16 +191,31 @@ def main():
     parser.add_argument('--major', required=True, type=int, choices=(20, 21))
     parser.add_argument('--host-harness', type=Path, help='Load the EXE host methods without changing local Openness group membership')
     parser.add_argument('--public-api', type=Path)
+    parser.add_argument('--engine-worker', type=Path, help='Explicitly marked SDK-only worker for offline usage examples')
+    parser.add_argument('--engine-catalog', type=Path)
     parser.add_argument('--usage-output', type=Path)
     parser.add_argument('--transport', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     args = parser.parse_args()
+    if (args.engine_worker is None) != (args.engine_catalog is None):
+        parser.error('Both --engine-worker and --engine-catalog are required')
+    if args.engine_worker is not None:
+        require(args.public_api is not None, 'SDK worker capture requires --public-api')
+        with fixture_directory('resource-sdk-worker-') as scratch:
+            args.portal_root = sdk_only_installation(args.public_api, args.major, Path(scratch))
+            run(args)
+    else:
+        run(args)
+
+
+def run(args):
     passed = 0
     usage_records = []
     for transport in args.transport:
         for profile in ('full', 'lite'):
             label = f'V{args.major} {transport} {profile}'
             with server(args.exe.resolve(), args.portal_root.resolve(), args.major,
-                        transport, profile, args.host_harness, args.public_api) as (rpc, http, logs):
+                        transport, profile, args.host_harness, args.public_api,
+                        engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc, http, logs):
                 initialized = rpc('initialize', params={'protocolVersion': '2024-11-05',
                     'capabilities': {}, 'clientInfo': {'name': 'resource-discovery-test', 'version': '1'}})
                 require('result' in initialized, 'Initialize failed')
@@ -256,8 +286,9 @@ def main():
                 unknown = rpc('unknown/resource-discovery-test')
                 if profile == 'full':
                     planned = rpc('tools/call', params={'name': 'PlanArtifactImportOrder', 'arguments': {'artifacts': [{'id': 'FB', 'dependencies': ['UDT']}, {'id': 'UDT'}]}})
-                    plan = envelope(planned)['data']['plan']
-                    require(plan['Valid'] and plan['Order'] == ['UDT', 'FB'], 'Shared dependency planner failed through real MCP transport')
+                    data = envelope(planned)['data']
+                    plan = data.get('plan', data)
+                    require(plan.get('valid', plan.get('Valid')) and plan.get('order', plan.get('Order')) == ['UDT', 'FB'], 'Shared dependency planner failed through real MCP transport')
                     passed += 1
                 require(unknown.get('error', {}).get('code') == -32601,
                         'Unknown method no longer returns MethodNotFound')

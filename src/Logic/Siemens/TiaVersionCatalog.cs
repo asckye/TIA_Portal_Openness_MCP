@@ -21,6 +21,8 @@ namespace TiaMcp.Versioning
         public string RuntimeDirectory { get; private set; }
         public string EngineOutputDirectory { get; private set; }
         public bool IsFullEngine { get { return MajorVersion >= 20; } }
+        public string HostKind { get { return "foundation"; } }
+        public string WorkerKind { get { return MajorVersion >= 20 ? "engine" : "plc"; } }
         public string SupportState { get { return IsFullEngine ? "existing-engine" : "plc-foundation"; } }
         public string ApiVersion { get { return Key == "14sp1" ? "14.0.1.0" : Key == "15.1" ? "15.1.0.0" : Key + ".0.0.0"; } }
         public string ApiFolder { get { return Key == "14sp1" ? "V14 SP1" : "V" + Key; } }

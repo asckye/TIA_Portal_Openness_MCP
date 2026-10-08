@@ -2,9 +2,9 @@
   "mcpServers": {
     "tia-portal": {
       "comment": "推荐双击 TiaOpenness.exe 配置。手动配置时使用 runtime/v21 或 runtime/v20 下引擎的绝对路径，非默认安装需显式传入 TIA 版本和安装根目录。",
-      "command": "C:\\REPLACE_ME\\TIA_Portal_Openness_MCP\\runtime\\v21\\TiaMcp.Engine.V21.exe",
+      "command": "C:\\REPLACE_ME\\TIA_Portal_Openness_MCP\\runtime\\v21\\TiaMcp.FoundationHost.exe",
       "args": [
-        "--tia-major-version",
+        "--release-key",
         "21"
       ],
       "env": {}

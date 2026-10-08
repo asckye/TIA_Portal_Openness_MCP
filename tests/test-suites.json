@@ -1,7 +1,7 @@
 {
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
-    "minimumPassed": 30,
+    "minimumPassed": 194,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -57,17 +57,17 @@
   },
   "updater": {
     "project": "tests/Updater/TiaMcp.Updater.Tests.csproj",
-    "minimumPassed": 20,
+    "minimumPassed": 24,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 19,
+        "minimumPassed": 23,
         "maximumSkipped": 1,
         "reason": "The end-to-end updater test requires Windows and .NET Framework 4.8."
       },
       "macos": {
-        "minimumPassed": 19,
+        "minimumPassed": 23,
         "maximumSkipped": 1,
         "reason": "The end-to-end updater test requires Windows and .NET Framework 4.8."
       }

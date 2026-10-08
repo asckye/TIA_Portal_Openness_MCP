@@ -82,6 +82,11 @@ def main():
         check(package == archive.stem, f'top folder {package} != archive name {archive.stem}')
         inside = {n[len(package) + 1:]: n for n in names if not n.endswith('/')}
         content = {rel: z.read(full) for rel, full in inside.items()}
+    required = rules.get('requiredFiles', [])
+    check(bool(required) and len(required) == len(set(required)), 'Invalid required delivery files')
+    for name in required:
+        check(layout.plain_path(name) and layout.delivered(name, rules), 'Invalid required delivery path: ' + name)
+        check(name in content, 'Required delivery file missing from ZIP: ' + name)
 
     # 2. tracked files identical - text files up to line endings: the ZIP is built from the maintainer's working
     #    tree while a CI checkout with core.autocrlf=true turns LF blobs into CRLF (12 files failed that way on the
@@ -166,8 +171,13 @@ class AssetChecks(unittest.TestCase):
         rules = (Path(__file__).resolve().parents[2] / layout.DELIVERY_RULES).read_bytes()
         self.tree = {layout.DELIVERY_RULES: rules, 'README.md': b'User documentation\n',
                      'Version.props': b'excluded compiler input', 'tools/source.cs': b'excluded source'}
-        self.runtime = {'runtime/v21/TiaMcp.Engine.V21.exe': b'engine',
+        self.runtime = {'runtime/v21/worker/TiaMcp.Engine.V21.exe': b'engine',
                         'runtime/verification/NativeCallWeaver.dll': b'release-only verifier'}
+        for name in json.loads(rules)['requiredFiles']:
+            if name.startswith('runtime/'):
+                self.runtime.setdefault(name, b'required runtime')
+            elif name != 'TiaOpenness.exe':
+                self.tree.setdefault(name, b'required delivery file')
         build = {'runtimeFiles': [{'path': n, 'sha256': sha(b)} for n, b in self.runtime.items()]}
         gui = {'executable': {'path': 'TiaOpenness.exe', 'sha256': sha(b'launcher')}}
         self.tree['manifest/release-build.json'] = json.dumps(build).encode()
@@ -176,7 +186,8 @@ class AssetChecks(unittest.TestCase):
                     'configuratorBuildSha256': sha(self.tree['manifest/configurator-build.json'])}
         self.tree['manifest/delivery.json'] = json.dumps(delivery).encode()
         self.content = {n: b for n, b in self.tree.items() if layout.delivered(n, json.loads(rules))}
-        self.content.update({'runtime/v21/TiaMcp.Engine.V21.exe': b'engine', 'TiaOpenness.exe': b'launcher'})
+        self.content.update({name: data for name, data in self.runtime.items() if layout.delivered(name, json.loads(rules))})
+        self.content['TiaOpenness.exe'] = b'launcher'
 
     def tearDown(self):
         self.assertEqual(self.root.resolve().parent, self.parent.resolve())
@@ -220,10 +231,25 @@ class AssetChecks(unittest.TestCase):
         self.assertEqual(self.verify()[0], 1)
 
     def test_missing_or_modified_binary_fails(self):
-        del self.content['runtime/v21/TiaMcp.Engine.V21.exe']
+        del self.content['runtime/v21/worker/TiaMcp.Engine.V21.exe']
         self.assertEqual(self.verify()[0], 1)
-        self.content['runtime/v21/TiaMcp.Engine.V21.exe'] = b'changed'
+        self.content['runtime/v21/worker/TiaMcp.Engine.V21.exe'] = b'changed'
         self.assertEqual(self.verify()[0], 1)
+
+    def test_required_worker_catalog_cannot_be_omitted_from_inventory(self):
+        name = 'runtime/v21/worker/tool-catalog.json'
+        del self.content[name]
+        build = json.loads(self.tree['manifest/release-build.json'])
+        build['runtimeFiles'] = [row for row in build['runtimeFiles'] if row['path'] != name]
+        self.tree['manifest/release-build.json'] = json.dumps(build).encode()
+        self.content['manifest/release-build.json'] = self.tree['manifest/release-build.json']
+        delivery = json.loads(self.tree['manifest/delivery.json'])
+        delivery['engineBuildSha256'] = sha(self.tree['manifest/release-build.json'])
+        self.tree['manifest/delivery.json'] = json.dumps(delivery).encode()
+        self.content['manifest/delivery.json'] = self.tree['manifest/delivery.json']
+        result, output = self.verify()
+        self.assertEqual(result, 1)
+        self.assertIn('Required delivery file missing from ZIP: ' + name, output)
 
     def test_sidecar_digest_fails(self):
         self.assertEqual(self.verify(sidecar=False)[0], 1)

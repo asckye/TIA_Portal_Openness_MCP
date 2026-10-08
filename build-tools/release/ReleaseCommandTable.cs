@@ -27,7 +27,7 @@ internal static class ReleaseCommandTable
         new("native-diagnostics-jit", "HttpTests.exe native-diagnostics-only", "native-jit-v{major}.log", "JIT + open generic equals inventory; adapter/native journals >= 8/3", "nativeDiagnostics"),
         new("process-leases", "HttpTests.exe process-leases-only", "process-leases-v{major}.log", "minimum 2", "sessionStability.processLeaseChecksPassed"),
         new("worker-supervisor", "HttpTests.exe worker-supervisor-only", "worker-supervisor-v{major}.log", "minimum 25; no TIA", "workerIsolation.faultChecksPassed"),
-        new("worker-protocol", "Test-WorkerIsolation.py", "worker-protocol-v{major}.log", "minimum 58; no TIA", "workerIsolation.protocolChecksPassed"),
+        new("worker-protocol", "Test-FoundationTransport.py", "worker-protocol-v{major}.log", "minimum 58; no TIA", "workerIsolation.protocolChecksPassed"),
         new("approval-safety", "Test-ReleaseApprovalGate.py --product engine", "approval-safety-v{major}.log", "exactly 7; no workbench/TIA", "approvalSafety"),
         new("software-lookup", "HttpTests.exe software-lookup-only", "software-lookup-v{major}.log", "minimum 45", "softwareLookupPassed"),
         new("engineering-api", "HttpTests.exe engineering-api-only", "engineering-api-v{major}.log", "V20 >= 2840; V21 >= 3126", "engineeringApiShapePassed"),

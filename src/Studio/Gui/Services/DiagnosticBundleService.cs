@@ -210,8 +210,10 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
             if (context.BundleRoot != null)
             {
                 string host = EnvironmentBundleFiles.Host(context.BundleRoot, release.Key);
-                string config = release.IsFullEngine ? host + ".config" : Path.ChangeExtension(host, ".runtimeconfig.json");
+                string config = Path.ChangeExtension(host, ".runtimeconfig.json");
                 inputs.Add(new("host-config", config, "config/hosts/" + release.Key + "/" + Path.GetFileName(config)));
+                string workerConfig = BundleLayout.WorkerPath(context.BundleRoot, release.Key) + ".config";
+                inputs.Add(new("host-config", workerConfig, "config/workers/" + release.Key + "/" + Path.GetFileName(workerConfig)));
             }
         }
         var auditRoots = context.AuditReadRoots ?? new[] { context.AuditDirectory ?? DataLocations.Current.AuditDirectory };

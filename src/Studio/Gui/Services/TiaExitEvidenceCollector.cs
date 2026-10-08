@@ -81,9 +81,11 @@ internal static class TiaExitEvidenceCollector
 
     private sealed class WindowsEventLogSource : ITiaExitEvidenceSource
     {
-        private const string ProductDumpName = @"^(Siemens\.Automation\.Portal|TiaMcp\.Engine\.V(?:20|21)|TiaMcp\.FoundationHost)\.";
-        private static readonly string[] ProductProcesses =
-            { "Siemens.Automation.Portal", "TiaMcp.Engine.V20", "TiaMcp.Engine.V21", "TiaMcp.FoundationHost" };
+        private static readonly string[] ProductProcesses = new[] { "Siemens.Automation.Portal" }
+            .Concat(TiaMcp.Versioning.TiaVersionCatalog.Runnable.SelectMany(release => new[] {
+                Path.GetFileNameWithoutExtension(BundleLayout.GetProduct(release.Key).Executable),
+                Path.GetFileNameWithoutExtension(BundleLayout.GetProduct(release.Key).WorkerExecutable) })).Distinct().ToArray();
+        private static readonly string ProductDumpName = "^(" + string.Join("|", ProductProcesses.Select(Regex.Escape)) + @")\.";
 
         public IReadOnlyList<TiaEvidenceEvent> ReadEvents(TiaEvidenceQuery query, DateTimeOffset sinceUtc, int maximum)
         {

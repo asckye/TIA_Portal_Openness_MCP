@@ -16,7 +16,7 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
-KEYS = ['14sp1', '15.1', '16', '17', '18', '19']
+KEYS = ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']
 USAGE_REPORTS = []
 INIT = {'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'foundation-transport-test', 'version': '1'}}
 
@@ -133,9 +133,67 @@ def exercise(client, key, logfile, expected_before):
     return len(names)
 
 
+def exercise_engine(client, key):
+    client.call('initialize', INIT)
+    tools = client.call('tools/list', {})['tools']
+    expected = json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))
+    assert {t['name'] for t in tools} == {t['name'] for t in expected['tools']}
+    for entry in tools:
+        result = client.call('tools/call', {'name': entry['name'], 'arguments': {'__invalid': True}})
+        body = json.loads(result['content'][0]['text'])
+        assert result['isError'] and body == result['structuredContent']
+        assert body['error']['code'] in ('INVALID_ARGUMENT', 'RESOURCE_UNAVAILABLE', 'UNSUPPORTED_CAPABILITY'), (entry['name'], body)
+        assert body['meta']['execution'] == 'not-started', (entry['name'], body)
+    result = client.call('tools/call', {'name': 'InitializeEnvironment', 'arguments': {}})
+    body = json.loads(result['content'][0]['text'])
+    assert body['schemaVersion'] == 4 and not body['data']['ready']
+    client.close()
+    return len(tools)
+
+
+def engine_transports(args, temp, counts):
+    for key in (key for key in args.releases if key in ('20', '21')):
+        data = temp / ('data-' + key)
+        data.mkdir()
+        env = dict(os.environ, TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
+        env.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
+        command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()),
+                   '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full']
+        with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
+            client = Stdio(command, env, stderr)
+            try:
+                counts[key] = exercise_engine(client, key)
+            finally:
+                if client.p.poll() is None:
+                    client.p.terminate(); client.p.wait(10)
+        with socket.socket() as port:
+            port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
+        url = f'http://127.0.0.1:{number}'
+        with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
+            process = subprocess.Popen(command + ['--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key'],
+                                       env=env, stdout=stderr, stderr=stderr)
+            try:
+                deadline = time.monotonic() + 60
+                while True:
+                    try:
+                        with Http(url).request('/mcp/health', auth=False) as response:
+                            assert json.load(response)['releaseKey'] == key
+                        break
+                    except urllib.error.URLError:
+                        assert process.poll() is None and time.monotonic() < deadline
+                        time.sleep(.1)
+                first, second = Http(url), Http(url)
+                exercise_engine(first, key)
+                exercise_engine(second, key)
+                assert first.sid and second.sid and first.sid != second.sid
+            finally:
+                process.terminate(); process.wait(10)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--fixture', type=Path, required=True)
+    parser.add_argument('--fixture', type=Path)
+    parser.add_argument('--releases', nargs='+', choices=KEYS, default=KEYS)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
@@ -146,7 +204,7 @@ def main():
         args.temp_root.mkdir(parents=True, exist_ok=False)
     with (nullcontext(args.temp_root.resolve()) if args.temp_root else tempfile.TemporaryDirectory(prefix='tia-foundation-wire-')) as temp:
         temp = Path(temp)
-        for key in KEYS:
+        for key in (key for key in args.releases if key not in ('20', '21')):
             logfile = temp / f'{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
             command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp)]
@@ -168,7 +226,7 @@ def main():
             calls = [r for r in records if r['stage'] == 'call']
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
-        for key in KEYS:
+        for key in (key for key in args.releases if key not in ('20', '21')):
             with socket.socket() as port:
                 port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
             url = f'http://127.0.0.1:{number}'
@@ -212,9 +270,10 @@ def main():
                     assert starts[0]['args'][3] != starts[1]['args'][3]
                 finally:
                     p.terminate(); p.wait(10)
+        engine_transports(args, temp, counts)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
-    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 12, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
-    print('PASS: six STDIO releases, twelve isolated HTTP sessions across six releases, dependency planning and Chinese worker roundtrip; native TIA NOT RUN')
+    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': len(args.releases) * 2, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
+    print(f'COMPLETE: {sum(counts.values()) * 3} Foundation transport checks passed; {len(counts)} releases; native TIA NOT RUN')
 
 
 if __name__ == '__main__':

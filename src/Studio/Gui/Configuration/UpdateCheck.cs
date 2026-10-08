@@ -144,7 +144,7 @@ namespace TiaMcpConfigurator
             var list = new List<string>();
             var names = TiaMcp.Versioning.TiaVersionCatalog.Runnable
                 .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct().ToList();
-            names.AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => "TiaMcp.PlcWorker." + release.Key).Distinct());
+            names.AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).WorkerExecutable)).Distinct());
             string boundary = String.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
             foreach (string name in names.Distinct())
             foreach (var p in Process.GetProcessesByName(name))

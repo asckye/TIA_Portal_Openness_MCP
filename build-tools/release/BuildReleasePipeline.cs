@@ -131,7 +131,7 @@ internal static partial class ReleaseCommands
             .Where(Directory.Exists)
             .SelectMany(directory => Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
             .Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config" ||
-                Path.GetFileName(path) is "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
+                Path.GetFileName(path) is "tool-catalog.json" or "release-key.txt" or "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(path => new { path = Path.GetRelativePath(Root, path).Replace('\\', '/'), length = new FileInfo(path).Length, sha256 = ReleaseRecords.HashFile(path) }).ToArray();
         var artifacts = new List<object>();
@@ -161,7 +161,7 @@ internal static partial class ReleaseCommands
             runtimeFiles, sourceFiles, validationInputs, validationArtifacts = artifacts
         };
         WriteJson(Path.Combine(Root, "manifest/release-build.json"), record);
-        var deliveryCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", releaseDate], "Delivery preparation");
+        var deliveryCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", releaseDate, "-Tier", ReleasePlan(options).Tier], "Delivery preparation");
         if (deliveryCode != 0) return deliveryCode;
         Console.WriteLine($"Built and checked both runtimes: {fileVersion}. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate.");
         return 0;
@@ -321,7 +321,7 @@ internal static partial class ReleaseCommands
                 RunBuildRaw(dotnet, ["build", project, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} engine build");
 
                 var built = Path.Combine(engineSource, major == 20 ? "bin-v20/Release/net48" : "bin/Release/net48");
-                var runtime = Path.Combine(Root, $"runtime/v{major}");
+                var runtime = Path.Combine(Root, $"runtime/v{major}/worker");
                 Directory.CreateDirectory(runtime);
                 var payload = Directory.EnumerateFiles(built).Where(path =>
                 {
@@ -342,8 +342,10 @@ internal static partial class ReleaseCommands
             finally { if (locked) buildMutex.ReleaseMutex(); }
         }
 
-        var exe = Path.Combine(Root, $"runtime/v{major}/TiaMcp.Engine.V{major}.exe");
+        var exe = Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe");
         RequireFile(exe, "Built engine EXE missing");
+        RunBuildRaw(exe, ["--write-tool-catalog", Path.Combine(Path.GetDirectoryName(exe)!, "tool-catalog.json")],
+            Path.Combine(outputDirectory, $"tool-catalog-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} worker catalog");
         if (FileVersionInfo.GetVersionInfo(exe).FileVersion != fileVersion) throw new ReleaseException($"V{major} runtime version mismatch");
         if (plan.Includes("engine-functional"))
             RunBuildSpec("example-library", harness, [exe, "example-library-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
@@ -356,7 +358,7 @@ internal static partial class ReleaseCommands
             using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
             coverage = coverageDoc.RootElement.Clone();
             var adapterCoveragePath = Path.Combine(outputDirectory, $"adapter-native-call-coverage-v{major}.json");
-            var adapter = Path.Combine(Root, $"runtime/v{major}/TiaMcp.Adapter.{major}.dll");
+            var adapter = Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll");
             RunBuildSpec("adapter-native-coverage", dotnet, [packagedWeaver, "verify", adapter, adapterCoveragePath], outputDirectory, runTemp, cliHome, apiRoot, major);
             using var adapterCoverageDoc = JsonDocument.Parse(File.ReadAllText(adapterCoveragePath));
             var adapterCoverage = adapterCoverageDoc.RootElement.Clone();
@@ -383,9 +385,9 @@ internal static partial class ReleaseCommands
         {
             var workerText = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
             workerFaults = RequireCount("worker supervisor", workerText, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
-            var protocolText = RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-WorkerIsolation.py"), "--exe", exe,
-                "--major", major.ToString(), "--host-harness", harness, "--public-api", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-            workerProtocol = RequireCount("worker protocol", protocolText, "COMPLETE: (\\d+) isolated MCP checks passed; no TIA connection attempted", "workerProtocol");
+            var protocolText = RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
+                "--releases", major.ToString(), "--output", Path.Combine(outputDirectory, "foundation-transport")], outputDirectory, runTemp, cliHome, apiRoot, major);
+            workerProtocol = RequireCount("worker protocol", protocolText, "COMPLETE: (\\d+) Foundation transport checks passed", "workerProtocol");
 
         }
 
@@ -414,9 +416,19 @@ internal static partial class ReleaseCommands
         var resources = 0;
         if (plan.Includes("resource-discovery"))
         {
+        var fixtureDirectory = Path.Combine(outputDirectory, "resource-sdk-worker");
+        RunBuildRaw(dotnet, ["build", Path.Combine(Root, $"src/Engine/TiaMcpServer.V{major}.csproj"), "-c", "Release", "-v:q",
+            "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", "-p:TiaMcpEngineWorkerSdkFixture=true",
+            "-p:AppendTargetFrameworkToOutputPath=false", $"-p:OutputPath={fixtureDirectory}", $"-p:SiemensEngineeringDirectory={api}"],
+            Path.Combine(outputDirectory, "resource-sdk-worker-build.log"), runTemp, cliHome, apiRoot, null, "Resource SDK worker build");
+        var fixtureWorker = Path.Combine(fixtureDirectory, $"TiaMcp.Engine.V{major}.exe");
+        var fixtureCatalog = Path.Combine(fixtureDirectory, "tool-catalog.json");
+        RunBuildRaw(fixtureWorker, ["--bundle-root", Root, "--write-tool-catalog", fixtureCatalog],
+            Path.Combine(outputDirectory, "resource-sdk-worker-catalog.log"), runTemp, cliHome, apiRoot, null, "Resource SDK worker catalog");
         var usagePath = Path.Combine(outputDirectory, $"tool-usage-v{major}.json");
-        var resourcesText = RunBuildSpec("resource-discovery", python, [Path.Combine(Root, "scripts/checks/Test-ResourceDiscovery.py"), "--exe", exe,
-            "--portal-root", api, "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--usage-output", usagePath], outputDirectory, runTemp, cliHome, apiRoot, major);
+        var resourcesText = RunBuildSpec("resource-discovery", python, [Path.Combine(Root, "scripts/checks/Test-ResourceDiscovery.py"), "--exe", Path.Combine(Root, $"runtime/v{major}/TiaMcp.FoundationHost.exe"),
+            "--portal-root", api, "--major", major.ToString(), "--engine-worker", fixtureWorker, "--engine-catalog", fixtureCatalog,
+            "--public-api", api, "--usage-output", usagePath], outputDirectory, runTemp, cliHome, apiRoot, major);
         resources = RequireCount("resource discovery", resourcesText, "COMPLETE: (\\d+) resource discovery checks passed");
         }
         JsonElement v21Ecosystem = default;
@@ -484,7 +496,7 @@ internal static partial class ReleaseCommands
             v21EcosystemAdapters = plan.Includes("engine-ecosystem") ? (JsonElement?)v21Ecosystem : null,
             isolatedLocalStability = plan.Includes("engine-isolated-stability") ? (JsonElement?)isolatedStability : null,
             sessionStability = new { processLeaseChecksPassed = processLeases, nativeMcpSafetyChecksPassed = GetJsonInt(common, "nativeMcpSafetyChecksPassed"), crashEvidenceChecksPassed = GetJsonInt(common, "crashEvidenceChecksPassed"), nativeMcpExecuted = false },
-            nativeDiagnostics, workerIsolation = plan.Includes("engine-worker-isolation") ? new { enabledByDefault = false, faultChecksPassed = workerFaults, protocolChecksPassed = workerProtocol, nativeAcceptance = "NOT RUN", protocolScriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-WorkerIsolation.py")) } : null,
+            nativeDiagnostics, workerIsolation = plan.Includes("engine-worker-isolation") ? new { enabledByDefault = true, faultChecksPassed = workerFaults, protocolChecksPassed = workerProtocol, nativeAcceptance = "NOT RUN", protocolScriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py")) } : null,
             approvalSafety = plan.Includes("engine-approval") ? new { status = "passed", checksPassed = GetJsonInt(approval, "checksPassed"), defaultEnabled = true, directWriteRefusedBeforeDispatch = true, callToolWriteRefusedBeforeDispatch = true, readSucceeded = true, workbenchConnected = false, tiaConnected = false, scriptSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py")) } : null,
             engineeringLiveEdits = "NOT TESTED; preview/API shape and offline behavior only",
             unifiedGraphicLists = major == 21 ? "API present; native import not live-tested" : "not exposed by supplied V20 API",
@@ -552,7 +564,7 @@ internal static partial class ReleaseCommands
         using var coverageDoc = JsonDocument.Parse(File.ReadAllText(coveragePath));
         var coverage = coverageDoc.RootElement;
         var adapterPath = Path.Combine(outputDirectory, $"jit-adapter-v{major}.json");
-        RunBuildSpec("adapter-native-coverage", dotnet, [weaver, "verify", Path.Combine(Root, $"runtime/v{major}/TiaMcp.Adapter.{major}.dll"), adapterPath], outputDirectory, runTemp, cliHome, apiRoot, major);
+        RunBuildSpec("adapter-native-coverage", dotnet, [weaver, "verify", Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll"), adapterPath], outputDirectory, runTemp, cliHome, apiRoot, major);
         using var adapterDoc = JsonDocument.Parse(File.ReadAllText(adapterPath));
         var adapterCoverage = adapterDoc.RootElement;
         var nativeJitText = RunBuildSpec("native-diagnostics-jit", harness, [exe, "native-diagnostics-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
@@ -568,7 +580,7 @@ internal static partial class ReleaseCommands
 
     private static void RunShippedRuntimeChecks(string dotnet, string v21Api, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome, ReleaseCheckPlan plan)
     {
-        var exe = Path.Combine(Root, "runtime/v21/TiaMcp.Engine.V21.exe");
+        var exe = Path.Combine(Root, "runtime/v21/worker/TiaMcp.Engine.V21.exe");
         var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
         if (plan.Includes("engine-functional")) RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
         if (plan.Includes("engine-functional")) RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);

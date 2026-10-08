@@ -201,3 +201,5 @@ Studio 不需要配置 MCP，也不需要 AI 客户端。下面使用中文界�
 V20/V21 MCP 服务即使没有检测到 TIA、安装版本与引擎不匹配，或当前用户尚未加入 `Siemens TIA Openness` 组，也会保持服务启动，让 AI 读取诊断和工具目录。`InitializeEnvironment` 与环境诊断会说明原因和修复步骤；需要 TIA 的调用会返回 `RESOURCE_UNAVAILABLE`，并标记操作尚未开始。先按提示安装对应版本及 Openness，或把当前用户加入本机 Openness 组并注销、重新登录。
 
 4.0 发布版默认不启用 Openness 工作进程隔离。配置器生成的客户端命令不加入隔离参数；用户自行编辑启动命令时可用 `--isolate-openness` 启用，或用 `--no-isolate-openness` 明确关闭。用 `GetOpennessWorkerStatus` 查看当前状态。真机验收完成前，默认保持关闭。
+
+八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。V20/V21 的完整目录与引擎 worker 自动从 `worker/` 子目录加载，保持完整解压包即可。

@@ -18,7 +18,7 @@
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 手动检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py) | lite 清单专项检查，需已构建引擎与测试 harness；默认 CI/发布链不执行 |
 | 检查 | [Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，发布链执行；需相应环境或测试 harness |
-| 检查 | [Test-WorkerIsolation.py](checks/Test-WorkerIsolation.py)、[Test-LocalStability.py](checks/Test-LocalStability.py) | 本地 worker 故障恢复、分页与宿主退出；普通/隔离模式压力及日志配对。使用测试宿主，不连接 TIA；双版本构建门自动执行 |
+| 检查 | [Test-FoundationTransport.py](checks/Test-FoundationTransport.py)、[Test-LocalStability.py](checks/Test-LocalStability.py) | 本地 worker 故障恢复、分页与宿主退出；普通/隔离模式压力及日志配对。使用测试宿主，不连接 TIA；双版本构建门自动执行 |
 | 检查 | [Test-DownloadRouteSelection.cs](checks/Test-DownloadRouteSelection.cs)、[Test-MatchPlcName.cs](checks/Test-MatchPlcName.cs) | 路由与名称匹配回归；可用 `-SourceOnly` 编译生产成员，否则转到 net48 HttpTests 反射引擎 |
 | 检查 | `HttpTests.exe <engine.exe> test-migration-read-assembly <PublicAPI>`、`test-ecosystem-assembly <PublicAPI>` | 反射迁移程序集和生态工具行为；由 Build-Release 调用，离线缺依赖时可加 `--skip-pdf --skip-companion` |
 | 检查 | [Test-AdapterInputs.cs](../src/Adapters/build/Test-AdapterInputs.cs)、[Test-WorkerIsolation.cs](../src/Adapters/build/Test-WorkerIsolation.cs) | C# file-based app：适配器输入选择与八版 worker 隔离证据 |
@@ -33,7 +33,7 @@
 | 诊断 | [Probe-McpServer.py](diagnostics/Probe-McpServer.py) | 直连 MCP 服务的探针（不经 MCP 客户端、绕过代理）：`tools [关键字]` / `call <lite 工具> '{…}'` / `bridge <任意工具> @args.json`；连接信息取 `~/.claude.json` 的 `tia-portal-vm` 或 `--url` / `--token` |
 | 诊断 | [campaign/](diagnostics/campaign/) | 真机批跑：`camp.py`（单调 / 按 plan 批跑并记 ledger）、`rawmsg.py`（UTF-8 看原文）、`plans/plan_*.py`（各族测试计划）、`make_ledger.py`（生成[真机台账](../docs/reference/real-machine-ledger.md)）、`export_full.py`；运行前按[原生验收说明](../docs/development/validation.md)选择当前测试环境；脚本内旧环境值需核实 |
 | 诊断 | [openness-dynamic-coverage.json](diagnostics/openness-dynamic-coverage.json) | 经反射 / 泛型到达、类型名不出现在源码里的 Openness 类型登记表（`pattern` / `tool` / `mechanism` / `verified`），覆盖审计据此计入"动态覆盖" |
-| 操作 | [CLI 入门](../docs/getting-started/cli.md) | 生成工程和预热直接运行 `runtime\v21\TiaMcp.Engine.V21.exe gen <spec>` / `prewarm`；V20 使用对应 `runtime\v20` EXE |
+| 操作 | [CLI 入门](../docs/getting-started/cli.md) | 生成工程和预热直接运行 `runtime\v21\worker\TiaMcp.Engine.V21.exe gen <spec>` / `prewarm`；V20 使用对应 `runtime\v20` EXE |
 | 操作 | [vci-watch](operations/vci-watch/watch.py) | `python watch.py --register-task [--interval-minutes 10]` 注册当前用户的 `pythonw.exe` 计划任务；`python watch.py --register-task --remove` 删除 |
 | 操作 | `runtime/tools/TiaMcp.Updater.exe` | 在已解压的交付包里更新或回滚；手动运行时从包根传入 `-InstallRoot .`；支持 `-Check`、`-Version`、`-Force`、`-Repository`、`-TimeoutSeconds`、`-WaitForPid`、`-Rollback` 和 `-RelaunchConfigurator`；不连接 TIA、不结束进程，保留用户数据及未归更新器所有的文件 |
 

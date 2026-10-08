@@ -28,10 +28,10 @@
 | V15.1 | 58 | PLC 基础引擎 |
 | V16 / V17 / V18 | 各 60 | PLC 基础引擎 |
 | V19 | 62 | PLC 基础引擎 |
-| V20 | 477 | 完整引擎 |
-| V21 | 488 | 完整引擎 |
+| V20 | 487 | Foundation 主机 + 引擎 worker |
+| V21 | 498 | Foundation 主机 + 引擎 worker |
 
-V20/V21 默认 lite 档显示 63 个常用工具，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。旧版本直接显示各自的基础目录，参数和返回值可能不同。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
+V20/V21 默认 lite 档显示 73 个常用工具，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。八版统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`；V20/V21 自动发现 `worker/` 下的引擎与工具目录，八版共有工具采用同一份 Foundation 代码、参数和用法。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
 
 AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取本版参数、示例和结果解释；用 `language` 查编程语言示例，用 `exampleId` 取完整源码或调用序列。全部工具共用这套示例入口，官方 API 模式与本项目封装示例分别标明。
 

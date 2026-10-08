@@ -1,419 +1,688 @@
 {
-    "generatedAt":  "2026-10-04T22:25:05.8987932+00:00",
-    "testsPassed":  197,
-    "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
-    "executable":  {
-                       "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "136efe9a9eab75fb0f874206e3bacb7d60f4cb2a25c58df422fde84eed785370"
-                   },
-    "sourceFiles":  [
-                        {
-                            "path":  "scripts/build/Build-Configurator.ps1",
-                            "sha256":  "1b45e185b2fb7ab506789b88e36b6d317d3528256bc952507cbf91b305d1ec8c"
-                        },
-                        {
-                            "path":  "tools/openness-shared/BundleLayout.cs",
-                            "sha256":  "41edef9024f3efd577f868922a567c51de57baea4d14e6647f530f2c41857942"
-                        },
-                        {
-                            "path":  "tools/openness-shared/LocalProcess.cs",
-                            "sha256":  "2a8c845587e0aade157e08b7ef4165b2f99b6295cc2f11848637765e62285895"
-                        },
-                        {
-                            "path":  "tools/openness-shared/OpennessEnvironment.cs",
-                            "sha256":  "792872f6310a7d98860508e585ddd9463baaada196cc6d3d38291b55fd673a42"
-                        },
-                        {
-                            "path":  "tools/openness-shared/ProcessArguments.cs",
-                            "sha256":  "23e95bc2b97f65f0092d88a7c41108971062ce358a671c7b7c5204211f392f22"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/Directory.Build.props",
-                            "sha256":  "bb48dc51a885ca3c2ccd81ff3e1f9f56dbed6de99497d8bfafe726cb3ae2760b"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Bridge/Program.cs",
-                            "sha256":  "fa0fe12c2ce2c19ed0f91db77912ade4b9be810e45dd6c530f0f8efd31062f66"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Bridge/TiaOpenness.Bridge.csproj",
-                            "sha256":  "7d9002fa36490fcb358f7d419202236570ca4fd8a70cbf9bddfb8df46ab67281"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Client/BridgeClient.cs",
-                            "sha256":  "389381377eab20156ca990bf77047e1add7a147d61024813f218c6bcc260aa0e"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Client/TiaClient.cs",
-                            "sha256":  "d14f551e5948f90a9a3a94646f502f4723f6a1ba5473fcafb4ab8c3ee1fbd34d"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Client/TiaOpenness.Client.csproj",
-                            "sha256":  "b6c8940933b0695adbf219adfb8f0c112348588f7fd3c3440511deeaa51386f9"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Contracts/Models/Dto.cs",
-                            "sha256":  "818ace2de7e0f63e8fad0cdeea08673d7e100af60a1370b9d10bbb7521903e71"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Contracts/Models/Enums.cs",
-                            "sha256":  "77550e03d66c8df5d54164841ffd8caa5b80335b15b3f7d0e5f1658598e15032"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Contracts/Models/VersionControl.cs",
-                            "sha256":  "0f7d11e008b247fef6dd7b61f1c3bcacf3e820f2dd94e239b344e7c587d11be8"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Contracts/Rpc/BridgeJson.cs",
-                            "sha256":  "ef1a3b55f5a9e17b360beb23d384829bd5d1911b210f90bea3dbb2c45ac0244f"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Contracts/Rpc/JsonRpc.cs",
-                            "sha256":  "bbc35638893ca382e36ea184785b2fe7f49db4a0e351d003885d182e3d117f9b"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Contracts/TiaOpenness.Contracts.csproj",
-                            "sha256":  "451157732ee7708757cdb2cfad9e9efe01a7f2910d306764dbecca713b872d79"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/ITiaSession.cs",
-                            "sha256":  "4dedbda2fdd732f41d001e8e160f286c61d2512257bff8b27221af2489c19b99"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/IVersionControl.cs",
-                            "sha256":  "98896958190439fc74cb98a89ad52edc51e72e4eec64a322893dcc3b96cf4923"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs",
-                            "sha256":  "2294c750604333992d5005c686ff7431cc22ab98d50ef006fae84639cf2f8903"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/UnavailableSessionFactory.cs",
-                            "sha256":  "13e014aa270607ec4e1dbd9e4d9e9a95ddd2d4eb75082f248b6cf646e896a3ea"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/AdapterSessionFactory.cs",
-                            "sha256":  "ca0f06dc301dfbd9bc37e86b04970f1ccda1bbb0d7283134dacd4834618ce5f7"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/AdapterTiaSession.cs",
-                            "sha256":  "2306ca36d9106e003687d30a2d8249c793f87affd2b34150fa5018f2885bd717"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/BridgeChannel.cs",
-                            "sha256":  "9a9f23a06f09f37bd0f4b2c3934a23f6482d00496e41102baa33092a9f495144"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/SessionFactoryLoader.cs",
-                            "sha256":  "33409dae7533903c82bf8db01a8aedbca270a08f8de4ebca22f0abf20e16bf1a"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/StudioDtoMap.cs",
-                            "sha256":  "eb6e88db9491e11396dc0fc5e18257e6971fc643e9f170e697702c5da008cf88"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessAssemblyResolver.cs",
-                            "sha256":  "4c043f5aa7a0fb04e55da13533e6a99af83e06f594752d5d1cb07a9ea4711c92"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessDoctor.cs",
-                            "sha256":  "0c22fa691bc13d77ab11b3814b8654e863f780c2637f77509b0a45b228d9b072"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessLocator.cs",
-                            "sha256":  "ef9bcd23da4d643d50889dea7fa4fa2ac070dd25b21fad52c84e70beadf36c04"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Inspection/GitWorkspaceDiff.cs",
-                            "sha256":  "e6b1aecb49f683cfd6fa95c2fa5bd3d440982338ae7f4bd89f10ab4f015a4126"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Inspection/InspectionEngine.cs",
-                            "sha256":  "0f4d31be4b3532f1f6a1f89e984c5f7dea73b01bc4b2004ae62ff6d22c8f6a12"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Mock/MockTiaSession.cs",
-                            "sha256":  "9f0eda01d177d6350c172e5a509817633055f1377d27524082c89425fde8693b"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Mock/MockVersionControl.cs",
-                            "sha256":  "406250cd769ed9fa133b3b27977ced2e73470de4ffa45a58bcaa827bd79dc151"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs",
-                            "sha256":  "ce7773dc8b60e5800be2f06af84cbdf397b6bae6857fd0a85017968fb0d04d3d"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/RpcDispatcher.cs",
-                            "sha256":  "9adc61d5d1c8a5a0872b74f51f3aae6874571bf71928b5e2a2d21a76da3d0c67"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/VersionControlUnsupportedException.cs",
-                            "sha256":  "347762d674d706cb710f83b214e94d663d6c4cfc5d371483625037464d114608"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Core/TiaOpenness.Core.csproj",
-                            "sha256":  "81b77252b0bce69ad35dda64a71b20c55874cd6e7fb3034e0a0959d8acd90d7d"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/App.xaml",
-                            "sha256":  "b4bbfbc99f663865cb4f6e5f5a60fb391d4b3f962f60da47edd7e9dc5bad1a0b"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/App.xaml.cs",
-                            "sha256":  "801ac4a6c9628202386bfcc076ac37fe5ecd74779abcbb9b34cb428903bd0bbd"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/AssemblyInfo.cs",
-                            "sha256":  "50998a8f562cbef745de0be8f1b2d96c05956ba5eec2940e490f93c812b974cd"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Common/Mvvm.cs",
-                            "sha256":  "79f2d10c47de7ed48f3c0e72dd2fc933469a69afbbdb4aef32c4842b32b82ab9"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs",
-                            "sha256":  "d6a0fbcdf2e855dc17969c1140477a333d97b37fd99874dd5470d4ee047ae05f"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs",
-                            "sha256":  "e4b3e58da55e351c0afdae99b7f01d63b22e891c6e446aff69b0bdfb39ac06b3"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml",
-                            "sha256":  "859cb21e214261fceb95c72040b49671be69bba4212cc18b5b1468f8777c5608"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs",
-                            "sha256":  "ce5f0407b5a6ab27c933affef03319587e765ca21bd8344efcb727b90c7e2afe"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs",
-                            "sha256":  "374d2a456f495a7ae003591092468fab6fa35b01c2677e7ca805112f9fbe216e"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs",
-                            "sha256":  "23af763e84197cb27e9eb9befe5ff0ef69157e838f360bf2dfc13bdf618150c1"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ConfigurationPage.cs",
-                            "sha256":  "09e140a64ed2813c1e1f4102727c11c43a9d397d30e4f95397a89fd55eb2d548"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/BoolConverters.cs",
-                            "sha256":  "00a98cd03993a181e87e29ee43eaa9bbd1249da4c4bd3bc8adce227b6290f8f2"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassLogView.cs",
-                            "sha256":  "cb89d5dd6e41c5be9f66c5090998f82d8f5076147edabdf024ad75155d50bc98"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassMessageBox.cs",
-                            "sha256":  "7f92436eea92ec1199ca16de4df06485f82959757608f8a5bce8df09aa40dbdf"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassPresentation.cs",
-                            "sha256":  "2f03a94bcf535cf4999530925523b422007d307be49d035cfd0cf06dc4746cc1"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/Ux.cs",
-                            "sha256":  "03d3f3e1851930f52931ff6fdb3f023cef905c4ddc685a1d723bc394d4c7a433"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/WorkbenchCommands.cs",
-                            "sha256":  "4b0cd26cedcdcda8c7fea870d50843f43ff7e09373d05f170642f1996b49ea72"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Medium.ttf",
-                            "sha256":  "d16e6dc99672734698d629705f617c79f6eb6040f5113efe3a145204dc988109"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-OFL.txt",
-                            "sha256":  "a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Regular.ttf",
-                            "sha256":  "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Bold.ttf",
-                            "sha256":  "fbd7be7920420c6b578fed97bf3cf5f290ccc57d6d5133f2e7b86f8e920bc428"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Medium.ttf",
-                            "sha256":  "35bdfc2887027213040e5767c6bc15a0294686a637fff516e5517e51bd59d577"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-OFL.txt",
-                            "sha256":  "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Regular.ttf",
-                            "sha256":  "d51189da4d8784379aa44ef261730c24c241e98ed272d1c4c513789a1f448f6e"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-SemiBold.ttf",
-                            "sha256":  "857ad79181f4aff33a51bdaaeedbae6595888086580295ff438fc331c7ba4dba"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/SOURCES.txt",
-                            "sha256":  "edc3f81a7ccbd77f2d12e2a9432898ab5f7f1ff90a88cb473195a0efbe91f545"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Localization/Loc.cs",
-                            "sha256":  "f2dfcf135e776f83965e4e872126ae57e93dd225c9d6369b67827b55802f31d5"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Localization/LocalizedText.cs",
-                            "sha256":  "4a216b98379eeabbc50ad3ea56e241112b3ba956d24e64f049a011056ef64cb6"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Localization/Strings.cs",
-                            "sha256":  "23a68e7326d7472fe9ee841febe4c645020d77f77ae62d93ce01ebbf844cd472"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Localization/TrExtension.cs",
-                            "sha256":  "701476b29d5ed2a83d2e6f34377f194d8f00b2ac58a7cf8cc35495416d9a918e"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/MainWindow.xaml",
-                            "sha256":  "556ac0cbb4207877c38a8f4462df0ca0ed1ad098897195a2d5cced5a303983dd"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/MainWindow.xaml.cs",
-                            "sha256":  "9770baa95b9c3ac0f5912a6dac8bc90c4471916dbd606d88d59b7dc9315b54a6"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Services/IDialogService.cs",
-                            "sha256":  "eb35f4f33c0add1ef597bc4ff4713c481c3eec1c0bd5811ee9e32fccd8f51233"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Services/IStudioClient.cs",
-                            "sha256":  "eabdac1dfc3517db5b27fb1b82c251ec39f3680800b07a2ef45c245e446edf95"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Services/StudioClient.cs",
-                            "sha256":  "93bb3d8f1079ddba00cf602089161f3576e4a040f54b1e3ca4beb2b3901399b3"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Services/WorkbenchActivity.cs",
-                            "sha256":  "ebf0be8208b4cd32c45d603c8654e19ef2fd7c4c4b3a1d6b575755ac46efb57c"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Services/WpfDialogService.cs",
-                            "sha256":  "ff88ea490bd70b155d334e6e22bb24a5d7de9f34cbbc47df325821fabcd0a94d"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Settings/UiSettings.cs",
-                            "sha256":  "4b069960d12dfc27bbf92138c880c3c5020d012475f52a20af94ac24b4b2693c"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Controls.Buttons.xaml",
-                            "sha256":  "659f3e6176883fc778b3ee84956cafef6edbc6d847c18224a8bb403005fed65f"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Controls.Collections.xaml",
-                            "sha256":  "ab98a552fce3d902f78fb29a280f11c9c38b6efea91f20f31295b731030292eb"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Controls.Inputs.xaml",
-                            "sha256":  "d274ed09c9fe4e93062b12c0d9235529cba83fe72b5b37be9a8cf53180ca11de"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Controls.Navigation.xaml",
-                            "sha256":  "a41189dced07dcea1c5b2ea5d1e41d4304350b580119ed4a1851cbbe1ca6b4d3"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.Studio.xaml",
-                            "sha256":  "0a2dad873d79ef7bb556748064186ad576d64bd2be22f33ccabcbf812a1e285a"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml",
-                            "sha256":  "cbc2ed5ecfe254cc5e57d5a3a7c82d75e110e792beb5cd2563d2168b737babd3"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Icons.xaml",
-                            "sha256":  "33104d1cb9159ca3710e406a6ef13535b853e2bf75f91d8b441279e3613a7a49"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Dark.xaml",
-                            "sha256":  "e9c0df919950a7defa6aabcefeb759acaac07d08ffb2f86d1baaccdfc770b5a9"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Light.xaml",
-                            "sha256":  "1ed45c48149de2790990e3f83fecc016527d9500e9fcb1ab5f770d129afcc50d"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/ThemeManager.cs",
-                            "sha256":  "2fcdc1c229c65cfcd6764a0e2b7892abccf279249d1b6f2f9ed0030ac2eee3e0"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Typography.xaml",
-                            "sha256":  "e5be48512974678cf1cb9e856ae53f6250865a91f76703938f7a008062dcfa2d"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Window.xaml",
-                            "sha256":  "b79304e9af6f3381945e8950c751c33a7dc75f1b6b8a33082f72f0588072eb37"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj",
-                            "sha256":  "2886856b932372dfdc989762d9c2366005ed9106331421ae01e439b57fbe3327"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/BlockNode.cs",
-                            "sha256":  "f7d9f86787f8b10e5bce86e5cb48ee06375f2614686c9943d33281fbe5806c55"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/BlockRow.cs",
-                            "sha256":  "4717fe5971e0e01b4fc08f8cbb2df9f8a85eb21e5937936d7dbed3abf835f6da"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/DeviceNode.cs",
-                            "sha256":  "b5495e331d353bea3b306eab536585c546e4276db13688ae5d902113c1aeb1fe"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/EngineeringViewModel.cs",
-                            "sha256":  "d3d8837a265c16c73495bb02ac2f22614c8345f48902d900f5863c7824663490"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/MainView.cs",
-                            "sha256":  "b516850a40c7af3e5b40c248ba44626cb61f055baafa6c74a174b679f3253460"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/MainViewModel.cs",
-                            "sha256":  "b54cc89650c8a6025cdcc01d1b92eceda985f39bfb126f67df32d6545adefe89"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/SessionViewModel.cs",
-                            "sha256":  "f39b86c25cf5dc6621f73462e3f40b382f39ef864f3ca5504b35d88a1cc7a84b"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Gui/ViewModels/VersionControlViewModel.cs",
-                            "sha256":  "ccf3458cbc2ad251062b200b7da3fc00094d2fd24665ce2ae2143e41bf367aea"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs",
-                            "sha256":  "d049d51177609184e264da6bee0a3ffbd0b9289dd409c945595381787893b647"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/tests/Directory.Build.props",
-                            "sha256":  "59e7865c13478347516803193004d3dd729f00b3cb601c643b33b262adb1f697"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs",
-                            "sha256":  "c2d5aa31e32d586f0971d8f302b6b727b0a8ee498bd92f5f707a1c2fd4bdb424"
-                        },
-                        {
-                            "path":  "tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj",
-                            "sha256":  "ae87ded03252ccf24c3492ecb558773d7adc6edee7c447586440c9859fa9df55"
-                        },
-                        {
-                            "path":  "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs",
-                            "sha256":  "669ef39b846b865fc9fe5bd4e3784c5f3562013a76805b465fd0dc28f44ecd97"
-                        },
-                        {
-                            "path":  "Version.props",
-                            "sha256":  "3e3efe162111072d1c20c90866499471d95575516ca721c30e8d09220d634d38"
-                        }
-                    ]
+  "tier": "package",
+  "generatedAt": "2026-10-08T09:10:03.4346420\u002B00:00",
+  "testsPassed": 0,
+  "realTiaAcceptance": "NOT PERFORMED; isolated client configuration and WPF tests only",
+  "executable": {
+    "path": "TiaOpenness.exe",
+    "sha256": "450f91e392eab4108c4339dbb68995e3ff7971a17418f894d5c0159f9e2fbd7c"
+  },
+  "sourceFiles": [
+    {
+      "path": "build-tools/release/BranchGate.cs",
+      "sha256": "557a77a9d82c0fdb48faf34588f13b19ac6ce39a6b4084856a211b7bdf3803da"
+    },
+    {
+      "path": "build-tools/release/BuildOutputCache.cs",
+      "sha256": "d1b84d4de067b2b337c343db54102b531d28fc1aed00356b615bf2114805ad46"
+    },
+    {
+      "path": "build-tools/release/BuildReleasePipeline.cs",
+      "sha256": "d20ca9721620242dcccbeef6e3ef065bc3807d106eb2e9df3988393847878152"
+    },
+    {
+      "path": "build-tools/release/BundleManifestRequirements.cs",
+      "sha256": "20b1492164e0b375f2fd634dd3266dba09c57a37fccb09c3e6c43cbe6e5bd807"
+    },
+    {
+      "path": "build-tools/release/ParallelPipeline.cs",
+      "sha256": "6049b0b4c21567532b40425588444aae00b7dc7cd3f55d238898c7e7df1484de"
+    },
+    {
+      "path": "build-tools/release/Program.cs",
+      "sha256": "89530618acf9ba2d867e648ceca7fb10bb26e7dc0209de247f16f32d4598ade9"
+    },
+    {
+      "path": "build-tools/release/ReleaseCandidateChecks.cs",
+      "sha256": "87bfded7332582c9ff10f06844c7505add6ec813126423dbff9b0c81d7f65278"
+    },
+    {
+      "path": "build-tools/release/ReleaseCommands.cs",
+      "sha256": "83c9efd2a7ce3f2cbd4a56d2a02893d1ac2f455988212bac10a6809815c231e9"
+    },
+    {
+      "path": "build-tools/release/ReleaseCommandTable.cs",
+      "sha256": "46ac075a3ac37ec9fb1794b362b4ad16ae148ad02037e6e6ccc50259f6a3b39f"
+    },
+    {
+      "path": "build-tools/release/ReleasePrerequisites.cs",
+      "sha256": "a5fc9185f4f244f416d52b2dc30932ba2d1f344a4d9eed73005ffa6a104ae390"
+    },
+    {
+      "path": "build-tools/release/ReleaseProduction.cs",
+      "sha256": "bc7a916b03a8ed0c6e18cbb8d0307db8079b414124c96d8ecf0399f2c16087f1"
+    },
+    {
+      "path": "build-tools/release/ReleasePublisher.cs",
+      "sha256": "c5972257242cff3b0245fbeadcb1ba05c12f57baa01bdc98de88dc58891c93ad"
+    },
+    {
+      "path": "build-tools/release/ReleaseRecords.cs",
+      "sha256": "4eb153dad76ce50e8f10f857611a98d7e615f96336e60951d281ed6cbae54207"
+    },
+    {
+      "path": "build-tools/release/ReleaseRecordSnapshot.cs",
+      "sha256": "f1e2e8f1b002ff63aaeb6e544799d34b61da4eddbd50599f14217edc81826d43"
+    },
+    {
+      "path": "build-tools/release/ReleaseStageRunner.cs",
+      "sha256": "c8e8dd28dd3920aeff030a462ac0c73166931aaf52e210f6226c2aa8ab00189c"
+    },
+    {
+      "path": "build-tools/release/ReleaseTiers.cs",
+      "sha256": "892d2ff9a98591c41bbc547faf4e25104dd48cd3fb54a42cf9465f89e1131520"
+    },
+    {
+      "path": "build-tools/release/ReleaseValidation.cs",
+      "sha256": "4143413636f68756302c578a3caa2f04e5737404bcbf699d8bc1a9e992e23c1f"
+    },
+    {
+      "path": "build-tools/release/SourceRoots.cs",
+      "sha256": "b3f9edd328e20c8e20afd27a2421ce0bc62ea50bc91cbe803e34efe4f2d08a53"
+    },
+    {
+      "path": "src/Logic/Siemens/TiaVersionCatalog.cs",
+      "sha256": "f8484d9ada9f268d5e9888b9a9acffd803a165749cd32703a366be789b3b2f29"
+    },
+    {
+      "path": "src/Shared/BundleLayout.cs",
+      "sha256": "041280a2477f658d781b643a5c4b01c085bb97f4399642ca17928bff65ed4328"
+    },
+    {
+      "path": "src/Shared/LocalProcess.cs",
+      "sha256": "2a8c845587e0aade157e08b7ef4165b2f99b6295cc2f11848637765e62285895"
+    },
+    {
+      "path": "src/Shared/OpennessEnvironment.cs",
+      "sha256": "792872f6310a7d98860508e585ddd9463baaada196cc6d3d38291b55fd673a42"
+    },
+    {
+      "path": "src/Shared/ProcessArguments.cs",
+      "sha256": "23e95bc2b97f65f0092d88a7c41108971062ce358a671c7b7c5204211f392f22"
+    },
+    {
+      "path": "src/Studio/Directory.Build.props",
+      "sha256": "b01102cd0d61526c97b7d323866b6f536026661ff6c930fdb41eaca6e618e372"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf",
+      "sha256": "d16e6dc99672734698d629705f617c79f6eb6040f5113efe3a145204dc988109"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt",
+      "sha256": "a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf",
+      "sha256": "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/NotoSansSC-Bold.otf",
+      "sha256": "c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/NotoSansSC-OFL.txt",
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/NotoSansSC-Regular.otf",
+      "sha256": "faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9"
+    },
+    {
+      "path": "src/Studio/Gui/Fonts/SOURCES.txt",
+      "sha256": "9de0ae95791048fbd756e0fd82a8dc16f55c272303661ba0bdf256d77d0958b8"
+    },
+    {
+      "path": "src/Studio/Launcher/Launcher.cs",
+      "sha256": "b8371a9cf5c26aa6eadb13c708874c9c31b952b06f7922a727dffbc532c4b973"
+    },
+    {
+      "path": "src/Studio/Bridge/Program.cs",
+      "sha256": "c252708f07cdd42712284dfebe8049c44ceefa415b8fd58c2a5725b190c0ba05"
+    },
+    {
+      "path": "src/Studio/Bridge/TiaOpenness.Bridge.csproj",
+      "sha256": "f2ec2e493eb8d8a95df7846530fc816bdc5618025cbc45b9a75345ee51d77739"
+    },
+    {
+      "path": "src/Studio/Client/BridgeClient.cs",
+      "sha256": "12d126ef6561368012a81e98e2e8e23bde8a85bd046634facfa874601cc71a1c"
+    },
+    {
+      "path": "src/Studio/Client/TiaClient.cs",
+      "sha256": "d14f551e5948f90a9a3a94646f502f4723f6a1ba5473fcafb4ab8c3ee1fbd34d"
+    },
+    {
+      "path": "src/Studio/Client/TiaOpenness.Client.csproj",
+      "sha256": "e0d46ca374442aa2967bf54d387724ed827067b5e67017166c70f17b131d2e1d"
+    },
+    {
+      "path": "src/Studio/Contracts/Models/Dto.cs",
+      "sha256": "818ace2de7e0f63e8fad0cdeea08673d7e100af60a1370b9d10bbb7521903e71"
+    },
+    {
+      "path": "src/Studio/Contracts/Models/Enums.cs",
+      "sha256": "6f788d91a37643860c612bbaba75bd6b7a09818a8d3df9a54867e9148e86783f"
+    },
+    {
+      "path": "src/Studio/Contracts/Models/VersionControl.cs",
+      "sha256": "0f7d11e008b247fef6dd7b61f1c3bcacf3e820f2dd94e239b344e7c587d11be8"
+    },
+    {
+      "path": "src/Studio/Contracts/Rpc/BridgeJson.cs",
+      "sha256": "ef1a3b55f5a9e17b360beb23d384829bd5d1911b210f90bea3dbb2c45ac0244f"
+    },
+    {
+      "path": "src/Studio/Contracts/Rpc/JsonRpc.cs",
+      "sha256": "bbc35638893ca382e36ea184785b2fe7f49db4a0e351d003885d182e3d117f9b"
+    },
+    {
+      "path": "src/Studio/Contracts/TiaOpenness.Contracts.csproj",
+      "sha256": "451157732ee7708757cdb2cfad9e9efe01a7f2910d306764dbecca713b872d79"
+    },
+    {
+      "path": "src/Studio/Core/Abstractions/ITiaSession.cs",
+      "sha256": "4dedbda2fdd732f41d001e8e160f286c61d2512257bff8b27221af2489c19b99"
+    },
+    {
+      "path": "src/Studio/Core/Abstractions/IVersionControl.cs",
+      "sha256": "98896958190439fc74cb98a89ad52edc51e72e4eec64a322893dcc3b96cf4923"
+    },
+    {
+      "path": "src/Studio/Core/Abstractions/SessionFactoryLoader.cs",
+      "sha256": "6a3506d2ce971c53d1304180905560dbd2b6c9f4c1ac916c53b466ebf3d84ef5"
+    },
+    {
+      "path": "src/Studio/Core/Abstractions/UnavailableSessionFactory.cs",
+      "sha256": "13e014aa270607ec4e1dbd9e4d9e9a95ddd2d4eb75082f248b6cf646e896a3ea"
+    },
+    {
+      "path": "src/Studio/Core/Adapters/AdapterSessionFactory.cs",
+      "sha256": "ca0f06dc301dfbd9bc37e86b04970f1ccda1bbb0d7283134dacd4834618ce5f7"
+    },
+    {
+      "path": "src/Studio/Core/Adapters/AdapterTiaSession.cs",
+      "sha256": "2306ca36d9106e003687d30a2d8249c793f87affd2b34150fa5018f2885bd717"
+    },
+    {
+      "path": "src/Studio/Core/Adapters/BridgeChannel.cs",
+      "sha256": "9a9f23a06f09f37bd0f4b2c3934a23f6482d00496e41102baa33092a9f495144"
+    },
+    {
+      "path": "src/Studio/Core/Adapters/SessionFactoryLoader.cs",
+      "sha256": "3cd233a1a7fa1d01e76c5401ea2646bd74c2ffbfd1b0f8c998dcc88571146da1"
+    },
+    {
+      "path": "src/Studio/Core/Adapters/StudioDtoMap.cs",
+      "sha256": "eb6e88db9491e11396dc0fc5e18257e6971fc643e9f170e697702c5da008cf88"
+    },
+    {
+      "path": "src/Studio/Core/CallJournalReader.cs",
+      "sha256": "7b16b367202ba0407c779e3bee49cb126d44253ba45562745ec71fa37887889d"
+    },
+    {
+      "path": "src/Studio/Core/EngineToolResult.cs",
+      "sha256": "acfaa658a1a9043edac38cae4ecd58377dbb274404c02af49c6005bb10bb6e9d"
+    },
+    {
+      "path": "src/Studio/Core/Environment/DiagnosticRedactor.cs",
+      "sha256": "0d855a9f239cc1453eba8621fd306c3fb04ad0c0f03ebdd1539da24fb7f8b794"
+    },
+    {
+      "path": "src/Studio/Core/Environment/OpennessAssemblyResolver.cs",
+      "sha256": "4c043f5aa7a0fb04e55da13533e6a99af83e06f594752d5d1cb07a9ea4711c92"
+    },
+    {
+      "path": "src/Studio/Core/Environment/OpennessDoctor.cs",
+      "sha256": "0c22fa691bc13d77ab11b3814b8654e863f780c2637f77509b0a45b228d9b072"
+    },
+    {
+      "path": "src/Studio/Core/Environment/OpennessLocator.cs",
+      "sha256": "ef9bcd23da4d643d50889dea7fa4fa2ac070dd25b21fad52c84e70beadf36c04"
+    },
+    {
+      "path": "src/Studio/Core/Environment/WindowsEnvironmentSources.cs",
+      "sha256": "60356398f6b9d7e2dd630059e3fa9777d5fc91f3257e8da5bd4fd633b7395750"
+    },
+    {
+      "path": "src/Studio/Core/Environment/WorkbenchEnvironmentChecks.cs",
+      "sha256": "9b7db069508bbe2e3376597a3534201c4adad3a7b23b176508c9bb6497ed5c64"
+    },
+    {
+      "path": "src/Studio/Core/Inspection/GitWorkspaceDiff.cs",
+      "sha256": "e6b1aecb49f683cfd6fa95c2fa5bd3d440982338ae7f4bd89f10ab4f015a4126"
+    },
+    {
+      "path": "src/Studio/Core/Inspection/InspectionEngine.cs",
+      "sha256": "0f4d31be4b3532f1f6a1f89e984c5f7dea73b01bc4b2004ae62ff6d22c8f6a12"
+    },
+    {
+      "path": "src/Studio/Core/Mock/MockTiaSession.cs",
+      "sha256": "c3c31df3589f90b07dd19ec3fe6dec7a7377ad91810290a94f8db4ad2e77b88a"
+    },
+    {
+      "path": "src/Studio/Core/Mock/MockVersionControl.cs",
+      "sha256": "8d49fce70badb8e3f7c1d651f96d9c9aa9130b4c006024b44e469b8bc0ea7079"
+    },
+    {
+      "path": "src/Studio/Core/Rpc/BridgeChannel.cs",
+      "sha256": "ce7773dc8b60e5800be2f06af84cbdf397b6bae6857fd0a85017968fb0d04d3d"
+    },
+    {
+      "path": "src/Studio/Core/Rpc/RpcDispatcher.cs",
+      "sha256": "99b96dd4a3d536617d1992567dcb784cef2ea680b08a8caa8daab9f5d82872b9"
+    },
+    {
+      "path": "src/Studio/Core/Rpc/VersionControlUnsupportedException.cs",
+      "sha256": "347762d674d706cb710f83b214e94d663d6c4cfc5d371483625037464d114608"
+    },
+    {
+      "path": "src/Studio/Core/TiaOpenness.Core.csproj",
+      "sha256": "5c52bf175329d141d1740319239930984e2802863d835d0ae142d64ea10c3e1f"
+    },
+    {
+      "path": "src/Studio/Gui/App.xaml",
+      "sha256": "1cd2dafab027e5db5c026b739def061529fdbc7c4237c7c1a9094017a821438e"
+    },
+    {
+      "path": "src/Studio/Gui/App.xaml.cs",
+      "sha256": "95de8da09bed9e2362df0001ae4f2ac659866516315ab7db79323de599b61ca2"
+    },
+    {
+      "path": "src/Studio/Gui/AssemblyInfo.cs",
+      "sha256": "50998a8f562cbef745de0be8f1b2d96c05956ba5eec2940e490f93c812b974cd"
+    },
+    {
+      "path": "src/Studio/Gui/Common/Mvvm.cs",
+      "sha256": "94a24ca817a7f5e0bf434b33cfe3a995d100fa3d3dd095b0ab3ab9b8bec2a613"
+    },
+    {
+      "path": "src/Studio/Gui/ConfigurationPage.cs",
+      "sha256": "99335774283ec6a0bbd5c512c2b1126cdc8bfa1ab663171855b6ff9c55e11c05"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ClientConfigurationChange.cs",
+      "sha256": "95006f74e2fac1ec1b421f3d929c1325589bfe8e4da5d3685954684b092af6c2"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ClientProfiles.cs",
+      "sha256": "38f4f72f9590eb60a9c203d03d1452588ec6284160d1c9425606003bdff9dc9b"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ConfigCore.cs",
+      "sha256": "fe53130641b56d526a78a89054c347902f8279f5e1940f0c01132e5634c5e581"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ConfigurationPreview.cs",
+      "sha256": "c844549cc2725402671d8e12d49e39c956e84e775f5b101e9cd48cbf915dd808"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ConfigurationStrings.cs",
+      "sha256": "f67ecd45a97d83767548c91238b219651afa532a32a997f3b8a7ca200bb7f62e"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ConfigurationView.xaml",
+      "sha256": "fb9f3746600ddb141608c7e02c201d13078333cc38258183ce676ed2e61c81d3"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ConfigurationView.xaml.cs",
+      "sha256": "115936b5fd327f4dee313f05e14f8cfeaf89be6270d051da62c86b8b99745b2b"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/ModernJson.cs",
+      "sha256": "374d2a456f495a7ae003591092468fab6fa35b01c2677e7ca805112f9fbe216e"
+    },
+    {
+      "path": "src/Studio/Gui/Configuration/UpdateCheck.cs",
+      "sha256": "6f8f41787592641f9cf4807df917814c21b8abae6c4ca98965845fdf40ef8e00"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/BoolConverters.cs",
+      "sha256": "00a98cd03993a181e87e29ee43eaa9bbd1249da4c4bd3bc8adce227b6290f8f2"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/LogTailView.cs",
+      "sha256": "f827ac7a93e73b1afc0081710de61d28e0059b288cea99b065c41eaed2047d56"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/ResultPresentation.cs",
+      "sha256": "38ec42d4f3c3d0df2fa0c779d770b0a34a98cd28f9cb2d0cc6033cfa22bb5c42"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/TrackedTextBlock.cs",
+      "sha256": "3bc779244ce2ad9c17e0052e89c4075415e875a6c33c71929f3450643f764ada"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/Ux.cs",
+      "sha256": "03d3f3e1851930f52931ff6fdb3f023cef905c4ddc685a1d723bc394d4c7a433"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/WorkbenchCommands.cs",
+      "sha256": "0c5d9aa460177137d4f10e080cd185f8a157f058992791b81736df0cf65a3761"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/WorkbenchLogView.cs",
+      "sha256": "e4fff7cc4b83b3842596dab4038b58ec6efe6ab00c062b6fa810666e8714bde0"
+    },
+    {
+      "path": "src/Studio/Gui/Controls/WorkbenchMessageBox.cs",
+      "sha256": "6c26671341815b8d6de256cc73432e17a668e2557c8bdefc6337edb61ded937b"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/EngineResultText.cs",
+      "sha256": "18f51f7c37cbce1fb2b9bafc114cd87c5800d6d3eb1e82615b2cca342cf49f90"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/Loc.cs",
+      "sha256": "f2dfcf135e776f83965e4e872126ae57e93dd225c9d6369b67827b55802f31d5"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/LocalizedText.cs",
+      "sha256": "4a216b98379eeabbc50ad3ea56e241112b3ba956d24e64f049a011056ef64cb6"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/Strings.cs",
+      "sha256": "11bd090bae15eb8dca0c882d910372247cffabdf536c2a77666c37d221c85aa7"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/Strings.Engine.cs",
+      "sha256": "3cf2bad0894707bfdcd2eb297627afd7ad674dbaab32326127bc1a16c3270ee6"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/Strings.FeaturePages.cs",
+      "sha256": "26361b199231a0090706a17c3207eaa0b66d2b3ee1cca0f235c5caa1f06df1e1"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/Strings.ProjectPages.cs",
+      "sha256": "eee82c72df3086c7cbff250822fb8e0ee9c83128d13bed681e5c80a79742bbd2"
+    },
+    {
+      "path": "src/Studio/Gui/Localization/TrExtension.cs",
+      "sha256": "701476b29d5ed2a83d2e6f34377f194d8f00b2ac58a7cf8cc35495416d9a918e"
+    },
+    {
+      "path": "src/Studio/Gui/MainWindow.xaml",
+      "sha256": "5dc3416dabaf5ba819f8cc89f279bd7adf5ada05240c84fec1ddc907853e5f94"
+    },
+    {
+      "path": "src/Studio/Gui/MainWindow.xaml.cs",
+      "sha256": "f8057109f5ef5b77cc07d1943eb12f57c6c627ad50daab3b5e988c4eb86ef22a"
+    },
+    {
+      "path": "src/Studio/Gui/Services/ApprovalNotification.cs",
+      "sha256": "4ff897d32286a6065abffb6ecd1be48996c6a7116ac25f2bd60b81ed8d827085"
+    },
+    {
+      "path": "src/Studio/Gui/Services/ApprovalService.cs",
+      "sha256": "d76c1db5a4e42f9677edbf3b20736bcd953e4718dec36b606408b42df00a6aac"
+    },
+    {
+      "path": "src/Studio/Gui/Services/AtlasService.cs",
+      "sha256": "7ade4a442832282b05ff885c85c4a73d9370ef0966a42d7f7e78427b533b43f6"
+    },
+    {
+      "path": "src/Studio/Gui/Services/AuditLogService.cs",
+      "sha256": "f004943cda7efb69ddfc421aa014cf489b33dd9fe48de23ae9171ba51fd6dbf8"
+    },
+    {
+      "path": "src/Studio/Gui/Services/AuditTailReader.cs",
+      "sha256": "cdea3cafea504e4651d64e89083c41530f76c265b632d68263ffbdef4bdfce42"
+    },
+    {
+      "path": "src/Studio/Gui/Services/CallJournalService.cs",
+      "sha256": "a57c87d471a9233b68d0f5555cd6f6a5be005f485aa771a356c4f2dee147454d"
+    },
+    {
+      "path": "src/Studio/Gui/Services/ChangeMonitor.cs",
+      "sha256": "acdf16ff60942091d320bda56f8c2fe0fc67f38604a178c2ee1f103bfeb3d02a"
+    },
+    {
+      "path": "src/Studio/Gui/Services/DiagnosticBundleService.cs",
+      "sha256": "26eec5ffd43a3b1dc7d3dabac4c01e03fc00ea4159ff70d37737353974ba4647"
+    },
+    {
+      "path": "src/Studio/Gui/Services/EnvironmentCheckService.cs",
+      "sha256": "2d4d998f562fb9dcdf09b1b6e512ff00076ab973c6db79e7d1babad2abff36e4"
+    },
+    {
+      "path": "src/Studio/Gui/Services/FeatureContracts.cs",
+      "sha256": "bea0c57aa501dc1035ddc8837c1d96b449af733126e488feabc40c74558ca7a5"
+    },
+    {
+      "path": "src/Studio/Gui/Services/FeatureJson.cs",
+      "sha256": "fe302fe84daf4145782b85d1ddea15fa421dd25789fa0a65abd9fe147d7ac29e"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IApprovalService.cs",
+      "sha256": "459243729d2d57408f357708a4cb061beee9d21d3a2c7bb714b17a78dc3d014d"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IAtlasService.cs",
+      "sha256": "4ffb9fb3af4bd8227b7b814e124b59303c4fc86c013b00b63f3713131495757f"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IDiagnosticBundleService.cs",
+      "sha256": "e52adb7211165f596e6c2de3f860b74adb0cb0ad26553edba343dce7452f139f"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IDialogService.cs",
+      "sha256": "eb35f4f33c0add1ef597bc4ff4713c481c3eec1c0bd5811ee9e32fccd8f51233"
+    },
+    {
+      "path": "src/Studio/Gui/Services/IStudioClient.cs",
+      "sha256": "be21f28cb0e36ac010d9a0cbe82798bb4127fd996c8fa18d545f43ec16719c6a"
+    },
+    {
+      "path": "src/Studio/Gui/Services/Stubs/ApprovalServiceStub.cs",
+      "sha256": "100c52e90e6a3dca74440bab68eb7809bca719375c11849f2b615362708eb511"
+    },
+    {
+      "path": "src/Studio/Gui/Services/Stubs/FeatureServicesStub.cs",
+      "sha256": "2e7edfc96eabddb524c6cdf4cb2b8da0dcf1084c0ee1f44bc3d2704477843058"
+    },
+    {
+      "path": "src/Studio/Gui/Services/StudioClient.cs",
+      "sha256": "694308449826e31c75fb720a3c5a166edadf7188fd11f2b619dba59cb95944d5"
+    },
+    {
+      "path": "src/Studio/Gui/Services/TiaExitEvidenceCollector.cs",
+      "sha256": "e79a15a81969eae0deafa20873c84e53114f7377727a14066b62f43c25058f60"
+    },
+    {
+      "path": "src/Studio/Gui/Services/WorkbenchActivity.cs",
+      "sha256": "a365b25ffbeb0ec5227e8462f6a05c819d3fa9a6260787013aff1f755c269d32"
+    },
+    {
+      "path": "src/Studio/Gui/Services/WpfDialogService.cs",
+      "sha256": "69be1a2bc737083ff68b0c8d84ecdc2b5575cb24ece1e963e866afcae1d35769"
+    },
+    {
+      "path": "src/Studio/Gui/Settings/UiSettings.cs",
+      "sha256": "b78435a0500c6d02230004b9f3b3ece41089e024223c7570c9c111a51951e052"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Icons.xaml",
+      "sha256": "33104d1cb9159ca3710e406a6ef13535b853e2bf75f91d8b441279e3613a7a49"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Palette.Dark.xaml",
+      "sha256": "be993c0de8085859ac6163e0b1379b724ed182f7849b1bac9ecc0a98fbfd2525"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Palette.Light.xaml",
+      "sha256": "94b8c1271819dbfa62d778a464da12e7a815a6430e84997166c2acffdd7ab72c"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/Primer.xaml",
+      "sha256": "2a70cd1a7ca012575d74e2aa3d3d3bc4f049c8a37dab7f6f6f76cb79aa51affb"
+    },
+    {
+      "path": "src/Studio/Gui/Themes/ThemeManager.cs",
+      "sha256": "3a7144629623485e26dc164a0da34a00f9aa087cb0eebf1bf03971b8426b0a2a"
+    },
+    {
+      "path": "src/Studio/Gui/TiaOpenness.Gui.csproj",
+      "sha256": "be0f02413d58e0ab6c699896084e50af493e346e8f131d9d158dbb19478e1483"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/BlockNode.cs",
+      "sha256": "f7d9f86787f8b10e5bce86e5cb48ee06375f2614686c9943d33281fbe5806c55"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/BlockRow.cs",
+      "sha256": "4717fe5971e0e01b4fc08f8cbb2df9f8a85eb21e5937936d7dbed3abf835f6da"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/DeviceNode.cs",
+      "sha256": "b5495e331d353bea3b306eab536585c546e4276db13688ae5d902113c1aeb1fe"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/EngineeringViewModel.cs",
+      "sha256": "9e6810fa3c7c9fdaa31676d84eed5f83cd6f0cc9a17b72909e2b6e57344e6e75"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/FeaturePagesViewModel.cs",
+      "sha256": "2238097c16bc9f9be1f38db77b3b7bb1c519aba0bd52569619dba78caf1397e0"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/MainView.cs",
+      "sha256": "b516850a40c7af3e5b40c248ba44626cb61f055baafa6c74a174b679f3253460"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/MainViewModel.cs",
+      "sha256": "a86d70553cfc098759cfdd7b439302d1f6d800dab43026f0ed7bc0a8cad9dfe3"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/SessionViewModel.cs",
+      "sha256": "5a3da369311f0e173a37994bcdc2f5a95033255710421abab99c291516a589f9"
+    },
+    {
+      "path": "src/Studio/Gui/ViewModels/VersionControlViewModel.cs",
+      "sha256": "d80165469a6414fc4d2c60f2cba665da98d726b3a39368f8941764dd821c6e52"
+    },
+    {
+      "path": "src/Studio/Gui/Views/AiCallsView.xaml",
+      "sha256": "2c20fe7537fd24d2ffe890af35ed761f57a7accafcec8de7b219e33bd19f7cd0"
+    },
+    {
+      "path": "src/Studio/Gui/Views/AiCallsView.xaml.cs",
+      "sha256": "7cd32d8aab2262052fa1f81d371a406032a88484e352837514eedb451a13932f"
+    },
+    {
+      "path": "src/Studio/Gui/Views/ApprovalsDrawer.xaml",
+      "sha256": "c42ae3d0b1004b13d5511a34ebc41f681e6fdaf8f18fa2dfaafa783d473494ab"
+    },
+    {
+      "path": "src/Studio/Gui/Views/ApprovalsDrawer.xaml.cs",
+      "sha256": "74da9e62ff7952974e53feaf4c2cc85305c7c4f921d3c346d42661ed623da7ed"
+    },
+    {
+      "path": "src/Studio/Gui/Views/AtlasPresentation.cs",
+      "sha256": "b0656229dcca10efb639f9bb081841202952d193e8d5f804c0dcfa03d5fb0e46"
+    },
+    {
+      "path": "src/Studio/Gui/Views/AuditLogView.xaml",
+      "sha256": "2f693c28dbd3b32273f8b9a07551a994141364aee76bf9885d3685e468491f0f"
+    },
+    {
+      "path": "src/Studio/Gui/Views/AuditLogView.xaml.cs",
+      "sha256": "55a142992cc9b048a94df9cdf368f6d47776a634e0427bf54d5438fc22e59dad"
+    },
+    {
+      "path": "src/Studio/Gui/Views/BlocksView.xaml",
+      "sha256": "0f60aab5731046a53797412045bad730e580871d784f623aa45d828ace7b5935"
+    },
+    {
+      "path": "src/Studio/Gui/Views/BlocksView.xaml.cs",
+      "sha256": "5304c1d3a959e2738cb7817881d5f1033abc02da3317c7a0c383331fc5f524be"
+    },
+    {
+      "path": "src/Studio/Gui/Views/CallDetailDrawer.xaml",
+      "sha256": "1316d5836c9ecf25796552cc32536466ade74de9d3e2c27020dfdbe46006cda4"
+    },
+    {
+      "path": "src/Studio/Gui/Views/CallDetailDrawer.xaml.cs",
+      "sha256": "afa2198a98d547d80fbfc2ac970c2bc6b2d015de73cd4d38d86e0a146bd7a24f"
+    },
+    {
+      "path": "src/Studio/Gui/Views/EngineeringOptionsView.xaml",
+      "sha256": "f38c4abb745ab128b5dfdd9718ebd2a5f8322e90d3cb74919130f88270cace19"
+    },
+    {
+      "path": "src/Studio/Gui/Views/EngineeringOptionsView.xaml.cs",
+      "sha256": "3eacd0f6b327059ef2caa87ee21041e456ba2dde02b16e329cc61ef1fe5e7f28"
+    },
+    {
+      "path": "src/Studio/Gui/Views/EngineeringSideView.xaml",
+      "sha256": "5fc6706453e1d62e51ca5a24c105ee3537880c2387199d0f7653373e5ffadfe0"
+    },
+    {
+      "path": "src/Studio/Gui/Views/EngineeringSideView.xaml.cs",
+      "sha256": "c5662adda985c04ff96f83b5bd2f3ff0e5ce98d430a30a8644ca3184a5ef5f85"
+    },
+    {
+      "path": "src/Studio/Gui/Views/EnvironmentView.xaml",
+      "sha256": "331a58567ff7c5b8ca41d93b6d617acc991ff090918fff34554a71d10851e257"
+    },
+    {
+      "path": "src/Studio/Gui/Views/EnvironmentView.xaml.cs",
+      "sha256": "3ae950fa4b94d004ea76c8e95ced9c84054c3503eadada20ae9c15934024b5c8"
+    },
+    {
+      "path": "src/Studio/Gui/Views/LogView.xaml",
+      "sha256": "0372c86f283de851b15eda6176cd467f20bb311da5931913db629a1e9c8ee514"
+    },
+    {
+      "path": "src/Studio/Gui/Views/LogView.xaml.cs",
+      "sha256": "3b4ac6fcc8196fbf7ea16b133eb92068d5b7d6c50e4f9b471a84725e145b79e9"
+    },
+    {
+      "path": "src/Studio/Gui/Views/ProjectOperationsView.xaml",
+      "sha256": "7d3e78f5c65b7e7f24cfc8caee5083700cb58518435114b6df3940048caffab9"
+    },
+    {
+      "path": "src/Studio/Gui/Views/ProjectOperationsView.xaml.cs",
+      "sha256": "ac8174d5da312479b9f37f1095262c1a8563c772a93d29dd34bce13df005fbea"
+    },
+    {
+      "path": "src/Studio/Gui/Views/SettingsView.xaml",
+      "sha256": "3b826c055b0872cdb29159368186bb750fc5c3fd69b2014d264fd8d75bfaaa15"
+    },
+    {
+      "path": "src/Studio/Gui/Views/SettingsView.xaml.cs",
+      "sha256": "5de02f9e079d3e06a06227ab4605446b28938df25ccb8e92341920a964c0ed0e"
+    },
+    {
+      "path": "src/Studio/Gui/Views/VersionControlView.xaml",
+      "sha256": "4b984cd4006bd5606e36578955ab0189a4dbacd4102859a1b662ee46a15507f8"
+    },
+    {
+      "path": "src/Studio/Gui/Views/VersionControlView.xaml.cs",
+      "sha256": "3c1e5c4bc64b8fe808cdeb10f2041842e83bcf48afdc87b7d56b33ade46bce52"
+    },
+    {
+      "path": "src/Studio/Gui/WorkbenchFeaturePages.cs",
+      "sha256": "e5c2a830fe305e571bbe636256fc1e46c773915b468a959196806944793f89dc"
+    },
+    {
+      "path": "src/Studio/Gui/WorkbenchShell.cs",
+      "sha256": "85d055b92b2803daa435d782588b77fbf7b98224b758cd8a644c9f43009d63bb"
+    },
+    {
+      "path": "tests/Studio/Directory.Build.props",
+      "sha256": "f0a3dd714cd052edbb4eadb839b7ba475ae73e9b2f00f20f0a3754fabdbee0d9"
+    },
+    {
+      "path": "tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs",
+      "sha256": "b5495aa0e82bce5b79c8c7f3b39cd0e8d31e9e3bdddd99b8ea1e3d3ce1ac2d13"
+    },
+    {
+      "path": "tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj",
+      "sha256": "43c3b7042daedce95436ddd89466ad6f052dc270752059289e38f0197d5cce18"
+    },
+    {
+      "path": "Version.props",
+      "sha256": "3e3efe162111072d1c20c90866499471d95575516ca721c30e8d09220d634d38"
+    }
+  ]
 }

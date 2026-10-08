@@ -37,35 +37,17 @@ def run(args):
     for key in args.releases:
         root, env = gate.fresh_data_root(args.temp_root, f"smoke-{key}", approval_enabled=None)
         with gate.retained_on_failure(root):
-            if key in gate.KEYS:
-                exe = args.runtime_root / f"v{key}/TiaMcp.FoundationHost.exe"
-                with gate.foundation_host(exe, key, args.public_api_root, env, root / "stderr.log") as host:
-                    assert_roster(host.rpc("tools/list"), key)
-                    assert_environment(host.rpc("tools/call", {"name": "InitializeEnvironment", "arguments": {}}), key)
-                    stopped = gate.assert_foundation_write_stopped(host.rpc("tools/call", {
-                        "name": gate.FOUNDATION_WRITE[0], "arguments": gate.FOUNDATION_WRITE[1]}), f"V{key} smoke")
-            else:
-                major = int(key)
-                api = args.public_api_root / f"TIA_V{key}_PublicAPI/V{key}"
-                if major == 21:
-                    api /= "net48"
-                installation = gate.resources.sdk_only_installation(api, major, root / "sdk-only")
-                exe = args.runtime_root / f"v{key}/TiaMcp.Engine.V{key}.exe"
-                with gate.resources.server(exe, installation, major, "stdio", "full", None, api,
-                                           env_overrides=env) as (rpc, _, _):
-                    initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
-                        "clientInfo": {"name": "release-smoke", "version": "1"}})
-                    gate.require("result" in initialized, f"V{key}: initialize failed")
-                    rpc("notifications/initialized", notification=True)
-                    assert_roster(rpc("tools/list", "roster"), key)
-                    assert_environment(gate.rpc_call(rpc, "InitializeEnvironment", {}, "environment"), key)
-                    gate.assert_readiness_refused(gate.rpc_call(rpc, *gate.ENGINE_WRITE, "write"), f"V{key} smoke")
-                    stopped = "readiness"
+            exe = args.runtime_root / f"v{key}/TiaMcp.FoundationHost.exe"
+            with gate.foundation_host(exe, key, args.public_api_root, env, root / "stderr.log") as host:
+                assert_roster(host.rpc("tools/list"), key)
+                assert_environment(host.rpc("tools/call", {"name": "InitializeEnvironment", "arguments": {}}), key)
+                stopped = gate.assert_foundation_write_stopped(host.rpc("tools/call", {
+                    "name": gate.FOUNDATION_WRITE[0], "arguments": gate.FOUNDATION_WRITE[1]}), f"V{key} smoke")
         results[key] = {"checksPassed": 4, "transport": "stdio", "stoppedBy": stopped, "tiaConnected": False}
     for name, exe, arguments, expected in (
         ("studio", args.runtime_root / "studio/TiaOpenness.exe", ["--network", "127.0.0.1", "not-a-port", "S-1-5-18"], 1),
         ("configurator", args.runtime_root.parent / "TiaOpenness.exe", ["--network", "127.0.0.1", "not-a-port", "S-1-5-18"], 0),
-        ("updater", args.runtime_root.parent / "bin-build/updater/TiaMcp.Updater.exe", ["-Help"], 0),
+        ("updater", args.runtime_root / "tools/TiaMcp.Updater.exe", ["-Help"], 0),
     ):
         root, env = gate.fresh_data_root(args.temp_root, f"smoke-{name}", approval_enabled=None)
         with gate.retained_on_failure(root):

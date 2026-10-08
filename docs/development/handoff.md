@@ -16,7 +16,7 @@ There are no 3.x tool aliases in the 4.0 catalog. D1 behavior families remain
 
 The eight exact release keys are `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`,
 and `21`; original V14 and V15 are excluded. V14 SP1–V19 use the Foundation host
-and matching worker. V20/V21 use the full engine. The bundle entry is root
+and matching PLC worker. V20/V21 use FoundationHost with the full catalog and an engine worker in `runtime/v20/worker` / `runtime/v21/worker`. All eight MCP entries are `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`. The bundle entry is root
 `TiaOpenness.exe`; Studio calls Openness directly through its eight release
 adapters. Selecting a release does not upgrade a project.
 

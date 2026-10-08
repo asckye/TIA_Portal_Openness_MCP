@@ -620,7 +620,11 @@ def capture_release(args, release, exe, public_api):
                 env.update(capture_readiness_overrides(harness, args.packaged_no_tia))
             portal_root = (resources.sdk_only_installation(public_api, int(release), scratch)
                            if release in FULL_RELEASES else public_api)
-        server = (contracts.engine_host_server(args, release, portal_root, 'full', env) if args.engine_host
+        capture_args = copy.copy(args)
+        if args.packaged_no_tia and args.engine_host:
+            capture_args.engine_host = capture_exe
+            capture_args.repo_root = scratch
+        server = (contracts.engine_host_server(capture_args, release, portal_root, 'full', env) if args.engine_host
                   else resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
                               harness, public_api, env_overrides=env
                               ))
@@ -847,9 +851,11 @@ def capture(args):
             raise ValueError('--exe must be a unique RELEASE=PATH for a supported release')
         executables[release] = Path(path).resolve()
     snapshots = {}
+    requested_host = args.engine_host
     for release in args.releases:
-        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'TiaMcp.Engine.V{release}.exe' if release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'worker/TiaMcp.Engine.V{release}.exe' if args.engine_source and release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
         if release in FULL_RELEASES:
+            args.engine_host = requested_host or (None if args.engine_source else exe)
             api = None if args.packaged_no_tia else api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if api is not None and release == '21':
                 api /= 'net48'
@@ -1472,6 +1478,7 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', required=True, type=Path)
+    capture_parser.add_argument('--engine-source', action='store_true', help='A/B capture through the retired engine host')
     capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost with SDK fixture workers')
     capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')

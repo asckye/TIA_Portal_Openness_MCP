@@ -16,7 +16,7 @@ if (options.Count != 0) throw new ArgumentException("Unexpected argument: " + op
 var root = FindRoot(Directory.GetCurrentDirectory());
 if (!sourceOnly)
 {
-    if (string.IsNullOrWhiteSpace(exe)) exe = Path.Combine(root, "runtime", "v21", "TiaMcp.Engine.V21.exe");
+    if (string.IsNullOrWhiteSpace(exe)) exe = Path.Combine(root, "runtime", "v21", "worker", "TiaMcp.Engine.V21.exe");
     var harness = Path.Combine(root, "tests", "Engine", "TiaMcpServer.HttpTests", "TiaMcpServer.HttpTests.csproj");
     var runArgs = new List<string> { "run", "--project", harness, "-c", "Release", "--no-restore", "--", Path.GetFullPath(exe), "test-download-route" };
     if (!string.IsNullOrWhiteSpace(apiDirectory)) runArgs.Add(Path.GetFullPath(apiDirectory));

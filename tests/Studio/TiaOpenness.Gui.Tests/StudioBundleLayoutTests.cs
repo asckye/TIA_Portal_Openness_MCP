@@ -58,9 +58,7 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
         {
             string installed = At(scratch, "runtime/v" + release.Key + "/" + BundleLayout.GetProduct(release.Key).Executable);
             Assert.Equal(installed, ConfigCore.Engine(scratch, release.Key, scratch));
-            string source = At(scratch, release.IsFullEngine
-                ? "src/Engine/" + release.EngineOutputDirectory + "/" + configuration + "/net48/" + BundleLayout.GetProduct(release.Key).Executable
-                : "src/FoundationHost/bin/" + configuration + "/net10.0/" + BundleLayout.GetProduct(release.Key).Executable);
+            string source = At(scratch, "src/FoundationHost/bin/" + configuration + "/net10.0/" + BundleLayout.GetProduct(release.Key).Executable);
             Assert.Throws<FileNotFoundException>(() => ConfigCore.Engine(scratch, release.Key, gui));
             Put(scratch, Path.GetRelativePath(scratch, source));
             Assert.Equal(source, ConfigCore.Engine(scratch, release.Key, gui));

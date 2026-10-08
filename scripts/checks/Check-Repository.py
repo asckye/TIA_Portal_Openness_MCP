@@ -59,7 +59,17 @@ def product_name_errors(root, names):
         path = root / name
         if not path.is_file():
             continue
+        cleanup_paths = set()
+        if name == 'scripts/operations/delivery-files.json':
+            rules = json.loads(path.read_text(encoding='utf-8-sig'))
+            cleanup_paths = set(rules['exclude']['files']) & set(rules['legacyCleanup']['files'])
         for line, text in enumerate(path.read_text(encoding='utf-8-sig').splitlines(), 1):
+            if cleanup_paths:
+                try:
+                    if json.loads(text.strip().rstrip(',')) in cleanup_paths:
+                        continue
+                except (ValueError, TypeError):
+                    pass
             if pattern.search(text) or identity.search(text):
                 errors.append(f'{name}:{line}: retired product reference')
     return errors
@@ -159,13 +169,17 @@ def check(root, no_binaries=False, package_mode=False):
             errors.append(f'{label}: missing or external path: {name}')
     package = read('manifest/package-manifest.json')
     for key, value in package['entrypoints'].items():
+        if key == 'mcpServerArgs':
+            if value != ['--release-key', '21']:
+                errors.append('package entry mcpServerArgs: expected the default release key')
+            continue
         # The generated manifest schema still carries this legacy repository-only key;
         # the validator now lives in the C# release tool and is not shipped.
         if key == 'bundleValidationScript' and (package_mode or not (root / value).is_file()):
             continue
         required(value, 'package entry ' + key)
     required(package['cli']['exe'], 'CLI')
-    for path in rules['include']['files']:
+    for path in set(rules['include']['files']) | set(rules['requiredFiles']):
         required(path, 'delivery file')
     for prefix in rules['include']['prefixes']:
         if no_binaries and prefix == 'runtime/':
@@ -195,12 +209,12 @@ def check(root, no_binaries=False, package_mode=False):
         if 'repository' in row['consumers']:
             required(row['path'], row['repositoryLabel'])
     for major in (20, 21):
-        required(f'runtime/v{major}/TiaMcp.Runtime.dll', 'runtime channel assembly')
-        required(f'runtime/v{major}/TiaMcp.Adapter.{major}.dll', 'in-process shared adapter')
-        required(f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll', 'adapter contracts assembly')
+        required(f'runtime/v{major}/worker/TiaMcp.Runtime.dll', 'runtime channel assembly')
+        required(f'runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll', 'engine worker adapter')
+        required(f'runtime/v{major}/worker/TiaMcp.Adapters.Contracts.dll', 'adapter contracts assembly')
     for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll'):
         required('runtime/verification/' + name, 'packaged native verifier')
-    for key in ('14sp1', '15.1', '16', '17', '18', '19'):
+    for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
         # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
         required(f'runtime/v{key}/TiaMcp.WorkerChannel.dll', 'worker channel host')
         for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
@@ -214,8 +228,6 @@ def check(root, no_binaries=False, package_mode=False):
     names = [row['name'] for row in roster['tools']]
     if len(names) != len(set(names)) or len(names) != roster['toolCount'] or len(names) != package['capabilities']['mcpToolCount']:
         errors.append('Tool inventory count/uniqueness differs from package metadata')
-    for version in ('20', '21'):
-        required(f'runtime/v{version}/TiaMcp.Engine.V{version}.exe', 'runtime')
     swallowed = Path(__file__).with_name('Check-SwallowedExceptions.py')
     result = subprocess.run([sys.executable, str(swallowed), '--root', str(root)])
     if result.returncode:

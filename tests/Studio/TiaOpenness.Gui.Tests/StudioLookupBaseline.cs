@@ -22,10 +22,7 @@ internal static class StudioLookupBaseline
     public static string Engine(string root, string versionKey)
         {
             var version = TiaVersionCatalog.RequireRunnable(versionKey);
-            var candidates = version.IsFullEngine ? new[] {
-                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.Engine.V" + version.MajorVersion + ".exe"),
-                Path.Combine(root, "src", "Engine", version.EngineOutputDirectory, "Release", "net48", "TiaMcp.Engine.V" + version.MajorVersion + ".exe") } : new[] {
-                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.FoundationHost.exe") };
+            var candidates = new[] { Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcp.FoundationHost.exe") };
             var path = candidates.FirstOrDefault(File.Exists);
             if (path == null) throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", version.DisplayName));
             return path;

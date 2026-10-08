@@ -39,12 +39,7 @@ namespace TiaOpenness.Core.Environment
             yield return Path.Combine(directory, "TiaMcp.Logic.dll");
             yield return Path.Combine(directory, "ModelContextProtocol.dll");
             yield return Path.Combine(directory, "ModelContextProtocol.Core.dll");
-            if (release.IsFullEngine)
-            {
-                yield return host + ".config";
-                yield return Path.Combine(directory, "TiaMcp.Runtime.dll");
-            }
-            if (!release.IsFullEngine)
+            if (release.HostKind == "foundation")
             {
                 yield return Path.Combine(directory, "release-key.txt");
                 yield return Path.ChangeExtension(host, ".dll");
@@ -53,6 +48,13 @@ namespace TiaOpenness.Core.Environment
                 yield return TiaOpenness.Shared.BundleLayout.WorkerPath(root, key);
                 yield return Path.Combine(directory, "TiaMcp.WorkerChannel.dll");
                 yield return Path.Combine(directory, "worker", "TiaMcp.Adapters.Contracts.dll");
+                yield return Path.Combine(directory, "worker", "TiaMcp.Adapter." + key + ".dll");
+                if (release.WorkerKind == "engine")
+                {
+                    yield return Path.Combine(directory, "worker", "tool-catalog.json");
+                    yield return TiaOpenness.Shared.BundleLayout.WorkerPath(root, key) + ".config";
+                    yield return Path.Combine(directory, "worker", "TiaMcp.Runtime.dll");
+                }
             }
         }
     }

@@ -51,6 +51,23 @@ public sealed class BundleRootTests : IDisposable
         Assert.Throws<BundleResourceUnavailableException>(() => HostOptions.Parse(new[] { "--bundle-root", At("missing"), "--release-key", "19" }, At("host")));
     }
 
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Full_catalog_host_discovers_worker_and_catalog_without_path_options(string release)
+    {
+        Put("manifest/package-manifest.json", "fixture");
+        Put("runtime/v" + release + "/release-key.txt", release);
+        var options = HostOptions.Parse(new[] { "--profile", "full" }, At("runtime/v" + release));
+        Assert.Equal(At("runtime/v" + release + "/worker/TiaMcp.Engine.V" + release + ".exe"), options.EngineWorkerExe);
+        Assert.Equal(At("runtime/v" + release + "/worker/tool-catalog.json"), options.EngineCatalog);
+        Assert.Equal(scratch, BundleLayout.ResolveRoot(Path.GetDirectoryName(options.EngineWorkerExe)!, null, null));
+        Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--engine-worker", At("worker.exe") }, At("runtime/v" + release)));
+        options = HostOptions.Parse(new[] { "--engine-worker", At("custom.exe"), "--engine-catalog", At("custom.json") }, At("runtime/v" + release));
+        Assert.Equal(At("custom.exe"), options.EngineWorkerExe);
+        Assert.Equal(At("custom.json"), options.EngineCatalog);
+    }
+
     [Fact]
     public void Development_test_host_reads_resources_without_an_override()
     {

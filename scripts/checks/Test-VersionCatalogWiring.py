@@ -57,7 +57,7 @@ class VersionCatalogWiring(unittest.TestCase):
         registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources.all_text()))
         self.assertFalse(set(excluded) - registered)
         # Engine host checks compare with the engine's own roster; ToolProfiles is the FoundationHost product roster (P7-04).
-        self.assertIn("'Isolation changed the tool catalog'", read(ROOT / 'scripts/checks/Test-WorkerIsolation.py'))
+        self.assertIn("exercise_engine", read(ROOT / 'scripts/checks/Test-FoundationTransport.py'))
         stability = read(ROOT / 'scripts/checks/Test-LocalStability.py')
         self.assertIn('if getattr(args, key) is None: setattr(args, key, len(names))', stability)
         self.assertNotIn('ToolProfiles.resx', stability)

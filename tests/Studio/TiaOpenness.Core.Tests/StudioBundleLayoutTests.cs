@@ -80,15 +80,14 @@ public sealed class StudioBundleLayoutTests : IDisposable
         {
             var product = BundleLayout.GetProduct(release.Key);
             Assert.Equal("v" + release.Key, product.RuntimeDirectory);
-            Assert.Equal(release.IsFullEngine ? "TiaMcp.Engine.V" + release.Key + ".exe" : "TiaMcp.FoundationHost.exe", product.Executable);
-            Assert.Equal(release.IsFullEngine ? "--tia-major-version" : "--release-key", product.VersionOption);
+            Assert.Equal("TiaMcp.FoundationHost.exe", product.Executable);
+            Assert.Equal("--release-key", product.VersionOption);
             string configuration = anchor.Contains("/Debug/", StringComparison.Ordinal) ? "Debug" : "Release";
             string expectedEngine = anchor.StartsWith("src/Studio/", StringComparison.Ordinal)
-                ? At(scratch, release.IsFullEngine ? "src/Engine/" + release.EngineOutputDirectory + "/" + configuration + "/net48/" + product.Executable
-                    : "src/FoundationHost/bin/" + configuration + "/net10.0/" + product.Executable)
+                ? At(scratch, "src/FoundationHost/bin/" + configuration + "/net10.0/" + product.Executable)
                 : At(scratch, "runtime/v" + release.Key + "/" + product.Executable);
             Assert.Equal(expectedEngine, BundleLayout.WorkbenchEnginePath(scratch, release.Key, output));
-            Assert.Equal(At(scratch, "runtime/v" + release.Key + "/worker/TiaMcp.PlcWorker." + release.Key + ".exe"), BundleLayout.WorkerPath(scratch, release.Key));
+            Assert.Equal(At(scratch, "runtime/v" + release.Key + "/worker/" + product.WorkerExecutable), BundleLayout.WorkerPath(scratch, release.Key));
             Assert.Equal(Path.Combine(Path.GetDirectoryName(bridge)!, "adapters", "v" + release.Key, "TiaOpenness.Openness.dll"),
                 BundleLayout.WorkbenchAdapterPath(output, release.Key, "TiaOpenness.Openness.dll", scratch));
             Assert.Equal(Path.Combine(Path.GetDirectoryName(bridge)!, "adapters", "v" + release.Key, "TiaMcp.Adapter." + release.Key + ".dll"),

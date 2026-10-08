@@ -51,8 +51,9 @@ internal sealed class HostOptions
         if (options.ContainsKey("--release-key") && options.ContainsKey("--tia-major-version"))
             TiaVersionCatalog.RequireMatchingEngine(release, Value("--tia-major-version"));
         var version = TiaVersionCatalog.RequireRunnable(release);
-        bool engine = options.ContainsKey("--engine-worker");
-        if (engine != options.ContainsKey("--engine-catalog") || engine && release is not ("20" or "21"))
+        bool engine = version.WorkerKind == "engine";
+        bool explicitWorker = options.ContainsKey("--engine-worker");
+        if (explicitWorker != options.ContainsKey("--engine-catalog") || explicitWorker && !engine)
             throw new ArgumentException("The engine host requires release 20 or 21 and both --engine-worker and --engine-catalog.");
         int timeout = 120;
         if (options.ContainsKey("--worker-timeout-seconds") && (!int.TryParse(Value("--worker-timeout-seconds"), out timeout) || timeout <= 0))
@@ -88,8 +89,8 @@ internal sealed class HostOptions
         }
         return new HostOptions {
             BundleRoot = bundleRoot, ReleaseKey = release,
-            EngineWorkerExe = engine ? Path.GetFullPath(Value("--engine-worker")) : null,
-            EngineCatalog = engine ? Path.GetFullPath(Value("--engine-catalog")) : null,
+            EngineWorkerExe = engine ? Path.GetFullPath(Value("--engine-worker", TiaOpenness.Shared.BundleLayout.EngineWorkerPath(bundleRoot, release, directory))) : null,
+            EngineCatalog = engine ? Path.GetFullPath(Value("--engine-catalog", Path.Combine(Path.GetDirectoryName(TiaOpenness.Shared.BundleLayout.EngineWorkerPath(bundleRoot, release, directory))!, "tool-catalog.json"))) : null,
             EngineTimeoutSeconds = timeout, WithUi = flags.Contains("--with-ui"),
             WorkerTimeoutConfig = options.ContainsKey("--worker-timeout-config") ? File.ReadAllText(Path.GetFullPath(Value("--worker-timeout-config"))) : null,
             TiaPortalLocation = options.ContainsKey("--tia-portal-location") ? Value("--tia-portal-location") : null, Profile = profile,

@@ -129,11 +129,12 @@ def main():
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
     required_exes = ['TiaOpenness.exe', 'runtime/tools/TiaMcp.Updater.exe', 'runtime/tools/TiaMcp.Updater.exe.config',
-                     'runtime/v20/TiaMcp.Engine.V20.exe', 'runtime/v21/TiaMcp.Engine.V21.exe',
+                     'runtime/v20/worker/TiaMcp.Engine.V20.exe', 'runtime/v21/worker/TiaMcp.Engine.V21.exe',
                      'manifest/package-manifest.json']
+    required_exes += layout.load_delivery(root)['requiredFiles']
     required_exes += ['runtime/tools/TiaMcp.WriteGuard.exe']
     if multi is not None:
-        required_exes += [f'runtime/v{key}/TiaMcp.FoundationHost.exe' for key in multi['studioReleaseKeys'][:6]]
+        required_exes += [f'runtime/v{key}/TiaMcp.FoundationHost.exe' for key in multi['studioReleaseKeys']]
         required_exes += ['runtime/studio/TiaOpenness.exe']
         pin = json.loads((root / 'scripts/build/bundled-dotnet.json').read_text(encoding='utf-8'))
         required_exes += [f"runtime/dotnet/host/fxr/{pin['version']}/hostfxr.dll", 'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt']
@@ -196,7 +197,7 @@ def main():
             require(isinstance(isolation, dict), f'V{major} worker isolation proof missing')
             require(isolation.get('faultChecksPassed', 0) >= 25 and isolation.get('protocolChecksPassed', 0) >= 58,
                     f'V{major} worker fault/protocol validation incomplete')
-            require(isolation.get('protocolScriptSha256') == sha(files['scripts/checks/Test-WorkerIsolation.py']),
+            require(isolation.get('protocolScriptSha256') == sha(files['scripts/checks/Test-FoundationTransport.py']),
                     f'V{major} worker protocol script changed after validation')
         if 'engine-isolated-stability' in selected:
             require((checks.get('isolatedLocalStability') or {}).get('isolatedWorker') is True,
@@ -212,7 +213,7 @@ def main():
         for stability in proofs:
             require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
                     f'V{major} local stability validation missing')
-            require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/TiaMcp.Engine.V{major}.exe']),
+            require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe']),
                     f'V{major} stability test used a different runtime')
             for field, path in (('scriptSha256', 'scripts/checks/Test-LocalStability.py'),
                                 ('resourceHelperSha256', 'scripts/checks/Test-ResourceDiscovery.py')):
@@ -259,13 +260,13 @@ def main():
                 'docs/getting-started/cli.md', 'scripts/README.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
                 'plugin/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
-    required += [f'runtime/v{major}/TiaMcp.Runtime.dll' for major in (20, 21)]
-    required += [f'runtime/v{major}/TiaMcp.Adapter.{major}.dll' for major in (20, 21)]
-    required += [f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll' for major in (20, 21)]
+    required += [f'runtime/v{major}/worker/TiaMcp.Runtime.dll' for major in (20, 21)]
+    required += [f'runtime/v{major}/worker/TiaMcp.Adapter.{major}.dll' for major in (20, 21)]
+    required += [f'runtime/v{major}/worker/TiaMcp.Adapters.Contracts.dll' for major in (20, 21)]
     required += ['runtime/verification/' + name for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll')]
     required += ['runtime/studio/TiaMcp.WorkerChannel.dll']
     required += ['runtime/studio/bridge/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
-    for key in ('14sp1', '15.1', '16', '17', '18', '19'):
+    for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
         # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
         required += [f'runtime/v{key}/TiaMcp.WorkerChannel.dll']
         required += [f'runtime/v{key}/worker/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]

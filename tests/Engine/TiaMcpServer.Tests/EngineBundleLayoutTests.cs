@@ -46,13 +46,18 @@ namespace TiaMcpServer.Tests
         {
             Put(scratch, "manifest/package-manifest.json");
             string directory = Directory.CreateDirectory(At(scratch, "runtime/v21")).FullName;
-            string own = Path.Combine(directory, "TiaMcp.Engine.V21.exe");
+            string own = At(scratch, "runtime/v21/worker/TiaMcp.Engine.V21.exe");
             string expected = BundleLayout.EngineExecutablePath(scratch, release, directory);
             Assert.Equal(expected, Assert.Throws<BundleResourceUnavailableException>(() => BundleLayout.RequireEngine(release, directory)).Resource);
             Put(scratch, expected.Substring(scratch.Length + 1).Replace('\\', '/'));
             Assert.Equal(expected, BundleLayout.RequireEngine(release, directory));
             if (release == "14sp1" || release == "15.1") return;
             int version = int.Parse(release);
+            if (version >= 20)
+            {
+                expected = BundleLayout.WorkerPath(scratch, release);
+                Put(scratch, expected.Substring(scratch.Length + 1).Replace('\\', '/'));
+            }
             Assert.Equal(release == "21" ? null : expected, EngineRouter.FindSiblingExe(version, () => own));
             File.Delete(expected);
             Assert.Null(EngineRouter.FindSiblingExe(version, () => own));
@@ -69,8 +74,7 @@ namespace TiaMcpServer.Tests
         {
             Put(scratch, "manifest/package-manifest.json");
             string directory = Directory.CreateDirectory(At(scratch, "src/Engine/" + bin + "/" + configuration + "/net48")).FullName;
-            string expected = At(scratch, release == "19" ? "src/FoundationHost/bin/" + configuration + "/net10.0/TiaMcp.FoundationHost.exe"
-                : "src/Engine/" + (release == "20" ? "bin-v20" : "bin") + "/" + configuration + "/net48/TiaMcp.Engine.V" + release + ".exe");
+            string expected = At(scratch, "src/FoundationHost/bin/" + configuration + "/net10.0/TiaMcp.FoundationHost.exe");
             Assert.Equal(expected, BundleLayout.EngineExecutablePath(scratch, release, directory));
             string spelled = scratch + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar;
             Assert.Equal(expected, Path.GetFullPath(BundleLayout.EngineExecutablePath(spelled, release, directory)));
@@ -106,11 +110,11 @@ namespace TiaMcpServer.Tests
         public void Unknown_outputs_cannot_route_without_an_explicit_bundle()
         {
             Put(scratch, "manifest/package-manifest.json");
-            Put(scratch, "runtime/v20/TiaMcp.Engine.V20.exe");
+            Put(scratch, "runtime/v20/worker/TiaMcp.Engine.V20.exe");
             string directory = Directory.CreateDirectory(At(scratch, "custom/bin/Release/net48")).FullName;
             string own = Path.Combine(directory, "engine.exe");
             Assert.Null(EngineRouter.FindSiblingExe(20, () => own));
-            Assert.Equal(At(scratch, "runtime/v20/TiaMcp.Engine.V20.exe"), EngineRouter.FindSiblingExe(20, () => own, scratch));
+            Assert.Equal(At(scratch, "runtime/v20/worker/TiaMcp.Engine.V20.exe"), EngineRouter.FindSiblingExe(20, () => own, scratch));
         }
 
         [Theory]

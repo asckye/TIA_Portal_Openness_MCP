@@ -62,7 +62,7 @@ internal static class ReleaseRecords
                 var bundledRuntime = file.StartsWith(Path.Combine(runtime, "dotnet") + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
                 var allowed = BinaryExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase) || ext.Equals(".json", StringComparison.OrdinalIgnoreCase) || ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) || bundledRuntime;
                 return allowed && !Path.GetFileName(file).Equals("README.md", StringComparison.OrdinalIgnoreCase) &&
-                       (!prepared || !System.Text.RegularExpressions.Regex.IsMatch(file, @"[\\/]runtime[\\/](v20|v21|verification|tools)[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+                       (!prepared || !System.Text.RegularExpressions.Regex.IsMatch(file, @"[\\/]runtime[\\/](verification|tools)[\\/]|[\\/]runtime[\\/](v20|v21)[\\/]worker[\\/]", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
             })
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(file => new ReleaseArtifact(Relative(root, file), HashFile(file)))
@@ -171,7 +171,8 @@ internal static class ReleaseRecords
                 {
                     var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
                     return Directory.Exists(path) ? Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories) : [];
-                }).Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config" || Path.GetFileName(path) is "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
+                }).Where(path => Path.GetExtension(path) is ".exe" or ".dll" or ".config" ||
+                    Path.GetFileName(path) is "tool-catalog.json" or "release-key.txt" or "NativeCallWeaver.deps.json" or "NativeCallWeaver.runtimeconfig.json")
                   .Select(path => Relative(root, path)).Order(StringComparer.Ordinal).ToArray()
                 : [];
             var recorded = ReadRows(record, "runtimeFiles").Select(row => row.Path).Order(StringComparer.Ordinal).ToArray();
@@ -229,10 +230,12 @@ internal static class ReleaseRecords
         var required = new List<string> { "runtime/studio/TiaOpenness.exe", "runtime/studio/TiaMcp.WorkerChannel.dll" };
         required.AddRange(dependencies.Select(name => "runtime/studio/bridge/" + name));
         required.AddRange(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key => $"runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll"));
-        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         {
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.exe");
-            required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
+            if (key is not ("20" or "21")) required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
+            required.Add($"runtime/v{key}/release-key.txt");
+            required.Add($"runtime/v{key}/TiaMcp.FoundationHost.runtimeconfig.json");
             required.Add($"runtime/v{key}/TiaMcp.WorkerChannel.dll");
         }
         var missing = required.Where(path => !File.Exists(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)))).ToList();

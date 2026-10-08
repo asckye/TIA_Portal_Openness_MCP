@@ -260,7 +260,7 @@ public sealed class ReleaseRecordParityTests
             foreach (var relative in new[]
                      {
                          "runtime/tools/TiaMcp.WriteGuard.exe", "runtime/tools/TiaMcp.WriteGuard.dll",
-                         "runtime/v20/TiaMcp.Engine.V20.exe", "runtime/verification/NativeCallWeaver.dll",
+                         "runtime/v20/worker/TiaMcp.Engine.V20.exe", "runtime/verification/NativeCallWeaver.dll",
                          "runtime/studio/TiaOpenness.exe"
                      })
             {
@@ -272,7 +272,7 @@ public sealed class ReleaseRecordParityTests
             var prepared = ReleaseRecords.GetRuntimeFiles(root, prepared: true).Select(row => row.Path).ToHashSet(StringComparer.Ordinal);
             Assert.Contains("runtime/studio/TiaOpenness.exe", prepared);
             Assert.DoesNotContain("runtime/tools/TiaMcp.WriteGuard.exe", prepared);
-            Assert.DoesNotContain("runtime/v20/TiaMcp.Engine.V20.exe", prepared);
+            Assert.DoesNotContain("runtime/v20/worker/TiaMcp.Engine.V20.exe", prepared);
             Assert.DoesNotContain("runtime/verification/NativeCallWeaver.dll", prepared);
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
@@ -293,10 +293,12 @@ public sealed class ReleaseRecordParityTests
         var required = new List<string> { "runtime/studio/TiaOpenness.exe", "runtime/studio/TiaMcp.WorkerChannel.dll" };
         required.AddRange(dependencies.Select(name => "runtime/studio/bridge/" + name));
         required.AddRange(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(key => $"runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll"));
-        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+        foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         {
             required.Add($"runtime/v{key}/TiaMcp.FoundationHost.exe");
-            required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
+            if (key is not ("20" or "21")) required.AddRange(dependencies.Select(name => $"runtime/v{key}/worker/{name}"));
+            required.Add($"runtime/v{key}/release-key.txt");
+            required.Add($"runtime/v{key}/TiaMcp.FoundationHost.runtimeconfig.json");
             required.Add($"runtime/v{key}/TiaMcp.WorkerChannel.dll");
         }
         required.AddRange(new[] { "System.Text.Json.dll", "System.Text.Encodings.Web.dll", "System.IO.Pipelines.dll" }.Select(name => "runtime/dotnet/shared/Microsoft.NETCore.App/10.0.12/" + name));

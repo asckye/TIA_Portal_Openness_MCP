@@ -37,7 +37,7 @@ def self_test():
 
         def test_binary_and_configuration_files(self):
             for name in ('runtime/studio/TiaOpenness.exe', 'runtime/v14sp1/TiaMcp.FoundationHost.dll',
-                         'runtime/v21/TiaMcp.Engine.V21.exe.config', 'runtime/v14sp1/release-key.txt'):
+                         'runtime/v21/worker/TiaMcp.Engine.V21.exe.config', 'runtime/v14sp1/release-key.txt'):
                 self.assertTrue(runtime_path_allowed(name))
 
         def test_unreviewed_extensions_outside_framework(self):
@@ -90,8 +90,10 @@ def main():
         assert sha(data) == row['sha256'], 'Binary changed after testing: ' + name
         files[name] = data
     for key in multi['studioReleaseKeys']:
-        assert f"runtime/v{key}/{'TiaMcp.Engine.V' + key if key in ('20', '21') else 'TiaMcp.FoundationHost'}.exe" in files
+        assert f'runtime/v{key}/TiaMcp.FoundationHost.exe' in files
         assert f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files
+    for name in layout.load_delivery(ROOT)['requiredFiles']:
+        assert name in files, 'Required delivery file missing: ' + name
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip()
     files['MULTIVERSION-BUILD.json'] = json.dumps({'commit': commit, 'tier': candidate['tier'], 'checksRan': candidate['checksRan'], 'checksSkipped': candidate['checksSkipped'], 'nativeAcceptance': 'NOT RUN for newly enabled targets', 'buildRecord': 'manifest/multi-version-build.json', 'toolMatrix': 'manifest/version-tools.json'}, indent=2).encode()
     args.output.parent.mkdir(parents=True, exist_ok=True)

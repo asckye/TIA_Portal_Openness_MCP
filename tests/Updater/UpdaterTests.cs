@@ -16,6 +16,21 @@ namespace TiaMcp.Updater.Tests
     {
         [Fact] public void Check_reports_release_without_changing_install() { using (var f = new Fixture()) { byte[] before = f.Read("TiaOpenness.exe"); Assert.Equal(0, f.Run(check: true)); Assert.Equal(before, f.Read("TiaOpenness.exe")); } }
         [Fact] public void Self_and_root_launcher_are_replaced_and_user_data_is_preserved() { using (var f = new Fixture()) { Assert.Equal(0, f.Run()); Assert.Equal("new-launcher", f.Text("TiaOpenness.exe")); Assert.Equal("new-updater", f.Text("runtime/tools/TiaMcp.Updater.exe")); Assert.Equal("kept", f.Text("data/config/user.json")); Assert.Equal("unknown", f.Text("notes.txt")); Assert.False(f.Exists("TiaMcp.Updater.exe")); Assert.False(f.Exists("TiaMcp.Updater.exe.config")); Assert.False(f.Exists("scripts/operations/Update-Engine.ps1")); } }
+        [Fact] public void Upgrade_moves_engine_workers_and_removes_owned_legacy_entries()
+        {
+            using var f = new Fixture();
+            Assert.Equal(0, f.Run());
+            foreach (string key in new[] { "20", "21" })
+            {
+                Assert.False(f.Exists("runtime/v" + key + "/TiaMcp.Engine.V" + key + ".exe"));
+                Assert.True(f.Exists("runtime/v" + key + "/TiaMcp.FoundationHost.exe"));
+                Assert.True(f.Exists("runtime/v" + key + "/worker/tool-catalog.json"));
+                Assert.Equal("new-engine" + key, f.Text("runtime/v" + key + "/worker/TiaMcp.Engine.V" + key + ".exe"));
+            }
+            Assert.Equal("kept", f.Text("data/config/user.json"));
+            Assert.Equal(0, f.Run(rollback: true));
+            Assert.Equal("old-engine21", f.Text("runtime/v21/TiaMcp.Engine.V21.exe"));
+        }
         [Fact] public void Self_replacement_uses_a_staged_copy_outside_the_install() { using (var f = new Fixture()) { string source = Path.Combine(f.Root, "runtime/tools/TiaMcp.Updater.exe"); string staged = UpdaterFileStaging.CopyTo(source, Path.Combine(f.Root, "..", "staged-updater")); Assert.NotEqual(source, staged); Assert.Equal("old-updater", File.ReadAllText(staged)); Assert.Equal("old-config", File.ReadAllText(staged + ".config")); Assert.Equal(0, f.Run()); Assert.Equal("old-updater", File.ReadAllText(staged)); Assert.Equal("new-updater", f.Text("runtime/tools/TiaMcp.Updater.exe")); } }
         [WindowsFact] public void Built_updater_applies_a_local_package_and_rolls_it_back()
         {
@@ -133,7 +148,7 @@ namespace TiaMcp.Updater.Tests
             Write("runtime/v20/TiaMcp.Engine.V20.exe", "old-engine20"); Write("runtime/v21/TiaMcp.Engine.V21.exe", "old-engine21");
             Write("runtime/v21/old.dll", "owned-old-runtime"); Write("runtime/v21/user.dll", "user-runtime");
             Write("scripts/operations/Update-Engine.ps1", "old updater script"); Write("data/config/user.json", "kept"); Write("notes.txt", "unknown");
-            var inventory = new Dictionary<string, string> { ["scripts/operations/Update-Engine.ps1"] = Hash("scripts/operations/Update-Engine.ps1"), ["runtime/v21/old.dll"] = Hash("runtime/v21/old.dll") };
+            var inventory = new Dictionary<string, string> { ["scripts/operations/Update-Engine.ps1"] = Hash("scripts/operations/Update-Engine.ps1"), ["runtime/v21/old.dll"] = Hash("runtime/v21/old.dll"), ["runtime/v20/TiaMcp.Engine.V20.exe"] = Hash("runtime/v20/TiaMcp.Engine.V20.exe"), ["runtime/v21/TiaMcp.Engine.V21.exe"] = Hash("runtime/v21/TiaMcp.Engine.V21.exe") };
             Write("manifest/release-file-hashes.json", JsonSerializer.Serialize(new { files = inventory }));
             if (sourceCheckout) { Write("Version.props", "<Project />"); Directory.CreateDirectory(Path.Combine(Root, "src/Studio/Gui")); Write("src/Studio/Gui/TiaOpenness.Gui.csproj", "<Project />"); }
             Source = new FakeReleaseSource(this);
@@ -179,6 +194,21 @@ namespace TiaMcp.Updater.Tests
             }
         }
 
+        internal static void AddDeliveryLayout(Action<string, string> add)
+        {
+            string rules = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "scripts/operations/delivery-files.json"));
+            add("scripts/operations/delivery-files.json", rules);
+            using var document = JsonDocument.Parse(rules);
+            foreach (var item in document.RootElement.GetProperty("requiredFiles").EnumerateArray())
+            {
+                string path = item.GetString();
+                if (path.StartsWith("runtime/v", StringComparison.Ordinal) && !path.EndsWith(".exe", StringComparison.Ordinal)) add(path, "fixture");
+                else if (path.StartsWith("runtime/v", StringComparison.Ordinal) && path.Contains("FoundationHost")) add(path, "fixture-host");
+                else if (path.Contains("PlcWorker")) add(path, "fixture-worker");
+                else if (path.StartsWith("runtime/studio/", StringComparison.Ordinal)) add(path, "fixture-studio");
+            }
+        }
+
         internal static void WriteLocalPackage(string source, string updater, string updaterConfig)
         {
             const string package = "TIA_MCP_Delivery_v4.0.0_20261006";
@@ -190,9 +220,9 @@ namespace TiaMcp.Updater.Tests
                 AddText(archive, package + "/TiaOpenness.exe", "new-launcher");
                 AddFile(archive, package + "/runtime/tools/TiaMcp.Updater.exe", updater);
                 AddFile(archive, package + "/runtime/tools/TiaMcp.Updater.exe.config", updaterConfig);
-                AddText(archive, package + "/runtime/v20/TiaMcp.Engine.V20.exe", "new-engine20");
-                AddText(archive, package + "/runtime/v21/TiaMcp.Engine.V21.exe", "new-engine21");
-                AddText(archive, package + "/scripts/operations/delivery-files.json", "{\"schemaVersion\":1,\"include\":{\"files\":[\"TiaOpenness.exe\",\"runtime/tools/TiaMcp.Updater.exe\",\"runtime/tools/TiaMcp.Updater.exe.config\",\"manifest/package-manifest.json\",\"manifest/delivery.json\",\"scripts/operations/delivery-files.json\"],\"prefixes\":[\"runtime/\",\"scripts/operations/\"]},\"exclude\":{\"files\":[\"scripts/operations/Update-Engine.ps1\"],\"prefixes\":[]},\"legacyCleanup\":{\"files\":[\"scripts/operations/Update-Engine.ps1\",\"TiaMcp.Updater.exe\",\"TiaMcp.Updater.exe.config\"],\"prefixes\":[\"src/\"]}}");
+                AddText(archive, package + "/runtime/v20/worker/TiaMcp.Engine.V20.exe", "new-engine20");
+                AddText(archive, package + "/runtime/v21/worker/TiaMcp.Engine.V21.exe", "new-engine21");
+                AddDeliveryLayout((path, content) => AddText(archive, package + "/" + path, content));
             }
             byte[] bytes = File.ReadAllBytes(zipPath);
             using (var sha = SHA256.Create()) File.WriteAllText(Path.Combine(source, package + ".sha256"), BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant() + "  " + package + ".zip\n", new UTF8Encoding(false));
@@ -277,9 +307,8 @@ namespace TiaMcp.Updater.Tests
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/manifest/delivery.json", "{\"release\":\"4.0.0\",\"package\":\"TIA_MCP_Delivery_v4.0.0_20261006\",\"engineRelease\":\"4.0.0\"}");
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/manifest/package-manifest.json", "{}");
                     Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/TiaOpenness.exe", "new-launcher"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/tools/TiaMcp.Updater.exe", "new-updater"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/tools/TiaMcp.Updater.exe.config", "new-config");
-                    Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/v20/TiaMcp.Engine.V20.exe", "new-engine20"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/v21/TiaMcp.Engine.V21.exe", "new-engine21");
-                    string rules = "{\"schemaVersion\":1,\"include\":{\"files\":[\"TiaOpenness.exe\",\"runtime/tools/TiaMcp.Updater.exe\",\"runtime/tools/TiaMcp.Updater.exe.config\",\"manifest/package-manifest.json\",\"manifest/delivery.json\",\"scripts/operations/delivery-files.json\"],\"prefixes\":[\"runtime/\",\"scripts/operations/\"]},\"exclude\":{\"files\":[\"scripts/operations/Update-Engine.ps1\"],\"prefixes\":[]},\"legacyCleanup\":{\"files\":[\"scripts/operations/Update-Engine.ps1\",\"TiaMcp.Updater.exe\",\"TiaMcp.Updater.exe.config\"],\"prefixes\":[\"src/\"]}}";
-                    Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/scripts/operations/delivery-files.json", rules);
+                    Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/v20/worker/TiaMcp.Engine.V20.exe", "new-engine20"); Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/runtime/v21/worker/TiaMcp.Engine.V21.exe", "new-engine21");
+                    Fixture.AddDeliveryLayout((path, content) => Add(zip, "TIA_MCP_Delivery_v4.0.0_20261006/" + path, content));
                 }
                 return memory.ToArray();
             }
