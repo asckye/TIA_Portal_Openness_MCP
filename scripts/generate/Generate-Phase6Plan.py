@@ -683,7 +683,8 @@ TASK_PATHS = {
     "P6-66": ["build-tools/release", "tests/Release", "scripts/build/Package-Release.py", "scripts/checks", "docs/development/release-workflow.md", "docs/development/validation.md"],
     "P6-67": ["src/Shared", "src/Logic", "src/FoundationHost", "src/Adapters", "src/Adapters.Contracts", "src/WorkerChannel", "src/Worker", "tests/Engine", E+"ModelContextProtocol", E+"Siemens", "reference/tool-examples", "manifest", "scripts/checks", "scripts/generate", TE+"TiaMcpServer.Tests", TE+"TiaMcpServer.LegacyHostTests", TE+"TiaMcpServer.HttpTests", "docs/reference", "docs/getting-started"],
     "P6-68": ["src", "tests", "reference/tool-examples", "scripts/checks", "scripts/generate", "manifest", "docs/reference", "docs/getting-started", "docs/development/phase6-review.md", "docs/releases/v4.0.0-tool-migration.md"],
-    "P6-69": ["src/FoundationHost", "src/Logic", "src/Shared", "src/Engine", "src/Worker", "tests", "reference/tool-examples", "manifest", "docs/reference", "docs/development/phase6-review.md"],
+    "P6-69": ["src/FoundationHost", "src/Logic", "src/Shared", "src/Engine", "src/Worker", "tests", "reference/tool-examples", "scripts/checks/phase6_groups.py", "manifest", "docs/reference", "docs/development/phase6-review.md"],
+    "P6-70": ["src/FoundationHost", "src/Logic", "src/Shared", "src/Engine", "src/Worker", "src/Adapters/Native/Hardware", "src/Adapters/Native/Session", "tests", "reference/tool-examples", "scripts/checks/phase6_groups.py", "manifest", "docs/reference", "docs/development/phase6-review.md"],
 }
 for task in MIGRATION_GROUPS:
     if task == "P6-67":
@@ -696,7 +697,7 @@ TASK_PATHS["P6-23"] += ["src/Runtime", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", TE+"TiaMcpServer.HttpTests"]
 
 def validate_inventory(inventory):
-    expected = {f"P6-{i:02}" for i in range(1, 70)}
+    expected = {f"P6-{i:02}" for i in range(1, 71)}
     plan = read("docs/development/refactor-plan.md").split("### 阶段 6：", 1)[1].split("## 待维护者决定", 1)[0]
     assert set(re.findall(r"^\| (P6-\d+) \|", plan, re.M)) == set(inventory) == expected
     for task, paths in inventory.items():
