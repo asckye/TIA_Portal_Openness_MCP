@@ -49316,7 +49316,7 @@
       "topic": "device-add",
       "purpose": "Add an installed catalog device through the current V20/V21 engine schema.",
       "preconditions": "Discover and explicitly bind the intended process/project. Choose a fresh deviceName and exact installed catalog row.",
-      "notes": "The current engine CreateHardwareDevice schema has preferredMlfb/preferredVersion/deviceName/family only; it has no dryRun/expectedPlanHash parameters. Bind via ListPortalProcessProjects → ConnectProject, then search and create. Device-name and exact-row admission runs with approval disabled too. SaveProject is separate.",
+      "notes": "The current engine CreateHardwareDevice schema has preferredMlfb/preferredVersion/deviceName/family only; it has no dryRun/expectedPlanHash parameters. Bind via ListPortalProcessProjects → ConnectPortal → AttachOpenProject, then search and create. Device-name and exact-row admission runs with approval disabled too. SaveProject is separate.",
       "releaseKeys": [
         "20",
         "21"

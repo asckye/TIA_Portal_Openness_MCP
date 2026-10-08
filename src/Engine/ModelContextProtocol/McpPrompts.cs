@@ -12,7 +12,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 V4 operating rules:
 - Use only tools registered by this release. Read GetToolUsage for the selected tool and copy its typed arguments; pass arrays, objects, numbers, booleans and enums as their schema types, never JSON-encode typed values into strings.
-- For a new or different TIA process, call ListPortalProcessProjects and choose the exact row with the user. On V20/V21 call ConnectProject with that row's processId, processStartUtc and projectPath; on Foundation call ConnectPortal with the selected row's processId. Do not launch or select a process implicitly.
+- For a new or different TIA process, call ListPortalProcessProjects and choose the exact row with the user. Call ConnectPortal with that row's processId, then AttachOpenProject with the row's project name and project file as projectName and expectedProjectFile. Do not launch or select a process implicitly.
 - Read every result as the schemaVersion 4 envelope: ok, data, error and meta. Inspect meta.outcome, meta.execution and meta.completeness, then operation data and warnings. Follow meta.paging only within the same release/session/binding/query snapshot; meta.paging.complete=true describes that snapshot's pages, not full project observation.
 - On meta.outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the target and reset the session when required. Never replay a write automatically.
 - D1 native behavior remains current for all applicable families and releases; L5 is NOT RUN. Treat UNVERIFIED_BEHAVIOR as a warning. Do not infer safe-v4 behavior or use candidate parameters.
@@ -23,7 +23,7 @@ V4 operating rules:
         [McpServerPrompt(Name = "Connect"), Description("Select and connect to a specific TIA Portal project process")]
         public static string Connect()
         {
-            return WithV4Rules(@"Connect to the intended project. First call ListPortalProcessProjects and have the user select the exact process and project row. On V20/V21, call ConnectProject with that row's processId, processStartUtc and projectPath. On a Foundation host, call ConnectPortal with the selected row's processId. Call GetSessionState and confirm the connected process and project. Do not start TIA Portal or choose a process by name alone.");
+            return WithV4Rules(@"Connect to the intended project. First call ListPortalProcessProjects and have the user select the exact process and project row. Call ConnectPortal with that row's processId, then AttachOpenProject with the row's project name and project file as projectName and expectedProjectFile. Call GetSessionState and confirm the connected process and project. Do not start TIA Portal or choose a process by name alone.");
         }
 
         [McpServerPrompt(Name = "OpenProject"), Description("Open a TIA Portal project")]
@@ -49,7 +49,7 @@ If the intended process is not connected, use ListPortalProcessProjects and the 
         [McpServerPrompt(Name = "GetProjectTree"), Description("Get the current project structure")]
         public static string GetProjectTree()
         {
-            return WithV4Rules(@"Read GetSessionState first. If the intended project is not bound, use ListPortalProcessProjects and ConnectProject with an explicitly selected row, then OpenProject if needed. Call GetProjectTree and retain exact device, PLC software and HMI software paths for later calls.");
+            return WithV4Rules(@"Read GetSessionState first. If the intended project is not bound, use ListPortalProcessProjects, ConnectPortal and AttachOpenProject with an explicitly selected row, or OpenProject when the project is not open yet. Call GetProjectTree and retain exact device, PLC software and HMI software paths for later calls.");
         }
 
         [McpServerPrompt(Name = "CreateProjectWithDevices"), Description("Create a project with selected PLC and HMI devices")]

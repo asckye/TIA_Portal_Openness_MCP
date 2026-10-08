@@ -46,8 +46,7 @@ prompt_source = next(source for path, source in sources.sources.items() if path.
 for required in (
     "private static string WithV4Rules",
     "ListPortalProcessProjects",
-    "ConnectProject with that row's processId, processStartUtc and projectPath",
-    "ConnectPortal with the selected row's processId",
+    "ConnectPortal with that row's processId, then AttachOpenProject",
     "schemaVersion 4 envelope",
     "OUTCOME_UNKNOWN",
     "D1 native behavior remains current",
@@ -62,11 +61,12 @@ for required in (
 for stale in (
     "EnsureOpennessUserGroup", "fbBlockJson", "designJson", "ConnectPortal — attach to a running",
     "meta.success / meta.operationSuccess", "SaveProject — save any pending changes first",
+    "ConnectProject",
 ):
     assert stale not in prompt_source, f"Stale prompt instruction remains: {stale}"
 
 prompt_tools = (
-    "ListPortalProcessProjects", "ConnectProject", "ConnectPortal", "GetSessionState", "OpenProject",
+    "ListPortalProcessProjects", "ConnectPortal", "AttachOpenProject", "GetSessionState", "OpenProject",
     "GetProjectTree", "CloseProject", "SaveProject", "DisconnectPortal", "CreateProject",
     "SearchHardwareCatalog", "CreateHardwareDevice", "CreateHardwareCatalogDevice",
     "ConnectDeviceNodesToProfinetSubnet", "GetSoftwareTree", "ExportPlcBlocks", "ExportPlcTypes",
