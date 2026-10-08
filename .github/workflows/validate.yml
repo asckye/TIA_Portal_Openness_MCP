@@ -35,10 +35,12 @@ jobs:
           dotnet run --project build-tools/release -- validate-bundle -SelfTest
       - name: Release prerequisites, reuse and documentation assertions
         run: |
+          # Stop at the first failing command; otherwise only the last exit code fails the step.
+          $PSNativeCommandUseErrorActionPreference = $true
           dotnet test tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj -c Release --nologo
           dotnet run --project build-tools/release -- preflight
           dotnet run --project build-tools/release -- release -DocumentationOnly
-          dotnet run --project build-tools/release -- run-release-build -DryRun
+          dotnet run --project build-tools/release -- run-release-build -Tier full -DryRun
       - name: Release safety suites and production PLC name fixture
         shell: bash
         run: |

@@ -634,6 +634,10 @@ const string Hint = """See OldTool for details.""";
 
 
 if __name__ == '__main__':
+    # The report is Chinese; a Windows CI console defaults to cp1252.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8', errors='replace')
     if '--selftest' in sys.argv or '--self-test' in sys.argv:
         result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(GuidanceTests))
         sys.exit(0 if result.wasSuccessful() else 1)
