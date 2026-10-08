@@ -34,7 +34,9 @@ internal static partial class ReleaseCommands
                 ["TIA_MCP_RELEASE_TEMP_ROOT"] = temp, ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api,
                 ["RestoreConfigFile"] = options.Get("NuGetConfig"), ["NuGetAudit"] = "false"
             };
-            var result = ProcessRunner.Run(executable, args, cwd ?? Root, env);
+            var result = executable == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(args.ToArray(), new HashSet<string> { "SelfTest", "NoRestore" }), env)
+                : ProcessRunner.Run(executable, args, cwd ?? Root, env);
+            if (executable == "test-suites") { Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError); }
             if (activeLog.Value is { } log) File.AppendAllText(log, result.StandardOutput + result.StandardError, new System.Text.UTF8Encoding(false));
             if (result.ExitCode == 0) Directory.Delete(root, true);
             else Console.Error.WriteLine($"Retained failed release check data ({name}): {root}");
@@ -116,7 +118,8 @@ internal static partial class ReleaseCommands
         {
             ("prompt-registration", () =>
             {
-                runStep("05-prompt-registration", () => runPython("scripts/checks/Test-DotnetSuites.py", ["--suite", "prompt-registration", "--dotnet", dotnet, "--results-directory", Path.Combine(logs, "prompt-registration-results")]));
+                runStep("05-prompt-registration", () => ProcessRunner.RequireSuccess(runIsolated("prompt-registration", "test-suites",
+                    ["-Suite", "prompt-registration", "-Dotnet", dotnet, "-ResultsDirectory", Path.Combine(logs, "prompt-registration-results")], false, Root), "prompt registration suite"));
                 return new PipelineResult("prompt-registration", 0, "Prompt registration passed." + Environment.NewLine, "");
             }),
             ("contracts", () =>
@@ -211,8 +214,12 @@ internal static partial class ReleaseCommands
         {
             jobs.Add((test.Check, () =>
             {
-                runStep(test.Check, () => runPython(test.Script, test.Arguments.Select(argument => argument == "{output}"
-                    ? Path.Combine(logs, test.Check + "-" + Guid.NewGuid().ToString("N")) : argument).ToArray()));
+                runStep(test.Check, () =>
+                {
+                    var arguments = test.Arguments.Select(argument => argument == "{output}" ? Path.Combine(logs, test.Check + "-" + Guid.NewGuid().ToString("N")) : argument).ToArray();
+                    if (test.Command is null) runPython(test.Script, arguments);
+                    else ProcessRunner.RequireSuccess(runIsolated(test.Check, test.Command, arguments, false, Root), test.Check);
+                });
                 return new PipelineResult(test.Check, 0, "Check self-test passed.\n", "");
             }));
         }

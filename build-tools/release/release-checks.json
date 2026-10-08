@@ -272,7 +272,7 @@
       ]
     },
     {
-      "path": "scripts/checks/Test-DotnetSuites.py",
+      "path": "build-tools/release/DotnetSuites.cs",
       "checks": [
         "dotnetsuites-self-test"
       ]
@@ -388,6 +388,34 @@
         "resource-discovery-self-test",
         "native-diagnostics",
         "http-concurrency"
+      ]
+    },
+    {
+      "path": "build-tools/common/",
+      "checks": [
+        "dotnetsuites-self-test",
+        "offline-suites"
+      ]
+    },
+    {
+      "path": "build-tools/release/DotnetSuiteSelfTests.cs",
+      "checks": [
+        "dotnetsuites-self-test",
+        "offline-suites"
+      ]
+    },
+    {
+      "path": "build-tools/release/HostParity.cs",
+      "checks": [
+        "dotnetsuites-self-test",
+        "offline-suites"
+      ]
+    },
+    {
+      "path": "tests/Repository/",
+      "checks": [
+        "dotnetsuites-self-test",
+        "offline-suites"
       ]
     }
   ],
@@ -529,10 +557,11 @@
     },
     {
       "check": "dotnetsuites-self-test",
-      "script": "scripts/checks/Test-DotnetSuites.py",
+      "script": "build-tools/release/DotnetSuites.cs",
       "arguments": [
-        "--self-test"
-      ]
+        "-SelfTest"
+      ],
+      "command": "test-suites"
     },
     {
       "check": "nativelifecycle-self-test",

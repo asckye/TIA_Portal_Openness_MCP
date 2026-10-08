@@ -24,16 +24,19 @@ jobs:
       - name: Swallowed-exception checker self-tests
         run: python scripts/checks/Check-SwallowedExceptions.py --self-test
       - name: TRX gate self-checks
-        run: python scripts/checks/Test-DotnetSuites.py --self-test
+        run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression and MCP SDK version policy
-        run: python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
+        run: dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy
 
   source-contracts:
-    # Python-only source contracts: no build, Siemens SDK, TIA or engine process.
+    # Source contracts: .NET 10 and Python, without Siemens SDKs or TIA.
     # Keep the inventory in docs/development/validation.md in sync with these steps.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
@@ -61,7 +64,8 @@ jobs:
           python3 scripts/checks/Inventory-ResponseEnvelopes.py --self-test
           python3 scripts/checks/Check-EnvelopeRewrite.py --self-test
           python3 scripts/checks/Check-Repository.py --self-test
-          python3 scripts/checks/Test-EngineSources.py
+      - name: Shared source helpers and Python compatibility vectors
+        run: dotnet run --project build-tools/release -- test-suites -Suite source-contracts
       - name: Diagnostic membership contracts
         run: python3 scripts/checks/Test-DiagnosticMembershipSources.py
       - name: Native adapter host and JSON dependency boundary
@@ -111,7 +115,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Foundation contracts and functional tests
-        run: python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership --suite adapter-contracts --suite worker-channel --suite compile-candidate --suite compile-candidate-no-safety --suite fallback-vci-modern --suite fallback-vci-initial --suite fallback-vci-classic
+        run: dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic
       - name: Build host and synthetic worker without Siemens SDKs
         shell: bash
         run: |

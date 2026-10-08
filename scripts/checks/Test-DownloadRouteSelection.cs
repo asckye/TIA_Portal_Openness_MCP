@@ -3,15 +3,16 @@
 // Usage: dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicApiDirectory <V21 SDK>
 #:property PublishAot=false
 #:property NuGetAudit=false
+#:project ../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj
 
 using System.Text;
+using TiaMcp.BuildCommon;
 
 var options = args.ToList();
 var sourceOnly = RemoveFlag(options, "-SourceOnly", "--source-only");
 var exe = Take(options, "-Exe", "--exe");
 var apiDirectory = Take(options, "-PublicApiDirectory", "--public-api-directory");
 var dotnet = Take(options, "-Dotnet", "--dotnet") ?? "dotnet";
-var python = Take(options, "-Python", "--python") ?? "python";
 if (options.Count != 0) throw new ArgumentException("Unexpected argument: " + options[0]);
 var root = FindRoot(Directory.GetCurrentDirectory());
 if (!sourceOnly)
@@ -37,23 +38,28 @@ public static class FakeBuilder {
 }
 ";
 
-var temporary = NewTempDirectory("tia-route-selection-");
+var temporaryFixture = new OfflineFixtures("tia-route-selection-", root);
+var temporary = temporaryFixture.DirectoryPath;
 try
 {
-    var fixtureText = await ExtractFixture(root, Path.Combine(temporary, "Fixture.cs"), python);
+    var fixtureText = ExtractFixture(root);
     var assemblyPath = Path.Combine(temporary, "TiaMcp.Engine.V21.dll");
     await CompileFrameworkFixture(fixtureText, assemblyPath, Directory.GetFiles(Path.GetFullPath(apiDirectory), "Siemens.Engineering*.dll"), dotnet);
     var harness = Path.Combine(root, "tests", "Engine", "TiaMcp.Engine.Harness", "bin", "Release", "net48", "TiaMcp.Engine.Harness.exe");
     return await Run(harness, new[] { assemblyPath, "test-download-route", Path.GetFullPath(apiDirectory) }, root);
 }
-finally { Directory.Delete(temporary, true); }
+finally { temporaryFixture.Dispose(); }
 
-static async Task<string> ExtractFixture(string root, string output, string python)
+static string ExtractFixture(string root)
 {
-    const string extractor = "import sys\nfrom pathlib import Path\nroot,out=Path(sys.argv[1]),Path(sys.argv[2])\nsys.path.insert(0,str(root/'scripts/checks'))\nfrom engine_sources import EngineSources\ne=EngineSources(root)\nhead='using System; using System.Collections; using System.Collections.Generic; using System.Linq; using System.Reflection; using Siemens.Engineering.Connection; '\nnames=['FindSubnetOrGatewayAddress','TryCreateTargetAddress','EnumerateDownloadRoutes','ReadReflectedParent','ReadReflectedInt','ReadConfigurationAddresses','SameIpv4Subnet24','ScoreDownloadRoutes','DescribeRoutes','SelectDownloadRoute']\nmembers='\\n'.join(e.member(n,owner='OnlineDownloadService') for n in names)\ntypes='\\n'.join('private sealed '+e.type_text(n) for n in ['DownloadRoute','DownloadRouteSelection'])\nhelpers='\\n'.join(e.member(n,owner='Portal').replace('private static','public') for n in ['ReadReflectedString','EnumerateReflectedProperty'])\ntext=head+'namespace TiaMcpServer.Siemens { public class Portal {'+helpers+'} internal static class EngineeringGroupOperations {'+e.member('Items',owner='EngineeringGroupOperations')+'} } namespace TiaMcpServer.Siemens.Services { public class OnlineDownloadService { private readonly Portal _session; public OnlineDownloadService(Portal session) { _session=session; }'+types+members+'} }'\nout.write_text(text+'\\n'+sys.argv[3],encoding='utf-8')";
-    var result = await Capture(python, new[] { "-c", extractor, root, output, FakeTypes });
-    if (result.ExitCode != 0) throw new InvalidOperationException("Production source fixture extraction failed: " + result.Output);
-    return await File.ReadAllTextAsync(output);
+    var sources = new EngineSources(root);
+    const string head = "using System; using System.Collections; using System.Collections.Generic; using System.Linq; using System.Reflection; using Siemens.Engineering.Connection; ";
+    string[] names = ["FindSubnetOrGatewayAddress", "TryCreateTargetAddress", "EnumerateDownloadRoutes", "ReadReflectedParent", "ReadReflectedInt", "ReadConfigurationAddresses", "SameIpv4Subnet24", "ScoreDownloadRoutes", "DescribeRoutes", "SelectDownloadRoute"];
+    var members = string.Join('\n', names.Select(name => sources.Member(name, owner: "OnlineDownloadService")));
+    var types = string.Join('\n', new[] { "DownloadRoute", "DownloadRouteSelection" }.Select(name => "private sealed " + sources.TypeText(name)));
+    var helpers = string.Join('\n', new[] { "ReadReflectedString", "EnumerateReflectedProperty" }.Select(name => sources.Member(name, owner: "Portal").Replace("private static", "public", StringComparison.Ordinal)));
+    return head + "namespace TiaMcpServer.Siemens { public class Portal {" + helpers + "} internal static class EngineeringGroupOperations {" + sources.Member("Items", owner: "EngineeringGroupOperations")
+        + "} } namespace TiaMcpServer.Siemens.Services { public class OnlineDownloadService { private readonly Portal _session; public OnlineDownloadService(Portal session) { _session=session; }" + types + members + "} }\n" + FakeTypes;
 }
 
 static async Task CompileFrameworkFixture(string source, string output, IReadOnlyList<string> references, string dotnet)
@@ -97,14 +103,6 @@ static async Task<(int ExitCode, string Output)> Capture(string program, IReadOn
 }
 
 static string Quote(string value) => "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
-static string NewTempDirectory(string prefix)
-{
-    var root = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-    var path = Path.GetFullPath(Path.Combine(root, prefix + Guid.NewGuid().ToString("N")));
-    if (!path.StartsWith(root, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) throw new InvalidOperationException("Test directory escaped TEMP.");
-    Directory.CreateDirectory(path);
-    return path;
-}
 static bool RemoveFlag(List<string> values, params string[] names)
 {
     var found = false;

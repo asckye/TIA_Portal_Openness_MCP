@@ -133,10 +133,10 @@ V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器
 
 ## 无需运行 TIA 的检查
 
-### 纯 Python 源码契约（Ubuntu CI）
+### 源码契约（Ubuntu CI）
 
 [offline-checks.yml](../../.github/workflows/offline-checks.yml) 的 `source-contracts` job
-执行下列静态检查，无需 .NET、Siemens SDK、引擎进程、TIA 或网络服务。
+执行下列静态检查，使用 .NET 10 和 Python，无需 Siemens SDK、引擎进程、TIA 或网络服务。
 其中 `Check-Repository.py --no-binaries` 同时执行 BundleLayout、SwallowedExceptions、
 CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们的独立复跑命令。
 
@@ -149,7 +149,7 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 | `python scripts/checks/Check-McpText.py` | MCP 中文字面量基线 |
 | `python scripts/checks/Inventory-ResponseEnvelopes.py` | 手写响应信封基线 |
 | `python scripts/checks/Check-DeadToolReferences.py` | 工具描述死引用与重名注册 |
-| `python scripts/checks/Test-EngineSources.py` | 成员定位：搬文件、重载、类型、词法边界与缺失/歧义拒绝 |
+| `dotnet run --project build-tools/release -- test-suites -Suite source-contracts` | 成员定位、词法边界、缺失/歧义拒绝，以及 Python JSON/词法器/MCP 结果的兼容向量；干净 checkout 至少 85 项、零跳过 |
 | `python scripts/checks/Test-DiagnosticMembershipSources.py` | 诊断只读组检查、显式修复与默认不连接 |
 | `python scripts/checks/Test-DocumentImportSafetySources.py` | 文档导入前置拒绝、不重试、部分结果与报告证据 |
 | `python scripts/checks/Test-ImportSelectionSources.py` | 导入选择、冲突、覆盖与确定性排序 |
@@ -214,9 +214,9 @@ python scripts/checks/Check-TiaFeatures.py
 python scripts/checks/Check-BundleLayout.py --self-test
 python scripts/checks/Check-BundleLayout.py
 dotnet run --project build-tools/release -- validate-bundle -Strict
-python scripts/checks/Test-DotnetSuites.py --self-test
-python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
-python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership
+dotnet run --project build-tools/release -- test-suites -SelfTest
+dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy
+dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership
 dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 dotnet run --project build-tools/release -- build-configurator -Test
 ```
@@ -391,7 +391,7 @@ dotnet run src/Adapters/build/Test-AdapterInputs.cs -- --source-root src --publi
 `TiaMcp.WorkerChannel` 同时以 net48/net10.0 构建，无 Siemens 引用。其信封使用与 LegacyHost 相同的 STJ 包版本，DTO 编解码保持原样。[规则与预览测试对应表](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)列出保留和不适用的规则。
 
 ```powershell
-python scripts/checks/Test-DotnetSuites.py --suite worker-channel
+dotnet run --project build-tools/release -- test-suites -Suite worker-channel
 dotnet publish src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release -o bin-build/foundation-host
 dotnet build tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj -c Release
 # 如 CI foundation-transport：将 publish 文件复制到 runtime/v14sp1、v15.1、v16、v17、v18、v19，并写入各自 release-key.txt。
@@ -423,7 +423,7 @@ dotnet run --project build-tools/release -- validate-bundle -SelfTest
 dotnet run --project build-tools/release -- release -DocumentationOnly
 dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
 # 需要本机 V21 PublicAPI 和 .NET Framework 4.8 targeting pack；列入日常本机验证，不等待发布。
-dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicApiDirectory <V21-net48-SDK> -Python <python.exe>
+dotnet run scripts/checks/Test-DownloadRouteSelection.cs -- -SourceOnly -PublicApiDirectory <V21-net48-SDK>
 ```
 
 两项 `-SourceOnly` 检查通过仓库词法提取器定位当前生产方法并用 .NET 10 的 C# 编译器生成 net48 小夹具，

@@ -1,7 +1,7 @@
 {
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
-    "minimumPassed": 194,
+    "minimumPassed": 220,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -248,5 +248,11 @@
       "--filter",
       "FullyQualifiedName~SharedLifecycleTests"
     ]
+  },
+  "source-contracts": {
+    "project": "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj",
+    "minimumPassed": 85,
+    "maximumSkipped": 0,
+    "arguments": []
   }
 }

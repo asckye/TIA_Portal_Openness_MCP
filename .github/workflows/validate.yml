@@ -47,8 +47,8 @@ jobs:
           set -euo pipefail
           python scripts/checks/Test-NativeLifecycle.py --self-test
           python scripts/checks/Test-NativeMcpSession.py --self-test
-          python scripts/checks/Test-DotnetSuites.py --suite crash-evidence
-          python scripts/checks/Test-DotnetSuites.py --suite write-guard
+          dotnet run --project build-tools/release -- test-suites -Suite crash-evidence
+          dotnet run --project build-tools/release -- test-suites -Suite write-guard
           dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
       - name: Release feature defines match the reviewed table
         run: python scripts/checks/Check-TiaFeatures.py

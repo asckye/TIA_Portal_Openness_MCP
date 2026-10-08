@@ -218,26 +218,26 @@ internal static partial class ReleaseCommands
             nativeMcpSafety = RequireCount("nativeMcpSafety", mcpSafetyText, "COMPLETE: (\\d+) native MCP safety checks passed");
             RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
-            RunDotnetSuiteForRelease("write-guard", "write-guard", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            RunDotnetSuiteForRelease("write-guard", "write-guard", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             writeGuardPassed = ReadSuitePassed(suiteResults, "write-guard");
-            RunDotnetSuiteForRelease("crash-evidence", "crash-evidence", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            RunDotnetSuiteForRelease("crash-evidence", "crash-evidence", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             crashEvidencePassed = ReadSuitePassed(suiteResults, "crash-evidence");
             RunBuildSpec("tool-usage", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
             RunBuildSpec("version-catalog", python, [Path.Combine(Root, "scripts/checks/Test-VersionCatalogWiring.py")], outputDirectory, runTemp, cliHome, apiRoot);
 
             var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj");
             RestoreBuildProject(dotnet, offlineProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-            RunDotnetSuiteForRelease("offline", "offline", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            RunDotnetSuiteForRelease("offline", "offline", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlinePassed = ReadSuitePassed(suiteResults, "offline");
-            RunDotnetSuiteForRelease("offline-v20", "offline-v20", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            RunDotnetSuiteForRelease("offline-v20", "offline-v20", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlineV20Passed = ReadSuitePassed(suiteResults, "offline-v20");
             var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj");
             RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-            RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             versionPolicyPassed = ReadSuitePassed(suiteResults, "version-policy");
             var updaterSuiteProject = Path.Combine(Root, "tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj");
             RestoreBuildProject(dotnet, updaterSuiteProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
-            RunDotnetSuiteForRelease("updater", "updater", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            RunDotnetSuiteForRelease("updater", "updater", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             updaterPassed = ReadSuitePassed(suiteResults, "updater");
         }
         var writeGuardProject = Path.Combine(Root, "src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj");
@@ -625,7 +625,7 @@ internal static partial class ReleaseCommands
         WriteJson(manifestPath, manifest);
     }
 
-    private static void RunDotnetSuiteForRelease(string name, string tableName, string dotnet, string python, string resultDirectory,
+    private static void RunDotnetSuiteForRelease(string name, string tableName, string dotnet, string resultDirectory,
         string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget)
     {
         var spec = ReleaseCommandTable.Get(tableName);
@@ -634,8 +634,10 @@ internal static partial class ReleaseCommands
         var buildProperties = suite.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToArray();
         RunBuildRaw(dotnet, ["build", suite.GetProperty("project").GetString()!, "-c", "Release", "--no-restore", "-v:q", .. buildProperties],
             Path.Combine(outputDirectory, name + "-harness-build.log"), runTemp, cliHome, apiRoot, nuget, name + " harness build");
-        var args = new[] { Path.Combine(Root, "scripts/checks/Test-DotnetSuites.py"), "--suite", name, "--dotnet", dotnet, "--no-restore", "--dotnet-arg=--no-build", "--results-directory", resultDirectory };
-        RunBuildSpec(tableName, python, args, outputDirectory, runTemp, cliHome, apiRoot);
+        var options = Options.Parse(["-Suite", name, "-Dotnet", dotnet, "-NoRestore", "-DotnetArg=--no-build", "-ResultsDirectory", resultDirectory], new HashSet<string> { "NoRestore" });
+        var result = RunBuildIsolated(dotnet, [], Path.Combine(outputDirectory, spec.LogFile), runTemp, cliHome, apiRoot, null, false, name,
+            env => DotnetSuites.Run(Root, options, env));
+        ProcessRunner.RequireSuccess(result, spec.Command);
     }
 
     private static int ReadSuitePassed(string directory, string suite)
@@ -675,7 +677,7 @@ internal static partial class ReleaseCommands
     }
 
     private static CommandResult RunBuildIsolated(string executable, IEnumerable<string> arguments, string log, string runTemp, string cliHome,
-        string apiRoot, string? nuget, bool approval, string name)
+        string apiRoot, string? nuget, bool approval, string name, Func<IDictionary<string, string?>, CommandResult>? inProcess = null)
     {
         var args = arguments.ToList();
         if (Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
@@ -707,7 +709,7 @@ internal static partial class ReleaseCommands
             ["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"] = "false",
             ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0", ["MSBUILDDISABLENODEREUSE"] = "1", ["UseSharedCompilation"] = "false", ["NuGetAudit"] = "false"
         };
-        var result = CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env);
+        var result = inProcess is null ? CachedBuild(executable, args, () => ProcessRunner.Run(executable, args, Root, env), env) : inProcess(env);
         WriteLog(log, result);
         if (result.ExitCode == 0)
         {

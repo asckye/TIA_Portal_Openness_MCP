@@ -1,0 +1,3 @@
+{
+  "source": "namespace Demo {\nclass Service {\n    // public void Decoy() { }\n    public string Read(string text = \"}\") {\n        var literal = @\"public void Decoy() { }\";\n        var interpolated = $\"{new { Name = \"}\" }}\";\n        /* } */ return text;\n    }\n    public string Read(int count) => count.ToString();\n    [McpServerTool(Name = \"Read\")]\n    public string Tool() => Read(1);\n    class Nested { public void Read() { } }\n}\n}"
+}

@@ -25,6 +25,8 @@ internal static partial class ReleaseCommands
         "cache-info" => CacheInfo(options),
         "cache-clear" => CacheClear(options),
         "validate-bundle" => ValidateBundle(options),
+        "test-suites" => TestSuites(options),
+        "host-parity" => HostBehaviorParity(options),
         "get-bundled-dotnet" => GetBundledDotnet(options),
         "build-configurator" => BuildConfigurator(options),
         "build-studio" => BuildStudio(options),
@@ -47,7 +49,7 @@ internal static partial class ReleaseCommands
             ("tool usage catalog generator", Py, ["scripts/generate/Generate-ToolUsage.py", "--check"]),
             ("V4 contract snapshots", Py, ["scripts/checks/Snapshot-ToolContracts.py", "verify"]),
             ("V4 response snapshots", Py, ["scripts/checks/Snapshot-ToolResponses.py", "verify"]),
-            ("suite runner self-tests", Py, ["scripts/checks/Test-DotnetSuites.py", "--self-test"]),
+            ("suite runner self-tests", "test-suites", ["-SelfTest"]),
             ("release approval gate self-tests", Py, ["scripts/checks/Test-ReleaseApprovalGate.py", "--self-test"]),
             ("relocation checker self-tests", Py, ["scripts/checks/Test-RelocatedBundle.py", "--self-test"]),
             ("strict bundle rules", Dotnet, ["run", "--project", "build-tools/release", "--", "validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes"]),
@@ -63,7 +65,7 @@ internal static partial class ReleaseCommands
         foreach (var check in checks)
         {
             var arguments = AddOfflineNuGetConfig(check.Exe, check.Args);
-            var result = ProcessRunner.Run(check.Exe, arguments, Root);
+            var result = check.Exe == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(arguments, new HashSet<string> { "SelfTest" })) : ProcessRunner.Run(check.Exe, arguments, Root);
             if (result.ExitCode == 0)
             {
                 Console.WriteLine($"ok   {check.Name}");
@@ -1329,10 +1331,11 @@ internal static partial class ReleaseCommands
                     var host = CreateIsolatedHost(runTemp, "dotnet-suite-" + suite, approvalEnabled: false, apiRoot: api);
                     try
                     {
-                        var suiteArgs = new List<string> { "scripts/checks/Test-DotnetSuites.py", "--suite", suite, "--dotnet", dotnet,
-                            "--no-restore", "--dotnet-arg=--no-build", "--results-directory", Path.Combine(suiteResults, suite) };
-                        if (!string.IsNullOrWhiteSpace(nuget)) suiteArgs.Add("--dotnet-arg=-p:RestoreConfigFile=" + Path.GetFullPath(nuget));
-                        var result = RunLoggedProcess(python, suiteArgs, logs, suite + "-tests.log", null, host.Environment);
+                        var suiteArgs = new List<string> { "-Suite", suite, "-Dotnet", dotnet,
+                            "-NoRestore", "-DotnetArg=--no-build", "-ResultsDirectory", Path.Combine(suiteResults, suite) };
+                        if (!string.IsNullOrWhiteSpace(nuget)) suiteArgs.Add("-DotnetArg=-p:RestoreConfigFile=" + Path.GetFullPath(nuget));
+                        var result = DotnetSuites.Run(Root, Options.Parse(suiteArgs.ToArray(), new HashSet<string> { "NoRestore" }), host.Environment);
+                        WriteLog(Path.Combine(logs, suite + "-tests.log"), result);
                         ProcessRunner.RequireSuccess(result, "TRX suite gate failed: " + suite);
                         try { Directory.Delete(host.Root, true); }
                         catch (Exception ex) { Console.Error.WriteLine("WARNING release check data still in use (kept): " + host.Root + " (" + ex.Message + ")"); }
@@ -1349,9 +1352,12 @@ internal static partial class ReleaseCommands
                 foreach (string major in new[] { "20", "21" })
                 {
                     var parityDirectory = Path.Combine(suiteResults, "host-behavior-parity-v" + major);
-                    ProcessRunner.RequireSuccess(RunLoggedProcess(python,
-                        ["scripts/checks/Test-HostBehaviorParity.py", "--dotnet", dotnet, "--engine-major", major, "--results-directory", parityDirectory],
-                        logs, "host-behavior-parity-v" + major + ".log", nuget), "Host behavior parity gate failed: V" + major);
+                    var parityOptions = Options.Parse(["-Dotnet", dotnet, "-EngineMajor", major, "-ResultsDirectory", parityDirectory], new HashSet<string>());
+                    var parityEnvironment = new Dictionary<string, string?> { ["NuGetAudit"] = "false" };
+                    if (!string.IsNullOrWhiteSpace(nuget)) parityEnvironment["RestoreConfigFile"] = Path.GetFullPath(nuget);
+                    var parityResult = HostParity.Run(Root, parityOptions, parityEnvironment);
+                    WriteLog(Path.Combine(logs, "host-behavior-parity-v" + major + ".log"), parityResult);
+                    ProcessRunner.RequireSuccess(parityResult, "Host behavior parity gate failed: V" + major);
                     parityRows[major] = JsonNode.Parse(File.ReadAllText(Path.Combine(parityDirectory, "host-behavior-parity.json")));
                 }
                 validationNode["hostBehaviorParity"] = parityRows;

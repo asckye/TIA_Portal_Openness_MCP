@@ -9,7 +9,7 @@ internal static class Program
         "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
         "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
-        "DraftOnly", "DeleteDraft", "NoBuildCache", "CompileOnly"
+        "DraftOnly", "DeleteDraft", "NoBuildCache", "CompileOnly", "NoBuild"
     };
 
     public static int Main(string[] args)
@@ -61,7 +61,7 @@ internal static class CommandLine
     internal static readonly string[] Commands =
     [
         "release", "build-release", "build-multi-version", "run-release-build", "branch-gate", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
-        "build-studio", "build-configurator", "build-plc-workers", "prepare-delivery", "get-bundled-dotnet", "validate-bundle"
+        "build-studio", "build-configurator", "build-plc-workers", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity"
     ];
 }
 
@@ -77,11 +77,14 @@ internal sealed class Options
             var token = args[i];
             if (token.Length == 0 || token[0] != '-')
                 throw new ReleaseException($"Unexpected argument: {token}", 64);
-            var name = token.TrimStart('-');
+            var option = token.TrimStart('-');
+            var equals = option.IndexOf('=');
+            var name = (equals >= 0 ? option[..equals] : option).Replace("-", "", StringComparison.Ordinal);
             if (name.Length == 0)
                 throw new ReleaseException("Empty option name.", 64);
             string value;
-            if (booleanOptions.Contains(name))
+            if (equals >= 0) value = option[(equals + 1)..];
+            else if (booleanOptions.Contains(name))
             {
                 value = "true";
                 if (i + 1 < args.Length && bool.TryParse(args[i + 1], out _)) value = args[++i];

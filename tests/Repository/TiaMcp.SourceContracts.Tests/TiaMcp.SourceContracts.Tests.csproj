@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Shared/Xunit.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <GenerateProgramFile>true</GenerateProgramFile>
+    <RootNamespace>TiaMcp.SourceContracts.Tests</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
+    <None Update="Vectors/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

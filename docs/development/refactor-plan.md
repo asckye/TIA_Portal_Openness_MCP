@@ -155,7 +155,7 @@ P6-02 已完成，P6-01 已更新事实与路径待审查，其余为待实施�
 但在 L5-X 前不得切换发布能力；未验收族保持 current 行为。每次任务说明须列出精确路径，超出范围先停。
 
 公共证明缩写：`C`=`scripts/generate/Generate-Phase6Plan.py` --self-test/--check、仓库/死引用及全部 source-contracts；
-`T`=受影响离线套件按 `scripts/checks/Test-DotnetSuites.py` 的 TRX 最低数量门禁、0 失败；
+`T`=受影响离线套件按发布工具 `test-suites` 子命令（`dotnet run --project build-tools/release -- test-suites`）的 TRX 最低数量门禁、0 失败；
 `V`=八版实际名称/schema/响应快照符合生成映射，直接/CallTool/批次同形，版本/action 无扩张；
 `N`=逐方法前后 Siemens 调用顺序/参数/线程与全部织入类别差量，加本族故障证据及 L5。
 新增/移动/删除文件还必须运行 Strict/NoBinaries/SkipSourceHashes bundle 校验及三份必需文件清单核对。

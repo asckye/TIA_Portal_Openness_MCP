@@ -1,7 +1,7 @@
 <Solution>
   <!-- PlcWorker is built per TiaReleaseKey by the build-tools/release build-plc-workers command; it has no default release. -->
   <!-- Windows/.NET 10 SDK required for Studio. No Siemens assemblies required.
-       Registered xunit suites use scripts/checks/Test-DotnetSuites.py; unregistered console suites require dotnet run. -->
+       Registered xunit suites use the release-tool test-suites command; unregistered console suites require dotnet run. -->
   <Folder Name="/Engine/">
     <Project Path="src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <Project Path="src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
@@ -47,10 +47,14 @@
   <Folder Name="/Tools/">
     <Project Path="src/Updater/TiaMcp.Updater.csproj" />
     <Project Path="build-tools/release/TiaMcp.ReleaseTool.csproj" />
+    <Project Path="build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <Project Path="src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj" />
     <Project Path="tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj" />
     <Project Path="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     <Project Path="third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Repository/">
+    <Project Path="tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Release/">
     <Project Path="tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj" />

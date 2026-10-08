@@ -1,0 +1,514 @@
+[
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  },
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": false,
+      "data": null,
+      "error": {
+        "code": "OUTCOME_UNKNOWN"
+      },
+      "meta": {
+        "outcome": "unknown"
+      }
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": false,
+      "data": null,
+      "error": {
+        "code": "OUTCOME_UNKNOWN"
+      },
+      "meta": {
+        "outcome": "unknown"
+      }
+    },
+    "successfulError": "Tool failed: {\"code\": \"OUTCOME_UNKNOWN\"}"
+  },
+  {
+    "reply": [],
+    "envelopeError": "Expected an object result",
+    "successfulError": "Expected an object result"
+  },
+  {
+    "reply": null,
+    "envelopeError": "Expected an object result",
+    "successfulError": "Expected an object result"
+  },
+  {
+    "reply": {},
+    "envelopeError": "Expected structuredContent or one V4 TextContent",
+    "successfulError": "Expected structuredContent or one V4 TextContent"
+  },
+  {
+    "reply": {
+      "error": {
+        "code": -32602
+      }
+    },
+    "envelopeError": "JSON-RPC error: {\"code\": -32602}",
+    "successfulError": "JSON-RPC error: {\"code\": -32602}"
+  },
+  {
+    "reply": {
+      "result": []
+    },
+    "envelopeError": "Expected a CallToolResult object",
+    "successfulError": "Expected a CallToolResult object"
+  },
+  {
+    "reply": {
+      "content": []
+    },
+    "envelopeError": "Expected structuredContent or one V4 TextContent",
+    "successfulError": "Expected structuredContent or one V4 TextContent"
+  },
+  {
+    "reply": {
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": true,
+        "data": {
+          "items": []
+        },
+        "error": null,
+        "meta": {}
+      }
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  },
+  {
+    "reply": {
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"schemaVersion\": 4, \"ok\": true, \"data\": {\"items\": []}, \"error\": null, \"meta\": {}}"
+          }
+        ]
+      }
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  },
+  {
+    "reply": {
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": true,
+        "data": {
+          "items": []
+        },
+        "error": null,
+        "meta": {}
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schemaVersion\": 4, \"ok\": true, \"data\": {\"items\": []}, \"error\": null, \"meta\": {}}"
+        }
+      ]
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  },
+  {
+    "reply": {
+      "isError": true,
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": false,
+        "data": null,
+        "error": {
+          "code": "OUTCOME_UNKNOWN"
+        },
+        "meta": {
+          "outcome": "unknown"
+        }
+      }
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": false,
+      "data": null,
+      "error": {
+        "code": "OUTCOME_UNKNOWN"
+      },
+      "meta": {
+        "outcome": "unknown"
+      }
+    },
+    "successfulError": "Tool failed: {\"code\": \"OUTCOME_UNKNOWN\"}"
+  },
+  {
+    "reply": {
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": false,
+        "data": null,
+        "error": {
+          "code": "OUTCOME_UNKNOWN"
+        },
+        "meta": {
+          "outcome": "unknown"
+        }
+      }
+    },
+    "envelopeError": "V4 isError/ok mismatch",
+    "successfulError": "V4 isError/ok mismatch"
+  },
+  {
+    "reply": {
+      "isError": true,
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": true,
+        "data": {
+          "items": []
+        },
+        "error": null,
+        "meta": {}
+      }
+    },
+    "envelopeError": "V4 isError/ok mismatch",
+    "successfulError": "V4 isError/ok mismatch"
+  },
+  {
+    "reply": {
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": true,
+        "data": {
+          "items": []
+        },
+        "error": null,
+        "meta": {}
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schemaVersion\": 4, \"ok\": false, \"data\": null, \"error\": {\"code\": \"OUTCOME_UNKNOWN\"}, \"meta\": {\"outcome\": \"unknown\"}}"
+        }
+      ]
+    },
+    "envelopeError": "V4 structuredContent/text mismatch",
+    "successfulError": "V4 structuredContent/text mismatch"
+  },
+  {
+    "reply": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schemaVersion\": 4, \"ok\": true, \"data\": {\"items\": []}, \"error\": null, \"meta\": {}}"
+        },
+        {
+          "type": "text",
+          "text": "{\"schemaVersion\": 4, \"ok\": true, \"data\": {\"items\": []}, \"error\": null, \"meta\": {}}"
+        }
+      ]
+    },
+    "envelopeError": "Expected structuredContent or one V4 TextContent",
+    "successfulError": "Expected structuredContent or one V4 TextContent"
+  },
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": 1,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "envelopeError": "Invalid V4 envelope",
+    "successfulError": "Invalid V4 envelope"
+  },
+  {
+    "reply": {
+      "schemaVersion": 3,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "envelopeError": "Invalid V4 envelope",
+    "successfulError": "Invalid V4 envelope"
+  },
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": []
+    },
+    "envelopeError": "Invalid V4 envelope",
+    "successfulError": "Invalid V4 envelope"
+  },
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": {},
+      "meta": {}
+    },
+    "envelopeError": "Invalid V4 envelope",
+    "successfulError": "Invalid V4 envelope"
+  },
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": false,
+      "data": null,
+      "error": null,
+      "meta": {
+        "outcome": "unknown"
+      }
+    },
+    "envelopeError": "Invalid V4 envelope",
+    "successfulError": "Invalid V4 envelope"
+  },
+  {
+    "reply": {
+      "schemaVersion": 4,
+      "ok": false,
+      "data": {
+        "items": [
+          {
+            "index": 0,
+            "target": "SaveProject",
+            "result": {
+              "schemaVersion": 4,
+              "ok": false,
+              "data": null,
+              "error": {
+                "code": "NOT_EXECUTED"
+              },
+              "meta": {
+                "outcome": "unknown"
+              }
+            }
+          }
+        ]
+      },
+      "error": {
+        "code": "OUTCOME_UNKNOWN"
+      },
+      "meta": {
+        "outcome": "unknown"
+      }
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": false,
+      "data": {
+        "items": [
+          {
+            "index": 0,
+            "target": "SaveProject",
+            "result": {
+              "schemaVersion": 4,
+              "ok": false,
+              "data": null,
+              "error": {
+                "code": "NOT_EXECUTED"
+              },
+              "meta": {
+                "outcome": "unknown"
+              }
+            }
+          }
+        ]
+      },
+      "error": {
+        "code": "OUTCOME_UNKNOWN"
+      },
+      "meta": {
+        "outcome": "unknown"
+      }
+    },
+    "successfulError": "Tool failed: {\"code\": \"OUTCOME_UNKNOWN\"}"
+  },
+  {
+    "reply": {
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": true,
+        "data": {
+          "items": []
+        },
+        "error": null,
+        "meta": {}
+      },
+      "content": [
+        {
+          "type": "image",
+          "data": "opaque"
+        }
+      ]
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  },
+  {
+    "reply": {
+      "schemaVersion": 4.0,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "envelope": {
+      "schemaVersion": 4.0,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4.0,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  },
+  {
+    "reply": {
+      "structuredContent": {
+        "schemaVersion": 4,
+        "ok": true,
+        "data": {
+          "items": []
+        },
+        "error": null,
+        "meta": {}
+      },
+      "isError": 0
+    },
+    "envelope": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    },
+    "successful": {
+      "schemaVersion": 4,
+      "ok": true,
+      "data": {
+        "items": []
+      },
+      "error": null,
+      "meta": {}
+    }
+  }
+]

@@ -255,8 +255,9 @@ internal static partial class ReleaseCommands
             : Path.Combine(Root, "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj");
         RunReleaseRaw(dotnet, ["restore", project, "--configfile", Path.GetFullPath(nugetConfig), "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"],
             Path.Combine(output, "restore-" + suite + ".log"), runTemp, cliHome, apiRoot, nugetConfig, "restore " + suite + " suite");
-        var args = new[] { Path.Combine(Root, "scripts/checks/Test-DotnetSuites.py"), "--suite", suite, "--dotnet", dotnet, "--no-restore", "--results-directory", results };
-        var result = RunBuildIsolated(python, args, Path.Combine(output, suite + ".log"), runTemp, cliHome, apiRoot, null, false, suite);
+        var suiteOptions = Options.Parse(["-Suite", suite, "-Dotnet", dotnet, "-NoRestore", "-ResultsDirectory", results], new HashSet<string> { "NoRestore" });
+        var result = RunBuildIsolated(dotnet, [], Path.Combine(output, suite + ".log"), runTemp, cliHome, apiRoot, null, false, suite,
+            env => DotnetSuites.Run(Root, suiteOptions, env));
         ProcessRunner.RequireSuccess(result, suite + " suite failed");
         _ = ReadSuitePassed(results, suite);
     }

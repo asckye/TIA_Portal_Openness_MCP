@@ -4,7 +4,7 @@ internal static class Program
 {
     private static int Main()
     {
-        Console.Error.WriteLine("Use python scripts/checks/Test-DotnetSuites.py --suite version-policy, or dotnet test on this project.");
+        Console.Error.WriteLine("Use dotnet run --project build-tools/release -- test-suites -Suite version-policy, or dotnet test on this project.");
         return 2;
     }
 }

@@ -86,10 +86,14 @@
   <Folder Name="/Tools/">
     <Project Path="src/Updater/TiaMcp.Updater.csproj" />
     <Project Path="build-tools/release/TiaMcp.ReleaseTool.csproj" />
+    <Project Path="build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <Project Path="src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj" />
     <Project Path="tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj" />
     <Project Path="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     <Project Path="third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Repository/">
+    <Project Path="tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Release/">
     <Project Path="tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj" />
