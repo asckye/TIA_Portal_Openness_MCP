@@ -124,8 +124,7 @@ namespace TiaMcpServer
                 }
                 if (options.ToolCatalogOutput != null)
                 {
-                    AppDomain.CurrentDomain.AssemblyResolve += Engineering.Resolver;
-                    Cli.ToolCatalogExport.Write(options.ToolCatalogOutput);
+                    ExportToolCatalog(options.ToolCatalogOutput);
                     return;
                 }
                 if (!options.IsolateOpennessExplicit && !options.OpennessWorkerChild && !options.EngineWorker)
@@ -732,6 +731,14 @@ namespace TiaMcpServer
                 // Re-throw so host surfaces failure, but we still have the log on disk.
                 throw;
             }
+        }
+
+        // Build-time catalog export: no TIA attach and no version guard, so it stays out of Main's
+        // guarded startup; the resolver is registered before the catalog code is JIT-compiled.
+        private static void ExportToolCatalog(string output)
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += Engineering.Resolver;
+            Cli.ToolCatalogExport.Write(output);
         }
 
         private static bool MarkUnavailableIfOpennessAssembliesMissing()
