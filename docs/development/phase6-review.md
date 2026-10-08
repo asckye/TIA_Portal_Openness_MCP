@@ -1929,17 +1929,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 文件 | 类别:全部命中行 | 实施方式 |
 |---|---|---|
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 退役根变量:54 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
-| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:85 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
+| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:98 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 退役产品名:48 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 退役产品名:24,76 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
-| [manifest/configurator-build.json](../../manifest/configurator-build.json) | 退役产品名:6 | 生成记录只由所属生成器重建；不手工改写扫描命中 |
 | [manifest/history/contracts-v3/responses/20.json](../../manifest/history/contracts-v3/responses/20.json) | 退役产品名:66 | 历史契约只读归档；不编辑内容、不重算哈希 |
 | [manifest/history/contracts-v3/responses/21.json](../../manifest/history/contracts-v3/responses/21.json) | 退役产品名:55 | 历史契约只读归档；不编辑内容、不重算哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 退役产品名:31,37 | 生成记录只由所属生成器重建；不手工改写扫描命中 |
-| [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 退役产品名:2821,3069,3317,3565,3813,4061,4393,4397,4677,4681 | 生成记录只由所属生成器重建；不手工改写扫描命中 |
-| [manifest/release-build.json](../../manifest/release-build.json) | 退役产品名:2099,2104,2454,2459 | 生成记录只由所属生成器重建；不手工改写扫描命中 |
+| [scripts/operations/delivery-files.json](../../scripts/operations/delivery-files.json) | 退役产品名:90,91,96,97,136,137,142,143 | 更新器的排除与旧文件清理名单：按名删除退役文件，不是现行引用 |
 
-共 10 个候选文件。扫描只匹配退役的产品文件名、TIA_MCP_REPOSITORY_ROOT 和私人默认路径标记；E1 表逐项核对仍在使用的严格 BundleLayout 入口。发布/验收/迁移证据和生成清单按其只读或再生成规则标注。扫描不命中已批准的新产品名、BundleLayout 包装器、显式 workspaceRoot 或当前日志文件名。
+共 8 个候选文件。扫描只匹配退役的产品文件名、TIA_MCP_REPOSITORY_ROOT 和私人默认路径标记；E1 表逐项核对仍在使用的严格 BundleLayout 入口。发布/验收/迁移证据和生成清单按其只读或再生成规则标注。扫描不命中已批准的新产品名、BundleLayout 包装器、显式 workspaceRoot 或当前日志文件名。
 
 </details>
 

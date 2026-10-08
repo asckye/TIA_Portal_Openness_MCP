@@ -927,6 +927,7 @@ for f in sorted(files, key=lambda p: p.replace("manifest/history/contracts-v3/",
         treatment = "生成记录只由所属生成器重建；不手工改写扫描命中"
     elif f.startswith(("docs/releases/", "docs/archive/", "docs/development/evidence/", "docs/reference/real-machine-ledger.md")): treatment = "历史发布/验收证据只读保留，不作为 V4 改写目标"
     elif f.startswith("tests/"): treatment = "回归负例证据只读保留；断言退役名称或变量不能重新生效"
+    elif f == "scripts/operations/delivery-files.json": treatment = "更新器的排除与旧文件清理名单：按名删除退役文件，不是现行引用"
     elif f in ("docs/development/repository-layout.md", "docs/development/runtime-layout.md"): treatment = "BundleLayout 迁移证据只读保留；现行定位规则在同页明确"
     elif f.startswith("docs/development/"): treatment = "更新现行说明；历史阶段证据保留并注明被 V4 决策取代"
     scan.append([link(f, f), "; ".join(k+":"+",".join(v) for k,v in hits.items()), treatment])
