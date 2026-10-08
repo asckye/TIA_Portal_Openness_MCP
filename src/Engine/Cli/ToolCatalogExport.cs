@@ -15,8 +15,6 @@ namespace TiaMcpServer.Cli
         internal static void Write(string path)
         {
             var tools = McpServer.GetAllTools();
-            var methods = McpServer.AllToolMethods();
-            var signature = typeof(McpServer).GetMethod("RenderSignature", BindingFlags.NonPublic | BindingFlags.Static)!;
             var catalog = new {
                 formatVersion = 1, release = McpServer.ReleaseKey,
                 workerSha256 = Worker.EngineWorkerHost.Hash(Assembly.GetExecutingAssembly().Location),
@@ -24,30 +22,21 @@ namespace TiaMcpServer.Cli
                 liteTools = McpServer.GetLiteTools().Select(t => t.ProtocolTool.Name).ToArray(),
                 behaviorCapabilities = BehaviorCapabilities.Table(typeof(McpServer).Assembly, McpServer.ReleaseKey),
                 serverInstructions = McpGuides.ServerInstructions,
-                descriptors = tools.Select(t => Describe(t.ProtocolTool.Name, methods[t.ProtocolTool.Name], signature)).ToArray()
+                descriptors = tools.Select(t => Describe(McpServer.CatalogView.All[t.ProtocolTool.Name])).ToArray(),
+                unavailableTools = McpServer.CatalogView.IncludingUnavailable.Values
+                    .Where(t => !McpServer.CatalogView.All.ContainsKey(t.Name))
+                    .Select(t => new { tool = t.Tool, descriptor = Describe(t) }).ToArray()
             };
             File.WriteAllText(Path.GetFullPath(path), JsonSerializer.Serialize(catalog, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions), new UTF8Encoding(false));
         }
 
-        // Standalone builder seam: P7-02 can replace this without changing the wire format.
-        private static object Describe(string name, MethodInfo method, MethodInfo signature)
+        private static object Describe(ToolDescriptor tool)
         {
-            var classification = method.GetCustomAttribute<ToolClassificationAttribute>()?.Value ?? ToolMetadata.Find(name)!;
-            var dryRun = method.GetParameters().FirstOrDefault(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
             return new {
-                name, rawDescription = method.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "",
-                classification = new { level = classification.Layer, domain = classification.Domain, operation = classification.Operation,
-                    batchRead = classification.BatchRead, batchWrite = classification.BatchWrite },
-                signature = (string)signature.Invoke(null, new object[] { name, method })!,
-                parameters = McpServer.SpecsOf(method).Select(s => {
-                    var parameter = method.GetParameters().Single(p => p.Name == s.Name);
-                    return new { name = s.Name, friendlyType = s.Kind, clrType = parameter.ParameterType.FullName, required = s.Required,
-                        defaultJson = s.DefaultText, defaultText = parameter.HasDefaultValue ? parameter.DefaultValue?.ToString() : null,
-                        description = s.Description, synthesized = s.Synthesized, allowedValues = s.AllowedValues };
-                }).ToArray(),
-                dryRun = new { present = dryRun != null, @default = dryRun?.DefaultValue as bool? },
-                candidateFamily = method.GetCustomAttribute<BehaviorCandidateAttribute>()?.Family,
-                execution = name is "GetExportContent" or "ListExportHandles" || ToolTaxonomy.IsSafeWithoutTia(name) ? "host" : "worker"
+                name = tool.Name, rawDescription = tool.RawDescription, classification = tool.Classification,
+                signature = tool.Signature, parameters = tool.Parameters,
+                dryRun = new { present = tool.DryRun.Present, @default = tool.DryRun.Present ? (bool?)tool.DryRun.Default : null },
+                candidateFamily = tool.CandidateFamily, execution = tool.Execution
             };
         }
     }

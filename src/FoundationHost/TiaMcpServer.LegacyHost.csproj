@@ -18,22 +18,10 @@
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.4.25258.110" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../Shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../EngineHost/TiaMcp.EngineHost.csproj" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../Shared/InvocationJournal.cs" Link="Journal/InvocationJournal.Shared.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
-    <Compile Include="../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="../Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs" Link="EngineLocal/XmlBuilderTools.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="EngineLocal/XmlBuildResults.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="EngineLocal/ImportOrderTools.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" Link="EngineLocal/McpServer.Exports.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/ToolExamples.cs" Link="EngineLocal/ToolExamples.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/Responses.cs" Link="EngineLocal/Responses.cs" />
-    <Compile Include="../Engine/ModelContextProtocol/Types.cs" Link="EngineLocal/Types.cs" />
   </ItemGroup>
 </Project>

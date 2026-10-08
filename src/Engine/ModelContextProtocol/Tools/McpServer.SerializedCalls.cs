@@ -40,6 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane)
             => lane = Isolation.ToolDispatchLanes.Enter(name, McpDispatchCancellation.Value);
+#if !TIA_ENGINE_HOST
         private sealed class WorkerGenerationKey
         {
             internal long Generation = -1;
@@ -64,7 +65,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static object? ReadyApprovalSessionKey() => EngineServices.GetIfInitialized(typeof(Siemens.Portal));
+#endif
+#if !TIA_ENGINE_HOST
         static partial void ApprovalBindingIdentity(ref string? identity) => identity = InvocationJournal.BindingSnapshot?.Invoke()?.ToJsonString();
+#endif
         static partial void ApprovalWaitSignal(string phase, int seconds)
         {
             if (Isolation.IsolatedWorkerHost.IsChild && ProgressRequest.Value is { } request)
@@ -77,6 +81,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         static partial void RecordBridgeEvent(string id, string name, string phase)
         { if (!TiaOpenness.Shared.AuditInvocation.IsReadOnlyPreview) InvocationJournal.Write(id, name, phase); }
+#if !TIA_ENGINE_HOST
         static partial void StartCallProjection(string id, System.Reflection.MethodInfo method, object?[] arguments, ref System.IDisposable? observation)
         {
             if (TiaOpenness.Shared.AuditInvocation.IsReadOnlyPreview) return;
@@ -99,6 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (observation is InvocationJournal.CallSpan span)
                 span.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
         }
+#endif
         static partial void RecordAdmissionRejection(RequestContext<CallToolRequestParams> request, CallToolResult result)
         {
             try
@@ -120,6 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (System.Exception) /* swallow(logging-failure): journal failures cannot replace an existing rejection response */ { }
         }
+#if !TIA_ENGINE_HOST
         static partial void ValidateRuntimeBinding(System.Reflection.MethodInfo method)
         {
             // The bridge has already selected an attributed overload. Looking it up
@@ -140,6 +147,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (portal != null && PreflightLogic.NeedsProject(operation ?? ToolTaxonomy.OperationOf(name, null).Operation, name))
                 portal.VerifyBinding(name);
         }
+#endif
         internal static IList<McpServerTool> WrapWithSerializedCalls(IList<McpServerTool> tools)
         {
             var result = new List<McpServerTool>();

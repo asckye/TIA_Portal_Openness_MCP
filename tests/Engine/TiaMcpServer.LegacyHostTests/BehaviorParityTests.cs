@@ -41,6 +41,8 @@ public sealed class BehaviorParityTests
                     : new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["dir"] = bundle, ["dryRun"] = true };
                 File.WriteAllText(Path.Combine(bundle, "P.ap18"), "fixture");
                 var engine = JsonNode.Parse(enginefixture::TiaMcpServer.Tests.BehaviorParityEngine.RunPrecondition(tool, message, parameter, argument, wrapped, true, args.ToJsonString()))!;
+                var shared = JsonNode.Parse(EngineHostParity.RunPrecondition(tool, message, parameter, argument, wrapped, true, args.ToJsonString()))!;
+                Assert.True(JsonNode.DeepEquals(BehaviorParityCases.Project(engine), BehaviorParityCases.Project(shared)));
                 Assert.Contains(message, (string?)engine["error"]?["message"]);
                 Assert.Equal(parameter, (string?)engine["error"]?["details"]?["parameter"]);
                 foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
@@ -157,6 +159,8 @@ public sealed class BehaviorParityTests
     public async Task Dispatch_paths_have_identical_behavior(string scenario, string code, string outcome, string execution)
     {
         var engine = JsonNode.Parse(enginefixture::TiaMcpServer.Tests.BehaviorParityEngine.Run(scenario))!;
+        var shared = JsonNode.Parse(EngineHostParity.Run(scenario))!;
+        Assert.True(JsonNode.DeepEquals(engine, shared), scenario + "\nengine=" + engine + "\nshared=" + shared);
         if (Environment.GetEnvironmentVariable("TIA_MCP_PARITY_ENGINE_RELEASE") is string expectedRelease)
             Assert.Equal(expectedRelease, (string?)engine["engineRelease"]);
         engine.AsObject().Remove("engineRelease");

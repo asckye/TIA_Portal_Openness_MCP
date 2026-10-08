@@ -51,8 +51,8 @@ internal sealed class HostOptions
             TiaVersionCatalog.RequireMatchingEngine(release, Value("--tia-major-version"));
         var version = TiaVersionCatalog.RequireRunnable(release);
         bool engine = options.ContainsKey("--engine-worker");
-        if (engine != options.ContainsKey("--engine-catalog") || engine && release != "21")
-            throw new ArgumentException("The engine slice requires release 21 and both --engine-worker and --engine-catalog.");
+        if (engine != options.ContainsKey("--engine-catalog") || engine && release is not ("20" or "21"))
+            throw new ArgumentException("The engine host requires release 20 or 21 and both --engine-worker and --engine-catalog.");
         int timeout = 120;
         if (options.ContainsKey("--worker-timeout-seconds") && (!int.TryParse(Value("--worker-timeout-seconds"), out timeout) || timeout <= 0))
             throw new ArgumentException("--worker-timeout-seconds must be positive.");

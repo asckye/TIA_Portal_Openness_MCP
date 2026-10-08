@@ -16,6 +16,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static ResponseMessage ReadOpennessWorkerStatus()
         {
+#if TIA_ENGINE_HOST
+            var worker = Worker.Snapshot();
+#else
             var metadata = typeof(McpServer).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
                 .FirstOrDefault(attribute => attribute.Key == "TiaMcpWorkerIsolationDefault")?.Value;
             var worker = IsolatedWorkerHost.Current?.Snapshot() ?? new JsonObject {
@@ -26,6 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
             worker["forceOff"] = "--no-isolate-openness";
             worker["environmentReady"] = Runtime.OpennessReadiness.Ready;
             worker["environmentCause"] = Runtime.OpennessReadiness.Cause;
+#endif
             return new ResponseMessage {
                 Message = "Local worker and TIA environment state; no native call was made.",
                 Meta = ResponseMeta.Unstamped(true, ("worker", worker))
@@ -40,9 +44,14 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage RestartOpennessWorker(
             [Description("confirmRestart: false previews only; true discards the idle/faulted worker and its bindings without replaying any operation.")] bool confirmRestart = false)
         {
+#if TIA_ENGINE_HOST
+            return new ResponseMessage { Message = "Worker reset request evaluated; no TIA project was opened or saved.",
+                Meta = Worker.Restart(confirmRestart, System.Threading.CancellationToken.None).GetAwaiter().GetResult() };
+#else
             var supervisor = IsolatedWorkerHost.Current;
             return new ResponseMessage { Message = supervisor == null ? "Isolated worker mode is not enabled." : "Worker reset request evaluated; no TIA project was opened or saved.",
                 Meta = supervisor?.Restart(confirmRestart) ?? ResponseMeta.Unstamped(false, ("enabled", false)) };
+#endif
         }
     }
 }

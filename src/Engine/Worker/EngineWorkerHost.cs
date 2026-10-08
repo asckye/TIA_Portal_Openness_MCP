@@ -60,6 +60,7 @@ namespace TiaMcpServer.Worker
 
         private void ProcessLost(string reason) => nativeFault = reason;
         private JsonObject Status() => new JsonObject {
+            ["releaseKey"] = McpServer.ReleaseKey, ["behaviorCapabilities"] = McpServer.CatalogView.BehaviorCapabilities.DeepClone(),
             ["readiness"] = new JsonObject { ["ready"] = OpennessReadiness.Ready, ["cause"] = OpennessReadiness.Cause,
                 ["recommendedFix"] = OpennessReadiness.FixEn, ["recommendedFixZh"] = OpennessReadiness.FixZh },
             ["binding"] = JsonNode.Parse(binding), ["session"] = CachedSession(), ["nativeFault"] = nativeFault
@@ -72,7 +73,7 @@ namespace TiaMcpServer.Worker
             // uses cached identity and OS liveness; it never queries native collections.
             var type = typeof(EngineWorkerHost).Assembly.GetType("TiaMcpServer.Siemens.Portal")!;
             var portal = EngineServices.GetIfInitialized(type);
-            return portal == null ? null : JsonSerializer.SerializeToNode(type.GetMethod("GetState")!.Invoke(portal, null));
+            return portal == null ? null : JsonSerializer.SerializeToNode(type.GetMethod("GetState")!.Invoke(portal, null), new JsonSerializerOptions(JsonSerializerDefaults.Web));
         }
 
         private ChannelResponse Dispatch(ChannelRequest request)

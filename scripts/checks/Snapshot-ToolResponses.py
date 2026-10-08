@@ -1,7 +1,8 @@
 """Capture and compare offline responses and pre-invocation dispatch refusals.
 
-The executable/harness/PublicAPI options match Snapshot-ToolContracts.py. No TIA
-attachment, worker, or network service is invoked. check_usage owns
+The executable/harness/PublicAPI options match Snapshot-ToolContracts.py. The
+optional --engine-host mode launches the explicitly marked SDK fixture worker;
+--transport http selects a local HTTP fixture. No TIA attachment is performed. check_usage owns
 the existing in-memory example allowlist; additional calls below are deliberately
 literal, never selected for execution by a tool description or a name prefix.
 V20/V21 use full STDIO plus a separate lite STDIO bridge session. Foundation
@@ -487,6 +488,8 @@ def capture_readiness_overrides(harness, packaged_no_tia):
 
 
 def sdk_only_harness(args, release):
+    if getattr(args, 'engine_host', None):
+        return None
     if args.packaged_no_tia or release not in FULL_RELEASES:
         return args.harness.resolve() if args.harness else None
     if args.harness:
@@ -605,9 +608,11 @@ def capture_release(args, release, exe, public_api):
                 env.update(capture_readiness_overrides(harness, args.packaged_no_tia))
             portal_root = (resources.sdk_only_installation(public_api, int(release), scratch)
                            if release in FULL_RELEASES else public_api)
-        with resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
+        server = (contracts.engine_host_server(args, release, portal_root, 'full', env) if args.engine_host
+                  else resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
                               harness, public_api, env_overrides=env
-                              ) as (rpc, _, logs):
+                              ))
+        with server as (rpc, _, logs):
             tools = initialize(rpc)
             entries = {}
             call = recorder(rpc, entries, 'full', release)
@@ -726,8 +731,10 @@ def capture_release(args, release, exe, public_api):
                     'l1Domains': domain_calls}}
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during capture')
-        with resources.server(capture_exe, portal_root, int(release), 'stdio', 'lite',
-                              args.harness.resolve() if args.harness else None, public_api, env_overrides=env) as (rpc, _, logs):
+        server = (contracts.engine_host_server(args, release, portal_root, 'lite', env) if args.engine_host
+                  else resources.server(capture_exe, portal_root, int(release), 'stdio', 'lite',
+                              args.harness.resolve() if args.harness else None, public_api, env_overrides=env))
+        with server as (rpc, _, logs):
             lite = initialize(rpc)
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
             bridge = recorder(rpc, entries, 'lite', release)
@@ -1167,6 +1174,12 @@ class RawResponseTests(unittest.TestCase):
             args.packaged_no_tia = False
             self.assertIsNone(sdk_only_harness(args, '19'))
 
+    def test_engine_host_capture_uses_its_worker_instead_of_the_http_harness(self):
+        args = argparse.Namespace(packaged_no_tia=False, harness=None,
+                                  repo_root=Path.cwd(), engine_host=Path('FoundationHost.exe'))
+        self.assertIsNone(sdk_only_harness(args, '20'))
+        self.assertIsNone(sdk_only_harness(args, '21'))
+
     def test_frozen_snapshot_fields(self):
         root = Path(__file__).resolve().parents[2]
         snapshot = json.loads((root / 'manifest/contracts/v4/responses/21.json').read_text(encoding='utf-8'))
@@ -1396,6 +1409,10 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', required=True, type=Path)
+    capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost with SDK fixture workers')
+    capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH')
+    capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')
+    capture_parser.add_argument('--transport', choices=('stdio', 'http'), default='stdio', help='EngineHost transport')
     capture_parser.add_argument('--harness', type=Path,
                                 help='HttpTests host harness for V20/V21 sdk-only captures (defaults to the built harness)')
     capture_parser.add_argument('--public-api-root', type=Path)

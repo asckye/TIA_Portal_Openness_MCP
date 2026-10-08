@@ -41,6 +41,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static CallToolResult? SessionPrecheckRefusal(string name)
         {
+#if TIA_ENGINE_HOST
+            if (name == "RestartOpennessWorker") return null;
+#endif
             if (!ToolTaxonomy.UsesOpennessLane(name)) return null;
             var key = CurrentApprovalSession();
             return SessionBehavior.RequiresReset(key != null && SessionFaults.GetValue(key, _ => new SessionFault()).Unknown, ToolTaxonomy.UsesOpennessLane(name))

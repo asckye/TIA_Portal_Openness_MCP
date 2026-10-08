@@ -1,0 +1,40 @@
+<Project>
+  <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ToolDescriptor.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.Approval.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.Batch.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.Profile.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ToolUsageTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ImportStagingTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/XmlBuildResults.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/EcosystemTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/TemplateTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ExportTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/SessionToolContract.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/OfflineToolExecution.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Responses.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Types.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/ToolExamples.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/McpHints.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/McpPrompts.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/McpPromptRegistration.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/InvocationJournal.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/Isolation/ToolDispatchLanes.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/Isolation/OpennessReadinessGuard.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.Worker.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs" />
+    <Compile Include="@(EngineHostSource)" Link="EngineHost/%(Filename)%(Extension)" Condition="'$(MSBuildProjectName)' == 'TiaMcp.EngineHost'" />
+    <Compile Update="@(EngineHostSource)" Link="EngineHost/%(Filename)%(Extension)" Condition="'$(MSBuildProjectName)' != 'TiaMcp.EngineHost'" />
+  </ItemGroup>
+</Project>

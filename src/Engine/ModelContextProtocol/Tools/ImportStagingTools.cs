@@ -35,6 +35,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!HttpTransport || CurrentSession.Value != null) return null;
             var meta = JsonSerializer.SerializeToNode(request.Params?.Meta, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
             string? token = (string?)meta?[SessionMetadata];
+#if TIA_ENGINE_HOST
+            token = request.Server.SessionId;
+#endif
             if (token == null || !HttpSessions.TryGetValue(token, out var session)) throw new InvalidOperationException("The HTTP MCP session is unavailable; initialize a new session.");
             return new SessionScope(session);
         }

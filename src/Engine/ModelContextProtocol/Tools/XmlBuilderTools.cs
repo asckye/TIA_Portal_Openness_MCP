@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,7 +18,6 @@ using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 
 
-using TiaMcpServer.Siemens.Services;
 
 namespace TiaMcpServer.ModelContextProtocol
 {

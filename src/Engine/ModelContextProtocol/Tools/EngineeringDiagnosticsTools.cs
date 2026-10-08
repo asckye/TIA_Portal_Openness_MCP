@@ -22,7 +22,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage InspectSimaticSdCompatibility([Description("Absolute input/output path on the MCP server, with the documented extension.")] string filePath, [Description("20 or 21; 0 selects the current engine.")] int tiaMajor = 0, [Description("Caller-known installed Update number; -1 means unknown.")] int installedUpdate = -1)
         {
+            #if TIA_ENGINE_HOST
+            if (tiaMajor == 0) tiaMajor = int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
+#else
             if (tiaMajor == 0) tiaMajor = Engineering.TiaMajorVersion;
+#endif
             if (tiaMajor != 20 && tiaMajor != 21 || installedUpdate < -1) throw new ArgumentException("tiaMajor must be 20/21; installedUpdate >= -1.");
             var file = new FileInfo(filePath);
             if (!Path.IsPathRooted(filePath) || !file.Exists || !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) || file.Length > 20 * 1024 * 1024)
@@ -32,6 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return new ResponseMessage { Message = "Format compatibility risks inspected; no native call or project change.", Meta = meta };
         }
 
+#if !TIA_ENGINE_HOST
         [McpServerTool(Name = "GetOpennessCompatibility"), Description("[L2][Diagnostics][READ] Read this server's loaded Siemens.Engineering assembly file versions and compiled engine capabilities without connecting to TIA. SDK file versions do not establish installed TIA Update/Hotfix: installedPatch remains unknown. Includes links to relevant Siemens V20 SD and V21 stability fixes, native-cross-reference policy and unsupported faceplate-type authoring boundary.")]
         public CallToolResult GetOpennessCompatibilityV4()
             => SessionToolContract.Run("GetOpennessCompatibility", false, false, () => ReadOpennessCompatibility());
@@ -58,6 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     "https://docs.tia.siemens.cloud/r/en-us/v21.0/tia-portal-hotfixes-readme/improvements-in-update-2-hotfix-1/deletion-of-invalid-networks-during-compilation") } };
         }
 
+#endif
         [McpServerTool(Name = "GetNativeInvocationLog"), Description("[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500.")]
         public CallToolResult GetNativeInvocationLogV4([Description("Number of recent entries, 1..500.")] int take = 100)
             => SessionToolContract.Run("GetNativeInvocationLog", false, false, () => ReadNativeInvocationLog(take));

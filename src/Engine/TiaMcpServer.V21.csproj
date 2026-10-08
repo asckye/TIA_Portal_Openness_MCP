@@ -62,4 +62,5 @@
   <ItemGroup>
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
+  <Import Project="../EngineHost/EngineHostSources.props" />
 </Project>

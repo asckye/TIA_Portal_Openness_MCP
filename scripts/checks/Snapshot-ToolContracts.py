@@ -15,6 +15,126 @@ import re
 import shutil
 import subprocess
 import sys
+from contextlib import contextmanager
+import os
+import queue
+import secrets
+import socket
+import threading
+import time
+import urllib.request
+import urllib.error
+
+
+def engine_overrides(values, option):
+    result = {}
+    for value in values:
+        release, separator, path = value.partition('=')
+        if not separator or release not in ('20', '21') or not path or release in result:
+            raise ValueError(option + ' must be unique RELEASE=PATH entries for 20/21')
+        result[release] = Path(path).resolve()
+    return result
+
+
+@contextmanager
+def engine_host_server(args, release, portal_root, profile, env_overrides):
+    workers = engine_overrides(args.engine_worker, '--engine-worker')
+    catalogs = engine_overrides(args.engine_catalog, '--engine-catalog')
+    if release not in workers or release not in catalogs:
+        raise ValueError('EngineHost capture requires a worker and catalog for V' + release)
+    transport = args.transport
+    key = secrets.token_urlsafe(24)
+    port = 0
+    if transport == 'http':
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+    endpoint = f'http://127.0.0.1:{port}/mcp'
+    command = [str(args.engine_host.resolve()), '--bundle-root', str(args.repo_root.resolve()),
+               '--release-key', release, '--engine-worker', str(workers[release]), '--engine-catalog', str(catalogs[release]),
+               '--profile', profile, '--transport', transport]
+    if portal_root is not None:
+        command += ['--tia-portal-location', str(portal_root)]
+    if transport == 'http':
+        command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
+    environment = dict(os.environ, **env_overrides)
+    environment['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
+    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True, encoding='utf-8', env=environment, creationflags=subprocess.CREATE_NO_WINDOW)
+    output, errors = queue.Queue(), []
+    def drain_stdout():
+        for line in process.stdout:
+            if line.strip():
+                output.put(line)
+        output.put(None)
+    def drain_stderr():
+        errors.extend(process.stderr)
+    readers = [threading.Thread(target=drain_stdout, daemon=True), threading.Thread(target=drain_stderr, daemon=True)]
+    for reader in readers:
+        reader.start()
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    session_id = None
+    def http(body):
+        nonlocal session_id
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream',
+                   'Authorization': 'Bearer ' + key}
+        if session_id:
+            headers['Mcp-Session-Id'] = session_id
+        request = urllib.request.Request(endpoint, json.dumps(body).encode('utf-8'), headers)
+        with opener.open(request, timeout=25) as response:
+            session_id = response.headers.get('Mcp-Session-Id', session_id)
+            raw = response.read().decode('utf-8')
+            if response.headers.get('Content-Type', '').startswith('text/event-stream'):
+                raw = next(line[6:] for line in raw.splitlines() if line.startswith('data: '))
+            return json.loads(raw) if raw else None
+    def rpc(method, request_id=1, params=None, include_params=True, notification=False):
+        message = {'jsonrpc': '2.0', 'method': method}
+        if not notification:
+            message['id'] = request_id
+        if include_params:
+            message['params'] = params or {}
+        if transport == 'http':
+            reply = http(message)
+        else:
+            process.stdin.write(json.dumps(message, ensure_ascii=False) + '\n')
+            process.stdin.flush()
+            if notification:
+                return None
+            while True:
+                raw = output.get(timeout=25)
+                if raw is None:
+                    raise ValueError('EngineHost exited: ' + ''.join(errors))
+                reply = json.loads(raw)
+                if 'id' in reply:
+                    break
+        if not notification and (reply is None or reply.get('id') != request_id):
+            raise ValueError('EngineHost response ID mismatch: ' + method)
+        return reply
+    try:
+        if transport == 'http':
+            deadline = time.monotonic() + 25
+            while True:
+                if process.poll() is not None:
+                    raise ValueError('EngineHost exited: ' + ''.join(errors))
+                try:
+                    with opener.open(endpoint + '/health', timeout=2):
+                        break
+                except (urllib.error.URLError, TimeoutError):
+                    if time.monotonic() >= deadline:
+                        raise ValueError('EngineHost HTTP startup timed out')
+                    time.sleep(.1)
+        yield rpc, http, errors
+    finally:
+        process.stdin.close()
+        try:
+            process.wait(timeout=3 if transport == 'stdio' else .2)
+        except subprocess.TimeoutExpired:
+            process.terminate()
+            process.wait(timeout=5)
+        for reader in readers:
+            reader.join(timeout=5)
+        process.stdout.close()
+        process.stderr.close()
 
 
 RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
@@ -115,9 +235,11 @@ def capture(args):
                            if args.harness is None else public_api)
             rosters = {}
             for profile in ('full', 'lite'):
-                with resources.server(exe, portal_root, int(release), 'stdio', profile,
+                server = (engine_host_server(args, release, portal_root, profile, {"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"})
+                          if args.engine_host else resources.server(exe, portal_root, int(release), 'stdio', profile,
                                       args.harness.resolve() if args.harness else None, public_api,
-                                      env_overrides={"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"}) as (rpc, _, logs):
+                                      env_overrides={"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"}))
+                with server as (rpc, _, logs):
                     reply = rpc('initialize', params={'protocolVersion': '2024-11-05',
                         'capabilities': {}, 'clientInfo': {'name': 'contract-snapshot', 'version': '1'}})
                     resources.require('result' in reply, f'Initialize failed: {reply}')
@@ -400,6 +522,10 @@ def main():
     commands.add_parser('self-test', help='Exercise capability/output/schema negative cases').set_defaults(run=self_test)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', type=Path, required=True)
+    capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through the opt-in FoundationHost')
+    capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH', help='SDK fixture engine worker built with TiaMcpEngineWorkerSdkFixture=true')
+    capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')
+    capture_parser.add_argument('--transport', choices=('stdio', 'http'), default='stdio', help='EngineHost transport')
     capture_parser.add_argument('--harness', type=Path,
                                 help='Optional test host harness; by default V20/V21 run as the real EXE')
     capture_parser.add_argument('--output', type=Path, required=True)

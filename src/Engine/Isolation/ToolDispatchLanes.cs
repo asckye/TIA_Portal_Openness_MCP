@@ -20,9 +20,17 @@ namespace TiaMcpServer.Isolation
         {
             // Orchestration waits for approval and takes each target's lane itself.
             if (ToolTaxonomy.DispatchesTargets(name)) return null;
+#if TIA_ENGINE_HOST
+            bool workerTool = McpServer.CatalogView.Find(name, true)?.Execution == "worker";
+            var gate = workerTool && ToolTaxonomy.UsesOpennessLane(name) ? Sessions.GetValue(session, _ => new SemaphoreSlim(1, 1)) : Local;
+#else
             var gate = ToolTaxonomy.UsesOpennessLane(name) ? Sessions.GetValue(session, _ => new SemaphoreSlim(1, 1)) : Local;
+#endif
             for (var held = Held.Value; held != null; held = held.previous)
                 if (ReferenceEquals(held.gate, gate)) return null;
+#if TIA_ENGINE_HOST
+            if (!ReferenceEquals(gate, Local)) return new Lease(gate, await McpServer.Worker.Acquire(token).ConfigureAwait(false));
+#endif
             await gate.WaitAsync(token).ConfigureAwait(false);
             return new Lease(gate);
         }
@@ -36,13 +44,22 @@ namespace TiaMcpServer.Isolation
         // AsyncLocal changes in an awaited callee do not flow back into its caller.
         internal static void Activate(IDisposable? lease) { if (lease is Lease active) active.Activate(); }
 
+#if TIA_ENGINE_HOST
+        private static object SessionKey() => McpServer.Worker.SessionKey;
+#else
         private static object SessionKey() => Runtime.OpennessReadiness.Ready ? ReadySessionKey() : UnavailableSession;
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static object ReadySessionKey() => EngineServices.Provider.GetService(typeof(Siemens.IEngineeringSession)) ?? UnavailableSession;
 
+#endif
+
         private sealed class Lease : IDisposable
         {
             internal readonly SemaphoreSlim gate;
+#if TIA_ENGINE_HOST
+            private readonly IDisposable? workerLane;
+            internal Lease(SemaphoreSlim gate, IDisposable workerLane) { this.gate = gate; this.workerLane = workerLane; }
+#endif
             internal Lease? previous;
             private bool disposed;
             internal Lease(SemaphoreSlim gate) { this.gate = gate; }
@@ -52,6 +69,9 @@ namespace TiaMcpServer.Isolation
                 if (disposed) return;
                 disposed = true;
                 Held.Value = previous;
+#if TIA_ENGINE_HOST
+                if (workerLane != null) { workerLane.Dispose(); return; }
+#endif
                 gate.Release();
             }
         }

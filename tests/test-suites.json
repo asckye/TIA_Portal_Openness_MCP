@@ -205,12 +205,9 @@
     "publicApiRoot": true
   },
   "engine-host": {
-    "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 13,
+    "project": "tests/Engine/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
+    "minimumPassed": 17,
     "maximumSkipped": 0,
-    "arguments": [
-      "--filter",
-      "FullyQualifiedName~EngineSliceTests"
-    ]
+    "arguments": []
   }
 }

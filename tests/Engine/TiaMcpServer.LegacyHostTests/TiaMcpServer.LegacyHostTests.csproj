@@ -2,7 +2,8 @@
   <Import Project="../Shared/Xunit.props" />
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../src/FoundationHost/TiaMcpServer.LegacyHost.csproj" Aliases="enginehost" />
+    <ProjectReference Include="../../../src/FoundationHost/TiaMcpServer.LegacyHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="DefineConstants" />
+    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="enginehost" GlobalPropertiesToRemove="DefineConstants" />
     <ProjectReference Include="../TiaMcpServer.Tests/TiaMcpServer.Tests.csproj" Aliases="enginefixture" />
     <Compile Include="../TiaMcpServer.Tests/BehaviorParityCases.cs" Link="BehaviorParityCases.cs" />
   </ItemGroup>

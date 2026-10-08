@@ -14,15 +14,18 @@ internal static class EngineHost
 {
     internal static async Task<int> Run(HostOptions options, HostFileLogger logger)
     {
-        var catalog = new EngineCatalog(options.EngineCatalog!, options.EngineWorkerExe!);
+        using var worker = new EngineWorkerClient(options, EngineCatalog.Hash(options.EngineWorkerExe!));
+        using var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile);
+        worker.SessionLocked = () => TiaMcpServer.ModelContextProtocol.McpServer.SessionPrecheckRefusal("GetSessionState") != null;
         if (options.CatalogOnly)
         {
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = "21", profile = "full-engine",
-                tools = catalog.Tools.Where(t => EngineCatalog.Slice.Contains(t.Name)) }, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "full-engine",
+                behaviorCapabilities = pipeline.BehaviorCapabilities, tools = pipeline.Tools.Select(t => t.ProtocolTool) }, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             return 0;
         }
-        using var worker = new EngineWorkerClient(options, catalog.WorkerHash);
-        var slice = new EngineSlice(catalog, worker);
+        var status = await worker.Status(CancellationToken.None);
+        if ((string?)status["releaseKey"] != options.ReleaseKey || !System.Text.Json.Nodes.JsonNode.DeepEquals(status["behaviorCapabilities"], pipeline.BehaviorCapabilities))
+            throw new InvalidDataException("Engine worker release or behavior capabilities mismatch.");
         if (options.Transport == "http")
         {
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
@@ -31,8 +34,13 @@ internal static class EngineHost
             builder.Logging.AddProvider(logger);
             builder.Logging.SetMinimumLevel(LogLevel.Warning);
             builder.WebHost.UseSetting("urls", options.HttpPrefix);
-            var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = catalog.Instructions).WithHttpTransport().WithTools(slice.Tools(options.Profile));
-            Resources(mcp);
+            var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithHttpTransport(o => {
+                o.RunSessionHandler = async (_, server, token) => {
+                    using var session = pipeline.RegisterHttpSession(server.SessionId ?? Guid.NewGuid().ToString("N"));
+                    await server.RunAsync(token);
+                };
+            }).WithTools(pipeline.Tools);
+            pipeline.RegisterHandlers(mcp);
             var app = builder.Build();
             app.Use(async (context, next) => {
                 if (context.Request.Path == "/mcp/health") { await next(context); return; }
@@ -41,7 +49,7 @@ internal static class EngineHost
                 await next(context);
             });
             app.MapMcp("/mcp");
-            app.MapGet("/mcp/health", () => new { status = "ok", releaseKey = "21", profile = "full-engine" });
+            app.MapGet("/mcp/health", () => new { status = "ok", releaseKey = options.ReleaseKey, profile = "full-engine" });
             await app.RunAsync();
         }
         else
@@ -50,17 +58,12 @@ internal static class EngineHost
             builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
             builder.Logging.AddProvider(logger);
             builder.Logging.SetMinimumLevel(LogLevel.Warning);
-            var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = catalog.Instructions).WithStdioServerTransport().WithTools(slice.Tools(options.Profile));
-            Resources(mcp);
+            var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithStdioServerTransport().WithTools(pipeline.Tools);
+            pipeline.RegisterHandlers(mcp);
             using var host = builder.Build();
             await host.RunAsync();
         }
         return 0;
     }
 
-    private static void Resources(IMcpServerBuilder builder)
-    {
-        builder.WithListResourcesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourcesResult>(new ListResourcesResult { Resources = Array.Empty<Resource>() }); });
-        builder.WithListResourceTemplatesHandler((_, token) => { token.ThrowIfCancellationRequested(); return new ValueTask<ListResourceTemplatesResult>(new ListResourceTemplatesResult { ResourceTemplates = Array.Empty<ResourceTemplate>() }); });
-    }
 }

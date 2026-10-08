@@ -4,8 +4,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -214,6 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+#if !TIA_ENGINE_HOST
         [McpServerTool(Name = "RunOfflineReleaseValidationSuite"), Description("[L2][Validation]Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects.")]
         public CallToolResult RunOfflineReleaseValidationSuiteV4(
             [Description("workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.")] string workspaceRoot,
@@ -243,6 +242,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
 
+#endif
         [McpServerTool(Name = "BuildReleaseDiagnosticReport"), Description("[L2][Reports]Build an offline diagnostic report from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.")]
         public CallToolResult BuildReleaseDiagnosticReportV4(
             [Description("offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.")] string offlineReleaseSuiteJsonPath)
@@ -360,6 +360,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+#if !TIA_ENGINE_HOST
         [McpServerTool(Name = "RunClassicHmiTemporaryImportPreflight"), Description("[L2][HMI-Classic]Offline-only helper: run the Classic/Basic HMI temporary-import preflight. It checks TIA V21 environment, Openness group, package files, PLC-HMI sync, and emits an import/readback plan without connecting to TIA Portal or creating projects.")]
         public CallToolResult RunClassicHmiTemporaryImportPreflightV4(
             [Description("workspaceRoot: repository/workspace root.")] string workspaceRoot,
@@ -388,6 +389,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+#endif
         [McpServerTool(Name = "RunHmiTemplatePlcSyncPrecheckSuite"), Description("[L2][Validation]Offline-only helper: verify Unified HMI template RequiredTags against real PLC tag/DB-member XML symbols before any HMI binding. It does not connect to TIA Portal or modify projects.")]
         public CallToolResult RunHmiTemplatePlcSyncPrecheckSuiteV4(
             [Description("templateDirectory: directory containing Unified HMI template JSON files.")] string templateDirectory,

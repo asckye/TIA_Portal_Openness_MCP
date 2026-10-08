@@ -19,6 +19,10 @@
       <_Parameter1>TiaMcpWorkerIsolationDefault</_Parameter1>
       <_Parameter2>$(TiaMcpWorkerIsolationDefault)</_Parameter2>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpEngineWorkerSdkFixture)' == 'true'">
+      <_Parameter1>TiaMcpEngineWorkerSdkFixture</_Parameter1>
+      <_Parameter2>true</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esprima" Version="3.0.5" />
@@ -58,4 +62,5 @@
   <ItemGroup>
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
+  <Import Project="../EngineHost/EngineHostSources.props" />
 </Project>

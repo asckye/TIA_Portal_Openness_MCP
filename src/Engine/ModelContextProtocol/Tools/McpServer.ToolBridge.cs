@@ -36,10 +36,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         internal static string VersionToolProblem(string name)
-            => Siemens.ToolVersionPolicy.ToolProblem(Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), name);
+            => Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name);
 
         internal static string VersionCallProblem(string name, Func<string, string?> argument)
-            => Siemens.ToolVersionPolicy.CallProblem(Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), name, argument);
+            => Siemens.ToolVersionPolicy.CallProblem(ReleaseKey, name, argument);
 
         private static string DuplicateArgumentProblem(JsonObject arguments)
         {
@@ -280,7 +280,9 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void ValidateCallerInputFiles(string tool, string arguments)
             => CallerInputFiles.Validate(tool, JsonNode.Parse(arguments)!.AsObject());
 
+#if !TIA_ENGINE_HOST
         internal static string ReleaseKey => Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
+#endif
         internal static ToolArguments EmptyArguments() => new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject()));
         internal static Error InvalidInput(string parameter) => new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,

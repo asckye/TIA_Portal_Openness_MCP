@@ -9,6 +9,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal static class OfflineToolExecution
     {
+#if !TIA_ENGINE_HOST
         internal static string ResolveCompareSide(string side, string filePath, string blockPath, string softwarePath, JsonObject meta, out string? tempDir)
         {
             tempDir = null;
@@ -28,6 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return export.XmlPath;
         }
 
+#endif
         internal static void DeleteAnalysisTempDir(string? tempDir)
         {
             if (string.IsNullOrWhiteSpace(tempDir)) return;

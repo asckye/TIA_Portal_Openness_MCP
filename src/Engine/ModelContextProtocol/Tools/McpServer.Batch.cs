@@ -221,12 +221,22 @@ namespace TiaMcpServer.ModelContextProtocol
             EnterTargetLane("GetSessionState", "{}", ref lane);
             using var stateLane = lane;
             if (string.IsNullOrWhiteSpace(project)) throw new ArgumentException("expectedProject is required.");
+#if TIA_ENGINE_HOST
+            var status = Worker.Status(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+            var state = status["session"];
+            if ((bool?)state?["isConnected"] != true || !string.Equals((string?)state?["project"], project, StringComparison.Ordinal))
+                throw new InvalidOperationException("Expected project is not connected: " + project);
+            var binding = status["binding"] as JsonObject;
+            if (binding == null) throw new InvalidOperationException("Bound TIA process identity is unavailable.");
+            return BatchPlanStore.BindingState(binding);
+#else
             EngineServices.Get<Siemens.Portal>().EnsureBoundProjectUnchanged("Batch identity");
             var state = EngineServices.Get<SessionTools>().GetState();
             if (state.IsConnected != true || !string.Equals(state.Project, project, StringComparison.Ordinal)) throw new InvalidOperationException("Expected project is not connected: " + project);
             var health = EngineServices.Get<Siemens.Portal>().GetPortalProcessHealth();
             if (health["boundProcessId"] == null || health["processAlive"]?.GetValue<bool?>() != true) throw new InvalidOperationException("Bound TIA process identity is unavailable.");
             return BatchPlanStore.BindingState(EngineServices.Get<Siemens.Portal>().GetBindingIdentity());
+#endif
         }
     }
 }

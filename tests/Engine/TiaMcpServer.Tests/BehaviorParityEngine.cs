@@ -20,6 +20,16 @@ namespace TiaMcpServer.Tests
     // execute here; only the Siemens-backed tool body is a fixture.
     public static class BehaviorParityEngine
     {
+        public static Func<IDisposable>? ExternalHost { get; set; }
+        public static Func<string, JsonObject, JsonNode>? ExternalCall { get; set; }
+        public static object? ExternalStagingStore { get; private set; }
+        public static string CatalogJson() => JsonSerializer.Serialize(McpServer.CatalogView.All.Values, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+        public static (string Result, bool NativeCallIssued) InvokeBody(string id, string name, string arguments, bool preview)
+        {
+            using var correlation = InvocationJournal.UseCorrelation(id);
+            var result = McpServer.ToolInvoker.Invoke(name, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(arguments)), preview);
+            return (JsonSerializer.Serialize(result.Result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions), result.NativeCallIssued);
+        }
         private static string scenario = "";
         private static int writes, previews, waits;
         private static BatchReplacementPolicyTests.AdmissionFixture? batchFixture;
@@ -39,7 +49,9 @@ namespace TiaMcpServer.Tests
             refusal = typed ? new AdapterPreconditionException(message, parameter, argument) : new InvalidOperationException(message);
             if (wrapped) refusal = new InvalidOperationException("Private wrapper diagnostic.", refusal);
             McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(PreconditionProbe) }), () => false, new HashSet<string>());
-            return McpServer.ResultBody(McpServer.CallTool(tool, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(arguments))))!.ToJsonString();
+            using var external = ExternalHost?.Invoke();
+            return (ExternalCall?.Invoke(tool, JsonNode.Parse(arguments)!.AsObject())
+                ?? McpServer.ResultBody(McpServer.CallTool(tool, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(arguments))))!).ToJsonString();
         }
         public static class Probe
         {
@@ -150,6 +162,7 @@ namespace TiaMcpServer.Tests
             using var fixture = new InfrastructureContractsTests();
             scenario = value; writes = previews = waits = 0;
             McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(Probe) }), () => false, new HashSet<string>());
+            using var external = ExternalHost?.Invoke();
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             var wait = McpServer.ApprovalWaitOverrideForTests; var session = McpServer.ApprovalSessionKeyForTests;
             bool context = McpServer.EnterMcpApprovalContext(); var key = new object();
@@ -159,7 +172,7 @@ namespace TiaMcpServer.Tests
                 McpServer.ApprovalSessionKeyForTests = () => key;
                 McpServer.ApprovalWaitOverrideForTests = (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, !enabled,
                     scenario == "refused-approval" ? "denied" : null)); };
-                JsonNode Call(string tool, JsonObject args) => McpServer.ResultBody(McpServer.CallTool(tool,
+                JsonNode Call(string tool, JsonObject args) => ExternalCall?.Invoke(tool, args) ?? McpServer.ResultBody(McpServer.CallTool(tool,
                     new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
                 var results = new JsonArray(BehaviorParityCases.Project(Call(value=="single-type-group-missing" ? "ImportPlcType" : value=="single-table-group-missing" ? "ImportPlcTagTable" : value == "single-legacy-group-missing" ? "ImportPlcBlock" : value.StartsWith("compile-", StringComparison.Ordinal) ? "CompilePlcSoftware" : value == "native-read" ? "ListPlcTags"
                     : value == "missing-directory" || value.StartsWith("batch-", StringComparison.Ordinal) && value != "batch-alias" ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(value))));
@@ -186,13 +199,14 @@ namespace TiaMcpServer.Tests
             using var fixture=new BatchReplacementPolicyTests.AdmissionFixture(value.Substring(program ? 17 : 15),program);
             batchFixture=fixture;scenario="followup";writes=previews=waits=0;
             McpServer.ConfigureToolBridge(new ToolCatalog(new[]{typeof(McpServer),typeof(Probe)}),()=>false,new HashSet<string>());
+            using var external = ExternalHost?.Invoke();
             var settings=ApprovalSettings.Load(ApprovalSettings.SettingsPath);var previousKey=McpServer.ApprovalSessionKeyForTests;var wait=McpServer.ApprovalWaitOverrideForTests;
             bool context=McpServer.EnterMcpApprovalContext();var key=new object();
             try
             {
                 new ApprovalSettings(false,1).Save(ApprovalSettings.SettingsPath);McpServer.ApprovalSessionKeyForTests=()=>key;
                 McpServer.ApprovalWaitOverrideForTests=(pending,current,_)=> { if(current.Enabled) throw new Exception("Fixture must disable approval.");return Task.FromResult(new ApprovalOutcome(pending,true,null)); };
-                JsonNode Call(string tool,JsonObject args)=>McpServer.ResultBody(McpServer.CallTool(tool,new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
+                JsonNode Call(string tool,JsonObject args)=>ExternalCall?.Invoke(tool,args) ?? McpServer.ResultBody(McpServer.CallTool(tool,new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
                 var body=Call(program ? "ImportPlcProgramFromDirectory" : "ImportPlcBlocksFromDirectory",fixture.Arguments());
                 var results=new JsonArray(BehaviorParityCases.Project(body));
                 results.Add(BehaviorParityCases.Project(Call("ListPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" })));
@@ -209,6 +223,8 @@ namespace TiaMcpServer.Tests
             var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ImportStagingTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ImportStagingTools(store)).AddEngine(false, catalog).BuildServiceProvider());
+            ExternalStagingStore = store;
+            using var external = ExternalHost?.Invoke();
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath); var wait = McpServer.ApprovalWaitOverrideForTests;
             bool context = McpServer.EnterMcpApprovalContext(); int approvals = 0;
             try
@@ -216,7 +232,7 @@ namespace TiaMcpServer.Tests
                 new ApprovalSettings(enabled, 1).Save(ApprovalSettings.SettingsPath);
                 McpServer.ApprovalWaitOverrideForTests = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, !enabled, value == "staging-refused" ? "denied" : null)); };
                 var args = BehaviorParityCases.StagingArguments(value, store, bundle, McpServer.ReleaseKey);
-                var body = McpServer.ResultBody(McpServer.CallTool(BehaviorParityCases.StagingTool(value), new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
+                var body = ExternalCall?.Invoke(BehaviorParityCases.StagingTool(value), args) ?? McpServer.ResultBody(McpServer.CallTool(BehaviorParityCases.StagingTool(value), new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
                 return new JsonObject { ["engineRelease"] = McpServer.ReleaseKey, ["results"] = new JsonArray(BehaviorParityCases.Project(body)),
                     ["waits"] = approvals, ["writes"] = store.List()["batches"]!.AsArray().Count, ["previews"] = 0 }.ToJsonString();
             }
