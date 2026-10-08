@@ -89,7 +89,7 @@ namespace TiaMcp.Logic.V4
             if (arguments[parameter] is not JsonValue value || !value.TryGetValue<string>(out var path)) return;
             if (tool == "ExportDeviceAml" && (string.IsNullOrEmpty(Path.GetExtension(path)) || Directory.Exists(path)))
             {
-                if (!Path.IsPathRooted(path)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("An absolute exportPath is required.", parameter);
+                if (!Absolute(path)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("An absolute exportPath is required.", parameter);
                 if (checkOutput)
                 {
                     if (!Directory.Exists(path)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Output directory must already exist.", parameter);
@@ -97,7 +97,7 @@ namespace TiaMcp.Logic.V4
                 }
                 return;
             }
-            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path) || extensions.Length != 0 && !extensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(path) || !Absolute(path) || extensions.Length != 0 && !extensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("An absolute " + parameter + (extensions.Length == 0 ? " is required." : " ending in " + string.Join(" or ", extensions) + " is required."), parameter);
             if (output && checkOutput)
             {
@@ -106,6 +106,10 @@ namespace TiaMcp.Logic.V4
                 RequireWritable(Path.GetDirectoryName(path)!, parameter);
             }
         }
+
+        // The product runs on Windows; the format check also accepts drive and UNC paths when the offline tests run on Linux CI.
+        private static bool Absolute(string path) => Path.IsPathRooted(path) || Path.DirectorySeparatorChar != '\\'
+            && (path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/') || path.StartsWith(@"\\", StringComparison.Ordinal));
 
         private static void RequireWritable(string directory, string parameter)
         {
