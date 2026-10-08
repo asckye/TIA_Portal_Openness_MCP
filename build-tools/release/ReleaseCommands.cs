@@ -1001,7 +1001,8 @@ internal static partial class ReleaseCommands
         var output = Path.GetFullPath(options.Get("EvidenceDirectory", Path.Combine(Root, "bin-build/plc-adapter-workers")));
         Directory.CreateDirectory(output);
         var keys = options.All("ReleaseKeys").ToArray();
-        if (keys.Length == 0) keys = ["14sp1", "15.1", "16", "17", "18", "19"];
+        // 20/21 workers stay as compile coverage for the shared adapters the engine worker hosts; packaging skips them.
+        if (keys.Length == 0) keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
         var results = new List<object>();
         foreach (var key in keys)
         {
