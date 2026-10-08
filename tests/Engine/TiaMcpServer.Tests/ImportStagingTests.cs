@@ -54,6 +54,47 @@ namespace TiaMcpServer.Tests
         private readonly string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         private ImportStagingStore Store(string release = "17") { Directory.CreateDirectory(bundle); return new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); }
         [Theory]
+        [InlineData(false)][InlineData(true)]
+        public async Task Manifest_replace_retries_transient_delete_sharing_locks_and_keeps_partial_batches_cleanable(bool persistent)
+        {
+            if (Path.DirectorySeparatorChar != '\\') return;
+            using var store = Store("19");
+            FileStream? held = null; Task? release = null; bool locked = false;
+            store.BeforeManifestPublishForTests = path =>
+            {
+                if (locked || !System.IO.File.Exists(path)) return;
+                locked = true;
+                held = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                if (!persistent) release = Task.Run(async () => { await Task.Delay(300); held.Dispose(); });
+            };
+            try
+            {
+                if (persistent)
+                {
+                    var partial = store.Run("StageImportFiles", new[] { File() }, dryRun: false);
+                    Assert.False(partial.Ok);
+                    Assert.Equal(TiaMcp.Logic.V4.Outcome.Partial, partial.Meta.Outcome);
+                    Assert.Equal(TiaMcp.Logic.V4.Execution.Partial, partial.Meta.Execution);
+                    Assert.False(partial.Meta.RequiresSessionReset);
+                    Assert.Equal(1, Assert.IsType<TiaMcp.Logic.V4.PartialFailureDetails>(partial.Error!.Details).Succeeded);
+                    Assert.Contains("Staging publication failed after batch reservation:", partial.Error.Message);
+                    held!.Dispose();
+                    Assert.Single(store.List()["batches"]!.AsArray());
+                    Assert.NotNull(store.Cleanup((string)JsonNode.Parse(partial.Data!.Value.GetRawText())!["batchId"]!, false));
+                }
+                else
+                {
+                    var batch = store.Stage(new[] { File() }, false);
+                    Assert.Equal(1, (int)batch["writtenFileCount"]!);
+                    Assert.Null(batch["partial"]);
+                    Assert.Equal(1, (int)JsonNode.Parse(System.IO.File.ReadAllText(Path.Combine((string)batch["directory"]!, ".staging-batch.json")))!["writtenFileCount"]!);
+                    Assert.Single(store.List()["batches"]!.AsArray());
+                }
+                Assert.True(locked);
+            }
+            finally { if (release != null) await release; held?.Dispose(); }
+        }
+        [Theory]
         [InlineData("stdio", "open")][InlineData("stdio", "closed")][InlineData("stdio", "restarted")][InlineData("stdio", "unknown")]
         [InlineData("http", "open")][InlineData("http", "closed")][InlineData("http", "restarted")][InlineData("http", "unknown")]
         public void Transport_sessions_protect_live_batches_and_release_ended_batches(string transport, string state)

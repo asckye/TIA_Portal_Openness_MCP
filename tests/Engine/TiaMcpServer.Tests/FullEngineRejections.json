@@ -2348,8 +2348,8 @@
           }
         },
         "arguments": {
-          "preferredMlfb": "6ES7 515-2AM02-0AB0",
-          "preferredVersion": "V2.9",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
@@ -4949,7 +4949,7 @@
         },
         "arguments": {
           "softwarePath": "PLC_1",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
@@ -17521,7 +17521,7 @@
           }
         },
         "arguments": {
-          "keyword": "1515-2 PN",
+          "keyword": "1513",
           "limit": 10
         },
         "renamedFrom": [],
@@ -21545,8 +21545,8 @@
           }
         },
         "arguments": {
-          "preferredMlfb": "6ES7 515-2AM02-0AB0",
-          "preferredVersion": "V2.9",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
@@ -24146,7 +24146,7 @@
         },
         "arguments": {
           "softwarePath": "PLC_1",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
@@ -37414,7 +37414,7 @@
           }
         },
         "arguments": {
-          "keyword": "1515-2 PN",
+          "keyword": "1513",
           "limit": 10
         },
         "renamedFrom": [],

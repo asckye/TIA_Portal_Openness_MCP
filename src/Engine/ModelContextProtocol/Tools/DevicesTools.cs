@@ -370,7 +370,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("family: fallback hint, e.g. 'S7-1200', 'S7-1500', or 'WinCCUnifiedPC'")] string family = "S7-1500")
             => HardwareContract.Run("CreateHardwareDevice", () =>
             {
-                HardwareContract.RequireProject(_service.HasProject);
                 return AddDeviceWithFallback(preferredMlfb, preferredVersion, deviceName, family);
             }, write: true, current: true);
 

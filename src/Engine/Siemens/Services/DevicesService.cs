@@ -74,7 +74,7 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 if (_session.CurrentProject == null || _session.CurrentPortal == null)
-                    throw new TiaMcp.Logic.V4.DeviceCreationRejection(new TiaMcp.Logic.V4.Error("No project is bound.", new TiaMcp.Logic.V4.ProjectNotBoundDetails()));
+                    RequireHardwareCatalogBinding();
                 var project = _session.CurrentProject;
                 TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity Identity()
                 {
@@ -96,6 +96,8 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 var error = ex is TiaMcp.Logic.V4.DeviceCreationRejection rejection ? rejection.Error
+                    : ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException refusal
+                        ? new TiaMcp.Logic.V4.Error(refusal.Message, new TiaMcp.Logic.V4.PreconditionFailedDetails(refusal.ParamName ?? "device-create-preflight", null))
                     : new TiaMcp.Logic.V4.Error("Device preflight is unavailable; no Create was issued.", new TiaMcp.Logic.V4.PreconditionFailedDetails("device-create-preflight", null));
                 return TiaMcp.Logic.V4.DeviceCreationSession.Result(release, tool, id, null, error,
                     TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation, TiaMcp.Logic.V4.Execution.NotStarted);
@@ -105,6 +107,8 @@ namespace TiaMcpServer.Siemens.Services
 
         public Device AddDevice(string orderNumber, string version, string deviceName)
         {
+            RequireHardwareCatalogBinding();
+            RequireHardwareDeviceName(deviceName);
             _session.Logger?.LogInformation($"Adding device: {deviceName}, OrderNumber={orderNumber}, Version={version}");
             if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
@@ -236,6 +240,11 @@ namespace TiaMcpServer.Siemens.Services
             string deviceName,
             string family)
         {
+            RequireHardwareCatalogBinding();
+            RequireHardwareDeviceName(deviceName);
+            if (!string.IsNullOrWhiteSpace(preferredMlfb))
+                TiaMcp.Logic.V4.HardwareCatalogAdmission.ExactRow(SearchHardwareCatalog(preferredMlfb, 100).Select(row =>
+                    new TiaMcp.Adapters.Contracts.Candidates.DeviceCatalogEntry { TypeIdentifier = row.TypeIdentifier ?? "", ArticleNumber = row.ArticleNumber ?? "", Version = row.Version ?? "" }), preferredMlfb, preferredVersion);
             var attempts = new List<string>();
             string? lastError = null;
 
@@ -381,6 +390,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public List<HardwareCatalogCandidate> SearchHardwareCatalog(string keyword, int limit = 50)
         {
+            RequireHardwareCatalogBinding();
             var normalizedKeyword = (keyword ?? string.Empty).Trim();
             var results = new List<HardwareCatalogCandidate>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1151,5 +1161,10 @@ namespace TiaMcpServer.Siemens.Services
         private ProjectBase? HardwareProject => _session.CurrentProject;
 #endif
         internal bool HasProject => _session.CurrentProject is object;
+        private void RequireHardwareCatalogBinding()
+            => TiaMcp.Logic.V4.HardwareCatalogAdmission.RequireBound(_session.CurrentPortal != null && _session.CurrentProject != null, false);
+        private void RequireHardwareDeviceName(string deviceName)
+            => TiaMcp.Logic.V4.HardwareCatalogAdmission.AvailableName(_session.GetDevices()
+                .Concat(_session.CurrentProject!.UngroupedDevicesGroup.Devices).Select(device => device.Name), deviceName);
     }
 }

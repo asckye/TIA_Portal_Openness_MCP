@@ -24,6 +24,7 @@ namespace TiaMcp.PlcFoundation
             var request=new PlcDeviceAddRequest {Release=ReleaseKey,PreferredMlfb=preferredMlfb,PreferredVersion=preferredVersion,Name=deviceName,Family=family,DryRun=dryRun,ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile};
             PlcDeviceAddPolicy.ValidateOptions(request);
 #if PLC_HARDWARE_CATALOG
+            RequireHardwareCatalogBinding();
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var project=Project();var portal=Portal();
             request.Project=project.Path.FullName;request.ProcessId=lifecycle.ProcessId??throw new InvalidOperationException("Explicit attached process required.");request.RootIdentity=DeviceAddIdentity(project);

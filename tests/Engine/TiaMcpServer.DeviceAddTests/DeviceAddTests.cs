@@ -49,6 +49,18 @@ internal static class DeviceAddTests
         PlcDeviceAddResult Execute(PlcFoundationEngine e,string hash)=>e.AddDeviceWithFallback("6ES7 513-1AM03-0AB0","V1","PLC_2",dryRun:false,expectedPlanHash:hash,confirm:true,expectedProjectFile:e.BoundProject.Path.FullName);
         var engine=Engine();result=Preview(engine);Check(engine.BoundProject.Devices.Calls==0&&!result.Attempted,"adapter preview read-only");result=Execute(engine,result.PlanHash);Check(engine.BoundProject.Devices.Calls==1&&result.Executed,"adapter one exact create");
         engine=Engine();engine.Bound=false;Reject(()=>Preview(engine),"adapter unbound");Check(engine.AttachedPortal.HardwareCatalog.Calls==0,"unbound no query");
+        var bindingRefusal=Xunit.Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(()=>Preview(engine));
+        Check(!bindingRefusal.IsArgument && bindingRefusal.Message.Contains("ConnectPortal") && bindingRefusal.Message.Contains("AttachOpenProject"),"unbound typed connect instruction");
+        engine=Engine();engine.AttachedPortal.HardwareCatalog.Rows.Clear();
+        var rowRefusal=Xunit.Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(()=>Preview(engine));
+        Check(rowRefusal.IsArgument && rowRefusal.ParamName=="preferredMlfb/preferredVersion" && rowRefusal.Message.Contains("SearchHardwareCatalog") && engine.BoundProject.Devices.Calls==0,"missing row typed argument before write");
+        engine=Engine();result=Preview(engine);var reviewed=result.PlanHash;
+        Check(Execute(engine,reviewed).Executed,"approval-disabled initial device creation");
+        var duplicate=Xunit.Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(()=>Execute(engine,reviewed));
+        Check(!duplicate.IsArgument && duplicate.ParamName=="deviceName" && engine.BoundProject.Devices.Calls==1,"approval-disabled duplicate refuses before second create");
+        engine=Engine();result=Preview(engine);engine.BoundProject.Devices.Add(new(){Name="Other",Parent=engine.BoundProject});
+        var stale=Xunit.Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(()=>Execute(engine,result.PlanHash));
+        Check(stale.IsArgument && stale.ParamName=="expectedPlanHash" && engine.BoundProject.Devices.Calls==0,"approval-disabled stale reviewed plan refuses before create");
         engine=Engine();engine.ReleaseKey="18";Reject(()=>Preview(engine),"adapter release gate");Check(engine.AttachedPortal.HardwareCatalog.Calls==0,"release before query");
         engine=Engine();engine.lifecycle.IsLocalSession=false;Reject(()=>Preview(engine),"adapter local gate");
         engine=Engine();var group=new Siemens.Engineering.HW.DeviceUserGroup(){Parent=engine.BoundProject};group.Devices.Add(new(){Name="PLC_2",Parent=group});engine.BoundProject.DeviceGroups.Add(group);Reject(()=>Preview(engine),"grouped name collision");

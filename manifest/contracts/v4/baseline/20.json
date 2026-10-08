@@ -7848,7 +7848,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "cdbbd8e52b22723fdd1a504f11867ed5d29704bc52679730a6981c132c1b1c18",
+      "descriptionSha256": "591a8b2a309c65e483b7af3610a16d9e47dc0485a4d66de91df7fef789163fc9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12576,7 +12576,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "1228b0909d7d8dfed89a7ffd43626473659ac39ed6dccc90fb49933a018d68f0",
+      "descriptionSha256": "e13439c49bc80aa0e3b1fc541c932f74a5c1d8b16f5f07250083c3eef636f229",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12598,14 +12598,14 @@
           "preferredMlfb": {
             "description": "preferredMlfb: preferred MLFB/order number, e.g. '6ES7211-1BE40-0XB0'; empty uses family fallback list",
             "examples": [
-              "6ES7 515-2AM02-0AB0"
+              "6ES7 513-1AM03-0AB0"
             ],
             "type": "string"
           },
           "preferredVersion": {
             "description": "preferredVersion: preferred catalog version, e.g. 'V4.7'; empty probes known/default versions",
             "examples": [
-              "V2.9"
+              "V3.1"
             ],
             "type": "string"
           }
@@ -21891,7 +21891,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "74b4ca42ae2efdf2fd1c4f418a95920b9476ad2e3b19c66ad8cefecc4db50a4a",
+      "descriptionSha256": "2a20d48bdc693f99941be15587d841701352a0eee7f6f68ff058ba4201c6256e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -31833,14 +31833,14 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "9d9005be630656f9d84f3fb18cd05ffa739f1aff7faf7cef9e67ef53c0573477",
+      "descriptionSha256": "cacfa8323c5666e9e532e72632741c84bc118d29b9a6195c32c8b3723eb6507b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "keyword": {
             "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700', '6AV2123', '1211C DC/DC/DC', '6ES7211-1AE40'",
             "examples": [
-              "1515-2 PN"
+              "1513"
             ],
             "type": "string"
           },

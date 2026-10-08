@@ -36,6 +36,7 @@ namespace TiaMcp.PlcFoundation
         public string ReleaseKey="19";public FakeProject BoundProject=new();public FakePortal AttachedPortal=new();public FakeLifecycle lifecycle=new();public bool Bound=true;
         private FakeProject Project()=>Bound?BoundProject:throw new InvalidOperationException("explicit project required");
         private FakePortal Portal()=>AttachedPortal;
+        private void RequireHardwareCatalogBinding() { if(!Bound) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Hardware catalog tools require ConnectPortal followed by AttachOpenProject first.","session",false); }
         private void RequireProjectIdentity(string path)=>MutationIdentityPolicy.RequireSameProject(path,Project().Path.FullName);
     }
 }

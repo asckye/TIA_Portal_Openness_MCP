@@ -62,5 +62,16 @@ internal static class ToolExampleLibraryTests
         var moduleExample = ToolUsageCatalog.Examples("21", "full-engine", roster, exampleId: "unified-global-module")["examples"]![0]!;
         check((string?)eventExample["steps"]![0]!["tool"] == "SetUnifiedHmiButtonEventScriptCode" &&
             (string?)moduleExample["steps"]![0]!["tool"] == "ExchangeUnifiedScriptModules", "event and module examples use the correct engineering contracts");
+
+        var devices = ToolUsageCatalog.Sequences().Single(s => (string?)s!["id"] == "sequence/device-add-foundation")!;
+        check(devices["releaseKeys"]!.AsArray().Select(k => (string)k!).SequenceEqual(new[] { "19" }), "device add native example is scoped to V19");
+        check(devices["steps"]!.AsArray().Skip(1).Select(s => (string)s!["tool"]!).SequenceEqual(new[] {
+            "ConnectPortal", "AttachOpenProject", "SearchHardwareCatalog", "CreateHardwareDevice", "CreateHardwareDevice", "GetProjectTree" }), "device add uses explicit binding, row lookup, preview/apply and readback");
+        var deviceArgs = devices["steps"]![4]!["arguments"]!;
+        check((string?)deviceArgs["preferredMlfb"] == "6ES7 513-1AM03-0AB0" && (string?)deviceArgs["preferredVersion"] == "V3.1", "device catalog example preserves the verified same-row article/version");
+        var deviceApply = devices["steps"]![5]!["arguments"]!;
+        check(deviceApply["expectedPlanHash"] != null && deviceApply["expectedProjectFile"] != null && (bool?)deviceApply["dryRun"] == false,
+            "device add applies its own reviewed hash and exact project file");
+        check(devices["notes"]!.GetValue<string>().Contains("same deviceName") && devices["notes"]!.GetValue<string>().Contains("SaveProject"), "device add documents duplicate refusal and separate save");
     }
 }

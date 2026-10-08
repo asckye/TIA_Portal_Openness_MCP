@@ -37,6 +37,27 @@ public sealed class ApprovalPrecheckTests
     };
     public static IEnumerable<object[]> PreviewWriteTools => FoundationTools.Definitions.Where(d=>d.Arguments.Any(a=>a.Name=="dryRun")
         && new FoundationTool(d,new Worker()).IsNative && new FoundationTool(d,new Worker()).IsWrite).Select(d=>new object[]{d.Name});
+
+    public static IEnumerable<object[]> WriteFamilies => FoundationTools.Definitions
+        .Where(d => new FoundationTool(d, new Worker()).IsWrite || TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(FoundationV4Tool.Name(d.Name))?.Operation
+            is "FILE" or "EXECUTE" or "SESSION").Select(d => new object[] { d.Name, d.ResponseMember ?? "session" });
+
+    [Theory]
+    [MemberData(nameof(WriteFamilies))]
+    public async Task Every_write_family_keeps_admission_with_approval_disabled(string source, string family)
+    {
+        var worker = new Worker();
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), "19", null,
+            () => new(false, 1), (pending, _, _) => throw new InvalidOperationException("Invalid input must never request approval."));
+        Assert.False(string.IsNullOrWhiteSpace(family));
+        var body = (await tool.InvokeAsync(Request(tool.ProtocolTool.Name, new JsonObject { ["unexpectedAdmissionArgument"] = true }))).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        Assert.Equal(0, worker.Previews + worker.Writes + worker.Reads);
+        Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "APPROVAL_PRECHECK_REFUSED");
+    }
     [Theory]
     [MemberData(nameof(PreviewWriteTools))]
     public async Task Every_current_preview_write_refuses_missing_confirmation_with_approval_disabled(string source)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.PlcFoundation
 {
@@ -54,7 +55,7 @@ namespace TiaMcp.PlcFoundation
             var matched=rows.Where(x=>r.PreferredMlfb.StartsWith("OrderNumber:",StringComparison.Ordinal)
                 ? x.TypeIdentifier==r.PreferredMlfb
                 : x.ArticleNumber==r.PreferredMlfb && x.Version==r.PreferredVersion).ToArray();
-            if(matched.Length!=1) throw new InvalidOperationException("Exactly one exact catalog candidate required; no inferred substitution or probing.");
+            if(matched.Length!=1) throw new AdapterPreconditionException("preferredMlfb/preferredVersion must select exactly one catalog row. Run SearchHardwareCatalog and copy articleNumber and version from the same row, preserving spaces.", "preferredMlfb/preferredVersion");
             var chosen=matched[0];
             if(!chosen.TypeIdentifier!.StartsWith("OrderNumber:",StringComparison.Ordinal)) throw new ArgumentException("Only exact Siemens OrderNumber identifiers are accepted.");
             Text(chosen.ArticleNumber!,256,"Selected article number required."); Text(chosen.Version!,64,"Selected version required.");
@@ -78,18 +79,26 @@ namespace TiaMcp.PlcFoundation
         }
         internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
         {
+            try { return RunChecked(r,catalog,inventory,check,create); }
+            catch(ArgumentException error) when (!(error is AdapterPreconditionException))
+            { throw new AdapterPreconditionException(error.Message,error.ParamName??"arguments",true,error); }
+            catch(InvalidOperationException error)
+            { throw new AdapterPreconditionException("Device preflight could not verify the complete catalog, inventory or binding; no create attempted.","device-create-preflight",false,error); }
+        }
+        private static PlcDeviceAddResult RunChecked(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
+        {
             ValidateOptions(r); Text(r.RootIdentity,128,"Explicit project root identity required.");
             if(r.ProcessId<=0) throw new ArgumentException("Explicit attached process required.");
             MutationIdentityPolicy.AbsoluteFile(r.Project);
             if(!r.DryRun) MutationIdentityPolicy.RequireSameProject(r.ExpectedProject,r.Project);
             check(); var selected=Select(r,catalog); var before=Snapshot(inventory);
-            if(before.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException("Device name collision; no create attempted.");
+            if(before.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase))) throw new AdapterPreconditionException("Device name already exists; no create attempted. Choose a new deviceName and preview again.", "deviceName", false);
             var hash=Hash(r,selected,before);
             var result=new PlcDeviceAddResult { Release=r.Release,ProjectFile=r.Project,ProcessId=r.ProcessId,DeviceName=r.Name,Family=r.Family,TypeIdentifier=selected.TypeIdentifier!,ArticleNumber=selected.ArticleNumber!,Version=selected.Version!,PlanHash=hash,Inventory=before.Where(x=>!x.IsGroup).Select(x=>x.Name).ToArray() };
             if(r.DryRun) return result;
-            if(hash!=r.ExpectedHash) throw new InvalidOperationException("Reviewed device selection or project inventory changed.");
+            if(hash!=r.ExpectedHash) throw new AdapterPreconditionException("Reviewed device selection or project inventory changed; preview again and use the new expectedPlanHash.", "expectedPlanHash");
             check(); var freshSelection=Select(r,catalog); var freshInventory=Snapshot(inventory);
-            if(Hash(r,freshSelection,freshInventory)!=hash) throw new InvalidOperationException("Device selection or inventory changed before creation.");
+            if(Hash(r,freshSelection,freshInventory)!=hash) throw new AdapterPreconditionException("Device selection or inventory changed before creation; preview again.", "expectedPlanHash", false);
             check(); result.Attempted=true;
             try
             {

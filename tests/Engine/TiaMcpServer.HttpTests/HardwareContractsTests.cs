@@ -133,5 +133,28 @@ internal static class HardwareContractsTests
         check(candidate["meta"]!["warnings"]!.AsArray().Any(w => (string?)w!["code"] == "CANDIDATE_ONLY"), "P6-12 AML build remains an unverified import candidate");
         var sanitized = Map("GetDeviceAddressing", "{\"success\":false,\"error\":\"secret stack trace\"}");
         check(!sanitized.ToJsonString().Contains("secret stack trace"), "P6-12 excludes legacy exception rendering");
+
+        // Invoke the real tool/service bodies with an empty session, bypassing host approval entirely.
+        var serviceType = server.GetType("TiaMcpServer.Siemens.Services.DevicesService", true)!;
+        var service = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(serviceType);
+        serviceType.GetField("_session", All)!.SetValue(service,
+            System.Runtime.Serialization.FormatterServices.GetUninitializedObject(server.GetType("TiaMcpServer.Siemens.Portal", true)!));
+        foreach (var sample in new[] {
+            ("SearchHardwareCatalog", new object?[] { "1513", 50 }),
+            ("CreateHardwareDevice", new object?[] { "6ES7 513-1AM03-0AB0", "V1.7", "PLC_2", "S7-1500" }) })
+        {
+            var method = surface.Tool(sample.Item1);
+            var target = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.DeclaringType!);
+            method.DeclaringType!.GetField("_service", All)!.SetValue(target, service);
+            var body = Body(method.Invoke(target, sample.Item2)!);
+            check((string?)body["error"]?["code"] == "PRECONDITION_FAILED"
+                && (string?)body["error"]?["details"]?["parameter"] == "session"
+                && body["error"]!["message"]!.GetValue<string>().Contains("ListPortalProcessProjects")
+                && body["error"]!["message"]!.GetValue<string>().Contains("ConnectProject")
+                && (string?)body["meta"]?["outcome"] == "rejected-before-operation"
+                && (string?)body["meta"]?["execution"] == "not-started"
+                && (bool?)body["meta"]?["requiresSessionReset"] == false,
+                "P6-70 approval-disabled real body refuses unbound catalog: " + sample.Item1);
+        }
     }
 }

@@ -74,6 +74,13 @@ namespace TiaMcp.PlcFoundation
         private TiaPortal Portal() { Check(); sessionCandidateAdapter?.VerifyOwnedState(); disconnect.RequireActive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
         private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
 
+        private void RequireHardwareCatalogBinding()
+        {
+            Check();
+            if (portal == null || project == null)
+                throw new AdapterPreconditionException("Hardware catalog tools require ConnectPortal followed by AttachOpenProject first.", "session", false);
+        }
+
         // No process launch, automatic process selection, kill, project upgrade or UI interaction.
         public PlcConnectionResult Attach(int processId)
         {

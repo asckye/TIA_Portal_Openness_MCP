@@ -117,6 +117,10 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (InputFailure ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, current); }
             catch (Exception ex)
             {
+                if (TiaOpenness.Shared.HostFailurePolicy.Precondition(ex) is { } refusal)
+                    return Result(tool, null, new Error(refusal.Message, refusal.IsArgument
+                        ? new InvalidArgumentDetails(refusal.ParamName ?? "arguments", Array.Empty<string>())
+                        : new PreconditionFailedDetails("native-admission", null, refusal.ParamName)), Outcome.RejectedBeforeOperation, current);
                 var cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 Error? error = cause is ArgumentException || cause is JsonException ? McpServer.InvalidInput("arguments")

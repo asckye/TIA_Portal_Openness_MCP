@@ -1,13 +1,13 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "bb8f33008bbff87deec37fb69ca2702e9f5480c4ed9314f20ba29d1221f8abdc",
+  "catalogSha256": "515b8e8c0c517eb03ee2538aaaeee405d0cc9790e2c906a59c218d3011b2f743",
   "uniqueTools": 499,
   "documents": 89,
   "versionToolPairs": 1358,
   "offlineCallExecutions": 74,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 28,
+  "callSequences": 30,
   "languages": [
     "scl",
     "scl-sd",
@@ -54,7 +54,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -670,7 +670,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -1298,7 +1298,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -1948,7 +1948,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -2598,7 +2598,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -3248,7 +3248,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -3924,7 +3924,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 493,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -10924,7 +10924,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 545,
       "programmingExampleCount": 25,
-      "callSequenceCount": 28,
+      "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",

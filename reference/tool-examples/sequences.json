@@ -876,7 +876,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Contract checked; native acceptance NOT RUN.",
+    "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): external-source import, generation, compile and delete; this exact reusable example text native execution NOT RUN.",
     "steps": [
       {
         "tool": "GetSessionState",
@@ -1373,7 +1373,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: the wrong PLC, duplicate symbol, existing table, overwrite:false table import and borrowed close refusals were all observed with no approval request. Block/type and missing-file cases are shared-rule contract examples, native retest NOT RUN. V15.1-V19 retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): approval/precondition refusals and native export/import round trips; independently edited XML success NOT RUN. Approval disabled on V18/V19 still retains apply-path admission.",
     "steps": [
       {
         "tool": "GetSessionState",
@@ -1497,7 +1497,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: overwrite:true forward-slash import and readback showing only the exported tag succeeded; earlier same-day back-slash replacement also succeeded. File-edit instructions are reusable guidance; this retest imported the earlier native export, not an independently validated XML edit. V15.1-V19 round-trip retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): approval/precondition refusals and native export/import round trips; independently edited XML success NOT RUN. Approval disabled on V18/V19 still retains apply-path admission.",
     "steps": [
       {
         "tool": "GetSessionState",
@@ -1621,7 +1621,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: Main overwrite:true import, GetPlcBlockInfo readback and real compile succeeded. File-edit instructions are reusable guidance; the retest imported the earlier native export. V15.1-V19 round-trip retest NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): approval/precondition refusals and native export/import round trips; independently edited XML success NOT RUN. Approval disabled on V18/V19 still retains apply-path admission.",
     "steps": [
       {
         "tool": "GetSessionState",
@@ -1802,7 +1802,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Offline contracts/fixtures only; native acceptance NOT RUN.",
+    "validation": "Real-machine verified V16–V19 (2026-10-07) for staged SCL/source/generation and compiled replacement flow; successful program-directory replacement specifically verified V17–V19. V14 SP1/V15.1 native staging acceptance NOT RUN.",
     "steps": [
       {
         "tool": "StageImportFiles",
@@ -1902,7 +1902,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Offline contracts/fixtures only; native acceptance NOT RUN.",
+    "validation": "Real-machine verified V16–V19 (2026-10-07) for staged SCL/source/generation and compiled replacement flow; successful program-directory replacement specifically verified V17–V19. V14 SP1/V15.1 native staging acceptance NOT RUN.",
     "steps": [
       {
         "tool": "StageImportFiles",
@@ -2002,7 +2002,7 @@
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
-    "validation": "Offline fixture/contract checked; native acceptance NOT RUN.",
+    "validation": "Real-machine verified V16–V19 (2026-10-07) for staged SCL/source/generation and compiled replacement flow; successful program-directory replacement specifically verified V17–V19. V14 SP1/V15.1 native staging acceptance NOT RUN.",
     "steps": [
       {
         "tool": "StageImportFiles",
@@ -2370,6 +2370,142 @@
         "tool": "ListStagedImportFiles",
         "arguments": {},
         "expect": "Review retained staged batches; cleanup the selected batchId explicitly after inspection."
+      }
+    ]
+  },
+  {
+    "id": "sequence/device-add-foundation",
+    "topic": "device-add-foundation",
+    "purpose": "Add one exact catalog device to the explicitly bound V19 project.",
+    "preconditions": "Select the intended already-open project from ListPortalProcessProjects; choose a new deviceName and articleNumber/version from one installed catalog row.",
+    "notes": "ConnectPortal → AttachOpenProject → SearchHardwareCatalog → CreateHardwareDevice preview → apply with expectedPlanHash/expectedProjectFile → GetProjectTree. Re-applying with the same deviceName is refused before native Create, including when approval is disabled. Creation is not saved until a separate SaveProject.",
+    "releaseKeys": [
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Real-machine verified V19 (2026-10-07): exact 6ES7 513-1AM03-0AB0/V3.1 preview, apply (created-verified) and GetProjectTree readback with approval disabled. V14 SP1–V18 capability absent. P6-70 invalid catalog pair and duplicate/stale-plan refusals are offline-fixture verified; native fix retest NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListPortalProcessProjects",
+        "arguments": {},
+        "expect": "Select one current row; retain processId, exact projectPath and file name without extension."
+      },
+      {
+        "tool": "ConnectPortal",
+        "arguments": {
+          "processId": 12345
+        },
+        "expect": "Replace integer placeholder 12345 with the selected row processId; connect to that process only."
+      },
+      {
+        "tool": "AttachOpenProject",
+        "arguments": {
+          "projectName": "<file name without extension from selected projectPath>",
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Bind the already-open project by file name without extension and exact listed projectPath."
+      },
+      {
+        "tool": "SearchHardwareCatalog",
+        "arguments": {
+          "keyword": "1513"
+        },
+        "expect": "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
+      },
+      {
+        "tool": "CreateHardwareDevice",
+        "arguments": {
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
+          "deviceName": "PLC_2",
+          "family": "S7-1500",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Bind articleNumber/version from one row; review data.planHash and inventory."
+      },
+      {
+        "tool": "CreateHardwareDevice",
+        "arguments": {
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
+          "deviceName": "PLC_2",
+          "family": "S7-1500",
+          "dryRun": false,
+          "confirm": true,
+          "expectedPlanHash": "<data.planHash from this same preview>",
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Use the same reviewed preview hash and exact project file; expect created-verified, one native Create and no save."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Read back the new device; duplicate apply is refused and the session remains usable."
+      }
+    ]
+  },
+  {
+    "id": "sequence/device-add",
+    "topic": "device-add",
+    "purpose": "Add an installed catalog device through the current V20/V21 engine schema.",
+    "preconditions": "Discover and explicitly bind the intended process/project. Choose a fresh deviceName and exact installed catalog row.",
+    "notes": "The current engine CreateHardwareDevice schema has preferredMlfb/preferredVersion/deviceName/family only; it has no dryRun/expectedPlanHash parameters. Bind via ListPortalProcessProjects → ConnectProject, then search and create. Device-name and exact-row admission runs with approval disabled too. SaveProject is separate.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Schema/offline admission checked; V20/V21 native device creation NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListPortalProcessProjects",
+        "arguments": {},
+        "expect": "Current process/project rows; select the operator-intended PID, processStartUtc and projectPath."
+      },
+      {
+        "tool": "ConnectProject",
+        "arguments": {
+          "processId": 1234,
+          "processStartUtc": "<exact UTC start time from the selected row>",
+          "projectPath": "C:\\Projects\\Example.ap21"
+        },
+        "expect": "Bound to the exact selected process and project; no process starts automatically."
+      },
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Confirm the bound PID, start time and project file match the selected row."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Use the exact software and object paths returned for later calls."
+      },
+      {
+        "tool": "SearchHardwareCatalog",
+        "arguments": {
+          "keyword": "1513",
+          "limit": 50
+        },
+        "expect": "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
+      },
+      {
+        "tool": "CreateHardwareDevice",
+        "arguments": {
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
+          "deviceName": "PLC_2",
+          "family": "S7-1500"
+        },
+        "expect": "Bind both preferred fields to one installed row; complete approval when enabled."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Verify the device; creation has not saved the project."
       }
     ]
   }

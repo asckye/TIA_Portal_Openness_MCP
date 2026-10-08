@@ -16,6 +16,7 @@ namespace TiaMcp.PlcFoundation
         public FakePortal Attached { get; }=new();
         private Siemens.Engineering.ProjectBase Project() => Bound?new Siemens.Engineering.ProjectBase():throw new InvalidOperationException("Explicit project binding required.");
         private FakePortal Portal() { PortalReads++; return Attached; }
+        private void RequireHardwareCatalogBinding() { if(!Bound) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Hardware catalog tools require ConnectPortal followed by AttachOpenProject first.","session",false); }
     }
 }
 namespace Siemens.Engineering

@@ -15,8 +15,8 @@
     "plc-foundation": {
       "CreateHardwareDevice": {
         "arguments": {
-          "preferredMlfb": "6ES7513-1AM03-0AB0",
-          "preferredVersion": "<exact catalog version>",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500",
           "dryRun": true,
@@ -27,7 +27,7 @@
             "meaning": "Select ArticleNumber or TypeIdentifier from SearchHardwareCatalog, retaining exact spelling."
           },
           "preferredVersion": {
-            "meaning": "Select Version from the same catalog row. Full TypeIdentifier requires an empty version.",
+            "meaning": "Copy version from the same SearchHardwareCatalog row as preferredMlfb; V3.1 is the verified V19 example, bind to an installed row on other releases.",
             "requiresBinding": true
           },
           "deviceName": {
@@ -52,7 +52,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine verified V19 (2026-10-07): exact 6ES7 513-1AM03-0AB0/V3.1 preview, apply (created-verified) and GetProjectTree readback with approval disabled. V14 SP1–V18 capability absent. P6-70 invalid catalog pair and duplicate/stale-plan refusals are offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -71,11 +71,12 @@
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
-          "P6-35 behavior family P6-DEVICE is current for release key(s) 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "P6-35 behavior family P6-DEVICE is current for release key(s) 19; Current-policy preview/create/readback was real-machine verified on V19; safe-v4 candidate L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
           "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-          "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+          "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
+          "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
         ],
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. First bind the intended session using ConnectPortal → AttachOpenProject. Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling. Re-applying with the same deviceName is refused before Create, even with approval disabled. A stale expectedPlanHash requires a fresh preview. Creation is not saved until a separate SaveProject."
       },
       "AttachOpenProject": {
         "arguments": {
@@ -511,7 +512,7 @@
           }
         },
         "operations": {},
-        "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -1359,7 +1360,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine verified V16–V19 (2026-10-07): existing compiled watch table exported; V16 fixed PLC alias/forward-slash support verified. V14 SP1/V15.1 capability is absent. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -1386,7 +1387,7 @@
       "ExportTechnologyObject": {
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
@@ -1425,7 +1426,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine verified V19 (2026-10-07): compiled SpeedAxis_1 (TO_SpeedAxis) preview and actual export. V16 inconsistent ASIS refused before approval; V17 PID_Compact_1 from the system library reported know-how protected and refused before approval. Successful technology-object export on V16/V17/V18 NOT RUN; V14 SP1/V15.1 capability absent. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -1448,7 +1449,7 @@
           "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session.",
           "Preview by default. Inconsistent objects return PRECONDITION_FAILED in preview and apply before approval; compile the object before export."
         ],
-        "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+        "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session. A know-how-protected object is refused before approval (V17 system-library PID_Compact_1 reported protected). Compile an inconsistent object before export. A compiled TO_SpeedAxis such as SpeedAxis_1 exported successfully on V19; V20/V21 native export acceptance NOT RUN."
       },
       "ExportPlcType": {
         "arguments": {
@@ -1561,7 +1562,7 @@
           }
         },
         "operations": {},
-        "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview exercised successfully with an empty type inventory; no UDT was present. Non-empty/native type export acceptance NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V15.1–V19 (2026-10-07): compiled UDT batch export; inconsistent UDT refused with PRECONDITION_FAILED naming the object after P6-65. V14 SP1 native success NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2066,7 +2067,7 @@
           }
         },
         "operations": {},
-        "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: Main overwrite:true import, GetPlcBlockInfo readback and real CompilePlcSoftware succeeded. The overwrite:false guard is shared with the tested tag-table import; block refusal was not separately VM-exercised. Earlier V15.1/V16 evidence covers previews only; this replacement retest was not run on V15.1-V19. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): overwrite=false refusal before operation and overwrite=true native block import. BACKUP_SKIPPED for inconsistent replacement is a shared single-file policy; native warning evidence is from ImportPlcType on V16–V19. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2158,7 +2159,7 @@
           }
         },
         "operations": {},
-        "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Directory-import preview exercised refusal/error cases only (including an existing Main); positive native import acceptance NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V16–V19 (2026-10-07): overwrite=true, reviewed plan hash, recovery export then replacement; compile inconsistent replacement targets first. V14 SP1/V15.1 directory-import success NOT RUN. V18/V19 approval-disabled stale-plan rejection leaves the session usable. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2273,7 +2274,7 @@
           }
         },
         "operations": {},
-        "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Directory-import preview exercised refusal/error cases only (including an existing Main); positive native import acceptance NOT RUN. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V17–V19 (2026-10-07): overwrite=true program-directory import after compilation, with recovery export then replacement. V16 inconsistent-target rejection verified; unambiguous successful program-directory acceptance for V14 SP1/V15.1/V16 NOT RUN. V18/V19 approval-disabled stale-plan rejection verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2347,7 +2348,7 @@
           }
         },
         "operations": {},
-        "validation": "Reviewer V14 SP1 P6-60 package retest, 2026-10-06 23:30, approval enabled: overwrite:false existing-table precheck refusal and overwrite:true replacement using forward slashes succeeded; ListPlcTags showed the tag added after export was gone. Back-slash overwrite:true import also succeeded in the earlier same-day reviewer test. Earlier V15.1/V16 evidence covers previews only; this replacement retest was not run on V15.1-V19. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): export/overwrite=true import/readback and overwrite=false refusal. BACKUP_SKIPPED for inconsistent replacement is a shared single-file policy; native warning evidence is from ImportPlcType on V16–V19. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2416,7 +2417,7 @@
           }
         },
         "operations": {},
-        "validation": "Contract/source checked shared single-file guard and path normalization for Foundation 14sp1-19. ImportPlcType native execution was not exercised in this reviewer retest. These examples do not change the current behavior policy or certify safe-v4.",
+        "validation": "Real-machine verified V15.1–V19 (2026-10-07): overwrite=true after UDT export/readback; V16–V19 also verified BACKUP_SKIPPED when an inconsistent target cannot be backed up. V14 SP1 native type-import success NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2815,7 +2816,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine verified V19 (2026-10-07): keyword=1513 returned 50 catalog rows. V14 SP1–V18 capability absent. P6-70 typed unbound-session refusal is offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "resultContract": {
           "type": "Envelope",
           "schemaVersion": 4,
@@ -2825,8 +2826,10 @@
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
           "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
-          "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details."
-        ]
+          "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+          "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
+        ],
+        "note": " First bind the intended session using ConnectPortal → AttachOpenProject. Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
       },
       "ImportPlcExternalSource": {
         "arguments": {
@@ -2869,7 +2872,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): external-source import with PLC_1 and forward-slash paths. Import from a StageImportFiles returned path verified V16–V19; staging on V14 SP1/V15.1 NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -2931,7 +2934,7 @@
           }
         },
         "operations": {},
-        "validation": "Schema/contract example; target-specific values require binding. Native execution of this example NOT RUN unless the validation status below names an exercised case.",
+        "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): source import/generation/compile flow; staged SCL source verified V16–V19. Generation can replace existing blocks. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -3036,7 +3039,7 @@
           }
         },
         "operations": {},
-        "validation": "Offline fixture/contract checked; native import acceptance NOT RUN.",
+        "validation": "Real-machine verified V16–V19 (2026-10-07): staging complete SCL/XML and listing persisted batches; V14 SP1/V15.1 staging native acceptance NOT RUN. V19 transient manifest replacement regression is covered by P6-70 offline fixtures; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "resultReading": [
           "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session."
         ],
@@ -3052,7 +3055,7 @@
         "arguments": {},
         "parameters": {},
         "operations": {},
-        "validation": "Offline fixture/contract checked; native import acceptance NOT RUN.",
+        "validation": "Real-machine verified V16–V19 (2026-10-07): current and retained batches listed. V14 SP1/V15.1 native staging-list acceptance NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "resultReading": [
           "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session.",
           "Returns the newest 200 batches with totalBatches, returnedBatches and truncated. Unreadable folders are unknown with a reason; only known manifest fields are disclosed. A damaged primary can use a valid companion (reason manifest-invalid)."
@@ -3071,7 +3074,7 @@
           }
         },
         "operations": {},
-        "validation": "Offline fixture/contract checked; native import acceptance NOT RUN.",
+        "validation": "Real-machine verified V16–V19 (2026-10-07): cleanup removes owned files and retains foreign entries. V16/V17 cross-connection cleanup succeeded; V18/V19 live-session refusal was observed. V14 SP1/V15.1 native cleanup acceptance NOT RUN. P6-69 session-lifetime fix native retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "resultReading": [
           "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session.",
           "Another live or uninspectable host owner is refused before approval. Cleanup verifies length and SHA-256 under an exclusive file handle; changed, locked or unknown content remains in unknownEntries. IO before deletion is not-started; failure after deletion is partial with counts for this batch."
@@ -3105,21 +3108,26 @@
       },
       "CreateHardwareDevice": {
         "arguments": {
-          "preferredMlfb": "6ES7 515-2AM02-0AB0",
-          "preferredVersion": "V2.9",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
-        "parameters": {},
+        "parameters": {
+          "preferredVersion": {
+            "meaning": "Copy version from the same SearchHardwareCatalog row as preferredMlfb; V3.1 is the verified V19 example, bind to an installed row on other releases."
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
         "resultReading": [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
           "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4.",
-          "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+          "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
         ],
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. First bind the intended session using ListPortalProcessProjects → ConnectProject. Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
       },
       "CreateGsdDevice": {
         "arguments": {
@@ -5476,7 +5484,7 @@
       "ExportTechnologyObject": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
@@ -5489,7 +5497,8 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": [
           "Preview by default. Inconsistent objects return PRECONDITION_FAILED in preview and apply before approval; compile the object before export."
-        ]
+        ],
+        "note": " A know-how-protected object is refused before approval (V17 system-library PID_Compact_1 reported protected). Compile an inconsistent object before export. A compiled TO_SpeedAxis such as SpeedAxis_1 exported successfully on V19; V20/V21 native export acceptance NOT RUN."
       },
       "ExportTechnologyObjectsToDirectory": {
         "arguments": {
@@ -15461,7 +15470,7 @@
       },
       "SearchHardwareCatalog": {
         "arguments": {
-          "keyword": "1515-2 PN",
+          "keyword": "1513",
           "limit": 10
         },
         "parameters": {},
@@ -15470,8 +15479,10 @@
         "inline": true,
         "resultReading": [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
-        ]
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes.",
+          "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
+        ],
+        "note": " First bind the intended session using ListPortalProcessProjects → ConnectProject. Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
       },
       "SearchInstalledGsdDevices": {
         "arguments": {

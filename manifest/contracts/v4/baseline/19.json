@@ -3819,7 +3819,7 @@
       }
     },
     {
-      "descriptionSha256": "ef5a93682e648ebf185ebf9ae3dab970975da63b66327c286310bc82c3a97de2",
+      "descriptionSha256": "98f2b7562491ec19461f06862666750dcdcc2879252ac171fb0d266f36ca4b45",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -10662,7 +10662,7 @@
       }
     },
     {
-      "descriptionSha256": "252d12438ddb452b6268d8dbe209018f14a427d34309170d60411f6583b30e28",
+      "descriptionSha256": "561454a2eeb63554a4b336b140b62c1c2c37d4ca341e445803ffb8d365c3ffd7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},

@@ -135,6 +135,44 @@ namespace TiaMcpServer.Tests
             .Where(p => (string?)row["parameters"]![(string)p.Value!]!["type"] == "NativeValue")
             .Select(p => new object[] { (string)row["name"]!, (string)p.Value! }));
 
+        public static IEnumerable<object[]> WriteFamilies() => Rows.Select(row => (string)row!["name"]!)
+            .Where(name => ToolMetadata.Find(name)?.Operation is "WRITE" or "ONLINE-WRITE" or "FILE" or "EXECUTE" or "SESSION")
+            .Select(name => new object[] { name, ToolMetadata.Find(name)!.Domain });
+
+        [Theory, MemberData(nameof(WriteFamilies))]
+        public async Task Every_write_family_keeps_admission_with_approval_disabled(string name, string family)
+        {
+            using var fixture = new InfrastructureContractsTests();
+            McpServer.ConfigureToolBridge(Catalog, () => false, new HashSet<string>());
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            bool context = McpServer.EnterMcpApprovalContext();
+            try
+            {
+                new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+                Assert.False(ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled);
+                Assert.False(string.IsNullOrWhiteSpace(family));
+                var arguments = Rows.Single(row => (string)row!["name"]! == name)!["arguments"]!.DeepClone().AsObject();
+                arguments["unexpectedAdmissionArgument"] = true;
+                var input = new ToolArguments(JsonSerializer.SerializeToElement(arguments));
+                var method = Catalog.Methods.Single(pair => pair.Key == name).Value;
+                var direct = new VersionPolicyTool(McpServer.CreateTool(name, method));
+                var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ToolCatalogServerProxy>())
+                { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
+                foreach (var result in new[] { await direct.InvokeAsync(request), McpServer.CallTool(name, input) })
+                {
+                    var body = McpServer.ResultBody(result)!;
+                    // Version-specific operation admission can precede the unknown-argument check.
+                    string code = (string)body["error"]!["code"]!;
+                    Assert.Contains(code, new[] { "INVALID_ARGUMENT", "UNSUPPORTED_CAPABILITY" });
+                    Reject(result, code);
+                    Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+                    Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "APPROVAL_PRECHECK_REFUSED");
+                }
+                Assert.Equal(0, calls);
+            }
+            finally { McpServer.LeaveMcpApprovalContext(context); settings.Save(ApprovalSettings.SettingsPath); }
+        }
+
         [Theory, MemberData(nameof(NativeValues))]
         public void NativeValueKeepsLiteralStringsWithoutDecoding(string name, string parameter)
         {

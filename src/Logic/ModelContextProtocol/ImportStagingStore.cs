@@ -194,7 +194,16 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 { stream.Write(bytes, 0, bytes.Length); stream.Flush(true); }
                 BeforeManifestPublishForTests?.Invoke(path);
-                if (File.Exists(path)) File.Replace(temporary, path, null, true);
+                if (File.Exists(path))
+                {
+                    // A scanner may briefly hold the freshly published manifest without delete sharing.
+                    for (int attempt = 0; ; attempt++)
+                    {
+                        try { File.Replace(temporary, path, null, true); break; }
+                        catch (IOException) when (attempt < 4) /* swallow(native-fallback): a bounded backoff retries only atomic manifest publication; the final failure retains partial batch evidence */
+                        { System.Threading.Thread.Sleep(100 * (attempt + 1)); }
+                    }
+                }
                 else File.Move(temporary, path);
             }
             finally { if (File.Exists(temporary)) System.IO.File.Delete(temporary); }

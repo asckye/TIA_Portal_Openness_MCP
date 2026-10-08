@@ -4959,8 +4959,8 @@
           "lite"
         ],
         "arguments": {
-          "preferredMlfb": "6ES7 515-2AM02-0AB0",
-          "preferredVersion": "V2.9",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
@@ -5992,7 +5992,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
@@ -10432,7 +10432,7 @@
           "lite"
         ],
         "arguments": {
-          "keyword": "1515-2 PN",
+          "keyword": "1513",
           "limit": 10
         },
         "envelopeVersion": 4
@@ -12434,8 +12434,8 @@
           "lite"
         ],
         "arguments": {
-          "preferredMlfb": "6ES7 515-2AM02-0AB0",
-          "preferredVersion": "V2.9",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500"
         },
@@ -13467,7 +13467,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\ExportTechnologyObject.xml",
           "dryRun": true
         },
@@ -18078,7 +18078,7 @@
           "lite"
         ],
         "arguments": {
-          "keyword": "1515-2 PN",
+          "keyword": "1513",
           "limit": 10
         },
         "envelopeVersion": 4
@@ -21241,7 +21241,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
@@ -22256,7 +22256,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
@@ -23271,7 +23271,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
@@ -23799,8 +23799,8 @@
           "plc-foundation"
         ],
         "arguments": {
-          "preferredMlfb": "6ES7513-1AM03-0AB0",
-          "preferredVersion": "&lt;exact catalog version&gt;",
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
           "family": "S7-1500",
           "dryRun": true,
@@ -24303,7 +24303,7 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
-          "toName": "Axis_1",
+          "toName": "SpeedAxis_1",
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
