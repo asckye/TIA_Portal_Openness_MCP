@@ -8,13 +8,15 @@ internal sealed class WorkerOperationException(string message,int code,string ou
     internal string Outcome { get; }=outcome;
     internal string? EvidenceJson { get; }=evidenceJson;
     internal string? Parameter { get; }=ParameterFrom(evidenceJson);
+    internal string? ExceptionType { get; }=FieldFrom(evidenceJson, "exceptionType");
     internal bool KnownNoMutation { get; }=outcome is "rejected-before-operation" or "read-failed";
-    private static string? ParameterFrom(string? json)
+    private static string? ParameterFrom(string? json) => FieldFrom(json, "parameter");
+    private static string? FieldFrom(string? json, string field)
     {
         if (string.IsNullOrEmpty(json) || json == "null") return null;
         try
         {
-            var parameter = System.Text.Json.Nodes.JsonNode.Parse(json)?["parameter"];
+            var parameter = System.Text.Json.Nodes.JsonNode.Parse(json)?[field];
             return parameter is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<string>(out var name) ? name : null;
         }
         catch (System.Text.Json.JsonException) /* swallow(parse-fallback): malformed optional worker evidence has no caller parameter */ { return null; }

@@ -60,6 +60,7 @@ if (options.Transport == "http")
             };
             o.RunSessionHandler = async (context, server, cancellationToken) => {
                 using var worker = (WorkerClient)context.Items["foundationWorker"]!;
+                using var stagingSession = FoundationTool.RegisterStagingSession(worker, server.SessionId ?? Guid.NewGuid().ToString("N"));
                 await server.RunAsync(cancellationToken);
             };
         });
@@ -80,6 +81,7 @@ if (options.Transport == "http")
 else
 {
     using var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled) { Bundled = options.BundledWorker };
+    using var stagingSession = FoundationTool.RegisterStagingSession(worker, Guid.NewGuid().ToString("N"));
     var builder = Host.CreateEmptyApplicationBuilder(settings: null);
     builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
     builder.Logging.AddProvider(fileLogger);

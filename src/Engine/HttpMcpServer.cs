@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using TiaMcp.Logic.ModelContextProtocol;
+using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer
 {
@@ -35,11 +37,14 @@ namespace TiaMcpServer
         // response before returning 504, so a stalled pipe can't hang the request forever.
         private static readonly TimeSpan ResponseTimeout = TimeSpan.FromSeconds(240);
 
-        private sealed class Session
+        internal static readonly TimeSpan SessionIdleTimeout = TimeSpan.FromHours(2);
+        internal sealed class Session
         {
             public string Id = "";
             public DateTime LastSeenUtc;
             public string? ProtocolVersion;
+            internal ImportStagingSession Owner = null!;
+            internal int ActiveRequests;
         }
 
         private static readonly ConcurrentDictionary<string, Session> _sessions
@@ -63,6 +68,8 @@ namespace TiaMcpServer
 
             using var listener = new HttpListener();
             using var router = CreateRouter(httpToMcp, mcpToHttp);
+            ImportStagingTools.HttpTransport = true;
+            using var expiry = new Timer(_ => ExpireSessions(DateTime.UtcNow), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
             var handlers = new HashSet<Task>();
             Action stop = () =>
             {
@@ -113,7 +120,12 @@ namespace TiaMcpServer
                 await router.Completion.ConfigureAwait(false);
                 Task[] outstanding;
                 lock (handlers) { outstanding = new Task[handlers.Count]; handlers.CopyTo(outstanding); }
-                await Task.WhenAll(outstanding).ConfigureAwait(false);
+                try { await Task.WhenAll(outstanding).ConfigureAwait(false); }
+                finally
+                {
+                    foreach (var session in _sessions.Keys) CloseSession(session);
+                    ImportStagingTools.HttpTransport = false;
+                }
             }
         }
 
@@ -169,7 +181,7 @@ namespace TiaMcpServer
             if (HttpMethod("DELETE", method))
             {
                 var sid = req.Headers[SessionHeader];
-                if (!string.IsNullOrEmpty(sid)) _sessions.TryRemove(sid!, out _);
+                if (!string.IsNullOrEmpty(sid)) CloseSession(sid!);
                 res.StatusCode = 204;
                 res.Close();
                 return;
@@ -247,11 +259,25 @@ namespace TiaMcpServer
                 return;
             }
 
-            // Session bookkeeping. We assign on initialize and accept any subsequent header.
+            // A closed/expired header must initialize again; requests without a header get a session.
             var session = TouchSession(req, rpcMethod);
+            if (session == null) { res.StatusCode = 404; res.Close(); return; }
+            IDisposable activeRequest;
+            lock (session)
+            {
+                try { activeRequest = session.Owner.EnterRequest(); }
+                catch (InvalidOperationException) /* swallow(teardown): DELETE or expiration ended this session before dispatch */
+                { res.StatusCode = 404; res.Close(); return; }
+                session.ActiveRequests++;
+            }
+            using var requestLifetime = new SessionRequest(session, activeRequest);
             res.Headers[SessionHeader] = session.Id;
             var protoVersion = req.Headers[ProtocolHeader];
             if (!string.IsNullOrEmpty(protoVersion)) session.ProtocolVersion = protoVersion;
+            if (rpcMethod == "tools/call")
+            {
+                body = BindSessionMetadata(body, session);
+            }
 
             bool wantsSse = WantsEventStream(req);
 
@@ -314,22 +340,62 @@ namespace TiaMcpServer
                 && accept!.IndexOf("text/event-stream", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        private static Session TouchSession(HttpListenerRequest req, string? rpcMethod)
+        private static Session? TouchSession(HttpListenerRequest req, string? rpcMethod)
         {
+            ExpireSessions(DateTime.UtcNow);
             var sid = req.Headers[SessionHeader];
-            if (!string.IsNullOrEmpty(sid) && _sessions.TryGetValue(sid!, out var existing))
+            if (!string.IsNullOrEmpty(sid))
             {
-                existing.LastSeenUtc = DateTime.UtcNow;
+                if (!_sessions.TryGetValue(sid!, out var existing)) return null;
+                lock (existing) existing.LastSeenUtc = DateTime.UtcNow;
                 return existing;
             }
-            // Allocate a new session on initialize, or whenever a client omits the header.
+            return OpenSession();
+        }
+        internal static Session OpenSession()
+        {
             var s = new Session
             {
                 Id = Guid.NewGuid().ToString("N"),
                 LastSeenUtc = DateTime.UtcNow,
             };
+            s.Owner = new ImportStagingSession(s.Id);
+            ImportStagingTools.RegisterHttpSession(s.Owner);
             _sessions[s.Id] = s;
             return s;
+        }
+        internal static void CloseSession(string id)
+        {
+            if (_sessions.TryRemove(id, out var session)) lock (session)
+            { session.Owner.Dispose(); ImportStagingTools.RemoveHttpSession(session.Owner); }
+        }
+        internal static string BindSessionMetadata(string body, Session session)
+        {
+            var frame = JsonNode.Parse(body)!.AsObject();
+            if (frame["params"] is JsonObject parameters)
+            {
+                var meta = parameters["_meta"] as JsonObject;
+                if (meta == null) { meta = new JsonObject(); parameters["_meta"] = meta; }
+                // This value is server-owned; caller metadata cannot select a peer's staging session.
+                meta[ImportStagingTools.SessionMetadata] = session.Owner.SessionId;
+            }
+            return frame.ToJsonString();
+        }
+        internal static void ExpireSessions(DateTime now)
+        {
+            foreach (var pair in _sessions)
+                lock (pair.Value)
+                    if (pair.Value.ActiveRequests == 0 && now - pair.Value.LastSeenUtc >= SessionIdleTimeout) CloseSession(pair.Key);
+        }
+        private sealed class SessionRequest : IDisposable
+        {
+            private readonly Session session;
+            private readonly IDisposable request;
+            internal SessionRequest(Session session, IDisposable request) { this.session = session; this.request = request; }
+            public void Dispose()
+            {
+                lock (session) { session.ActiveRequests--; session.LastSeenUtc = DateTime.UtcNow; request.Dispose(); }
+            }
         }
 
         private static string BuildHealthJson()

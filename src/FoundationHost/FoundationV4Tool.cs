@@ -174,6 +174,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        using var stagingSession = (inner as FoundationTool)?.EnterStagingRequest();
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
         bool write = IsApprovalWrite(arguments);
@@ -350,6 +351,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         catch (OperationCanceledException) /* swallow(privacy): cancellation is represented by the stable V4 code, without exception text */
         { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error("Request cancelled before completion.", new CancelledDetails("host")))); }
+        catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
+        { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
         { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid("arguments"))); }
         catch (Exception ex) when (ex is ArgumentException or JsonException or InvalidOperationException)

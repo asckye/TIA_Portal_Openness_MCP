@@ -56,9 +56,9 @@ internal static class FoundationV4Result
 
     internal static Error WorkerRejection(Exception exception)
     {
-        string message = SafeWorkerMessage(exception.Message) ?? "Foundation precondition failed before operation.";
-        string parameter = (exception as WorkerOperationException)?.Parameter
-            ?? (exception is ArgumentException argument ? argument.ParamName : null) ?? "arguments";
+        var worker = exception as WorkerOperationException;
+        string? message = HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType);
+        string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, false, true,
             (exception as WorkerOperationException)?.Outcome, (exception as WorkerOperationException)?.Code);
         return HostBehavior.FailureError(kind, parameter, Empty, message);
@@ -93,7 +93,7 @@ internal static class FoundationV4Result
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         return Wire(release, name, id, data, HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
-                HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome),
+                HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType),
                 reason), true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 
@@ -202,7 +202,6 @@ internal static class FoundationV4Result
     private static bool Incomplete(JsonNode? node) => node is JsonArray rows ? rows.Any(Incomplete)
         : node is JsonObject obj && (obj["unavailableAttributes"] is JsonArray { Count: > 0 }
             || Flag(obj, "truncated") == true || Flag(obj, "complete") == false || obj.Any(p => Incomplete(p.Value)));
-    private static string? SafeWorkerMessage(string? message) => HostBehavior.SafeDiagnostic(message);
     internal static JsonObject Object(JsonNode? raw) => Fields(raw) switch {
         JsonObject obj => obj, JsonArray items => new JsonObject { ["items"] = items },
         JsonNode value => new JsonObject { ["value"] = value }, _ => new JsonObject() };

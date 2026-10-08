@@ -1,5 +1,11 @@
 # HTTP transport regression tests
 
+`staging-sessions-only` checks the compiled HTTP session bookkeeping and staging
+admission without a listener or native calls: open, DELETE-closed, idle-expired,
+restarted-host, unknown-owner and in-flight sessions. It also checks that HTTP
+request metadata carries the server's session identity instead of a caller's
+peer token. The fixture uses short temporary roots for net48 paths.
+
 This Windows/.NET Framework 4.8 harness loads the **compiled server EXE** via reflection.
 It checks the single response reader, client ID restoration (including null), timeout
 recovery, late replies, repeated IDs, queued deadlines, stream failure, disposal,

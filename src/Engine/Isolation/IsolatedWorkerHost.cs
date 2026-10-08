@@ -91,6 +91,7 @@ namespace TiaMcpServer.Isolation
         internal static bool IsControl(string? name) => string.Equals(name, "GetOpennessWorkerStatus", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "RestartOpennessWorker", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "GetNativeInvocationLog", StringComparison.OrdinalIgnoreCase);
+        internal static bool IsStaging(string? name) => name is "StageImportFiles" or "ListStagedImportFiles" or "CleanupStagedImportFiles";
 
         internal static CallToolResult Error(string tool, WorkerCallException exception, OpennessWorkerSupervisor? supervisor)
         {
@@ -130,9 +131,9 @@ namespace TiaMcpServer.Isolation
             public override Tool ProtocolTool => tool;
             public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
             {
-                bool controlBridge = tool.Name == "CallTool" && request.Params?.Arguments != null &&
-                    request.Params.Arguments.TryGetValue("name", out var target) && target.ValueKind == JsonValueKind.String && IsControl(target.GetString());
-                if (IsControl(tool.Name) || controlBridge
+                bool localBridge = tool.Name == "CallTool" && request.Params?.Arguments != null &&
+                    request.Params.Arguments.TryGetValue("name", out var target) && target.ValueKind == JsonValueKind.String && (IsControl(target.GetString()) || IsStaging(target.GetString()));
+                if (IsControl(tool.Name) || IsStaging(tool.Name) || localBridge
                     || (!Runtime.OpennessReadiness.Ready && OpennessReadinessGuard.IsSafeWithoutTia(tool.Name)))
                     return await local.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 using var journal = InvocationJournal.Observe(Guid.NewGuid().ToString("N"), tool.Name, "engine-worker", McpServer.ReleaseKey,

@@ -53,6 +53,55 @@ namespace TiaMcpServer.Tests
         }
         private readonly string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         private ImportStagingStore Store(string release = "17") { Directory.CreateDirectory(bundle); return new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); }
+        [Theory]
+        [InlineData("stdio", "open")][InlineData("stdio", "closed")][InlineData("stdio", "restarted")][InlineData("stdio", "unknown")]
+        [InlineData("http", "open")][InlineData("http", "closed")][InlineData("http", "restarted")][InlineData("http", "unknown")]
+        public void Transport_sessions_protect_live_batches_and_release_ended_batches(string transport, string state)
+        {
+            Directory.CreateDirectory(bundle);
+            using var owner = new ImportStagingSession(transport + "-A");
+            var old = new ImportStagingStore(bundle, "18", owner);
+            var batch = old.Stage(new[] { File() }, false);
+            string id = (string)batch["batchId"]!, folder = (string)batch["directory"]!;
+            Assert.Equal("current", (string?)old.List()["batches"]![0]!["ownerState"]);
+            Assert.Equal(transport + "-A", (string?)batch["mcpSessionId"]);
+            Assert.Equal(owner.HostInstanceId, (string?)batch["hostInstanceId"]);
+            if (state == "closed") owner.Dispose();
+            if (state is "unknown" or "restarted")
+            {
+                foreach (string name in new[] { ".staging-batch.json", ".staging-batch.previous.json" })
+                {
+                    string path = Path.Combine(folder, name); var manifest = JsonNode.Parse(System.IO.File.ReadAllText(path))!;
+                    manifest["hostInstanceId"] = Guid.NewGuid().ToString("N");
+                    if (state == "restarted") manifest["hostStartedUtc"] = DateTimeOffset.UtcNow.AddYears(-1).ToString("O");
+                    System.IO.File.WriteAllText(path, manifest.ToJsonString());
+                }
+            }
+            using var current = new ImportStagingSession(transport + "-B");
+            var connected = new ImportStagingStore(bundle, "18", current);
+            var listed = Assert.Single(connected.List()["batches"]!.AsArray())!;
+            Assert.Equal(state is "closed" or "restarted" ? "ended" : state == "open" ? "live-other" : "unknown", (string?)listed["ownerState"]);
+            var preview = connected.Run("CleanupStagedImportFiles", batchId: id);
+            var result = connected.Run("CleanupStagedImportFiles", batchId: id, dryRun: false);
+            Assert.Equal(state is "closed" or "restarted", preview.Ok);
+            Assert.Equal(state is "closed" or "restarted", result.Ok);
+            Assert.Equal(state is "open" or "unknown", System.IO.File.Exists(Path.Combine(folder, "F.scl")));
+        }
+        [Fact]
+        public void Closing_session_keeps_in_flight_operations_protected_until_they_finish()
+        {
+            Directory.CreateDirectory(bundle);
+            using var owner = new ImportStagingSession("http-A");
+            var old = new ImportStagingStore(bundle, "18", owner); var batch = old.Stage(new[] { File() }, false);
+            var connected = Store("18"); string id = (string)batch["batchId"]!;
+            var active = owner.EnterRequest(); owner.Dispose();
+            Assert.Throws<InvalidOperationException>(() => owner.EnterRequest());
+            Assert.Equal("live-other", (string?)connected.List()["batches"]![0]!["ownerState"]);
+            Assert.Throws<ArgumentException>(() => connected.Cleanup(id, false));
+            active.Dispose();
+            Assert.Equal("ended", (string?)connected.List()["batches"]![0]!["ownerState"]);
+            connected.Cleanup(id, false); Assert.Empty(connected.List()["batches"]!.AsArray());
+        }
         private static StagedTextFile File(string name = "F.scl", string kind = "scl", string content = "FUNCTION F : Void\nBEGIN\nEND_FUNCTION\n") => new StagedTextFile { FileName = name, Kind = kind, Content = content };
         [Theory]
         [InlineData("../F.scl")][InlineData("..\\F.scl")][InlineData("C:\\F.scl")][InlineData("F/F.scl")][InlineData("F\\F.scl")]
@@ -253,7 +302,7 @@ namespace TiaMcpServer.Tests
         {
             var store = Store(); var batch = store.Stage(new[] { File() }, false);
             string folder = (string)batch["directory"]!, id = (string)batch["batchId"]!, manifest = Path.Combine(folder, ".staging-batch.json");
-            System.IO.File.WriteAllText(manifest, structural ? System.IO.File.ReadAllText(manifest).Replace("\"manifestVersion\":1", "\"manifestVersion\":999") : "{\"manifestVersion\":");
+            System.IO.File.WriteAllText(manifest, structural ? System.IO.File.ReadAllText(manifest).Replace("\"manifestVersion\":2", "\"manifestVersion\":999") : "{\"manifestVersion\":");
             var listed = Assert.Single(store.List()["batches"]!.AsArray())!;
             Assert.Equal("manifest-invalid", (string?)listed["reason"]); Assert.Single(listed["files"]!.AsArray());
             var metadata = JsonNode.Parse(System.IO.File.ReadAllText(Path.Combine(folder, ".staging-batch.previous.json")))!;

@@ -22,7 +22,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
     }
 
     // Quotas belong to one MCP session; persisted batches remain visible after reconnection.
-    public sealed class ImportStagingStore
+    public sealed class ImportStagingStore : IDisposable
     {
         public const int MaximumFiles = 128, MaximumBatches = 32;
         public const long MaximumFileBytes = 4 * 1024 * 1024, MaximumBytes = 32 * 1024 * 1024;
@@ -31,6 +31,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
         private readonly string bundleRoot;
         private readonly string release;
         private readonly string session;
+        private readonly ImportStagingSession owner;
         private const string ManifestName = ".staging-batch.json";
         private const string CompanionName = ".staging-batch.previous.json";
         public const int MaximumListedBatches = 200;
@@ -49,6 +50,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
             var bundle = BundleLayout.RequireRoot(AppContext.BaseDirectory);
             return new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N"));
         }
+        public static ImportStagingStore Create(string release, ImportStagingSession session)
+            => new ImportStagingStore(BundleLayout.RequireRoot(AppContext.BaseDirectory), release, session);
         public static Envelope Unavailable(string tool, string release, IOException error, string? id = null)
         {
             string attempted = error is BundleResourceUnavailableException missing ? missing.Resource : AppContext.BaseDirectory;
@@ -58,11 +61,15 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()));
         }
         public ImportStagingStore(string bundleRoot, string release, string session)
+            : this(bundleRoot, release, new ImportStagingSession(session, session)) { }
+        public ImportStagingStore(string bundleRoot, string release, ImportStagingSession owner)
         {
+            string session = owner.SessionId;
             TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(release);
             if (!Path.IsPathRooted(bundleRoot) || !Guid.TryParseExact(session, "N", out _)) throw new ArgumentException("An absolute bundle root and server session identity are required.");
             this.release = release;
             this.session = session;
+            this.owner = owner;
             this.bundleRoot = Path.GetFullPath(bundleRoot);
             root = Path.Combine(this.bundleRoot, "staging", session);
         }
@@ -145,11 +152,13 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     ["byteLength"] = bytes[i].LongLength, ["sha256"] = Hash(bytes[i]) });
                 var result = new JsonObject { ["executed"] = !dryRun, ["stagingDirectory"] = root, ["byteLength"] = total, ["files"] = entries };
                 if (dryRun) return result;
+                owner.RegisterBatch();
                 var batchId = Guid.NewGuid().ToString("N");
                 var folder = Path.Combine(root, batchId);
                 result["batchId"] = batchId; result["directory"] = folder;
                 result["createdUtc"] = DateTimeOffset.UtcNow.ToString("O");
-                result["sessionId"] = session; result["releaseKey"] = release; result["manifestVersion"] = 1;
+                result["sessionId"] = session; result["releaseKey"] = release; result["manifestVersion"] = 2;
+                result["mcpSessionId"] = owner.McpSessionId; result["hostInstanceId"] = owner.HostInstanceId;
                 result["hostPid"] = hostPid; result["hostStartedUtc"] = hostStartedUtc;
                 result["writtenFileCount"] = 0;
                 // Reserve quota before publication, including partially written batches after IO failures.
@@ -174,7 +183,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 return result.DeepClone().AsObject();
             }
         }
-        private static readonly string[] ManifestKeys = { "manifestVersion", "sessionId", "releaseKey", "batchId", "createdUtc", "hostPid", "hostStartedUtc", "writtenFileCount", "partial" };
+        private static readonly string[] ManifestKeys = { "manifestVersion", "sessionId", "mcpSessionId", "hostInstanceId", "releaseKey", "batchId", "createdUtc", "hostPid", "hostStartedUtc", "writtenFileCount", "partial" };
         private static readonly string[] FileKeys = { "fileName", "kind", "encoding", "byteLength", "sha256" };
         private void AtomicWrite(string path, byte[] bytes)
         {
@@ -213,9 +222,11 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (stream.Length < 1 || stream.Length > 128 * 1024) return null;
             var input = JsonNode.Parse(stream)?.AsObject();
             if (input != null && ((string?)input["sessionId"] != owner || (string?)input["batchId"] != id)) throw new ManifestIdentityException();
-            if ((int?)input?["manifestVersion"] != 1 || !DateTimeOffset.TryParse((string?)input?["createdUtc"], out _) || input?["files"] is not JsonArray files
+            if ((int?)input?["manifestVersion"] is not (1 or 2) || !DateTimeOffset.TryParse((string?)input?["createdUtc"], out _) || input?["files"] is not JsonArray files
                 || files.Count > MaximumFiles || (int?)input["writtenFileCount"] is not int written || written < 0 || written > files.Count) return null;
             if ((string?)input["releaseKey"] is not string releaseKey || !new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(releaseKey)) return null;
+            if ((int?)input["manifestVersion"] == 2 && ((string?)input["mcpSessionId"] is not string mcp || string.IsNullOrWhiteSpace(mcp) || mcp.Length > 256
+                || !Guid.TryParseExact((string?)input["hostInstanceId"], "N", out _))) return null;
             if (input["hostPid"] != null && (input["hostPid"] is not JsonValue pidValue || !pidValue.TryGetValue<int>(out var pid) || pid < 1)
                 || input["hostStartedUtc"] != null && (input["hostStartedUtc"] is not JsonValue startValue || !startValue.TryGetValue<string>(out var started) || !DateTimeOffset.TryParse(started, out _))
                 || input["partial"] != null && (input["partial"] is not JsonValue partialValue || !partialValue.TryGetValue<bool>(out _))) return null;
@@ -237,7 +248,9 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 file["path"] = Path.Combine(folder, leaf); outputFiles.Add(file);
             }
             batch["files"] = outputFiles; batch["directory"] = folder; batch["stagingDirectory"] = Path.GetDirectoryName(folder);
-            batch["byteLength"] = total; batch["executed"] = true; batch["identified"] = true; batch["currentSession"] = owner == session;
+            batch["byteLength"] = total; batch["executed"] = true; batch["identified"] = true; batch["currentSession"] = owner == session
+                && ((int?)batch["manifestVersion"] == 1 || (string?)batch["hostInstanceId"] == this.owner.HostInstanceId && (string?)batch["mcpSessionId"] == this.owner.McpSessionId);
+            batch["ownerState"] = OwnerState(batch);
             return batch;
         }
         private static bool Matches(Stream stream, JsonNode entry)
@@ -268,7 +281,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
         }
         private JsonObject Unknown(string folder, string reason) => new JsonObject { ["directory"] = folder,
             ["sessionId"] = Path.GetFileName(Path.GetDirectoryName(folder)), ["batchId"] = Path.GetFileName(folder),
-            ["identified"] = false, ["currentSession"] = Path.GetDirectoryName(folder) == root,
+            ["identified"] = false, ["currentSession"] = Path.GetDirectoryName(folder) == root, ["ownerState"] = "unknown",
             ["files"] = new JsonArray(), ["byteLength"] = null, ["reason"] = reason };
         private JsonObject Inspect(string folder)
         {
@@ -338,20 +351,23 @@ namespace TiaMcp.Logic.ModelContextProtocol
                     ["maximumFiles"] = MaximumFiles, ["maximumBytes"] = MaximumBytes };
             }
         }
-        private bool OwnerAlive(JsonObject batch)
+        private string OwnerState(JsonObject batch)
         {
-            if ((bool?)batch["currentSession"] == true) return false;
-            if ((int?)batch["hostPid"] is not int pid || pid < 1 || (string?)batch["hostStartedUtc"] is not string started) return true;
-            if (OwnerAliveForTests != null) return OwnerAliveForTests(pid, started);
+            if ((bool?)batch["currentSession"] == true) return "current";
+            if ((int?)batch["hostPid"] is not int pid || pid < 1 || (string?)batch["hostStartedUtc"] is not string started) return "unknown";
+            if (OwnerAliveForTests != null) return OwnerAliveForTests(pid, started) ? "live-other" : "ended";
             try
             {
                 using var process = Process.GetProcessById(pid);
-                return !process.HasExited && process.StartTime.ToUniversalTime().ToString("O") == started;
+                if (process.HasExited || process.StartTime.ToUniversalTime().ToString("O") != started) return "ended";
+                return (string?)batch["hostInstanceId"] is string host && (string?)batch["mcpSessionId"] is string mcp
+                    ? ImportStagingSession.OwnerState(host, (string)batch["sessionId"]!, mcp) : "unknown";
             }
-            catch (ArgumentException) { /* swallow(probe-optional): the owning process no longer exists */ return false; }
+            catch (ArgumentException) { /* swallow(probe-optional): the owning process no longer exists */ return "ended"; }
             catch (Exception error) when (error is System.ComponentModel.Win32Exception || error is InvalidOperationException)
-            { /* swallow(probe-optional): an uninspectable owner must not be treated as dead */ return true; }
+            { /* swallow(probe-optional): an uninspectable owner must not be treated as dead */ return "unknown"; }
         }
+        public void Dispose() => owner.Dispose();
         public JsonObject Cleanup(string batchId, bool dryRun = true)
         {
             lock (gate)
@@ -360,7 +376,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 var matches = Discover().Where(b => (string?)b["batchId"] == batchId).ToArray();
                 if (matches.Length != 1 || (bool?)matches[0]["identified"] != true) throw new ArgumentException("Batch is unknown or ambiguous; a valid staging manifest is required for cleanup.", "batchId");
                 var batch = matches[0]; string folder = (string)batch["directory"]!;
-                if (OwnerAlive(batch)) throw new ArgumentException("The batch belongs to another live or uninspectable host session; cleanup refused.", "batchId");
+                if ((string?)batch["ownerState"] is not ("current" or "ended")) throw new ArgumentException("The batch belongs to another live or uninspectable MCP session; cleanup refused.", "batchId");
                 Safe(Path.Combine(folder, "probe"));
                 try { NativeExportPolicy.CheckWritableDirectory(folder, WriteAccessForTests); }
                 catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)

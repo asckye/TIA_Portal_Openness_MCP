@@ -23,6 +23,24 @@ namespace TiaMcpServer.Tests
         private static string scenario = "";
         private static int writes, previews, waits;
         private static BatchReplacementPolicyTests.AdmissionFixture? batchFixture;
+        private static Exception refusal = new InvalidOperationException();
+        public static class PreconditionProbe
+        {
+            [McpServerTool(Name = "OpenProject")]
+            public static CallToolResult Open(string path, bool dryRun = true) => throw refusal;
+            [McpServerTool(Name = "CloseProject")]
+            public static CallToolResult Close(bool dryRun = true) => throw refusal;
+            [McpServerTool(Name = "ImportPlcBlocksFromDirectory")]
+            public static CallToolResult Import(string softwarePath, string groupPath, string dir, bool dryRun = true) => throw refusal;
+        }
+        public static string RunPrecondition(string tool, string message, string? parameter, bool argument, bool wrapped, bool typed, string arguments)
+        {
+            using var fixture = new InfrastructureContractsTests();
+            refusal = typed ? new AdapterPreconditionException(message, parameter, argument) : new InvalidOperationException(message);
+            if (wrapped) refusal = new InvalidOperationException("Private wrapper diagnostic.", refusal);
+            McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(PreconditionProbe) }), () => false, new HashSet<string>());
+            return McpServer.ResultBody(McpServer.CallTool(tool, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(arguments))))!.ToJsonString();
+        }
         public static class Probe
         {
             [McpServerTool(Name = "CreatePlcTag"), ToolClassification("L1", "PLC-Software", "WRITE", batchWrite: true)]

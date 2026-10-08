@@ -37,9 +37,9 @@ namespace TiaMcp.PlcWorker
         internal static string Serialize(object? value) => JsonSerializer.Serialize(value, Options);
 
         internal static string Evidence(Exception cause) => Serialize(new {
-            exceptionType = cause.GetType().Name,
+            exceptionType = (TiaOpenness.Shared.HostFailurePolicy.Precondition(cause) ?? cause).GetType().Name,
             parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
-            isArgument = cause is AdapterPreconditionException precondition ? precondition.IsArgument : (bool?)null,
+            isArgument = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.IsArgument,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],
             stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],recoveryFiles=cause.Data["recoveryFiles"],exportPhase=cause.Data["exportPhase"],
             stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"],attemptedPath=cause.Data["attemptedPath"],recoveryStatus=cause.Data["recoveryStatus"],recoveryWarning=cause.Data["recoveryWarning"],recoverySkipped=cause.Data["recoverySkipped"] });

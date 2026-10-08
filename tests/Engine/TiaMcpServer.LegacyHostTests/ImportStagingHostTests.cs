@@ -26,6 +26,24 @@ public sealed class ImportStagingHostTests : IDisposable
     }
     public ImportStagingHostTests() { Directory.CreateDirectory(bundle); }
     [Theory]
+    [InlineData("stdio-A")][InlineData("http-A")]
+    public async Task Production_worker_session_lifetime_releases_staging_after_close(string mcpSessionId)
+    {
+        using var worker = new Worker();
+        using var owner = FoundationTool.RegisterStagingSession(worker, mcpSessionId);
+        var store = new ImportStagingStore(bundle, "18", owner);
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "StageImportFiles"), worker, store), "18",
+            null, () => new(false, 1));
+        var stage = (await tool.InvokeAsync(Request("StageImportFiles", Args()))).StructuredContent!;
+        Assert.True((bool?)stage["ok"]); Assert.Equal(mcpSessionId, (string?)stage["data"]?["mcpSessionId"]);
+        using var connected = new ImportStagingStore(bundle, "18", Guid.NewGuid().ToString("N"));
+        string id = (string)stage["data"]!["batchId"]!;
+        Assert.Throws<ArgumentException>(() => connected.Cleanup(id, false));
+        owner.Dispose();
+        Assert.Equal("ended", (string?)connected.List()["batches"]![0]!["ownerState"]);
+        connected.Cleanup(id, false); Assert.Empty(connected.List()["batches"]!.AsArray()); Assert.Equal(0, worker.Calls);
+    }
+    [Theory]
     [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")]
     public void Unknown_single_import_retains_unavailable_backup_warning(string release)
     {

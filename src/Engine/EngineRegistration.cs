@@ -19,6 +19,7 @@ namespace TiaMcpServer
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             services.TryAddSingleton(catalog);
+            services.TryAddSingleton<ImportStagingHostLifetime>();
             if (includeSession && OpennessReadiness.Ready)
             {
                 RegisterPortalServices(services);

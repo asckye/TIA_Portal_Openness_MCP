@@ -210,6 +210,16 @@ public sealed class WorkerJsonGoldenTests
             stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"],attemptedPath=cause.Data["attemptedPath"],recoveryStatus=cause.Data["recoveryStatus"],recoveryWarning=cause.Data["recoveryWarning"],recoverySkipped=cause.Data["recoverySkipped"] });
         Assert.Equal(expected, WorkerJson.Evidence(cause));
     }
+    [Fact]
+    public void Wrapped_authored_refusals_keep_the_typed_channel_evidence()
+    {
+        var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Borrowed projects cannot be closed.", "project", false);
+        var wrapped = new InvalidOperationException("Private wrapper text.", refusal);
+        var evidence = System.Text.Json.JsonDocument.Parse(WorkerJson.Evidence(wrapped)).RootElement;
+        Assert.Equal("AdapterPreconditionException", evidence.GetProperty("exceptionType").GetString());
+        Assert.Equal("project", evidence.GetProperty("parameter").GetString());
+        Assert.False(evidence.GetProperty("isArgument").GetBoolean());
+    }
 
     [Fact]
     public void FoundationEnumWireValuesRemainNumeric()

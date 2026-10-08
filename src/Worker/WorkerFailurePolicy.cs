@@ -14,6 +14,7 @@ internal sealed class WorkerFailureClassification
 
 internal static class WorkerFailurePolicy
 {
+    internal static Exception DiagnosticCause(Exception cause) => HostFailurePolicy.Precondition(cause) ?? cause;
     internal static WorkerFailureClassification Classify(Exception cause, bool enteredOperation, bool readOnly)
     {
         var kind = HostFailurePolicy.Classify(cause, enteredOperation, readOnly);

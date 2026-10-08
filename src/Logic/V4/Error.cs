@@ -182,10 +182,12 @@ namespace TiaMcp.Logic.V4
         internal override ErrorCode Code => ErrorCode.PreconditionFailed;
         [JsonPropertyOrder(0)] public string? Condition { get; }
         [JsonPropertyOrder(1)] public string? Target { get; }
-        public PreconditionFailedDetails(string? condition, string? target)
+        [JsonPropertyOrder(2), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Parameter { get; }
+        public PreconditionFailedDetails(string? condition, string? target, string? parameter = null)
         {
             Condition = condition;
             Target = target;
+            Parameter = parameter;
             V4Validation.Details(this);
         }
     }

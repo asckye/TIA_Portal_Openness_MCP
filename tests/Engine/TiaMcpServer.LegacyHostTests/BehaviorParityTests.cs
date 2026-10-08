@@ -14,6 +14,65 @@ using Xunit;
 
 public sealed class BehaviorParityTests
 {
+    private sealed class PreconditionWorker(Exception cause) : IFoundationWorker
+    {
+        public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
+        {
+            var classification = WorkerFailurePolicy.Classify(cause, true, true);
+            var diagnostic = WorkerFailurePolicy.DiagnosticCause(cause);
+            throw new WorkerOperationException(diagnostic.Message, classification.Code, "rejected-before-operation",
+                JsonSerializer.Serialize(new { exceptionType = diagnostic.GetType().Name, parameter = HostFailurePolicy.Parameter(cause) }));
+        }
+        public void Dispose() { }
+    }
+    [Theory]
+    [InlineData("OpenProject", "Project is already open; bind it explicitly instead.", "path", true)]
+    [InlineData("CloseProject", "Borrowed projects cannot be closed by this session.", "project", false)]
+    [InlineData("ImportPlcBlocksFromDirectory", "A complete target inventory is required before batch import.", "softwarePath", false)]
+    public async Task Authored_precondition_messages_and_parameters_reach_both_hosts(string tool, string message, string parameter, bool argument)
+    {
+        string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8)); Directory.CreateDirectory(bundle);
+        try
+        {
+            foreach (bool wrapped in new[] { false, true })
+            {
+                var args = tool == "OpenProject" ? new JsonObject { ["path"] = Path.Combine(bundle, "P.ap18"), ["dryRun"] = true }
+                    : tool == "CloseProject" ? new JsonObject { ["dryRun"] = true }
+                    : new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["dir"] = bundle, ["dryRun"] = true };
+                File.WriteAllText(Path.Combine(bundle, "P.ap18"), "fixture");
+                var engine = JsonNode.Parse(enginefixture::TiaMcpServer.Tests.BehaviorParityEngine.RunPrecondition(tool, message, parameter, argument, wrapped, true, args.ToJsonString()))!;
+                Assert.Contains(message, (string?)engine["error"]?["message"]);
+                Assert.Equal(parameter, (string?)engine["error"]?["details"]?["parameter"]);
+                foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+                {
+                    Exception cause = new AdapterPreconditionException(message, parameter, argument);
+                    if (wrapped) cause = new InvalidOperationException("Private wrapper diagnostic.", cause);
+                    var source = tool == "ImportPlcBlocksFromDirectory" ? "ImportBlocksFromDirectory" : tool;
+                    var target = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new PreconditionWorker(cause)), release);
+                    var body = (await target.InvokeAsync(Request(tool, args))).StructuredContent!;
+                    Assert.Equal((string?)engine["error"]?["message"], (string?)body["error"]?["message"]);
+                    Assert.True(JsonNode.DeepEquals(engine["error"]?["details"], body["error"]?["details"]));
+                    Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+                    Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+                    Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+                    var rejection = FoundationV4Result.WorkerRejection(new WorkerOperationException(cause is AdapterPreconditionException ? cause.Message : cause.InnerException!.Message,
+                        argument ? -32602 : -32603, "rejected-before-operation", JsonSerializer.Serialize(new { exceptionType = nameof(AdapterPreconditionException), parameter })));
+                    Assert.Contains(message, rejection.Message);
+                }
+            }
+        }
+        finally { Directory.Delete(bundle, true); }
+    }
+    [Fact]
+    public void Untyped_worker_refusals_do_not_expose_native_messages()
+    {
+        var failure = new WorkerOperationException("Private native text with password=secret at C:\\private\\project.ap18", -32603, "rejected-before-operation",
+            JsonSerializer.Serialize(new { exceptionType = "InvalidOperationException" }));
+        var body = FoundationV4Result.Failure("18", "OpenProject", "fixture", true, false, null, failure).StructuredContent!;
+        Assert.Equal("The request precondition failed before operation.", (string?)body["error"]?["message"]);
+        Assert.Equal("The request precondition failed before operation.", FoundationV4Result.WorkerRejection(failure).Message);
+        Assert.DoesNotContain("Private native text", body["error"]!.ToJsonString());
+    }
     public static IEnumerable<object[]> Cases => BehaviorParityCases.All;
     private sealed class Worker(string scenario) : IFoundationWorker
     {

@@ -90,7 +90,7 @@ namespace TiaMcp.Logic.V4
             => kind switch
             {
                 HostFailureKind.Argument => new Error(nativeMessage ?? "The request argument was refused before operation.", new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
-                HostFailureKind.Precondition => new Error(nativeMessage ?? "The request precondition failed before operation.", new PreconditionFailedDetails("native-admission", null)),
+                HostFailureKind.Precondition => new Error(nativeMessage ?? "The request precondition failed before operation.", new PreconditionFailedDetails("native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails("approval-precheck")),
                 HostFailureKind.Unknown => new Error("The operation outcome is unknown; inspect the retained evidence before a new session.", new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(null)),
@@ -112,11 +112,12 @@ namespace TiaMcp.Logic.V4
             { return "Native operation failed."; }
         }
 
-        internal static string? AdmissionDiagnostic(Exception error, int? reportedCode = null, string? reportedOutcome = null)
+        internal static string? AdmissionDiagnostic(Exception error, int? reportedCode = null, string? reportedOutcome = null, string? reportedExceptionType = null)
         {
-            for (var cause = error; cause != null; cause = cause.InnerException)
-                if (cause is TiaMcp.Adapters.Contracts.AdapterPreconditionException) return SafeDiagnostic(cause.Message);
-            return reportedCode == -32602 || reportedOutcome == "rejected-before-operation" ? SafeDiagnostic(error.Message) : null;
+            var precondition = HostFailurePolicy.Precondition(error);
+            if (precondition != null) return SafeDiagnostic(precondition.Message);
+            return reportedExceptionType == nameof(TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+                && (reportedCode == -32602 || reportedOutcome == "rejected-before-operation") ? SafeDiagnostic(error.Message) : null;
         }
 
         // Retain bounded, redacted I/O diagnostics; other untyped exceptions remain value-free.

@@ -158,7 +158,7 @@ internal static class Program
                 {
                     var cause = ex is TargetInvocationException && ex.InnerException != null ? ex.InnerException : ex;
                     var classification = WorkerFailurePolicy.Classify(cause, enteredOperation, readOnly);
-                    return ChannelResponse.Error(new ChannelFailure(cause.Message, classification.Code,
+                    return ChannelResponse.Error(new ChannelFailure(WorkerFailurePolicy.DiagnosticCause(cause).Message, classification.Code,
                         classification.Outcome, WorkerJson.Evidence(cause)));
                 }
             });

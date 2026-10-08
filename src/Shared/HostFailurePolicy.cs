@@ -23,13 +23,19 @@ namespace TiaOpenness.Shared
             return null;
         }
 
+        internal static AdapterPreconditionException? Precondition(Exception error)
+        {
+            for (var cause = error; cause != null; cause = cause.InnerException)
+                if (cause is AdapterPreconditionException precondition) return precondition;
+            return null;
+        }
+
         internal static HostFailureKind Classify(Exception error, bool dispatched, bool readOnly,
             string? reportedOutcome = null, int? reportedCode = null, string? reportedExceptionType = null, bool nativeRead = true)
         {
             error = Unwrap(error);
-            for (var cause = error; cause != null; cause = cause.InnerException)
-                if (cause is AdapterPreconditionException precondition)
-                    return precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition;
+            if (Precondition(error) is AdapterPreconditionException precondition)
+                return precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition;
             if (reportedCode == -32602 && (!dispatched || readOnly || reportedOutcome == "rejected-before-operation")) return HostFailureKind.Argument;
             if ((!dispatched || readOnly) && (error is OperationCanceledException || reportedExceptionType == nameof(OperationCanceledException)))
                 return HostFailureKind.Cancelled;

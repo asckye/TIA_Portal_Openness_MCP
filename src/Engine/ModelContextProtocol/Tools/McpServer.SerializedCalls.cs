@@ -161,6 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public override Tool ProtocolTool => inner.ProtocolTool;
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
+            using var stagingSession = ImportStagingTools.UseSession(request);
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
             {
                 bool callToolDisabled = McpServer.ApprovalResultWrite(ProtocolTool.Name,

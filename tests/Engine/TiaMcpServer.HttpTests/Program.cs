@@ -440,6 +440,7 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if (args.Length >= 2 && args[1] == "staging-sessions-only") { StagingSessionChecks.Run(Server, Check); return 0; }
             if (args.Length >= 2 && args[1] == "concurrency-only") {
                 if (args.Length >= 3) AppDomain.CurrentDomain.AssemblyResolve += (_, e) => {
                     string dependency = Path.Combine(Path.GetFullPath(args[2]), new AssemblyName(e.Name).Name + ".dll");

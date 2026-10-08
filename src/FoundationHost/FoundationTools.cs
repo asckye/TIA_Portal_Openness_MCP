@@ -19,8 +19,8 @@ internal static class FoundationTools
     };
     internal static readonly Definition[] Definitions = {
         new("StageImportFiles", "StageImportFiles", "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source or UTF-8 Document XML. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; V20 document imports require pairs, V21 resources are optional). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session.", new[]{new Argument("files","array"),Dry()}, "ImportStaging"),
-        new("ListStagedImportFiles", "ListStagedImportFiles", "[L1][PLC-Software][READ] List all bundle staging batches across sessions with sessionId, batchId, createdUtc, files, bytes, currentSession and SHA-256. Missing/invalid manifests are identified=false and cannot be cleaned. No TIA calls.", Array.Empty<Argument>(), "ImportStaging"),
-        new("CleanupStagedImportFiles", "CleanupStagedImportFiles", "[L1][PLC-Software][FILE] Delete only staging-owned leaves of an identified batchId from ListStagedImportFiles, including earlier sessions. Preview lists unknownEntries; apply retains them and reports folderRetained=true with a warning. Preview defaults true; apply dryRun=false is approved and audited. No caller paths or recursive deletion; recovery exports are retained.", new[]{S("batchId"),Dry()}, "ImportStaging"),
+        new("ListStagedImportFiles", "ListStagedImportFiles", "[L1][PLC-Software][READ] List all bundle staging batches across sessions with sessionId, batchId, createdUtc, files, bytes, currentSession, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown) and SHA-256. Missing/invalid manifests are identified=false and cannot be cleaned. No TIA calls.", Array.Empty<Argument>(), "ImportStaging"),
+        new("CleanupStagedImportFiles", "CleanupStagedImportFiles", "[L1][PLC-Software][FILE] Delete only staging-owned leaves of an identified batchId from ListStagedImportFiles, including ended MCP sessions; live-other and unknown owners are refused. Preview lists unknownEntries; apply retains them and reports folderRetained=true with a warning. Preview defaults true; apply dryRun=false is approved and audited. No caller paths or recursive deletion; recovery exports are retained.", new[]{S("batchId"),Dry()}, "ImportStaging"),
         new("GetState","ReadState","[runtime-query-candidate] Cached attachment/project state only; IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("ListPortalProcessProjects","ReadPortalProcessProjects","[runtime-query-candidate] Detached read of this release's process metadata; acquisition time is snapshot time, not process start. Separate OS start UTC is observation-only and may be unknown; no attach, launch or stable identity guarantee.",Array.Empty<Argument>(),"RuntimeQuery"),
         new("DiagnosePortalConnectReadiness","ReadPortalConnectReadiness","[runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open.",new[]{new Argument("processId","integer")},"RuntimeQuery"),
@@ -93,6 +93,13 @@ internal static class FoundationTools
 internal sealed partial class FoundationTool : McpServerTool
 {
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IFoundationWorker, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore> StagingStores = new();
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IFoundationWorker, TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingSessions = new();
+    internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession RegisterStagingSession(IFoundationWorker worker, string mcpSessionId)
+    {
+        var session = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession(mcpSessionId);
+        StagingSessions.Add(worker, session); return session;
+    }
+    internal IDisposable? EnterStagingRequest() => StagingSessions.TryGetValue(worker, out var session) ? session.EnterRequest() : null;
     private readonly Definition definition;
     private readonly IFoundationWorker worker;
     private readonly TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest;
@@ -270,7 +277,8 @@ internal sealed partial class FoundationTool : McpServerTool
             if (definition.ResponseMember == "ImportStaging")
             {
                 TiaMcp.Logic.ModelContextProtocol.ImportStagingStore store;
-                try { store = stagingForTest ?? StagingStores.GetValue(worker, _ => TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!)); }
+                try { store = stagingForTest ?? StagingStores.GetValue(worker, key => StagingSessions.TryGetValue(key, out var session)
+                    ? TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!, session) : TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!)); }
                 catch (IOException ex) { return FoundationV4Result.ImportCandidate(TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Unavailable(definition.Name, release!, ex, id)); }
                 var files = values["files"]?.Deserialize<TiaMcp.Logic.ModelContextProtocol.StagedTextFile[]>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow });
                 var mapped = TiaMcp.Logic.V4.McpResult.From(store.Run(definition.Name, files, (string?)values["batchId"] ?? "", (bool?)values["dryRun"] ?? true, id));

@@ -74,7 +74,7 @@ public sealed class FoundationCoverageRegressionTests
         foreach (var tool in new[] { "PlanPlcExternalSourceImport", "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "ListPlcTags" })
         {
             var result = FoundationV4Result.Failure("14sp1", tool, "fixture", true, false, null,
-                new WorkerOperationException(message, -32602, "read-failed", JsonSerializer.Serialize(new { parameter })));
+                new WorkerOperationException(message, -32602, "read-failed", JsonSerializer.Serialize(new { parameter, exceptionType = nameof(AdapterPreconditionException) })));
             var body = result.StructuredContent!;
             Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
             Assert.Equal(parameter, (string?)body["error"]?["details"]?["parameter"]);
@@ -99,13 +99,14 @@ public sealed class FoundationCoverageRegressionTests
         var state = FoundationV4Result.Failure("14sp1", "PlanPlcExternalSourceImport", "fixture", true, false, null,
             new WorkerOperationException("PLC/root identity changed.", -32603, "rejected-before-operation"));
         Assert.Equal("PRECONDITION_FAILED", (string?)state.StructuredContent?["error"]?["code"]);
-        Assert.Equal("PLC/root identity changed.", (string?)state.StructuredContent?["error"]?["message"]);
+        Assert.Equal("The request precondition failed before operation.", (string?)state.StructuredContent?["error"]?["message"]);
+        Assert.DoesNotContain("PLC/root identity changed.", state.StructuredContent!.ToJsonString());
     }
 
     private sealed class SourceFailureWorker : IFoundationWorker
     {
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token) => throw new WorkerOperationException(
-            "Fixture source admission.", -32602, "read-failed", "{\"parameter\":\"softwarePath\"}");
+            "Fixture source admission.", -32602, "read-failed", "{\"parameter\":\"softwarePath\",\"exceptionType\":\"AdapterPreconditionException\"}");
         public void Dispose() { }
     }
     [Fact]
