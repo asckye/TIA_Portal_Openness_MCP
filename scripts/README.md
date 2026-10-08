@@ -16,7 +16,8 @@
 | 构建 | `dotnet run --project build-tools/release -- build-studio` | 构建 Studio、本地 Bridge 和 八版本原生适配器；`-Test` 运行客户端及 WPF 功能测试，不启动 TIA |
 | 检查 | [Check-Repository.py](checks/Check-Repository.py)、`dotnet run --project build-tools/release -- validate-bundle`、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`--no-binaries` / `-NoBinaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对（本机上传前、`Verify published release` 工作流发布后各跑一次） |
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
-| 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |
+| 手动检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py) | lite 清单专项检查，需已构建引擎与测试 harness；默认 CI/发布链不执行 |
+| 检查 | [Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，发布链执行；需相应环境或测试 harness |
 | 检查 | [Test-WorkerIsolation.py](checks/Test-WorkerIsolation.py)、[Test-LocalStability.py](checks/Test-LocalStability.py) | 本地 worker 故障恢复、分页与宿主退出；普通/隔离模式压力及日志配对。使用测试宿主，不连接 TIA；双版本构建门自动执行 |
 | 检查 | [Test-DownloadRouteSelection.cs](checks/Test-DownloadRouteSelection.cs)、[Test-MatchPlcName.cs](checks/Test-MatchPlcName.cs) | 路由与名称匹配回归；可用 `-SourceOnly` 编译生产成员，否则转到 net48 HttpTests 反射引擎 |
 | 检查 | `HttpTests.exe <engine.exe> test-migration-read-assembly <PublicAPI>`、`test-ecosystem-assembly <PublicAPI>` | 反射迁移程序集和生态工具行为；由 Build-Release 调用，离线缺依赖时可加 `--skip-pdf --skip-companion` |
@@ -35,5 +36,7 @@
 | 操作 | [CLI 入门](../docs/getting-started/cli.md) | 生成工程和预热直接运行 `runtime\v21\TiaMcp.Engine.V21.exe gen <spec>` / `prewarm`；V20 使用对应 `runtime\v20` EXE |
 | 操作 | [vci-watch](operations/vci-watch/watch.py) | `python watch.py --register-task [--interval-minutes 10]` 注册当前用户的 `pythonw.exe` 计划任务；`python watch.py --register-task --remove` 删除 |
 | 操作 | `runtime/tools/TiaMcp.Updater.exe` | 在已解压的交付包里更新或回滚；手动运行时从包根传入 `-InstallRoot .`；支持 `-Check`、`-Version`、`-Force`、`-Repository`、`-TimeoutSeconds`、`-WaitForPid`、`-Rollback` 和 `-RelaunchConfigurator`；不连接 TIA、不结束进程，保留用户数据及未归更新器所有的文件 |
+
+| 手动检查 | [Test-CampaignInputs.py](checks/Test-CampaignInputs.py)、[Test-ExternalSourceDispatch.py](checks/Test-ExternalSourceDispatch.py)、[Test-HmiImportSafety.py](checks/Test-HmiImportSafety.py)、[Test-PilotTools.py](checks/Test-PilotTools.py)、[Test-PlcEditingMcp.py](checks/Test-PlcEditingMcp.py)、[Test-TechnologyImportSafety.py](checks/Test-TechnologyImportSafety.py)、[Test-SharedNativeIlReader.py](checks/Test-SharedNativeIlReader.py)、[Test-SharedNativeMigration.cs](checks/Test-SharedNativeMigration.cs) | 改动对应输入、派发、导入安全、工具或共享原生路径后按验证说明选择运行；默认 CI/发布链不执行，不使用 live 分支 |
 
 详见 [验证说明](../docs/development/validation.md) 和 [发布流程](../docs/development/release-workflow.md)。PowerShell、batch、cmd 构建发布入口已由 .NET release tool 替代并删除。

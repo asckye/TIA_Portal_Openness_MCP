@@ -164,8 +164,8 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 `--domain Cfc` 覆盖两个工具的八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
 逐字节相同。契约、响应快照、原生清单及全部离线门禁仍按本页验收要求运行。
 
-[Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 和
-[Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 保留为兼容入口。
+CFC 已纳入 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 和
+[Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 的统一领域检查；旧兼容入口已删除。
 
 ### CLI 宿主与命令实现
 

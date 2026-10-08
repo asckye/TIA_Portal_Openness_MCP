@@ -3,7 +3,7 @@
 Adapted from [EidoAut/EidoTiaWorkbench](https://github.com/EidoAut/EidoTiaWorkbench),
 commit `7a918b81925ed77bea96157d294610210b3de58c`, under the [MIT license](LICENSE).
 Copyright (c) 2026 EIDO AUTOMATION, S.L.U. The upstream file and Git blob are pinned
-in [upstream.json](upstream.json).
+in [UPSTREAM.json](UPSTREAM.json).
 
 The integrated implementation is [ImportDependencyPlanner.cs](../../src/Shared/ImportDependencyPlanner.cs).
 It retains dependency-first traversal, stable ordering and cycle detection. The local

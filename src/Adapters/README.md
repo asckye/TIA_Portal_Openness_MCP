@@ -193,7 +193,7 @@ site retains its caller, offset, opcode, member and category.
 | 20 | 1381 + 371 = 1752 | 522 + 157 = 679 |
 | 21 | 1378 + 371 = 1749 | 519 + 157 = 676 |
 
-`Build-Studio.ps1` preserves the legacy assembly identities and deployment layout.
+`dotnet run --project build-tools/release -- build-studio` preserves the legacy assembly identities and deployment layout.
 Comparing all legacy method bodies (instructions, operands, locals and exception
 handlers) gives zero differences: 207 methods for each of 14sp1/15.1 and 252 for
 each of 16–21. Moving source files changes build/debug identity and binary hashes;

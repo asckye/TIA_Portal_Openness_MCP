@@ -175,7 +175,7 @@ worker and must use observed state, never request-supplied identity.
 ## Evidence and maintenance
 
 The retained [historical migration ledger](evidence/legacy-plc-migration-status.json),
-[manual-read evidence](evidence/legacy-plc-manual-checklist.json) and `*-api-evidence.json`
+[manual-read evidence](evidence/legacy-plc-manual-checklist.json) and `manifest/history/evidence/legacy-*-api-evidence.json` (from the repository root)
 preserve exact source/API observations. Historical status strings apply to their
 recorded revision; current build and advertised scope come from the generated
 manifests and version matrix. The 62-name ledger is not an exhaustive API inventory.

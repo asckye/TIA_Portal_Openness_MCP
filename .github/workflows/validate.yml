@@ -50,14 +50,6 @@ jobs:
           python scripts/checks/Test-DotnetSuites.py --suite crash-evidence
           python scripts/checks/Test-DotnetSuites.py --suite write-guard
           dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
-      - name: Script calls must use registered V4 tools
-        shell: bash
-        run: |
-          set -euo pipefail
-          python scripts/checks/Check-ScriptToolCalls.py --self-test
-          python scripts/checks/Check-ScriptToolCalls.py
-          python scripts/mcp_results.py
-          python scripts/checks/Test-ScriptClients.py
       - name: Release feature defines match the reviewed table
         run: python scripts/checks/Check-TiaFeatures.py
       - name: Supplementary read and worker dispatch source contracts

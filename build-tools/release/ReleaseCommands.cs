@@ -565,15 +565,15 @@ internal static partial class ReleaseCommands
         catch (Exception ex) { errors.Add("Delivery rules could not be read: " + ex.Message); }
 
         foreach (var resource in BundleManifestRequirements.MissingBundleResources(root, package, noBinaries)) errors.Add("Missing bundle resource: " + resource);
-        foreach (var path in BundleManifestRequirements.GuiRequiredPaths)
+        foreach (var path in BundleManifestRequirements.GuiRequiredPaths(root))
         {
             if (package && rules is not null && !IsDeliveryFile(path, rules.RootElement)) continue;
             if (noBinaries && path == "TiaOpenness.exe") continue;
             if (!File.Exists(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)))) errors.Add("Missing GUI entry: " + path);
         }
         if (!package)
-            foreach (var name in new[] { "TiaMcp.Runtime.csproj", "S7LiveReader.cs", "OpcUaLiveReader.cs", "S7WebApiChannel.cs", "UnifiedOpenPipeChannel.cs" })
-                if (!File.Exists(Path.Combine(root, "src/Runtime", name))) errors.Add("Missing runtime channel source: src/Runtime/" + name);
+            foreach (var row in SourceRoots.Load(root).RequiredFiles.Where(row => row.RepositoryLabel == "runtime channel source"))
+                if (!File.Exists(Path.Combine(root, row.Path))) errors.Add("Missing runtime channel source: " + row.Path);
         if (strict)
         {
             var assemblies = Directory.EnumerateFiles(root, "*.dll", SearchOption.TopDirectoryOnly)

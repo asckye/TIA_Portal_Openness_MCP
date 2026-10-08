@@ -6,6 +6,8 @@ import json
 def release_checks(root, package, *records):
     """Validate candidate tier evidence before delivery projection removes sources."""
     policy = json.loads((root / 'build-tools/release/release-checks.json').read_text('utf-8'))
+    if policy.get('includeSourceRoots'):
+        policy['rules'] += source_check_rules(root)
     tier = package.get('tier')
     if tier not in ('package', 'quick', 'full'):
         raise ValueError('Package needs an explicit package/quick/full tier; run run-release-build -Tier')
@@ -55,6 +57,37 @@ GUI_PROJECT = 'src/Studio/Gui/TiaOpenness.Gui.csproj'
 DELIVERY_RULES = 'scripts/operations/delivery-files.json'
 GENERATED_RESOURCES = {'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.Updater.exe',
                        'runtime/tools/TiaMcp.Updater.exe.config'}
+SOURCE_ROOTS = 'build-tools/release/source-roots.json'
+
+
+def source_roots(root):
+    # Delivery directories omit build inputs; use the invoking checker's policy there.
+    path = root / SOURCE_ROOTS
+    policy = json.loads((path if path.is_file() else ROOT / SOURCE_ROOTS).read_text(encoding='utf-8'))
+    if (policy.get('schemaVersion') != 1 or not policy['roots']
+            or len({row['path'] for row in policy['roots']}) != len(policy['roots'])
+            or len({row['path'] for row in policy['requiredFiles']}) != len(policy['requiredFiles'])
+            or any(not plain_path(row['path']) or set(row['inventories']) - {'engine', 'multi', 'validation', 'validationMulti'}
+                   for row in policy['roots'])
+            or any(not plain_path(row['path']) or set(row['consumers']) - {'repository', 'bundle', 'package'}
+                   or ('repository' in row['consumers'] and not row.get('repositoryLabel')) for row in policy['requiredFiles'])):
+        raise ValueError('Invalid source root policy')
+    return policy
+
+
+def source_check_rules(root):
+    return [dict(path=row['path'] + '/', checks=row['checks']) for row in source_roots(root)['roots'] if 'checks' in row]
+
+
+def required_sources(root, consumer):
+    return [row['path'] for row in source_roots(root)['requiredFiles'] if consumer in row['consumers']]
+
+
+def compiler_sources(root, files):
+    roots = [row['path'] for row in source_roots(root)['roots'] if 'engine' in row['inventories']]
+    return {name for name in files if any(name.startswith(path + '/') for path in roots)
+            and Path(name).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json', '.config', '.manifest', '.resx')} | (
+                {'Version.props', *(path for path in roots if (root / path).is_file())} & set(files))
 
 
 def load_delivery(root):
@@ -250,15 +283,11 @@ class LayoutChecks(unittest.TestCase):
                     'Controls/WorkbenchLogView.cs', 'Controls/WorkbenchMessageBox.cs', 'Controls/ResultPresentation.cs', 'Controls/LogTailView.cs',
                     'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf', 'Fonts/JetBrainsMono-OFL.txt',
                     'Fonts/NotoSansSC-Regular.otf', 'Fonts/NotoSansSC-Bold.otf', 'Fonts/NotoSansSC-OFL.txt')
-        manifest = (ROOT / 'build-tools/release/BundleManifestRequirements.cs').read_text('utf-8')
-        package = (ROOT / 'scripts/build/Package-Release.py').read_text('utf-8')
-        repository = (ROOT / 'scripts/checks/Check-Repository.py').read_text('utf-8')
         for path in required:
             with self.subTest(path=path):
                 self.assertTrue((ROOT / gui / path).is_file())
-                self.assertIn('"' + gui + path + '"', manifest)
-                self.assertIn("'" + gui + path + "'", package)
-                self.assertIn("'" + path + "'", repository)
+                for consumer in ('bundle', 'package', 'repository'):
+                    self.assertIn(gui + path, required_sources(ROOT, consumer))
         self.assertEqual({p.name for p in (ROOT / gui / 'Fonts').iterdir() if p.suffix in ('.ttf', '.otf')},
                          {'JetBrainsMono-Regular.ttf', 'JetBrainsMono-Medium.ttf', 'NotoSansSC-Regular.otf', 'NotoSansSC-Bold.otf'})
         self.assertFalse((ROOT / 'docs/licenses/Manrope-OFL.txt').exists())

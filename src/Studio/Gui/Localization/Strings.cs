@@ -165,7 +165,7 @@ internal static partial class Strings
         ("Config.RestartClients", "Restart the configured clients and use {0} to read the project tree. Do not let multiple AIs modify the same project at the same time.", "重启已配置的客户端，使用 {0} 读取工程树。不要让多个 AI 同时修改同一工程。"),
         ("Config.SomeClientsNotSaved", "Some clients were not saved; successful changes were retained:\n{0}", "部分客户端未保存，其它成功项已保留：\n{0}"),
         ("Config.EngineOutsideBundle", "Engine version unknown: this is not an extracted delivery bundle (manifest\\delivery.json is missing)", "引擎版本未知：这里不是解压后的交付包（没有 manifest\\delivery.json）"),
-        ("Config.SourceRepositoryUpdate", "Source repository (.git present): do not update here; publish with scripts\\build\\Release.ps1", "源码仓库（有 .git）：不在这里更新，发布走 scripts\\build\\Release.ps1"),
+        ("Config.SourceRepositoryUpdate", "Source repository (.git present): do not update here; publish with dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary <summary>", "源码仓库（有 .git）：不在这里更新，发布走 dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary <summary>"),
         ("Config.CheckingUpdate", "Checking GitHub for the latest version…", "正在检查 GitHub 最新版本…"),
         ("Config.UpdateAvailable", "Update to {0}{1} · Stop the engine first, then click “Update engine…” below", "可更新到 {0}{1} · 先停引擎，再点下面的“更新引擎…”"),
         ("Config.UpdateAvailableLog", "Update check: {0} → {1}{2}; use “Update → Update engine…” ({3})", "检查更新：{0} → {1}{2}，菜单“更新 → 更新引擎…”执行（{3}）"),

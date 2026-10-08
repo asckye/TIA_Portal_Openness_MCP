@@ -1,6 +1,7 @@
 <Solution>
-  <!-- PlcWorker is built per TiaReleaseKey by Build-PlcAdapterWorkers.ps1; it has no default release. -->
+  <!-- PlcWorker is built per TiaReleaseKey by the build-tools/release build-plc-workers command; it has no default release. -->
   <Folder Name="/Engine/">
+    <Project Path="src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <Project Path="src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Project Path="src/Logic/TiaMcp.Logic.csproj" />
     <Project Path="src/FoundationHost/TiaMcpServer.LegacyHost.csproj" />
@@ -51,6 +52,9 @@
     <Project Path="src/Studio/Openness/V21/StudioOpenness.V21.csproj" />
   </Folder>
   <Folder Name="/Tests/Engine/">
+    <Project Path="tests/Engine/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcpServer.CompileCandidateTests/CompileCandidate.Tests.csproj" />
+    <Project Path="tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj" />
     <Project Path="tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj" />
     <Project Path="tests/Engine/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj" />
     <Project Path="tests/Engine/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj" />
@@ -80,9 +84,17 @@
     <Project Path="tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
+    <Project Path="src/Updater/TiaMcp.Updater.csproj" />
+    <Project Path="build-tools/release/TiaMcp.ReleaseTool.csproj" />
     <Project Path="src/Tools/WriteGuard/TiaMcp.WriteGuard.csproj" />
     <Project Path="tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj" />
     <Project Path="build-tools/native-call-weaver/NativeCallWeaver.csproj" />
     <Project Path="third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Release/">
+    <Project Path="tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Updater/">
+    <Project Path="tests/Updater/TiaMcp.Updater.Tests.csproj" />
   </Folder>
 </Solution>

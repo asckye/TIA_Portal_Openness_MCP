@@ -159,12 +159,28 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 
 该 job 还执行 `python scripts/generate/Generate-ToolUsage.py --check`，以及 BundleLayout、
 CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞异常自检仍在
-`offline-tests` job。`Test-CfcTools.py` 是领域检查的兼容入口，CFC 已包含在上述全领域检查中。
+`offline-tests` job。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
+`Check-ScriptToolCalls.py --self-test`、`Check-ScriptToolCalls.py`、`scripts/mcp_results.py` 和 `Test-ScriptClients.py`，
+`validate.yml` 不重复执行。
 
 按成员验证的引擎检查使用 [engine_sources.py](../../scripts/checks/engine_sources.py)，
 跨 `src/Engine/**/*.cs` 按成员名查找，显式以 UTF-8 读取，
 排除生成和构建文件；重载通过签名、所属类型或 MCP 属性区分，缺失或歧义直接失败。
 词法器保留完整方法体，不依赖相邻成员或迁移前文件路径。它是源码契约检查，不替代 C# 编译或原生验收。
+
+### 手动补充检查
+
+这些检查按改动范围运行，不属于默认 CI 或完整发布链：
+
+| 命令（仓库根目录） | 何时运行 |
+|---|---|
+| `python scripts/checks/Test-FoundationProxyIdentity.py --work-dir bin-build/proxy-identity` | 修改外部源规划、删除、批量导入身份检查后；编译实际生产方法，以新建但值相等的 API 代理验证身份语义，不需要 TIA/SDK |
+| `python -X utf8 scripts/checks/Test-Ecosystem.py` | 更新固定的 siemens-plc-tools 来源或 Python 桥接后；使用已装离线依赖的 Python，运行 plc-code、plc-iol、plc-trace 上游单元测试，不配置 live 端点 |
+| `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --engine-v20 <exe> --engine-v21 <exe> --harness <HttpTests.exe> --public-api-root <SDK-root> --evidence <new-worktree-dir> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA |
+
+旧 LegacyOffline/Passive Python 检查由 `foundation` xUnit 套件中的
+OfflineBlockComposition、OfflineXmlBuilder、OfflineComposition、OfflineLadder、PassiveHostDiagnostics
+覆盖；STDIO 初始化/清单/退出由 FoundationTransport 检查覆盖。P6-64 的一次性响应差异证明已退役。
 
 ### 需要本地 .NET 或工作目录的源码检查
 

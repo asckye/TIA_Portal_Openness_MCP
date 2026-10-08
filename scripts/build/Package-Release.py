@@ -162,7 +162,7 @@ def main():
     require(runtime_names == runtime_inventory | separately_built_updater, 'Runtime file inventory changed after validation')
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('src/Engine/','src/FoundationHost/','src/Worker/','src/Logic/','src/Runtime/','src/WorkerChannel/','src/Adapters/','src/Adapters.Contracts/', 'src/Updater/','src/Tools/WriteGuard/','tests/Engine/', 'tests/Updater/','tests/Tools/','build-tools/native-call-weaver/', 'build-tools/release/','src/Shared/','third_party/TiaGitAddIn.Core/','third_party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json', '.config', '.manifest', '.resx')} | ({'Version.props', 'tests/test-suites.json'} & set(files))
+    source_names = layout.compiler_sources(root, files)
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
@@ -252,61 +252,18 @@ def main():
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(Path(n).suffix.lower() in ('.ps1', '.psm1', '.bat', '.cmd') for n in files), 'PowerShell, batch, and cmd files must not be shipped')
     required = rules['include']['files'] + [layout.DELIVERY_RULES, 'docs/README.md',
-                'src/Updater/TiaMcp.Updater.csproj', 'src/Updater/Updater.cs', 'src/Updater/Program.cs',
-                'src/Updater/app.manifest', 'src/Updater/App.config', 'src/Updater/UpdaterText.cs', 'src/Updater/UpdaterMessages.resx',
-                'tests/Updater/TiaMcp.Updater.Tests.csproj', 'tests/Updater/UpdaterTests.cs',
-                'src/Shared/BundleLayout.cs',
-                'scripts/checks/Check-BundleLayout.py', 'scripts/checks/Test-ReleaseSmoke.py',
-                'build-tools/release/release-checks.json', 'build-tools/release/ReleaseTiers.cs', 'build-tools/release/ReleaseCandidateChecks.cs',
-                'build-tools/release/BuildOutputCache.cs', 'build-tools/release/BranchGate.cs',
-                'tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs',
-                'tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs',
-                'src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
-                'src/Adapters.Contracts/packages.lock.json',
                 'TiaOpenness.exe', 'docs/getting-started/configuration.md',
-                'src/Studio/Launcher/Launcher.cs',
-                'src/Studio/Gui/Themes/Primer.xaml',
-                'src/Studio/Gui/Themes/Palette.Light.xaml',
-                'src/Studio/Gui/Themes/Palette.Dark.xaml',
-                'src/Studio/Gui/Controls/WorkbenchLogView.cs',
-                'src/Studio/Gui/Controls/WorkbenchMessageBox.cs',
-                'src/Studio/Gui/Controls/ResultPresentation.cs',
-                'src/Studio/Gui/Controls/LogTailView.cs',
-                'src/Studio/Gui/Fonts/JetBrainsMono-Regular.ttf',
-                'src/Studio/Gui/Fonts/JetBrainsMono-Medium.ttf',
-                'src/Studio/Gui/Fonts/JetBrainsMono-OFL.txt',
-                'src/Studio/Gui/Fonts/NotoSansSC-Regular.otf',
-                'src/Studio/Gui/Fonts/NotoSansSC-Bold.otf',
-                'src/Studio/Gui/Fonts/NotoSansSC-OFL.txt',
-                'src/Studio/Gui/Fonts/SOURCES.txt',
-                'src/Studio/Gui/TiaOpenness.Gui.csproj',
-                'src/Studio/Gui/Configuration/ConfigurationView.xaml',
-                'src/Studio/Gui/Configuration/ConfigurationView.xaml.cs',
-                'src/Studio/Gui/Configuration/ConfigCore.cs',
-                'src/Studio/Gui/Configuration/ClientProfiles.cs',
-                'src/Studio/Gui/Configuration/UpdateCheck.cs',
-                'src/Studio/Gui/Configuration/ModernJson.cs',
-                'src/Studio/Gui/Localization/Strings.cs',
-                'src/Studio/Gui/Themes/Palette.Light.xaml',
-                'src/Studio/Gui/Themes/Palette.Dark.xaml',
-                'tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
-                'tests/Studio/TiaOpenness.Configuration.Tests/Tests.cs',
                 'runtime/tools/TiaMcp.WriteGuard.exe', 'runtime/tools/TiaMcp.WriteGuard.dll',
                 'runtime/tools/TiaMcp.WriteGuard.deps.json', 'runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json',
                 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
                 'docs/getting-started/cli.md', 'scripts/README.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
                 'plugin/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
-    required += ['src/Runtime/' + name for name in
-                 ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs')]
     required += [f'runtime/v{major}/TiaMcp.Runtime.dll' for major in (20, 21)]
     required += [f'runtime/v{major}/TiaMcp.Adapter.{major}.dll' for major in (20, 21)]
     required += [f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll' for major in (20, 21)]
     required += ['runtime/verification/' + name for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll')]
-    required += ['src/' + name for name in ('Adapters/Native/Plc/PlcServices.cs', 'Engine/ModelContextProtocol/InvocationJournal.Adapter.cs')]
-    required += ['tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs']
-    required += ['src/WorkerChannel/' + name for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json')]
-    required += ['src/Studio/Core/Rpc/BridgeChannel.cs', 'runtime/studio/TiaMcp.WorkerChannel.dll']
+    required += ['runtime/studio/TiaMcp.WorkerChannel.dll']
     required += ['runtime/studio/bridge/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):
         # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
@@ -316,6 +273,7 @@ def main():
     required += [f'{directory}/{category}/{key}.json'
                  for directory in ('manifest/history/contracts-v3', 'manifest/contracts/v4')
                  for category in ('baseline', 'responses') for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')]
+    required += layout.required_sources(root, 'package')
     require(all(n in files for n in required), 'Full delivery entries or documentation missing')
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     # Validate compiler inputs and release-only IL verifier in the repository before

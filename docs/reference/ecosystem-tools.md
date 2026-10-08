@@ -8,7 +8,7 @@
 |---|---|---|
 | Siemens `tia-portal-ai-extensions` | 官方 Openness 指南供检索和统一示例引用；资料不会自行执行。 | [固定来源](../../reference/siemens-openness/UPSTREAM.json) |
 | Siemens Openness Code Snippets | C# 官方示例作为参考语料纳入统一示例库，区分官方源代码与本项目 MCP 参数。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/siemens-code-snippets/UPSTREAM.json) |
-| `asckye/tia-openness-studio` | 已合入桌面工程；八个直接 Openness 适配器、共用工作流、中英界面，不再使用 MCP 通道。 | [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/upstream.json) |
+| `asckye/tia-openness-studio` | 已合入桌面工程；八个直接 Openness 适配器、共用工作流、中英界面，不再使用 MCP 通道。 | [Studio 说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)、[来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json) |
 | EidoTiaWorkbench | `PlanArtifactImportOrder` 复用依赖排序算法，八版共用；移除原 V21 域启发式假设。 | [改动与 MIT 许可](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md) |
 | `Czarnak/tia-git-addin` | MIT Core 的 SimaticML 解析、结构差异和 LAD 布局；结合本项目 HTML/Git 适配器。未复制桌面 UI。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/TiaGitAddIn.Core/UPSTREAM.json) |
 | `core-engineering/siemens-plc-tools` | 固定版本的 Python 包和 CLI，通过独立伴随进程调用；安装环境另外准备。 | [固定来源](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-tools/UPSTREAM.json) |
@@ -57,7 +57,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 Workbench 审批再派发；
 
 ## PLC Tools 环境
 
-在运行 MCP 的电脑上，按 [伴随工具说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-docs/development/repository-layout.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
+在运行 MCP 的电脑上，按 [伴随工具说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/siemens-plc-tools/README.md)准备 Python 环境，并通过 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。Python 环境不是发布 ZIP 的内置运行时。
 
 V20/V21 完整引擎通过安装布局解析器定位包根，再读取 `reference/siemens-openness` 中的指南以及
 `scripts/ecosystem` 中的 Python 桥接；完整交付包可在仓库外运行。包根可用 `--bundle-root` 或

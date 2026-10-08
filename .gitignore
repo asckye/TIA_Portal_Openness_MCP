@@ -47,7 +47,7 @@ TIA_V21_PublicAPI/
 /*.7z
 /*.zip
 
-# 引擎与配置器的二进制不入库（2.8.1 起，维护者决定）：本机 Build-Release.ps1 生成，发布 ZIP 由 Release.ps1 直接上传到 GitHub Release
+# 引擎与配置器的二进制不入库：本机 dotnet run --project build-tools/release -- build-release 生成，release 命令上传发布 ZIP
 /runtime/v20/
 /runtime/v21/
 /TiaOpenness.exe

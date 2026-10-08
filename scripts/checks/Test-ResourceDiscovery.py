@@ -198,7 +198,7 @@ def main():
                 passed += 1
                 for method, field in (('resources/list', 'resources'),
                                       ('resources/templates/list', 'resourceTemplates')):
-                    for number, request_id in enumerate((7, '璧勬簮鍙戠幇', 7)):
+                    for number, request_id in enumerate((7, 'resource-discovery', 7)):
                         response = rpc(method, request_id, include_params=number != 0)
                         require('error' not in response, f'{method}: {response.get("error")}')
                         require(response.get('result') == {field: []},

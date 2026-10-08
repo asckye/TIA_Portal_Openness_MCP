@@ -29,11 +29,11 @@ python watch.py
 ## 计划任务和日志
 
 ```powershell
-.egister-task.ps1
+python watch.py --register-task
 Disable-ScheduledTask TiaVciWatch
 Enable-ScheduledTask TiaVciWatch
-.egister-task.ps1 -IntervalMinutes 30
-.egister-task.ps1 -Remove
+python watch.py --register-task --interval-minutes 30
+python watch.py --register-task --remove
 ```
 
 默认计划间隔为 10 分钟。日志位于 `log/watch-YYYYMMDD.log`；`watch.state.json` 记录周期、退避与进程信息。配置中的完整检查间隔、未编译冷却、强制全量检查、锁时限和单轮超时有各自作用，以示例配置为准；超时可能终止脚本启动的引擎，已经导出的文件不会回滚。

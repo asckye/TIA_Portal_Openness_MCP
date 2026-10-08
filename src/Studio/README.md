@@ -16,7 +16,7 @@ prerequisite in Chinese and English. The bundled .NET 10 runtime does not replac
 The latest published package is v3.3.0; the 4.0 source is unreleased.
 
 Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,
-copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICENSE) and [file provenance](../../third_party/tia-openness-studio/upstream.json).
+copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICENSE) and [file provenance](../../third_party/tia-openness-studio/UPSTREAM.json).
 The complete original tree and Git history remain under `../../third_party/tia-openness-studio/upstream/` as reference archives.
 
 For a first installation and a step-by-step desktop walkthrough, see the [beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md).
@@ -26,7 +26,7 @@ For a first installation and a step-by-step desktop walkthrough, see the [beginn
 Build on Windows with .NET 10 SDK, .NET Framework 4.8 and the authorized PublicAPI directories:
 
 ```powershell
-pwsh ./scripts/build/Build-Studio.ps1 -PublicApiRoot 'D:\Project\TIA_Portal_MCP' -Test
+dotnet run --project build-tools/release -- build-studio -PublicApiRoot 'D:\Project\TIA_Portal_MCP' -Test
 & ./src/Studio/Gui/bin/Release/net10.0-windows/TiaOpenness.exe --lang zh --openness-version 21
 ```
 
@@ -134,7 +134,7 @@ date/time cases; the RPC method tests compare requests, responses, backend argum
 call order and progress. Client tests also cover identity rejection, all Studio
 error cases, cancellation before and after dispatch, timeout, concurrent calls,
 child exit, handled errors followed by another call, late progress, and disposal.
-Run the offline bridge smoke after `Build-Studio.ps1` with local SDK files:
+Run the offline bridge smoke after `dotnet run --project build-tools/release -- build-studio` with local SDK files:
 
 ```powershell
 python tests/Studio/Test-BridgeSmoke.py --bridge src/Studio/Gui/bin/Release/net10.0-windows/bridge/TiaOpenness.Bridge.exe --public-api-root <local-sdk-root>
@@ -165,9 +165,9 @@ and retain their partial results. An interrupted bridge call is not automaticall
 These operations do not provide rollback. An unsuccessful source generation retains its uniquely
 named source for inspection. The legacy `RequireBlockComment` inspection rule checks HeaderAuthor.
 
-The configuration page is the compiled `src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml`
+The configuration page is the compiled `src/Studio/Gui/Configuration/ConfigurationView.xaml`
 UserControl. Its code-behind retains the configuration/service logic and loads the Studio palettes
-and its own compiled English/Chinese dictionaries. `src/TiaOpenness.Launcher` contains only the
+and its own compiled English/Chinese dictionaries. `src/Studio/Launcher` contains only the
 Framework compatibility launcher; configuration tests run in the .NET 10 desktop host.
 
 ## Validation
@@ -184,5 +184,5 @@ progress and error recovery. It also runs Doctor through the ordinary bridge wit
 session. WPF tests render and inspect the actual controls. Native adapters compile against the
 official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
-Live 4.0 TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; the formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
+Live 4.0 TIA project acceptance remains pending. `dotnet run --project build-tools/release -- build-multi-version` deploys the desktop to `runtime/studio`; the formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
 [the shared version framework](../../docs/development/unified-version-framework.md).

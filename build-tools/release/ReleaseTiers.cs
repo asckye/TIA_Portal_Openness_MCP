@@ -11,7 +11,7 @@ internal sealed record ReleaseCheckPlan(string Tier, string[] SelectedChecks, st
     internal bool Includes(string check) => SelectedChecks.Contains(check, StringComparer.Ordinal);
 }
 
-internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, ReleaseCheckRule[] Rules, ReleaseSelfTest[] SelfTests)
+internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, ReleaseCheckRule[] Rules, ReleaseSelfTest[] SelfTests, bool IncludeSourceRoots = false)
 {
     internal static readonly string[] PackageChecks = ["preflight", "binary-build", "product-smoke", "relocation", "package", "bundle-validation"];
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -20,6 +20,7 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
     {
         var policy = JsonSerializer.Deserialize<ReleaseCheckPolicy>(File.ReadAllText(Path.Combine(root, "build-tools/release/release-checks.json")), JsonOptions)
             ?? throw new ReleaseException("Release check map is empty.");
+        if (policy.IncludeSourceRoots) policy = policy with { Rules = [.. SourceRoots.Load(root).CheckRules(), .. policy.Rules] };
         policy.Validate();
         return policy;
     }

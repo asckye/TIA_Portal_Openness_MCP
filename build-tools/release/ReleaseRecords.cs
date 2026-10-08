@@ -7,14 +7,11 @@ internal sealed record ReleaseArtifact(string Path, string Sha256);
 
 internal static class ReleaseRecords
 {
-    private static readonly string[] EngineSourceRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Updater", "src/Tools/WriteGuard", "tests/Engine", "tests/Updater", "tests/Tools", "tests/test-suites.json", "build-tools/native-call-weaver", "build-tools/release", "src/Shared", "third_party/TiaGitAddIn.Core", "third_party/SiemensOpcUaModelled"];
-    private static readonly string[] MultiSourceRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Tools/WriteGuard", "tests/Engine", "tests/Tools", "tests/test-suites.json", "src/Shared", "src/Studio", "tests/Studio", "third_party/tia-openness-studio", "build-tools/native-call-weaver", "build-tools/release", "scripts/build", "scripts/checks", "scripts/diagnostics", "scripts/generate"];
-    private static readonly string[] ValidationRoots = ["src/Engine", "src/FoundationHost", "src/Worker", "src/Logic", "src/Runtime", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/Updater", "src/Tools/WriteGuard", "tests/Engine", "tests/Updater", "tests/Tools", "tests/test-suites.json", "build-tools/native-call-weaver", "build-tools/release", "src/Shared", "third_party/eido-import-planner", "third_party/siemens-plc-tools", "third_party/SiemensOpcUaModelled", "third_party/simaticml-decoder", "third_party/TiaGitAddIn.Core", "scripts/build", "scripts/checks", "scripts/diagnostics", "scripts/generate", "scripts/ecosystem", "reference", "templates"];
     private static readonly string[] BinaryExtensions = [".exe", ".dll", ".config"];
 
     internal static IReadOnlyList<ReleaseArtifact> GetSources(string root, string kind)
     {
-        var roots = kind == "engine" ? EngineSourceRoots : kind == "multi" ? MultiSourceRoots : throw new ArgumentOutOfRangeException(nameof(kind));
+        var roots = kind is "engine" or "multi" ? SourceRoots.Load(root).Inventory(kind) : throw new ArgumentOutOfRangeException(nameof(kind));
         var extensions = kind == "engine"
             ? new HashSet<string>([".cs", ".csproj", ".props", ".targets", ".xml", ".json", ".config", ".manifest", ".resx"], StringComparer.OrdinalIgnoreCase)
             : new HashSet<string>([".cs", ".csproj", ".props", ".targets", ".xaml", ".py", ".json", ".resx"], StringComparer.OrdinalIgnoreCase);
@@ -36,7 +33,8 @@ internal static class ReleaseRecords
 
     internal static IReadOnlyList<ReleaseArtifact> GetValidationInputs(string root, string kind)
     {
-        var roots = kind == "multi" ? ValidationRoots.Concat(["src/Studio", "tests/Studio", "third_party/tia-openness-studio"]) : ValidationRoots;
+        var policy = SourceRoots.Load(root);
+        var roots = kind == "multi" ? policy.Inventory("validation").Concat(policy.Inventory("validationMulti")) : policy.Inventory("validation");
         var extensions = new HashSet<string>([".cs", ".csproj", ".props", ".targets", ".xml", ".json", ".xaml", ".py", ".toml", ".xsd", ".ttf", ".otf"], StringComparer.OrdinalIgnoreCase);
         var files = new HashSet<string>([Path.Combine(root, "Version.props")], StringComparer.OrdinalIgnoreCase);
         foreach (var relative in roots)

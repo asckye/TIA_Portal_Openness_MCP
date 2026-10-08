@@ -60,9 +60,6 @@ def product_name_errors(root, names):
         if not path.is_file():
             continue
         for line, text in enumerate(path.read_text(encoding='utf-8-sig').splitlines(), 1):
-            if name == 'docs/development/handoff.md' and text == ('- one WPF/.NET 10 workbench (configurator and Studio merged; `'
-                    + old_launcher + '.exe` remains the launcher) with menus'):
-                continue
             if pattern.search(text) or identity.search(text):
                 errors.append(f'{name}:{line}: retired product reference')
     return errors
@@ -194,33 +191,15 @@ def check(root, no_binaries=False, package_mode=False):
                 if layout.delivered(row['path'], rules):
                     required(row['path'], 'recorded runtime')
         return count, errors
-    required('src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj', 'adapter contracts')
-    required('src/Adapters.Contracts/packages.lock.json', 'adapter contracts lock')
-    for name in ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs'):
-        required('src/Runtime/' + name, 'runtime channel source')
+    for row in layout.source_roots(root)['requiredFiles']:
+        if 'repository' in row['consumers']:
+            required(row['path'], row['repositoryLabel'])
     for major in (20, 21):
         required(f'runtime/v{major}/TiaMcp.Runtime.dll', 'runtime channel assembly')
         required(f'runtime/v{major}/TiaMcp.Adapter.{major}.dll', 'in-process shared adapter')
         required(f'runtime/v{major}/TiaMcp.Adapters.Contracts.dll', 'adapter contracts assembly')
     for name in ('NativeCallWeaver.dll', 'NativeCallWeaver.deps.json', 'NativeCallWeaver.runtimeconfig.json', 'Mono.Cecil.dll'):
         required('runtime/verification/' + name, 'packaged native verifier')
-    for name in ('Adapters/Native/Plc/PlcServices.cs', 'Engine/ModelContextProtocol/InvocationJournal.Adapter.cs'):
-        required('src/' + name, 'engine adapter wiring')
-    required('tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs', 'engine adapter checks')
-    required('src/Shared/BundleLayout.cs', 'bundle layout')
-    for name in ('ReleaseTiers.cs', 'ReleaseCandidateChecks.cs', 'BuildOutputCache.cs', 'BranchGate.cs', 'release-checks.json'):
-        required('build-tools/release/' + name, 'release tier policy')
-    required('scripts/checks/Test-ReleaseSmoke.py', 'release smoke check')
-    required('tests/Release/TiaMcp.ReleaseTool.Tests/ReleaseTierTests.cs', 'release tier tests')
-    required('tests/Release/TiaMcp.ReleaseTool.Tests/BuildOutputCacheTests.cs', 'build cache tests')
-    required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
-    required('tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')
-    for name in ('TiaMcp.Updater.csproj', 'Program.cs', 'Updater.cs', 'UpdaterText.cs', 'UpdaterMessages.resx', 'app.manifest', 'App.config'):
-        required('src/Updater/' + name, 'updater source')
-    required('tests/Updater/TiaMcp.Updater.Tests.csproj', 'updater tests')
-    required('tests/Updater/UpdaterTests.cs', 'updater tests')
-    for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json'):
-        required('src/WorkerChannel/' + name, 'worker channel source')
     for key in ('14sp1', '15.1', '16', '17', '18', '19'):
         # The .NET 10 Foundation hosts take System.Text.Json, Encodings.Web and IO.Pipelines from the bundled shared framework.
         required(f'runtime/v{key}/TiaMcp.WorkerChannel.dll', 'worker channel host')
@@ -228,25 +207,13 @@ def check(root, no_binaries=False, package_mode=False):
             required(f'runtime/v{key}/worker/' + name, 'worker channel dependency')
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles'] + contract_required_paths():
         required(name, 'blueprint/contract snapshot')
-    studio = 'src/Studio/'
-    required(studio + 'Core/Rpc/BridgeChannel.cs', 'Studio channel codec')
     required('runtime/studio/TiaMcp.WorkerChannel.dll', 'Studio client channel')
     for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
         required('runtime/studio/bridge/' + name, 'Studio bridge channel dependency')
-    required(studio + 'Launcher/Launcher.cs', 'GUI entry')
-    for name in ('Themes/Primer.xaml', 'Themes/Palette.Light.xaml', 'Themes/Palette.Dark.xaml',
-                 'Controls/WorkbenchLogView.cs', 'Controls/WorkbenchMessageBox.cs', 'Controls/ResultPresentation.cs', 'Controls/LogTailView.cs',
-                 'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf',
-                 'Fonts/JetBrainsMono-OFL.txt', 'Fonts/NotoSansSC-Regular.otf',
-                 'Fonts/NotoSansSC-Bold.otf', 'Fonts/NotoSansSC-OFL.txt', 'Fonts/SOURCES.txt'):
-        required(studio + 'Gui/' + name, 'GUI entry')
     roster = read('manifest/tools-list.json')
     names = [row['name'] for row in roster['tools']]
     if len(names) != len(set(names)) or len(names) != roster['toolCount'] or len(names) != package['capabilities']['mcpToolCount']:
         errors.append('Tool inventory count/uniqueness differs from package metadata')
-    for name in ('tia.cmd', 'tia-v20.cmd', '閰嶇疆MCP.bat', '閰嶇疆MCP-v20.bat'):
-        if (root / name).exists():
-            errors.append('Replaced launcher returned: ' + name)
     for version in ('20', '21'):
         required(f'runtime/v{version}/TiaMcp.Engine.V{version}.exe', 'runtime')
     swallowed = Path(__file__).with_name('Check-SwallowedExceptions.py')
