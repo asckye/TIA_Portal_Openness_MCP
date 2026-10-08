@@ -63,6 +63,7 @@
     <Compile Include="../../../src/FoundationHost/FoundationTools.cs" Link="FoundationTools.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkerJob.cs" Link="WorkerJob.cs" />
     <Compile Include="../../../src/FoundationHost/DeclarationReadContract.cs" Link="DeclarationReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/V17ReadEnvelope.cs" Link="V17ReadEnvelope.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerProtocol.cs" Link="WorkerProtocol.cs" />
