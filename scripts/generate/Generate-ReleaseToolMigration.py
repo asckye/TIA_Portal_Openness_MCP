@@ -157,6 +157,10 @@ def render_release(key, old_doc, new_doc, mapping):
     old_tools = {tool["name"]: tool for tool in old_doc["tools"]}
     new_tools = {tool["name"]: tool for tool in new_doc["tools"]}
     targets = {name: mapping[name] for name in old_tools}
+    policy = (ROOT / "src/EngineHost/SharedToolCatalog.cs").read_text(encoding="utf-8")
+    retired_names = set(re.findall(r'"(\w+)"', policy.split('Removed =', 1)[1].split('};', 1)[0])) if key in ("20", "21") else set()
+    retired = {name: target for name, target in targets.items() if target in retired_names}
+    targets = {name: target for name, target in targets.items() if name not in retired}
     groups = {}
     for old_name, new_name in targets.items():
         groups.setdefault(new_name, []).append(old_name)
@@ -203,7 +207,11 @@ def render_release(key, old_doc, new_doc, mapping):
         else:
             change = "Rename"
         out.append(f"| {change} | {code(old_name)} | {code(new_name)} |")
-    out.append("| Removed without replacement | None | — |")
+    if retired:
+        for old_name, target in sorted(retired.items()):
+            out.append(f"| Removed duplicate lifecycle (P7-04) | {code(old_name)} | {code(target)} retired; use the shared Foundation session |")
+    else:
+        out.append("| Removed without replacement | None | — |")
     for name in additions:
         out.append(f"| Added in 4.0 | — | {code(name)} |")
     out.extend(["", "#### Parameter changes", "",
@@ -212,6 +220,8 @@ def render_release(key, old_doc, new_doc, mapping):
     parameter_rows = []
     required_additions = []
     for old_name in sorted(old_tools):
+        if old_name in retired:
+            continue
         target = targets[old_name]
         # Extra merged entry points share the retained GetToolUsage schema;
         # their old topic-only inputs are summarized below as a merge.

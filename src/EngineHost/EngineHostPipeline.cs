@@ -38,6 +38,7 @@ namespace TiaMcp.LegacyHost
     {
         internal static string ReleaseKey = "21";
         internal static IEngineWorker Worker = null!;
+        internal static Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingOwner = null!;
     }
 
     public sealed class EngineHostPipeline : IDisposable
@@ -46,19 +47,28 @@ namespace TiaMcp.LegacyHost
         public string Instructions { get; }
         public JsonArray BehaviorCapabilities { get; }
         public IList<McpServerTool> Tools { get; }
+        public IReadOnlyList<McpServerTool> AllTools { get; }
 
-        public EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile)
+        public EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
+            IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
         {
             EngineHostConfiguration.ReleaseKey = releaseKey;
             EngineHostConfiguration.Worker = worker;
+            EngineHostConfiguration.StagingOwner = () => ImportStagingTools.CurrentOwner ?? stagingLifetime.Session;
             var catalog = new EngineCatalog(path, workerPath, releaseKey);
+            IToolCatalogView published = sharedTools == null ? catalog : new SharedToolCatalog(catalog, sharedTools, sharedEssentials!);
             Instructions = catalog.Instructions;
             BehaviorCapabilities = catalog.BehaviorCapabilities;
             McpServer.SetProfileOverride(profile);
-            McpServer.ConfigureToolBridge(catalog, new WorkerToolInvoker(catalog, worker, stagingLifetime), McpServer.IsLiteProfile,
-                new HashSet<string>(catalog.Lite.Select(t => t.Name), StringComparer.Ordinal));
+            McpServer.ConfigureToolBridge(published, new WorkerToolInvoker(published, worker, stagingLifetime, sharedTools), McpServer.IsLiteProfile,
+                new HashSet<string>(published.Lite.Select(t => t.Name), StringComparer.Ordinal));
             InvocationJournal.BindingSnapshot = () => worker.Binding as JsonObject;
-            Tools = McpServer.WrapTools(McpServer.IsLiteProfile() ? McpServer.GetLiteTools() : McpServer.GetAllTools());
+            var selected = McpServer.IsLiteProfile() ? published.Lite : published.All.Values.ToArray();
+            Tools = selected.SelectMany(t => t.Execution == "foundation"
+                ? new[] { sharedTools!.Single(s => s.ProtocolTool.Name == t.Name) }
+                : McpServer.WrapTools(new[] { McpServer.ToolInvoker.CreateTool(t) })).ToList();
+            AllTools = published.All.Values.Select(t => t.Execution == "foundation"
+                ? sharedTools!.Single(s => s.ProtocolTool.Name == t.Name) : McpServer.ToolInvoker.CreateTool(t)).ToArray();
         }
 
         public IDisposable RegisterHttpSession(string id)
@@ -90,6 +100,9 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string ReleaseKey => TiaMcp.LegacyHost.EngineHostConfiguration.ReleaseKey;
         internal static TiaMcp.LegacyHost.IEngineWorker Worker => TiaMcp.LegacyHost.EngineHostConfiguration.Worker;
         internal static CancellationToken WorkerDispatchCancellation => McpDispatchCancellation.Value;
+        internal static IMcpServer? CurrentCallServer => ProgressRequest.Value?.Server;
+        internal static void MarkSharedSessionUncertain() => SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
+        internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.LegacyHost.EngineHostConfiguration.StagingOwner();
         static partial void RecordBridgeEvent(string id, string name, string phase);
         static partial void RecordCallRejection(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, CallToolResult result);
         static partial void ApprovalSessionKey(ref object? key)

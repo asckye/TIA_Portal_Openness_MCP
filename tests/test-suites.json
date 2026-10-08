@@ -209,5 +209,20 @@
     "minimumPassed": 17,
     "maximumSkipped": 0,
     "arguments": []
+  },
+  "shared-session": {
+    "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
+    "minimumPassed": 5,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "shared-pipeline": {
+    "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
+    "minimumPassed": 6,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~SharedPipelineTests"
+    ]
   }
 }

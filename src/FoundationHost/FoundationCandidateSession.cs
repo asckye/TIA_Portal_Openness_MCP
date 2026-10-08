@@ -11,6 +11,7 @@ internal sealed partial class FoundationCandidateSession(IFoundationWorker worke
 {
     private static readonly ConditionalWeakTable<IFoundationWorker, FoundationCandidateSession> Sessions = new();
     internal static FoundationCandidateSession For(IFoundationWorker worker) => Sessions.GetValue(worker, w => new(w));
+    internal static void Reset(IFoundationWorker worker) => Sessions.Remove(worker);
     private readonly object serial = new();
     private readonly DeviceCreationSession devices = new();
     private readonly PlcImportSession imports = new();

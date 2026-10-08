@@ -166,7 +166,8 @@ internal static class FoundationV4Result
     internal static CallToolResult Host(string release, string name, string id, JsonNode? raw, bool candidate, bool isError = false,
         IReadOnlyDictionary<string, JsonElement>? args = null)
     {
-        var data = Object(raw);
+        var data = name == "GetToolUsage" && (string?)raw?["usage"]?["profile"] == "full-engine"
+            ? raw!.DeepClone().AsObject() : Object(raw);
         // Collapse the legacy wrapper while retaining all domain and candidate evidence.
         if (data["data"] is JsonObject nested)
         {

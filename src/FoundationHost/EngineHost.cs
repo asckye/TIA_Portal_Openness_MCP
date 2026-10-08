@@ -15,7 +15,13 @@ internal static class EngineHost
     internal static async Task<int> Run(HostOptions options, HostFileLogger logger)
     {
         using var worker = new EngineWorkerClient(options, EngineCatalog.Hash(options.EngineWorkerExe!));
-        using var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile);
+        IReadOnlyList<McpServerTool>? roster = null;
+        var foundationNames = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, false).Select(t => t.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
+        var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
+            options.ApiDirectorySource, worker.FoundationReadiness, () => roster!, name => foundationNames.Contains(name) ? "plc-foundation" : "full-engine");
+        var essentials = LegacyHostToolRegistry.Create(worker, "19", false).Select(t => t.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
+        using var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile, shared, essentials);
+        roster = pipeline.AllTools;
         worker.SessionLocked = () => TiaMcpServer.ModelContextProtocol.McpServer.SessionPrecheckRefusal("GetSessionState") != null;
         if (options.CatalogOnly)
         {

@@ -1,9 +1,9 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "515b8e8c0c517eb03ee2538aaaeee405d0cc9790e2c906a59c218d3011b2f743",
-  "uniqueTools": 499,
+  "catalogSha256": "eed1256e83efc134aefa802f76a01923ba2fc55c4930f6d9f6a8f041b61ef493",
+  "uniqueTools": 493,
   "documents": 89,
-  "versionToolPairs": 1358,
+  "versionToolPairs": 1362,
   "offlineCallExecutions": 74,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -23,7 +23,7 @@
     "hmi-vbscript",
     "csharp"
   ],
-  "relatedOfficialPatternMappings": 259,
+  "relatedOfficialPatternMappings": 253,
   "noDirectVendoredExampleMappings": 240,
   "sources": [
     {
@@ -3918,11 +3918,11 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 480,
-      "checkedToolCount": 480,
+      "registeredToolCount": 482,
+      "checkedToolCount": 482,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 493,
+      "operationExampleCount": 486,
       "programmingExampleCount": 25,
       "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 2,
@@ -4196,16 +4196,6 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildProjectScaffold",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
           "operations": []
         },
         {
@@ -4483,16 +4473,6 @@
           "operations": []
         },
         {
-          "toolName": "ConnectIsolatedPortal",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "ConnectOnlinePlc",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4504,16 +4484,6 @@
         },
         {
           "toolName": "ConnectPortal",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "ConnectProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -4618,11 +4588,41 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcTag",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTypeGroup",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcUserConstant",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -5993,6 +5993,16 @@
           "operations": []
         },
         {
+          "toolName": "GetPortalConnectionReadiness",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetPortalInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6812,6 +6822,16 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSystemConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSystemGroups",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6834,11 +6854,31 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcTags",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcTypes",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcUserConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -7204,7 +7244,7 @@
             {
               "operation": "import",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageDcbLibraries.import is unavailable on V20; requires V21."
+              "releaseProblem": null
             }
           ]
         },
@@ -7433,7 +7473,7 @@
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageDeviceServiceObjects.setDefault is unavailable on V20; requires V21."
+              "releaseProblem": null
             },
             {
               "operation": "update",
@@ -7443,7 +7483,7 @@
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageDeviceServiceObjects: unknown action 'delete'. Allowed: read, setDefault."
+              "releaseProblem": null
             },
             {
               "operation": "export",
@@ -7674,12 +7714,12 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageDriveHardwareModule.changeType is unavailable on V20; requires V21."
+              "releaseProblem": null
             },
             {
               "operation": "setPositionNumber",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageDriveHardwareModule.setPositionNumber is unavailable on V20; requires V21."
+              "releaseProblem": null
             }
           ]
         },
@@ -8158,52 +8198,6 @@
           ]
         },
         {
-          "toolName": "ManageMultiuserSession",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "listServerProjects",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "readLockState",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "listLocalSessions",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "connectServer",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "disconnectServer",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "commit",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8615,7 +8609,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on V20; requires V21."
+              "releaseProblem": null
             },
             {
               "operation": "deleteGroup",
@@ -8717,12 +8711,12 @@
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on V20; requires V21."
+              "releaseProblem": null
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on V20; requires V21."
+              "releaseProblem": null
             }
           ]
         },
@@ -8773,7 +8767,7 @@
             {
               "operation": "generateBaseId",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManagePlcSafety.generateBaseId is unavailable on V20; requires V21."
+              "releaseProblem": null
             },
             {
               "operation": "login",
@@ -10248,6 +10242,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanPlcExternalSourceImport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10371,16 +10372,6 @@
           "operations": []
         },
         {
-          "toolName": "RetrieveProjectArchive",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "RunCapabilitySelfTest",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -10486,16 +10477,6 @@
         },
         {
           "toolName": "SaveProject",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "SaveProjectCopy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -10918,11 +10899,11 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 491,
-      "checkedToolCount": 491,
+      "registeredToolCount": 493,
+      "checkedToolCount": 493,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 545,
+      "operationExampleCount": 538,
       "programmingExampleCount": 25,
       "callSequenceCount": 30,
       "offlineBuilderExamplesExecuted": 2,
@@ -11196,16 +11177,6 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildProjectScaffold",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
           "operations": []
         },
         {
@@ -11483,16 +11454,6 @@
           "operations": []
         },
         {
-          "toolName": "ConnectIsolatedPortal",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "ConnectOnlinePlc",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -11504,16 +11465,6 @@
         },
         {
           "toolName": "ConnectPortal",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "ConnectProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -11618,11 +11569,41 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcTag",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTypeGroup",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcUserConstant",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -12993,6 +12974,16 @@
           "operations": []
         },
         {
+          "toolName": "GetPortalConnectionReadiness",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetPortalInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -13822,6 +13813,16 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcSystemConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcSystemGroups",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -13844,11 +13845,31 @@
           "operations": []
         },
         {
+          "toolName": "ListPlcTags",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ListPlcTypes",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcUserConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -15257,52 +15278,6 @@
             },
             {
               "operation": "connectIdent",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
-          "toolName": "ManageMultiuserSession",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "listServerProjects",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "readLockState",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "listLocalSessions",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "connectServer",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "disconnectServer",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "commit",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -17623,6 +17598,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanPlcExternalSourceImport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -17746,16 +17728,6 @@
           "operations": []
         },
         {
-          "toolName": "RetrieveProjectArchive",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "RunCapabilitySelfTest",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -17861,16 +17833,6 @@
         },
         {
           "toolName": "SaveProject",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "SaveProjectCopy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [

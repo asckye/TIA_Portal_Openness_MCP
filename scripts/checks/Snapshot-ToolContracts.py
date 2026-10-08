@@ -473,6 +473,7 @@ def compare_migration(args):
         a, b = ({t['name']: t for t in snapshot['tools']} for snapshot in (old, new))
         members = phase6_groups.group(args.migration, release, a)
         expected = {phase6_groups.mapped(name, members) for name in a} | phase6_groups.additions(args.migration)
+        if args.migration == 'P7-04' and release in ('20', '21'): expected -= phase6_groups.P7_04_REMOVED
         problems = []
         if set(b) != expected:
             problems.append('roster differs: ' + ', '.join(sorted(set(b) ^ expected)))
@@ -598,6 +599,8 @@ def verified_contracts(directory, root):
         for r in catalog['behaviorPolicies'] if r['releaseKey'] == release] for release in RELEASES}
     contracts = current_parameters(root)
     source_engine = {name for (profile, name) in contracts if profile == 'full-engine'}
+    import phase6_groups
+    source_engine = (source_engine | foundation_registered_names(root, contracts)) - phase6_groups.P7_04_REMOVED
     catalog_engine = rosters['20'][0] | rosters['21'][0]
     if source_engine != catalog_engine:
         raise ValueError('Full-engine registered source inventory differs from generated catalog: '
@@ -619,7 +622,8 @@ def verified_contracts(directory, root):
             raise ValueError(f'V{release}: behavior table differs from ledger-derived catalog')
         for tool in snapshot['tools']:
             validate_output(tool)
-            parameters = contracts.get((snapshot['profile'], tool['name']))
+            profile = 'plc-foundation' if tool['name'] in source_foundation | FOUNDATION_UNAVAILABLE_BELOW_20 else snapshot['profile']
+            parameters = contracts.get((profile, tool['name']))
             if parameters is None and tool['name'] not in source_foundation:
                 raise ValueError(f'V{release}: {tool["name"]} is absent from source registrations')
             if parameters is None:
@@ -719,7 +723,9 @@ def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().par
         if row['state'] != 'current': continue
         for entry in row['entries']:
             properties = by_name[entry]['inputSchema']['properties']
-            allowed = contracts[(snapshot['profile'], entry)]
+            profile = 'plc-foundation' if entry in foundation_registered_names(root, contracts) | FOUNDATION_UNAVAILABLE_BELOW_20 else snapshot['profile']
+            if (profile, entry) not in contracts: continue
+            allowed = contracts[(profile, entry)]
             if set(properties) - set(allowed):
                 raise ValueError(entry + ': current schema advertises unimplemented parameters: ' + ', '.join(sorted(set(properties) - set(allowed))))
             for name in candidate_fields & set(properties):

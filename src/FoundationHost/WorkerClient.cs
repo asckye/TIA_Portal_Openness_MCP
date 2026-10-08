@@ -12,7 +12,20 @@ internal interface IFoundationWorker : IDisposable
     Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken cancellationToken);
 }
 
-internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled) : IFoundationWorker
+internal interface IFoundationSessionWorker : IFoundationWorker
+{
+    string ApprovalIdentity { get; }
+    bool Poisoned { get; }
+    bool Bundled { get; }
+    bool SharedSession { get; }
+    TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner { get; }
+    IDisposable? EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request);
+    Task<IDisposable?> AcquireLane(CancellationToken token);
+    void ActivateLane(IDisposable? lane);
+    void MarkUncertain();
+}
+
+internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled) : IFoundationSessionWorker
 {
     private readonly SemaphoreSlim serial = new(1, 1);
     private static readonly AsyncLocal<WorkerClient?> Held = new();
@@ -42,6 +55,15 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     internal bool Poisoned => outcome.Poisoned;
     // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
     internal bool Bundled { get; init; } = true;
+    string IFoundationSessionWorker.ApprovalIdentity => ApprovalIdentity;
+    bool IFoundationSessionWorker.Poisoned => Poisoned;
+    bool IFoundationSessionWorker.Bundled => Bundled;
+    Task<IDisposable?> IFoundationSessionWorker.AcquireLane(CancellationToken token) => AcquireLane(token);
+    void IFoundationSessionWorker.ActivateLane(IDisposable? lane) => ActivateLane(lane);
+    void IFoundationSessionWorker.MarkUncertain() { }
+    bool IFoundationSessionWorker.SharedSession => false;
+    TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? IFoundationSessionWorker.StagingOwner => null;
+    IDisposable? IFoundationSessionWorker.EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request) => null;
 
     public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
     {

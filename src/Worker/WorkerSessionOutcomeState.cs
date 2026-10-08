@@ -7,6 +7,8 @@ namespace TiaMcp.PlcWorker
         private bool mutationOutcomeUnknown;
         private bool readsBlocked;
 
+        internal bool RequiresReset => readsBlocked || mutationOutcomeUnknown;
+
         internal void MarkUncertain(bool blockReads = false)
         {
             mutationOutcomeUnknown = true;

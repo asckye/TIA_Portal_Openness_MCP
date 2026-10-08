@@ -100,16 +100,20 @@ internal sealed partial class FoundationTool : McpServerTool
         StagingSessions.Add(worker, session); return session;
     }
     internal IDisposable? EnterStagingRequest() => StagingSessions.TryGetValue(worker, out var session) ? session.EnterRequest() : null;
+    internal bool SharedWorker => worker is IFoundationSessionWorker { SharedSession: true };
+    internal IDisposable? EnterSharedRequest(RequestContext<CallToolRequestParams> request) => (worker as IFoundationSessionWorker)?.EnterRequest(request);
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore> SharedStagingStores = new();
     private readonly Definition definition;
     private readonly IFoundationWorker worker;
     private readonly TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest;
     private readonly Tool tool;
     internal bool IsNative => definition.ResponseMember is not ("PlcRender" or "ImportStaging");
     internal bool RequiresTia => IsNative && definition.ResponseMember != "RuntimeQuery";
-    internal bool UsesProductionWorker => worker is WorkerClient { Bundled: true };
-    internal string? ApprovalIdentity => (worker as WorkerClient)?.ApprovalIdentity;
+    internal bool UsesProductionWorker => worker is IFoundationSessionWorker { Bundled: true };
+    internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;
     internal Task<IDisposable?> AcquireLane(CancellationToken token)
-        => IsNative && worker is WorkerClient client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
+        => IsNative && worker is IFoundationSessionWorker client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
+    internal void ActivateLane(IDisposable? lane) => (worker as IFoundationSessionWorker)?.ActivateLane(lane);
     internal bool JournalIsWrite => definition.Arguments.Any(a => a.Name == "dryRun")
         || definition.ResponseMember is "Connection" or "Bind" or "Disconnect" or "PlcRender";
     internal FoundationTool(Definition definition, IFoundationWorker worker, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest = null)
@@ -213,8 +217,12 @@ internal sealed partial class FoundationTool : McpServerTool
         }
     }
     internal bool SessionRequiresReset => FoundationCandidateSession.For(worker).RequiresSessionReset
-        || worker is WorkerClient { Poisoned: true };
-    internal void MarkSessionUncertain() => FoundationCandidateSession.For(worker).MarkUncertain();
+        || worker is IFoundationSessionWorker { Poisoned: true };
+    internal void MarkSessionUncertain()
+    {
+        FoundationCandidateSession.For(worker).MarkUncertain();
+        (worker as IFoundationSessionWorker)?.MarkUncertain();
+    }
     internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)
         => ReadArguments(arguments, new JsonObject());
     private void ReadArguments(IReadOnlyDictionary<string, JsonElement>? arguments, JsonObject values)
@@ -277,8 +285,9 @@ internal sealed partial class FoundationTool : McpServerTool
             if (definition.ResponseMember == "ImportStaging")
             {
                 TiaMcp.Logic.ModelContextProtocol.ImportStagingStore store;
-                try { store = stagingForTest ?? StagingStores.GetValue(worker, key => StagingSessions.TryGetValue(key, out var session)
-                    ? TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!, session) : TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!)); }
+                try { store = stagingForTest ?? (SharedWorker ? SharedStagingStores.GetValue(((IFoundationSessionWorker)worker).StagingOwner!,
+                    session => TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!, session)) : StagingStores.GetValue(worker, key => StagingSessions.TryGetValue(key, out var session)
+                    ? TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!, session) : TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Create(release!))); }
                 catch (IOException ex) { return FoundationV4Result.ImportCandidate(TiaMcp.Logic.ModelContextProtocol.ImportStagingStore.Unavailable(definition.Name, release!, ex, id)); }
                 var files = values["files"]?.Deserialize<TiaMcp.Logic.ModelContextProtocol.StagedTextFile[]>(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow });
                 var mapped = TiaMcp.Logic.V4.McpResult.From(store.Run(definition.Name, files, (string?)values["batchId"] ?? "", (bool?)values["dryRun"] ?? true, id));

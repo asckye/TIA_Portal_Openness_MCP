@@ -166,13 +166,13 @@ namespace TiaMcpServer.Tests
         }
 
         [Fact]
-        public void LiteMapHasSixtyDistinctCurrentNamesAndObjectExamplesPerRelease()
+        public void LiteMapHasSeventyThreeDistinctCurrentNamesAndObjectExamplesPerRelease()
         {
             foreach (string release in new[] { "20", "21" })
             {
                 var rows = ToolUsageCatalog.ProfileEntries(release).Where(r => r!["profiles"]!.AsArray().Any(p => (string?)p == "lite")).ToArray();
-                Assert.Equal(60, rows.Length);
-                Assert.Equal(60, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
+                Assert.Equal(73, rows.Length);
+                Assert.Equal(73, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
                 Assert.All(rows, row => Assert.IsType<JsonObject>(row!["arguments"]));
                 Assert.Contains(rows, r => (string?)r!["currentName"] == "PreviewToolCall");
                 Assert.Contains(rows, r => (string?)r!["name"] == "GetSessionState" && (string?)r!["currentName"] == "GetSessionState");
@@ -252,7 +252,7 @@ namespace TiaMcpServer.Tests
         public void UsageServesEveryMigratedExampleAgainstItsActualSchema()
         {
             var usage = new ToolUsageTools();
-            var entries = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey)
+            var entries = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey, engineSource: true)
                 .Where(r => (int?)r!["envelopeVersion"] == 4).ToArray();
             Assert.NotEmpty(entries);
             var methods = McpServer.AllToolMethods();
@@ -262,7 +262,7 @@ namespace TiaMcpServer.Tests
                 Assert.True(McpServer.IsInfrastructureV4(name), name);
                 // This offline assembly links only the shared tools. The full-engine
                 // usage-contracts check covers every generated V4 entry without filtering.
-                if (!methods.ContainsKey(name)) continue;
+                if (!methods.ContainsKey(name) || !ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey).Any(r => (string?)r!["currentName"] == name)) continue;
                 var result = Body(usage.GetToolUsage(toolName: name));
                 Assert.True((bool)result["ok"]!);
                 var data = result["data"]!;

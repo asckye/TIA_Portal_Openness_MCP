@@ -189,7 +189,7 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void GeneratedCasesCoverTheFullReleaseAndOnlyV4Registrations()
         {
-            var profiles = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey);
+            var profiles = McpServer.RuntimeProfileEntries();
             Assert.Equal(profiles.Select(r => (string)r!["currentName"]!), Catalog.Methods.Select(p => p.Key));
             Assert.All(profiles, row => {
                 Assert.Equal(4, (int)row!["envelopeVersion"]!);

@@ -7,11 +7,29 @@ namespace TiaMcp.WorkerChannel.Tests;
 
 public sealed class EngineProfileTests
 {
+    [Fact]
+    public void Foundation_and_engine_share_one_owner_epoch_and_correlation()
+    {
+        using var output = new MemoryStream();
+        int owner = Environment.CurrentManagedThreadId; long epoch = 0; var methods = new List<string>();
+        var server = new ChannelServer(Stream.Null, output, Identity, () => new(epoch, epoch != 0), request => {
+            Assert.Equal(owner, Environment.CurrentManagedThreadId);
+            Assert.Equal("shared-correlation", request.CorrelationId);
+            methods.Add(request.Method);
+            if (request.Method == "adapter.Attach") epoch++;
+            return ChannelResponse.Success("null");
+        }, ChannelProfile.Engine);
+        server.WriteHello();
+        server.Handle(Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"adapter.Attach\",\"params\":{\"processId\":1234},\"bindingEpoch\":0,\"requestId\":\"shared-correlation\"}"));
+        server.Handle(Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"engine.invoke\",\"params\":{},\"bindingEpoch\":1,\"requestId\":\"shared-correlation\"}"));
+        Assert.Equal(new[] { "adapter.Attach", "engine.invoke" }, methods); Assert.Equal(1, epoch); Assert.False(server.Poisoned);
+    }
+
     private static byte[] Frame(string method, bool preview = false, long id = 1, long epoch = 0) => Encoding.UTF8.GetBytes(
         "{\"jsonrpc\":\"2.0\",\"id\":" + id + ",\"method\":\"" + method + "\",\"params\":{\"preview\":" + (preview ? "true" : "false") + "},\"bindingEpoch\":" + epoch + "}");
 
     [Theory]
-    [InlineData("adapter.Read", false)] [InlineData("invoke", false)] [InlineData("engine.", false)]
+    [InlineData("adapter.Read", true)] [InlineData("adapter.", false)] [InlineData("invoke", false)] [InlineData("engine.", false)]
     [InlineData("engine.status", true)] [InlineData("engine.invoke", true)]
     public void Namespace(string method, bool valid)
     {

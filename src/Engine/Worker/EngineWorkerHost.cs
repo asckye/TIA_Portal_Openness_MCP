@@ -1,5 +1,10 @@
 using System;
 using System.IO;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using TiaMcp.PlcFoundation;
+using TiaMcp.PlcWorker;
+using TiaMcpServer.Siemens;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -24,6 +29,12 @@ namespace TiaMcpServer.Worker
         private long epoch;
         private string? nativeFault;
         private string binding = "null";
+        private PlcFoundationEngine? foundation;
+        private FoundationWorkerDispatcher? foundationDispatch;
+        private PortalProcessLease? processLease;
+        private long processStartTicks;
+        private Portal? portal;
+
 
         internal static string Hash(string path)
         {
@@ -45,6 +56,7 @@ namespace TiaMcpServer.Worker
             using var services = new ServiceCollection().AddLogging().AddEngine(includeSession: OpennessReadiness.Ready).BuildServiceProvider();
             EngineServices.SetServiceProvider(services);
             var host = new EngineWorkerHost();
+            if (OpennessReadiness.Ready) host.InitializeFoundation();
             PortalFailureClassifier.ProcessLostObserved += host.ProcessLost;
             try
             {
@@ -53,12 +65,105 @@ namespace TiaMcpServer.Worker
                     Hash(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + McpServer.ReleaseKey + ".dll")),
                     System.Diagnostics.Process.GetCurrentProcess().Id, Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_NONCE")!);
                 new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity,
-                    () => new ChannelBinding(host.epoch, host.binding != "null"), host.Dispatch, ChannelProfile.Engine).Run();
+                    host.Observe, host.Dispatch, ChannelProfile.Engine).Run();
             }
-            finally { PortalFailureClassifier.ProcessLostObserved -= host.ProcessLost; }
+            finally
+            {
+                PortalFailureClassifier.ProcessLostObserved -= host.ProcessLost;
+                host.ReleaseFoundation();
+            }
         }
 
         private void ProcessLost(string reason) => nativeFault = reason;
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void InitializeFoundation()
+        {
+            foundation = new PlcFoundationEngine(McpServer.ReleaseKey, Path.GetDirectoryName(typeof(global::Siemens.Engineering.TiaPortal).Assembly.Location)!);
+            foundationDispatch = new FoundationWorkerDispatcher(foundation, typeof(EngineWorkerHost).Assembly,
+                error => { _ = PortalFailureClassifier.IsPortalProcessLost(error); });
+            portal = (Portal)EngineServices.Get(typeof(Portal));
+            foundation.BorrowSharedSession((tia, project, session, state) => portal.AdoptFoundationSession(tia, project, session, state, 0, null));
+        }
+
+        private ChannelBinding Observe()
+        {
+            var state = foundationDispatch?.Observe();
+            string after = InvocationJournal.BindingSnapshot?.Invoke()?.ToJsonString() ?? "null";
+            // Foundation supplies the binding epoch for both namespaces. A fault can
+            // clear the cached binding without rebinding or making a second native call.
+            if (state != null) epoch = state.Epoch;
+            binding = after;
+            return new ChannelBinding(epoch, state?.Bound ?? binding != "null");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ReleaseFoundation()
+        {
+            if (foundation == null) return;
+            try { foundation.Dispose(); if (nativeFault == null) processLease?.ReleaseCleanly(); }
+            finally { processLease?.Dispose(); portal?.ClearFoundationSession(); }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ChannelResponse DispatchFoundation(ChannelRequest request)
+        {
+            using var correlation = InvocationJournal.UseCorrelation(request.CorrelationId ?? InvocationJournal.CorrelationId);
+            if (foundationDispatch == null) return ChannelResponse.Error(new ChannelFailure(
+                OpennessReadiness.Cause + " " + OpennessReadiness.FixEn, -32603, ChannelOutcome.RejectedBeforeNative));
+            if (nativeFault != null) return ChannelResponse.Error(new ChannelFailure(
+                TiaOpenness.Shared.SessionBehavior.Recovery, -32603, ChannelOutcome.RejectedBeforeNative));
+            bool reserved = false, dispatched = false;
+            try
+            {
+                using var document = JsonDocument.Parse(request.ArgumentsJson);
+                var args = document.RootElement;
+                int? pid = request.Method == "adapter.Attach" && args.TryGetProperty("processId", out var selected) && selected.TryGetInt32(out var id) ? id : (int?)null;
+                if (request.Method == "adapter." + WorkerOperations.SessionCandidate && args.TryGetProperty("candidate", out var candidate)
+                    && candidate.TryGetProperty("Check", out var check) && check.TryGetProperty("Request", out var planned)
+                    && planned.TryGetProperty("Action", out var action) && action.GetString() == "attach"
+                    && planned.TryGetProperty("ProcessId", out var candidatePid) && candidatePid.TryGetInt32(out var attachPid)) pid = attachPid;
+                if (pid.HasValue && processLease == null)
+                {
+                    using var process = Process.GetProcessById(pid.Value);
+                    if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
+                    processStartTicks = process.StartTime.ToUniversalTime().Ticks;
+                    processLease = PortalProcessLease.Acquire(DataLocations.Current.LeasesDirectory, pid.Value, processStartTicks);
+                    reserved = true;
+                }
+                dispatched = true;
+                var response = foundationDispatch.Dispatch(request);
+                if (nativeFault != null || foundationDispatch.SessionOutcome.RequiresReset || response.Failure?.Outcome == ChannelOutcome.Unknown)
+                {
+                    nativeFault ??= response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery;
+                    foundationDispatch.SessionOutcome.MarkUncertain();
+                    portal!.ClearFoundationSession(nativeFault);
+                }
+                else if (response.Failure != null && reserved)
+                {
+                    processLease!.ReleaseCleanly(); processLease = null;
+                }
+                else if (foundationDispatch.Ended)
+                {
+                    portal!.ClearFoundationSession();
+                    processLease?.ReleaseCleanly(); processLease = null;
+                }
+                else foundation!.BorrowSharedSession((tia, project, session, state) =>
+                    portal!.AdoptFoundationSession(tia, project, session, state, processStartTicks, processLease));
+                Observe();
+                return response;
+            }
+            catch (Exception error)
+            {
+                // Reservation/adoption errors never retry a Foundation operation.
+                if (dispatched && foundationDispatch.State.IsAttached)
+                { nativeFault = error.Message; foundationDispatch.SessionOutcome.MarkUncertain(); portal!.ClearFoundationSession(nativeFault); }
+                else if (reserved) { processLease?.ReleaseCleanly(); processLease = null; }
+                var failure = WorkerFailurePolicy.Classify(error, nativeFault != null, false);
+                return ChannelResponse.Error(new ChannelFailure(WorkerFailurePolicy.DiagnosticCause(error).Message,
+                    failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
+            }
+        }
+
         private JsonObject Status() => new JsonObject {
             ["releaseKey"] = McpServer.ReleaseKey, ["behaviorCapabilities"] = McpServer.CatalogView.BehaviorCapabilities.DeepClone(),
             ["readiness"] = new JsonObject { ["ready"] = OpennessReadiness.Ready, ["cause"] = OpennessReadiness.Cause,
@@ -78,7 +183,8 @@ namespace TiaMcpServer.Worker
 
         private ChannelResponse Dispatch(ChannelRequest request)
         {
-            if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
+            if (request.Method == "engine.status") { Observe(); return ChannelResponse.Success(Status().ToJsonString()); }
+            if (request.Method.StartsWith("adapter.", StringComparison.Ordinal)) return DispatchFoundation(request);
             if (request.Method != "engine.invoke")
                 return ChannelResponse.Error(new ChannelFailure("Unknown engine operation.", -32602, ChannelOutcome.RejectedBeforeNative));
             using var document = JsonDocument.Parse(request.ArgumentsJson);
@@ -93,6 +199,11 @@ namespace TiaMcpServer.Worker
             var error = McpServer.BindV4Call(name, new ToolArguments(args.GetProperty("arguments")), out var method, out var call);
             CallToolResult result;
             if (error != null) result = McpServer.V4Reject(name, error);
+            else if (ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey).OfType<JsonObject>()
+                .All(row => (string?)row["currentName"] != name || row["profiles"]!.AsArray().Any(p => (string?)p == "plc-foundation")))
+                result = McpServer.V4Reject(name, new Error("Tool is not registered in this engine namespace.", new ToolNotFoundDetails(name)));
+            else if (nativeFault != null || foundationDispatch?.Ended == true)
+                result = McpServer.V4Reject(name, HostBehavior.SessionReset());
             else if (!OpennessReadiness.Ready && !ToolTaxonomy.IsSafeWithoutTia(name))
             {
                 var environment = Status()["readiness"]!.DeepClone();
@@ -100,8 +211,15 @@ namespace TiaMcpServer.Worker
                     new ResourceUnavailableDetails("tia-openness-environment")), new JsonObject { ["environment"] = environment });
             }
             else result = McpServer.ToolResult(McpServer.InvokeToolMethod(method!, call!));
-            string after = InvocationJournal.BindingSnapshot?.Invoke()?.ToJsonString() ?? "null";
-            if (after != binding) { epoch++; binding = after; }
+            if (TiaOpenness.Shared.SessionBehavior.LocksSession(nativeCalls.NativeCallIssued,
+                (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)))
+            {
+                nativeFault = "Engine native outcome is unknown.";
+                foundationDispatch?.SessionOutcome.MarkUncertain();
+                portal?.ClearFoundationSession(nativeFault);
+            }
+            if (nativeFault != null) portal?.ClearFoundationSession(nativeFault);
+            Observe();
             var reply = Status();
             reply["nativeCallIssued"] = nativeCalls.NativeCallIssued;
             reply["result"] = JsonSerializer.SerializeToNode(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);

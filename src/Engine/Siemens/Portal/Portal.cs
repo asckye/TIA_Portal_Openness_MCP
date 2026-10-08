@@ -171,6 +171,7 @@ namespace TiaMcpServer.Siemens
         public void Dispose()
         {
             migrationPages.Dispose();
+            if (foundationSession) { ClearFoundationSession(); return; }
             ProjectOwnership.Release(_projectOpenedByUs && sessionCandidateAdapter == null && saveCloseAdapter == null,
                 () => (_project as Project)?.Close(),
                 () => DisconnectPortal(),

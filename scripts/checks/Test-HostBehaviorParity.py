@@ -46,7 +46,7 @@ def main():
         errors.extend(trx_errors)
     else:
         errors.append('missing TRX')
-    summary.write_text(json.dumps(dict(suite='host-behavior-parity', paths=['engine', 'foundation', 'engine-host-fake-worker'], engineRelease=args.engine_major, minimumPassed=103, maximumSkipped=0,
+    summary.write_text(json.dumps(dict(suite='host-behavior-parity', paths=['engine', 'foundation-eight-releases', 'engine-host-fake-worker'], engineRelease=args.engine_major, minimumPassed=103, maximumSkipped=0,
                                       exitCode=exit_code, **counts, errors=errors), indent=2) + '\n', encoding='utf-8')
     if errors:
         print('FAIL host-behavior-parity: ' + '; '.join(errors))

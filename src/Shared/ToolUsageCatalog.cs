@@ -21,13 +21,13 @@ namespace TiaOpenness.Shared
             return JsonNode.Parse(resources.GetString("Catalog", System.Globalization.CultureInfo.InvariantCulture)!)!.AsObject();
         });
 
-        public static JsonArray ProfileEntries(string release, int contractVersion = 4)
+        public static JsonArray ProfileEntries(string release, int contractVersion = 4, bool engineSource = false)
         {
             if (contractVersion != 4) throw new ArgumentException("Unsupported contract version.");
-            return (JsonArray)(Profiles.Value["releases"]?[release]?.DeepClone() ?? new JsonArray());
+            return (JsonArray)(Profiles.Value[engineSource ? "engineSourceReleases" : "releases"]?[release]?.DeepClone() ?? new JsonArray());
         }
 
-        private static JsonObject? ProfileEntry(string name, string release) => (Profiles.Value["releases"]?[release] as JsonArray)?
+        private static JsonObject? ProfileEntry(string name, string release, bool source = false) => (Profiles.Value[source ? "engineSourceReleases" : "releases"]?[release] as JsonArray)?
             .OfType<JsonObject>().FirstOrDefault(row => (string?)row["currentName"] == name || (string?)row["sourceName"] == name);
 
         public static string RegisteredName(string sourceName, string release)
@@ -75,7 +75,7 @@ namespace TiaOpenness.Shared
             return result;
         }
 
-        public static JsonArray Sequences() => (JsonArray)Data.Value["sequences"]!.DeepClone();
+        public static JsonArray Sequences(bool engineSource = false) => (JsonArray)Data.Value[engineSource ? "engineSourceSequences" : "sequences"]!.DeepClone();
         public static JsonObject Notes(string name) => (JsonObject)(Data.Value["toolNotes"]?[name]?.DeepClone() ?? new JsonObject());
 
         private static JsonObject? CallExample(string name, string release, string profile)
@@ -84,9 +84,9 @@ namespace TiaOpenness.Shared
             if (candidate != null) return new JsonObject { ["arguments"] = candidate, ["parameters"] = new JsonObject(),
                 ["note"] = candidate.ContainsKey("retryPolicy") ? "Preview to discover exact routes, select one verbatim, review the resulting plan, then apply once with confirmation and the expected project file."
                     : candidate.ContainsKey("exportPath") ? "Review the exact export objects and destination identities, then apply that plan once with confirmation and the expected project file." : "Resolve the exact installed catalog TypeIdentifier, preview, then apply that plan once with confirmation and the expected project file." };
-            var entry = profile == "full-engine" ? ProfileEntry(name, release) : null;
+            var entry = profile is "full-engine" or "engine-source" ? ProfileEntry(name, release, profile == "engine-source") : null;
             var source = (string?)entry?["currentName"] ?? name;
-            var row = Data.Value["calls"]?["profiles"]?[profile]?[source]?.DeepClone();
+            var row = (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[profile]?[source])?.DeepClone();
             if (row == null) return null;
             if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
@@ -95,13 +95,13 @@ namespace TiaOpenness.Shared
                 .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release))!.AsObject();
         }
 
-        public static JsonArray InlineCalls(string release)
+        public static JsonArray InlineCalls(string release, bool engineSource = false)
         {
             var result = new JsonArray();
-            foreach (var pair in Data.Value["calls"]!["profiles"]!["full-engine"]!.AsObject())
+            foreach (var pair in (engineSource ? Data.Value["engineSourceCalls"]! : Data.Value["calls"]!["profiles"]!["full-engine"]!).AsObject())
                 if ((bool?)pair.Value?["inline"] == true)
                 {
-                    var row = CallExample(pair.Key, release, "full-engine")!;
+                    var row = CallExample(pair.Key, release, engineSource ? "engine-source" : "full-engine")!;
                     result.Add(new JsonObject { ["tool"] = RegisteredName(pair.Key, release), ["arguments"] = row["arguments"]!.DeepClone(),
                         ["note"] = "Sample targets require binding; GetToolUsage explains this release's parameters and results." });
                 }
@@ -124,7 +124,7 @@ namespace TiaOpenness.Shared
             }
             // Explicit LINQ avoids the full engine's imported params Concat overload,
             // which appends a JsonArray as one JsonNode instead of joining its rows.
-            var records = Enumerable.Concat((JsonArray)Data.Value["examples"]!, (IEnumerable<JsonNode?>)(JsonArray)Data.Value["sequences"]!).Where(e =>
+            var records = Enumerable.Concat((JsonArray)Data.Value["examples"]!, (IEnumerable<JsonNode?>)Sequences(profile == "engine-source")).Where(e =>
                 (language.Length == 0 || (string?)e!["language"] == language) &&
                 (exampleId.Length == 0 || (string?)e!["id"] == exampleId) &&
                 (toolName.Length == 0 || e!["tools"] is JsonArray ts && ts.Any(t => (string?)t == toolName)
@@ -137,7 +137,7 @@ namespace TiaOpenness.Shared
                 bool sequenceRecord = row["steps"] is JsonArray;
                 if (exampleKind == "sequence" && !sequenceRecord || exampleKind == "language" && sequenceRecord) continue;
                 bool releaseMatches = row["releaseKeys"]!.AsArray().Any(v => (string?)v == release);
-                bool profileMatches = row["profile"] == null || (string?)row["profile"] == profile;
+                bool profileMatches = row["profile"] == null || (string?)row["profile"] == (profile == "engine-source" ? "full-engine" : profile);
                 if (exampleKind != "all" && (!releaseMatches || !profileMatches)) continue;
                 row["releaseMatches"] = releaseMatches;
                 row["profileMatches"] = profileMatches;

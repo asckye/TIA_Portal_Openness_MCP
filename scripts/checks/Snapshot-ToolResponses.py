@@ -53,6 +53,7 @@ elapsed-time, PID, arbitrary GUID or temp-path mask is used by the capture set.
 Unknown paths/encodings remain visible and must fail the consecutive-capture gate.
 """
 import argparse
+import copy
 from collections import Counter
 from contextlib import contextmanager
 import importlib.util
@@ -121,11 +122,12 @@ SELF_MARKER = "CallTool cannot invoke itself. Pass the target tool's own name."
 
 
 def v4_tools(release=None):
-    """Registered names whose runtime record carries envelopeVersion 4 (the P6-07b marker)."""
+    """Current and archived source names with V4 envelopes; preserve the reviewed masks for both capture paths."""
     import xml.etree.ElementTree as ET
     resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
-    releases = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)['releases']
-    return {row['currentName'] for key, rows in releases.items() if release in (None, key)
+    data = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)
+    releases = [*data['releases'].items(), *(data.get('engineSourceReleases', {}).items() if release is None else [])]
+    return {row['currentName'] for key, rows in releases if release in (None, key)
             for row in rows if row.get('envelopeVersion') == 4}
 
 
@@ -481,6 +483,16 @@ def session_write_refusal(reply, name, packaged_no_tia):
         session_approval_refusal(reply, name)
 
 
+def foundation_apply_refusal(reply, name):
+    resources.require(reply.get('schemaVersion') == 4 and reply.get('ok') is False
+        and reply['error']['code'] == 'INVALID_ARGUMENT'
+        and reply['error']['details']['parameter'] == 'confirm'
+        and reply['meta']['execution'] == 'not-started'
+        and reply['meta']['requiresSessionReset'] is False
+        and any(w['code'] == 'APPROVAL_PRECHECK_REFUSED' for w in reply['meta']['warnings']),
+        name + ': expected Foundation confirmation precheck: ' + canonical(reply))
+
+
 def capture_readiness_overrides(harness, packaged_no_tia):
     if harness is not None and not packaged_no_tia:
         return {'TIA_MCP_TEST_READINESS_READY': '1'}
@@ -635,18 +647,20 @@ def capture_release(args, release, exe, public_api):
                                   'GetSessionState readiness refusal omitted the no-TIA cause')
             else:
                 state = decoded('GetSessionState', {})
-                resources.require(state['data']['isConnected'] is False, 'Capture requires a disconnected host')
-                resources.require(state['data']['evidence']['journalHealth']['failedWrites'] == 0,
+                resources.require(state['data'].get('isAttached', state['data'].get('isConnected')) is False, 'Capture requires a disconnected host')
+                resources.require(args.engine_host or state['data']['evidence']['journalHealth']['failedWrites'] == 0,
                                   'Journal is not writable; use --temp-root inside the writable worktree')
             # Packaged no-TIA runs the product readiness gate. The SDK fixture
             # uses HttpTests-only readiness and must reach the product-default
             # approval gate without dispatching the native write.
-            for name, arguments in (
+            for name, arguments in ((('SaveProject', {'dryRun': False, 'confirm': False, 'expectedProjectFile': 'C:/P6-49-response-snapshot.ap21'}), ('CloseProject', {'dryRun': False, 'confirm': False, 'expectedProjectFile': 'C:/P6-49-response-snapshot.ap21'})) if args.engine_host else (
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
-                    ('CloseProject', {})):
+                    ('CloseProject', {}))):
                 result = decoded(name, arguments)
-                session_write_refusal(result, name, args.packaged_no_tia)
+                if args.engine_host:
+                    foundation_apply_refusal(result, name)
+                else: session_write_refusal(result, name, args.packaged_no_tia)
             decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
                                        'includeProducts': False})
             decoded('ListToolCategories', {})
@@ -688,12 +702,16 @@ def capture_release(args, release, exe, public_api):
                 match = re.match(r'^\s*\[L1\]\[(?:Category:)?([^\]]+)\]', tool['description'])
                 if match:
                     domains.setdefault(match[1].strip(), set()).add(tool['name'])
-            resources.require(set(domains) == set(DOMAIN_CALLS),
+            resources.require(set(domains) <= set(DOMAIN_CALLS) if args.engine_host else set(domains) == set(DOMAIN_CALLS),
                               'L1 taxonomy changed; review offline domain representatives')
             domain_calls = dict(DOMAIN_CALLS)
             if 'GetExportContent' in domains['Exports']:
                 domain_calls['Exports'] = 'GetExportContent'
             for domain, name in sorted(domain_calls.items()):
+                if args.engine_host and (domain not in domains or name not in domains[domain]):
+                    # Shared Foundation descriptions use the V19 taxonomy. Their
+                    # explicit safe calls above and admission sweep cover them.
+                    continue
                 resources.require(name in domains[domain], name + ' moved out of its L1 domain')
                 call(name, example(name))
 
@@ -740,12 +758,13 @@ def capture_release(args, release, exe, public_api):
             bridge = recorder(rpc, entries, 'lite', release)
             for name in sorted(registered):
                 v4_rejection(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}), name)
-            for name, arguments in (
+            for name, arguments in ((('SaveProject', {'dryRun': False, 'confirm': False, 'expectedProjectFile': 'C:/P6-49-response-snapshot.ap21'}), ('CloseProject', {'dryRun': False, 'confirm': False, 'expectedProjectFile': 'C:/P6-49-response-snapshot.ap21'})) if args.engine_host else (
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
-                    ('CloseProject', {})):
-                session_write_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})),
-                                      'CallTool -> ' + name, args.packaged_no_tia)
+                    ('CloseProject', {}))):
+                if args.engine_host:
+                    foundation_apply_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})), 'CallTool -> ' + name)
+                else: session_write_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})), 'CallTool -> ' + name, args.packaged_no_tia)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
                 bridgeSelfGuardTools=['CallTool'], bridgeSkipped={},
                 liteAdvertisedTools=sorted(t['name'] for t in lite))
@@ -1114,14 +1133,33 @@ def compare_migration(args):
             strip = lambda call: {k: v for k, v in call.items() if k != 'rawTextBlocks'}
             return phase6_groups.renamed(strip(old_call), subs) == strip(new_call)
         differing = [key for key in sorted(other_a.keys() | other_b.keys()) if other_a.get(key) != other_b.get(key)]
+        def capability_catalog_only(key):
+            if args.migration != 'P7-04' or key[1] != 'GetPortalInfo' or key not in other_a or key not in other_b:
+                return False
+            before, after = copy.deepcopy(other_a[key]), copy.deepcopy(other_b[key])
+            before.pop('rawTextBlocks', None)
+            after.pop('rawTextBlocks', None)
+            for call in (before, after):
+                result = call['response']['result']
+                envelopes = [result['structuredContent'], result['content'][0]['text']]
+                for envelope in envelopes:
+                    capabilities = envelope['data'].pop('behaviorCapabilities')
+                    if call is after:
+                        expected = json.loads((Path(__file__).resolve().parents[2] / f'manifest/contracts/v4/baseline/{release}.json').read_text('utf-8'))['behaviorCapabilities']
+                        if capabilities != expected:
+                            return False
+            return before == after
+
+        capability_catalog = [key for key in differing if capability_catalog_only(key)]
         guidance = [key for key in differing if renamed_only(key)]
-        outside = [key for key in differing if key not in guidance]
+        outside = [key for key in differing if key not in guidance and key not in capability_catalog]
         for key in ('release', 'formatVersion', 'profiles', 'transport', 'maxResponseChars'):
             assert old.get(key) == new.get(key), (release, key)
         assert new['rawMaskRules'] == RAW_MASK_RULES
         merged = len(members) - len({phase6_groups.mapped(name, members) for name in members})
-        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged + len(phase6_groups.additions(args.migration)), (release, 'registered tool count')
-        expected = {phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']} | phase6_groups.additions(args.migration)
+        removed = phase6_groups.removals(args.migration)
+        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged + len(phase6_groups.additions(args.migration)) - len(removed), (release, 'registered tool count')
+        expected = ({phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']} | phase6_groups.additions(args.migration)) - removed
         assert set(new['coverage']['directRejectedTools']) == expected, (release, 'direct refusal roster')
         if old['coverage'].get('bridgeRejectedTools'):
             assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}, (release, 'bridge refusal roster')
@@ -1134,6 +1172,8 @@ def compare_migration(args):
             print('  catalog: ' + key[1] + '(' + key[2] + ')')
         for key in guidance:
             print('  guidance renamed: ' + key[1] + '(' + key[2] + ')')
+        for key in capability_catalog:
+            print('  generated behaviorCapabilities only; other response fields equal: ' + key[1])
         for key in outside:
             print('  unexpected: ' + key[0] + ' ' + key[1] + '(' + key[2] + ') ' + str(first_difference(other_a.get(key), other_b.get(key))))
         failures += len(outside)

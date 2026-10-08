@@ -32,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { Topic = topic; Purpose = purpose; Preconditions = preconditions; Notes = notes; Steps = steps; }
         }
 
-        private static readonly Recipe[] Rows = TiaOpenness.Shared.ToolUsageCatalog.Sequences()
+        private static readonly Recipe[] Rows = TiaOpenness.Shared.ToolUsageCatalog.Sequences(engineSource: true)
             .Where(r => (string?)r?["profile"] == "full-engine")
             .Select(r => new Recipe((string)r!["topic"]!, (string)r["purpose"]!,
                 (string)r["preconditions"]!, (string)r["notes"]!,
@@ -56,7 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static JsonArray ForRelease(string release, IEnumerable<string> roster, string? topic = null)
         {
             var selection = Selection(topic);
-            return TiaOpenness.Shared.ToolUsageCatalog.Examples(release, "full-engine", roster,
+            return TiaOpenness.Shared.ToolUsageCatalog.Examples(release, "engine-source", roster,
                 exampleId: (string?)selection["exampleId"] ?? "", exampleKind: "sequence")["examples"]!.AsArray();
         }
 

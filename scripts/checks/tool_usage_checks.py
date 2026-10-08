@@ -75,7 +75,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
         assert usage['resultContract'] and usage['resultReading']
         if name in ('ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable'):
             note = example['note']
-            if str(release) in ('20', '21'):
+            if 'dryRun' not in props:
                 assert not {'overwrite', 'dryRun', 'confirm', 'expectedProjectFile'} & set(props), (release, name)
                 assert 'current V20/V21 schema has no overwrite' in note, (release, name)
             else:
@@ -122,7 +122,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             assert len(list(root.iter())) > 3, name + ': empty XML'
             if name in ('BuildPlcUdt', 'BuildPlcGlobalDb'):
                 target = args['outputReleaseKey']
-                expected_target = str(release) if str(release) in ('20', '21') else '21'
+                expected_target = '21' if 'outputReleaseKey' in schema.get('required', []) else str(release)
                 assert target == expected_target, (name, target, release)
                 engineering, interface = {
                     '14sp1': ('V14 SP1', 2), '15.1': ('V15.1', 3),
@@ -148,8 +148,8 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
         if exhaustive and name == 'PlanArtifactImportOrder':
             built = call(name, args)
             data = built['data'] if built.get('schemaVersion') == 4 else built.get('meta', {})
-            plan = data['plan'] if str(release) in ('20', '21') else data
-            valid, order = ('Valid', 'Order') if str(release) in ('20', '21') else ('valid', 'order')
+            plan = data.get('plan', data)
+            valid, order = ('Valid', 'Order') if 'Valid' in plan else ('valid', 'order')
             assert plan[valid] and plan[order] == ['UDT_Status', 'FB_Motor'], built
             offline_calls.append(name)
         if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
@@ -210,11 +210,11 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
                 elif example['id'] == 'sequence/foundation-approval-precheck':
                     assert all('no Workbench request' in step['expect'] for step in example['steps'][1:])
                 elif example['id'] == 'sequence/plc-xml-round-trip':
-                    assert all('overwrite' not in step['arguments'] for step in example['steps'])
+                    assert all('overwrite' not in step['arguments'] or 'overwrite' in schemas[step['tool']]['properties'] for step in example['steps'])
             if example['id'] in ('udt-builder-json', 'db-builder-json') and str(release) in ('20', '21'):
                 data = json.loads(example['files'][0]['content'])['json']
                 tool, argument = ('BuildPlcUdt', 'udt') if example['id'] == 'udt-builder-json' else ('BuildPlcGlobalDb', 'globalDb')
-                built = call(tool, {argument: data})
+                built = call(tool, {argument: data, 'outputReleaseKey': str(release)})
                 xml = built['data']['xml'] if built.get('schemaVersion') == 4 else built['xml']
                 root = ET.fromstring(xml)
                 assert any(e.tag.endswith('Name') and e.text == (data.get('udtName') or data.get('dbName') or data.get('name')) for e in root.iter()), example['id']

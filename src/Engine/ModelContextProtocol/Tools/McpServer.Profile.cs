@@ -13,7 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         private static readonly HashSet<string> LiteToolNames = new HashSet<string>(
-            TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey)
+            RuntimeProfileEntries()
                 .Where(row => row!["profiles"]!.AsArray().Any(p => (string?)p == "lite"))
                 .Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);
 

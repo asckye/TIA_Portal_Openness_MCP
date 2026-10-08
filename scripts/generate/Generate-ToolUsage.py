@@ -100,12 +100,18 @@ def registered_rosters(root=ROOT):
         registered = {host_map.get(n, n) for n in accepted | helpers}
         resolve_names([t['name'] for t in baseline[key]], registered, targets)
         rosters[key] = registered
+    policy = (root / 'src/EngineHost/SharedToolCatalog.cs').read_text('utf-8')
+    removed = set(re.findall(r'"(\w+)"', policy.split('Removed =', 1)[1].split('};', 1)[0]))
+    extras = {host_map.get(n, n) for n, response in definitions.items() if response in ('DocumentExport', 'BatchDocumentExport', 'DocumentImport', 'BatchDocumentImport')}
+    for key in ('20', '21'):
+        rosters[key] = (rosters[key] - removed) | rosters['19'] | extras
     return rosters, mapping
 
 
 def validate_coverage(rosters, calls):
     for profile, keys in (('full-engine', ('20', '21')), ('plc-foundation', ('14sp1', '15.1', '16', '17', '18', '19'))):
         expected = set().union(*(rosters[k] for k in keys))
+        if profile == 'plc-foundation': expected |= {'ExportPlcBlockDocuments', 'ExportPlcBlocksDocuments', 'ImportPlcBlockDocuments', 'ImportPlcBlocksDocuments'}
         assert set(calls['profiles'][profile]) == expected, (profile, 'Call example coverage differs from tool roster',
                                                           expected ^ set(calls['profiles'][profile]))
 
@@ -159,14 +165,13 @@ def validate_retest_examples(calls, sequences, metadata):
         assert 'Native imports do not overwrite an existing logical object.' not in text, name
         assert entry['parameters']['importPath']['requiresBinding'] is True, name
         full = calls['profiles']['full-engine'][name]
-        assert not {'overwrite', 'dryRun', 'confirm', 'expectedProjectFile'} & full['arguments'].keys(), name
-        assert 'current V20/V21 schema has no overwrite' in full['note'], name
+        assert full == entry, (name, 'Shared V20/V21 examples must be the Foundation examples')
 
     indexed = {entry['id']: entry for entry in sequences}
     for topic in ('foundation-approval-precheck', 'foundation-tag-table-round-trip', 'foundation-block-round-trip', 'plc-xml-round-trip'):
         sequence = indexed['sequence/' + topic]
         full = topic == 'plc-xml-round-trip'
-        keys = ['20', '21'] if full else ['14sp1', '15.1', '16', '17', '18', '19']
+        keys = ['20', '21'] if full else ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']
         assert sequence['releaseKeys'] == keys, topic
         assert sequence['profile'] == ('full-engine' if full else 'plc-foundation'), topic
         assert 'native' in sequence['validation'] and 'NOT RUN' in sequence['validation'], topic
@@ -255,7 +260,7 @@ def generate():
     rosters, _ = registered_rosters()
     from engine_sources import EngineSources
     full = source_metadata(EngineSources(ROOT).sources.values())
-    assert set(full) == rosters['21'], 'Source metadata differs from the registered roster'
+    assert rosters['21'] - set(full) <= rosters['19'], 'New registrations must come from Foundation'
     additions = new_v4_tools()
     names = set().union(*rosters.values())
     domains = {
@@ -366,6 +371,8 @@ def generate():
     return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
             'sources': sources, 'documents': documents, 'tools': mappings,
             'languages': library['languages'], 'examples': library['examples'],
+            'engineSourceCalls': read(ROOT / 'tests/Engine/TiaMcpServer.Tests/Fixtures/EngineSourceExamples.json'),
+            'engineSourceSequences': read(ROOT / 'tests/Engine/TiaMcpServer.Tests/Fixtures/EngineSourceSequences.json'),
             'calls': calls, 'sequences': sequences, **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
 
 
@@ -481,10 +488,12 @@ class RosterTests(unittest.TestCase):
             with self.assertRaises(AssertionError): resolve_names(targets, names, targets)
 
     def test_profile_coverage_stays_strict(self):
-        rosters = {k: {'New'} if k in ('20', '21') else {'Old'} for k in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
-        calls = {'profiles': {'full-engine': {'New': {}}, 'plc-foundation': {'Old': {}}}}
+        documents = {'ExportPlcBlockDocuments', 'ExportPlcBlocksDocuments', 'ImportPlcBlockDocuments', 'ImportPlcBlocksDocuments'}
+        rosters = {k: {'New', 'Old'} | documents if k in ('20', '21') else {'Old'} for k in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
+        calls = {'profiles': {'full-engine': {name: {} for name in {'New', 'Old'} | documents},
+                              'plc-foundation': {name: {} for name in {'Old'} | documents}}}
         validate_coverage(rosters, calls)
-        calls['profiles']['full-engine']['Old'] = {}
+        calls['profiles']['full-engine']['Extra'] = {}
         with self.assertRaises(AssertionError): validate_coverage(rosters, calls)
 
 

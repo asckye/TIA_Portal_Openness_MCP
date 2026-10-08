@@ -62,5 +62,12 @@
   <ItemGroup>
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Worker/FoundationWorkerDispatcher.cs" Link="Worker/FoundationWorkerDispatcher.cs" />
+    <Compile Include="../Worker/WorkerJson.cs" Link="Worker/WorkerJson.cs" />
+    <Compile Include="../Worker/WorkerOperations.cs" Link="Worker/WorkerOperations.cs" />
+    <Compile Include="../Worker/WorkerFailurePolicy.cs" Link="Worker/WorkerFailurePolicy.cs" />
+    <Compile Include="../Worker/WorkerSessionOutcomeState.cs" Link="Worker/WorkerSessionOutcomeState.cs" />
+  </ItemGroup>
   <Import Project="../EngineHost/EngineHostSources.props" />
 </Project>

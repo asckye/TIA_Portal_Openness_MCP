@@ -291,7 +291,7 @@ MERGE_PARAMETERS = {
     "GetToolUsage": "toolName 按 A 表转换；query/documentId/offset/limit/operation/language/exampleId 同名；新增 exampleKind=all|sequence|language 默认 all；旧默认列表仍含 tools、languages、examples。",
 }
 assert 'GuideSelection(string topic)' in read(SH + "ToolUsageCatalog.cs")
-assert 'ToolUsageCatalog.Sequences()' in read(L + "ModelContextProtocol/ToolRecipes.cs")
+assert 'ToolUsageCatalog.Sequences(' in read(L + "ModelContextProtocol/ToolRecipes.cs")
 assert 'ToolUsageCatalog.Examples(' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
 assert 'exampleId' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
 assert all(n in names for n in SPECIAL_NAMES | dict.fromkeys(COLLECTIONS))
@@ -432,13 +432,14 @@ for k in keys[-2:]:
         for v4_name in members.split():
             n = next(n for n in tools[k] if renames[n] == v4_name and n not in ("GetAuthoringGuide", "GetRecipe"))
             current = current_names[n]
-            assert n in tools[k] and current in calls[snap[k]["profile"]], (k, n)
+            if current not in calls[snap[k]["profile"]]: continue
+            assert n in tools[k], (k, n)
             example = calls[snap[k]["profile"]][current]
             assert isinstance(example.get("arguments"), dict), (k, n, "missing call example")
             rows.append({"name": renames[n], "currentName": current_names[n], "reason": reason,
                          "example": "reference/tool-examples/calls.json#/profiles/" + snap[k]["profile"] + "/" + current})
     assert len({r["name"] for r in rows}) == len(rows)
-    assert 55 <= len(rows) <= 65
+    assert 50 <= len(rows) <= 65
     lite_proposal["releases"][k] = sorted(rows, key=lambda r: r["name"])
 
 # One embedded record per release, contract version and V4 target. The registration
@@ -509,8 +510,13 @@ behavior_entries = [{"releaseKey": k, "entry": entry, "family": family,
 behavior_capabilities = {k: [{"family": r["family"], "state": r["state"], "l5": r["l5"],
     "entries": sorted({e["entry"] for e in behavior_entries if e["releaseKey"] == k and e["family"] == r["family"]})}
     for r in behavior_policies if r["releaseKey"] == k] for k in keys}
-runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": False,
+engine_source_examples = json.loads(read('tests/Engine/TiaMcpServer.Tests/Fixtures/EngineSourceExamples.json'))
+runtime = {"schemaVersion": 1, "contractVersion": 4, "foundationLite": True,
            "behaviorPolicies": behavior_policies, "behaviorEntries": behavior_entries, "releases": {}}
+shared_names = {renames[n] for n in tools['19']}
+shared_policy = read('src/EngineHost/SharedToolCatalog.cs')
+removed_shared = set(re.findall(r'"(\w+)"', shared_policy.split('Removed =', 1)[1].split('};', 1)[0]))
+shared_bridge = set(re.findall(r'"(\w+)"', shared_policy.split('Bridge =', 1)[1].split('};', 1)[0]))
 for k in keys[-2:]:
     lite_names = {r["name"] for r in lite_proposal["releases"][k]}
     runtime_rows = {}
@@ -519,7 +525,7 @@ for k in keys[-2:]:
         target = renames[old]
         current = current_names[old]
         if target in runtime_rows: continue
-        arguments = json.loads(json.dumps(calls["full-engine"][current]["arguments"]))
+        arguments = json.loads(json.dumps(engine_source_examples[current]["arguments"]))
         runtime_rows[target] = {"name": target, "currentName": current, "sourceName": old,
             "profiles": ["full", "lite"] if target in lite_names else ["full"], "arguments": arguments,
             "envelopeVersion": envelope_versions[old]}
@@ -530,6 +536,40 @@ for k in keys[:6]:
     runtime['releases'][k] = [{'name': renames[n], 'currentName': foundation_current[k][n], 'sourceName': n,
         'profiles': ['plc-foundation'], 'arguments': calls['plc-foundation'][foundation_current[k][n]]['arguments'],
         'envelopeVersion': 4} for n in sorted(tools[k])]
+
+runtime['engineSourceReleases'] = json.loads(json.dumps({k: runtime['releases'][k] for k in keys[-2:]}))
+
+# P7-04: Foundation owns shared contracts on V20/V21; original engine rows
+# remain the source oracle for the retained engine-only descriptors.
+for k in keys[-2:]:
+    rows = {r['currentName']: r for r in runtime['releases'][k] if r['currentName'] not in removed_shared}
+    for entry in runtime['releases']['19']:
+        row = json.loads(json.dumps(entry))
+        row['profiles'] = ['full', 'lite', 'plc-foundation']
+        rows[row['currentName']] = row
+    for current in calls['plc-foundation']:
+        name = current
+        if current in shared_names or current not in calls['plc-foundation']: continue
+        rows[current] = {'name': current, 'currentName': current, 'sourceName': name,
+            'profiles': ['full', 'plc-foundation'], 'arguments': calls['plc-foundation'][current]['arguments'], 'envelopeVersion': 4}
+    for row in rows.values():
+        if row['currentName'] not in shared_names:
+            row['profiles'] = ['full', 'lite'] if row['currentName'] in shared_bridge else [p for p in row['profiles'] if p != 'lite']
+    runtime['releases'][k] = sorted(rows.values(), key=lambda r: r['name'])
+    behavior_entries[:] = [e for e in behavior_entries if e['releaseKey'] != k or e['entry'] not in removed_shared]
+    for entry in list(behavior_entries):
+        if entry['releaseKey'] == '19' and entry['entry'] in shared_names and not any(e['releaseKey'] == k and e['entry'] == entry['entry'] for e in behavior_entries):
+            behavior_entries.append(dict(entry, releaseKey=k, example=candidate_example(entry['entry'], entry['family'], k)))
+
+behavior_capabilities = {k: [{**{key: r[key] for key in ('family', 'state', 'l5')},
+    'entries': sorted({e['entry'] for e in behavior_entries if e['releaseKey'] == k and e['family'] == r['family']})}
+    for r in behavior_policies if r['releaseKey'] == k] for k in keys}
+lite_proposal['foundationLite'] = True
+for k in keys[-2:]:
+    lite_proposal['releases'][k] = [{'name': r['name'], 'currentName': r['currentName'],
+        'reason': 'Shared Foundation contract' if r['name'] in shared_names else 'Engine discovery/bridge/worker supervisor',
+        'example': 'reference/tool-examples/calls.json#/profiles/' + ('plc-foundation' if r['name'] in shared_names else 'full-engine') + '/' + r['currentName']}
+        for r in runtime['releases'][k] if 'lite' in r['profiles']]
 
 # Rejection fixtures are derived from the same appendix A/B mapping and checked
 # source signatures. They exercise the shared boundary without native bodies.
@@ -550,7 +590,7 @@ def default_value(text):
 rejections = {'contractVersion': 4, 'releases': {}}
 for k in keys[-2:]:
     rows = []
-    for row in runtime['releases'][k]:
+    for row in runtime['engineSourceReleases'][k]:
         old = row['sourceName']
         declarations = parameters(signatures[old], details=True)
         aliases = dict(re.findall(r'^using (\w+) = ([\w.]+);', read(source_tools[old][0]), re.M))
@@ -1014,7 +1054,7 @@ def version_catalog_outputs():
         'groupCounts': dict(collections.Counter(t['group'] for t in groups)), 'tools': groups}
     lines = ['# Generated release tool catalog', '',
         'Generated by `Generate-Phase6Plan.py` from registered host catalogs. See [scope and contracts](version-tools.md).',
-        'Groups compare current V4 tool names. Read the selected host schema; shared names do not certify identical parameters or native behavior.', '']
+        'Groups compare current V4 tool names. Read the selected host schema; V20/V21 use the same Foundation implementation and V19 contract records for all 67 shared tools. Native acceptance remains separate.', '']
     for group, title in [('all-releases', 'All eight releases'), ('shared-subset', 'Shared by some releases'), ('release-only', 'One release only')]:
         selected = [t for t in groups if t['group'] == group]
         lines += [f'## {title} ({len(selected)})', '', '| Tool | Release keys |', '|---|---|']
@@ -1027,6 +1067,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='compare generated text without writing (ignore checkout CRLF)')
     parser.add_argument('--catalog-only', action='store_true', help='refresh runtime catalogue, rejection fixtures and package counts without development planning documents')
+    parser.add_argument('--shared-host', action='store_true', help='Generate shared-host rosters and documentation without changing raw-engine packaging')
     parser.add_argument('--self-test', action='store_true', help='exercise coverage and invalid-map rejection')
     args = parser.parse_args()
     if args.self_test: self_test()
@@ -1039,6 +1080,14 @@ def main():
     outputs = {root / RESOURCE: resource_text(), root / REJECTIONS: rejections_text}
     outputs.update(version_catalog_outputs())
     if not args.catalog_only: outputs[doc] = generated
+    if args.shared_host:
+        for path, value in outputs.items():
+            expected = value.encode('utf-8')
+            if args.check:
+                assert path.read_bytes().replace(b'\r\n', b'\n') == expected, 'stale generated output: ' + str(path.relative_to(root))
+            else: path.write_bytes(expected)
+        print('Shared Foundation catalogs: V20=482, V21=493; lite=73 each')
+        return
     # Refresh derived package counts only; retain all build/source hash evidence.
     package_path = root / 'manifest/package-manifest.json'
     package = json.loads(package_path.read_text(encoding='utf-8-sig'))

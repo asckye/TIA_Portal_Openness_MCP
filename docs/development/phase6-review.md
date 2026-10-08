@@ -395,8 +395,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 17 | 65 | 不设 | 9 | 9 | 65 | 不设 |
 | 18 | 65 | 不设 | 9 | 9 | 65 | 不设 |
 | 19 | 67 | 不设 | 9 | 9 | 67 | 不设 |
-| 20 | 482 | 63 | 272 | 156 | 480 | 60 |
-| 21 | 493 | 63 | 289 | 164 | 491 | 60 |
+| 20 | 482 | 63 | 272 | 156 | 480 | 73 |
+| 21 | 493 | 63 | 289 | 164 | 491 | 73 |
 
 八版当前名称并集 501；V4 名称并集 499；改名/合并入口 183；不变 318。数字只指目录，不代表原生能力验收。
 
@@ -1948,66 +1948,79 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 4.0 名称 | 当前示例入口 | 选择理由 | 版本 |
 |---|---|---|---|
-| `ArchiveSavedProject` | `ArchiveSavedProject` | 工程生命周期 | 20, 21 |
-| `AttachOpenProject` | `AttachOpenProject` | 工程生命周期 | 20, 21 |
-| `BuildPlcGlobalDb` | `BuildPlcGlobalDb` | 离线构造与规划 | 20, 21 |
-| `BuildPlcTagTable` | `BuildPlcTagTable` | 离线构造与规划 | 20, 21 |
-| `BuildPlcUdt` | `BuildPlcUdt` | 离线构造与规划 | 20, 21 |
-| `CallTool` | `CallTool` | 发现、用法与完整目录调用 | 20, 21 |
-| `ClearExportHandles` | `ClearExportHandles` | 大结果分页与文件交付 | 20, 21 |
-| `CloseProject` | `CloseProject` | 工程生命周期 | 20, 21 |
-| `CompileHmiDiagnostics` | `CompileHmiDiagnostics` | HMI 定位和诊断 | 20, 21 |
-| `CompilePlcDiagnostics` | `CompilePlcDiagnostics` | 常用 PLC 交换与编译 | 20, 21 |
-| `ConnectPortal` | `ConnectPortal` | 工程生命周期 | 20, 21 |
-| `ConnectProject` | `ConnectProject` | 工程生命周期 | 20, 21 |
-| `CreateHardwareDevice` | `CreateHardwareDevice` | 硬件查找和精确创建 | 20, 21 |
-| `CreateProject` | `CreateProject` | 工程生命周期 | 20, 21 |
-| `DeleteExportHandle` | `DeleteExportHandle` | 大结果分页与文件交付 | 20, 21 |
-| `DescribeHmiScreen` | `DescribeHmiScreen` | HMI 定位和诊断 | 20, 21 |
-| `DisconnectPortal` | `DisconnectPortal` | 工程生命周期 | 20, 21 |
-| `ExportPlcBlock` | `ExportPlcBlock` | 常用 PLC 交换与编译 | 20, 21 |
-| `ExportPlcTagTable` | `ExportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
-| `ExportPlcType` | `ExportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
-| `FindTools` | `FindTools` | 发现、用法与完整目录调用 | 20, 21 |
-| `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
-| `GenerateErrorReport` | `GenerateErrorReport` | 诊断收尾 | 20, 21 |
-| `GetEnvironmentDiagnostics` | `GetEnvironmentDiagnostics` | 环境与会话诊断 | 20, 21 |
-| `GetExportContent` | `GetExportContent` | 大结果分页与文件交付 | 20, 21 |
-| `GetOpennessWorkerStatus` | `GetOpennessWorkerStatus` | 环境与会话诊断 | 20, 21 |
-| `GetPlcBlockHierarchy` | `GetPlcBlockHierarchy` | 工程和 PLC 定位 | 20, 21 |
-| `GetPlcBlockInfo` | `GetPlcBlockInfo` | 工程和 PLC 定位 | 20, 21 |
-| `GetPlcTypeInfo` | `GetPlcTypeInfo` | 工程和 PLC 定位 | 20, 21 |
-| `GetProjectInfo` | `GetProjectInfo` | 工程和 PLC 定位 | 20, 21 |
-| `GetProjectTree` | `GetProjectTree` | 工程和 PLC 定位 | 20, 21 |
-| `GetSessionState` | `GetSessionState` | 环境与会话诊断 | 20, 21 |
-| `GetSoftwareInfo` | `GetSoftwareInfo` | 工程和 PLC 定位 | 20, 21 |
-| `GetSoftwareTree` | `GetSoftwareTree` | 工程和 PLC 定位 | 20, 21 |
-| `GetToolUsage` | `GetToolUsage` | 发现、用法与完整目录调用 | 20, 21 |
-| `ImportPlcBlock` | `ImportPlcBlock` | 常用 PLC 交换与编译 | 20, 21 |
-| `ImportPlcExternalSource` | `ImportPlcExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
-| `ImportPlcTagTable` | `ImportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
-| `ImportPlcType` | `ImportPlcType` | 常用 PLC 交换与编译 | 20, 21 |
-| `InitializeEnvironment` | `InitializeEnvironment` | 环境与会话诊断 | 20, 21 |
-| `ListDevices` | `ListDevices` | 工程和 PLC 定位 | 20, 21 |
-| `ListExportHandles` | `ListExportHandles` | 大结果分页与文件交付 | 20, 21 |
-| `ListHmiScreens` | `ListHmiScreens` | HMI 定位和诊断 | 20, 21 |
-| `ListHmiTagTables` | `ListHmiTagTables` | HMI 定位和诊断 | 20, 21 |
-| `ListHmiTags` | `ListHmiTags` | HMI 定位和诊断 | 20, 21 |
-| `ListPlcBlocks` | `ListPlcBlocks` | 工程和 PLC 定位 | 20, 21 |
-| `ListPlcTagTables` | `ListPlcTagTables` | 工程和 PLC 定位 | 20, 21 |
-| `ListPlcTypes` | `ListPlcTypes` | 工程和 PLC 定位 | 20, 21 |
-| `ListPortalProcessProjects` | `ListPortalProcessProjects` | 工程生命周期 | 20, 21 |
-| `ListToolCategories` | `ListToolCategories` | 发现、用法与完整目录调用 | 20, 21 |
-| `OpenProject` | `OpenProject` | 工程生命周期 | 20, 21 |
-| `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 离线构造与规划 | 20, 21 |
-| `PreviewToolCall` | `PreviewToolCall` | 发现、用法与完整目录调用 | 20, 21 |
-| `RestartOpennessWorker` | `RestartOpennessWorker` | 环境与会话诊断 | 20, 21 |
-| `SaveExportContent` | `SaveExportContent` | 大结果分页与文件交付 | 20, 21 |
-| `SaveProject` | `SaveProject` | 工程生命周期 | 20, 21 |
-| `SearchHardwareCatalog` | `SearchHardwareCatalog` | 硬件查找和精确创建 | 20, 21 |
-| `ValidateAutomationContext` | `ValidateAutomationContext` | 环境与会话诊断 | 20, 21 |
-| `ValidatePlcDocumentSchemas` | `ValidatePlcDocumentSchemas` | 离线构造与规划 | 20, 21 |
-| `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 常用 PLC 交换与编译 | 20, 21 |
+| `AttachOpenProject` | `AttachOpenProject` | Shared Foundation contract | 20, 21 |
+| `BuildFlgNetCall` | `BuildFlgNetCall` | Shared Foundation contract | 20, 21 |
+| `BuildPlcFbBlock` | `BuildPlcFbBlock` | Shared Foundation contract | 20, 21 |
+| `BuildPlcFcBlock` | `BuildPlcFcBlock` | Shared Foundation contract | 20, 21 |
+| `BuildPlcGlobalDb` | `BuildPlcGlobalDb` | Shared Foundation contract | 20, 21 |
+| `BuildPlcLadFcBlock` | `BuildPlcLadFcBlock` | Shared Foundation contract | 20, 21 |
+| `BuildPlcSymbolManifestFromPath` | `BuildPlcSymbolManifestFromPath` | Shared Foundation contract | 20, 21 |
+| `BuildPlcTagTable` | `BuildPlcTagTable` | Shared Foundation contract | 20, 21 |
+| `BuildPlcUdt` | `BuildPlcUdt` | Shared Foundation contract | 20, 21 |
+| `BuildStructuredText` | `BuildStructuredText` | Shared Foundation contract | 20, 21 |
+| `CallTool` | `CallTool` | Engine discovery/bridge/worker supervisor | 20, 21 |
+| `CleanupStagedImportFiles` | `CleanupStagedImportFiles` | Shared Foundation contract | 20, 21 |
+| `CloseProject` | `CloseProject` | Shared Foundation contract | 20, 21 |
+| `CompilePlcDiagnostics` | `CompilePlcDiagnostics` | Shared Foundation contract | 20, 21 |
+| `CompilePlcSoftware` | `CompilePlcSoftware` | Shared Foundation contract | 20, 21 |
+| `ConnectPortal` | `ConnectPortal` | Shared Foundation contract | 20, 21 |
+| `CreateHardwareDevice` | `CreateHardwareDevice` | Shared Foundation contract | 20, 21 |
+| `CreatePlcTag` | `CreatePlcTag` | Shared Foundation contract | 20, 21 |
+| `CreatePlcTagTable` | `CreatePlcTagTable` | Shared Foundation contract | 20, 21 |
+| `CreatePlcUserConstant` | `CreatePlcUserConstant` | Shared Foundation contract | 20, 21 |
+| `CreateProject` | `CreateProject` | Shared Foundation contract | 20, 21 |
+| `DeletePlcExternalSource` | `DeletePlcExternalSource` | Shared Foundation contract | 20, 21 |
+| `DisconnectPortal` | `DisconnectPortal` | Shared Foundation contract | 20, 21 |
+| `ExportPlcBlock` | `ExportPlcBlock` | Shared Foundation contract | 20, 21 |
+| `ExportPlcBlocks` | `ExportPlcBlocks` | Shared Foundation contract | 20, 21 |
+| `ExportPlcTagTable` | `ExportPlcTagTable` | Shared Foundation contract | 20, 21 |
+| `ExportPlcType` | `ExportPlcType` | Shared Foundation contract | 20, 21 |
+| `ExportPlcTypes` | `ExportPlcTypes` | Shared Foundation contract | 20, 21 |
+| `ExportPlcWatchTable` | `ExportPlcWatchTable` | Shared Foundation contract | 20, 21 |
+| `ExportTechnologyObject` | `ExportTechnologyObject` | Shared Foundation contract | 20, 21 |
+| `FindTools` | `FindTools` | Engine discovery/bridge/worker supervisor | 20, 21 |
+| `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | Shared Foundation contract | 20, 21 |
+| `GetOpennessWorkerStatus` | `GetOpennessWorkerStatus` | Engine discovery/bridge/worker supervisor | 20, 21 |
+| `GetPlcBlockHierarchy` | `GetPlcBlockHierarchy` | Shared Foundation contract | 20, 21 |
+| `GetPlcBlockInfo` | `GetPlcBlockInfo` | Shared Foundation contract | 20, 21 |
+| `GetPlcTypeInfo` | `GetPlcTypeInfo` | Shared Foundation contract | 20, 21 |
+| `GetPortalConnectionReadiness` | `GetPortalConnectionReadiness` | Shared Foundation contract | 20, 21 |
+| `GetProjectInfo` | `GetProjectInfo` | Shared Foundation contract | 20, 21 |
+| `GetProjectTree` | `GetProjectTree` | Shared Foundation contract | 20, 21 |
+| `GetSessionState` | `GetSessionState` | Shared Foundation contract | 20, 21 |
+| `GetSoftwareInfo` | `GetSoftwareInfo` | Shared Foundation contract | 20, 21 |
+| `GetSoftwareTree` | `GetSoftwareTree` | Shared Foundation contract | 20, 21 |
+| `GetToolUsage` | `GetToolUsage` | Shared Foundation contract | 20, 21 |
+| `ImportPlcBlock` | `ImportPlcBlock` | Shared Foundation contract | 20, 21 |
+| `ImportPlcBlocksFromDirectory` | `ImportPlcBlocksFromDirectory` | Shared Foundation contract | 20, 21 |
+| `ImportPlcExternalSource` | `ImportPlcExternalSource` | Shared Foundation contract | 20, 21 |
+| `ImportPlcProgramFromDirectory` | `ImportPlcProgramFromDirectory` | Shared Foundation contract | 20, 21 |
+| `ImportPlcTagTable` | `ImportPlcTagTable` | Shared Foundation contract | 20, 21 |
+| `ImportPlcType` | `ImportPlcType` | Shared Foundation contract | 20, 21 |
+| `InitializeEnvironment` | `InitializeEnvironment` | Shared Foundation contract | 20, 21 |
+| `ListPlcBlocks` | `ListPlcBlocks` | Shared Foundation contract | 20, 21 |
+| `ListPlcExternalSources` | `ListPlcExternalSources` | Shared Foundation contract | 20, 21 |
+| `ListPlcSystemConstants` | `ListPlcSystemConstants` | Shared Foundation contract | 20, 21 |
+| `ListPlcTagTables` | `ListPlcTagTables` | Shared Foundation contract | 20, 21 |
+| `ListPlcTags` | `ListPlcTags` | Shared Foundation contract | 20, 21 |
+| `ListPlcTypes` | `ListPlcTypes` | Shared Foundation contract | 20, 21 |
+| `ListPlcUserConstants` | `ListPlcUserConstants` | Shared Foundation contract | 20, 21 |
+| `ListPlcWatchTables` | `ListPlcWatchTables` | Shared Foundation contract | 20, 21 |
+| `ListPortalProcessProjects` | `ListPortalProcessProjects` | Shared Foundation contract | 20, 21 |
+| `ListStagedImportFiles` | `ListStagedImportFiles` | Shared Foundation contract | 20, 21 |
+| `ListTechnologyObjects` | `ListTechnologyObjects` | Shared Foundation contract | 20, 21 |
+| `ListToolCategories` | `ListToolCategories` | Engine discovery/bridge/worker supervisor | 20, 21 |
+| `OpenProject` | `OpenProject` | Shared Foundation contract | 20, 21 |
+| `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | Shared Foundation contract | 20, 21 |
+| `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | Shared Foundation contract | 20, 21 |
+| `PreviewToolCall` | `PreviewToolCall` | Engine discovery/bridge/worker supervisor | 20, 21 |
+| `RenderPlcBlock` | `RenderPlcBlock` | Shared Foundation contract | 20, 21 |
+| `RenderPlcProgramAtlas` | `RenderPlcProgramAtlas` | Shared Foundation contract | 20, 21 |
+| `RestartOpennessWorker` | `RestartOpennessWorker` | Engine discovery/bridge/worker supervisor | 20, 21 |
+| `RunCapabilitySelfTest` | `RunCapabilitySelfTest` | Shared Foundation contract | 20, 21 |
+| `SaveProject` | `SaveProject` | Shared Foundation contract | 20, 21 |
+| `SearchHardwareCatalog` | `SearchHardwareCatalog` | Shared Foundation contract | 20, 21 |
+| `StageImportFiles` | `StageImportFiles` | Shared Foundation contract | 20, 21 |
 
 数据文件：[ToolProfiles.resx](../../src/Logic/ModelContextProtocol/ToolProfiles.resx)。Catalog JSON 按 contractVersion、releaseKey 记录 V4/current/source 名称、profiles 和 arguments；参数示例取自 reference/tool-examples/calls.json，按当前契约转换并逐版验证。Foundation 继续不设 lite。
 

@@ -15,8 +15,16 @@ namespace TiaMcpServer.ModelContextProtocol
     // Shared V4 schema and admission rules for direct, bridge and batch calls.
     public static partial class McpServer
     {
+        internal static JsonArray RuntimeProfileEntries()
+        {
+#if TIA_ENGINE_HOST
+            return TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey);
+#else
+            return TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey, engineSource: true);
+#endif
+        }
         private static readonly HashSet<string> V4ToolNames = new HashSet<string>(
-            TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey)
+            Enumerable.Concat(RuntimeProfileEntries(), (IEnumerable<JsonNode?>)TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey, engineSource: true))
                 .Where(row => (int?)row!["envelopeVersion"] == 4).Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);
         internal static bool IsInfrastructureV4(string name) => V4ToolNames.Contains(name);
         internal static void AssertV4Tool(string name)

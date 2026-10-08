@@ -24,7 +24,7 @@ internal sealed class UsageHintTool : McpServerTool
         => inner.InvokeAsync(request, cancellationToken);
 }
 
-internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpServerTool>> roster) : McpServerTool
+internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpServerTool>> roster, Func<string, string>? exampleProfile = null) : McpServerTool
 {
     private readonly Tool tool = new() { Name = "GetToolUsage", Description = "Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only.",
         InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["additionalProperties"] = false,
@@ -59,21 +59,22 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
             if (offset < 0 || limit < 1 || limit > 200) throw new ArgumentException("offset >= 0 and limit 1..200 are required.");
             JsonObject usage;
             var all = roster();
+            string Profile(string target) => exampleProfile?.Invoke(target) ?? "plc-foundation";
             if (name.Length > 0)
             {
                 if (query.Length > 0 || id.Length > 0) throw new ArgumentException("Use toolName alone, or query/documentId for references.");
                 var target = all.Select(t => t.ProtocolTool).FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))
                     ?? throw new ArgumentException("Tool is not available in this release: " + name);
-                usage = ToolUsageCatalog.Describe(target.Name, releaseKey, "plc-foundation", target.Description ?? "",
+                usage = ToolUsageCatalog.Describe(target.Name, releaseKey, Profile(name), target.Description ?? "",
                     (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name));
-                usage["outputSchema"] = JsonNode.Parse(target.OutputSchema!.Value.GetRawText());
+                usage["outputSchema"] = target.OutputSchema.HasValue ? JsonNode.Parse(target.OutputSchema.Value.GetRawText()) : null;
                 usage["resultContract"] = new JsonObject { ["type"] = "Envelope", ["schemaVersion"] = 4 };
                 foreach (var key in new[] { "parameterSources", "interpretation" })
                     if (usage[key] != null) usage[key] = JsonNode.Parse(FoundationV4Tool.Guidance(usage[key]!.ToJsonString()));
-                usage["examples"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!.DeepClone();
+                usage["examples"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name, exampleKind)["examples"]!.DeepClone();
             }
             else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
-                usage = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind);
+                usage = ToolUsageCatalog.Examples(releaseKey, Profile(name), all.Select(t => t.ProtocolTool.Name), language, exampleId, exampleKind: exampleKind);
             else
             {
                 usage = ToolUsageCatalog.ReadReference(query, id, offset, limit);
@@ -84,7 +85,7 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     usage["toolCount"] = names.Length;
                     usage["behaviorCapabilities"] = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(ToolUsageTool).Assembly, releaseKey);
                     usage["nextToolOffset"] = offset + limit < names.Length ? JsonValue.Create(offset + limit) : null;
-                    usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", names);
+                    usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, Profile(name), names);
                 }
             }
             return ValueTask.FromResult(new CallToolResult { Content = new List<ContentBlock> { new TextContentBlock { Text = new JsonObject { ["success"] = true, ["usage"] = usage }.ToJsonString() } } });

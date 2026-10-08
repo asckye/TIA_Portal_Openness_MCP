@@ -26,7 +26,7 @@ namespace TiaMcp.PlcFoundation
     /// <summary>
     /// Shared typed PLC operations for the selected release.
     /// Native acceptance is tracked in docs/reference/real-machine-ledger.md.
-    /// The host must supply exact assembly resolution and serialize calls on one STA.
+    /// The host supplies exact assembly resolution and one release-specific owner thread.
     /// </summary>
     public sealed partial class PlcFoundationEngine : IDisposable
     {
@@ -47,8 +47,9 @@ namespace TiaMcp.PlcFoundation
             var compiled = typeof(PlcFoundationEngine).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
                 .Single(a => a.Key == "TiaReleaseKey").Value!;
             PlcFoundationPolicy.RequireRelease(compiled, releaseKey);
-            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-                throw new InvalidOperationException("PLC operations require an owning STA thread.");
+            if (Thread.CurrentThread.GetApartmentState() != PlcLifecyclePolicy.OwnerApartment(releaseKey))
+                throw new InvalidOperationException(releaseKey == "20" || releaseKey == "21"
+                    ? "PLC operations require the worker's owning MTA thread." : "PLC operations require an owning STA thread.");
             var contract = OpennessReleaseContract.For(releaseKey);
             contract = OpennessReleaseContract.For(releaseKey, contract.CoreAssemblyIdentity, selectedPublicApiDirectory);
             contract.RequireAssembly(typeof(TiaPortal).Assembly);
@@ -68,8 +69,21 @@ namespace TiaMcp.PlcFoundation
         {
             if (disposed) throw new ObjectDisposedException(nameof(PlcFoundationEngine));
             if (!allowDisconnected) disconnect.RequireActive();
-            if (Thread.CurrentThread.ManagedThreadId != ownerThread)
-                throw new InvalidOperationException("Use the owning STA thread; cross-thread native access is refused.");
+            PlcLifecyclePolicy.RequireOwner(ReleaseKey, ownerThread);
+        }
+        // Managed adoption only: the borrowing engine never attaches, opens or disposes these objects.
+        public void BorrowSharedSession(Action<TiaPortal?, EngineeringProject?, object?, PlcRuntimeState> adopt)
+        {
+            Check(true);
+            adopt(portal, project,
+#if PLC_SAFETY
+                localSession,
+#else
+                null,
+#endif
+                new PlcRuntimeState { ReleaseKey=ReleaseKey,IsAttached=lifecycle.ProcessId.HasValue,
+                    ProcessId=lifecycle.ProcessId,ProjectFile=lifecycle.ProjectFile,OwnsProject=lifecycle.OwnsProject,
+                    IsLocalSession=lifecycle.IsLocalSession });
         }
         private TiaPortal Portal() { Check(); sessionCandidateAdapter?.VerifyOwnedState(); disconnect.RequireActive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
         private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }

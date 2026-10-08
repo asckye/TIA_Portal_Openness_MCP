@@ -43,7 +43,7 @@ internal static partial class ReleaseCommands
             ("repository, links, shipped-document links, CHANGELOG version", Py, ["scripts/checks/Check-Repository.py", "--no-binaries"]),
             ("repository check self-tests", Py, ["scripts/checks/Check-Repository.py", "--self-test"]),
             ("dead tool references (descriptions and current docs)", Py, ["scripts/checks/Check-DeadToolReferences.py"]),
-            ("phase-6 tables generator", Py, ["-B", "scripts/generate/Generate-Phase6Plan.py", "--check"]),
+            ("phase-6 tables generator", Py, ["-B", "scripts/generate/Generate-Phase6Plan.py", "--shared-host", "--check"]),
             ("tool usage catalog generator", Py, ["scripts/generate/Generate-ToolUsage.py", "--check"]),
             ("V4 contract snapshots", Py, ["scripts/checks/Snapshot-ToolContracts.py", "verify"]),
             ("V4 response snapshots", Py, ["scripts/checks/Snapshot-ToolResponses.py", "verify"]),

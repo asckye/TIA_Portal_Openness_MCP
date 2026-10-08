@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #else
         private const string ExampleRelease = "21";
 #endif
-        private static readonly Example[] Rows = TiaOpenness.Shared.ToolUsageCatalog.InlineCalls(ExampleRelease)
+        private static readonly Example[] Rows = TiaOpenness.Shared.ToolUsageCatalog.InlineCalls(ExampleRelease, engineSource: true)
             .Select(r => new Example((string)r!["tool"]!, r["arguments"]!.ToJsonString(), (string)r["note"]!)).ToArray();
 
         private static readonly Dictionary<string, Example> Index = Rows.ToDictionary(r => r.Tool, r => r, StringComparer.OrdinalIgnoreCase);

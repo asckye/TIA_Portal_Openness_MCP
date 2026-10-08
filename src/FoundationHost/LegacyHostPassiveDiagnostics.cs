@@ -241,20 +241,22 @@ internal static class LegacyHostPassiveDiagnostics
 internal static class LegacyHostToolRegistry
 {
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string releaseKey, bool nativeSessionConfigured,
-        string? apiDirectory = null, string? apiDirectorySource = null)
+        string? apiDirectory = null, string? apiDirectorySource = null, Func<JsonObject>? readinessProvider = null,
+        Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null)
     {
         TiaVersionCatalog.Get(releaseKey);
         var tools = FoundationTools.Create(worker, releaseKey).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
         tools.Add(new ImportOrderTool());
-        Func<JsonObject> readiness = () => LegacyHostPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource);
+        Func<JsonObject> readiness = readinessProvider ?? (() => LegacyHostPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource));
         tools.AddRange(LegacyHostPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools, readiness));
-        tools.Add(new ToolUsageTool(releaseKey, () => tools));
+        tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile));
         var wrapped = new McpServerTool[tools.Count];
         Parallel.For(0, tools.Count, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
         {
             // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
-            Func<JsonObject>? readinessForTool = worker is WorkerClient { Bundled: true } ? readiness : null;
-            wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool));
+            Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
+            wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool,
+                sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
         tools.Clear(); tools.AddRange(wrapped);
         return tools.AsReadOnly();

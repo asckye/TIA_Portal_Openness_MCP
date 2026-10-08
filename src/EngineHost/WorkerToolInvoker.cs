@@ -19,11 +19,14 @@ namespace TiaMcp.LegacyHost
         private readonly IToolCatalogView catalog;
         private readonly IEngineWorker worker;
         private readonly IReadOnlyDictionary<string, MethodInfo> local;
+        private readonly IReadOnlyDictionary<string, McpServerTool> shared;
         private readonly System.Collections.Concurrent.ConcurrentDictionary<Type, object> targets = new();
         internal void SetLocalTarget(Type type, object value) => targets[type] = value;
-        internal WorkerToolInvoker(IToolCatalogView catalog, IEngineWorker worker, ImportStagingHostLifetime stagingLifetime)
+        internal WorkerToolInvoker(IToolCatalogView catalog, IEngineWorker worker, ImportStagingHostLifetime stagingLifetime,
+            IReadOnlyList<McpServerTool>? sharedTools = null)
         {
             this.catalog = catalog; this.worker = worker;
+            shared = (sharedTools ?? Array.Empty<McpServerTool>()).ToDictionary(t => t.ProtocolTool.Name, StringComparer.Ordinal);
             targets[typeof(ImportStagingTools)] = new ImportStagingTools(stagingLifetime);
             local = new[] { typeof(McpServer), typeof(XmlBuilderTools), typeof(OfflineSuiteTools), typeof(TemplateTools),
                 typeof(ExportTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(ToolUsageTools),
@@ -44,7 +47,7 @@ namespace TiaMcp.LegacyHost
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
                 if (!seen.Add(property.Name)) return McpServer.InvalidInput("arguments");
-            string problem = McpServer.VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
+            string problem = tool.Execution == "foundation" ? "" : McpServer.VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
                 : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);
@@ -104,6 +107,13 @@ namespace TiaMcp.LegacyHost
 
         private ToolInvocationResult Dispatch(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
+            if (tool.Execution == "foundation")
+            {
+                var request = new RequestContext<CallToolRequestParams>(McpServer.CurrentCallServer!) {
+                    Params = new CallToolRequestParams { Name = tool.Name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.Json.GetRawText()) }
+                };
+                return new ToolInvocationResult(shared[tool.Name].InvokeAsync(request, McpServer.WorkerDispatchCancellation).GetAwaiter().GetResult(), false);
+            }
             if (tool.Execution == "worker")
             {
                 if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name, HostBehavior.SessionReset()), false);

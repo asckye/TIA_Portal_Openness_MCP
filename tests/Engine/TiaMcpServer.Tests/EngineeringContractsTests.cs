@@ -150,7 +150,7 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void GroupExamplesFitTheSharedSchemas()
         {
-            foreach (var entry in TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey))
+            foreach (var entry in TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey, engineSource: true))
             {
                 string name = (string)entry!["currentName"]!;
                 if (!catalog.Methods.ToDictionary(p => p.Key, p => p.Value).TryGetValue(name, out var method)) continue;

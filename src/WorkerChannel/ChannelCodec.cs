@@ -15,7 +15,8 @@ namespace TiaMcp.WorkerChannel
 
         internal static bool ValidMethod(string method, ChannelProfile profile) =>
             profile == ChannelProfile.Studio ? !string.IsNullOrWhiteSpace(method) :
-            profile == ChannelProfile.Engine ? method.StartsWith("engine.", StringComparison.Ordinal) && method.Length > 7 :
+            profile == ChannelProfile.Engine ? (method.StartsWith("engine.", StringComparison.Ordinal) && method.Length > 7)
+                || (method.StartsWith("adapter.", StringComparison.Ordinal) && method.Length > 8) :
             method.StartsWith("adapter.", StringComparison.Ordinal) && method.Length > 8;
 
         internal static JsonDocument Parse(byte[] bytes, int limit)
@@ -86,9 +87,10 @@ namespace TiaMcp.WorkerChannel
                 throw new IOException("Worker hello identity mismatch or nonfresh binding.");
         }
 
-        internal static byte[] Request(long id, string method, string args, long epoch) => Encode(w =>
+        internal static byte[] Request(long id, string method, string args, long epoch, string? correlationId = null) => Encode(w =>
         {
             w.WriteNumber("id", id); w.WriteString("method", method); w.WriteNumber("bindingEpoch", epoch);
+            if (correlationId != null) w.WriteString("requestId", correlationId);
             Raw(w, "params", args, RequestLimit);
         }, RequestLimit);
 

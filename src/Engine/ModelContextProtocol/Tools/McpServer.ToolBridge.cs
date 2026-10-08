@@ -227,6 +227,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {
+#if TIA_ENGINE_HOST
+            if (CatalogView.Find(name)?.Execution == "foundation")
+            {
+                var refusal = beforeDispatch?.Invoke();
+                return refusal ?? ToolInvoker.Invoke(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0).Result;
+            }
+#endif
             bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
             bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
             string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
@@ -562,7 +569,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }).ToList();
             // Validate the maintained V4 samples and the exact examples served to
             // clients. This gate binds schemas only; it never invokes their targets.
-            foreach (var row in TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey))
+            foreach (var row in RuntimeProfileEntries())
             {
                 string name = (string)row!["currentName"]!;
                 AssertV4Tool(name);

@@ -222,7 +222,7 @@ namespace TiaMcpServer.ModelContextProtocol
             includingUnavailable = new Lazy<IReadOnlyDictionary<string, ToolDescriptor>>(() => View(true));
             lite = new Lazy<IReadOnlyList<ToolDescriptor>>(() =>
             {
-                var names = new HashSet<string>(TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey)
+                var names = new HashSet<string>(McpServer.RuntimeProfileEntries()
                     .Where(row => row!["profiles"]!.AsArray().Any(p => (string?)p == "lite"))
                     .Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);
                 return All.Values.Where(tool => names.Contains(tool.Name)).ToArray();

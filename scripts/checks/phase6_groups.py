@@ -11,14 +11,23 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 FOUNDATION_RELEASES = ('14sp1', '15.1', '16', '17', '18', '19')
-TASKS = tuple(f'P6-{i:02}' for i in range(7, 25)) + ('P6-67', 'P6-68', 'P6-69', 'P6-70')
+TASKS = tuple(f'P6-{i:02}' for i in range(7, 25)) + ('P6-67', 'P6-68', 'P6-69', 'P6-70', 'P7-04')
 P6_67_ADDITIONS = {'StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles'}
 P6_68_NAMES = {'StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles', 'ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable', 'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory', 'CompilePlcSoftware', 'CompilePlcDiagnostics', 'CompileDevice', 'CompileHmiDiagnostics', 'ExportTechnologyObject', 'ExportPlcWatchTable'}
 P6_67_NAMES = P6_67_ADDITIONS | {'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory', 'ImportPlcBlock', 'ImportPlcType', 'ImportPlcTagTable'}
 P6_69_NAMES = P6_67_ADDITIONS | {'OpenProject', 'CloseProject', 'ImportPlcBlocksFromDirectory', 'ImportPlcProgramFromDirectory'}
 P6_70_NAMES = P6_68_NAMES | {'SearchHardwareCatalog', 'CreateHardwareDevice', 'CreateDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ImportPlcExternalSource', 'GenerateBlocksFromExternalSource', 'ExportPlcTypes'}
 
+P7_04_REMOVED = {'ConnectProject', 'ConnectIsolatedPortal', 'BuildProjectScaffold', 'RetrieveProjectArchive', 'SaveProjectCopy', 'ManageMultiuserSession'}
+P7_04_NAMES = {t['name'] for t in json.loads((ROOT / 'manifest/contracts/v4/baseline/19.json').read_text('utf-8'))['tools']} | P7_04_REMOVED | {'ExportPlcBlockDocuments', 'ExportPlcBlocksDocuments', 'ImportPlcBlockDocuments', 'ImportPlcBlocksDocuments'}
+
+
+def removals(task):
+    return P7_04_REMOVED if task == 'P7-04' else set()
+
+
 def additions(task):
+    if task == 'P7-04': return {'CreatePlcTag', 'CreatePlcTagTable', 'CreatePlcUserConstant', 'GetPortalConnectionReadiness', 'ListPlcSystemConstants', 'ListPlcTags', 'ListPlcUserConstants', 'PlanPlcExternalSourceImport'}
     return P6_67_ADDITIONS if task == 'P6-67' else set()
 
 
@@ -36,6 +45,7 @@ def group(task, release, baseline_names):
     """3.x names of `release` that `task` migrates."""
     if task not in TASKS:
         raise ValueError('Unknown migration task: ' + task)
+    if task == 'P7-04': return P7_04_NAMES & set(baseline_names) if release in ('20', '21') else set()
     if task == 'P6-70':
         return P6_70_NAMES & set(baseline_names)
     if task == 'P6-69':
@@ -59,6 +69,7 @@ def names(task):
     """Every 3.x and V4 name `task` migrates in any release; usage-catalog responses about them belong to the group."""
     if task not in TASKS:
         raise ValueError('Unknown migration task: ' + task)
+    if task == 'P7-04': return P7_04_NAMES
     if task == 'P6-70':
         return P6_70_NAMES
     if task == 'P6-69':

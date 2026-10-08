@@ -275,7 +275,7 @@ namespace TiaMcpServer.Tests
             var names = Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value).ToArray();
             Assert.Equal(31, names.Length);
             Assert.Equal(31, names.Distinct().Count());
-            var generated = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey).ToDictionary(row => (string)row!["name"]!);
+            var generated = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey, engineSource: true).ToDictionary(row => (string)row!["name"]!);
             foreach (var name in names)
             {
                 Assert.Equal(name, (string?)generated[name]["currentName"]);

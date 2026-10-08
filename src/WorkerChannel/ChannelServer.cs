@@ -60,7 +60,9 @@ namespace TiaMcp.WorkerChannel
                 using (var document = ChannelCodec.Parse(bytes, ChannelCodec.RequestLimit))
                 {
                     var root = document.RootElement;
-                    ChannelCodec.Fields(root, "jsonrpc", "id", "method", "params", "bindingEpoch"); ChannelCodec.Version(root);
+                    ChannelCodec.Fields(root, profile == ChannelProfile.Engine
+                        ? new[] { "jsonrpc", "id", "method", "params", "bindingEpoch", "requestId" }
+                        : new[] { "jsonrpc", "id", "method", "params", "bindingEpoch" }); ChannelCodec.Version(root);
                     long id = ChannelCodec.Number(root, "id");
                     if (id <= lastId) throw new IOException("Duplicate or stale worker request id.");
                     var method = ChannelCodec.Text(root, "method");
@@ -73,6 +75,8 @@ namespace TiaMcp.WorkerChannel
                     lastId = id;
                     int owner = Thread.CurrentThread.ManagedThreadId, progress = 0;
                     active = true;
+                    string? correlationId = root.TryGetProperty("requestId", out _) ? ChannelCodec.Text(root, "requestId") : null;
+                    if (correlationId != null && (correlationId.Length == 0 || correlationId.Length > 128)) throw new IOException("Invalid request correlation.");
                     var request = new ChannelRequest(id, method, args.GetRawText(), (percent, payload) =>
                     {
                         try
@@ -84,7 +88,7 @@ namespace TiaMcp.WorkerChannel
                             Emit(ChannelCodec.Progress(id, progress, percent, payload));
                         }
                         catch (Exception ex) { throw Fault(ex); }
-                    });
+                    }, correlationId);
                     RequireUsable();
                     dispatched = true;
                     var response = dispatch(request);

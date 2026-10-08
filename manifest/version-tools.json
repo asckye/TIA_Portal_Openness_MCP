@@ -428,7 +428,7 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 480,
+      "toolCount": 482,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -459,7 +459,6 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -489,10 +488,8 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
-        "ConnectIsolatedPortal",
         "ConnectOnlinePlc",
         "ConnectPortal",
-        "ConnectProject",
         "ConnectProjectToWorkspace",
         "CreateDevice",
         "CreateGsdDevice",
@@ -501,7 +498,10 @@
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcInstanceDb",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
         "CreatePlcTypeGroup",
+        "CreatePlcUserConstant",
         "CreateProject",
         "CreateVersionControlWorkspace",
         "DecodePlcSimaticMl",
@@ -633,6 +633,7 @@
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPlcWebDiagnostics",
         "GetPlcWebVars",
+        "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
         "GetProjectProtection",
@@ -722,9 +723,12 @@
         "ListPlcForceTables",
         "ListPlcSimAdvancedInstances",
         "ListPlcSoftwareUnits",
+        "ListPlcSystemConstants",
         "ListPlcSystemGroups",
         "ListPlcTagTables",
+        "ListPlcTags",
         "ListPlcTypes",
+        "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListSivarcBlockDefinitions",
@@ -769,7 +773,6 @@
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
         "ManageMotionAxis",
-        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOnlineDriveFunctions",
         "ManageOpcUaAccessControl",
@@ -834,6 +837,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanOnlineReadOnlyDataProvider",
         "PlanOnlineReadOnlyMonitoring",
+        "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PreviewToolBatch",
         "PreviewToolCall",
@@ -850,7 +854,6 @@
         "RepairAndReimportPlcBlock",
         "ResolveSivarcExpression",
         "RestartOpennessWorker",
-        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunClassicHmiOfflineValidationSuite",
         "RunClassicHmiTemporaryImportPreflight",
@@ -866,7 +869,6 @@
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
-        "SaveProjectCopy",
         "ScanAccessibleDevices",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
@@ -914,7 +916,7 @@
     },
     "21": {
       "profile": "full-engine",
-      "toolCount": 491,
+      "toolCount": 493,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -945,7 +947,6 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -975,10 +976,8 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
-        "ConnectIsolatedPortal",
         "ConnectOnlinePlc",
         "ConnectPortal",
-        "ConnectProject",
         "ConnectProjectToWorkspace",
         "CreateDevice",
         "CreateGsdDevice",
@@ -987,7 +986,10 @@
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcInstanceDb",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
         "CreatePlcTypeGroup",
+        "CreatePlcUserConstant",
         "CreateProject",
         "CreateVersionControlWorkspace",
         "DecodePlcSimaticMl",
@@ -1119,6 +1121,7 @@
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPlcWebDiagnostics",
         "GetPlcWebVars",
+        "GetPortalConnectionReadiness",
         "GetPortalInfo",
         "GetProjectInfo",
         "GetProjectProtection",
@@ -1209,9 +1212,12 @@
         "ListPlcForceTables",
         "ListPlcSimAdvancedInstances",
         "ListPlcSoftwareUnits",
+        "ListPlcSystemConstants",
         "ListPlcSystemGroups",
         "ListPlcTagTables",
+        "ListPlcTags",
         "ListPlcTypes",
+        "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListSafetyActivationTests",
@@ -1260,7 +1266,6 @@
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
         "ManageMotionAxis",
-        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOnlineDriveFunctions",
         "ManageOpcUaAccessControl",
@@ -1331,6 +1336,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanOnlineReadOnlyDataProvider",
         "PlanOnlineReadOnlyMonitoring",
+        "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PreviewToolBatch",
         "PreviewToolCall",
@@ -1347,7 +1353,6 @@
         "RepairAndReimportPlcBlock",
         "ResolveSivarcExpression",
         "RestartOpennessWorker",
-        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunClassicHmiOfflineValidationSuite",
         "RunClassicHmiTemporaryImportPreflight",
@@ -1363,7 +1368,6 @@
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
-        "SaveProjectCopy",
         "ScanAccessibleDevices",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
@@ -1411,8 +1415,8 @@
     }
   },
   "groupCounts": {
-    "shared-subset": 434,
-    "all-releases": 54,
+    "shared-subset": 420,
+    "all-releases": 62,
     "release-only": 11
   },
   "tools": [
@@ -1732,15 +1736,6 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
-      "name": "BuildProjectScaffold",
-      "releases": [
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
       "name": "BuildReleaseDiagnosticReport",
       "releases": [
         "20",
@@ -2032,15 +2027,6 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
-      "name": "ConnectIsolatedPortal",
-      "releases": [
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
       "name": "ConnectOnlinePlc",
       "releases": [
         "20",
@@ -2062,15 +2048,6 @@
         "21"
       ],
       "group": "all-releases",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
-      "name": "ConnectProject",
-      "releases": [
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2154,9 +2131,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2167,9 +2146,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2189,9 +2170,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3461,9 +3444,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4373,9 +4358,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4410,9 +4397,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4438,9 +4427,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4887,15 +4878,6 @@
     },
     {
       "name": "ManageMotionAxis",
-      "releases": [
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
-      "name": "ManageMultiuserSession",
       "releases": [
         "20",
         "21"
@@ -5547,9 +5529,11 @@
         "16",
         "17",
         "18",
-        "19"
+        "19",
+        "20",
+        "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5709,15 +5693,6 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
-      "name": "RetrieveProjectArchive",
-      "releases": [
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
       "name": "RunCapabilitySelfTest",
       "releases": [
         "14sp1",
@@ -5862,15 +5837,6 @@
         "21"
       ],
       "group": "all-releases",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
-      "name": "SaveProjectCopy",
-      "releases": [
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

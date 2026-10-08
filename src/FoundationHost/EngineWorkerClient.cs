@@ -5,16 +5,22 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.WorkerChannel;
+using TiaMcp.PlcWorker;
 
 namespace TiaMcp.LegacyHost;
 
-internal sealed class EngineWorkerClient(HostOptions options, string workerHash) : IEngineWorker
+internal sealed class EngineWorkerClient(HostOptions options, string workerHash) : IEngineWorker, IFoundationSessionWorker
 {
+    private static readonly AsyncLocal<EngineWorkerClient?> Held = new();
     private readonly SemaphoreSlim serial = new(1, 1);
     private readonly TimeSpan timeout = TimeSpan.FromSeconds(options.EngineTimeoutSeconds);
     private Process? process;
     private ChannelClient? channel;
     private bool faulted;
+    private bool attachAttempted;
+    private int? attachedProcessId;
+    private JsonObject? disconnectAcknowledgement;
+    private WorkerOutcomeState foundationOutcome = new();
     private JsonNode? binding;
     private JsonObject status = new() { ["readiness"] = new JsonObject { ["ready"] = false } };
     private readonly object stateSync = new();
@@ -28,6 +34,74 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
     public bool Faulted { get { lock (stateSync) return faulted || channel?.Poisoned == true || process?.HasExited == true; } }
     public JsonNode? Binding { get { lock (stateSync) return binding?.DeepClone(); } }
     public object SessionKey { get { lock (stateSync) return sessionKey; } }
+    public string ApprovalIdentity => Binding?.ToJsonString() ?? "{}";
+    public bool Poisoned => foundationOutcome.Poisoned || Faulted || SessionLocked?.Invoke() == true;
+    public bool Bundled => true;
+    public bool SharedSession => true;
+    public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession StagingOwner => TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner;
+    public IDisposable? EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request)
+        => TiaMcpServer.ModelContextProtocol.ImportStagingTools.UseSession(request);
+    public void MarkUncertain() => TiaMcpServer.ModelContextProtocol.McpServer.MarkSharedSessionUncertain();
+    public async Task<IDisposable?> AcquireLane(CancellationToken token)
+        => ReferenceEquals(Held.Value, this) ? null : await Acquire(token).ConfigureAwait(false);
+    public void ActivateLane(IDisposable? lane) { if (lane is Lane held) held.Activate(); }
+    internal JsonObject FoundationReadiness()
+    {
+        var readiness = LegacyHostPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
+        lock (stateSync)
+            if ((bool?)status["readiness"]?["ready"] == true) { readiness["ready"] = true; readiness["cause"] = null; }
+        return readiness;
+    }
+
+    public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+    {
+        bool sent = false;
+        using var lane = await AcquireLane(token).ConfigureAwait(false);
+        try
+        {
+            if (disconnectAcknowledgement != null)
+            {
+                if (operation == "Disconnect" && arguments.Count == 0) return disconnectAcknowledgement.DeepClone();
+                throw new InvalidOperationException("Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.");
+            }
+            if (Poisoned) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
+            if (!options.NativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
+            await Start(token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            ChannelLimits.CheckRequest("adapter." + operation, arguments.ToJsonString());
+            bool attach = operation == "Attach" || operation == WorkerOperations.SessionCandidate
+                && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
+            bool firstAttach = attach && !attachAttempted;
+            if (attach) attachAttempted = true;
+            sent = true;
+            string wire = await channel!.CallAsync("adapter." + operation, arguments.ToJsonString(),
+                WorkerClient.BindingChangeFor(operation, arguments), WorkerOperations.IsReadOnly(operation)
+                    || (bool?)arguments["dryRun"] == true || (string?)arguments["mode"] == "preview", timeout, CancellationToken.None,
+                firstAttach: firstAttach, correlationId: TiaOpenness.Shared.AuditInvocation.CurrentRequestId
+                    ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId).ConfigureAwait(false);
+            var result = JsonNode.Parse(wire);
+            foundationOutcome.AcceptResult(operation, arguments, result);
+            if (operation == "Attach") attachedProcessId = (int?)arguments["processId"];
+            if (operation == "Disconnect") disconnectAcknowledgement = DisconnectContract.Validate(result, true, attachedProcessId, true);
+            if (foundationOutcome.Poisoned) MarkUncertain();
+            await ReadStatus(CancellationToken.None).ConfigureAwait(false);
+            return result;
+        }
+        catch (ChannelFailure failure)
+        {
+            var error = new WorkerOperationException(failure.Message, failure.Code,
+                failure.Outcome == ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome == ChannelOutcome.ReadFailed ? "read-failed" : "unknown", failure.EvidenceJson);
+            error.Data["foundationRequestSent"] = sent;
+            if (failure.Outcome == ChannelOutcome.Unknown) { lock (stateSync) faulted = true; error.Data["foundationSessionPoisoned"] = true; }
+            throw error;
+        }
+        catch (Exception error)
+        {
+            error.Data["foundationRequestSent"] = sent;
+            if (sent) { lock (stateSync) faulted = true; error.Data["foundationSessionPoisoned"] = true; }
+            throw;
+        }
+    }
     public JsonObject Snapshot()
     {
         lock (stateSync)
@@ -53,7 +127,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
     private sealed class Lane(EngineWorkerClient owner) : IDisposable
     {
         private int disposed;
-        public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { Interlocked.Decrement(ref owner.active); owner.serial.Release(); } }
+        private EngineWorkerClient? previous;
+        internal void Activate() { previous = Held.Value; Held.Value = owner; }
+        public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { Held.Value = previous; Interlocked.Decrement(ref owner.active); owner.serial.Release(); } }
     }
 
     private async Task Start(CancellationToken token)
@@ -123,7 +199,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
             if ((string?)observed["releaseKey"] != options.ReleaseKey || !JsonNode.DeepEquals(observed["behaviorCapabilities"],
                 TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(EngineWorkerClient).Assembly, options.ReleaseKey)))
                 throw new InvalidDataException("Engine worker release or behavior capabilities mismatch.");
-            lock (stateSync) { status = observed; binding = observed["binding"]?.DeepClone(); return (JsonObject)status.DeepClone(); }
+            lock (stateSync) { status = observed; binding = observed["binding"]?.DeepClone(); if (observed["nativeFault"] != null) faulted = true; return (JsonObject)status.DeepClone(); }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch { lock (stateSync) faulted = true; throw; }
@@ -142,7 +218,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
             {
                 previousGenerations.Add(previous);
                 while (previousGenerations.Count > 16) previousGenerations.RemoveAt(0);
-                Stop(); faulted = false; binding = null; sessionKey = new object(); generation++;
+                Stop(); faulted = false; attachAttempted = false; attachedProcessId = null; disconnectAcknowledgement = null; foundationOutcome = new WorkerOutcomeState(); binding = null; sessionKey = new object(); generation++;
+                FoundationCandidateSession.Reset(this);
                 status = new JsonObject { ["readiness"] = new JsonObject { ["ready"] = false } };
             }
             await ReadStatus(token).ConfigureAwait(false);

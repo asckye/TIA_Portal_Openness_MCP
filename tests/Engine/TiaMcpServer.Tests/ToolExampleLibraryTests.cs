@@ -32,7 +32,7 @@ internal static class ToolExampleLibraryTests
             && oldPath["example"]!["bindings"]!.AsArray().Any(p => (string?)p == "path")
             && ((string?)oldPath["example"]!["request"]!["params"]!["arguments"]!["path"])?.Contains("closed project file for this release") == true,
             "Foundation open example binds an exact closed target file for the selected release");
-        var modernPath = ToolUsageCatalog.InlineCalls("20").First(r => (string?)r!["tool"] == "OpenProject")!;
+        var modernPath = ToolUsageCatalog.InlineCalls("20", engineSource: true).First(r => (string?)r!["tool"] == "OpenProject")!;
         check(((string)modernPath["arguments"]!["path"]!).EndsWith(".ap20"), "inline discovery uses the same V20 example");
         var objectSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""softwarePath"",""objectPath"",""properties""],""properties"":{""softwarePath"":{""type"":""string""},""objectPath"":{""type"":""array""},""properties"":{""type"":""object""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
         var objectUsage = ToolUsageCatalog.Describe("SetUnifiedObjectProperties", "21", "full-engine", "", objectSchema);

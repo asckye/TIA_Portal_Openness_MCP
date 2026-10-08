@@ -45,7 +45,7 @@ public sealed class BehaviorParityTests
                 Assert.True(JsonNode.DeepEquals(BehaviorParityCases.Project(engine), BehaviorParityCases.Project(shared)));
                 Assert.Contains(message, (string?)engine["error"]?["message"]);
                 Assert.Equal(parameter, (string?)engine["error"]?["details"]?["parameter"]);
-                foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+                foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
                 {
                     Exception cause = new AdapterPreconditionException(message, parameter, argument);
                     if (wrapped) cause = new InvalidOperationException("Private wrapper diagnostic.", cause);
@@ -167,7 +167,7 @@ public sealed class BehaviorParityTests
         if(scenario.StartsWith("disabled-",StringComparison.Ordinal)) { await DisabledBatch(engine,scenario,code);return; }
         bool enabled=!scenario.EndsWith("-disabled",StringComparison.Ordinal);
         if(!enabled) scenario=scenario.Substring(0,scenario.Length-9);
-        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         {
             if (scenario.StartsWith("staging-", StringComparison.Ordinal))
             {

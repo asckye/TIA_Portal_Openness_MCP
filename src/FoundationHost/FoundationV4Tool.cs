@@ -58,6 +58,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
         CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait;
     private readonly Func<JsonObject>? readinessForTest;
+    private readonly bool sharedSession;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -67,12 +68,13 @@ internal sealed class FoundationV4Tool : McpServerTool
         Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null,
         Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
             CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null,
-        Func<JsonObject>? readinessForTest = null)
+        Func<JsonObject>? readinessForTest = null, bool sharedSession = false)
     {
         this.inner = inner; this.release = release;
         this.approvalSettings = approvalSettings;
         this.approvalWait = approvalWait;
         this.readinessForTest = readinessForTest;
+        this.sharedSession = sharedSession || inner is FoundationTool { SharedWorker: true };
         var source = inner.ProtocolTool;
         deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
@@ -174,13 +176,16 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        using var sharedStagingSession = (inner as FoundationTool)?.EnterSharedRequest(request);
         using var stagingSession = (inner as FoundationTool)?.EnterStagingRequest();
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
         bool write = IsApprovalWrite(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
-        string id = Meta.Correlate(null);
+        string id = Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId
+            ?? (sharedSession
+                ? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId : null));
         using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "foundation", release, tool.Name, id);
         var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value, id, audit, write);
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
@@ -302,7 +307,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (inner is FoundationTool targetLaneTool)
             {
                 lane = await targetLaneTool.AcquireLane(cancellationToken);
-                WorkerClient.ActivateLane(lane);
+                targetLaneTool.ActivateLane(lane);
             }
             if (inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,

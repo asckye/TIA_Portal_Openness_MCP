@@ -26,6 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private readonly ConditionalWeakTable<ImportStagingSession, Lazy<ImportStagingStore>> sessionStores = new ConditionalWeakTable<ImportStagingSession, Lazy<ImportStagingStore>>();
         private static readonly ConcurrentDictionary<string, ImportStagingSession> HttpSessions = new ConcurrentDictionary<string, ImportStagingSession>(StringComparer.Ordinal);
         private static readonly AsyncLocal<ImportStagingSession?> CurrentSession = new AsyncLocal<ImportStagingSession?>();
+        internal static ImportStagingSession? CurrentOwner => CurrentSession.Value;
         internal const string SessionMetadata = "tiaMcpStagingSession";
         internal static bool HttpTransport { get; set; }
         internal static void RegisterHttpSession(ImportStagingSession session) => HttpSessions[session.SessionId] = session;

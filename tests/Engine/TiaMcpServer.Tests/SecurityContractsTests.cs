@@ -237,7 +237,7 @@ namespace TiaMcpServer.Tests
         {
             foreach (var pair in catalog.Methods)
             {
-                var row = TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey).Single(r => (string?)r!["currentName"] == pair.Key)!;
+                var row = TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey, engineSource: true).Single(r => (string?)r!["currentName"] == pair.Key)!;
                 Assert.Equal(4, (int)row["envelopeVersion"]!);
                 var schema = McpServer.ToolInputSchema(pair.Key, pair.Value);
                 Assert.Null(McpServer.ValidateV4Arguments(pair.Value, JsonSerializer.SerializeToElement(row["arguments"]), schema));

@@ -30,6 +30,14 @@ namespace TiaMcp.PlcFoundation
     }
     internal static class PlcLifecyclePolicy
     {
+        internal static System.Threading.ApartmentState OwnerApartment(string release)
+            => release == "20" || release == "21" ? System.Threading.ApartmentState.MTA : System.Threading.ApartmentState.STA;
+        internal static void RequireOwner(string release, int ownerThread)
+        {
+            if (System.Threading.Thread.CurrentThread.ManagedThreadId != ownerThread)
+                throw new InvalidOperationException(release == "20" || release == "21"
+                    ? "Use the owning MTA thread; cross-thread native access is refused." : "Use the owning STA thread; cross-thread native access is refused.");
+        }
         internal static void RequireLocalSessionExecution(bool localSession,bool dryRun)
         {
             if(localSession && !dryRun) throw new AdapterPreconditionException("Local-session mutation is blocked until session kind, server-lock effects and project identity are reconciled. Opening an exclusive session can lock a server project; preview grants no execution permission.",isArgument:false);

@@ -65,13 +65,19 @@
         "expect": "Current process/project rows; select the operator-intended PID, processStartUtc and projectPath."
       },
       {
-        "tool": "ConnectProject",
+        "tool": "ConnectPortal",
         "arguments": {
-          "processId": 1234,
-          "processStartUtc": "<exact UTC start time from the selected row>",
-          "projectPath": "C:\\Projects\\Example.ap21"
+          "processId": 1234
         },
-        "expect": "Bound to the exact selected process and project; no process starts automatically."
+        "expect": "Attach explicitly to the selected process; no project is implicitly bound."
+      },
+      {
+        "tool": "AttachOpenProject",
+        "arguments": {
+          "projectName": "Project_1",
+          "expectedProjectFile": "C:/Examples/Project_1.ap{extension}"
+        },
+        "expect": "Bind the exact open project."
       },
       {
         "tool": "GetSessionState",
@@ -133,20 +139,28 @@
         "tool": "GenerateBlocksFromExternalSource",
         "arguments": {
           "softwarePath": "PLC_1",
-          "externalSourceName": "<Block>"
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "generated blocks listed"
       },
       {
         "tool": "CompilePlcDiagnostics",
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "ErrorCount 0"
       },
       {
         "tool": "SaveProject",
-        "arguments": {},
+        "arguments": {
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
         "expect": "IsModified false"
       }
     ]
@@ -154,8 +168,8 @@
   {
     "id": "sequence/plc-s7dcl-import",
     "topic": "plc-s7dcl-import",
-    "purpose": "Add LAD / FBD logic from S7DCL text documents (preferred over hand-written FlgNet XML).",
-    "preconditions": "connect-project done; the .s7dcl (+ .s7res) files are on the TIA machine, UTF-8 WITH BOM.",
+    "purpose": "Preview one admitted ordinary GlobalDB document set through the shared Foundation import candidate.",
+    "preconditions": "ConnectPortal then AttachOpenProject done; an ordinary GlobalDB .s7dcl (+ required V20 .s7res) set exists on the TIA machine. FC/FB/LAD documents remain refused.",
     "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
     "releaseKeys": [
       "20",
@@ -170,22 +184,30 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "groupPath": "",
-          "importPath": "C:\\Temp\\docs",
-          "fileNameWithoutExtension": "<Block>",
-          "importOption": "Override"
+          "importPath": "C:\\Examples\\documents",
+          "fileNameWithoutExtension": "DB_Status",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
-        "expect": "block imported"
+        "expect": "review the preview plan and admitted GlobalDB identity; no import during dryRun"
       },
       {
         "tool": "CompilePlcDiagnostics",
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "ErrorCount 0"
       },
       {
         "tool": "SaveProject",
-        "arguments": {},
+        "arguments": {
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
         "expect": "saved"
       }
     ]
@@ -291,7 +313,11 @@
       },
       {
         "tool": "SaveProject",
-        "arguments": {},
+        "arguments": {
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
         "expect": "saved"
       }
     ]
@@ -313,7 +339,7 @@
       {
         "tool": "ListPlcWatchTables",
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "<exact softwarePath from GetProjectTree>"
         },
         "expect": "existing tables"
       },
@@ -454,7 +480,9 @@
       {
         "tool": "CompilePlcSoftware",
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "0 errors"
       },
@@ -640,8 +668,7 @@
       {
         "tool": "SearchHardwareCatalog",
         "arguments": {
-          "keyword": "1515-2 PN",
-          "limit": 10
+          "keyword": "1513"
         },
         "expect": "order numbers and versions"
       },
@@ -796,25 +823,32 @@
       {
         "tool": "ExportPlcBlock",
         "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "<Group/Block>",
-          "exportPath": "C:\\Temp"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "blockPath": "Main",
+          "exportPath": "<existing caller-selected export directory>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Inspect V4 data and exported-file evidence; keep the exact output path and target release."
       },
       {
         "tool": "ImportPlcBlock",
         "arguments": {
-          "softwarePath": "PLC_1",
-          "groupPath": "<Group>",
-          "importPath": "C:\\Temp\\<Block>.xml"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "importPath": "<data.outputFile from completed ExportPlcBlock>",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "expect": "imported"
       },
       {
         "tool": "CompilePlcDiagnostics",
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "ErrorCount 0"
       }
@@ -872,7 +906,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -996,7 +1032,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1061,7 +1099,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1203,7 +1243,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1322,7 +1364,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1369,7 +1413,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1493,7 +1539,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1617,7 +1665,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1727,52 +1777,64 @@
       {
         "tool": "ExportPlcTagTable",
         "arguments": {
-          "softwarePath": "PLC_1",
-          "tagTableName": "<existing caller-selected table>",
-          "exportPath": "C:\\Examples\\exports\\Tags.xml"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "tagTableName": "默认变量表",
+          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Read the returned export file path; edit the file on the TIA machine before import, retaining the table name and native format."
       },
       {
         "tool": "ImportPlcTagTable",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "folderPath": "",
-          "importPath": "C:\\Examples\\exports\\Tags.xml"
+          "importPath": "<data.outputFile from completed ExportPlcTagTable>",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "expect": "Approve the current full-engine import; inspect its V4 outcome and domain evidence."
       },
       {
         "tool": "ExportPlcTagTable",
         "arguments": {
-          "softwarePath": "PLC_1",
-          "tagTableName": "<existing caller-selected table>",
-          "exportPath": "C:\\Examples\\exports\\Tags-verified.xml"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "tagTableName": "默认变量表",
+          "exportPath": "<new absolute Tags.xml file in an existing caller-selected directory>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Re-export to a second new file and compare the actual table content with the imported XML; the full engine has no ListPlcTags tool."
       },
       {
         "tool": "ExportPlcBlock",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main",
-          "exportPath": "C:\\Examples\\exports"
+          "exportPath": "<existing caller-selected export directory>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Use the returned Main.xml path; move an old output first. Edit that file while retaining block name/number and native format."
       },
       {
         "tool": "ImportPlcBlock",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "groupPath": "",
-          "importPath": "C:\\Examples\\exports\\Main.xml"
+          "importPath": "<data.outputFile from completed ExportPlcBlock>",
+          "dryRun": true,
+          "confirm": false,
+          "overwrite": false
         },
         "expect": "Approve the current full-engine import and inspect readback evidence."
       },
       {
         "tool": "GetPlcBlockInfo",
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
           "blockPath": "Main"
         },
         "expect": "Inspect the imported block and consistency state."
@@ -1780,7 +1842,9 @@
       {
         "tool": "CompilePlcSoftware",
         "arguments": {
-          "softwarePath": "PLC_1"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Approve real compilation and inspect compiler state/errors."
       }
@@ -1798,7 +1862,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1898,7 +1964,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -1998,7 +2066,9 @@
       "16",
       "17",
       "18",
-      "19"
+      "19",
+      "20",
+      "21"
     ],
     "profile": "plc-foundation",
     "kind": "call-sequence",
@@ -2159,24 +2229,28 @@
       {
         "tool": "ImportPlcExternalSource",
         "arguments": {
-          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "<files[0].path from staging>"
+          "filePath": "C:/Examples/FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Current full-engine source import is a separate approved write; retain source name from ListPlcExternalSources."
       },
       {
         "tool": "GenerateBlocksFromExternalSource",
         "arguments": {
-          "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "externalSourceName": "<exact imported source name>"
+          "softwarePath": "PLC_1",
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Current full-engine generation is a separate approved write; inspect returned objects, then compile separately."
       },
       {
         "tool": "CleanupStagedImportFiles",
         "arguments": {
-          "batchId": "<batchId from staging>",
+          "batchId": "<batchId from StageImportFiles or ListStagedImportFiles>",
           "dryRun": false
         },
         "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
@@ -2202,9 +2276,9 @@
         "arguments": {
           "files": [
             {
-              "fileName": "ExampleUDT.scl",
-              "kind": "udt",
-              "content": "TYPE \"ExampleUDT\"\nVERSION : 0.1\n   STRUCT\n      Ready : Bool;\n   END_STRUCT;\nEND_TYPE\n"
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
           "dryRun": true
@@ -2216,9 +2290,9 @@
         "arguments": {
           "files": [
             {
-              "fileName": "ExampleUDT.scl",
-              "kind": "udt",
-              "content": "TYPE \"ExampleUDT\"\nVERSION : 0.1\n   STRUCT\n      Ready : Bool;\n   END_STRUCT;\nEND_TYPE\n"
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
           "dryRun": false
@@ -2228,24 +2302,28 @@
       {
         "tool": "ImportPlcExternalSource",
         "arguments": {
-          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "softwarePath": "PLC_1",
           "groupPath": "",
-          "filePath": "<files[0].path from staging>"
+          "filePath": "C:/Examples/FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Current full-engine source import is a separate approved write; retain source name from ListPlcExternalSources."
       },
       {
         "tool": "GenerateBlocksFromExternalSource",
         "arguments": {
-          "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "externalSourceName": "<exact imported source name>"
+          "softwarePath": "PLC_1",
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Current full-engine generation is a separate approved write; inspect returned objects, then compile separately."
       },
       {
         "tool": "CleanupStagedImportFiles",
         "arguments": {
-          "batchId": "<batchId from staging>",
+          "batchId": "<batchId from StageImportFiles or ListStagedImportFiles>",
           "dryRun": false
         },
         "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
@@ -2271,14 +2349,9 @@
         "arguments": {
           "files": [
             {
-              "fileName": "ExampleUDT.xml",
-              "kind": "udt",
-              "content": "<complete exact-release native Document XML for ExampleUDT>"
-            },
-            {
-              "fileName": "Main.xml",
-              "kind": "simaticml",
-              "content": "<complete exact-release native Document XML for Main>"
+              "fileName": "FC_Add.scl",
+              "kind": "scl",
+              "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
           "dryRun": false
@@ -2289,16 +2362,13 @@
         "tool": "ImportPlcProgramFromDirectory",
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "sourceDir": "<directory from staging>",
-          "overwrite": false,
-          "importOrder": [
-            "ExampleUDT.xml",
-            "Main.xml"
-          ],
-          "compileAfter": false,
-          "stopOnImportFailure": true,
+          "sourceDir": "<existing dedicated import directory containing only intended native XML files>",
           "dryRun": true,
-          "regexName": "^(ExampleUDT|Main)\\.xml$"
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "expect": "Preview initial create-only import and retain its planHash."
       },
@@ -2306,26 +2376,27 @@
         "tool": "ImportPlcProgramFromDirectory",
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "sourceDir": "<directory from staging>",
-          "overwrite": false,
-          "importOrder": [
-            "ExampleUDT.xml",
-            "Main.xml"
-          ],
-          "compileAfter": false,
-          "stopOnImportFailure": true,
+          "sourceDir": "<existing dedicated import directory containing only intended native XML files>",
           "dryRun": false,
           "confirm": true,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true,
           "expectedProjectFile": "<exact bound project file>",
-          "expectedPlanHash": "<planHash from program preview>",
-          "regexName": "^(ExampleUDT|Main)\\.xml$"
+          "expectedPlanHash": "<planHash from this same preview>",
+          "importOrder": [
+            "Main.xml"
+          ]
         },
         "expect": "Approve the initial import using its preview hash; newly imported objects can remain inconsistent."
       },
       {
         "tool": "CompilePlcSoftware",
         "arguments": {
-          "softwarePath": "<exact softwarePath from GetProjectTree>"
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Run compilation and resolve COMPILE_ERRORS before overwrite. The native result is completed even when it contains errors; inspect counts and full messages."
       },
@@ -2333,16 +2404,13 @@
         "tool": "ImportPlcProgramFromDirectory",
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "sourceDir": "<directory from staging>",
-          "overwrite": true,
-          "importOrder": [
-            "ExampleUDT.xml",
-            "Main.xml"
-          ],
-          "compileAfter": false,
-          "stopOnImportFailure": true,
+          "sourceDir": "<existing dedicated import directory containing only intended native XML files>",
           "dryRun": true,
-          "regexName": "^(ExampleUDT|Main)\\.xml$"
+          "confirm": false,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true
         },
         "expect": "Review planHash and replacement blockers. If replace-blocked appears, compile/resolve protection and preview again. With approval disabled, applying a stale hash returns INVALID_ARGUMENT before backup; a reviewed blocked plan returns PRECONDITION_FAILED before backup. Both leave the session usable."
       },
@@ -2350,19 +2418,18 @@
         "tool": "ImportPlcProgramFromDirectory",
         "arguments": {
           "softwarePath": "<exact softwarePath from GetProjectTree>",
-          "sourceDir": "<directory from staging>",
-          "overwrite": true,
-          "importOrder": [
-            "ExampleUDT.xml",
-            "Main.xml"
-          ],
-          "compileAfter": false,
-          "stopOnImportFailure": true,
+          "sourceDir": "<existing dedicated import directory containing only intended native XML files>",
           "dryRun": false,
           "confirm": true,
+          "regexName": "^Main\\.xml$",
+          "overwrite": false,
+          "compileAfter": false,
+          "stopOnImportFailure": true,
           "expectedProjectFile": "<exact bound project file>",
-          "expectedPlanHash": "<planHash from program preview>",
-          "regexName": "^(ExampleUDT|Main)\\.xml$"
+          "expectedPlanHash": "<planHash from this same preview>",
+          "importOrder": [
+            "Main.xml"
+          ]
         },
         "expect": "Approve once; exports of every replacement precede imports. On failure inspect recoveryDirectory, restored, remainingChanged and each restoreStatus. OUTCOME_UNKNOWN remains unknown."
       },
@@ -2466,13 +2533,19 @@
         "expect": "Current process/project rows; select the operator-intended PID, processStartUtc and projectPath."
       },
       {
-        "tool": "ConnectProject",
+        "tool": "ConnectPortal",
         "arguments": {
-          "processId": 1234,
-          "processStartUtc": "<exact UTC start time from the selected row>",
-          "projectPath": "C:\\Projects\\Example.ap21"
+          "processId": 1234
         },
-        "expect": "Bound to the exact selected process and project; no process starts automatically."
+        "expect": "Attach explicitly to the selected process; no project is implicitly bound."
+      },
+      {
+        "tool": "AttachOpenProject",
+        "arguments": {
+          "projectName": "Project_1",
+          "expectedProjectFile": "C:/Examples/Project_1.ap{extension}"
+        },
+        "expect": "Bind the exact open project."
       },
       {
         "tool": "GetSessionState",
@@ -2487,8 +2560,7 @@
       {
         "tool": "SearchHardwareCatalog",
         "arguments": {
-          "keyword": "1513",
-          "limit": 50
+          "keyword": "1513"
         },
         "expect": "Results contain articleNumber (preserve spaces, e.g. 6ES7 513-1AM03-0AB0), version (e.g. V3.1) and typeIdentifier (OrderNumber:6ES7 513-1AM03-0AB0/V3.1). Copy articleNumber AND version from the SAME row; a pair assembled from different rows is refused with INVALID_ARGUMENT naming preferredMlfb/preferredVersion and pointing to SearchHardwareCatalog. Do not substitute typeIdentifierNormalized for the exact catalog spelling."
       },
@@ -2498,7 +2570,9 @@
           "preferredMlfb": "6ES7 513-1AM03-0AB0",
           "preferredVersion": "V3.1",
           "deviceName": "PLC_2",
-          "family": "S7-1500"
+          "family": "S7-1500",
+          "dryRun": true,
+          "confirm": false
         },
         "expect": "Bind both preferred fields to one installed row; complete approval when enabled."
       },
