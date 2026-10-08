@@ -58,7 +58,10 @@ namespace TiaMcpServer.Worker
             using var services = new ServiceCollection().AddLogging().AddEngine(includeSession: OpennessReadiness.Ready).BuildServiceProvider();
             EngineServices.SetServiceProvider(services);
             var host = new EngineWorkerHost();
-            if (OpennessReadiness.Ready) host.InitializeFoundation();
+            // Methods that touch Siemens types are only compiled when Openness is ready; without TIA their JIT
+            // fails to load the Siemens assemblies and the worker would crash on its way out.
+            bool foundationStarted = OpennessReadiness.Ready;
+            if (foundationStarted) host.InitializeFoundation();
             PortalFailureClassifier.ProcessLostObserved += host.ProcessLost;
             try
             {
@@ -72,7 +75,7 @@ namespace TiaMcpServer.Worker
             finally
             {
                 PortalFailureClassifier.ProcessLostObserved -= host.ProcessLost;
-                host.ReleaseFoundation();
+                if (foundationStarted) host.ReleaseFoundation();
             }
         }
 

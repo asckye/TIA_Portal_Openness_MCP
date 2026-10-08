@@ -1,6 +1,8 @@
 """Exercise real MCP STDIO/HTTP hosts against a separate synthetic worker. No TIA calls."""
 import argparse
 from contextlib import nullcontext
+import ctypes
+from ctypes import wintypes
 from tool_usage_checks import check_usage
 import json
 import os
@@ -151,12 +153,47 @@ def exercise_engine(client, key):
     return len(tools)
 
 
+class ProcessEntry(ctypes.Structure):
+    _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD), ('th32ProcessID', wintypes.DWORD),
+                ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', wintypes.DWORD), ('cntThreads', wintypes.DWORD),
+                ('th32ParentProcessID', wintypes.DWORD), ('pcPriClassBase', ctypes.c_long), ('dwFlags', wintypes.DWORD),
+                ('szExeFile', ctypes.c_wchar * 260)]
+
+
+def worker_handles(host_pid):
+    """Open a wait handle on every engine worker the host started."""
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    snapshot = kernel.CreateToolhelp32Snapshot(2, 0)
+    entry, handles = ProcessEntry(), []
+    entry.dwSize = ctypes.sizeof(ProcessEntry)
+    try:
+        more = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+        while more:
+            if entry.th32ParentProcessID == host_pid and entry.szExeFile.lower().startswith('tiamcp.engine.'):
+                handles.append(kernel.OpenProcess(0x00100000, False, entry.th32ProcessID))
+            more = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+    finally:
+        kernel.CloseHandle(snapshot)
+    return kernel, handles
+
+
+def engine_worker_exits_cleanly(key, env):
+    # Without TIA the worker must leave through its normal path; a crash there leaves WER holding its files.
+    worker = ROOT / f'runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe'
+    done = subprocess.run([str(worker), '--engine-worker', '--bundle-root', str(ROOT), '--tia-major-version', key],
+                          input=b'', capture_output=True, env=dict(env, TIA_MCP_ENGINE_NONCE='0' * 64), timeout=120)
+    assert done.returncode == 0, (key, done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:])
+
+
 def engine_transports(args, temp, counts):
     for key in (key for key in args.releases if key in ('20', '21')):
         data = temp / ('data-' + key)
         data.mkdir()
         env = dict(os.environ, TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
         env.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
+        engine_worker_exits_cleanly(key, env)
         command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()),
                    '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full']
         with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
@@ -186,6 +223,15 @@ def engine_transports(args, temp, counts):
                 exercise_engine(first, key)
                 exercise_engine(second, key)
                 assert first.sid and second.sid and first.sid != second.sid
+                # The host's job object ends its workers with it, even when the host is killed.
+                kernel, handles = worker_handles(process.pid)
+                assert handles, 'Engine worker not found under the HTTP host'
+                process.kill(); process.wait(10)
+                try:
+                    assert all(kernel.WaitForSingleObject(handle, 5000) == 0 for handle in handles), 'Engine worker outlived the killed host'
+                finally:
+                    for handle in handles:
+                        kernel.CloseHandle(handle)
             finally:
                 process.terminate(); process.wait(10)
 
