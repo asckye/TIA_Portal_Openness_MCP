@@ -43,6 +43,7 @@
     {
       "entries": [
         "AttachOpenProject",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
         "OpenProject"
       ],
@@ -54,7 +55,8 @@
       "entries": [
         "CloseProject",
         "DisconnectPortal",
-        "SaveProject"
+        "SaveProject",
+        "SaveProjectCopy"
       ],
       "family": "P6-CLOSE",
       "l5": "NOT RUN",
@@ -7868,6 +7870,35 @@
       }
     },
     {
+      "descriptionSha256": "33c4b0ac163114eb3bd1ed621a8ce26c2aa5ea4cc855ace355949bac3cf0db2d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "spec": {
+            "description": "spec: JSON object describing the project to generate. See tool description for keys.",
+            "examples": [
+              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "spec"
+        ],
+        "type": "object"
+      },
+      "name": "BuildProjectScaffold",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "a71accea88bb04bdf79ceb757392ad7e26efc9bc5151cbc9bb8c6de62a158e7f",
       "inputSchema": {
         "additionalProperties": false,
@@ -14021,6 +14052,16 @@
         "type": "object"
       },
       "name": "ConnectDeviceNodesToProfinetSubnet",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "517eedef1316de030379ef1692791436c6010cd8031d40032d39e72d748e95ce",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ConnectIsolatedPortal",
       "outputSchema": null
     },
     {
@@ -32367,6 +32408,83 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "ae4d2d56173981eb2545824f2ff61d4513cbb502dc040fc4560c02ec618df69f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "read | listServerProjects | readLockState | listLocalSessions | connectServer | disconnectServer | commit. ",
+            "enum": [
+              "read",
+              "listServerProjects",
+              "readLockState",
+              "listLocalSessions",
+              "connectServer",
+              "disconnectServer",
+              "commit"
+            ],
+            "type": "string"
+          },
+          "commitComment": {
+            "default": "",
+            "description": "commitComment: comment text of the commit.",
+            "type": "string"
+          },
+          "confirmChange": {
+            "default": false,
+            "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "host": {
+            "default": "",
+            "description": "host: server host name or IP address.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "port": {
+            "default": 0,
+            "description": "port: TCP port (0 = default).",
+            "type": "integer"
+          },
+          "projectName": {
+            "default": "",
+            "description": "projectName: exact project name.",
+            "type": "string"
+          },
+          "protocol": {
+            "default": "Https",
+            "description": "protocol: Https or Http.",
+            "type": "string"
+          },
+          "serverName": {
+            "default": "",
+            "description": "serverName: multiuser server name.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ManageMultiuserSession",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "c4ae4c3b3df766ab44e05aa9ddea21e2af388ff4089f1258b29f5f0bdff41cf2",
       "inputSchema": {
         "additionalProperties": false,
@@ -39181,6 +39299,39 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "d83f95c39b8e526f8673d17973052006093d94daeed6204944e9479010912de8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "archivePath": {
+            "description": "archivePath: full path of the project archive (.zap2x) on the TIA machine.",
+            "type": "string"
+          },
+          "destinationDirectory": {
+            "description": "destinationDirectory: folder on the TIA machine that receives the output.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "upgrade": {
+            "default": false,
+            "description": "upgrade: true opens with an upgrade to the current TIA version when the file is older.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archivePath",
+          "destinationDirectory"
+        ],
+        "type": "object"
+      },
+      "name": "RetrieveProjectArchive",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
       "inputSchema": {
         "additionalProperties": false,
@@ -40014,6 +40165,24 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "606bc7144cced0e172fd43bbe7736c74fcb3cd2da2ef4dccd2d1d5c2ee652b9c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "newProjectPath": {
+            "description": "newProjectPath: defines the new path where to save the project",
+            "type": "string"
+          }
+        },
+        "required": [
+          "newProjectPath"
+        ],
+        "type": "object"
+      },
+      "name": "SaveProjectCopy",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "8e99fef5e0f0a097812964e34c059f0ec49f6730d29bcb2e1d4f328ab9d3cb54",

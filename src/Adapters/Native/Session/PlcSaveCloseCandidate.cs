@@ -18,7 +18,7 @@ namespace TiaMcp.PlcFoundation
                     saveCloseAdapter = new SaveCloseAdapter(() => portal, () => project,
                         () => new SessionState { ProcessId = lifecycle.ProcessId, ProcessStartUtc = lifecycle.ProcessId.HasValue ? sessionCandidateStart : null,
                             ProjectFile = lifecycle.ProjectFile, Ownership = project == null ? "none" : lifecycle.OwnsProject ? "owned" : "borrowed" },
-                        () => project, () => ownsPortal == false, () => Check(true),
+                        () => project, () => PlcDisconnectState.Supports(ownsPortal,sharedPortal), () => Check(true),
                         () => { project = null; lifecycle.Unbound(); sessionCandidateAdapter = null;
 #if PLC_SAFETY
                             localSession = null;

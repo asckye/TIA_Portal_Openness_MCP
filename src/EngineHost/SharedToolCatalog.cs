@@ -8,12 +8,11 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.LegacyHost
 {
-    // Lifecycle operations which would create, replace or close the Foundation binding.
+    // Pure duplicate of ConnectPortal followed by AttachOpenProject.
     internal static class SharedToolPolicy
     {
         internal static readonly ISet<string> Removed = new HashSet<string>(StringComparer.Ordinal) {
-            "ConnectProject", "ConnectIsolatedPortal", "BuildProjectScaffold", "RetrieveProjectArchive",
-            "SaveProjectCopy", "ManageMultiuserSession"
+            "ConnectProject"
         };
         internal static readonly string[] Bridge = { "FindTools", "CallTool", "PreviewToolCall", "ListToolCategories",
             "GetOpennessWorkerStatus", "RestartOpennessWorker" };

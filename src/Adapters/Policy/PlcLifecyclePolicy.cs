@@ -27,6 +27,16 @@ namespace TiaMcp.PlcFoundation
         { RequireBound(); if(!OwnsProject) throw new AdapterPreconditionException("Borrowed projects or borrowed local sessions are never closed.",isArgument:false); if(isModified) throw new AdapterPreconditionException("Save explicitly before closing; implicit discard is refused.",isArgument:false); }
         internal void Unbound() { RequireBound(); ProjectFile=null; OwnsProject=false; IsLocalSession=false; }
         internal void Detached() { ProjectFile=null; OwnsProject=false; IsLocalSession=false; ProcessId=null; }
+        internal bool Adopt(PlcRuntimeState state)
+        {
+            string? file=state.ProjectFile==null ? null : MutationIdentityPolicy.AbsoluteFile(state.ProjectFile);
+            if(file!=null && !state.ProcessId.HasValue) throw new InvalidOperationException("A shared project requires a reserved process.");
+            bool changed=ProcessId!=state.ProcessId || !string.Equals(ProjectFile,file,StringComparison.OrdinalIgnoreCase)
+                || OwnsProject!=(file!=null && state.OwnsProject) || IsLocalSession!=(file!=null && state.IsLocalSession);
+            ProcessId=state.ProcessId; ProjectFile=file; OwnsProject=file!=null && state.OwnsProject;
+            IsLocalSession=file!=null && state.IsLocalSession;
+            return changed;
+        }
     }
     internal static class PlcLifecyclePolicy
     {

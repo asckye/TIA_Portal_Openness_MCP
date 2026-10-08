@@ -3078,6 +3078,16 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "BuildProjectScaffold": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "BuildReleaseDiagnosticReport": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -3456,6 +3466,16 @@
         "guides/skills/devices-and-hardware/SKILL.md",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
         "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ConnectIsolatedPortal": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
       ],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
@@ -7625,6 +7645,16 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ManageMultiuserSession": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ManageNetworkDomain": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -8918,6 +8948,16 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "RetrieveProjectArchive": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "RunCapabilitySelfTest": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -9043,6 +9083,16 @@
       "manualReferences": []
     },
     "SaveProject": {
+      "relationship": "related-api-patterns",
+      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
+      "documents": [
+        "guides/skills/session-and-project/SKILL.md",
+        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+      ],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "SaveProjectCopy": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
       "documents": [
@@ -31928,6 +31978,15 @@
           "inline": true,
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         },
+        "ConnectIsolatedPortal": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-SESSION is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ]
+        },
         "ConnectProjectToWorkspace": {
           "arguments": {
             "dryRun": true
@@ -38140,6 +38199,84 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         },
+        "ManageMultiuserSession": {
+          "arguments": {
+            "confirmChange": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "serverName": {
+              "exampleValue": "<serverName from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "projectName": {
+              "exampleValue": "Example"
+            },
+            "protocol": {
+              "exampleValue": "Https"
+            },
+            "host": {
+              "exampleValue": "192.0.2.10"
+            },
+            "port": {
+              "exampleValue": 0
+            },
+            "commitComment": {
+              "exampleValue": "<commitComment from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "listServerProjects": {
+              "arguments": {
+                "action": "listServerProjects",
+                "serverName": "<serverName from this operation's target or user input>"
+              }
+            },
+            "readLockState": {
+              "arguments": {
+                "action": "readLockState"
+              }
+            },
+            "listLocalSessions": {
+              "arguments": {
+                "action": "listLocalSessions"
+              }
+            },
+            "connectServer": {
+              "arguments": {
+                "action": "connectServer",
+                "serverName": "<serverName from this operation's target or user input>",
+                "protocol": "Https",
+                "host": "192.0.2.10",
+                "port": 0
+              }
+            },
+            "disconnectServer": {
+              "arguments": {
+                "action": "disconnectServer"
+              }
+            },
+            "commit": {
+              "arguments": {
+                "action": "commit",
+                "commitComment": "<commitComment from this operation's target or user input>"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
         "ManageNetworkDomain": {
           "arguments": {
             "subnetName": "PN_IE_1",
@@ -43925,6 +44062,21 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         },
+        "RetrieveProjectArchive": {
+          "arguments": {
+            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "destinationDirectory": "C:\\Examples\\restored",
+            "dryRun": true
+          },
+          "parameters": {
+            "upgrade": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
         "RunCapabilitySelfTest": {
           "arguments": {
             "connectIfNeeded": false,
@@ -44162,6 +44314,18 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
+        "SaveProjectCopy": {
+          "arguments": {
+            "newProjectPath": "C:\\Examples\\Copy"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+            "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED."
+          ]
+        },
         "SaveProject": {
           "arguments": {
             "dryRun": true,
@@ -44203,6 +44367,17 @@
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
           ],
           "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, later native reads and writes return SESSION_RESET_REQUIRED, reason=previous-outcome-unknown, without approval; inspect TIA, then DisconnectPortal and establish a new explicit ConnectPortal/AttachOpenProject session."
+        },
+        "BuildProjectScaffold": {
+          "arguments": {
+            "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+            "dryRun": true
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         },
         "ScanAccessibleDevices": {
           "arguments": {

@@ -200,7 +200,9 @@ namespace TiaMcpServer.Siemens.Services
         }
         public ResponseMessage ManageMultiuserSession(string action = "read", string serverName = "", string projectName = "", string protocol = "Https", string host = "", int port = 0,
             string commitComment = "", int offset = 0, int limit = 100, bool confirmChange = false, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageMultiuserSession", meta => {
+            => !dryRun && (action is "connectServer" or "disconnectServer" or "commit") && _session is Portal portal && portal.NeedsSharedLifecycle
+                ? portal.SharedSessionOperation(() => ManageMultiuserSession(action, serverName, projectName, protocol, host, port, commitComment, offset, limit, confirmChange, dryRun))
+                : _session.RunHmiStepTool("ManageMultiuserSession", meta => {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 bool mutation = ProjectSecurityLogic.ValidateMultiuser(action, serverName, projectName, protocol, host, port, commitComment, confirmChange, dryRun);
                 ProjectSecurityLogic.ValidatePage(offset, limit);

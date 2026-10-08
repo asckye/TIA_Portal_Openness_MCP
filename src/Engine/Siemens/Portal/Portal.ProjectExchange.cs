@@ -38,7 +38,9 @@ namespace TiaMcpServer.Siemens
                 return "Project language changed and verified; no save/compile/download.";
             });
         public ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade = false, bool dryRun = true)
-            => RunHmiStepTool("RetrieveProjectArchive", meta => {
+            => sharedLifecycle != null && !sharedLifecycle.Executing
+                ? sharedLifecycle.Engine(() => RetrieveProjectArchive(archivePath, destinationDirectory, upgrade, dryRun))
+                : RunHmiStepTool("RetrieveProjectArchive", meta => {
                 if (_portal == null) throw new InvalidOperationException("Connect to TIA first.");
                 if (_project != null || _session != null || _portal.Projects.Any() || _portal.LocalSessions.Any()) throw new InvalidOperationException("Use a connected Portal with no open project/session. Existing projects will never be closed automatically.");
                 var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(archivePath)); if (!file.Exists) throw new FileNotFoundException("Archive not found.");

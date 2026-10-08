@@ -18,11 +18,13 @@ namespace TiaMcp.PlcWorker
         private readonly Action<Exception>? failureObserved;
         internal readonly WorkerSessionOutcomeState SessionOutcome = new WorkerSessionOutcomeState();
         private WorkerSessionOutcomeState sessionOutcome => SessionOutcome;
-        private bool disconnectAttempted, disconnected;
+        private bool disconnectAttempted, disconnected, sharedInvalidated;
         private PlcRuntimeState? observed;
         private long bindingEpoch;
         internal bool Ended => disconnectAttempted;
-        internal PlcRuntimeState State => disconnected ? new PlcRuntimeState() : disconnectAttempted ? observed! : engine.ReadState();
+        internal void EndSharedSession() { disconnectAttempted=true; disconnected=true; }
+        internal void InvalidateSharedSession() { SessionOutcome.MarkUncertain(); sharedInvalidated=true; }
+        internal PlcRuntimeState State => disconnected || sharedInvalidated ? new PlcRuntimeState() : disconnectAttempted ? observed! : engine.ReadState();
         internal FoundationWorkerDispatcher(PlcFoundationEngine engine, Assembly policyAssembly, Action<Exception>? failureObserved = null)
         {
             this.engine = engine;
@@ -50,7 +52,7 @@ namespace TiaMcp.PlcWorker
         {
             // ReadState only copies the adapter's managed lifecycle fields. It performs
             // no Siemens calls. A terminal Disconnect cannot be queried again.
-            var state=disconnected ? new PlcRuntimeState() : disconnectAttempted ? observed! : engine.ReadState();
+            var state=State;
             if(observed!=null && (observed.ProcessId!=state.ProcessId || observed.ProjectFile!=state.ProjectFile ||
                 observed.OwnsProject!=state.OwnsProject || observed.IsLocalSession!=state.IsLocalSession)) bindingEpoch++;
             observed=state;

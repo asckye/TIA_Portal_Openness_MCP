@@ -428,7 +428,7 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 482,
+      "toolCount": 487,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -459,6 +459,7 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -488,6 +489,7 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
@@ -773,6 +775,7 @@
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
         "ManageMotionAxis",
+        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOnlineDriveFunctions",
         "ManageOpcUaAccessControl",
@@ -854,6 +857,7 @@
         "RepairAndReimportPlcBlock",
         "ResolveSivarcExpression",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunClassicHmiOfflineValidationSuite",
         "RunClassicHmiTemporaryImportPreflight",
@@ -869,6 +873,7 @@
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanAccessibleDevices",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
@@ -916,7 +921,7 @@
     },
     "21": {
       "profile": "full-engine",
-      "toolCount": 493,
+      "toolCount": 498,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -947,6 +952,7 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildProjectScaffold",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
@@ -976,6 +982,7 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
@@ -1266,6 +1273,7 @@
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
         "ManageMotionAxis",
+        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOnlineDriveFunctions",
         "ManageOpcUaAccessControl",
@@ -1353,6 +1361,7 @@
         "RepairAndReimportPlcBlock",
         "ResolveSivarcExpression",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunClassicHmiOfflineValidationSuite",
         "RunClassicHmiTemporaryImportPreflight",
@@ -1368,6 +1377,7 @@
         "SamplePlcLiveValuesS7",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanAccessibleDevices",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
@@ -1415,7 +1425,7 @@
     }
   },
   "groupCounts": {
-    "shared-subset": 420,
+    "shared-subset": 425,
     "all-releases": 62,
     "release-only": 11
   },
@@ -1736,6 +1746,15 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "BuildProjectScaffold",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "BuildReleaseDiagnosticReport",
       "releases": [
         "20",
@@ -2019,6 +2038,15 @@
     },
     {
       "name": "ConnectDeviceNodesToProfinetSubnet",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConnectIsolatedPortal",
       "releases": [
         "20",
         "21"
@@ -4886,6 +4914,15 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "ManageMultiuserSession",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "ManageNetworkDomain",
       "releases": [
         "20",
@@ -5693,6 +5730,15 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "RetrieveProjectArchive",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "RunCapabilitySelfTest",
       "releases": [
         "14sp1",
@@ -5837,6 +5883,15 @@
         "21"
       ],
       "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SaveProjectCopy",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

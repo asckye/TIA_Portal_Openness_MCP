@@ -4,6 +4,10 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Compile Include="../../../src/Engine/Siemens/Portal/Portal.FoundationSession.cs" Link="Portal.FoundationSession.cs" />
+    <Compile Include="../../../src/Engine/Worker/SharedSessionLifecycle.cs" Link="SharedSessionLifecycle.cs" />
+    <Compile Include="../../../src/Adapters/Policy/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcDisconnectPolicy.cs" Link="PlcDisconnectPolicy.cs" />
     <Compile Include="../../../src/Logic/Siemens/ProjectBindingIdentity.cs" Link="ProjectBindingIdentity.cs" />
   </ItemGroup>
 </Project>

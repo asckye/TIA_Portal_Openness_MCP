@@ -70,7 +70,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 use
 | `SaveProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `StageImportFiles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (420)
+## Shared by some releases (425)
 
 | Tool | Release keys |
 |---|---|
@@ -94,6 +94,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 use
 | `BuildClassicHmiTagTable` | 20, 21 |
 | `BuildDeviceAmlDocument` | 20, 21 |
 | `BuildPlcAliasAlarmLad` | 20, 21 |
+| `BuildProjectScaffold` | 20, 21 |
 | `BuildReleaseDiagnosticReport` | 20, 21 |
 | `BuildReleaseHandoffArtifacts` | 20, 21 |
 | `BuildReleaseManifest` | 20, 21 |
@@ -118,6 +119,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 use
 | `CompileHmiDiagnostics` | 20, 21 |
 | `ConfigureMotionHardwareConnection` | 20, 21 |
 | `ConnectDeviceNodesToProfinetSubnet` | 20, 21 |
+| `ConnectIsolatedPortal` | 20, 21 |
 | `ConnectOnlinePlc` | 20, 21 |
 | `ConnectProjectToWorkspace` | 20, 21 |
 | `CreateDevice` | 20, 21 |
@@ -363,6 +365,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 use
 | `ManageLibraryType` | 20, 21 |
 | `ManageLibraryTypeVersion` | 20, 21 |
 | `ManageMotionAxis` | 20, 21 |
+| `ManageMultiuserSession` | 20, 21 |
 | `ManageNetworkDomain` | 20, 21 |
 | `ManageOnlineDriveFunctions` | 20, 21 |
 | `ManageOpcUaAccessControl` | 20, 21 |
@@ -439,6 +442,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 use
 | `RepairAndReimportPlcBlock` | 20, 21 |
 | `ResolveSivarcExpression` | 20, 21 |
 | `RestartOpennessWorker` | 20, 21 |
+| `RetrieveProjectArchive` | 20, 21 |
 | `RunClassicHmiOfflineValidationSuite` | 20, 21 |
 | `RunClassicHmiTemporaryImportPreflight` | 20, 21 |
 | `RunHmiActionScriptRecipeSafetySelfTest` | 20, 21 |
@@ -452,6 +456,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 use
 | `RunToolTransaction` | 20, 21 |
 | `SamplePlcLiveValuesS7` | 20, 21 |
 | `SaveExportContent` | 20, 21 |
+| `SaveProjectCopy` | 20, 21 |
 | `ScanAccessibleDevices` | 20, 21 |
 | `ScanPlcSourceAnnotations` | 20, 21 |
 | `SearchHardwareCatalog` | 19, 20, 21 |

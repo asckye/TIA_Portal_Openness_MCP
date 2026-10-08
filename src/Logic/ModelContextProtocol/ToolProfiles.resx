@@ -2457,6 +2457,20 @@
     },
     {
       "releaseKey": "20",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -2968,6 +2982,16 @@
     },
     {
       "releaseKey": "20",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+      }
+    },
+    {
+      "releaseKey": "20",
       "entry": "SynchronizeVersionControlWorkspace",
       "family": "P6-FALLBACK",
       "example": {
@@ -3065,6 +3089,20 @@
         "mode": "preview",
         "confirm": false,
         "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -3576,6 +3614,16 @@
       "example": {
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
       }
     },
     {
@@ -4277,6 +4325,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildReleaseDiagnosticReport",
         "currentName": "BuildReleaseDiagnosticReport",
         "sourceName": "BuildReleaseDiagnosticReport",
@@ -4824,6 +4885,16 @@
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -8948,6 +9019,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMultiuserSession",
+        "currentName": "ManageMultiuserSession",
+        "sourceName": "ManageMultiuserSession",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -10310,6 +10395,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -10541,6 +10640,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },
@@ -11941,6 +12052,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildProjectScaffold",
+        "currentName": "BuildProjectScaffold",
+        "sourceName": "ScaffoldProject",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\"}",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildReleaseDiagnosticReport",
         "currentName": "BuildReleaseDiagnosticReport",
         "sourceName": "BuildReleaseDiagnosticReport",
@@ -12488,6 +12612,16 @@
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -16692,6 +16826,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMultiuserSession",
+        "currentName": "ManageMultiuserSession",
+        "sourceName": "ManageMultiuserSession",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -18145,6 +18293,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -18376,6 +18538,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },

@@ -206,13 +206,13 @@
   },
   "engine-host": {
     "project": "tests/Engine/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
-    "minimumPassed": 17,
+    "minimumPassed": 19,
     "maximumSkipped": 0,
     "arguments": []
   },
   "shared-session": {
     "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
-    "minimumPassed": 5,
+    "minimumPassed": 51,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -239,5 +239,14 @@
     "minimumPassed": 3,
     "maximumSkipped": 0,
     "arguments": []
+  },
+  "shared-lifecycle": {
+    "project": "tests/Engine/TiaMcp.SharedSession.Tests/TiaMcp.SharedSession.Tests.csproj",
+    "minimumPassed": 46,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~SharedLifecycleTests"
+    ]
   }
 }

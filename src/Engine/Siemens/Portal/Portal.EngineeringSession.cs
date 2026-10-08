@@ -188,7 +188,10 @@ namespace TiaMcpServer.Siemens
 
         private void ReleaseProject()
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+            { sharedLifecycle.Engine(() => { ReleaseProject(); return true; }); return; }
             _session = null; _project = null; _projectOpenedByUs = false; InvalidateHmiSoftwareCache();
+            _binding = null; _expectedProjectName = null;
         }
 
         string? IEngineeringSession.LastExportedFile => LastExportedFile;

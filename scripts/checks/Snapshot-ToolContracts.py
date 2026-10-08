@@ -472,7 +472,7 @@ def compare_migration(args):
         old, new = baseline[release], current[release]
         a, b = ({t['name']: t for t in snapshot['tools']} for snapshot in (old, new))
         members = phase6_groups.group(args.migration, release, a)
-        expected = {phase6_groups.mapped(name, members) for name in a} | phase6_groups.additions(args.migration)
+        expected = {phase6_groups.mapped(name, members) for name in a} | phase6_groups.additions(args.migration, release)
         if args.migration == 'P7-04' and release in ('20', '21'): expected -= phase6_groups.P7_04_REMOVED
         problems = []
         if set(b) != expected:
@@ -487,6 +487,21 @@ def compare_migration(args):
         described = [name for name in changed_other if name not in guidance
                      and unhashed(phase6_groups.renamed(a[name], subs)) == unhashed(b[name])]
         problems += [name + ': unmigrated contract changed' for name in changed_other if name not in guidance + described]
+        if args.migration == 'P7-04b':
+            problems += [name + ': untouched record changed' for name in changed_other]
+            for field in ('profile', 'liteTools'):
+                if old.get(field) != new.get(field): problems.append(field + ': must stay unchanged')
+            if release in ('20', '21'):
+                fixture = Path(__file__).resolve().parents[2] / ('tests/Engine/TiaMcp.EngineHost.Tests/Fixtures/EngineSource' + release + '.json')
+                source = json.loads(fixture.read_text('utf-8'))
+                original = {t['name']: t for t in source['tools']}
+                original_families = {r['family']: set(r['entries']) for r in source['behaviorCapabilities']}
+                expected_capabilities = [{**r, 'entries': sorted(set(r['entries']) | (original_families[r['family']] & phase6_groups.P7_04B_NAMES))}
+                                         for r in old['behaviorCapabilities']]
+                if new['behaviorCapabilities'] != expected_capabilities: problems.append('unreviewed capability change')
+                problems += [name + ': pre-P7-04 record differs' for name in phase6_groups.P7_04B_NAMES
+                             if b.get(name) != original.get(name)]
+                if len(new.get('liteTools', [])) != 73: problems.append('lite must remain at 73 tools')
         if new.get('liteTools') is not None and release in runtime.get('releases', {}):
             expected_lite = {r['currentName'] for r in runtime['releases'][release] if 'lite' in r['profiles']}
             if set(new['liteTools']) != expected_lite or not expected_lite <= set(b):
@@ -599,8 +614,9 @@ def verified_contracts(directory, root):
         for r in catalog['behaviorPolicies'] if r['releaseKey'] == release] for release in RELEASES}
     contracts = current_parameters(root)
     source_engine = {name for (profile, name) in contracts if profile == 'full-engine'}
-    import phase6_groups
-    source_engine = (source_engine | foundation_registered_names(root, contracts)) - phase6_groups.P7_04_REMOVED
+    policy = (root / 'src/EngineHost/SharedToolCatalog.cs').read_text('utf-8')
+    removed = set(re.findall(r'"(\w+)"', policy.split('Removed =', 1)[1].split('};', 1)[0]))
+    source_engine = (source_engine | foundation_registered_names(root, contracts)) - removed
     catalog_engine = rosters['20'][0] | rosters['21'][0]
     if source_engine != catalog_engine:
         raise ValueError('Full-engine registered source inventory differs from generated catalog: '

@@ -1091,7 +1091,7 @@ def compare_migration(args):
         old, new = baseline[release], current[release]
         a, b = ({identity(call): call for call in snapshot['calls']} for snapshot in (old, new))
         members = phase6_groups.group(args.migration, release, {key[1] for key in a})
-        allowed = members | {phase6_groups.mapped(name, members) for name in members} | phase6_groups.additions(args.migration)
+        allowed = members | {phase6_groups.mapped(name, members) for name in members} | phase6_groups.additions(args.migration, release)
 
         def catalog(key):
             # Usage, search and category responses render the generated examples (Generate-ToolUsage --check), the schemas
@@ -1134,7 +1134,7 @@ def compare_migration(args):
             return phase6_groups.renamed(strip(old_call), subs) == strip(new_call)
         differing = [key for key in sorted(other_a.keys() | other_b.keys()) if other_a.get(key) != other_b.get(key)]
         def capability_catalog_only(key):
-            if args.migration != 'P7-04' or key[1] != 'GetPortalInfo' or key not in other_a or key not in other_b:
+            if args.migration not in ('P7-04', 'P7-04b') or key[1] != 'GetPortalInfo' or key not in other_a or key not in other_b:
                 return False
             before, after = copy.deepcopy(other_a[key]), copy.deepcopy(other_b[key])
             before.pop('rawTextBlocks', None)
@@ -1158,8 +1158,8 @@ def compare_migration(args):
         assert new['rawMaskRules'] == RAW_MASK_RULES
         merged = len(members) - len({phase6_groups.mapped(name, members) for name in members})
         removed = phase6_groups.removals(args.migration)
-        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged + len(phase6_groups.additions(args.migration)) - len(removed), (release, 'registered tool count')
-        expected = ({phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']} | phase6_groups.additions(args.migration)) - removed
+        assert new['coverage']['registeredTools'] == old['coverage']['registeredTools'] - merged + len(phase6_groups.additions(args.migration, release)) - len(removed), (release, 'registered tool count')
+        expected = ({phase6_groups.mapped(name, members) for name in old['coverage']['directRejectedTools']} | phase6_groups.additions(args.migration, release)) - removed
         assert set(new['coverage']['directRejectedTools']) == expected, (release, 'direct refusal roster')
         if old['coverage'].get('bridgeRejectedTools'):
             assert set(new['coverage']['bridgeRejectedTools']) == expected - {'CallTool'}, (release, 'bridge refusal roster')
@@ -1181,6 +1181,17 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_restored_lifecycle_group_is_release_scoped(self):
+        import phase6_groups
+        restored = {'RetrieveProjectArchive', 'SaveProjectCopy', 'ManageMultiuserSession', 'BuildProjectScaffold', 'ConnectIsolatedPortal'}
+        self.assertEqual(restored, phase6_groups.names('P7-04b'))
+        self.assertEqual(set(), phase6_groups.removals('P7-04b'))
+        self.assertEqual({}, phase6_groups.rename_map('P7-04b'))
+        for release in RELEASES:
+            self.assertEqual(restored if release in ('20', '21') else set(), phase6_groups.additions('P7-04b', release))
+            self.assertEqual(set(), phase6_groups.group('P7-04b', release, {'Existing'}))
+            self.assertEqual(restored if release in ('20', '21') else set(), phase6_groups.group('P7-04b', release, restored))
+
     def test_write_refusal_matches_capture_readiness_mode(self):
         readiness = {'schemaVersion': 4, 'ok': False,
             'error': {'code': 'RESOURCE_UNAVAILABLE', 'details': {'resource': 'tia-openness-environment'}},

@@ -15,6 +15,21 @@ using Xunit.Abstractions;
 public sealed class PipelineTests(ITestOutputHelper output)
 {
     [Theory]
+    [InlineData("20")] [InlineData("21")]
+    public void Shared_catalog_restores_lifecycle_descriptors_without_adding_them_to_lite(string release)
+    {
+        using var fixture = new Fixture(release, all: true);
+        var shared = new SharedToolCatalog(fixture.Catalog, Array.Empty<McpServerTool>(), new HashSet<string>());
+        Assert.Null(shared.Find("ConnectProject", includeUnavailable: true));
+        foreach (string name in new[] { "RetrieveProjectArchive", "SaveProjectCopy", "ManageMultiuserSession", "BuildProjectScaffold", "ConnectIsolatedPortal" })
+        {
+            Assert.Same(fixture.Catalog.Find(name), shared.Find(name));
+            Assert.Same(shared.Find(name), shared.Find(name, includeUnavailable: true));
+            Assert.DoesNotContain(shared.Lite, tool => tool.Name == name);
+        }
+    }
+
+    [Theory]
     [InlineData("20", 480)]
     [InlineData("21", 491)]
     public void EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation(string release, int count)

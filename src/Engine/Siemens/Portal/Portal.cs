@@ -209,6 +209,8 @@ namespace TiaMcpServer.Siemens
         // Metadata selection precedes Attach; ambiguous names never choose an arbitrary instance.
         public bool ConnectPortal(string? projectName, bool allowStart, JsonObject? info)
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => ConnectPortal(projectName, allowStart, info));
             if (_projectOpenedByUs) throw new PortalException(PortalErrorCode.InvalidState,
                 "Explicitly save/close/disconnect the MCP-owned project before replacing the connection.");
             string? wanted = string.IsNullOrWhiteSpace(projectName) ? null : projectName.Trim();
@@ -229,6 +231,7 @@ namespace TiaMcpServer.Siemens
                     throw new PortalException(PortalErrorCode.NotFound, "Requested project is not open. Inspect ListPortalProcessProjects or explicitly use ConnectIsolatedPortal for a new instance.");
                 if (_portal != null) DisconnectPortal();
                 _portal = InvocationJournal.Native("TiaPortal.Create", () => new TiaPortal(Engineering.LaunchWithUserInterface ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface));
+                sharedPortalOwned = true;
                 RememberBoundProcess();
                 LastConnectInfo = new JsonObject { ["boundProcessId"] = _boundProcessId, ["startedNew"] = true };
             }
@@ -264,12 +267,15 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         public bool ConnectIsolatedPortal()
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => ConnectIsolatedPortal());
             if (_portal != null || _project != null || _session != null)
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "ConnectIsolatedPortal: this MCP session already owns a TIA connection. "
                     + "Start a fresh MCP process before calling ConnectIsolatedPortal.");
             LastConnectError = null;
             _portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(TiaPortalMode.WithoutUserInterface)); RememberBoundProcess();
+            sharedPortalOwned = true;
             _logger?.LogInformation("Started isolated headless TIA Portal instance.");
             return true;
         }
@@ -281,6 +287,9 @@ namespace TiaMcpServer.Siemens
 
         public bool DisconnectPortal()
         {
+            if (sharedLifecycle != null) return sharedLifecycle.Foundation(() => {
+                sharedDisconnect!(); return true;
+            });
             _logger?.LogInformation("Disconnecting from TIA Portal...");
             return Operation.Run(_logger, nameof(DisconnectPortal), () =>
             {
@@ -379,6 +388,8 @@ namespace TiaMcpServer.Siemens
         // credentials go in as UmacCredentials.Name / Type / SetPassword(SecureString) and are never logged.
         public bool OpenProject(string projectPath, bool closeForeignProject, string umacUserName, string umacPassword, string umacUserType)
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => OpenProject(projectPath, closeForeignProject, umacUserName, umacPassword, umacUserType));
             _logger?.LogInformation($"Opening project: {projectPath} (credentials={(string.IsNullOrEmpty(umacUserName) ? "none" : "umac")})");
             EngineeringCredentialRules.ValidateUmacCredentials(umacUserName, umacPassword, umacUserType);
             UmacDelegate? umacDelegate = null; SecureString? umacSecret = null;
@@ -518,6 +529,8 @@ namespace TiaMcpServer.Siemens
 
         public bool CreateProject(string directoryPath, string projectName, bool closeForeignProject = false)
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => CreateProject(directoryPath, projectName, closeForeignProject));
             EnsureBoundProjectUnchanged("Open/create project");
             var foreign = ForeignOpenProjectName();
             if (foreign != null && !closeForeignProject)
@@ -608,6 +621,8 @@ namespace TiaMcpServer.Siemens
 
         public bool SaveAsProject(string path)
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => SaveAsProject(path));
             _logger?.LogInformation($"Saving project as: {path}");
 
             if (IsProjectNull())
@@ -625,6 +640,8 @@ namespace TiaMcpServer.Siemens
 
         public bool CloseProject()
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => CloseProject());
             _logger?.LogInformation("Closing project...");
 
             if (IsProjectNull())
@@ -669,6 +686,8 @@ namespace TiaMcpServer.Siemens
 
         public bool OpenSession(string localSessionPath)
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => OpenSession(localSessionPath));
             _logger?.LogInformation($"Opening session: {localSessionPath}");
 
             if (IsPortalNull())
@@ -741,6 +760,8 @@ namespace TiaMcpServer.Siemens
 
         public bool CloseSession()
         {
+            if (sharedLifecycle != null && !sharedLifecycle.Executing)
+                return sharedLifecycle.Engine(() => CloseSession());
             _logger?.LogInformation("Closing session...");
 
             EnsureBoundProjectUnchanged("Session operation");

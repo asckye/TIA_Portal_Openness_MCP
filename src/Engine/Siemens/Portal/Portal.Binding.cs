@@ -85,7 +85,13 @@ namespace TiaMcpServer.Siemens
             var lease = Reserve(pid, ticks);
             // A timeout cannot cancel Attach. The MTA worker owns the lease until it
             // returns and detaches. A dead worker leaves ACTIVE for this TIA identity.
-            TiaPortal? attached = TimedAttachment.Run(() => {
+            TiaPortal? attached;
+            if (sharedLifecycle != null)
+            {
+                sharedLifecycle.AttachProcess!(pid, ticks, lease);
+                attached = _portal;
+            }
+            else attached = TimedAttachment.Run(() => {
                 try { return InvocationJournal.Native("TiaPortal.Attach", () => process.Attach()); }
                 catch (Exception ex) { if (IsSecurityRefusal(ex)) lease.ReleaseCleanly(); else lease.Dispose(); throw; }
             }, late => { try { late.Dispose(); lease.ReleaseCleanly(); } finally { lease.Dispose(); } }, ConnectLogic.AttachTimeoutMsPerProcess);
@@ -116,7 +122,12 @@ namespace TiaMcpServer.Siemens
                 InvalidateHmiSoftwareCache(); ResetHmiReadHealth();
                 LastConnectInfo = new JsonObject { ["boundProcessId"] = pid, ["startedNew"] = false, ["binding"] = GetBindingIdentity() };
             }
-            catch { DisconnectPortal(); throw; }
+            catch
+            {
+                if (sharedLifecycle != null) sharedLifecycle.Lock("Engine attachment binding could not be established.");
+                else DisconnectPortal();
+                throw;
+            }
         }
     }
 }

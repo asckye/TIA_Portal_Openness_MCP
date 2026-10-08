@@ -34,6 +34,8 @@ namespace TiaMcpServer.Worker
         private PortalProcessLease? processLease;
         private long processStartTicks;
         private Portal? portal;
+        private SharedSessionLifecycle? lifecycle;
+        private bool ownedPortal;
 
 
         internal static string Hash(string path)
@@ -82,7 +84,44 @@ namespace TiaMcpServer.Worker
             foundationDispatch = new FoundationWorkerDispatcher(foundation, typeof(EngineWorkerHost).Assembly,
                 error => { _ = PortalFailureClassifier.IsPortalProcessLost(error); });
             portal = (Portal)EngineServices.Get(typeof(Portal));
-            foundation.BorrowSharedSession((tia, project, session, state) => portal.AdoptFoundationSession(tia, project, session, state, 0, null));
+            lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {
+                nativeFault = reason;
+                foundationDispatch.InvalidateSharedSession();
+                foundation.InvalidateSharedSession();
+                portal.ClearFoundationSession(reason);
+            });
+            lifecycle.AttachProcess = (pid, ticks, lease) => {
+                processStartTicks = ticks; processLease = lease; ownedPortal = false;
+                foundation.Attach(pid);
+                RefreshFromFoundation();
+            };
+            portal.UseSharedLifecycle(lifecycle, () => {
+                foundation.Disconnect(); foundationDispatch.EndSharedSession();
+            });
+            RefreshFromFoundation();
+        }
+
+        private void RefreshFromFoundation()
+        {
+            if (foundationDispatch!.SessionOutcome.RequiresReset || nativeFault != null)
+            { lifecycle!.Lock(nativeFault ?? TiaOpenness.Shared.SessionBehavior.Recovery); return; }
+            if (foundationDispatch.Ended)
+            {
+                portal!.ClearFoundationSession();
+                processLease?.ReleaseCleanly(); processLease = null; processStartTicks = 0; ownedPortal = false;
+            }
+            else foundation!.BorrowSharedSession((tia, project, session, state) =>
+                portal!.AdoptFoundationSession(tia, project, session, state, processStartTicks, processLease, ownedPortal));
+        }
+
+        private void RefreshFromEngine()
+        {
+            if (nativeFault != null) { lifecycle!.Lock(nativeFault); return; }
+            portal!.BorrowEngineSession((tia, project, session, state, ticks, lease, owns) => {
+                processStartTicks = ticks; processLease = lease; ownedPortal = owns;
+                foundation!.AdoptSharedSession(tia, project, session, state, owns, ticks);
+            });
+            RefreshFromFoundation();
         }
 
         private ChannelBinding Observe()
@@ -131,35 +170,30 @@ namespace TiaMcpServer.Worker
                     reserved = true;
                 }
                 dispatched = true;
-                var response = foundationDispatch.Dispatch(request);
+                var response = lifecycle!.Foundation(() => foundationDispatch.Dispatch(request));
                 if (nativeFault != null || foundationDispatch.SessionOutcome.RequiresReset || response.Failure?.Outcome == ChannelOutcome.Unknown)
                 {
                     nativeFault ??= response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery;
                     foundationDispatch.SessionOutcome.MarkUncertain();
-                    portal!.ClearFoundationSession(nativeFault);
+                    lifecycle!.Lock(nativeFault);
                     response = ChannelResponse.Error(new ChannelFailure(nativeFault, -32603, ChannelOutcome.Unknown,
                         response.Failure?.EvidenceJson ?? "null"));
                 }
                 else if (response.Failure != null && reserved)
                 {
-                    processLease!.ReleaseCleanly(); processLease = null;
+                    processLease!.ReleaseCleanly(); processLease = null; processStartTicks = 0;
+                    RefreshFromFoundation();
                 }
-                else if (foundationDispatch.Ended)
-                {
-                    portal!.ClearFoundationSession();
-                    processLease?.ReleaseCleanly(); processLease = null;
-                }
-                else foundation!.BorrowSharedSession((tia, project, session, state) =>
-                    portal!.AdoptFoundationSession(tia, project, session, state, processStartTicks, processLease));
+                else RefreshFromFoundation();
                 Observe();
                 return response;
             }
             catch (Exception error)
             {
                 // Reservation/adoption errors never retry a Foundation operation.
-                if (dispatched && foundationDispatch.State.IsAttached)
-                { nativeFault = error.Message; foundationDispatch.SessionOutcome.MarkUncertain(); portal!.ClearFoundationSession(nativeFault); }
-                else if (reserved) { processLease?.ReleaseCleanly(); processLease = null; }
+                if (nativeFault != null || lifecycle!.Fault != null || dispatched && foundationDispatch.State.IsAttached)
+                { lifecycle!.Lock(error.Message); }
+                else if (reserved) { processLease?.ReleaseCleanly(); processLease = null; processStartTicks = 0; RefreshFromFoundation(); }
                 var failure = WorkerFailurePolicy.Classify(error, nativeFault != null, false);
                 return ChannelResponse.Error(new ChannelFailure(WorkerFailurePolicy.DiagnosticCause(error).Message,
                     failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
@@ -229,11 +263,9 @@ namespace TiaMcpServer.Worker
             if (TiaOpenness.Shared.SessionBehavior.LocksSession(nativeCalls.NativeCallIssued,
                 (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)))
             {
-                nativeFault = "Engine native outcome is unknown.";
-                foundationDispatch?.SessionOutcome.MarkUncertain();
-                portal?.ClearFoundationSession(nativeFault);
+                lifecycle?.Lock("Engine native outcome is unknown.");
             }
-            if (nativeFault != null) portal?.ClearFoundationSession(nativeFault);
+            if (nativeFault != null) lifecycle?.Lock(nativeFault);
             Observe();
             var reply = Status();
             reply["nativeCallIssued"] = nativeCalls.NativeCallIssued;

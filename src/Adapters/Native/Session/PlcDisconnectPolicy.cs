@@ -10,15 +10,18 @@ namespace TiaMcp.PlcFoundation
         internal PlcDisconnectResult? Result { get; private set; }
         internal void RequireActive()
         { if (Attempted) throw new InvalidOperationException("Disconnect ended this worker session; create a new explicit session before attaching again. An uncertain disconnect must be inspected, never retried."); }
-        internal PlcDisconnectResult Execute(int? processId, bool? ownsPortal, Action detach)
+        internal static bool Supports(bool? ownsPortal, bool sharedPortal) => ownsPortal==false || sharedPortal && ownsPortal==true;
+        internal PlcDisconnectResult Execute(int? processId, bool? ownsPortal, Action detach, bool sharedPortal = false)
         {
             if (Result != null) return Result;
             RequireActive();
-            if (processId.HasValue && ownsPortal != false)
+            if (processId.HasValue && !Supports(ownsPortal,sharedPortal))
                 throw new NotSupportedException("Disconnect supports only proven non-owning existing-process attachments; unknown or owned Portal lifetime semantics are blocked.");
             Attempted = true;
             if (processId.HasValue) detach();
-            Result = new PlcDisconnectResult { ProcessId=processId, Detached=processId.HasValue };
+            Result = new PlcDisconnectResult { ProcessId=processId, Detached=processId.HasValue,
+                Strategy=sharedPortal && ownsPortal==true ? "owned-shared-portal-dispose" : "non-owning-attachment-only",
+                LaunchMode=ownsPortal==true ? "engine-started" : "never" };
             return Result;
         }
     }
