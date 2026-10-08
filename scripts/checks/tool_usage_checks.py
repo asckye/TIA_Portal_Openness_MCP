@@ -8,6 +8,9 @@ from mcp_results import successful
 import xml.etree.ElementTree as ET
 
 
+WITHDRAWN_FROM_PRODUCT = {'ConnectProject'}
+
+
 def unwrap_usage(reply):
     reply = successful(reply)
     body = dict(reply['data'])
@@ -40,6 +43,9 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
     builder_examples = 0
     offline_calls = []
     selected = names if exhaustive else ['GetToolUsage', 'ManageStartdriveParameter']
+    # ConnectProject is withdrawn from the V20/V21 product catalog (P7-04); the engine host still lists it until it is retired
+    # (P7-08), and its usage lookup is refused. Every other listed name must describe itself.
+    selected = [name for name in selected if name not in WITHDRAWN_FROM_PRODUCT]
     for name in selected:
         usage = unwrap_usage(call('GetToolUsage', {'toolName': name}))
         assert usage['available'] and usage['releaseKey'] == str(release) and usage['toolName'] == name
