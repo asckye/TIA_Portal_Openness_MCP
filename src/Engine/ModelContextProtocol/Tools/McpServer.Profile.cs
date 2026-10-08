@@ -1,7 +1,6 @@
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -20,16 +19,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static IList<McpServerTool> GetLiteTools()
         {
-            var tools = new List<McpServerTool>();
-            foreach (var entry in ToolCatalog.Engine.Methods)
-            {
-                var name = entry.Key;
-                if (LiteToolNames.Contains(name) && VersionToolProblem(name).Length == 0)
-                {
-                    tools.Add(CreateTool(name, entry.Value));
-                }
-            }
-            return tools;
+            return CatalogView.Lite.Select(tool => ToolInvoker.CreateTool(tool)).ToList();
         }
 
         /// <summary>
@@ -37,29 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// </summary>
         public static IList<McpServerTool> GetAllTools()
         {
-            var tools = new List<McpServerTool>();
-            foreach (var entry in ToolCatalog.Engine.Methods)
-            {
-                var name = entry.Key;
-                if (VersionToolProblem(name).Length == 0) tools.Add(CreateTool(name, entry.Value));
-            }
-            return tools;
-        }
-
-        // The protocol description carries the worked example from ToolExamples (one table, validated at build
-        // time), so the model sees a correct call next to every listed tool without duplicating examples in attributes.
-        internal static McpServerTool CreateTool(string name, MethodInfo method)
-        {
-            var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
-            var description = attribute?.Description ?? "";
-            var decorated = method.GetCustomAttribute<TiaMcp.Logic.V4.BehaviorCandidateAttribute>() != null
-                ? description + TiaOpenness.Shared.ToolUsageCatalog.Hint(name)
-                : ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
-            var tool = ReferenceEquals(decorated, description) || decorated == description
-                ? ToolCatalog.CreateTool(method)
-                : ToolCatalog.CreateTool(method, new McpServerToolCreateOptions { Name = name, Description = decorated });
-            // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
-            return WithSchemaHints(tool, name, method);
+            return CatalogView.All.Values.Select(tool => ToolInvoker.CreateTool(tool)).ToList();
         }
 
         // ---- Profile resolution -----------------------------------------------------------------

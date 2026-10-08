@@ -85,12 +85,12 @@ namespace TiaMcpServer.Siemens
             if (name.Equals("ManageDeviceServiceObjects", StringComparison.OrdinalIgnoreCase))
             {
                 var family = argument("family") ?? "";
-                if (!Contains(DeviceServiceObjectRules.ServiceObjectFamilies, family)) return name + ": unknown family '" + family + "'.";
+                if (!Contains(DeviceServiceObjectActions.ServiceObjectFamilies, family)) return name + ": unknown family '" + family + "'.";
                 if (family.Equals("webApplications", StringComparison.OrdinalIgnoreCase))
-                { allowed = DeviceServiceObjectRules.WebApplicationActions; v21Actions = allowed; }
+                { allowed = DeviceServiceObjectActions.WebApplicationActions; v21Actions = allowed; }
                 else if (family.Equals("telecontrolDataPoints", StringComparison.OrdinalIgnoreCase))
-                { allowed = DeviceServiceObjectRules.TelecontrolActions; v21Actions = new[] { "read", "update", "delete" }; }
-                else { allowed = DeviceServiceObjectRules.CertificateServiceActions; v21Actions = Array.Empty<string>(); }
+                { allowed = DeviceServiceObjectActions.TelecontrolActions; v21Actions = new[] { "read", "update", "delete" }; }
+                else { allowed = DeviceServiceObjectActions.CertificateServiceActions; v21Actions = Array.Empty<string>(); }
             }
             if (allowed != null)
             {

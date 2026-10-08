@@ -35,6 +35,9 @@
     <Compile Include="../../../src/Engine/EngineServices.cs" Link="EngineServices.cs" />
     <Compile Include="../../../src/Engine/EngineRegistration.cs" Link="EngineRegistration.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolDescriptor.cs" Link="ToolDescriptor.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/InProcessToolInvoker.cs" Link="InProcessToolInvoker.cs" />
+    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.InProcessTools.cs" Link="McpServer.InProcessTools.cs" />
     <Compile Include="..\..\..\src\Adapters\Native\Plc\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="..\..\..\src\Engine\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
     <Compile Include="../../../src/Engine/Cli/SpecLoader.cs" Link="SpecLoader.cs" />
@@ -43,7 +46,6 @@
     <EmbeddedResource Include="Golden/CliV4.json" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
     <Compile Include="..\..\..\src\Engine\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
-    <Compile Include="..\..\..\src\Engine\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />
     <Compile Include="..\..\..\src\Engine\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
     <Compile Include="..\..\..\src\Engine\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="..\..\..\src\Engine\Siemens\Hmi\HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />

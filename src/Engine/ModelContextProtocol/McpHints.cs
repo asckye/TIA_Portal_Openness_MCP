@@ -36,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var body = McpServer.ResultBody(result);
             if (!RecoveryHints.Attach(body, (tool, release, operation) =>
             {
-                if (release != McpServer.ReleaseKey || !McpServer.AllToolMethods().ContainsKey(tool)) return null;
+                if (release != McpServer.ReleaseKey || !McpServer.AllToolDescriptors().ContainsKey(tool)) return null;
                 var usage = McpServer.ResultBody(new ToolUsageTools().GetToolUsage(toolName: tool, operation: operation));
                 return usage?["data"]?["example"] as JsonObject;
             })) return result;

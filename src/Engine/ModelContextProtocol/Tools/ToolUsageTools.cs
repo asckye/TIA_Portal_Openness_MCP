@@ -30,7 +30,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (exampleKind != "all" && exampleKind != "sequence" && exampleKind != "language")
                     return McpServer.V4Reject("GetToolUsage", McpServer.InvalidInput("exampleKind"));
                 if (offset < 0 || limit < 1 || limit > 200) throw new ArgumentException("offset >= 0 and limit 1..200 are required.");
-                var methods = McpServer.AllToolMethods();
+                var methods = McpServer.AllToolDescriptors();
                 var release = McpServer.ReleaseKey;
                 Paging? paging = null;
                 if ((toolName.Length > 0 || operation.Length > 0 || language.Length > 0 || exampleId.Length > 0) && (query.Length > 0 || documentId.Length > 0))
@@ -41,11 +41,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (query.Length > 0 || documentId.Length > 0) throw new ArgumentException("Use toolName alone, or query/documentId for references.");
                     if (!methods.TryGetValue(toolName, out var method))
-                        return McpServer.V4Reject("GetToolUsage", McpServer.AllToolMethods(includeUnavailable: true).ContainsKey(toolName)
+                        return McpServer.V4Reject("GetToolUsage", McpServer.AllToolDescriptors(includeUnavailable: true).ContainsKey(toolName)
                             ? new Error("Tool is not available in this release.", new UnsupportedCapabilityDetails(release, toolName, null))
                             : new Error("Tool is not registered in this release.", new ToolNotFoundDetails(toolName)));
                     var name = methods.Keys.First(k => string.Equals(k, toolName, StringComparison.OrdinalIgnoreCase));
-                    var tool = McpServer.CreateTool(name, method).ProtocolTool;
+                    var tool = method.Tool;
                     var example = ToolExamples.Find(name);
                     usage = ToolUsageCatalog.Describe(name, release, "full-engine", McpServer.ToolDescription(method),
                         (JsonObject)JsonNode.Parse(tool.InputSchema.GetRawText())!, example?.ArgumentsJson, example?.Note, operation,
@@ -65,7 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         var names = methods.Keys.OrderBy(n => n, StringComparer.Ordinal).ToArray();
                         usage["tools"] = new JsonArray(names.Skip(offset).Take(limit).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray());
                         usage["toolCount"] = names.Length;
-                        usage["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(ToolUsageTools).Assembly, release);
+                        usage["behaviorCapabilities"] = McpServer.CatalogView.BehaviorCapabilities.DeepClone();
                         total = Math.Max(names.Length, total);
                         usage["exampleLibrary"] = ToolUsageCatalog.Examples(release, "full-engine", methods.Keys);
                     }

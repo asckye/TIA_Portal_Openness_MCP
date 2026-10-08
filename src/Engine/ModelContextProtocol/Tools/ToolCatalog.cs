@@ -14,7 +14,7 @@ using TiaMcp.Logic.V4;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    internal sealed class ToolCatalog
+    internal sealed class ToolCatalog : IToolCatalogView
     {
         // Reviewed registration metadata avoids loading unrelated embedded SDK/model types.
         // HttpTests compares this roster with the attributed types in the built assembly.
@@ -214,11 +214,48 @@ namespace TiaMcpServer.ModelContextProtocol
                         throw new InvalidOperationException("Duplicate MCP tool name '" + name + "': "
                             + previous.DeclaringType!.FullName + "." + previous.Name + " and "
                             + method.DeclaringType!.FullName + "." + method.Name + ". Tool names must be unique (OrdinalIgnoreCase).");
-                    methods.Add(name, BehaviorCapabilities.SelectMethod(name, method, candidates, McpServer.ReleaseKey));
+                    methods.Add(name, TiaMcp.Logic.V4.BehaviorCapabilities.SelectMethod(name, method, candidates, McpServer.ReleaseKey));
                 }
             }
             Methods = methods.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToList().AsReadOnly();
+            all = new Lazy<IReadOnlyDictionary<string, ToolDescriptor>>(() => View(false));
+            includingUnavailable = new Lazy<IReadOnlyDictionary<string, ToolDescriptor>>(() => View(true));
+            lite = new Lazy<IReadOnlyList<ToolDescriptor>>(() =>
+            {
+                var names = new HashSet<string>(TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey)
+                    .Where(row => row!["profiles"]!.AsArray().Any(p => (string?)p == "lite"))
+                    .Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);
+                return All.Values.Where(tool => names.Contains(tool.Name)).ToArray();
+            });
+            behaviorCapabilities = new Lazy<JsonArray>(() => TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(ToolCatalog).Assembly, McpServer.ReleaseKey));
         }
+
+        private readonly ConcurrentDictionary<string, Lazy<(ToolDescriptor Descriptor, McpServerTool Tool)>> descriptors =
+            new ConcurrentDictionary<string, Lazy<(ToolDescriptor, McpServerTool)>>(StringComparer.OrdinalIgnoreCase);
+        private (ToolDescriptor Descriptor, McpServerTool Tool) DescriptorEntry(string name)
+            => descriptors.GetOrAdd(name, key => new Lazy<(ToolDescriptor, McpServerTool)>(() =>
+            {
+                var method = Methods.First(pair => pair.Key == key).Value;
+                var tool = McpServer.CreateInProcessTool(key, method, out var descriptor);
+                return (descriptor, tool);
+            })).Value;
+        internal McpServerTool RuntimeTool(string name) => DescriptorEntry(name).Tool;
+        private readonly Lazy<IReadOnlyDictionary<string, ToolDescriptor>> all;
+        private readonly Lazy<IReadOnlyDictionary<string, ToolDescriptor>> includingUnavailable;
+        private readonly Lazy<IReadOnlyList<ToolDescriptor>> lite;
+        private readonly Lazy<JsonArray> behaviorCapabilities;
+        public IReadOnlyDictionary<string, ToolDescriptor> All => all.Value;
+        public IReadOnlyDictionary<string, ToolDescriptor> IncludingUnavailable => includingUnavailable.Value;
+        private IReadOnlyDictionary<string, ToolDescriptor> View(bool includeUnavailable)
+            => Methods.Where(pair => includeUnavailable || McpServer.VersionToolProblem(pair.Key).Length == 0)
+                .ToDictionary(pair => pair.Key, pair => DescriptorEntry(pair.Key).Descriptor, StringComparer.OrdinalIgnoreCase);
+        public IReadOnlyList<ToolDescriptor> Lite => lite.Value;
+        public ToolDescriptor? Find(string name, bool includeUnavailable = false)
+        {
+            var entry = Methods.FirstOrDefault(pair => string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase));
+            return entry.Key == null || !includeUnavailable && McpServer.VersionToolProblem(entry.Key).Length != 0 ? null : DescriptorEntry(entry.Key).Descriptor;
+        }
+        public JsonArray BehaviorCapabilities => (JsonArray)behaviorCapabilities.Value.DeepClone();
 
         private static readonly McpServerToolCreateOptions DefaultOptions = new McpServerToolCreateOptions();
         private static readonly ConcurrentDictionary<(MethodInfo Method, string? Name, string? Description), Lazy<McpServerTool>> MetadataTools =

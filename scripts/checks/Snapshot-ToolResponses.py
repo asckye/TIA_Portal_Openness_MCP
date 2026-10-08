@@ -107,7 +107,8 @@ FOUNDATION_COVERAGE_FIELDS = {'registeredTools', 'calledTools', 'directRejectedT
 # McpServer.VersionPolicy.cs::InvokeAsync delegates to V4Admission/BindV4Call,
 # rejecting duplicate names BEFORE version/schema checks and inner.InvokeAsync.
 # McpServer.Profile.cs::GetAllTools/GetLiteTools supply the advertised rosters.
-# McpServer.ToolBridge.cs::CallTool(string,ToolArguments) calls BindV4Call, which
+# McpServer.ToolBridge.cs::CallTool(string,ToolArguments) binds through IToolInvoker
+# and McpServer.InProcessTools.cs::BindV4Call, which
 # rejects case-insensitive duplicate properties BEFORE schema validation, binding
 # and InvokeToolMethod. It returns a V4 INVALID_ARGUMENT/not-started envelope.
 # The two distinct JSON keys below trigger the same duplicate-name refusal on

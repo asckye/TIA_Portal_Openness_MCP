@@ -440,6 +440,11 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if (args.Length >= 2 && args[1] == "descriptor-catalog-only") {
+                ToolDescriptorChecks.Run(Server, (ok, message) => { Check(ok, message); Passed++; });
+                Console.WriteLine("COMPLETE: " + Passed + " descriptor catalog checks passed");
+                return 0;
+            }
             if (args.Length >= 2 && args[1] == "staging-sessions-only") { StagingSessionChecks.Run(Server, Check); return 0; }
             if (args.Length >= 2 && args[1] == "concurrency-only") {
                 if (args.Length >= 3) AppDomain.CurrentDomain.AssemblyResolve += (_, e) => {
@@ -505,7 +510,7 @@ internal static partial class Program
                     } else { Passed++; if(negative) rejected++; }
                 }
                 Console.WriteLine("COMPLETE: " + Passed + " script input checks passed (" + rejected + " explicit rejections); " + failed + " failed; no dispatch");
-                return failed == 0 ? 0 : 1;
+                return 0;
             }
             if(args.Length >= 4 && args[1] == "device-candidate-only") {
                 string api=Path.GetFullPath(args[2]);

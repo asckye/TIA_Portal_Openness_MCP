@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -157,25 +156,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (call == null) return InvalidInput("operations");
                 var args = JsonNode.Parse(call.Arguments.Json.GetRawText())!.AsObject();
                 if (write) args["dryRun"] = true;
-                var error = BindV4Call(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out var method, out _);
+                var error = ToolInvoker.Bind(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out _);
                 if (error != null) return error;
-                var targetMethod = method!;
-                string name = targetMethod.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? targetMethod.Name;
+                var targetMethod = CatalogView.Find(call.Name, includeUnavailable: true)!;
+                string name = targetMethod.Name;
                 var classification = ClassificationOf(targetMethod);
                 bool orchestration = IsBatchOrchestration(targetMethod);
                 bool read = classification?.BatchRead == true;
-                bool preview = classification?.BatchWrite == true && targetMethod.GetParameters().Any(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
+                bool preview = classification?.BatchWrite == true && targetMethod.DryRun.Present;
                 if (orchestration || (write ? !preview : !read)) return InvalidInput("operations");
-                targets[call.Name] = new ToolTarget(call.Name, new InputSchema(ToolInputSchema(call.Name, targetMethod)), new InputBudget(), read, preview, orchestration: orchestration);
+                targets[call.Name] = new ToolTarget(call.Name, new InputSchema(targetMethod.Tool.InputSchema), new InputBudget(), read, preview, orchestration: orchestration);
             }
             var result = ToolCallValidator.Create(write ? ToolCallMode.PreviewBatch : ToolCallMode.ReadBatch, targets.Values.ToArray()).Validate(operations, "operations");
             validated = result.Value;
             return result.Error;
         }
 
-        internal static bool IsBatchOrchestration(MethodInfo method) => method.Name.Contains("Batch")
-            || method.Name == "CallTool" || method.GetCustomAttribute<McpServerToolAttribute>()?.Name == "RunToolTransaction"
-            || method.GetCustomAttribute<McpServerToolAttribute>()?.Name == "GetPlcCrossReferences";
+        internal static bool IsBatchOrchestration(ToolDescriptor tool) => tool.Name.Contains("Batch")
+            || tool.Name == "CallTool" || tool.Name == "RunToolTransaction" || tool.Name == "GetPlcCrossReferences";
 
         private static string StablePreview(JsonNode? value)
         {
@@ -196,7 +194,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private static JsonObject BatchRow(int index, string target, CallToolResult result) => new JsonObject
         { ["index"] = index, ["target"] = target, ["result"] = ResultBody(FinishApproval(result, null,
-            McpApprovalContext.Value && ToolCatalog.IsWrite(target) && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled)) };
+            McpApprovalContext.Value && IsWriteTool(target) && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled)) };
 
         private static CallToolResult BatchResult(string tool, JsonArray rows, bool write)
         {

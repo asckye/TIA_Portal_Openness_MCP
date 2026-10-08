@@ -15,11 +15,11 @@ namespace TiaMcpServer.Siemens
         private static void RequireAbsoluteNewFile(string filePath, string parameter)
             => ArgumentRules.RequireAbsolutePath(filePath, "Absolute " + parameter + " required.");
         // ---- device service objects ---------------------------------------------------------------------------------------------
-        internal static readonly string[] ServiceObjectFamilies = { "webApplications", "telecontrolDataPoints", "certificateServices" };
-        internal static readonly string[] WebApplicationActions = { "read", "setDefault" };
-        internal static readonly string[] TelecontrolActions = { "read", "update", "delete", "export", "import" };
+        internal static readonly string[] ServiceObjectFamilies = DeviceServiceObjectActions.ServiceObjectFamilies;
+        internal static readonly string[] WebApplicationActions = DeviceServiceObjectActions.WebApplicationActions;
+        internal static readonly string[] TelecontrolActions = DeviceServiceObjectActions.TelecontrolActions;
         internal static readonly string[] TelecontrolProperties = { "Name", "DataPointType", "DataPointIndex", "MasterFunction" };
-        internal static readonly string[] CertificateServiceActions = { "read", "update", "setServiceGroupName", "createService", "deleteService" };
+        internal static readonly string[] CertificateServiceActions = DeviceServiceObjectActions.CertificateServiceActions;
         internal static readonly string[] CertificateConfigurationProperties = { "Usage", "CertificateExpirationEventActivated", "RemainingCertificateLifetime" };
         internal static readonly string[] CertificateConfigurationUsages = { "TIAPortal", "Runtime" };
         internal static readonly string[] CertificateSupportedServiceNames = { "None", "OpcUaClient", "OpcUaServer", "Webserver" };

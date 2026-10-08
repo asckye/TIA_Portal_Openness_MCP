@@ -112,10 +112,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var methods = AllToolMethods();
+                var methods = AllToolDescriptors();
                 bool known = name != null && methods.ContainsKey(name);
                 using var journal = InvocationJournal.Observe(System.Guid.NewGuid().ToString("N"), known ? name! : "CallTool", "engine", ReleaseKey,
-                    known && IsWriteTool(methods[name!]), () => arguments.Json.GetRawText());
+                    known && IsWrite(ClassificationOf(methods[name!])), () => arguments.Json.GetRawText());
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             }
             catch (System.Exception) /* swallow(logging-failure): journal failures cannot replace an existing rejection response */ { }

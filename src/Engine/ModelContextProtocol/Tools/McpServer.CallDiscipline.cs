@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -24,23 +22,6 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void AssertV4Tool(string name)
         {
             if (!IsInfrastructureV4(name)) throw new InvalidOperationException("Registered tool has no generated V4 contract: " + name);
-        }
-
-        private static readonly ConcurrentDictionary<(string Name, MethodInfo Method), JsonElement> InputSchemas =
-            new ConcurrentDictionary<(string, MethodInfo), JsonElement>();
-        internal static JsonElement ToolInputSchema(string name, MethodInfo method)
-            => InputSchemas.GetOrAdd((name, method), key => CreateInputSchema(key.Name, key.Method));
-
-        private static JsonElement CreateInputSchema(string name, MethodInfo method)
-        {
-            var raw = ToolCatalog.CreateTool(method).ProtocolTool.InputSchema;
-            var schema = (JsonObject)JsonNode.Parse(raw.GetRawText())!;
-            var candidate = method.GetCustomAttribute<BehaviorCandidateAttribute>();
-            SchemaHintsLogic.Augment(schema, SpecsOf(method), candidate?.Family == "P6-FALLBACK" ? BehaviorCapabilities.CandidateExample(ReleaseKey, name) : null);
-            PreserveTypedSchemas(schema, raw, method);
-            InfrastructureSchema(name, schema);
-            schema["additionalProperties"] = false;
-            return JsonSerializer.SerializeToElement(InlineSchema(schema));
         }
 
         private static void InfrastructureSchema(string name, JsonObject schema)
@@ -142,15 +123,15 @@ namespace TiaMcpServer.ModelContextProtocol
         };
 
         /// <summary>Apply documented hints and the shared V4 admission boundary; schema failures stop registration.</summary>
-        internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, MethodInfo method)
+        internal static McpServerTool WithSchemaHints(McpServerTool tool, string name, IReadOnlyList<PreflightLogic.ParameterSpec> specs, Action<JsonObject, JsonElement> preserveTypedSchemas)
         {
             var protocol = tool.ProtocolTool;
             var schema = JsonNode.Parse(protocol.InputSchema.GetRawText())!.AsObject();
             var example = ToolExamples.Find(name);
             var exampleArgs = TiaMcp.Logic.V4.BehaviorCapabilities.CandidateExample(ReleaseKey, name)
                 ?? (example == null ? null : JsonNode.Parse(example.ArgumentsJson)!.AsObject());
-            SchemaHintsLogic.Augment(schema, SpecsOf(method), exampleArgs);
-            PreserveTypedSchemas(schema, protocol.InputSchema, method);
+            SchemaHintsLogic.Augment(schema, specs, exampleArgs);
+            preserveTypedSchemas(schema, protocol.InputSchema);
             InfrastructureSchema(name, schema);
             schema = InlineSchema(schema);
             using var doc = JsonDocument.Parse(schema.ToJsonString(DisciplineJson));
@@ -164,79 +145,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 Annotations = protocol.Annotations,
                 Meta = protocol.Meta,
             };
-            return new InfrastructureInputTool(new SchemaHintedTool(tool, clone), method);
-        }
-
-        private static void PreserveTypedSchemas(JsonObject schema, JsonElement original, MethodInfo method)
-        {
-            foreach (var parameter in method.GetParameters())
-                if (parameter.ParameterType != typeof(ToolArguments?) && TypedToolInput.For(parameter.ParameterType) != null)
-                    schema["properties"]![parameter.Name!] = JsonNode.Parse(original.GetProperty("properties").GetProperty(parameter.Name!).GetRawText());
-        }
-
-        internal static Error? ValidateV4Arguments(MethodInfo method, JsonElement arguments, JsonElement schema)
-        {
-            // Check family budgets before binding so converter exceptions cannot erase
-            // LIMIT_EXCEEDED or expose supplied values in SDK diagnostics.
-            var family = ValidateNestedTypedArguments(method, arguments) ?? ValidateTypedFamilies(method, arguments);
-            if (family != null) return family;
-            var shapeError = new InputSchema(schema).Validate(arguments, "arguments");
-            if (shapeError != null) return shapeError;
-            foreach (var parameter in method.GetParameters())
-            {
-                if (IsInfrastructureParameter(parameter.ParameterType) || !arguments.TryGetProperty(parameter.Name!, out var value)) continue;
-                try { JsonSerializer.Deserialize(value.GetRawText(), parameter.ParameterType, V4BindingJson); }
-                catch (InputRejection rejection) { return rejection.ToError(parameter.Name!); }
-                catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException || ex is NotSupportedException)
-                { return InvalidInput(parameter.Name!); }
-            }
-            return null;
-        }
-
-        private static Error? ValidateTypedFamilies(MethodInfo method, JsonElement arguments)
-        {
-            foreach (var parameter in method.GetParameters())
-            {
-                var contract = TypedToolInput.For(parameter.ParameterType);
-                if (contract == null || parameter.ParameterType == typeof(ToolArguments?) || !arguments.TryGetProperty(parameter.Name!, out var value)) continue;
-                var error = contract.Validate(value, parameter.Name!);
-                if (error != null) return error;
-            }
-            return null;
-        }
-
-        private static Error? ValidateNestedTypedArguments(MethodInfo method, JsonElement arguments)
-        {
-            Error? Target(JsonElement call)
-            {
-                if (call.ValueKind != JsonValueKind.Object || !call.TryGetProperty("name", out var name) || name.ValueKind != JsonValueKind.String
-                    || !call.TryGetProperty("arguments", out var input) || input.ValueKind != JsonValueKind.Object) return null;
-                if (!AllToolMethods(true).TryGetValue(name.GetString()!, out var target)) return null;
-                return ValidateTypedFamilies(target, input);
-            }
-            string tool = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
-            if (tool == "CallTool" || tool == "PreviewToolCall") return Target(arguments);
-            if ((tool == "RunReadOnlyToolBatch" || tool == "PreviewToolBatch") && arguments.TryGetProperty("operations", out var operations)
-                && operations.ValueKind == JsonValueKind.Array)
-                foreach (var operation in operations.EnumerateArray())
-                {
-                    var error = Target(operation);
-                    if (error != null) return error;
-                }
-            return null;
+            return new SchemaHintedTool(tool, clone);
         }
 
         static partial void ValidateV4Admission(RequestContext<CallToolRequestParams> request, ref CallToolResult? result)
         {
             string name = request.Params?.Name ?? "";
-            if (!AllToolMethods(true).TryGetValue(name, out var method)) return;
+            if (!AllToolDescriptors(true).TryGetValue(name, out var method)) return;
             // The same order as CallTool and batches: typed families, the argument budget,
             // then BindV4Call (duplicates, release, typed contract, binding).
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
-            var error = ValidateTypedFamilies(method, arguments);
+            var error = ToolInvoker.ValidateArguments(method, arguments, method.Tool.InputSchema, typedFamiliesOnly: true);
             if (error == null)
             {
-                try { error = BindV4Call(name, new ToolArguments(arguments), out _, out _); }
+                try { error = ToolInvoker.Bind(name, new ToolArguments(arguments), out _); }
                 catch (InputRejection rejection) { error = rejection.ToError("arguments"); }
             }
             if (error != null) result = V4TargetReject(name, error, current: CurrentBehaviorTargets(name, arguments));
@@ -247,7 +169,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             int toolsWithEnums = 0, enums = 0, defaults = 0, undocumented = 0, parameters = 0, vocabulary = 0;
             var undocumentedTools = new List<string>();
-            foreach (var kv in AllToolMethods())
+            foreach (var kv in AllToolDescriptors())
             {
                 var specs = SpecsOf(kv.Value);
                 var schema = new JsonObject { ["properties"] = new JsonObject(specs.Select(s => new KeyValuePair<string, JsonNode?>(s.Name, new JsonObject()))) };
@@ -263,7 +185,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return new JsonObject
             {
-                ["tools"] = AllToolMethods().Count, ["parameters"] = parameters, ["toolsWithEnumHints"] = toolsWithEnums, ["enumHints"] = enums, ["defaultHints"] = defaults,
+                ["tools"] = AllToolDescriptors().Count, ["parameters"] = parameters, ["toolsWithEnumHints"] = toolsWithEnums, ["enumHints"] = enums, ["defaultHints"] = defaults,
                 ["parametersUndocumented"] = undocumented, ["parametersFromVocabulary"] = vocabulary, ["toolsWithUndocumentedParameters"] = undocumentedTools.Count,
                 ["undocumentedTools"] = new JsonArray(undocumentedTools.OrderBy(t => t, StringComparer.Ordinal).Select(t => (JsonNode)t).ToArray()),
             };
@@ -274,13 +196,16 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class InfrastructureInputTool : McpServerTool
     {
         private readonly McpServerTool inner;
-        private readonly MethodInfo method;
-        internal InfrastructureInputTool(McpServerTool inner, MethodInfo method) { this.inner = inner; this.method = method; }
+        private readonly ToolDescriptor method;
+        private readonly Func<JsonElement, JsonElement, Error?>? validate;
+        internal InfrastructureInputTool(McpServerTool inner, ToolDescriptor method, Func<JsonElement, JsonElement, Error?>? validate = null)
+        { this.inner = inner; this.method = method; this.validate = validate; }
         public override Tool ProtocolTool => inner.ProtocolTool;
         public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
-            var error = McpServer.ValidateV4Arguments(method, arguments, ProtocolTool.InputSchema);
+            var error = validate != null ? validate(arguments, ProtocolTool.InputSchema)
+                : McpServer.ToolInvoker.ValidateArguments(method, arguments, ProtocolTool.InputSchema);
             return error != null ? new ValueTask<CallToolResult>(McpServer.V4TargetReject(ProtocolTool.Name, error, McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments))) : inner.InvokeAsync(request, cancellationToken);
         }
     }

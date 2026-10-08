@@ -78,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var args = JsonNode.Parse(arguments)!.AsObject();
             if (HostBehavior.LegacyBatchImport(name, args)) return null;
-            bool candidate = BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
+            bool candidate = ToolBehaviorPolicy(name, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4;
             if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || candidate || HostBehavior.IsSingleXmlImport(name))) return null;
             string? identity = null; ApprovalBindingIdentity(ref identity);
@@ -118,18 +118,17 @@ namespace TiaMcpServer.ModelContextProtocol
             var args = JsonNode.Parse(arguments)!.AsObject();
             bool hasDryRun = TryDryRunDefault(tool, out var defaultPreview);
             return HostBehavior.ApprovalWrite(tool, args,
-                BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4,
-                ToolCatalog.IsWrite(tool), hasDryRun, defaultPreview);
+                ToolBehaviorPolicy(tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4,
+                IsWriteTool(tool), hasDryRun, defaultPreview);
         }
         private static bool TryDryRunDefault(string tool, out bool defaultPreview)
         {
             defaultPreview = true;
-            if (!AllToolMethods(includeUnavailable: true).TryGetValue(tool, out var method)) return false;
-            var parameter = method.GetParameters().FirstOrDefault(item => item.Name == "dryRun" && item.ParameterType == typeof(bool));
+            if (!AllToolDescriptors(includeUnavailable: true).TryGetValue(tool, out var method)) return false;
+            var parameter = method.Parameters.FirstOrDefault(p => p.Name == "dryRun" && p.ClrType == "System.Boolean");
             if (parameter == null) return false;
-            if (!parameter.HasDefaultValue || parameter.DefaultValue is not bool value) return true;
-            defaultPreview = value;
-            return true;
+            defaultPreview = method.DryRun.Default;
+            return method.DryRun.Present;
         }
         internal static bool ApprovalResultWrite(string tool, string arguments)
         {
@@ -137,7 +136,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var args = JsonNode.Parse(arguments)!.AsObject();
             return args["name"] is JsonValue name && name.TryGetValue<string>(out var target)
                 && !string.Equals(target, "CallTool", StringComparison.OrdinalIgnoreCase)
-                && AllToolMethods(includeUnavailable: true).ContainsKey(target)
+                && AllToolDescriptors(includeUnavailable: true).ContainsKey(target)
                 && ApprovalWrite(target, (args["arguments"] as JsonObject)?.ToJsonString() ?? "{}");
         }
         internal static async Task<ApprovalOutcome?> WaitForApproval(string tool, string arguments, CancellationToken token)
@@ -151,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch") return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
-            if (BehaviorCapabilities.EntryPolicy(typeof(McpServer).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
+            if (ToolBehaviorPolicy(tool, BehaviorPolicy.Current) == BehaviorPolicy.SafeV4
                 && (string?)args["mode"] != "apply") return null;
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             string? identity = null;

@@ -163,7 +163,7 @@ for n in tools["21"]:
     current_names[n] = next(iter(candidates))
 assert set(current_names.values()) == set(registered_tools), "unmapped registrations"
 source_tools = {n: registered_tools[current_names[n]] for n in tools["21"]}
-policy = read(E + "Siemens/ToolVersionPolicy.cs")
+policy = read("src/Logic/Siemens/ToolVersionPolicy.cs")
 only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
 only21 = {old for old, current in current_names.items() if old in only21 or current in only21}
 assert set(tools["20"]) == set(source_tools) - only21
@@ -649,7 +649,7 @@ TASK_PATHS = {
     "P6-32": [E+"Siemens/PlcBlockLookup.cs", E+"Siemens/Services/PlcExternalSourcesService.cs", A+"Native/Plc", F+"ExternalSourcePlanContract.cs", F+"ExternalSourceWorkflowContract.cs", F+"ExternalSourceDeleteContract.cs"],
     "P6-33": [E+"Siemens/Services/PlcSoftwareService.cs", E+"Siemens/Services/PlcBlocksService.cs", E+"Siemens/Services/HmiDescribeService.cs", E+"Siemens/Services/HardwareServicesService.cs", A+"Native/Plc/PlcBlockPrimitives.cs", F+"V17CompileEnvelope.cs"],
     "P6-34": [E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", E+"Siemens/Services/OnlineDownloadService.cs", E+"Siemens/Services/VersionControlService.cs", A+"Native/Vci"],
-    "P6-35": [E+"Siemens/ToolVersionPolicy.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", F+"FoundationTools.cs", "reference/version-feature-matrix.json", "docs/reference/real-machine-ledger.md", "scripts/checks/Snapshot-ToolContracts.py", "scripts/checks/Snapshot-ToolResponses.py"],
+    "P6-35": ["src/Logic/Siemens/ToolVersionPolicy.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", F+"FoundationTools.cs", "reference/version-feature-matrix.json", "docs/reference/real-machine-ledger.md", "scripts/checks/Snapshot-ToolContracts.py", "scripts/checks/Snapshot-ToolResponses.py"],
     "P6-36": [E+"TiaMcpServer.V20.csproj", E+"TiaMcpServer.V21.csproj", F+"TiaMcpServer.LegacyHost.csproj", S+"Launcher/Launcher.cs", "scripts/build", "scripts/checks", "build-tools/native-call-weaver", "scripts/operations/delivery-files.json"],
     "P6-37": [SH+"BundleLayout.cs", E+"Program.cs", E+"Cli", E+"Siemens/EngineRouter.cs", F+"HostOptions.cs", F+"Program.cs", L+"ModelContextProtocol/Builders/EcosystemFiles.cs", TE+"TiaMcpServer.Tests/BundleLayoutTests.cs"],
     "P6-38": [S+"Gui/Configuration", S+"Gui/ConfigurationPage.cs", S+"Client/BridgeClient.cs", S+"Core/Abstractions/SessionFactoryLoader.cs", S+"Core/Adapters/SessionFactoryLoader.cs", TS],
