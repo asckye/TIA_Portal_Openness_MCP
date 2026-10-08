@@ -135,8 +135,9 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 int count = batches.Values.Sum(b => b["files"]!.AsArray().Count);
                 if (batches.Count >= MaximumBatches || count + files.Length > MaximumFiles || retained + total > MaximumBytes) throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", "files");
                 CheckWritable();
+                // Only Windows hosts hand staged paths to net48 workers and engines.
                 foreach (var file in files)
-                    if (Path.Combine(root, new string('0', 32), file.FileName).Length >= 260)
+                    if (Path.DirectorySeparatorChar == '\\' && Path.Combine(root, new string('0', 32), file.FileName).Length >= 260)
                         throw new ArgumentException("Staged import path exceeds the net48 MAX_PATH limit; use a shorter bundle path or filename.", "files");
                 var entries = new JsonArray();
                 for (int i = 0; i < files.Length; i++) entries.Add(new JsonObject { ["fileName"] = files[i].FileName, ["kind"] = files[i].Kind,

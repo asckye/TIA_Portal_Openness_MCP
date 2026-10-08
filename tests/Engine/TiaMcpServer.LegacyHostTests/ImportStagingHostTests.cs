@@ -11,7 +11,7 @@ using Xunit;
 
 public sealed class ImportStagingHostTests : IDisposable
 {
-    private readonly string bundle = Path.GetFullPath(Path.Combine("bin-build/P6-67/host-fixtures", Guid.NewGuid().ToString("N")));
+    private readonly string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
     private sealed class Worker : IFoundationWorker
     {
         internal int Imports, Calls;

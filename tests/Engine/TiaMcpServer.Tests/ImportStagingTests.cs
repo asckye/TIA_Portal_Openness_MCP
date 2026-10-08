@@ -51,7 +51,7 @@ namespace TiaMcpServer.Tests
             Assert.Equal(14, (int)inlineDisplay["sourceText"]!["byteLength"]!);
             Assert.NotNull(inlineDisplay["xmlContent"]!["sha256"]);
         }
-        private readonly string bundle = Path.GetFullPath(Path.Combine("bin-build", "P6-67", "staging-fixture-" + Guid.NewGuid().ToString("N")));
+        private readonly string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
         private ImportStagingStore Store(string release = "17") { Directory.CreateDirectory(bundle); return new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); }
         private static StagedTextFile File(string name = "F.scl", string kind = "scl", string content = "FUNCTION F : Void\nBEGIN\nEND_FUNCTION\n") => new StagedTextFile { FileName = name, Kind = kind, Content = content };
         [Theory]
@@ -349,7 +349,7 @@ namespace TiaMcpServer.Tests
         }
         public void Dispose()
         {
-            // All fixture paths are fixed descendants of the current worktree.
+            // The fixture bundle is a fresh short folder under the temp root (CI checkouts are deep).
             if (Directory.Exists(bundle)) Directory.Delete(bundle, true);
         }
     }

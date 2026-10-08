@@ -185,7 +185,7 @@ namespace TiaMcpServer.Tests
         private static string RunStaging(string value,bool enabled=true)
         {
             using var fixture = new InfrastructureContractsTests();
-            string bundle = Path.GetFullPath(Path.Combine("bin-build/P6-67r/parity-stage", Guid.NewGuid().ToString("N"))); Directory.CreateDirectory(bundle);
+            string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8)); Directory.CreateDirectory(bundle);
             var store = new ImportStagingStore(bundle, McpServer.ReleaseKey, Guid.NewGuid().ToString("N"));
             var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ImportStagingTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());

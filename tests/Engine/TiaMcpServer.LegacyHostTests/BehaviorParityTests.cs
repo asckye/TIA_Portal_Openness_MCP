@@ -107,7 +107,7 @@ public sealed class BehaviorParityTests
         {
             if (scenario.StartsWith("staging-", StringComparison.Ordinal))
             {
-                string bundle = Path.GetFullPath(Path.Combine("bin-build/P6-67r/parity-stage", Guid.NewGuid().ToString("N"))); Directory.CreateDirectory(bundle);
+                string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8)); Directory.CreateDirectory(bundle);
                 var store = new ImportStagingStore(bundle, release, Guid.NewGuid().ToString("N")); int approvals = 0;
                 try
                 {

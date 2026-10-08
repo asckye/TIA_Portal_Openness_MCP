@@ -19,7 +19,7 @@ namespace TiaMcpServer.Tests
         public void Actual_engine_tools_stage_without_a_native_session_after_approval_and_cleanup_is_owned()
         {
             using var fixture = new InfrastructureContractsTests();
-            string bundle = Path.GetFullPath(Path.Combine("bin-build/P6-67/bridge-fixtures", Guid.NewGuid().ToString("N")));
+            string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8));
             Directory.CreateDirectory(bundle);
             var store = new ImportStagingStore(bundle, McpServer.ReleaseKey, Guid.NewGuid().ToString("N"));
             var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ImportStagingTools) });
