@@ -11,6 +11,38 @@ namespace TiaMcp.ShippedTools.Tests;
 public sealed class WriteGuardPortTests
 {
     [Fact]
+    public void Product_roster_includes_reviewed_Foundation_tools_and_refuses_withdrawn_names()
+    {
+        using var fixture = new GuardFixture();
+        var contract = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.RepositoryRoot, "manifest", "contracts", "v4", "baseline", "21.json")))!.AsObject();
+        var tools = contract["tools"]!.AsArray().Select(node => node!.AsObject()).ToArray();
+        Assert.Equal(tools.Length, (int)fixture.Manifest["toolCount"]!);
+        Assert.Equal(tools.Select(tool => (string)tool["name"]!).Order(),
+            fixture.Manifest["tools"]!.AsArray().Select(tool => (string)tool!["name"]!).Order());
+        foreach (var tool in tools)
+            Assert.Equal(tool["inputSchema"]!["properties"]!.AsObject().Select(pair => pair.Key).Order(),
+                fixture.Entry((string)tool["name"]!)["parameters"]!.AsArray().Select(parameter => (string)parameter!).Order());
+        var additions = new Dictionary<string, string> {
+            ["CreatePlcTag"] = "WRITE", ["CreatePlcTagTable"] = "WRITE", ["CreatePlcUserConstant"] = "WRITE",
+            ["GetPortalConnectionReadiness"] = "READ", ["ListPlcSystemConstants"] = "READ", ["ListPlcTags"] = "READ",
+            ["ListPlcUserConstants"] = "READ", ["PlanPlcExternalSourceImport"] = "OFFLINE"
+        };
+        foreach (var (name, operation) in additions)
+        {
+            Assert.Equal(operation, (string?)fixture.Entry(name)["operation"]);
+            fixture.ExpectAllow(fixture.Call(name, new JsonObject { ["dryRun"] = true }));
+            fixture.ExpectAllow(fixture.Call("CallTool", new JsonObject { ["name"] = name, ["arguments"] = new JsonObject { ["dryRun"] = true } }));
+            if (operation == "WRITE")
+                fixture.ExpectDeny(fixture.Call(name, new JsonObject { ["dryRun"] = false }, ("TIA_MCP_GUARD_DENY_OPERATIONS", "WRITE")), name);
+        }
+        foreach (var name in new[] { "ConnectProject", "ConnectIsolatedPortal", "BuildProjectScaffold", "RetrieveProjectArchive", "SaveProjectCopy", "ManageMultiuserSession", "CreatePlcFuture" })
+        {
+            fixture.ExpectDeny(fixture.Call(name, new JsonObject(), ("TIA_MCP_ALLOW_ONLINE_WRITE", "1")), "tool list is out of date");
+            fixture.ExpectDeny(fixture.Call("CallTool", new JsonObject { ["name"] = name, ["arguments"] = new JsonObject() }), name);
+        }
+    }
+
+    [Fact]
     public void Current_roster_and_preview_cases_match_the_pretooluse_policy()
     {
         using var fixture = new GuardFixture();
@@ -106,7 +138,7 @@ public sealed class WriteGuardPortTests
         fixture.ExpectAllow(fixture.Call(applyBatch, new JsonObject { ["token"] = "hidden-plan-012" }, ("TIA_MCP_ALLOW_ONLINE_WRITE", "1")));
         fixture.ExpectDeny(fixture.Call(bridge, new JsonObject { ["name"] = applyBatch, ["arguments"] = new JsonObject { ["token"] = "hidden-plan-012" } }), "opaque stored plan");
         fixture.ExpectDeny(fixture.Call(bridge, new JsonObject { ["name"] = readBatch, ["arguments"] = new JsonObject { ["operations"] = new JsonArray(reads[0]!.DeepClone(), writeOperation.DeepClone()) } }), write);
-        fixture.ExpectDeny(fixture.Call(execute, new JsonObject(), ("TIA_MCP_GUARD_DENY_OPERATIONS", "EXECUTE")), execute);
+        fixture.ExpectDeny(fixture.Call(execute, new JsonObject { ["dryRun"] = false }, ("TIA_MCP_GUARD_DENY_OPERATIONS", "EXECUTE")), execute);
 
         var lines = fixture.AuditLines();
         Assert.True(lines.Count >= 20);

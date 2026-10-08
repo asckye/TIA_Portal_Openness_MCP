@@ -39,7 +39,7 @@
   },
   "write-guard": {
     "project": "tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj",
-    "minimumPassed": 3,
+    "minimumPassed": 4,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",

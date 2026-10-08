@@ -25,6 +25,27 @@ EXCEPTIONS = {
     'DeleteExport': ('FILE', 'WRITE', 'Deletes an in-memory response handle, not a file.'),
 }
 MERGED = {'GetAuthoringGuide', 'GetRecipe'}
+# P7-04 additions to the V20/V21 product, absent from the frozen engine baseline.
+# These are offline project operations/readers; none contacts a controller/runtime.
+NEW_FOUNDATION_TOOLS = {
+    'CreatePlcTag': ('CreatePlcTag', 'WRITE', 'Creates a tag in the bound offline PLC project.'),
+    'CreatePlcTagTable': ('CreatePlcTagTable', 'WRITE', 'Creates a tag table in the bound offline PLC project.'),
+    'CreatePlcUserConstant': ('CreatePlcUserConstant', 'WRITE', 'Creates a user constant in the bound offline PLC project.'),
+    'GetPortalConnectionReadiness': ('DiagnosePortalConnectReadiness', 'READ', 'Passive connection prerequisites; does not attach.'),
+    'ListPlcSystemConstants': ('ReadPlcSystemConstants', 'READ', 'Reads system constant declarations from the bound project.'),
+    'ListPlcTags': ('ReadPlcTags', 'READ', 'Reads tag declarations from the bound project.'),
+    'ListPlcUserConstants': ('ReadPlcUserConstants', 'READ', 'Reads user constant declarations from the bound project.'),
+    'PlanPlcExternalSourceImport': ('PlanPlcExternalSourceImport', 'OFFLINE', 'Plans an external source import; no import execution.'),
+}
+WITHDRAWN = {
+    'ConnectIsolatedPortal': 'ConnectIsolated', 'ConnectProject': 'ConnectToProject',
+    'BuildProjectScaffold': 'ScaffoldProject', 'RetrieveProjectArchive': 'RetrieveProjectArchive',
+    'SaveProjectCopy': 'SaveAsProject', 'ManageMultiuserSession': 'ManageMultiuserSession',
+}
+REBASED_SOURCES = {
+    'ExportPlcBlockDocuments': 'ExportAsDocuments', 'ExportPlcBlocksDocuments': 'ExportBlocksAsDocuments',
+    'ImportPlcBlockDocuments': 'ImportFromDocuments', 'ImportPlcBlocksDocuments': 'ImportBlocksFromDocuments',
+}
 
 
 def read(path):
@@ -84,6 +105,13 @@ def compare_operation(old, actual, baseline, additions=None):
     assert actual == expected, (old, baseline[old], '->', actual, 'expected', expected)
 
 
+def compare_foundation_operation(current, source, actual, baseline):
+    reviewed_source, expected, reason = NEW_FOUNDATION_TOOLS[current]
+    assert source == reviewed_source and reason.strip(), ('unreviewed Foundation mapping', current, source)
+    assert source not in baseline and current not in baseline, ('new tool collides with frozen baseline', current)
+    assert actual == expected, (current, actual, 'expected', expected)
+
+
 def check(manifest_path):
     generator = runpy.run_path(str(ROOT / 'scripts/generate/Generate-ToolUsage.py'))
     rosters, mapping = generator['registered_rosters'](ROOT)
@@ -101,7 +129,7 @@ def check(manifest_path):
     taxonomy = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8-sig')
     metadata = (ROOT / 'src/Logic/ModelContextProtocol/ToolMetadata.cs').read_text(encoding='utf-8')
     declared = re.findall(r'\["([^"]+)"\] = new Classification\(', metadata)
-    assert len(declared) == len(set(declared)) and set(declared) == expected, 'explicit classification coverage differs from roster'
+    assert len(declared) == len(set(declared)) and set(declared) == expected | set(WITHDRAWN), 'explicit classification coverage differs from product/source rosters'
     classify = operation_classifier(taxonomy, metadata)
     descriptions = {}
     for source in EngineSources(ROOT).sources.values():
@@ -111,34 +139,57 @@ def check(manifest_path):
             assert description, ('Missing adjacent Description', match[1])
             assert match[1] not in descriptions, ('Duplicate source registration', match[1])
             descriptions[match[1]] = description[1]
-    assert set(descriptions) == expected, 'source descriptions differ from roster'
+    assert set(descriptions) == (expected - set(NEW_FOUNDATION_TOOLS)) | set(WITHDRAWN), 'engine source descriptions differ from reviewed product roster'
     seen = set()
+    seen_new = set()
     for key in ('20', '21'):
         rows = runtime['releases'][key]
         compare_names([{'name': row['currentName']} for row in rows], rosters[key], 'runtime V' + key)
         for row in rows:
             old, current, final = row['sourceName'], row['currentName'], row['name']
-            assert mapping[old] == current, ('Stale runtime sourceName', row)
-            description = descriptions[current]
+            description = descriptions.get(current)
             source_operation = classify(current, description)
             assert listed[current]['operation'] == source_operation, (current, 'stale manifest operation')
+            if current in NEW_FOUNDATION_TOOLS:
+                compare_foundation_operation(current, old, source_operation, baseline)
+                compare_foundation_operation(current, old, classify(final, description), baseline)
+                seen_new.add(current)
+                continue
+            if current in REBASED_SOURCES:
+                assert old == current, ('Stale Foundation document sourceName', row)
+                old = REBASED_SOURCES[current]
+            assert mapping[old] == current, ('Stale runtime sourceName', row)
             compare_operation(old, source_operation, baseline, additions)
             compare_operation(old, classify(final, description), baseline, additions)
             seen.add(old)
     # The two removed guide aliases share GetToolUsage; their READ category is still checked.
     for old in MERGED:
         compare_operation(old, listed[mapping[old]]['operation'], baseline)
-    assert seen | MERGED == set(baseline) | set(additions), ('Uncompared baseline tools', set(baseline) - seen - MERGED)
+    assert seen | MERGED | set(WITHDRAWN.values()) == set(baseline) | set(additions), ('Uncompared baseline tools', set(baseline) - seen - MERGED - set(WITHDRAWN.values()))
+    assert seen_new == set(NEW_FOUNDATION_TOOLS), 'Reviewed Foundation addition coverage differs'
+    for current, old in WITHDRAWN.items():
+        assert old in baseline and mapping[old] == current and current not in listed, ('Withdrawn tool exposed', current)
     import importlib.util
     spec = importlib.util.spec_from_file_location('contract_snapshot', Path(__file__).with_name('Snapshot-ToolContracts.py'))
     snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
     snapshot.verified_contracts(ROOT / 'manifest/contracts/v4/baseline', ROOT)
+    contracts = {row['name']: row for row in read(ROOT / 'manifest/contracts/v4/baseline/21.json')['tools']}
+    for name, entry in listed.items():
+        assert set(entry['parameters']) == set(contracts[name]['inputSchema']['properties']), (name, 'guard parameter roster differs from product contract')
     print(f'Tool list: V20={len(rosters["20"])}, V21={len(rosters["21"])}, union={len(expected)}; names match.')
     print(f'Operation comparison: {len(baseline)} released tools, {len(seen)} runtime mappings, '
-          f'{len(MERGED)} merged guides, {len(EXCEPTIONS)} justified exceptions; 0 unexplained differences.')
+          f'{len(MERGED)} merged guides, {len(WITHDRAWN)} withdrawn, {len(seen_new)} reviewed Foundation additions, '
+          f'{len(EXCEPTIONS)} justified exceptions; 0 unexplained differences.')
 
 
 class Checks(unittest.TestCase):
+    def test_reviewed_foundation_additions_and_unknown_names_fail_closed(self):
+        for current, (source, expected, _) in NEW_FOUNDATION_TOOLS.items():
+            compare_foundation_operation(current, source, expected, {})
+            with self.assertRaises(AssertionError): compare_foundation_operation(current, source, 'ONLINE-WRITE', {})
+            with self.assertRaises(AssertionError): compare_foundation_operation(current, source, expected, {source: expected})
+        with self.assertRaises(KeyError): compare_foundation_operation('CreatePlcFuture', 'CreatePlcFuture', 'WRITE', {})
+
     def test_current_schema_rejects_candidate_only_parameters(self):
         import importlib.util
         spec = importlib.util.spec_from_file_location('contract_snapshot', Path(__file__).with_name('Snapshot-ToolContracts.py'))

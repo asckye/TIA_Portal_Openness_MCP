@@ -362,10 +362,12 @@ internal static class DeveloperChecks
         }
     }
 
-    internal static int GenerateToolsList(Assembly server, string publicApiDirectory, string outputPath, string packageName)
+    internal static int GenerateToolsList(Assembly server, string publicApiDirectory, string outputPath, string packageName,
+        string foundationHost, string bundleRoot)
     {
-        if (string.IsNullOrWhiteSpace(publicApiDirectory) || string.IsNullOrWhiteSpace(outputPath))
-            throw new ArgumentException("generate-tools-list requires PublicAPI directory and output file.");
+        if (string.IsNullOrWhiteSpace(publicApiDirectory) || string.IsNullOrWhiteSpace(outputPath)
+            || !File.Exists(foundationHost) || !Directory.Exists(bundleRoot))
+            throw new ArgumentException("generate-tools-list requires PublicAPI directory, output file, FoundationHost and bundle root.");
         Reset();
         AddResolver(server, publicApiDirectory);
         var runtimePath = Path.GetDirectoryName(server.Location)!;
@@ -388,39 +390,51 @@ internal static class DeveloperChecks
             });
         }
 
-        // This maintained gate calls ToolExamples.ValidateAgainst with actual reflected signatures and then checks
-        // the version-aware examples surfaced through GetToolUsage, matching the former generator's full coverage.
-        var exampleProblems = (IEnumerable)type.GetMethod("ValidateToolExamples", All)!.Invoke(null, null)!;
-        var exampleErrors = exampleProblems.Cast<object>().Select(x => x.ToString()).ToArray();
-        Check(exampleErrors.Length == 0, exampleErrors.Length == 0 ? "ToolExamples.ValidateAgainst and surfaced usage examples fit" : string.Join("; ", exampleErrors));
+        // Keep validating the engine recipe library; product examples below use the
+        // same schema-aware usage library as FoundationHost, excluding withdrawn tools.
         var recipeProblems = (IEnumerable)type.GetMethod("ValidateToolRecipes", All)!.Invoke(null, null)!;
         var recipeErrors = recipeProblems.Cast<object>().Select(x => x.ToString()).ToArray();
         Check(recipeErrors.Length == 0, recipeErrors.Length == 0 ? "ToolRecipes.ValidateAgainst accepts every recipe" : string.Join("; ", recipeErrors));
 
-        var discipline = type.GetMethod("SchemaHintStatistics", All)!.Invoke(null, null)!;
-        var disciplineText = (string)discipline.GetType().GetMethod("ToJsonString", new[] { typeof(JsonSerializerOptions) })!.Invoke(discipline, new object?[] { null })!;
-        using var disciplineDoc = JsonDocument.Parse(disciplineText);
-        var disciplineRoot = disciplineDoc.RootElement;
-        var previousUndocumented = ReadPreviousUndocumented(outputPath);
+        using var product = ProductCatalog(server, foundationHost, bundleRoot, outputPath);
+        var productTools = product.RootElement.GetProperty("tools");
+        var disciplineRoot = product.RootElement.GetProperty("callDiscipline");
+        var previousUndocumented = ReadPreviousUndocumented(outputPath, out var previousProduct);
         var undocumented = disciplineRoot.GetProperty("parametersUndocumented").GetInt32();
-        Check(previousUndocumented == null || undocumented <= previousUndocumented.Value,
-            previousUndocumented == null || undocumented <= previousUndocumented.Value
+        // Compare like rosters during the migration from a raw engine manifest.
+        var comparableUndocumented = previousProduct ? undocumented
+            : ((JsonObject)type.GetMethod("SchemaHintStatistics", All)!.Invoke(null, null)!)["parametersUndocumented"]!.GetValue<int>();
+        Check(previousUndocumented == null || comparableUndocumented <= previousUndocumented.Value,
+            previousUndocumented == null || comparableUndocumented <= previousUndocumented.Value
                 ? "undocumented parameter count did not increase"
-                : $"Parameters without a [Description] went up from {previousUndocumented} to {undocumented}");
+                : $"Parameters without a [Description] went up from {previousUndocumented} to {comparableUndocumented}");
 
         var catalogType = server.GetType("TiaMcpServer.ModelContextProtocol.ToolCatalog", true)!;
         var catalog = catalogType.GetProperty("Engine", All)!.GetValue(null)!;
-        var methods = ((IEnumerable)catalogType.GetProperty("Methods", All)!.GetValue(catalog)!).Cast<object>().ToArray();
-        var examplesType = server.GetType("TiaMcpServer.ModelContextProtocol.ToolExamples", true)!;
-        var findExample = examplesType.GetMethod("Find", All)!;
+        var methods = ((IEnumerable)catalogType.GetProperty("Methods", All)!.GetValue(catalog)!).Cast<object>()
+            .ToDictionary(entry => Get(entry, "Key")!.ToString()!, entry => (MethodInfo)Get(entry, "Value")!, StringComparer.Ordinal);
+        var usageType = logic.GetType("TiaOpenness.Shared.ToolUsageCatalog", true)!;
+        var profiles = (IEnumerable)usageType.GetMethod("ProfileEntries", All)!.Invoke(null, new object[] { "21", 4, false })!;
+        var profileRows = profiles.Cast<JsonObject>().ToDictionary(row => (string)row["currentName"]!, StringComparer.Ordinal);
+        var productNames = productTools.EnumerateArray().Select(entry => entry.GetProperty("name").GetString()!).ToArray();
         var rows = new List<(string Name, JsonObject Value)>();
-        foreach (var entry in methods)
+        foreach (var entry in productTools.EnumerateArray())
         {
-            var method = (MethodInfo)Get(entry, "Value")!;
-            var name = Get(entry, "Key")!.ToString()!;
-            var descriptionAttribute = CustomAttributeData.GetCustomAttributes(method)
-                .FirstOrDefault(attribute => attribute.AttributeType.FullName == typeof(DescriptionAttribute).FullName);
-            var description = descriptionAttribute == null ? "" : (string)descriptionAttribute.ConstructorArguments[0].Value!;
+            var name = entry.GetProperty("name").GetString()!;
+            var description = entry.GetProperty("description").GetString()!;
+            var schema = entry.GetProperty("inputSchema");
+            var properties = schema.GetProperty("properties").EnumerateObject().Select(parameter => parameter.Name).ToArray();
+            var profile = profileRows[name];
+            bool shared = profile["profiles"]!.AsArray().Any(value => (string?)value == "plc-foundation");
+            var usage = (JsonObject)usageType.GetMethod("Describe", All)!.Invoke(null, new object?[] {
+                name, "21", shared ? "plc-foundation" : "full-engine", description,
+                JsonNode.Parse(schema.GetRawText())!.AsObject(), null, null, "", productNames, null, null
+            })!;
+            var example = usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
+            Check(!example.Select(pair => pair.Key).Except(properties).Any()
+                && (!schema.TryGetProperty("required", out var required) || required.EnumerateArray().All(parameter => example.ContainsKey(parameter.GetString()!))),
+                name + " product usage example fits the advertised parameter roster");
+            methods.TryGetValue(name, out var method);
             var tag = parseTag.Invoke(null, new object[] { name })!;
             var layer = Get(tag, "Item1")!.ToString()!;
             var domain = Get(tag, "Item2")!.ToString()!;
@@ -428,8 +442,7 @@ internal static class DeveloperChecks
             var opName = Get(operation, "Item1")!.ToString()!;
             var opInferred = Convert.ToBoolean(Get(operation, "Item2"));
             var category = categoryOf.Invoke(null, new object[] { domain })!.ToString()!;
-            var example = findExample.Invoke(null, new object?[] { name });
-            var parameters = new JsonArray(method.GetParameters().Select(parameter => (JsonNode?)JsonValue.Create(parameter.Name)).ToArray());
+            var parameters = new JsonArray(properties.Select(parameter => (JsonNode?)JsonValue.Create(parameter)).ToArray());
             rows.Add((name, new JsonObject
             {
                 ["name"] = name,
@@ -438,11 +451,11 @@ internal static class DeveloperChecks
                 ["domain"] = domain,
                 ["operation"] = opName,
                 ["operationInferred"] = opInferred,
-                ["method"] = method.Name,
-                ["returnType"] = method.ReturnType.Name,
+                ["method"] = shared ? "FoundationV4Tool.InvokeAsync" : method!.Name,
+                ["returnType"] = shared ? "CallToolResult" : method!.ReturnType.Name,
                 ["parameters"] = parameters,
                 ["description"] = description,
-                ["example"] = example == null ? null : JsonValue.Create(Get(example, "ArgumentsJson")!.ToString())
+                ["example"] = JsonValue.Create(example.ToJsonString())
             }));
         }
         var uncategorized = rows.Where(row => row.Value["category"]!.GetValue<string>() == "uncategorized").Select(row => row.Name).ToArray();
@@ -459,18 +472,18 @@ internal static class DeveloperChecks
         // OrderedDictionary keys through PSObject.Properties, so every sort key is null and
         // its unstable Array.Sort permutation is observable in manifest/tools-list.json.
         Array.Sort(sortedRows, Comparer<JsonNode>.Create((_, _) => 0));
-        var recipeType = logic.GetType("TiaMcpServer.ModelContextProtocol.ToolRecipes", true)!;
-        var recipeCount = ((IEnumerable)recipeType.GetProperty("All", All)!.GetValue(null)!).Cast<object>().Count();
+        var recipeCount = ((IEnumerable)usageType.GetMethod("Sequences", All)!.Invoke(null, new object[] { false })!).Cast<object>().Count();
         var curatedCount = rows.Count(row => row.Value["example"] != null);
         var output = new JsonObject
         {
             ["package"] = packageName,
             ["generatedAt"] = DateTimeOffset.UtcNow.ToString("o"),
-            ["source"] = "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-            ["fileVersion"] = FileVersionInfo.GetVersionInfo(server.Location).FileVersion,
-            ["exeSha256"] = Sha256(server.Location),
+            ["source"] = "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
+            ["fileVersion"] = FileVersionInfo.GetVersionInfo(foundationHost).FileVersion,
+            ["exeSha256"] = Sha256(foundationHost),
+            ["workerSha256"] = Sha256(server.Location),
             ["toolCount"] = rows.Count,
-            ["note"] = "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
+            ["note"] = "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
             ["callDiscipline"] = new JsonObject
             {
                 ["parameters"] = disciplineRoot.GetProperty("parameters").GetInt32(),
@@ -490,9 +503,41 @@ internal static class DeveloperChecks
         var destination = Path.GetFullPath(outputPath);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
         File.WriteAllText(destination, output.ToJsonString(serializerOptions), new UTF8Encoding(false));
-        Console.WriteLine($"Compiled EXE tool metadata: {rows.Count} tools; {curatedCount} with a validated example; {output["callDiscipline"]!["enumHints"]} enum hints on {output["callDiscipline"]!["toolsWithEnumHints"]} tools; {undocumented} of {output["callDiscipline"]!["parameters"]} parameters without their own description ({output["callDiscipline"]!["parametersFromVocabulary"]} covered by the vocabulary; {output["callDiscipline"]!["toolsWithUndocumentedParameters"]} tools); recipes validated");
+        Console.WriteLine($"FoundationHost product metadata: {rows.Count} tools; {curatedCount} with a validated example; {output["callDiscipline"]!["enumHints"]} enum hints on {output["callDiscipline"]!["toolsWithEnumHints"]} tools; {undocumented} of {output["callDiscipline"]!["parameters"]} parameters without their own description ({output["callDiscipline"]!["parametersFromVocabulary"]} covered by the vocabulary; {output["callDiscipline"]!["toolsWithUndocumentedParameters"]} tools); recipes validated");
         Console.WriteLine($"Generator gates: {checks} checks passed, {failures} failed");
         return failures == 0 ? 0 : 1;
+    }
+
+    private static JsonDocument ProductCatalog(Assembly server, string foundationHost, string bundleRoot, string outputPath)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(outputPath))!;
+        Directory.CreateDirectory(directory);
+        var catalogPath = Path.Combine(directory, ".guard-engine-catalog-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            // Export descriptors only. The host's --catalog path overlays the same
+            // Foundation registrations as STDIO/HTTP, without launching a worker.
+            server.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", All)!.Invoke(null, new object[] { catalogPath });
+            string Quote(string value) => "\"" + Regex.Replace(Regex.Replace(value, @"(\\*)""", "$1$1\\\""), @"\\+$", "$0$0") + "\"";
+            var start = new ProcessStartInfo(Path.GetFullPath(foundationHost)) {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+                Arguments = "--catalog --offline --profile full --release-key 21 --bundle-root " + Quote(Path.GetFullPath(bundleRoot))
+                    + " --engine-worker " + Quote(server.Location) + " --engine-catalog " + Quote(catalogPath)
+            };
+            using var process = Process.Start(start)!;
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(60000)) { process.Kill(); throw new TimeoutException("Foundation product catalog timed out."); }
+            var text = stdout.GetAwaiter().GetResult();
+            var error = stderr.GetAwaiter().GetResult();
+            if (process.ExitCode != 0) throw new InvalidOperationException("Foundation product catalog failed: " + error);
+            var product = JsonDocument.Parse(text);
+            if (product.RootElement.GetProperty("releaseKey").GetString() != "21"
+                || product.RootElement.GetProperty("profile").GetString() != "full-engine")
+            { product.Dispose(); throw new InvalidDataException("Guard roster requires the V21 full product catalog."); }
+            return product;
+        }
+        finally { if (File.Exists(catalogPath)) File.Delete(catalogPath); }
     }
 
     private static void Reset() { checks = 0; failures = 0; }
@@ -564,12 +609,14 @@ internal static class DeveloperChecks
         return config;
     }
 
-    private static int? ReadPreviousUndocumented(string outputPath)
+    private static int? ReadPreviousUndocumented(string outputPath, out bool productRoster)
     {
+        productRoster = false;
         if (!File.Exists(outputPath)) return null;
         try
         {
             using var previous = JsonDocument.Parse(File.ReadAllText(outputPath));
+            productRoster = previous.RootElement.GetProperty("source").GetString()?.StartsWith("FoundationHost V21 full product catalog", StringComparison.Ordinal) == true;
             return previous.RootElement.GetProperty("callDiscipline").GetProperty("parametersUndocumented").GetInt32();
         }
         catch { return null; }

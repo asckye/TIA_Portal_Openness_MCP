@@ -64,7 +64,8 @@ namespace PlcExchangeTests
         {
             var method = Entries()["GetPlcCrossReferences"];
             Assert.Equal("GetCrossReferencesV4", method.Name);
-            var classify = typeof(McpServer).GetMethod("IsBatchOrchestration", BindingFlags.Static | BindingFlags.NonPublic)!;
+            var classify = typeof(McpServer).GetMethod("IsBatchOrchestration", BindingFlags.Static | BindingFlags.NonPublic,
+                null, new[] { typeof(MethodInfo) }, null)!;
             Assert.True((bool)classify.Invoke(null, new object[] { method })!);
             Assert.False((bool)classify.Invoke(null, new object[] { Entries()["ListExportHandles"] })!);
             var target = new ToolTarget("GetPlcCrossReferences", new InputSchema(JsonSerializer.Deserialize<JsonElement>("{\"type\":\"object\"}")),

@@ -26,7 +26,8 @@ internal static class EngineHost
         if (options.CatalogOnly)
         {
             Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "full-engine",
-                behaviorCapabilities = pipeline.BehaviorCapabilities, tools = pipeline.Tools.Select(t => t.ProtocolTool) }, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
+                behaviorCapabilities = pipeline.BehaviorCapabilities, callDiscipline = TiaMcpServer.ModelContextProtocol.McpServer.SchemaHintStatistics(),
+                tools = pipeline.Tools.Select(t => t.ProtocolTool) }, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             return 0;
         }
         var status = await worker.Status(CancellationToken.None);

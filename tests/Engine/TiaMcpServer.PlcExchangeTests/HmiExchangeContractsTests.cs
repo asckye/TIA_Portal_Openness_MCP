@@ -39,7 +39,8 @@ namespace PlcExchangeTests
             .SelectMany(n => ToolType(n).GetMethods(All)).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
             .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!, m => m);
         private static MethodInfo Method(string name) => Methods()[name];
-        private static object? Boundary(string name, params object?[] args) => typeof(McpServer).GetMethod(name, All)!.Invoke(null, args);
+        private static object? Boundary(string name, params object?[] args) => typeof(McpServer).GetMethods(All)
+            .Single(method => method.Name == name && method.GetParameters().Length == args.Length).Invoke(null, args);
         private static CallToolResult Map(string tool, object response, bool writes, bool current)
             => (CallToolResult)ToolType("HmiExchangeContract").GetMethod("Map", All)!.Invoke(null, new[] { tool, response, writes, current })!;
         private static string[] ParseNames(string json)

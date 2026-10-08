@@ -249,6 +249,9 @@ internal static partial class ReleaseCommands
         var harnessProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
         RestoreBuildProject(dotnet, harnessProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", harnessProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, nuget, "HTTP harness build");
+        var foundationHostProject = Path.Combine(Root, "src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
+        RestoreBuildProject(dotnet, foundationHostProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
+        RunBuildRaw(dotnet, ["build", foundationHostProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-foundation-host.log"), runTemp, cliHome, apiRoot, nuget, "Foundation product catalog build");
         var weaverProject = Path.Combine(Root, "build-tools/native-call-weaver/NativeCallWeaver.csproj");
         RestoreBuildProject(dotnet, weaverProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", weaverProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "native-weaver-build.log"), runTemp, cliHome, apiRoot, nuget, "native call weaver build");
@@ -569,7 +572,8 @@ internal static partial class ReleaseCommands
         var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
         if (plan.Includes("engine-functional")) RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
         if (plan.Includes("engine-functional")) RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
-        RunBuildSpec("generate-tools-list", harness, [exe, "generate-tools-list", v21Api, Path.Combine(Root, "manifest/tools-list.json"), package], outputDirectory, runTemp, cliHome, apiRoot);
+        var foundationHost = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
+        RunBuildSpec("generate-tools-list", harness, [exe, "generate-tools-list", v21Api, Path.Combine(Root, "manifest/tools-list.json"), package, foundationHost, Root], outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildSpec("tool-capability-matrix", dotnet, ["run", Path.Combine(Root, "scripts/generate/Generate-ToolCapabilityMatrix.cs"), "--", "--tools-list", Path.Combine(Root, "manifest/tools-list.json"), "--out-file", Path.Combine(Root, "docs/reference/tool-matrix.md")], outputDirectory, runTemp, cliHome, apiRoot);
     }
 
