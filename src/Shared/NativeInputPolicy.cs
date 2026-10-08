@@ -14,9 +14,22 @@ namespace TiaOpenness.Shared
         internal static T Read<T>(string parameter, Func<T> read)
         {
             try { return read(); }
-            catch (Exception error) when (error is FileNotFoundException || error is DirectoryNotFoundException || error is UnauthorizedAccessException)
+            catch (Exception error) when (error is FileNotFoundException || error is DirectoryNotFoundException || error is UnauthorizedAccessException
+                || error is PathTooLongException || error is NotSupportedException || error is ArgumentException && error is not AdapterPreconditionException)
             { throw new AdapterPreconditionException("The input file cannot be read. Verify its path and read permissions.", parameter, true, error); }
+            // A sharing violation or another I/O failure still happens before the native operation.
+            catch (IOException error)
+            { throw new AdapterPreconditionException("The input file cannot be read now; another program may hold it open. Close it or pass a copy, then retry.", parameter, false, error); }
         }
+
+        // TIA Portal holds an open project file; a project path is checked for existence only.
+        internal static void RequireExists(string path, string parameter)
+            => Read(parameter, () =>
+            {
+                string full = FullPath(path);
+                if (!File.Exists(full) && !Directory.Exists(full)) throw new FileNotFoundException(null, full);
+                return true;
+            });
 
         internal static FileStream OpenRead(string path, string parameter)
             => Read(parameter, () => new FileStream(FullPath(path), FileMode.Open, FileAccess.Read, FileShare.Read));

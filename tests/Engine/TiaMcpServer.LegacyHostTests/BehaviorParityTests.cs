@@ -62,8 +62,9 @@ public sealed class BehaviorParityTests
             if (scenario == "native-read") error = new IOException("Fixture native interruption.");
             try
             {
-                if (scenario == "missing-directory" || scenario == "file-access-denied")
-                    NativeInputPolicy.Read<int>("filePath", () => throw (scenario == "missing-directory" ? (Exception)new DirectoryNotFoundException() : new UnauthorizedAccessException()));
+                if (scenario == "missing-directory" || scenario == "file-access-denied" || scenario == "file-locked")
+                    NativeInputPolicy.Read<int>("filePath", () => throw (scenario == "missing-directory" ? (Exception)new DirectoryNotFoundException()
+                        : scenario == "file-locked" ? new IOException("Fixture sharing violation.", unchecked((int)0x80070020)) : new UnauthorizedAccessException()));
                 BehaviorParityCases.ExportAdmission(scenario);
                 if (scenario.StartsWith("blocked-export", StringComparison.Ordinal))
                 {

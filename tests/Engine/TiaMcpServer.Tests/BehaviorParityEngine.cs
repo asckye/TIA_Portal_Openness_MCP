@@ -54,8 +54,9 @@ namespace TiaMcpServer.Tests
                 if (scenario == "existing-no-overwrite") throw new AdapterPreconditionException("Existing object; overwrite=false.", "overwrite");
                 if (scenario == "precondition") throw new AdapterPreconditionException("Fixture state refusal.", "softwarePath", false);
                 if (scenario == "cancellation") throw new OperationCanceledException();
-                if (scenario == "missing-directory" || scenario == "file-access-denied")
-                    NativeInputPolicy.Read<int>("filePath", () => throw (scenario == "missing-directory" ? (Exception)new DirectoryNotFoundException() : new UnauthorizedAccessException()));
+                if (scenario == "missing-directory" || scenario == "file-access-denied" || scenario == "file-locked")
+                    NativeInputPolicy.Read<int>("filePath", () => throw (scenario == "missing-directory" ? (Exception)new DirectoryNotFoundException()
+                        : scenario == "file-locked" ? new IOException("Fixture sharing violation.", unchecked((int)0x80070020)) : new UnauthorizedAccessException()));
                 if (scenario == "no-effect") return McpServer.V4Result("CreatePlcTag", new JsonObject {
                     ["status"] = "not-found-not-deleted", ["attempted"] = false, ["executed"] = false, ["deleted"] = false, ["targetIdentity"] = "" });
                 if (!dryRun && scenario == "unknown") { InvocationJournal.NativeCallStarted(); throw new IOException("Fixture native interruption."); }

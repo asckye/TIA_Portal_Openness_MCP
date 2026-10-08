@@ -17,6 +17,7 @@ namespace TiaMcp.BehaviorParity
             new object[] { "missing-file", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "missing-directory", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "file-access-denied", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
+            new object[] { "file-locked", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
             new object[] { "existing-no-overwrite", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" },
             new object[] { "precondition", "PRECONDITION_FAILED", "rejected-before-operation", "not-started" },
             new object[] { "unknown", "OUTCOME_UNKNOWN", "unknown", "unknown" },

@@ -28,10 +28,13 @@ namespace TiaMcp.Logic.V4
                     || pair.Key == "path" && tool is "BuildPlcSymbolManifestFromPath" or "ExtractPlcBlockMetrics" or "ValidateClassicHmiMinimalPackageFiles" or "ValidateClassicHmiMinimalPackagePlcSync"
                     || pair.Key == "directoryPath" && tool == "AuditEngineeringExports"
                     || tool == "SeedProjectFromReference" && pair.Key == "referenceDir"
-                    || tool == "OpenProject" && pair.Key == "path"
-                    || tool == "ConnectProject" && pair.Key == "projectPath"
-                    || tool == "OpenLocalSession" && pair.Key == "localSessionPath"
                     || tool is "RetrieveProject" or "RetrieveProjectArchive" && pair.Key == "archivePath";
+                if (tool == "OpenProject" && pair.Key == "path" || tool == "ConnectProject" && pair.Key == "projectPath"
+                    || tool == "OpenLocalSession" && pair.Key == "localSessionPath")
+                {
+                    NativeInputPolicy.RequireExists(path, pair.Key);
+                    continue;
+                }
                 if (!input) continue;
                 // Unified exchange imports identify a file by directory + fileName.
                 if (pair.Key == "directory" && import && arguments["fileName"] is JsonValue fileValue
