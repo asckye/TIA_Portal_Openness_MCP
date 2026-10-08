@@ -233,6 +233,8 @@ public sealed class EngineHttpSessionTests
                 start.ArgumentList.Add("--worker-timeout-config"); start.ArgumentList.Add(timeouts);
             }
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = directory; start.Environment["TiaPortalLocation"] = "";
+            // Release checks set their own diagnostics root; the journal assertions read this host's data directory.
+            start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");
             string config = Path.Combine(directory, "config"); Directory.CreateDirectory(config);
             new ApprovalSettings(false, 1).Save(Path.Combine(config, "approval.settings"));
             var process = Process.Start(start)!;
