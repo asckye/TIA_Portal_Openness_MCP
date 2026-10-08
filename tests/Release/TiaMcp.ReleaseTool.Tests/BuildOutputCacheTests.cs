@@ -153,8 +153,8 @@ public sealed class BuildOutputCacheTests
                 var root = Path.Combine(parent, name);
                 System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools/release"));
                 File.WriteAllText(Path.Combine(root, "build-tools/release/orchestrator.cs"), "// identical orchestrator\n");
-                System.IO.Directory.CreateDirectory(Path.Combine(root, "scripts/build"));
-                File.WriteAllText(Path.Combine(root, "scripts/build/bundled-dotnet.json"), "{}");
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools"));
+                File.WriteAllText(Path.Combine(root, "build-tools/bundled-dotnet.json"), "{}");
                 var config = Path.Combine(root, "nuget.config");
                 File.WriteAllText(config, "<configuration><packageSources><clear /></packageSources></configuration>");
                 foreach (var projectName in new[] { "Shared", "Unit" })
@@ -258,8 +258,8 @@ public sealed class BuildOutputCacheTests
             {
                 System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools/release"));
                 File.WriteAllText(Path.Combine(root, "build-tools/release/orchestrator.cs"), "// identical orchestrator\n");
-                System.IO.Directory.CreateDirectory(Path.Combine(root, "scripts/build"));
-                File.WriteAllText(Path.Combine(root, "scripts/build/bundled-dotnet.json"), "{}");
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools"));
+                File.WriteAllText(Path.Combine(root, "build-tools/bundled-dotnet.json"), "{}");
                 File.WriteAllText(Path.Combine(root, "nuget.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
                 File.WriteAllText(Path.Combine(root, "linked.cs"), "public class Linked {}\n");
                 var folder = Path.Combine(root, "unit");
@@ -326,8 +326,8 @@ public sealed class BuildOutputCacheTests
             {
                 System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools/release"));
                 File.WriteAllText(Path.Combine(root, "build-tools/release/orchestrator.cs"), "// identical orchestrator\n");
-                System.IO.Directory.CreateDirectory(Path.Combine(root, "scripts/build"));
-                File.WriteAllText(Path.Combine(root, "scripts/build/bundled-dotnet.json"), "{}");
+                System.IO.Directory.CreateDirectory(Path.Combine(root, "build-tools"));
+                File.WriteAllText(Path.Combine(root, "build-tools/bundled-dotnet.json"), "{}");
                 File.WriteAllText(Path.Combine(root, "nuget.config"), "<configuration><packageSources><clear /></packageSources></configuration>");
                 var weaver = Path.Combine(root, "weaver/bin/Release/net10.0/Weaver.dll");
                 System.IO.Directory.CreateDirectory(Path.GetDirectoryName(weaver)!);

@@ -1,6 +1,6 @@
 """Exercise migrated pilot domains through the real SDK, bridge and isolated STDIO host.
 
-Uses the HttpTests protocol host without Openness initialization. No TIA connection,
+Uses the TiaMcp.Engine.Harness protocol host without Openness initialization. No TIA connection,
 network transport, Git mutation or companion execution is requested.
 """
 import argparse

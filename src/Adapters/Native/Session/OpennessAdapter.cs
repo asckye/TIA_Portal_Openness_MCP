@@ -1,6 +1,6 @@
 using System;
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcp.Adapters

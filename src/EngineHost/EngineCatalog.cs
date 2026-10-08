@@ -9,7 +9,7 @@ using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost
+namespace TiaMcp.FoundationHost
 {
     internal sealed class EngineCatalog : IToolCatalogView
     {

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>TiaMcp.WorkerChannel.TransportFixture</RootNamespace>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <FixtureRelease Include="14sp1;15.1;16;17;18;19;20;21" />
+  </ItemGroup>
+  <!-- Synthetic adapter identities, confined to the fixture build directory. -->
+  <Target Name="FixtureAdapterIdentities" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)TiaMcp.Adapter.%(FixtureRelease.Identity).dll" />
+  </Target>
+</Project>

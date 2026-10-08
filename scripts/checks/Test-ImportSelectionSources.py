@@ -51,7 +51,7 @@ class ImportSelectionWiring(unittest.TestCase):
         self.assertTrue((LOGIC / 'ModelContextProtocol/Tools/ImportSelectionPolicy.cs').exists())
         self.assertFalse((SRC / 'ModelContextProtocol/Tools/ImportSelectionPolicy.cs').exists())
         for version in (20, 21):
-            project = (SRC / f'TiaMcpServer.V{version}.csproj').read_text(encoding='utf-8')
+            project = (SRC / f'TiaMcp.Engine.V{version}.csproj').read_text(encoding='utf-8')
             self.assertIn('<ProjectReference Include="../Logic/TiaMcp.Logic.csproj"', project)
 
 if __name__ == '__main__':

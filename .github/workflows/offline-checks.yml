@@ -116,8 +116,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dotnet publish src/FoundationHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/ci-foundation
-          dotnet build tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
+          dotnet publish src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release -o bin-build/ci-foundation
+          dotnet build tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj -c Release
           for key in 14sp1 15.1 16 17 18 19; do
             target="runtime/v$key"
             mkdir -p "$target"
@@ -125,4 +125,4 @@ jobs:
             printf '%s' "$key" > "$target/release-key.txt"
           done
       - name: Six real STDIO hosts and isolated HTTP sessions
-        run: python scripts/checks/Test-FoundationTransport.py --fixture tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results
+        run: python scripts/checks/Test-FoundationTransport.py --fixture tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results

@@ -13,7 +13,7 @@ using System.IO;
 using System.Linq;
 using Siemens.Engineering;
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 
 namespace Siemens.Engineering {
@@ -51,7 +51,7 @@ namespace TiaMcp.Adapters.Native.Plc {
     }
     public static class PlcBlockPrimitives { public static object Parent(Siemens.Engineering.IEngineeringObject item)=>item.Parent; }
 }
-namespace TiaMcp.PlcFoundation {
+namespace TiaMcp.Adapters {
     internal static class PlcLifecyclePolicy { internal static void RequireLocalSessionExecution(bool local,bool preview) { if(local) throw new AdapterPreconditionException("Local session refused.",isArgument:false); } }
     public sealed partial class PlcFoundationEngine {
         private sealed class Lifecycle { internal bool IsLocalSession=false; internal int? ProcessId=123; }

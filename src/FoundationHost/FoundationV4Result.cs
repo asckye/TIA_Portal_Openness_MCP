@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal static class FoundationV4Result
 {

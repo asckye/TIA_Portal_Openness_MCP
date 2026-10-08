@@ -52,7 +52,7 @@ internal static partial class ReleaseCommands
             Build("build-tools/native-call-weaver/NativeCallWeaver.csproj");
             var weaverOutput = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0");
             CopyDirectoryContents(weaverOutput, Path.Combine(Root, "runtime/verification"));
-            Build("src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
+            Build("src/FoundationHost/TiaMcp.FoundationHost.csproj");
             foreach (var key in new[] { "20", "21" })
             {
                 CleanLegacyEngineLayout(key);
@@ -63,15 +63,15 @@ internal static partial class ReleaseCommands
                     File.Copy(file, Path.Combine(runtime, Path.GetFileName(file)), true);
                 File.WriteAllText(Path.Combine(runtime, "release-key.txt"), key, new System.Text.UTF8Encoding(false));
             }
-            Build("tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
-            Build("tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj");
-            var fixture = Path.Combine(Root, "tests/Engine/TiaMcpServer.DiagnosticsTests/bin/Release/net48/DiagnosticsTests.exe");
+            Build("tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
+            Build("tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj");
+            var fixture = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe");
             VerifyDiagnosticFixture(python, fixture, Path.Combine(weaverOutput, "NativeCallWeaver.dll"), logs, temp, cli, apiRoot);
-            var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
+            var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
             foreach (var major in new[] { 20, 21 })
             {
                 var api = ResolveReleaseApi(null, apiRoot, major);
-                Build($"src/Engine/TiaMcpServer.V{major}.csproj", [$"-p:SiemensEngineeringDirectory={api}"]);
+                Build($"src/Engine/TiaMcp.Engine.V{major}.csproj", [$"-p:SiemensEngineeringDirectory={api}"]);
                 var built = Path.Combine(Root, major == 20 ? "src/Engine/bin-v20/Release/net48" : "src/Engine/bin/Release/net48");
                 var runtime = Path.Combine(Root, $"runtime/v{major}/worker");
                 Directory.CreateDirectory(runtime);

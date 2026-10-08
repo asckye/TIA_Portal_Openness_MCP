@@ -1,6 +1,6 @@
 """Compare disconnected domain responses over full/lite, direct/isolated STDIO.
 
-Use pre-move/current HttpTests and EXEs. Compare UTF-8 response text, masking the
+Use pre-move/current TiaMcp.Engine.Harness and EXEs. Compare UTF-8 response text, masking the
 declared envelope/watch-probe timestamps and D1 exception stack frames. Version-hidden tools must remain hidden; their direct
 registration refusal and lite bridge refusal are compared as well. Never connects
 to TIA. Extend CASES when migrating another domain; source coverage is mandatory.

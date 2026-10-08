@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal static class PlcRuntimeQueryPolicy
     {

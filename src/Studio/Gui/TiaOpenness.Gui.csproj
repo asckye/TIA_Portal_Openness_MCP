@@ -8,7 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>TiaOpenness</AssemblyName>
     <Nullable>enable</Nullable>
-    <!-- Published apphosts look for the bundled runtime/dotnet first (scripts/build/bundled-dotnet.json), then an installed .NET. -->
+    <!-- Published apphosts look for the bundled runtime/dotnet first (build-tools/bundled-dotnet.json), then an installed .NET. -->
     <AppHostRelativeDotNet>../dotnet</AppHostRelativeDotNet>
     <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
   </PropertyGroup>

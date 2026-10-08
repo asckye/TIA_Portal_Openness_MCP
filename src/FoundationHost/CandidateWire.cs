@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using TiaMcp.Adapters.Contracts.Candidates;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal static class CandidateWire
 {

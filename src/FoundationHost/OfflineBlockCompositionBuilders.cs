@@ -5,7 +5,7 @@ using System.Xml;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 /// <summary>Pure candidate assembly; only Compose methods, never file or probe helpers.</summary>
 internal static class OfflineBlockCompositionBuilders

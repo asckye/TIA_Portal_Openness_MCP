@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class DeviceAddContract
 {
     internal static TiaMcp.Logic.V4.Envelope ValidateCandidate(JsonNode? payload, JsonObject request)
@@ -48,7 +48,7 @@ internal static class DeviceAddContract
         bool Flag(string k)=>r[k] is JsonValue v&&v.TryGetValue<bool>(out var b)?b:throw new InvalidDataException("Missing creation flag: "+k);
         foreach(var field in r) if(field.Value is JsonValue value && value.TryGetValue<string>(out var text) && text.Length>4096) throw new InvalidDataException("Oversized creation field.");
         if(Text("DeviceName").Length>128 || Text("TypeIdentifier").Length>512 || Text("ArticleNumber").Length>256 || Text("Version").Length>64 || Text("Error").Length>2048)throw new InvalidDataException("Creation scalar bound exceeded.");
-        TiaMcp.PlcFoundation.MutationIdentityPolicy.AbsoluteFile(Text("ProjectFile"));
+        TiaMcp.Adapters.MutationIdentityPolicy.AbsoluteFile(Text("ProjectFile"));
         bool dry=request["dryRun"]?.GetValue<bool>()??true;
         if(Text("Release") is not ("19" or "20" or "21") || r["ProcessId"] is not JsonValue p || !p.TryGetValue<int>(out var pid)||pid<=0 || string.IsNullOrWhiteSpace(Text("ProjectFile")))throw new InvalidDataException("Invalid creation session.");
         if(Text("DeviceName")!=request["deviceName"]?.GetValue<string>() || Text("Family")!=(request["family"]?.GetValue<string>()??"S7-1500"))throw new InvalidDataException("Creation target mismatch.");
@@ -58,7 +58,7 @@ internal static class DeviceAddContract
         if(!admitted.Contains(Text("ArticleNumber"),StringComparer.Ordinal) || Text("TypeIdentifier")!="OrderNumber:"+Text("ArticleNumber")+"/"+Text("Version") || Text("Version").Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)))throw new InvalidDataException("Catalog identity is outside the bounded PLC admission.");
         var hash=Text("PlanHash");if(hash.Length!=64 || hash.Any(c=>!"0123456789abcdef".Contains(c)))throw new InvalidDataException("Missing creation plan hash.");
         if(!dry && (request["confirm"]?.GetValue<bool>()!=true || hash!=request["expectedPlanHash"]?.GetValue<string>()))throw new InvalidDataException("Creation review mismatch.");
-        if(!dry) TiaMcp.PlcFoundation.MutationIdentityPolicy.RequireSameProject(request["expectedProjectFile"]?.GetValue<string>()??"",Text("ProjectFile"));
+        if(!dry) TiaMcp.Adapters.MutationIdentityPolicy.RequireSameProject(request["expectedProjectFile"]?.GetValue<string>()??"",Text("ProjectFile"));
         if(r["Inventory"] is not JsonArray a || a.Count>4096 || a.Any(x=>x is not JsonValue v||!v.TryGetValue<string>(out var n)||string.IsNullOrWhiteSpace(n)||n.Length>128))throw new InvalidDataException("Incomplete creation inventory.");
         var names=a.Select(x=>x!.GetValue<string>()).ToArray();if(names.Distinct(StringComparer.OrdinalIgnoreCase).Count()!=names.Length || names.Contains(Text("DeviceName"),StringComparer.OrdinalIgnoreCase))throw new InvalidDataException("Creation name collision.");
         switch(Text("Status"))

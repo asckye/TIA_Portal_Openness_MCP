@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <RootNamespace>TiaOpenness.Configuration.Tests</RootNamespace>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsTestProject>false</IsTestProject>

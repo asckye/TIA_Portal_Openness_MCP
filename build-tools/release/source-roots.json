@@ -41,7 +41,7 @@
       ]
     },
     {
-      "path": "src/Worker",
+      "path": "src/PlcWorker",
       "inventories": [
         "engine",
         "multi",
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "path": "src/Runtime",
+      "path": "src/OnlineChannels",
       "inventories": [
         "engine",
         "multi",
@@ -222,6 +222,146 @@
     },
     {
       "path": "tests/Engine",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation"
+      ],
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "tests/Shared",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation"
+      ],
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "tests/FoundationHost",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation"
+      ],
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "tests/Adapters",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation"
+      ],
+      "checks": [
+        "preflight",
+        "binary-build",
+        "offline-suites",
+        "native-coverage",
+        "resource-discovery",
+        "prompt-registration",
+        "product-smoke",
+        "engine-functional",
+        "engine-worker-isolation",
+        "engine-approval",
+        "engine-ecosystem",
+        "engine-stability",
+        "engine-isolated-stability",
+        "engine-contracts",
+        "engine-responses",
+        "foundation-transport",
+        "foundation-approval",
+        "foundation-responses",
+        "gui-tests",
+        "relocation",
+        "approval-self-test",
+        "relocation-self-test",
+        "contracts-self-test",
+        "responses-self-test",
+        "ecosystem-self-test"
+      ]
+    },
+    {
+      "path": "tests/WorkerChannel",
       "inventories": [
         "engine",
         "multi",
@@ -415,7 +555,7 @@
       ]
     },
     {
-      "path": "scripts/build",
+      "path": "build-tools",
       "inventories": [
         "multi",
         "validation"
@@ -745,7 +885,7 @@
       "repositoryLabel": "adapter contracts lock"
     },
     {
-      "path": "src/Runtime/TiaMcp.Runtime.csproj",
+      "path": "src/OnlineChannels/TiaMcp.OnlineChannels.csproj",
       "consumers": [
         "repository",
         "package"
@@ -753,7 +893,7 @@
       "repositoryLabel": "runtime channel source"
     },
     {
-      "path": "src/Runtime/S7LiveReader.cs",
+      "path": "src/OnlineChannels/S7LiveReader.cs",
       "consumers": [
         "repository",
         "package"
@@ -761,7 +901,7 @@
       "repositoryLabel": "runtime channel source"
     },
     {
-      "path": "src/Runtime/OpcUaLiveReader.cs",
+      "path": "src/OnlineChannels/OpcUaLiveReader.cs",
       "consumers": [
         "repository",
         "package"
@@ -769,7 +909,7 @@
       "repositoryLabel": "runtime channel source"
     },
     {
-      "path": "src/Runtime/S7WebApiChannel.cs",
+      "path": "src/OnlineChannels/S7WebApiChannel.cs",
       "consumers": [
         "repository",
         "package"
@@ -777,7 +917,7 @@
       "repositoryLabel": "runtime channel source"
     },
     {
-      "path": "src/Runtime/UnifiedOpenPipeChannel.cs",
+      "path": "src/OnlineChannels/UnifiedOpenPipeChannel.cs",
       "consumers": [
         "repository",
         "package"
@@ -803,7 +943,7 @@
       "repositoryLabel": "engine adapter wiring"
     },
     {
-      "path": "tests/Engine/TiaMcpServer.HttpTests/AdapterIntegrationChecks.cs",
+      "path": "tests/Engine/TiaMcp.Engine.Harness/AdapterIntegrationChecks.cs",
       "consumers": [
         "repository",
         "bundle",
@@ -893,7 +1033,7 @@
       "repositoryLabel": "bundle layout check"
     },
     {
-      "path": "tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs",
+      "path": "tests/Engine/TiaMcp.Engine.Tests/BundleLayoutTests.cs",
       "consumers": [
         "repository",
         "bundle",
@@ -958,7 +1098,7 @@
       "repositoryLabel": "updater source"
     },
     {
-      "path": "tests/Updater/TiaMcp.Updater.Tests.csproj",
+      "path": "tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj",
       "consumers": [
         "repository",
         "package"
@@ -966,7 +1106,7 @@
       "repositoryLabel": "updater tests"
     },
     {
-      "path": "tests/Updater/UpdaterTests.cs",
+      "path": "tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs",
       "consumers": [
         "repository",
         "package"

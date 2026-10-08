@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcpServer.V20'">20</TiaBuildVersion>
-    <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcpServer.V21'">21</TiaBuildVersion>
+    <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcp.Engine.V20'">20</TiaBuildVersion>
+    <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcp.Engine.V21'">21</TiaBuildVersion>
     <TiaPublicApiReleaseKey>$(TiaBuildVersion)</TiaPublicApiReleaseKey>
     <TiaReleaseKey>$(TiaBuildVersion)</TiaReleaseKey>
     <TiaFeatureProfile>Engine</TiaFeatureProfile>
@@ -16,7 +16,7 @@
   </PropertyGroup>
   <!-- Set before SDK imports. Command-line obj paths propagate into project references
        and can overwrite this engine's assets with the netstandard dependency's assets. -->
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TiaMcpServer.V20'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TiaMcp.Engine.V20'">
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj-v20\</BaseIntermediateOutputPath>
     <MSBuildProjectExtensionsPath>$(MSBuildThisFileDirectory)obj-v20\</MSBuildProjectExtensionsPath>
   </PropertyGroup>

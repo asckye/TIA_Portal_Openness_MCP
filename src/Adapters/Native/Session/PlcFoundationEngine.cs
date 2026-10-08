@@ -21,7 +21,7 @@ using EngineeringProject = Siemens.Engineering.ProjectBase;
 using EngineeringProject = Siemens.Engineering.Project;
 #endif
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     /// <summary>
     /// Shared typed PLC operations for the selected release.

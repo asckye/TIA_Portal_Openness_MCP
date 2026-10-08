@@ -98,7 +98,7 @@ namespace TiaOpenness.Shared
 #endif
                 if (bundle != null)
                 {
-                    primary = Path.Combine(bundle, "data");
+                    primary = Path.Combine(bundle, File.Exists(Path.Combine(bundle, "TiaPortalOpenness.slnx")) ? "bin-build/data" : "data");
                     if (CanWrite(primary)) root = primary;
                 }
             }

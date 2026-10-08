@@ -1,5 +1,5 @@
 using System;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 
 namespace TiaMcp.Adapters.Contracts
 {

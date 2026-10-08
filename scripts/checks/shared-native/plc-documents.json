@@ -31,7 +31,7 @@
     {
       "name": "foundation",
       "types": [
-        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+        "TiaMcp.Adapters.PlcFoundationEngine"
       ],
       "releases": [
         "14sp1",
@@ -44,38 +44,38 @@
         "21"
       ],
       "methodScopes": {
-        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+        "TiaMcp.Adapters.PlcFoundationEngine": [
           {
             "method": "CreateDocumentImportContext",
-            "signature": "TiaMcp.PlcFoundation.PlcDocumentImportContext TiaMcp.PlcFoundation.PlcFoundationEngine::CreateDocumentImportContext(TiaMcp.PlcFoundation.PlcDocumentImportRequest)"
+            "signature": "TiaMcp.Adapters.PlcDocumentImportContext TiaMcp.Adapters.PlcFoundationEngine::CreateDocumentImportContext(TiaMcp.Adapters.PlcDocumentImportRequest)"
           },
           {
             "method": "ExportAsDocuments",
-            "signature": "TiaMcp.PlcFoundation.PlcDocumentExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportAsDocuments(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean)"
+            "signature": "TiaMcp.Adapters.PlcDocumentExportResult TiaMcp.Adapters.PlcFoundationEngine::ExportAsDocuments(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean)"
           },
           {
             "method": "ExportBlocksAsDocuments",
-            "signature": "TiaMcp.PlcFoundation.PlcBatchDocumentExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportBlocksAsDocuments(System.String,System.String,System.String,System.Boolean,System.Int32,System.Boolean,System.String,System.Boolean)"
+            "signature": "TiaMcp.Adapters.PlcBatchDocumentExportResult TiaMcp.Adapters.PlcFoundationEngine::ExportBlocksAsDocuments(System.String,System.String,System.String,System.Boolean,System.Int32,System.Boolean,System.String,System.Boolean)"
           },
           {
             "method": "PlanPlcExternalSourceImport",
-            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceImportPlan TiaMcp.PlcFoundation.PlcFoundationEngine::PlanPlcExternalSourceImport(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+            "signature": "TiaMcp.Adapters.PlcExternalSourceImportPlan TiaMcp.Adapters.PlcFoundationEngine::PlanPlcExternalSourceImport(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
           },
           {
             "method": "DeletePlcExternalSource",
-            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceDeleteResult TiaMcp.PlcFoundation.PlcFoundationEngine::DeletePlcExternalSource(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+            "signature": "TiaMcp.Adapters.PlcExternalSourceDeleteResult TiaMcp.Adapters.PlcFoundationEngine::DeletePlcExternalSource(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
           },
           {
             "method": "ExternalSourceObjects",
-            "signature": "TiaMcp.PlcFoundation.PlcFoundationEngine/ExternalSourceNativeObject[] TiaMcp.PlcFoundation.PlcFoundationEngine::ExternalSourceObjects(Siemens.Engineering.SW.PlcSoftware)"
+            "signature": "TiaMcp.Adapters.PlcFoundationEngine/ExternalSourceNativeObject[] TiaMcp.Adapters.PlcFoundationEngine::ExternalSourceObjects(Siemens.Engineering.SW.PlcSoftware)"
           },
           {
             "method": "ImportPlcExternalSource",
-            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceImportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ImportPlcExternalSource(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+            "signature": "TiaMcp.Adapters.PlcExternalSourceImportResult TiaMcp.Adapters.PlcFoundationEngine::ImportPlcExternalSource(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
           },
           {
             "method": "GenerateBlocksFromExternalSource",
-            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceGenerationResult TiaMcp.PlcFoundation.PlcFoundationEngine::GenerateBlocksFromExternalSource(System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+            "signature": "TiaMcp.Adapters.PlcExternalSourceGenerationResult TiaMcp.Adapters.PlcFoundationEngine::GenerateBlocksFromExternalSource(System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
           }
         ]
       }
@@ -88,7 +88,7 @@
     }
   ],
   "expansionTypes": [
-    "TiaMcp.PlcFoundation.PlcExternalSourceDeleteIdentities"
+    "TiaMcp.Adapters.PlcExternalSourceDeleteIdentities"
   ],
   "expansionNamespaces": [],
   "tools": [

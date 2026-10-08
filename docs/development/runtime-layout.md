@@ -56,7 +56,7 @@ MCP 的 `SaveExportContent` 不能写 `approval.settings`、其常规短文件�
 ### 安装根与开发输出
 
 G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需要 `.git`。交付包由
-[`Package-Release.py`](../../scripts/build/Package-Release.py) 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
+[`Package-Release.py`](../../build-tools/Package-Release.py) 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，
 排除 `runtime/verification/`。交付包保留资源、用户文档、插件及桥接所用 Python 源码；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。
 
 [`BundleLayout.cs`](../../src/Shared/BundleLayout.cs) 以 `manifest/package-manifest.json` 为根标记，
@@ -77,7 +77,7 @@ P6-37 的引擎、Foundation 和 CLI 都接受 `--bundle-root <absolute-path>` �
 | MCP 安装输出 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` |
 | 完整引擎开发输出 | `src/Engine/bin-v20/<configuration>/net48`、`src/Engine/bin/<configuration>/net48` |
 | Foundation 开发输出 | `src/FoundationHost/bin/<configuration>/net10.0` |
-| 引擎测试宿主输出 | `tests/Engine/TiaMcpServer.HttpTests/bin/<configuration>/net48`；`tests/Engine/TiaMcpServer.LegacyHostTests/bin/<configuration>/net10.0`；`tests/Engine/TiaMcpServer.Tests/bin/<configuration>/net10.0` |
+| 引擎测试宿主输出 | `tests/Engine/TiaMcp.Engine.Harness/bin/<configuration>/net48`；`tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/<configuration>/net10.0`；`tests/Engine/TiaMcp.Engine.Tests/bin/<configuration>/net10.0` |
 | Studio 安装输出（既有） | `runtime/studio`、`runtime/studio/bridge` |
 | 随包独立工具 | `runtime/tools`；apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装 .NET |
 | Studio 开发输出（既有） | `src/Studio/Gui/bin/<configuration>/net10.0-windows` 及其 `bridge` 子目录；`src/Studio/Bridge/bin/<configuration>/net48` |
@@ -166,7 +166,7 @@ HMI 读取、原生导出和 Studio 崩溃日志分别以 `TiaMcpServer.hmi-read
 
 伴随 Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`；
 显式 `TIA_MCP_PLC_TOOLS_PYTHON` 优先，缺省目录缺失或不可写报 `IO_FAILED` 与具体路径。
-不创建安装目录环境，不复制或执行旧 `TiaMcp_Output` 环境；开发者须显式指定解释器或安装脚本的 `-EnvironmentPath`。
+不创建安装目录环境，不复制或执行旧 `bin-build` 环境；开发者须显式指定解释器或安装脚本的 `-EnvironmentPath`。
 
 私人报告/fixture CLI 要求 `--workspace-root <existing-absolute-directory>`，独立于 `--bundle-root`；
 HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目录分析要求具体 `--global-library-probe-json-path`。
@@ -180,7 +180,7 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 `plugin/skill/` 和 `third_party/` 中继续交付的 Python 源码保留，不按整目录递归清除。旧 `tools/` 文件、运行文件及 manifest 也仅删除记录中确认且新包不再包含的项。
 没有旧完整文件记录时，只从构建记录识别旧运行二进制，不猜测其他文件的所有权。
 备份附带本次新包文件收据，回滚先删除备份中不存在且未被用户改写的新文件，再恢复原文件，避免叠加出混合布局。
-`data`、`.previous`、`.update`、`TiaMcp_Output` 不参与开发路径清理；数据目录在覆盖和回滚时保留。
+`data`、`.previous`、`.update`、`bin-build` 不参与开发路径清理；数据目录在覆盖和回滚时保留。
 下载 ZIP、校验和及展开目录保存在系统临时目录，完成或失败后清理暂存文件；不再受 PowerShell 260 字符路径限制。
 `data`、日志与用户新增或修改过的文件在覆盖和回滚时保留。更新器只按旧交付哈希清理退役开发文件，
 每次更新记录新文件清单以便安全回滚，并只保留最近两份备份。`data` 已加入根 `.gitignore`。
@@ -208,13 +208,13 @@ HMI 模板还要求 `--hmi-template-directory <absolute-directory>`，组件目�
 
 仓库模式核对代码表与跟踪文件；包模式从仓库运行校验器，按交付规则检查资源而不要求包内源码。
 检查器不证明运行时返回值、二进制完整性或西门子行为；`Check-Repository.py --no-binaries` 同时运行此检查。
-布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/BundleLayoutTests.cs)、
-[EcosystemTests.cs](../../tests/Engine/TiaMcpServer.Tests/EcosystemTests.cs)、
-[EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
+布局矩阵及调用方差分测试位于完整引擎的 [BundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/BundleLayoutTests.cs)、
+[EcosystemTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EcosystemTests.cs)、
+[EngineBundleLayoutTests.cs](../../tests/Engine/TiaMcp.Engine.Tests/EngineBundleLayoutTests.cs) 和 Studio 的
 [Core 布局测试](../../tests/Studio/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs)、
 [GUI 布局测试](../../tests/Studio/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs)，覆盖安装、开发输出、worktree、CI、仅 runtime、嵌套暂存、
 空格/中文/尾分隔符、缺文件及显式覆盖。
-Foundation 的 [BundleRootTests.cs](../../tests/Engine/TiaMcpServer.LegacyHostTests/BundleRootTests.cs)
+Foundation 的 [BundleRootTests.cs](../../tests/FoundationHost/TiaMcp.FoundationHost.Tests/BundleRootTests.cs)
 覆盖六个 release-key、相邻版本文件、默认 worker 及显式 `--worker-exe`。
 
 G7-1 已将 `GetOpennessGuidance`、`GetV21EcosystemCatalog` 和 bin 布局的 `CheckProductUpdate` 加入 P0-06。

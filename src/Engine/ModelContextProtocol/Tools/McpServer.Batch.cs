@@ -14,7 +14,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
 #if TIA_ENGINE_HOST
-        private static BatchPlanStore BatchPlans => TiaMcp.LegacyHost.EngineHostConfiguration.Current.BatchPlans;
+        private static BatchPlanStore BatchPlans => TiaMcp.FoundationHost.EngineHostConfiguration.Current.BatchPlans;
 #else
         private static readonly BatchPlanStore BatchPlans = new BatchPlanStore();
 #endif

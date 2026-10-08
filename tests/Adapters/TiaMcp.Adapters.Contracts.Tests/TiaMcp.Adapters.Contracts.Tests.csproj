@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Shared/Xunit.props" />
+  <PropertyGroup>
+    <RootNamespace>TiaMcp.Adapters.Contracts.Tests</RootNamespace><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <ProjectReference Include="../../../src/Studio/Contracts/TiaOpenness.Contracts.csproj" />
+    <Compile Include="../../../src/PlcWorker/WorkerJson.cs" Link="WorkerJson.cs" />
+    <Compile Include="../../../src/Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <None Update="GoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="StudioGoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

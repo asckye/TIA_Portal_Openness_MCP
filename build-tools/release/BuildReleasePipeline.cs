@@ -163,7 +163,7 @@ internal static partial class ReleaseCommands
         WriteJson(Path.Combine(Root, "manifest/release-build.json"), record);
         var deliveryCode = RunSelfCommand(["prepare-delivery", "-Release", release, "-ReleaseDate", releaseDate, "-Tier", ReleasePlan(options).Tier], "Delivery preparation");
         if (deliveryCode != 0) return deliveryCode;
-        Console.WriteLine($"Built and checked both runtimes: {fileVersion}. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate.");
+        Console.WriteLine($"Built and checked both runtimes: {fileVersion}. Review and commit changes, then run build-tools/Package-Release.py. Real TIA acceptance is separate.");
         return 0;
     }
 
@@ -192,10 +192,10 @@ internal static partial class ReleaseCommands
             Console.WriteLine("PASS " + name + " compilation; " + Path.Combine(logs, name + ".log"));
         }
         Build("native-call-weaver", "build-tools/native-call-weaver/NativeCallWeaver.csproj");
-        Build("engine-v20", "src/Engine/TiaMcpServer.V20.csproj", v20);
-        Build("engine-v21", "src/Engine/TiaMcpServer.V21.csproj", v21);
-        Build("foundation-host", "src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
-        Build("http-tests", "tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
+        Build("engine-v20", "src/Engine/TiaMcp.Engine.V20.csproj", v20);
+        Build("engine-v21", "src/Engine/TiaMcp.Engine.V21.csproj", v21);
+        Build("foundation-host", "src/FoundationHost/TiaMcp.FoundationHost.csproj");
+        Build("http-tests", "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
         return 0;
     }
 
@@ -225,17 +225,17 @@ internal static partial class ReleaseCommands
             RunBuildSpec("tool-usage", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
             RunBuildSpec("version-catalog", python, [Path.Combine(Root, "scripts/checks/Test-VersionCatalogWiring.py")], outputDirectory, runTemp, cliHome, apiRoot);
 
-            var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj");
+            var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj");
             RestoreBuildProject(dotnet, offlineProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("offline", "offline", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlinePassed = ReadSuitePassed(suiteResults, "offline");
             RunDotnetSuiteForRelease("offline-v20", "offline-v20", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             offlineV20Passed = ReadSuitePassed(suiteResults, "offline-v20");
-            var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj");
+            var versionPolicyProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj");
             RestoreBuildProject(dotnet, versionPolicyProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("version-policy", "version-policy", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             versionPolicyPassed = ReadSuitePassed(suiteResults, "version-policy");
-            var updaterSuiteProject = Path.Combine(Root, "tests/Updater/TiaMcp.Updater.Tests.csproj");
+            var updaterSuiteProject = Path.Combine(Root, "tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj");
             RestoreBuildProject(dotnet, updaterSuiteProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("updater", "updater", dotnet, python, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             updaterPassed = ReadSuitePassed(suiteResults, "updater");
@@ -246,10 +246,10 @@ internal static partial class ReleaseCommands
         var updaterProject = Path.Combine(Root, "src/Updater/TiaMcp.Updater.csproj");
         RestoreBuildProject(dotnet, updaterProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", updaterProject, "-c", "Release", "-f", "net48", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-updater.log"), runTemp, cliHome, apiRoot, nuget, "Updater build");
-        var harnessProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
+        var harnessProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
         RestoreBuildProject(dotnet, harnessProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", harnessProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, nuget, "HTTP harness build");
-        var foundationHostProject = Path.Combine(Root, "src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
+        var foundationHostProject = Path.Combine(Root, "src/FoundationHost/TiaMcp.FoundationHost.csproj");
         RestoreBuildProject(dotnet, foundationHostProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
         RunBuildRaw(dotnet, ["build", foundationHostProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "build-foundation-host.log"), runTemp, cliHome, apiRoot, nuget, "Foundation product catalog build");
         var weaverProject = Path.Combine(Root, "build-tools/native-call-weaver/NativeCallWeaver.csproj");
@@ -268,10 +268,10 @@ internal static partial class ReleaseCommands
         JsonElement diagnostics = JsonSerializer.SerializeToElement(new { status = "skipped" });
         if (plan.Includes("native-diagnostics"))
         {
-            var diagnosticProject = Path.Combine(Root, "tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj");
+            var diagnosticProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj");
             RestoreBuildProject(dotnet, diagnosticProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunBuildRaw(dotnet, ["build", diagnosticProject, "-c", "Release", "--no-restore", "-v:q"], Path.Combine(outputDirectory, "native-diagnostics-build.log"), runTemp, cliHome, apiRoot, nuget, "native diagnostics fixture build");
-            var diagnosticFixture = Path.Combine(Path.GetDirectoryName(diagnosticProject)!, "bin/Release/net48/DiagnosticsTests.exe");
+            var diagnosticFixture = Path.Combine(Path.GetDirectoryName(diagnosticProject)!, "bin/Release/net48/TiaMcp.Engine.Diagnostics.Tests.exe");
             diagnostics = VerifyDiagnosticFixture(python, diagnosticFixture, Path.Combine(weaverOutput, "NativeCallWeaver.dll"), outputDirectory, runTemp, cliHome, apiRoot);
         }
         var common = new { diagnosticTests = diagnostics, crashEvidenceChecksPassed = crashEvidencePassed, writeGuardChecksPassed = writeGuardPassed, updaterPassed,
@@ -287,9 +287,9 @@ internal static partial class ReleaseCommands
     {
         var plan = ReleasePlan(options);
         var engineSource = Path.Combine(Root, "src/Engine");
-        var nativeProject = Path.Combine(Root, $"tests/Engine/TiaMcpServer.NativeTests/V{major}/NativeTests.V{major}.csproj");
-        var project = Path.Combine(engineSource, $"TiaMcpServer.V{major}.csproj");
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
+        var nativeProject = Path.Combine(Root, $"tests/Engine/TiaMcp.Engine.Native.Tests/V{major}/TiaMcp.Engine.Native.Tests.V{major}.csproj");
+        var project = Path.Combine(engineSource, $"TiaMcp.Engine.V{major}.csproj");
+        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         var weaver = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
         var packagedWeaver = Path.Combine(Root, "runtime/verification/NativeCallWeaver.dll");
         RequireFile(harness, "HTTP harness has not been built");
@@ -311,7 +311,7 @@ internal static partial class ReleaseCommands
                     RestoreBuildProject(dotnet, nativeProject, nuget, outputDirectory, runTemp, cliHome, apiRoot, properties);
                     RunBuildRaw(dotnet, ["build", nativeProject, "-c", "Release", "--no-restore", "-v:q", .. properties], Path.Combine(outputDirectory, $"native-build-v{major}.log"), runTemp, cliHome, apiRoot, nuget, $"V{major} native tests build");
                     var nativeOutput = Path.Combine(Path.GetDirectoryName(nativeProject)!, "bin/Release/net48");
-                    var nativeExe = Path.Combine(nativeOutput, $"NativeTests.V{major}.exe");
+                    var nativeExe = Path.Combine(nativeOutput, $"TiaMcp.Engine.Native.Tests.V{major}.exe");
                     if (Directory.Exists(nativeOutput) && Directory.EnumerateFiles(nativeOutput, "Siemens.Engineering*.dll").Any())
                         throw new ReleaseException("Native test harness must not copy Siemens assemblies locally");
                     var nativeSafetyText = RunBuildSpec("native-safety", nativeExe, ["--self-test"], outputDirectory, runTemp, cliHome, apiRoot, major);
@@ -417,7 +417,7 @@ internal static partial class ReleaseCommands
         if (plan.Includes("resource-discovery"))
         {
         var fixtureDirectory = Path.Combine(outputDirectory, "resource-sdk-worker");
-        RunBuildRaw(dotnet, ["build", Path.Combine(Root, $"src/Engine/TiaMcpServer.V{major}.csproj"), "-c", "Release", "-v:q",
+        RunBuildRaw(dotnet, ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{major}.csproj"), "-c", "Release", "-v:q",
             "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", "-p:TiaMcpEngineWorkerSdkFixture=true",
             "-p:AppendTargetFrameworkToOutputPath=false", $"-p:OutputPath={fixtureDirectory}", $"-p:SiemensEngineeringDirectory={api}"],
             Path.Combine(outputDirectory, "resource-sdk-worker-build.log"), runTemp, cliHome, apiRoot, null, "Resource SDK worker build");
@@ -491,7 +491,7 @@ internal static partial class ReleaseCommands
             httpPassed = http, hmiPassed = hmi, resourceDiscoveryPassed = resources, nativeExportRemotingPassed = nativeExport,
             migrationAssembly = plan.Includes("engine-functional") ? "passed" : "skipped", realProjectAcceptance = "NOT PERFORMED for this release", hmiSnapshotRemotingPassed = snapshot,
             softwareLookupPassed = software, engineeringApiShapePassed = engineering,
-            nativeHarness = new { compiled = plan.Includes("offline-suites"), safetyChecksPassed = nativeSafety, supervisorChecksPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"), exeSha256 = plan.Includes("offline-suites") ? ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(nativeProject)!, $"bin/Release/net48/NativeTests.V{major}.exe")) : "", supervisorSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py")), liveAcceptance = "NOT RUN; explicit opt-in required" },
+            nativeHarness = new { compiled = plan.Includes("offline-suites"), safetyChecksPassed = nativeSafety, supervisorChecksPassed = GetJsonInt(common, "nativeSupervisorChecksPassed"), exeSha256 = plan.Includes("offline-suites") ? ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(nativeProject)!, $"bin/Release/net48/TiaMcp.Engine.Native.Tests.V{major}.exe")) : "", supervisorSha256 = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py")), liveAcceptance = "NOT RUN; explicit opt-in required" },
             localStability = plan.Includes("engine-stability") ? (JsonElement?)stability : null,
             v21EcosystemAdapters = plan.Includes("engine-ecosystem") ? (JsonElement?)v21Ecosystem : null,
             isolatedLocalStability = plan.Includes("engine-isolated-stability") ? (JsonElement?)isolatedStability : null,
@@ -581,7 +581,7 @@ internal static partial class ReleaseCommands
     private static void RunShippedRuntimeChecks(string dotnet, string v21Api, string apiRoot, string package, string outputDirectory, string runTemp, string cliHome, ReleaseCheckPlan plan)
     {
         var exe = Path.Combine(Root, "runtime/v21/worker/TiaMcp.Engine.V21.exe");
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
+        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         if (plan.Includes("engine-functional")) RunBuildSpec("download-route", harness, [exe, "test-download-route", v21Api], outputDirectory, runTemp, cliHome, apiRoot);
         if (plan.Includes("engine-functional")) RunBuildSpec("match-plc-name", harness, [exe, "test-match-plc-name"], outputDirectory, runTemp, cliHome, apiRoot);
         var foundationHost = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");

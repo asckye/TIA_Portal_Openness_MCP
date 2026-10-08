@@ -5,7 +5,7 @@ using System.Xml;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 /// <summary>Conservative candidate-only adapter. Never invokes helper probe/file methods.</summary>
 internal static class OfflineLadderBuilders

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Versioning;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal static class PlcCompilePolicy
     {

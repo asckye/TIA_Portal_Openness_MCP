@@ -9,7 +9,7 @@ using System.Xml;
 using System.Xml.Linq;
 using TiaMcp.Adapters.Contracts;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed class PlcBatchImportRequest
     {

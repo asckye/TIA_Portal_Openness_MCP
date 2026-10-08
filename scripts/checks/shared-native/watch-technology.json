@@ -143,7 +143,7 @@
     {
       "name": "foundation",
       "types": [
-        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+        "TiaMcp.Adapters.PlcFoundationEngine"
       ],
       "releases": [
         "14sp1",
@@ -156,26 +156,26 @@
         "21"
       ],
       "methodScopes": {
-        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+        "TiaMcp.Adapters.PlcFoundationEngine": [
           {
             "method": "ReadWatchTableNames",
-            "signature": "TiaMcp.PlcFoundation.PlcSupplementaryReadResult TiaMcp.PlcFoundation.PlcFoundationEngine::ReadWatchTableNames(System.String)"
+            "signature": "TiaMcp.Adapters.PlcSupplementaryReadResult TiaMcp.Adapters.PlcFoundationEngine::ReadWatchTableNames(System.String)"
           },
           {
             "method": "ReadTechnologyObjects",
-            "signature": "TiaMcp.PlcFoundation.PlcSupplementaryReadResult TiaMcp.PlcFoundation.PlcFoundationEngine::ReadTechnologyObjects(System.String)"
+            "signature": "TiaMcp.Adapters.PlcSupplementaryReadResult TiaMcp.Adapters.PlcFoundationEngine::ReadTechnologyObjects(System.String)"
           },
           {
             "method": "TechnologyMetadata",
-            "signature": "TiaMcp.PlcFoundation.PlcTechnologyReadRow TiaMcp.PlcFoundation.PlcFoundationEngine::TechnologyMetadata(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB)"
+            "signature": "TiaMcp.Adapters.PlcTechnologyReadRow TiaMcp.Adapters.PlcFoundationEngine::TechnologyMetadata(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB)"
           },
           {
             "method": "ExportPlcWatchTable",
-            "signature": "TiaMcp.PlcFoundation.PlcSpecialExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportPlcWatchTable(System.String,System.String,System.String,System.String,System.Boolean)"
+            "signature": "TiaMcp.Adapters.PlcSpecialExportResult TiaMcp.Adapters.PlcFoundationEngine::ExportPlcWatchTable(System.String,System.String,System.String,System.String,System.Boolean)"
           },
           {
             "method": "ExportTechnologyObject",
-            "signature": "TiaMcp.PlcFoundation.PlcSpecialExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportTechnologyObject(System.String,System.String,System.String,System.String,System.Boolean)"
+            "signature": "TiaMcp.Adapters.PlcSpecialExportResult TiaMcp.Adapters.PlcFoundationEngine::ExportTechnologyObject(System.String,System.String,System.String,System.String,System.Boolean)"
           }
         ]
       }
@@ -183,7 +183,7 @@
   ],
   "primitives": [
     {
-      "adapterType": "TiaMcp.PlcFoundation.WatchTechnologyPrimitives",
+      "adapterType": "TiaMcp.Adapters.WatchTechnologyPrimitives",
       "engineNamespace": "TiaMcpServer.Siemens.LocalWatchTechnology"
     }
   ],

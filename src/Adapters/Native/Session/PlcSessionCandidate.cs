@@ -3,7 +3,7 @@ using System.Linq;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Native.Session;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

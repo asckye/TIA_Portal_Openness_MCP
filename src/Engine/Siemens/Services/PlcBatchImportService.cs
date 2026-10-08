@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 using TiaMcp.Adapters.Contracts;
 using TiaMcpServer.ModelContextProtocol;
 

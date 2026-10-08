@@ -6,7 +6,7 @@ using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Online;
 using Siemens.Engineering.SW;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

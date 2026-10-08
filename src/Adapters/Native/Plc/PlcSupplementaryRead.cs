@@ -1,4 +1,4 @@
-using Native = TiaMcp.PlcFoundation.WatchTechnologyPrimitives;
+using NativeCalls = TiaMcp.Adapters.WatchTechnologyPrimitives;
 using System;
 using System.Linq;
 using Siemens.Engineering.SW.TechnologicalObjects;
@@ -6,7 +6,7 @@ using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.WatchAndForceTables;
 #endif
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
@@ -16,9 +16,9 @@ namespace TiaMcp.PlcFoundation
 #if PLC_WATCH_READ
             return PlcSupplementaryReadPolicy.ReadSnapshot(()=> {
                 var selected=ReadSelection(softwarePath);
-                var root=Native.WatchGroup(selected.Value);
+                var root=NativeCalls.WatchGroup(selected.Value);
                 if(root==null) throw new InvalidOperationException("WatchAndForceTableGroup is unavailable.");
-                var items=PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,group=>Native.WatchTables(group).Select(table=>Native.Name(table)),group=>Native.Groups(group),group=>group.Name);
+                var items=PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,group=>NativeCalls.WatchTables(group).Select(table=>NativeCalls.Name(table)),group=>NativeCalls.Groups(group),group=>group.Name);
                 return new PlcSupplementaryReadResult { SoftwarePath=selected.ExactPath,ReleaseKey=ReleaseKey,Scope=PlcSupplementaryReadPolicy.WatchScope,Items=items };
             });
 #else
@@ -30,16 +30,16 @@ namespace TiaMcp.PlcFoundation
             PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey);
             return PlcSupplementaryReadPolicy.ReadSnapshot(()=> {
                 var selected=ReadSelection(softwarePath);
-                var root=Native.TechnologyGroup(selected.Value);
+                var root=NativeCalls.TechnologyGroup(selected.Value);
                 if(root==null) throw new InvalidOperationException("TechnologicalObjectGroup is unavailable.");
                 var items=PlcSupplementaryReadPolicy.Technologies<TechnologicalInstanceDBGroup>(root,
-                    group=>Native.Objects(group).Select(item=>TechnologyMetadata(item)),
+                    group=>NativeCalls.Objects(group).Select(item=>TechnologyMetadata(item)),
 #if PLC_TECH_GROUP_READ
-                    group=>Native.Groups(group),
+                    group=>NativeCalls.Groups(group),
 #else
                     group=>new TechnologicalInstanceDBGroup[0],
 #endif
-                    group=>Native.Name(group));
+                    group=>NativeCalls.Name(group));
                 return new PlcSupplementaryReadResult { SoftwarePath=selected.ExactPath,ReleaseKey=ReleaseKey,Scope=PlcSupplementaryReadPolicy.TechnologyReadScope(ReleaseKey),Items=items };
             });
         }
@@ -47,7 +47,7 @@ namespace TiaMcp.PlcFoundation
         {
             // Exact PE/XML evidence: both properties have public getters in all
             // eight adapters. OfSystemLibVersion also has a setter; never use it.
-            return PlcSupplementaryReadPolicy.TechnologyMetadata(Native.Name(item),
+            return PlcSupplementaryReadPolicy.TechnologyMetadata(NativeCalls.Name(item),
                 ()=>item.OfSystemLibElement,()=>item.OfSystemLibVersion);
         }
     }

@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class ExternalSourceDeleteContract
 {
     internal static JsonObject Validate(JsonNode? payload,JsonObject request)

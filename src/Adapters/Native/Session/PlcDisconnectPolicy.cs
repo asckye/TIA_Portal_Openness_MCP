@@ -1,6 +1,6 @@
 using System;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     // A successful disconnect ends this session. An uncertain attempt is never retried,
     // including by the engine's final Dispose. No project operation is needed here.

@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 // Additional foundation tools, not entries in the pinned V17 PLC profile.
 // Preserve their existing PascalCase array contract and native declaration text.

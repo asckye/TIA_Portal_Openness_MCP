@@ -90,9 +90,9 @@ def main():
             return {caller: [s[1:] for s in sorted(sites)] for caller, sites in sequences.items()}
         assert adapter_sequences(read(args.baseline_root / inventory)['sites']) == adapter_sequences(read(ROOT / inventory)['sites']), (version, 'adapter native call order')
         il(f'adapter-{version}', args.baseline_root / relative, ROOT / relative, args.baseline_root / inventory, ROOT / inventory,
-           lambda owner: owner.startswith('TiaMcp.Adapters.Native.') or owner.startswith('TiaMcp.PlcFoundation.'),
-           {'System.Void TiaMcp.PlcFoundation.PlcFoundationEngine::.ctor(System.String,System.String)',
-            'System.Void TiaMcp.PlcFoundation.PlcFoundationEngine::Check(System.Boolean)'})
+           lambda owner: owner.startswith('TiaMcp.Adapters.Native.') or owner.startswith('TiaMcp.Adapters.'),
+           {'System.Void TiaMcp.Adapters.PlcFoundationEngine::.ctor(System.String,System.String)',
+            'System.Void TiaMcp.Adapters.PlcFoundationEngine::Check(System.Boolean)'})
     (evidence / 'proof.json').write_text(json.dumps(rows, indent=2) + '\n', encoding='utf-8')
 
 

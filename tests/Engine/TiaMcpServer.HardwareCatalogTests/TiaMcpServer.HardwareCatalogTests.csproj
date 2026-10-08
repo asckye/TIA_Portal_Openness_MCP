@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><Compile Include="../../../src/Adapters/Native/Hardware/HardwarePrimitives.cs" Link="HardwarePrimitives.cs" /></ItemGroup>
-  <Import Project="../Shared/Xunit.props" />
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><DefineConstants>$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" /><Compile Include="../../../src/Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs" Link="PlcHardwareCatalogPolicy.cs" /><Compile Include="../../../src/FoundationHost/HardwareCatalogContract.cs" Link="HardwareCatalogContract.cs" /><Compile Include="../../../src/Adapters/Native/Hardware/PlcHardwareCatalog.cs" Link="PlcHardwareCatalog.cs" /></ItemGroup>
-</Project>

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 // Binds worker processes to the host's lifetime: the job handle is held until the host exits, and Windows kills
 // every assigned worker when the last handle closes (including when the host is terminated). Processes the

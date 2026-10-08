@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using Siemens.Engineering;
 using Siemens.Engineering.Multiuser;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Worker;
 

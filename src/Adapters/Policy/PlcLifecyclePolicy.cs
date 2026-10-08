@@ -3,7 +3,7 @@ using System.IO;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Versioning;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class PlcLifecycleState
     {

@@ -1,6 +1,6 @@
 using TiaMcp.Versioning;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed class HostOptions
 {

@@ -1,7 +1,7 @@
 using ModelContextProtocol;
 using System.Text.Json.Nodes;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal static class V17ProjectEnvelope
 {

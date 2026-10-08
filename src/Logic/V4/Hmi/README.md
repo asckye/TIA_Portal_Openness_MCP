@@ -70,7 +70,7 @@ It also tests text longer than 262144 characters to guard against importing an
 unrelated Foundation restriction. No H string/character cap has been invented.
 
 Equivalence evidence is in
-[V4HmiEquivalenceTests.cs](../../../../tests/Engine/TiaMcpServer.Tests/V4HmiEquivalenceTests.cs)
+[V4HmiEquivalenceTests.cs](../../../../tests/Engine/TiaMcp.Engine.Tests/V4HmiEquivalenceTests.cs)
 with source-file/line citations per sample group. Deterministic Classic XML and
 theme/layout design output are compared as UTF-8 bytes. Package XML, readiness
 and other fields are compared after removing only its three report timestamps.
@@ -99,5 +99,5 @@ limit details before constructors raise their existing `ArgumentException`.
 Both paths use the same family traversal and `InputGuard.Limit` checks.
 No project files, tool/catalog registration, Siemens calls or manifest hashes
 are changed. The original HMI contract/equivalence tests are unchanged;
-[V4HmiInputUnificationTests.cs](../../../../tests/Engine/TiaMcpServer.Tests/V4HmiInputUnificationTests.cs)
+[V4HmiInputUnificationTests.cs](../../../../tests/Engine/TiaMcp.Engine.Tests/V4HmiInputUnificationTests.cs)
 also exercises their samples through text, element and typed contract entry points.

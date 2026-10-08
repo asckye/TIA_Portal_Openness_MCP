@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class PlcBatchDocumentExportSource
     {

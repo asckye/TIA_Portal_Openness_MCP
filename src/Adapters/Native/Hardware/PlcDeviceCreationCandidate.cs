@@ -5,7 +5,7 @@ using System.Linq;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Hardware;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

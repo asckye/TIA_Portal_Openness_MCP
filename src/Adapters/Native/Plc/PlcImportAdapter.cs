@@ -171,7 +171,7 @@ namespace TiaMcp.Adapters.Native.Plc
         }
         public void ExportRecovery(PlcImportObject item, FileInfo file)
         {
-            TiaMcp.PlcFoundation.PlcExportPublication.Publish(file, output =>
+            TiaMcp.Adapters.PlcExportPublication.Publish(file, output =>
             {
                 var value = objects[item.Id];
                 if (value is PlcBlock block) block.Export(output, ExportOptions.None);

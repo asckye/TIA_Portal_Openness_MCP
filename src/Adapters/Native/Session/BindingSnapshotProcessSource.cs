@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class BindingSnapshotProcessSource : IBindingProcessObservationSource
     {

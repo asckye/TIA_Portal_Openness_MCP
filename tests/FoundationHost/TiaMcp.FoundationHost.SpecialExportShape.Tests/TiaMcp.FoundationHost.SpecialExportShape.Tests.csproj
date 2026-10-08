@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Shared/Xunit.props" />
+  <PropertyGroup>
+    <RootNamespace>TiaMcp.FoundationHost.SpecialExportShape.Tests</RootNamespace>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);PLC_WATCH_READ;PLC_WATCH_EXPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSpecialExport.cs" Link="PlcSpecialExport.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/WatchTechnologyPrimitives.cs" Link="WatchTechnologyPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
+  </ItemGroup>
+</Project>

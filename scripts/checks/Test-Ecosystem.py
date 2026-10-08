@@ -1,6 +1,6 @@
 """Run pinned upstream offline unit tests with source precedence and UTF-8.
 
-Usage: TiaMcp_Output/ecosystem-python/Scripts/python.exe -X utf8 scripts/checks/Test-Ecosystem.py
+Usage: bin-build/ecosystem-python/Scripts/python.exe -X utf8 scripts/checks/Test-Ecosystem.py
 No live endpoint or TIA connection is configured by this runner.
 """
 from pathlib import Path
@@ -17,7 +17,7 @@ def main():
     sys.path[:0] = [str(SOURCE / "src")] + [str(p / "src") for p in sorted((SOURCE / "packages").iterdir()) if (p / "src").is_dir()]
     import pytest
     os.chdir(SOURCE)
-    return pytest.main(["packages/plc-code/tests", "packages/plc-iol/tests", "packages/plc-trace/tests", "--import-mode=importlib", "-o", "addopts=", "-o", "cache_dir=" + str(ROOT / "TiaMcp_Output/pytest-cache"), "--disable-warnings", "-q", "-rs", "--basetemp", str(ROOT / "TiaMcp_Output/pytest-ecosystem")] + sys.argv[1:])
+    return pytest.main(["packages/plc-code/tests", "packages/plc-iol/tests", "packages/plc-trace/tests", "--import-mode=importlib", "-o", "addopts=", "-o", "cache_dir=" + str(ROOT / "bin-build/pytest-cache"), "--disable-warnings", "-q", "-rs", "--basetemp", str(ROOT / "bin-build/pytest-ecosystem")] + sys.argv[1:])
 
 
 if __name__ == "__main__":

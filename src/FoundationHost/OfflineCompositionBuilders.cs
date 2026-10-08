@@ -4,7 +4,7 @@ using System.Xml;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 /// <summary>Bounded in-memory adaptation of existing V21 generators; never invokes their file/probe methods.</summary>
 internal static class OfflineCompositionBuilders

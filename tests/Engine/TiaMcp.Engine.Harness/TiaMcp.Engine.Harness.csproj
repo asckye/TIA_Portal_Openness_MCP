@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>TiaMcp.Engine.Harness</AssemblyName>
+    <RootNamespace>TiaMcp.Engine.Harness</RootNamespace>
+    <TiaMcpTestWorkerDouble Condition="'$(TiaMcpTestWorkerDouble)' == ''">true</TiaMcpTestWorkerDouble>
+    <TiaMcpTestWorkerIsolationDefault Condition="'$(TiaMcpTestWorkerIsolationDefault)' == ''">true</TiaMcpTestWorkerIsolationDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../../manifest/version-tools.json" LogicalName="VersionTools.json" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TiaMcpTestWorkerDouble)' == 'true'">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TiaMcpTestWorkerDouble</_Parameter1>
+      <_Parameter2>enabled</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TiaMcpTestWorkerIsolationDefault)' != ''">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TiaMcpWorkerIsolationDefault</_Parameter1>
+      <_Parameter2>$(TiaMcpTestWorkerIsolationDefault)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
+  <!-- Compile-only SDK/JSON types; runtime dependencies resolve beside the loaded EXE.
+       Keep transitive build targets so net48 uses its inbox System.ValueTuple. -->
+  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" IncludeAssets="compile" /></ItemGroup>
+  <ItemGroup><PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" IncludeAssets="compile;buildTransitive" /></ItemGroup>
+  <ItemGroup><None Update="Golden/*.txt" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../TiaMcp.Engine.Tests/OfflineContractChecks.cs" Link="OfflineContractChecks.cs" /></ItemGroup>
+</Project>

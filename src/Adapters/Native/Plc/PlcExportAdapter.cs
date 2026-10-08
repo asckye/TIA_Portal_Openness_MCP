@@ -105,7 +105,7 @@ namespace TiaMcp.Adapters.Native.Plc
             bool documents = tool.EndsWith("Documents", StringComparison.Ordinal);
             if (documents && release != "20" && release != "21") CandidatePrimitives.Unsupported(release, "documents");
             string space = tool.Contains("Type") ? "type" : tool == "ExportPlcTagTable" ? "tag" : "block";
-            TiaMcp.PlcFoundation.PlcExchangePolicy.ObjectPath(request.GroupPath, true);
+            TiaMcp.Adapters.PlcExchangePolicy.ObjectPath(request.GroupPath, true);
             if (request.PreservePath && (documents || batch) && !OverwriteSupported) CandidatePrimitives.Unsupported(release, "preservePath");
             if (request.PreservePath && tool == "ExportPlcTagTable") CandidatePrimitives.Unsupported(release, "preservePath");
             var inventory = ReadInventory();

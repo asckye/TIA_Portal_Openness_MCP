@@ -44,7 +44,7 @@ partial。领域私有状态（Teamcenter 连接、`migrationPages`、三个锁�
 
 - **内核**：保留 `Portal` 类作为会话单例，显式实现新的内部接口 `IEngineeringSession`（工程/门户句柄、
   `RunStep`、`AcquireWriteAccess`、`VerifyBinding`、软件/PLC/硬件/库/HMI 解析、`AdoptProject`/`ReleaseProject`）。
-  保留现有成员名，HttpTests 的 IL 与字段检查不受影响。服务不得直接写会话字段。
+  保留现有成员名，TiaMcp.Engine.Harness 的 IL 与字段检查不受影响。服务不得直接写会话字段。
 - **领域服务**：每对现有文件拆为一个服务类和一个 `[McpServerToolType]` 实例工具类；方法签名、返回类型、
   属性、参数与默认值原样迁移。先不为领域服务定义接口，需要替身测试时再加。纯辅助函数（`Safe`、`Names`、
   `Page`、`TryGetPropertyValue` 等）改为静态辅助类。
@@ -60,7 +60,7 @@ partial。领域私有状态（Teamcenter 连接、`migrationPages`、三个锁�
   共用 `EngineRegistration.AddEngine`。步骤 16 已移除 `McpServer` 上的会话入口及工具转发；CLI 直接解析
   所属实例，隔离父容器不向 standalone 容器回退。
 - **工具类位置**：保持在 `ModelContextProtocol/Tools/` 平铺（`Test-VersionCatalogWiring.py` 非递归扫描该目录）。
-- **测试**：HttpTests 加载织入后的 V20/V21 发布程序，不能改为编译期引用；新增 `EngineSurface` 查找辅助，
+- **测试**：TiaMcp.Engine.Harness 加载织入后的 V20/V21 发布程序，不能改为编译期引用；新增 `EngineSurface` 查找辅助，
   按工具名跨 `[McpServerToolType]` 类型查找，按成员名跨 `Portal` 与服务查找，IL 检查带声明类型。
 
 ## 每一步的验收
@@ -86,9 +86,9 @@ P3-04 的接口沿用 `RunHmiStepTool` / `AcquireHmiEditAccess`，对应上文�
 J 表示需要设计判断，M 表示可按说明机械执行。
 
 1. P0-06 离线返回结构快照（FindTools、ListToolCategories、PreviewToolCall、断开时的 GetSessionState、离线构造器等）。
-2. **J** `ToolCatalog`、`EngineServices`、`EngineRegistration`，不迁移工具；同步 `HttpTests.exe generate-tools-list`、
-   `HttpTests.exe test-migration-read-assembly`、`Test-VersionCatalogWiring.py` 与 `ToolBridgeFixtures`。
-3. **M** HttpTests `EngineSurface` 辅助。
+2. **J** `ToolCatalog`、`EngineServices`、`EngineRegistration`，不迁移工具；同步 `TiaMcp.Engine.Harness.exe generate-tools-list`、
+   `TiaMcp.Engine.Harness.exe test-migration-read-assembly`、`Test-VersionCatalogWiring.py` 与 `ToolBridgeFixtures`。
+3. **M** TiaMcp.Engine.Harness `EngineSurface` 辅助。
 4. **J** 内核接口：提取静态辅助，把 `ExactPlcForEngineering`、`ExactEngineeringHardware`、
    `ExactOpenEngineeringLibrary`、`ResolveHmiSoftwareOrThrow` 收入内核，加入 `AdoptProject`/`ReleaseProject`。
 5. **M** 试点（不调用西门子 API）：OfflineSuites、Ecosystem、V21Ecosystem、Git、PlcTemplates、QualityAudit、
@@ -107,7 +107,7 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 16. **done** `Program` 拆为 CLI 宿主，`Runtime/` 拆为独立程序集，删除 `McpServer` 的 `_portal`、`_services`、`Portal` 与 CLI 工具转发。
 17. **J** G9。
 
-服务注册按约定扫描，不集中编辑同一注册文件，步骤 7–10 可以并行。P1-04 移动的 `*Logic.cs` 与 HttpTests
+服务注册按约定扫描，不集中编辑同一注册文件，步骤 7–10 可以并行。P1-04 移动的 `*Logic.cs` 与 TiaMcp.Engine.Harness
 查找有交叉，阶段 3 在 P1-04 三步完成后开始。
 
 步骤 5 的 30 个试点工具已迁入以下平铺实例类；`Ecosystem` 与 `EcosystemFiles` 合为同一领域。
@@ -130,7 +130,7 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 与 [XmlBuildResults](../../src/Engine/ModelContextProtocol/Tools/XmlBuildResults.cs)；目录查询和工具构造仍由 MCP 宿主提供。
 P6-07 将指南和配方统一为 `GetToolUsage` 的语言/示例选择器，已删除不再注册工具的指南类。
 这些试点工具没有 CLI 静态调用点；CLI 的同名报告命令直接使用既有构造器。
-HttpTests 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南依赖注入；
+TiaMcp.Engine.Harness 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南依赖注入；
 [Test-PilotTools.py](../../scripts/checks/Test-PilotTools.py) 通过 STDIO 覆盖九个领域的直接、桥接及隔离子进程调用。
 传入 `--baseline-exe` 可逐项比较迁移前后的 `tools/list` 序列；`ToolCatalog` 按名称排序，SDK 的线上枚举序列
 仍以实际宿主输出为准，不在本步调整。
@@ -147,7 +147,7 @@ CFC 是第一个样板：[CfcService](../../src/Engine/Siemens/Services/CfcServi
 会话或领域服务。工具仍由 `ToolCatalog` 发现。服务和工具都为非 `IDisposable` 的单例。
 
 迁移前先单独补吞异常原因并缩减基线，保存注释补丁，以去注释代码和 Release EXE 字节一致性验收。
-随后原样移动方法，将服务加入 HttpTests 的 `EngineSurface` 服务名单；`CfcShapeChecks` 和
+随后原样移动方法，将服务加入 TiaMcp.Engine.Harness 的 `EngineSurface` 服务名单；`CfcShapeChecks` 和
 `EngineeringApiShapeTests` 保留原断言，并验证真实声明类型、共享会话、单例和工具到服务的 IL 调用。
 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 接收两份 `NativeCallWeaver verify`
 清单（`--baseline before.json --current after.json`），比较全局 Siemens 成员多重集合，并按同名方法自动匹配
@@ -158,7 +158,7 @@ CFC 是第一个样板：[CfcService](../../src/Engine/Siemens/Services/CfcServi
 CLI 方法还逐一比较反射、接口调用、对象分派及枚举输入点的顺序；嵌套 DTO/委托只归一化外层 CLI 类名。
 它证明静态调用点顺序；方法体原样迁移的源码检查另保证参数、lambda 所在位置与线程调度不变，不能替代真机轨迹。
 
-[Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 用迁移前后各自的 HttpTests（`--baseline-harness` /
+[Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 用迁移前后各自的 TiaMcp.Engine.Harness（`--baseline-harness` /
 `--host-harness`）和 EXE（`--baseline-exe` / `--exe`），以可重复的 `--domain <name>` 选择领域，在
 full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，并核对源码中的工具名单。
 `--domain Cfc` 覆盖两个工具的八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
@@ -190,7 +190,7 @@ CFC 已纳入 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCa
 P3-18 删除迁移期嵌套 `*ToolSupport` 和 HMI 编译转发。目录枚举、工具构造与描述读取仍由 `McpServer`
 提供；编译与编译诊断分别由 `PlcCompilation`、`CompilerDiagnostics` 承载；XML 构建响应、PLC 批量导入响应、
 离线执行、文件名、名称建议、在线策略、工程编排和 JSON 参数解析分别使用具名内部静态辅助类。
-辅助类仍在引擎程序集，工具直接调用其实现。HttpTests 通过显式辅助类型清单定位黄金响应的执行器。
+辅助类仍在引擎程序集，工具直接调用其实现。TiaMcp.Engine.Harness 通过显式辅助类型清单定位黄金响应的执行器。
 
 最后的会话余项分布到 `Portal.HmiOperation.cs`（响应钩子）、`Portal.Diagnostics.cs`（门户诊断）、
 `Portal.SessionResolvers.cs`（硬件实用程序解析）、`Portal.ObjectIdentity.cs`（对象标识与编辑器）和
@@ -281,7 +281,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 迁移前后的原生序列保持一致：工具 → 原 Portal 方法内的调用体，变为实例工具 → 服务内同一调用体 →
 `IEngineeringSession` → 原共享内核辅助。没有新增原生调用、参数改写或线程调度。
 `DescribeObjectProperty` 在工具与服务中同名，原生顺序检查对这两个方法族分别明确配对，其余由脚本自动匹配。
-`InvokeOnInstance` 通过服务实例访问共享内核辅助，HttpTests 的反射调用改由 `EngineSurface.Invoke` 解析目标，
+`InvokeOnInstance` 通过服务实例访问共享内核辅助，TiaMcp.Engine.Harness 的反射调用改由 `EngineSurface.Invoke` 解析目标，
 原有断言全部保留。`EngineSurface.InvokeUninitialized` 给迁出的服务注入未初始化的 Portal，保持原有 guard
 测试的空内核条件；两者均不执行构造函数，也不获取原生资源。
 ### HMI 离线替身边界
@@ -306,7 +306,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 读取健康重置、空工程消息和缓存失效留在内核，不为服务未直接调用的操作扩展接口。
 
 离线套件直接构造服务并注入 `FakeHmiToolSession`，不再链接这五个 `Portal` 文件及 `Portal.HmiOperation.cs`。
-替身模拟会话响应和故障状态，生产信封继续由 HttpTests 的黄金字节检查覆盖。
+替身模拟会话响应和故障状态，生产信封继续由 TiaMcp.Engine.Harness 的黄金字节检查覆盖。
 `ToolBridgeFixtures` 中仅保留非 partial 的注册用 `Portal` 占位类和 `IEngineeringSession`，
 用于链接真实 `EngineRegistration` 及维护工具的根目录检查；HMI 行为测试不使用此占位类。
 `EngineBundleLayoutTests` 不再声明 `Portal`。既有断言、输入和预期文本保留，offline 最低数量不变。
@@ -501,7 +501,7 @@ CLI 直接解析 [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/Devi
 仅服务内部需要上述接口的行构造器改为实例方法，原方法体按接口访问替换后保持一致。
 `Test-DomainTools.py` 的 `HardwareNetwork` / `HardwareServices` 用例覆盖全部迁移工具、full/lite、
 直接及隔离子进程路径，并比较 V20 的通信连接和设备服务对象版本拒绝。
-HttpTests 保留全部既有断言，另检查两个领域的工具归属、共享会话、单例、生命周期和工具到服务的 IL 调用。
+TiaMcp.Engine.Harness 保留全部既有断言，另检查两个领域的工具归属、共享会话、单例、生命周期和工具到服务的 IL 调用。
 ### 在线、下载与设备传输
 
 `OnlineDownloadService` 与 `OnlineDownloadTools` 合并承载在线、下载及设备传输的 12 个工具，
@@ -650,7 +650,7 @@ Addresses 5、Devices 15、HardwareServices 11、MotionProDiagClassicHmi 12、Li
 CLI 直接解析 `HardwareNetworkTools` 调用 `ProbeHardwareHmiConnectionOwnerCandidates` /
 `ProbeHardwareHmiConnectionWhitelistedServices`，解析 `LibraryTools` 调用
 `ProbeGlobalLibrary` / `ImportMasterCopyFromGlobalLibrary`；对应静态转发已删除。
-六个服务均已在 `EngineSurface` 名单和约定注册中，未重复添加；HttpTests 的领域名单覆盖新增工具、会话共享和 CLI 实例归属。
+六个服务均已在 `EngineSurface` 名单和约定注册中，未重复添加；TiaMcp.Engine.Harness 的领域名单覆盖新增工具、会话共享和 CLI 实例归属。
 
 原生调用顺序、参数与线程归属不变；方法体通过去注释 token 比较，工具属性、参数与默认值原样保留。
 同名工具和服务按声明类型分别输入原生调用顺序检查器，完整织入清单另比较全部类别的成员多重集合。
@@ -703,7 +703,7 @@ GetPutGetAccess；TraceTagCause、TraceTagCauseLive 继续调用内核的同名�
 工程读取、块导出、S7 读取的顺序、参数和线程归属不变。其他两个工具类没有会话依赖。
 RuntimeMeta 由 RuntimeChannelTools 保留为内部静态辅助，供 PLCSIM 执行器复用。
 
-[TiaMcp.Runtime](../../src/Runtime/TiaMcp.Runtime.csproj) 为不织入的 net48 协议程序集，
+[TiaMcp.Runtime](../../src/OnlineChannels/TiaMcp.OnlineChannels.csproj) 为不织入的 net48 协议程序集，
 保持 TiaMcpServer.Runtime 命名空间，引用原版本 Sharp7、Workstation.UaClient、官方 HTTP Web API 客户端及 Logic。
 官方 Siemens.Simatic.S7.Webserver.API 是协议客户端；此程序集不引用 Siemens.Engineering、PLCSIM 或引擎。
 独立还原时显式保持引擎已有的 DependencyInjection 版本，不引入新的依赖版本。
@@ -731,7 +731,7 @@ Package-Release、Validate-Bundle、Check-Repository 的必需文件清单同步
 
 Test-DomainTools 的三个运行时领域覆盖全部 20 个工具、full/lite 与普通/隔离路径。
 空地址、空节点、空 host、空变量及无效请求在打开通道前拒绝；CPU 探测/状态、离线追踪和 PLCSIM 使用既有重复参数准入拒绝，
-避免打开协议连接、探测本机模拟实例或扩大耗时屏蔽规则。HttpTests 另外核对实例单例、会话依赖与程序集归属。
+避免打开协议连接、探测本机模拟实例或扩大耗时屏蔽规则。TiaMcp.Engine.Harness 另外核对实例单例、会话依赖与程序集归属。
 ### 会话与工程工具
 
 [SessionTools](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs)
@@ -813,6 +813,6 @@ the matching `language`, `query`, or `exampleId` selector.
 `Siemens/Portal` 和 `Siemens/Services` 内不再调用 `EngineServices.Get`，依赖图无反向会话依赖。
 标签表先于画面导入，原生调用参数、顺序和线程保持原样。
 
-HttpTests 保留原有断言数量，原静态转发存在性断言改为无转发、实例解析和单例归属检查；指南结果仍比较完整 Meta。
+TiaMcp.Engine.Harness 保留原有断言数量，原静态转发存在性断言改为无转发、实例解析和单例归属检查；指南结果仍比较完整 Meta。
 另验证容器与内核的断开状态一致、无会话宿主不回退、McpServer 无会话状态，以及 Types/HmiExchange 的注入关系。
 静态转发移除后为空的九个 partial 文件已删除；其他 partial 仍承载共享实现或支持适配器。

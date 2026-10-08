@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     // API-independent file publication; the callback is the only native boundary.
     internal static class PlcExportPublication

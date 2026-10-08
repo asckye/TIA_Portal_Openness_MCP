@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../Shared/Xunit.props" />
-  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/WorkerProgressShim.cs" Link="WorkerProgressShim.cs" />
-  </ItemGroup>
-</Project>

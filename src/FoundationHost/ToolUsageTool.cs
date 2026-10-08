@@ -4,7 +4,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaOpenness.Shared;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed class UsageHintTool : McpServerTool
 {

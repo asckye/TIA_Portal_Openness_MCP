@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     // Deliberately narrower than the original probing tool: selection is read-only, creation is once.
     public sealed class PlcDeviceAddResult

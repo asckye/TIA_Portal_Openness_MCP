@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("TiaMcpServer.LegacyHostTests")]
+[assembly: InternalsVisibleTo("TiaMcp.FoundationHost.Tests")]

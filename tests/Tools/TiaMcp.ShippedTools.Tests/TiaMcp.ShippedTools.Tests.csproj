@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Studio/Directory.Build.props" />
   <PropertyGroup>
+    <RootNamespace>TiaMcp.ShippedTools.Tests</RootNamespace>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

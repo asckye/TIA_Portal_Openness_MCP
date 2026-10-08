@@ -161,7 +161,7 @@
 | F01 宿主元工具与诊断 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 无 Openness；旧版 Foundation 目录刻意不含桥接/lite（`docs/reference/version-tools.md`），在旧版发布 `CallTool/FindTools/ApplyToolBatch` 等属产品决定 |
 | F02 PLC 离线分析 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 无 Openness；`RenderPlcBlockDocument` 在线导出模式用 `M:SW.Blocks.PlcBlock.Export`（全版本）；`ValidatePlcDocumentSchemas`/`DecodePlcSimaticMl` 以 V20/V21 格式为准 |
 | F03 HMI 离线设计 | partial⁰ | partial⁰ | partial⁰ | partial⁰ | partial⁰ | partial⁰ | 离线可运行；Unified 产物落点需 `T:HmiUnified.HmiSoftware`（19+）；Classic 包与 `RunClassicHmiTemporaryImportPreflight` 以 V21 格式/环境为准 |
-| F04 运行时通道 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 非 Openness（`src/Runtime` net48）；Put/Get 预检的属性名逐版 unknown |
+| F04 运行时通道 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 非 Openness（`src/OnlineChannels` net48）；Put/Get 预检的属性名逐版 unknown |
 | F05 门户会话与生命周期 | partial | partial | partial | partial | partial | partial | `M:Project.SaveAs`/`Archive`、`M:ProjectComposition.Retrieve` 15.1+；`T:Multiuser.LocalSession`、`M:Multiuser.ProjectServer.CreateLocalSession` 17+；`BuildProjectScaffold` 的 S7DCL 导入需 `M:SW.Blocks.PlcBlockComposition.ImportFromDocuments`（20+） |
 | F06 工程服务 | partial | partial | partial | partial | partial | partial | 语言/项目文本/设置/事务/ShowInEditor 全版本；`M:HW.Device.CompareTo` 15.1+；`T:CustomIdentity.CustomIdentityProvider` 16+；编译设置属性 16–20；`M:Library.ProjectLibrary.CompareToLibrary` 18+；`T:ObjectIdentifierProvider` 20+ |
 | F07 安全 | no（Put/Get unknown） | partial | partial | partial | partial | partial | `T:AdvancedProtection.ProtectionProviderBase`、`T:HW.Features.PlcAccessLevelProvider` 15.1+；证书、Web 用户、监控表 Web 访问 16+；UMAC/UMC、主密钥 17+；密码策略、简易 Web 用户 18+；设备 Syslog 19+；项目 Syslog 20+ |
@@ -202,7 +202,7 @@
 
 | 编号 | 基础设施 | 引擎现状 | 使用族 | Foundation 落点与要求 |
 |---|---|---|---|---|
-| I1 | 会话绑定与生命周期 | `Portal`、`IEngineeringSession`、`Worker/SharedSessionLifecycle.cs`（P7-04b）、绑定快照、进程租约 | 全部 Openness 族；F05 最深 | 适配器会话（`OpennessAdapter`/`PlcFoundationEngine`）需公开 portal/project/进程与独占访问；14sp1–19 为 STA，20/21 worker 为 MTA（P7-04），新代码须线程模型中立 |
+| I1 | 会话绑定与生命周期 | `Portal`、`IEngineeringSession`、`WorkerMode/SharedSessionLifecycle.cs`（P7-04b）、绑定快照、进程租约 | 全部 Openness 族；F05 最深 | 适配器会话（`OpennessAdapter`/`PlcFoundationEngine`）需公开 portal/project/进程与独占访问；14sp1–19 为 STA，20/21 worker 为 MTA（P7-04），新代码须线程模型中立 |
 | I2 | 对象定位 | softwarePath/别名（Foundation 已有 `PlcReadPathPolicy`、`NativePathSelection`）；单元作用域 unitName+unitKind；硬件 devicePath/itemPath 名数组（`ExactEngineeringHardware`、`HardwareOwnerPath`，19 个引擎文件）；HMI 路径；库路径 | F08–F17（PLC）、F07/F13/F18–F22/F31（硬件）、F24–F29（HMI）、F23/F29（库） | 逐类一次实现为 shared-native 原语，样板族先做硬件定位 |
 | I3 | 步骤封装 | `RunHmiStepTool`（名为 HMI，实为通用：meta、dryRun、mayHaveChanged、before/after 读回、错误映射，54 个文件使用）、`AcquireHmiEditAccess`（50 个文件） | 几乎全部写族 | 宿主侧统一信封与审批（已有 P6-65 共用规则），适配器侧统一“预检-执行-读回-结果未知即锁定”回复接口 |
 | I4 | 标量属性/属性读写 | `EngineeringScalarProperties`、`PropertyPathReader`、`ApplyScalarsAndAttributes`（47 个文件） | F07、F18–F20、F26–F28、F35 等 | 适配器原语，类型转换表逐版编译 |
@@ -212,7 +212,7 @@
 | I8 | 在线路由与凭据 | `ConnectionConfiguration`/PG-PC 接口选择、`OnlineToolPolicy`、`EngineeringCredentialRules`（SecureString，不回显） | F22、F12、F31 在线部分、F07、F30、F33（Teamcenter） | 一处实现；ONLINE-WRITE 审批与安全闸门不变 |
 | I9 | HMI 访问与崩溃隔离 | `HmiExactAccess`、`HmiSnapshot`、`Portal.Software.UnifiedHmiHelpers` 反射助手；已知崩溃规避（SyntaxCheck、脚本改名、Classic 画面尺寸、CFC 未知图表保护查询） | F24–F29、F32 | 隔离规则逐条带入适配器，不得在迁移中丢失 |
 | I10 | 原生调用诊断与织入 | `InvocationJournal`、`NativeCallDiagnostics`、`NativeCallWeaver` verify | 全部适配器代码 | 已为八版适配器强制；新文件加入 `Adapter.Sources.props` 白名单 |
-| I11 | 第三方 | TiaGitAddIn.Core（`RenderPlcVisualDiff`）、SiemensOpcUaModelled（F15）、Esprima/YamlDotNet（F28、Unified 脚本）、Sharp7/S7 WebAPI/Workstation.UaClient（`src/Runtime`，F04/F12）、PLCSIM Adv API（运行时定位）、siemens-plc-tools Python（`RunPlcCompanionTool`） | F01–F04、F12、F15、F28 | 只放宿主或 Siemens 无关库；不得进入适配器（边界检查） |
+| I11 | 第三方 | TiaGitAddIn.Core（`RenderPlcVisualDiff`）、SiemensOpcUaModelled（F15）、Esprima/YamlDotNet（F28、Unified 脚本）、Sharp7/S7 WebAPI/Workstation.UaClient（`src/OnlineChannels`，F04/F12）、PLCSIM Adv API（运行时定位）、siemens-plc-tools Python（`RunPlcCompanionTool`） | F01–F04、F12、F15、F28 | 只放宿主或 Siemens 无关库；不得进入适配器（边界检查） |
 | I12 | 工具描述符与目录 | V20/V21 目录由引擎 `--write-tool-catalog` 生成并经 `EngineCatalog` 校验执行所有权；`ToolMetadata`、`ToolExecution`、`BehaviorCapabilities`、`GetToolUsage` 示例 | 全部 | P8-02 须先给描述符一个不依赖引擎的来源（见第 5 节），否则 P8-04 无法退役引擎 |
 | I13 | DTO/JSON 边界 | 引擎服务直接返回 `JsonObject`/`ResponseMessage`；适配器禁止引用 Logic/JSON 库（`scripts/checks/Check-AdapterBoundary.py`） | 全部 Openness 族 | 每族在 `src/Adapters.Contracts` 定义类型化 DTO，worker 用 `WorkerJson` 序列化，宿主映射为与基线一致的 V4 JSON |
 
@@ -823,7 +823,7 @@ P8-02 在样板族上应确定并留下的框架（其余批次照抄）：
 
 各版 XML 成员数：14sp1 3,441；15.1 8,635；16 13,663；17 17,212；18 20,679；19 26,895；20 30,019；21 33,421。各版公共类型命名空间的出现区间（XML `T:` 统计）可复核：例如 `Siemens.Engineering.HmiUnified` 19–21、`SW.Units` 16–21、`Safety` 16–21、`SafetyValidation` 仅 21、`CrossReference` 18–21、`SW.FunctionCharts` 18–21、`TeamcenterGateway` 18–21、`VersionControl` 16–21、`Multiuser` 17–21、`MC.Sinumerik` 16–20、`SCADAExporter` 17–20、`Simotion` 14sp1/15.1/17–20、`Startdrive`（旧）仅 14sp1、`MC.Drives` 15.1–21。
 
-F01–F04 不调用 Openness：431 个工具中，这四族工具方法体除 `RenderPlcBlockDocument`（可选在线导出）与 `GetPlcLiveValuesS7`（可选 Put/Get 预检）外，不访问引擎会话、Portal 或 `GetService`；`src/Runtime/TiaMcp.Runtime.csproj` 不引用 Siemens.Engineering。
+F01–F04 不调用 Openness：431 个工具中，这四族工具方法体除 `RenderPlcBlockDocument`（可选在线导出）与 `GetPlcLiveValuesS7`（可选 Put/Get 预检）外，不访问引擎会话、Portal 或 `GetService`；`src/OnlineChannels/TiaMcp.OnlineChannels.csproj` 不引用 Siemens.Engineering。
 
 逐族关键成员（列为 14sp1…21，标记见第 0 节）：
 

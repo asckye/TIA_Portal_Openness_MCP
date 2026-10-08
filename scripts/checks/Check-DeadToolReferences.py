@@ -369,7 +369,7 @@ def _current_markdown(root):
     try:
         names = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', '*.md'],
                                         cwd=root).decode('utf-8').split('\0')
-        return [root / name for name in names if name]
+        return [root / name for name in names if name and (root / name).is_file()]
     except (OSError, subprocess.CalledProcessError):
         return list(root.rglob('*.md'))
 

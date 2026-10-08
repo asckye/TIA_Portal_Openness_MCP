@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 // SDK options are supplied by the caller, so this contract can be tested without
 // the SDK or Siemens assemblies. Never wrap malformed/missing native results as success.

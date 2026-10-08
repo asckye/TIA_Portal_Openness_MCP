@@ -5,7 +5,7 @@ using Siemens.Engineering.SW.Blocks;
 #if PLC_DOCUMENT_EXPORT
 using Siemens.Engineering.SW;
 #endif
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

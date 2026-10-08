@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 // No Siemens dependency. Never call the production path helper: it scans and reparses files.
 internal static class OfflineSymbolManifest

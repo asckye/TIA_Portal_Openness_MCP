@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using System.Text;
 using System.Security.Cryptography;
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class BatchDocumentImportContract
 {
  internal static string PlanHash(JsonArray items)

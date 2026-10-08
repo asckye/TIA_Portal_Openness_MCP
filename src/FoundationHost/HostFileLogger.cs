@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using TiaOpenness.Shared;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed class HostFileLogger : ILoggerProvider, ILogger
 {

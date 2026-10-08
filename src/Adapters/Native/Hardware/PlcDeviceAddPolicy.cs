@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TiaMcp.Adapters.Contracts;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class PlcDeviceAddRequest
     {

@@ -57,7 +57,7 @@ internal static partial class ReleaseCommands
         Func<string, string, IReadOnlyList<string>, bool, string?, CommandResult> runIsolated)
     {
         var snapshotArgs = new[] { "--repo-root", Root, "--public-api-root", api };
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
+        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         var fixtureWorkers = new Dictionary<string, string>(StringComparer.Ordinal);
         if (plan.Includes("engine-responses"))
         {
@@ -66,7 +66,7 @@ internal static partial class ReleaseCommands
                 var directory = Path.Combine(logs, "sdk-worker-v" + release);
                 var worker = Path.Combine(directory, $"TiaMcp.Engine.V{release}.exe");
                 var result = runIsolated("sdk-worker-build", dotnet,
-                    ["build", Path.Combine(Root, $"src/Engine/TiaMcpServer.V{release}.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
+                    ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{release}.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
                      "-p:TiaMcpEngineWorkerSdkFixture=true", "-p:AppendTargetFrameworkToOutputPath=false", $"-p:OutputPath={directory}",
                      $"-p:SiemensEngineeringDirectory={ResolveReleaseApi(null, api, int.Parse(release))}", "-p:NuGetAudit=false"], true, Root);
                 ProcessRunner.RequireSuccess(result, "SDK fixture worker build");

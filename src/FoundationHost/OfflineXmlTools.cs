@@ -5,7 +5,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal static class OfflineXmlTools
 {

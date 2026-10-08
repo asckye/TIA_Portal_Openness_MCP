@@ -8,7 +8,7 @@ using Siemens.Engineering;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.ExternalSources;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

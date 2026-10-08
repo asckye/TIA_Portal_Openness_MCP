@@ -213,7 +213,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "14sp1"
     },
@@ -224,7 +224,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "15.1"
     },
@@ -235,7 +235,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "16"
     },
@@ -246,7 +246,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "17"
     },
@@ -257,7 +257,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "18"
     },
@@ -268,7 +268,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "19"
     },
@@ -279,7 +279,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "20"
     },
@@ -290,7 +290,7 @@
     ]
   },
   {
-    "project": "src/Worker/TiaMcpServer.PlcWorker.csproj",
+    "project": "src/PlcWorker/TiaMcp.PlcWorker.csproj",
     "properties": {
       "TiaReleaseKey": "21"
     },
@@ -301,7 +301,7 @@
     ]
   },
   {
-    "project": "src/Engine/TiaMcpServer.V20.csproj",
+    "project": "src/Engine/TiaMcp.Engine.V20.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
@@ -312,7 +312,7 @@
     ]
   },
   {
-    "project": "src/Engine/TiaMcpServer.V21.csproj",
+    "project": "src/Engine/TiaMcp.Engine.V21.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
@@ -323,7 +323,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj",
+    "project": "tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
@@ -333,7 +333,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "14sp1"
     },
@@ -344,7 +344,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "15.1"
     },
@@ -355,7 +355,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "16"
     },
@@ -366,7 +366,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "17"
     },
@@ -377,7 +377,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "18"
     },
@@ -388,7 +388,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "19"
     },
@@ -399,7 +399,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "20"
     },
@@ -410,7 +410,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj",
     "properties": {
       "TiaReleaseKey": "21"
     },
@@ -421,7 +421,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/TiaMcp.FoundationHost.DeviceAdd.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
@@ -430,7 +430,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.FoundationHost.HardwareCatalog.Tests/TiaMcp.FoundationHost.HardwareCatalog.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
@@ -440,7 +440,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V20/V20.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
@@ -450,7 +450,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.NativeTests/V21/NativeTests.V21.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V21/V21.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
@@ -459,7 +459,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj",
+    "project": "tests/FoundationHost/TiaMcp.FoundationHost.SpecialExportShape.Tests/TiaMcp.FoundationHost.SpecialExportShape.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
@@ -470,7 +470,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
@@ -479,7 +479,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
     "properties": {
       "DefineConstants": "TIA_V20"
     },

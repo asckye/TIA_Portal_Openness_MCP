@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost
+namespace TiaMcp.FoundationHost
 {
     // Pure duplicate of ConnectPortal followed by AttachOpenProject.
     internal static class SharedToolPolicy

@@ -46,7 +46,7 @@
 | `scripts/checks/Test-DownloadRouteSelection.cs` 第 14、53 行 | `-Python` 选项，用 `python -c` 和 `engine_sources` 提取生产成员 | 批 1 |
 | `scripts/checks/Test-SharedNativeMigration.cs` 第 29–160 行 | 调用 `Compare-SharedNativePaths.py`、`Test-SharedNativeIlReader.py` | 批 6 |
 | build-tools/release | `Py`（`PYTHON` 环境变量）、各命令的 `-Python` 选项，前置检查 “Python >= 3.12”（`ReleasePrerequisites.RequirePython`、`ReleasePrerequisiteTests`） | 批 8 |
-| 产品与伴随环境（保留） | `InstallPlcToolsCommand.cs`、`DataLocations.EcosystemPython`、`EcosystemTools`/`QualityAuditTools`/`V21EcosystemTools`、HttpTests 伴随夹具、`TIA_MCP_PLC_TOOLS_PYTHON`、`RequireEcosystemPython` | 不改 |
+| 产品与伴随环境（保留） | `InstallPlcToolsCommand.cs`、`DataLocations.EcosystemPython`、`EcosystemTools`/`QualityAuditTools`/`V21EcosystemTools`、TiaMcp.Engine.Harness 伴随夹具、`TIA_MCP_PLC_TOOLS_PYTHON`、`RequireEcosystemPython` | 不改 |
 
 ## 2. 清单表
 
@@ -74,7 +74,7 @@
   - `DOC`：文档中的命令
 
 除另行说明外，外部依赖都只有标准库。“逐字节”列出受跟踪的输出：它们必须与 Python 版本完全一致，见第 4 节。
-未跟踪的结果文件（`bin-build/`、`test-results/`）只要求字段结构和 stdout 标记兼容，因为发布工具会解析这些结果。
+未跟踪的结果文件（`bin-build/`）只要求字段结构和 stdout 标记兼容，因为发布工具会解析这些结果。
 
 C# 目标的缩写：
 
@@ -124,9 +124,9 @@ C# 目标的缩写：
 | `Compare-NativeCallOrder.py` | 350 | 比较引擎、助手和 CLI 迁移前后的 NativeCallWeaver 清单 | RT-st 自检；PY：Snapshot-SharedNative；DOC engine-decomposition | 无 | — | FBA；批 6 |
 | `Compare-SharedNativePaths.py` | 2,368 | 比较配置域的织入路径，不执行原生代码；临时编译 `SharedNativeIlReader.cs` | RT-st 自检；PY：Test-SharedNativeIlReader；CS：Test-SharedNativeMigration.cs | `--evidence-from/--output` → `docs/development/evidence/p4-i*.json`（含 `expandedGraphSha256`，为紧凑、ensure_ascii 的 `json.dumps` 结果的 sha256） | dotnet build（Mono.Cecil） | FBA，直接编入 `SharedNativeIlReader.cs`；批 6 |
 | `Inventory-ResponseEnvelopes.py` | 454 | 清点响应构造，并对手写赋值做棘轮 | CI-sc 自检；RT-st；PY：Check-Repository | `--update-baseline` → `response-envelope-baseline.json`（`ensure_ascii` 默认值） | — | RT `check-ratchet envelopes`；批 2 |
-| `Snapshot-ToolContracts.py` | 900 | 捕获离线工具契约，拒绝不兼容的输入结构变化（capture/compare/verify/self-test） | CI-sc verify；RT-pf、RT-bg verify、RT-rc（stdio/http capture+compare、引擎 A/B）、RT-st；PY：Check-ToolsList、Snapshot-ToolResponses | capture → `manifest/contracts/v4/baseline/*.json`（`sort_keys`、indent=2） | HttpTests、引擎/主机 EXE、HTTP | RT `snapshot-contracts`；批 4 |
-| `Snapshot-ToolResponses.py` | 1,714 | 捕获并比较离线响应与派发前拒绝；连续两次捕获须一致，掩码规则经评审 | CI-sc verify；RT-pf、RT-bg、RT-rc（含 foundation-responses）、RT-st；PY：Test-DomainTools、Test-ToolUsage、Snapshot-SharedToolUsage、EngineSliceOracle、Check-ScriptToolCalls（负例路径）；CS：ReleaseTierTests.cs | capture → `manifest/contracts/v4/responses/*.json`（`responseDigest.sha256` = Python canonical JSON 的 sha256） | HttpTests、dotnet、HTTP | RT `snapshot-responses`；批 4 |
-| `Test-DomainTools.py` | 1,509 | 比较 full/lite、直连/隔离 STDIO 下的断开领域响应；`--source-only` 只核对注册与夹具 | CI-sc `--source-only`；RT-st；DOC engine-decomposition | 无 | HttpTests | 源码部分 → xUnit，运行部分 → RT/FBA；批 4 |
+| `Snapshot-ToolContracts.py` | 900 | 捕获离线工具契约，拒绝不兼容的输入结构变化（capture/compare/verify/self-test） | CI-sc verify；RT-pf、RT-bg verify、RT-rc（stdio/http capture+compare、引擎 A/B）、RT-st；PY：Check-ToolsList、Snapshot-ToolResponses | capture → `manifest/contracts/v4/baseline/*.json`（`sort_keys`、indent=2） | TiaMcp.Engine.Harness、引擎/主机 EXE、HTTP | RT `snapshot-contracts`；批 4 |
+| `Snapshot-ToolResponses.py` | 1,714 | 捕获并比较离线响应与派发前拒绝；连续两次捕获须一致，掩码规则经评审 | CI-sc verify；RT-pf、RT-bg、RT-rc（含 foundation-responses）、RT-st；PY：Test-DomainTools、Test-ToolUsage、Snapshot-SharedToolUsage、EngineSliceOracle、Check-ScriptToolCalls（负例路径）；CS：ReleaseTierTests.cs | capture → `manifest/contracts/v4/responses/*.json`（`responseDigest.sha256` = Python canonical JSON 的 sha256） | TiaMcp.Engine.Harness、dotnet、HTTP | RT `snapshot-responses`；批 4 |
+| `Test-DomainTools.py` | 1,509 | 比较 full/lite、直连/隔离 STDIO 下的断开领域响应；`--source-only` 只核对注册与夹具 | CI-sc `--source-only`；RT-st；DOC engine-decomposition | 无 | TiaMcp.Engine.Harness | 源码部分 → xUnit，运行部分 → RT/FBA；批 4 |
 | `Test-DotnetSuites.py` | 322 | 运行 xUnit 套件，按 TRX、最少通过数和跳过上限门禁 | CI-ot、CI-ft、CI-va；RT-pf 自检、RT-br（6 个套件）、RT-mv（Foundation 套件）、RT-rc、RT-st；PY：Test-HostBehaviorParity；CS：`tests/Engine/*/Program.cs` 提示文字、Offline.slnx 注释 | `<结果>/<suite>/<suite>.json` 摘要（不跟踪，发布工具读取） | dotnet test | RT `test-suites`，发布工具内直接调用；批 1 |
 | `Test-FoundationTransport.py` | 326 | 真实 STDIO/HTTP 主机对接合成 worker 的传输检查 | CI-ft；RT-br（worker-protocol）、RT-bg、RT-mv；RT-hash（`protocolScriptSha256`）；PY：Test-VersionCatalogWiring 读取其文本 | 结果 JSON | ctypes（kernel32 进程快照）、HTTP | RT 子命令；批 6 |
 | `Test-HostBehaviorParity.py` | 59 | 同一夹具分别经引擎、Foundation、EngineHost 三条派发路径运行，并执行 TRX 门禁 | RT-mv | `host-behavior-parity.json`（不跟踪） | dotnet | RT `host-parity`；批 1 |
@@ -134,10 +134,10 @@ C# 目标的缩写：
 | `Test-NativeDiagnostics.py` | 55 | 运行构建时织入的替身 API 诊断夹具 | RT-br、RT-bg；RT-hash（`scriptSha256`） | `result.json` | dotnet | RT；批 6 |
 | `Test-NativeLifecycle.py` | 196 | net48 原生烟雾测试的监督器，默认只运行自检 | CI-va 自检；RT-eg、RT-br 自检、RT-st；RT-hash（`supervisorSha256`）；CS：NativeTests/Program.cs；DOC native-lifecycle-tests.md | 输出目录 | NativeTests.exe | RT；批 6 |
 | `Test-NativeMcpSession.py` | 172 | 生产 MCP 会话生命周期测试，默认只给出计划 | CI-va 自检；RT-eg、RT-br、RT-st；DOC native-mcp-session-tests.md | 输出目录 | 引擎 EXE | RT；批 6 |
-| `Test-ReleaseApprovalGate.py` | 411 | 证明默认开启的审批在派发前拒绝写入（engine/foundation） | RT-pf 自检、RT-br、RT-bg、RT-mv、RT-st；RT-hash；PY：Test-ReleaseSmoke | `result.json` | HttpTests、主机 EXE | RT；批 6 |
+| `Test-ReleaseApprovalGate.py` | 411 | 证明默认开启的审批在派发前拒绝写入（engine/foundation） | RT-pf 自检、RT-br、RT-bg、RT-mv、RT-st；RT-hash；PY：Test-ReleaseSmoke | `result.json` | TiaMcp.Engine.Harness、主机 EXE | RT；批 6 |
 | `Test-ReleaseSmoke.py` | 91 | 八个随包 MCP 主机的 STDIO 冒烟测试 | RT-rc、RT-st；source-roots.json；`ReleaseCommands.ValidateBuildRecords` 将其列为必需文件 | 无 | 主机 EXE | RT；批 6 |
 | `Test-RelocatedBundle.py` | 1,068 | 解压包移到仓库外后，检查只读、不连 TIA 的启动路径 | RT-pf 自检、RT-rc、RT-st；DOC release-workflow、validation | 临时副本 | winreg、dotnet、EXE | RT 子命令（在仓库外执行）；批 6 |
-| `Test-ResourceDiscovery.py` | 313 | 真实 EXE 的 STDIO/HTTP 资源发现；同时是 10 个脚本共用的 MCP 测试客户端 | RT-br、RT-st；RT-hash（`resourceHelperSha256`）；PY：10 个脚本 | `--usage-output`（不跟踪） | HTTP、HttpTests | 共用 MCP 客户端 + RT `check-resources`；批 4（副本保留到批 6） |
+| `Test-ResourceDiscovery.py` | 313 | 真实 EXE 的 STDIO/HTTP 资源发现；同时是 10 个脚本共用的 MCP 测试客户端 | RT-br、RT-st；RT-hash（`resourceHelperSha256`）；PY：10 个脚本 | `--usage-output`（不跟踪） | HTTP、TiaMcp.Engine.Harness | 共用 MCP 客户端 + RT `check-resources`；批 4（副本保留到批 6） |
 | `Test-V21Ecosystem.py` | 106 | 经离线主机检查生态适配器（导入 simaticml 桥接） | RT-br（伴随 Python）、RT-st | 结果 JSON | 伴随 Python 环境 | RT；批 6 |
 | `Test-VersionCatalogWiring.py` | 143 | 版本门禁、派发、配置与构建接线的源码契约；读取 Package-Release、Test-FoundationTransport、Test-LocalStability 的源码文本 | CI-sc；RT-br、RT-eg | 无 | — | xUnit；批 2（批 5、批 6 时改断言目标） |
 | `Verify-ReleaseAsset.py` | 265 | 将交付 ZIP 与对应 Git 提交逐文件比对，并核对清单哈希 | CI-rl；RT-pk、RT-st；DOC | 自检时写临时 ZIP | git、zipfile | RT `verify-release-asset`；批 5 |
@@ -147,11 +147,11 @@ C# 目标的缩写：
 | 文件 | 行 | 用途 | 调用方 | 写出（逐字节） | 外部依赖 | 目标·批次 |
 |---|---:|---|---|---|---|---|
 | `scripts/generate/Generate-ToolUsage.py` | 517 | 生成嵌入的官方来源与示例目录，以及工具配置资源 | CI-sc `--check`；RT-pf、RT-eg、RT-br `--check`；PY：Check-ToolsList、Generate-Phase6Plan（runpy） | `src/Shared/ToolUsageData.json`（3.4 MB）、`src/Logic/ModelContextProtocol/ToolProfiles.resx`（1.1 MB，经 Phase6Plan 的 `resource_text()`），均为**产品嵌入资源** | ast（`literal_eval` 读取 Phase6Plan 源码中的 `NEW_V4_TOOLS`）、runpy | RT `generate-tool-usage [--check]`；批 3 |
-| `scripts/generate/Generate-Phase6Plan.py` | 1,135 | 生成 V4 提案与运行目录；模块顶层执行全部计算（含 git ls-files，包括未跟踪文件） | RT-pf（`--shared-host --check`）；PY：Generate-ToolUsage、phase6_groups | `--shared-host`：ToolProfiles.resx、`tests/Engine/TiaMcpServer.Tests/FullEngineRejections.json`、`manifest/version-tools.json`、`docs/reference/version-tool-catalog.md`、`docs/development/phase6-review.md` 标记块；不带 `--shared-host` 时另写 `manifest/package-manifest.json` 计数、`reference/version-feature-matrix.json`、`docs/reference/real-machine-ledger.md` 能力块 | git、runpy | 拆分：仍在使用的产品输出 → RT `generate-catalogs`；phase6-review.md 冻结归档（待决定）；批 3 |
+| `scripts/generate/Generate-Phase6Plan.py` | 1,135 | 生成 V4 提案与运行目录；模块顶层执行全部计算（含 git ls-files，包括未跟踪文件） | RT-pf（`--shared-host --check`）；PY：Generate-ToolUsage、phase6_groups | `--shared-host`：ToolProfiles.resx、`tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json`、`manifest/version-tools.json`、`docs/reference/version-tool-catalog.md`、`docs/development/phase6-review.md` 标记块；不带 `--shared-host` 时另写 `manifest/package-manifest.json` 计数、`reference/version-feature-matrix.json`、`docs/reference/real-machine-ledger.md` 能力块 | git、runpy | 拆分：仍在使用的产品输出 → RT `generate-catalogs`；phase6-review.md 冻结归档（待决定）；批 3 |
 | `scripts/generate/Generate-ReleaseToolMigration.py` | 347 | 生成 3.x→4.0 工具与输入迁移表 | RT-pf（文件存在时才执行 `--check`） | `docs/releases/v4.0.0-tool-migration.md` | — | RT `generate-release-migration`，或冻结为历史文档（待决定）；批 3 |
 | `scripts/diagnostics/Audit-VersionTools.py` | 114 | 按版本目录对工具分组，对照官方 XML 成员与已编译调用点 | RT-mv（native-coverage）；DOC openness-coverage、gap-review | `manifest/version-tools.json`、`docs/reference/version-tool-catalog.md`（**与 Phase6Plan 写同一文件，表头不同**）、`manifest/version-api-audit.json`（**当前提交为 CRLF**）；`bin-build` 中的候选清单 | 本地 PublicAPI XML、`bin-build` 覆盖清单 | RT `audit-version-tools`；批 3 |
 | `scripts/diagnostics/Audit-ToolUsage.py` | 51 | 汇总八版用法检索覆盖 | RT-mv（foundation-transport + Test） | `manifest/tool-usage-coverage.json`（文本模式写出，在 Windows 上为 CRLF；当前提交为 LF，Test-ToolUsage 也写这个文件） | 依赖 `bin-build` 结果 | RT `audit-tool-usage`；批 3 |
-| `tests/Engine/TiaMcpServer.Tests/Fixtures/PlcRender/generate.py` | 86 | 经临时 .NET runner 调用 `PlcProgramRenderer`，重建渲染 golden | DOC 同目录 README | `Fixtures/PlcRender/*.html`（`-text`）、`bin-build/P6-62` 样例 | dotnet run（net10 runner 引用 TiaMcp.Logic） | FBA，用 `#:project` 引用 `src/Logic/TiaMcp.Logic.csproj`（net48;net10.0）；批 3 |
+| `tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/generate.py` | 86 | 经临时 .NET runner 调用 `PlcProgramRenderer`，重建渲染 golden | DOC 同目录 README | `Fixtures/PlcRender/*.html`（`-text`）、`bin-build/P6-62` 样例 | dotnet run（net10 runner 引用 TiaMcp.Logic） | FBA，用 `#:project` 引用 `src/Logic/TiaMcp.Logic.csproj`（net48;net10.0）；批 3 |
 | `scripts/diagnostics/campaign/make_ledger.py` | 301 | 由战役台账与人工覆盖生成真机台账 | DOC scripts/README（camp 说明） | `docs/reference/real-machine-ledger.md`（与 Phase6Plan 能力块写同一文件） | gzip（`ledger-runs.jsonl.gz`） | 作为 campaign FBA 的子命令；批 7 |
 | `scripts/diagnostics/campaign/vm_ledger.py` | 44 | 从原开发机的 Claude 会话记录统计 VM 上调用过的工具 | 无；make_ledger 读取其输出 | `scripts/diagnostics/campaign/vm_ledger.json`（输入只存在于原开发机） | 本机 `~/.claude` 会话记录 | 建议退役，`vm_ledger.json` 作为冻结数据；批 7 |
 
@@ -179,7 +179,7 @@ C# 目标的缩写：
 - `plan_sim1` 49
 - `plan_uni1` 62、`plan_uni2` 65
 
-### 2.5 打包（scripts/build/）
+### 2.5 打包（build-tools/）
 
 | 文件 | 行 | 用途 | 调用方 | 写出 | 外部依赖 | 目标·批次 |
 |---|---:|---|---|---|---|---|
@@ -219,27 +219,27 @@ C# 目标的缩写：
 
 | 文件 | 行 | 用途 | 调用方 | 写出 | 外部依赖 | 目标·批次 |
 |---|---:|---|---|---|---|---|
-| `Check-LiteProfile.py` | 182 | 检查 lite 默认档可用且与 full 不同；需要已构建的引擎与 harness | DOC scripts/README（手动） | 无 | HttpTests | FBA 或退役；批 4 |
+| `Check-LiteProfile.py` | 182 | 检查 lite 默认档可用且与 full 不同；需要已构建的引擎与 harness | DOC scripts/README（手动） | 无 | TiaMcp.Engine.Harness | FBA 或退役；批 4 |
 | `Snapshot-SharedNative.py` | 100 | 用精确 HEAD 的 SDK 构建证明 P7-04 的 Siemens IL 与调用顺序 | 无调用方 | `--evidence` 指定的证据文件 | Compare-NativeCallOrder、SDK | 退役候选；批 6 |
 | `Snapshot-SharedToolUsage.py` | 67 | 在八版 FoundationHost 管线上检查用法 | 无调用方 | coverage 输出 | 两个快照脚本、Test-ToolUsage | 退役候选，或并入 Test-ToolUsage；批 4 |
-| `Test-CampaignInputs.py` | 51 | 用已构建引擎的 V4 结构离线校验全部战役输入 | DOC validation、scripts/README | 输出目录 | HttpTests | FBA（批 7 计划改为 JSON 后同步读取方式）；批 4 |
+| `Test-CampaignInputs.py` | 51 | 用已构建引擎的 V4 结构离线校验全部战役输入 | DOC validation、scripts/README | 输出目录 | TiaMcp.Engine.Harness | FBA（批 7 计划改为 JSON 后同步读取方式）；批 4 |
 | `Test-Ecosystem.py` | 24 | 用伴随 Python 运行上游 plc-code/iol/trace 单元测试 | DOC validation.md | 无 | pytest（伴随环境） | C# 启动器 FBA，或归入保留的生态部分（待决定）；批 7 |
 | `Test-ExternalSourceDispatch.py` | 139 | 提取派发方法体，编译后对托管替身执行 | DOC | `--work-dir` 证据 | dotnet | FBA（使用共用的 EngineSources）；批 2 |
 | `Test-FoundationProxyIdentity.py` | 140 | 用新建且值相等的 API 代理运行 Foundation 源规划与删除代码 | DOC | `--work-dir` | dotnet | FBA；批 2 |
 | `Test-HmiImportSafety.py` | 156 | 提取 HMI 调用方和助手，做纯替身检查 | DOC | `bin-build` 临时目录 | dotnet | FBA；批 2 |
-| `Test-PilotTools.py` | 118 | 迁移试点域经 SDK、桥接与隔离 STDIO 运行 | DOC engine-decomposition（历史文档） | 无 | HttpTests | 退役候选；批 4 |
-| `Test-PlcEditingMcp.py` | 118 | PLC 文档工具经真实 MCP 传输运行，不连 TIA | DOC | 输出目录 | HttpTests | FBA；批 4 |
+| `Test-PilotTools.py` | 118 | 迁移试点域经 SDK、桥接与隔离 STDIO 运行 | DOC engine-decomposition（历史文档） | 无 | TiaMcp.Engine.Harness | 退役候选；批 4 |
+| `Test-PlcEditingMcp.py` | 118 | PLC 文档工具经真实 MCP 传输运行，不连 TIA | DOC | 输出目录 | TiaMcp.Engine.Harness | FBA；批 4 |
 | `Test-SharedNativeIlReader.py` | 267 | 编译合成 IL，证明回调与守卫的处理 | CS：Test-SharedNativeMigration.cs；DOC adapter-merge | 临时文件 | dotnet | 并入 Compare-SharedNativePaths FBA 的自检；批 6 |
 | `Test-SnapshotComparison.py` | 88 | 检查两个快照比较命令行的版本过滤 | 无调用方 | 临时文件 | `sys.executable` | 并入快照实现的 xUnit；批 4 |
 | `Test-TechnologyImportSafety.py` | 96 | 技术对象导入安全：提取方法后对替身运行 | DOC | 临时文件 | dotnet | FBA；批 2 |
-| `Test-ToolUsage.py` | 109 | 八版 STDIO 用法检索，执行白名单示例；CLAUDE.md 要求修改示例后运行 | DOC validation | `--coverage-output` → `manifest/tool-usage-coverage.json`（LF） | HttpTests、主机 | RT 子命令或 FBA；批 4 |
+| `Test-ToolUsage.py` | 109 | 八版 STDIO 用法检索，执行白名单示例；CLAUDE.md 要求修改示例后运行 | DOC validation | `--coverage-output` → `manifest/tool-usage-coverage.json`（LF） | TiaMcp.Engine.Harness、主机 | RT 子命令或 FBA；批 4 |
 
 ### 2.9b 测试目录中的脚本（3 个）
 
 | 文件 | 行 | 用途 | 调用方 | 写出 | 外部依赖 | 目标·批次 |
 |---|---:|---|---|---|---|---|
-| `tests/Engine/TiaMcpServer.HttpTests/measure_concurrency.py` | 202 | 离线派发及真实 STDIO/HTTP 并发测量 | 无调用方（HttpTests 已有 `concurrency-only` 模式） | 输出目录 | 主机、harness | 退役候选；批 6 |
-| `tests/Engine/TiaMcpServer.LegacyHostTests/EngineSliceOracle.py` | 118 | 将主机与织入后的引擎 worker 对比冻结的 V21 切片记录 | 无调用方 | 输出目录 | dotnet、Snapshot-ToolResponses | 退役候选，或改为 FBA；批 4 |
+| `tests/Engine/TiaMcp.Engine.Harness/measure_concurrency.py` | 202 | 离线派发及真实 STDIO/HTTP 并发测量 | 无调用方（TiaMcp.Engine.Harness 已有 `concurrency-only` 模式） | 输出目录 | 主机、harness | 退役候选；批 6 |
+| `tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineSliceOracle.py` | 118 | 将主机与织入后的引擎 worker 对比冻结的 V21 切片记录 | 无调用方 | 输出目录 | dotnet、Snapshot-ToolResponses | 退役候选，或改为 FBA；批 4 |
 | `tests/Studio/Test-BridgeSmoke.py` | 86 | Studio 适配器 hello 与只读 RPC（使用本地 SDK） | DOC src/Studio/README.md | 无 | Bridge.exe | FBA，或并入 Studio 测试项目；批 7 |
 
 ## 3. 分批方案
@@ -258,7 +258,7 @@ C# 目标的缩写：
   - 选项采用 `-Name value` 风格，布尔选项需列入 `BooleanOptions`。注意 `Options.Parse` 只去掉前导 `-`，所以 `--no-binaries` 不等于 `-NoBinaries`；需要兼容旧拼写时，在解析中去掉名称里的 `-`。
   - 失败抛出 `ReleaseException`（带退出码）；`ReleaseCommandTable` 登记命令说明；`release-checks.json` 维护路径与检查的映射和 `selfTests`。
   - 测试放在 `tests/Release/TiaMcp.ReleaseTool.Tests`（InternalsVisibleTo），对应 `tests/test-suites.json` 中的 `release-tool` 套件。
-- **反射 net48 引擎的检查**：放进 `tests/Engine/TiaMcpServer.HttpTests` 的模式（`DeveloperChecks.cs`），用 `HttpTests.exe <engine> <mode>` 调用。
+- **反射 net48 引擎的检查**：放进 `tests/Engine/TiaMcp.Engine.Harness` 的模式（`DeveloperChecks.cs`），用 `TiaMcp.Engine.Harness.exe <engine> <mode>` 调用。
 
 本任务的分工：
 

@@ -191,11 +191,11 @@ namespace TiaOpenness.Shared
                         "src/FoundationHost/bin/" + configuration + "/net10.0");
                     if (foundationRoot != null) return foundationRoot;
                     foreach (var harness in new[] {
-                        "TiaMcpServer.HttpTests/bin/" + configuration + "/net48",
-                        "TiaMcpServer.LegacyHostTests/bin/" + configuration + "/net10.0",
-                        "TiaMcpServer.Tests/bin/" + configuration + "/net10.0" })
+                        "tests/Engine/TiaMcp.Engine.Harness/bin/" + configuration + "/net48",
+                        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/bin/" + configuration + "/net10.0",
+                        "tests/Engine/TiaMcp.Engine.Tests/bin/" + configuration + "/net10.0" })
                     {
-                        var harnessRoot = FromAnchor(directory, "tests/Engine/" + harness);
+                        var harnessRoot = FromAnchor(directory, harness);
                         if (harnessRoot != null) return harnessRoot;
                     }
                 }

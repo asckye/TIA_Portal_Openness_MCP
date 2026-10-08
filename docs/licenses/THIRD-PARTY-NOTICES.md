@@ -30,7 +30,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 ## 随包 .NET 运行时（`runtime/dotnet`）
 
-3.3.0 起随包分发 Microsoft .NET 10.0.12 运行时（Microsoft.NETCore.App、Microsoft.AspNetCore.App、Microsoft.WindowsDesktop.App），取自微软官方压缩包 `aspnetcore-runtime-10.0.12-win-x64.zip` 与 `windowsdesktop-runtime-10.0.12-win-x64.zip`，按 [scripts/build/bundled-dotnet.json](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/scripts/build/bundled-dotnet.json) 记录的 SHA-512 校验后原样展开，不做修改。许可证为 MIT（© .NET Foundation and Contributors），原文与第三方声明随运行时保留在 `runtime/dotnet/LICENSE.txt`、`runtime/dotnet/ThirdPartyNotices.txt`；参见 [DotNet-Foundation-MIT.txt](DotNet-Foundation-MIT.txt)。
+3.3.0 起随包分发 Microsoft .NET 10.0.12 运行时（Microsoft.NETCore.App、Microsoft.AspNetCore.App、Microsoft.WindowsDesktop.App），取自微软官方压缩包 `aspnetcore-runtime-10.0.12-win-x64.zip` 与 `windowsdesktop-runtime-10.0.12-win-x64.zip`，按 [build-tools/bundled-dotnet.json](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/build-tools/bundled-dotnet.json) 记录的 SHA-512 校验后原样展开，不做修改。许可证为 MIT（© .NET Foundation and Contributors），原文与第三方声明随运行时保留在 `runtime/dotnet/LICENSE.txt`、`runtime/dotnet/ThirdPartyNotices.txt`；参见 [DotNet-Foundation-MIT.txt](DotNet-Foundation-MIT.txt)。
 
 ## 仅构建期的诊断覆盖工具
 

@@ -6,7 +6,7 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Native.Plc;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal static class PlcBatchImportRecovery
     {

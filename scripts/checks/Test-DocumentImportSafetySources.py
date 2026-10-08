@@ -34,7 +34,7 @@ class DocumentImportSafetySources(unittest.TestCase):
         self.assertLess(SINGLE.index('Documents.SetAutoNumber(imported, false);'), SINGLE.index('Documents.SetNumber(imported, prevNumber.Value);'))
 
     def test_worker_blocks_reads_and_previews_after_uncertain_document_batch(self):
-        worker = ROOT / 'src/Worker'
+        worker = ROOT / 'src/PlcWorker'
         # The PlcWorker loop and the V20/V21 engine worker share one dispatcher.
         program = (worker / 'FoundationWorkerDispatcher.cs').read_text(encoding='utf-8')
         guard = program.index('sessionOutcome.RequireUsable(readOnly);')
@@ -42,8 +42,8 @@ class DocumentImportSafetySources(unittest.TestCase):
         self.assertLess(guard, program.index('method.Invoke(engine, call)'))
         self.assertIn('if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);', program)
         self.assertNotIn('batchOutcomeUnknown', program)
-        self.assertIn('WorkerSessionOutcomeState.cs', (worker / 'TiaMcpServer.PlcWorker.csproj').read_text(encoding='utf-8'))
-        self.assertIn('FoundationWorkerDispatcher.cs', (worker / 'TiaMcpServer.PlcWorker.csproj').read_text(encoding='utf-8'))
+        self.assertIn('WorkerSessionOutcomeState.cs', (worker / 'TiaMcp.PlcWorker.csproj').read_text(encoding='utf-8'))
+        self.assertIn('FoundationWorkerDispatcher.cs', (worker / 'TiaMcp.PlcWorker.csproj').read_text(encoding='utf-8'))
 
     def test_missing_group_rejected_before_native_call(self):
         self.assertIn('string.IsNullOrWhiteSpace(groupPath) ? Documents.BlockGroup(plcSoftware)', BATCH)

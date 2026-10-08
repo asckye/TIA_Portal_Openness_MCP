@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.HW;
 #if PLC_HARDWARE_CATALOG
-using Hardware = TiaMcp.Adapters.Hardware.HardwarePrimitives;
+using NativeHardware = TiaMcp.Adapters.Hardware.HardwarePrimitives;
 #endif
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
@@ -32,7 +32,7 @@ namespace TiaMcp.PlcFoundation
                 RequireProjectIdentity(request.Project);
                 if(lifecycle.ProcessId!=request.ProcessId || !object.Equals(Project(),project) || !object.Equals(Portal(),portal)) throw new InvalidOperationException("Project/process/session identity changed.");
             };
-            Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog=()=>portal.HardwareCatalog.Find(preferredMlfb).Select(entry=>new PlcHardwareCatalogCandidate {TypeIdentifier=Hardware.TypeIdentifier(entry),ArticleNumber=Hardware.ArticleNumber(entry),Version=Hardware.Version(entry)});
+            Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog=()=>portal.HardwareCatalog.Find(preferredMlfb).Select(entry=>new PlcHardwareCatalogCandidate {TypeIdentifier=NativeHardware.TypeIdentifier(entry),ArticleNumber=NativeHardware.ArticleNumber(entry),Version=NativeHardware.Version(entry)});
             Func<IEnumerable<PlcDeviceAddItem>> inventory=()=> {
                 // Complete root, grouped and ungrouped device inventory; no software/online reads.
                 var rows=new List<PlcDeviceAddItem>();var groups=new List<object>();int visited=0;
@@ -50,7 +50,7 @@ namespace TiaMcp.PlcFoundation
                     groups.Add(group);rows.Add(new PlcDeviceAddItem {Name=group.Name,Identity=DeviceAddIdentity(group),ParentIdentity=DeviceAddIdentity(parent),IsGroup=true,ParentVerified=object.Equals(group.Parent,parent)});devices(group.Devices,group);
                     foreach(var child in group.Groups) visit(child,group,depth+1);
                 };
-                devices(Hardware.Devices(project),project);
+                devices(NativeHardware.Devices(project),project);
                 var ungrouped=project.UngroupedDevicesGroup??throw new InvalidOperationException("Ungrouped system group unavailable.");
                 rows.Add(new PlcDeviceAddItem {Name="$ungrouped",Identity=DeviceAddIdentity(ungrouped),ParentIdentity=request.RootIdentity,IsGroup=true,ParentVerified=object.Equals(ungrouped.Parent,project)});
                 devices(ungrouped.Devices,ungrouped);
@@ -58,7 +58,7 @@ namespace TiaMcp.PlcFoundation
                 return rows;
             };
             var result=PlcDeviceAddPolicy.Run(request,catalog,inventory,check,(identifier,name)=> {
-                var created=Hardware.CreateWithItem(Hardware.Devices(project),identifier,name,name);
+                var created=NativeHardware.CreateWithItem(NativeHardware.Devices(project),identifier,name,name);
                 return created==null ? null! : new PlcDeviceAddItem {Name=created.Name,Identity=DeviceAddIdentity(created),ParentIdentity=request.RootIdentity,ParentVerified=object.Equals(created.Parent,project)};
             });
             if(result.RequiresSessionReset) deviceAddOutcomeUnknown=true;

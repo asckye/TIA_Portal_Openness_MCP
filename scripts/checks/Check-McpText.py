@@ -362,7 +362,7 @@ class SelfTests(unittest.TestCase):
         with lexer.scratch_directory() as root:
             for relative in lexer.SOURCE_ROOTS:
                 (root / relative).mkdir(parents=True)
-            for project in ('TiaMcpServer', 'TiaMcp.Logic', 'TiaMcpServer.LegacyHost', 'TiaMcp.Adapters'):
+            for project in ('TiaMcpServer', 'TiaMcp.Logic', 'TiaMcp.FoundationHost', 'TiaMcp.Adapters'):
                 path = root / lexer.SOURCE_ROOTS[0] / project / 'A.cs'
                 path.parent.mkdir()
                 path.write_text('throw new Exception("中文");', encoding='utf-8')

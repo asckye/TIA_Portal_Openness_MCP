@@ -7,7 +7,7 @@ using Siemens.Engineering.HW;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Adapters.Native.Plc;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

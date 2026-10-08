@@ -7,7 +7,7 @@ using ModelContextProtocol.Protocol;
 using TiaMcp.WorkerChannel;
 using TiaMcp.PlcWorker;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed class EngineWorkerClient(HostOptions options, string workerHash) : IEngineWorker, IEngineWorkerProgress, IFoundationSessionWorker, IFoundationWorkerResult
 {
@@ -62,7 +62,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
     public void ActivateLane(IDisposable? lane) { if (lane is Lane held) held.Activate(); }
     internal JsonObject FoundationReadiness()
     {
-        var readiness = LegacyHostPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
+        var readiness = FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
         lock (stateSync)
             if ((bool?)status["readiness"]?["ready"] == true) { readiness["ready"] = true; readiness["cause"] = null; }
         return readiness;

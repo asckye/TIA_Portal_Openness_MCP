@@ -1,6 +1,6 @@
 using System.Threading;
 using Siemens.Engineering;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Worker;

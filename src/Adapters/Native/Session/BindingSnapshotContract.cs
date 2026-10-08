@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public enum BindingLifecycleChange { Attach, Bind, Unbind, Detach }
 

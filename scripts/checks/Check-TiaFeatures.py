@@ -18,11 +18,11 @@ def project_cases(root):
 
     for pattern in ('src/Adapters/V*/*.csproj',
                     'src/Studio/Openness/V*/*.csproj',
-                    'src/Engine/TiaMcpServer.V*.csproj'):
+                    'src/Engine/TiaMcp.Engine.V*.csproj'):
         for path in sorted(root.glob(pattern)):
             add(path)
-    for name in ('src/Worker/TiaMcpServer.PlcWorker.csproj',
-                 'tests/Engine/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj'):
+    for name in ('src/PlcWorker/TiaMcp.PlcWorker.csproj',
+                 'tests/Engine/TiaMcp.Engine.ApiCompileChecks/TiaMcp.Engine.ApiCompileChecks.csproj'):
         for release in RELEASES:
             add(root / name, {'TiaReleaseKey': release})
     # Keep intentional test defines covered, without moving them into the feature table.

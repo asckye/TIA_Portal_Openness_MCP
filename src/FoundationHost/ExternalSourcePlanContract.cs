@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class ExternalSourcePlanContract
 {
     // The worker resolves a unique short PLC host name before returning the exact address.

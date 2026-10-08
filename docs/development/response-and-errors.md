@@ -71,9 +71,9 @@ meta 的构造方式共 13 种：内联 `{timestamp, success}`（B1）；先取�
 
 | 层 | 内容 |
 |---|---|
-| E1 | HttpTests 在织入后的 V20/V21 EXE 中，用 4 种序列化选项写出样例对象，保存真实字节 |
+| E1 | TiaMcp.Engine.Harness 在织入后的 V20/V21 EXE 中，用 4 种序列化选项写出样例对象，保存真实字节 |
 | E2 | 每个构造器变体与从调用点复制的字面初始化器在固定时钟下逐字节相同 |
-| E3 | HttpTests 用反射调用真实二进制中的执行器，传入合成动作（成功、失败、各类异常、阻断），改动前在 master 录制，改动后 0 差异 |
+| E3 | TiaMcp.Engine.Harness 用反射调用真实二进制中的执行器，传入合成动作（成功、失败、各类异常、阻断），改动前在 master 录制，改动后 0 差异 |
 | E4 | `Check-EnvelopeRewrite.py --base <sha>`：每个改动片段必须匹配封闭的旧→新模板，其余行不变 |
 | E5 | 织入清单中**全部类别**的成员多重集合（按声明方法归并 lambda）不变，比只看西门子成员更严 |
 | E6 | P0-06 增加格式 3：解码前记录每个文本块的原始 SHA-256，只屏蔽已列明的时间戳路径；从改动前的 master 重录基线 |
@@ -120,11 +120,11 @@ C# 改动；新增、删除、非模板改动均拒绝。省略路径时检查�
 
 1. 运行检查器 `--self-test`、`--base <sha> <本任务调用点路径…>`；临时在一个转换处插入额外语句，确认非零退出后恢复。
 2. E2 跑 `Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy`（检查 TRX 下限）；E3 两版
-   HttpTests `response-golden-only` 各 124 项。新增模板需覆盖键序、CLR 类型、节点归属和时钟取值位置。
+   TiaMcp.Engine.Harness `response-golden-only` 各 124 项。新增模板需覆盖键序、CLR 类型、节点归属和时钟取值位置。
 3. E5 对两版 weave `sites` 按声明方法归并 lambda/异步状态机，比较 **全部 category + opcode + member** 多重集合；
    只允许本次初始化器的 `JsonObject::.ctor` 移到不织入的 Logic，并逐方法列出减少数；其余类别及西门子调用顺序不变。
 4. E6 两版 `Snapshot-ToolResponses.py capture/compare` 要求 `changed=0 rawChanged=0`；工具契约要求 0/0/0。
-   跑 `Test-DomainTools.py` 的已登记领域，试点其余工具另跑 `Test-PilotTools.py`，以及两版 HttpTests 离线模式。
+   跑 `Test-DomainTools.py` 的已登记领域，试点其余工具另跑 `Test-PilotTools.py`，以及两版 TiaMcp.Engine.Harness 离线模式。
    最后跑吞异常、注释、MCP 文本、仓库与 bundle 门禁；用 `Inventory-ResponseEnvelopes.py --update-baseline` 收紧基线。
 
 ## P2-03 吞异常治理

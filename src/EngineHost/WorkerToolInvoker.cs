@@ -12,7 +12,7 @@ using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost
+namespace TiaMcp.FoundationHost
 {
     internal sealed class WorkerToolInvoker : IToolInvoker
     {

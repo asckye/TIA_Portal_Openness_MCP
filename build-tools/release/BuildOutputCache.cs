@@ -21,7 +21,7 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
     private static string UnitPath(string root, string name)
     {
         var readable = Regex.Replace(name, "[^a-zA-Z0-9._-]+", "-").Trim('-');
-        return Path.Combine(root, "unit-" + readable[..Math.Min(80, readable.Length)] + "-" + Key([], [name])[..12]);
+        return Path.Combine(root, "unit-" + readable[..Math.Min(16, readable.Length)] + "-" + Key([], [name])[..12]);
     }
 
     internal static string Key(IEnumerable<ReleaseArtifact> inputs, IEnumerable<string> properties) =>
@@ -317,7 +317,7 @@ internal static partial class ReleaseCommands
     {
         var common = ProcessRunner.Run("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], Root);
         ProcessRunner.RequireSuccess(common, "Locate main repository cache");
-        return Path.Combine(Directory.GetParent(common.StandardOutput.Trim())!.FullName, "TiaMcp_Output/build-cache");
+        return Path.Combine(Directory.GetParent(common.StandardOutput.Trim())!.FullName, "bin-build/cache");
     }
 
     private static long CacheLimit(Options? options = null)
@@ -650,7 +650,7 @@ internal static partial class ReleaseCommands
         foreach (var path in Directory.EnumerateFiles(Path.Combine(sdkRoot, "Roslyn"), "*", SearchOption.AllDirectories)) Add(path);
         var framework = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8");
         if (Directory.Exists(framework)) foreach (var path in Directory.EnumerateFiles(framework, "*.dll", SearchOption.AllDirectories)) Add(path);
-        Add(Path.Combine(root, "scripts/build/bundled-dotnet.json"));
+        Add(Path.Combine(root, "build-tools/bundled-dotnet.json"));
         // Hash the build orchestrator too: changes to arguments, weaving or payload rules invalidate outputs.
         foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "build-tools/release"), "*", SearchOption.TopDirectoryOnly)) Add(path);
         var sdk = ProcessRunner.Run(dotnet, ["--version"], root, environment);

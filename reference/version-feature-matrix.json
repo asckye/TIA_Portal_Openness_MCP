@@ -136,7 +136,7 @@
       ],
       "sourceFiles": [
         "src/Adapters/Native/Session/PlcFoundationEngine.cs",
-        "src/Adapters/Native/Plc/PlcSoftwareRead.cs"
+        "src/Adapters/Native/Plc/PlcNativeSoftwareRead.cs"
       ],
       "nextStep": "Use these readers to verify generated/imported identities in each version test project.",
       "sdkEvidence": {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public static class MutationIdentityPolicy
     {

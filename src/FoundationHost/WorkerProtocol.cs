@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed class WorkerOperationException(string message,int code,string outcome,string? evidenceJson = null) : Exception(message)
 {

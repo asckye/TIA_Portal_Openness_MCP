@@ -20,7 +20,7 @@ def main():
     p.add_argument('--output', required=True, type=Path)
     args = p.parse_args()
     fixture, weaver, output = args.fixture.resolve(), args.weaver.resolve(), args.output.resolve()
-    require(fixture.name == 'DiagnosticsTests.exe', 'Only the fake diagnostics fixture may be run')
+    require(fixture.name == 'TiaMcp.Engine.Diagnostics.Tests.exe', 'Only the fake diagnostics fixture may be run')
     output.mkdir(parents=True, exist_ok=False)
     def run(command, name, expected=0):
         env = dict(os.environ, TIA_MCP_DIAGNOSTICS_DIRECTORY=str(output / name))

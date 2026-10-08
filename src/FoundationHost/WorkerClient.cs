@@ -5,7 +5,7 @@ using TiaMcp.WorkerChannel;
 using TiaMcp.PlcWorker;
 using TiaMcpServer.Siemens;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal interface IFoundationWorker : IDisposable
 {

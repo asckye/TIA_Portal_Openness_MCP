@@ -6,7 +6,7 @@
 #define PLC_WATCH_EXPORT
 namespace TiaMcpServer.Siemens.LocalWatchTechnology
 #else
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 #endif
 {
     using System;

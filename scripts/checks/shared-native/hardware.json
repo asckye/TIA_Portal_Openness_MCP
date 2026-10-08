@@ -54,19 +54,19 @@
     {
       "name": "foundation",
       "methodScopes": {
-        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+        "TiaMcp.Adapters.PlcFoundationEngine": [
           {
             "method": "SearchHardwareCatalog",
-            "signature": "TiaMcp.PlcFoundation.PlcHardwareCatalogSearchResult TiaMcp.PlcFoundation.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
+            "signature": "TiaMcp.Adapters.PlcHardwareCatalogSearchResult TiaMcp.Adapters.PlcFoundationEngine::SearchHardwareCatalog(System.String,System.Int32)"
           },
           {
             "method": "AddDeviceWithFallback",
-            "signature": "TiaMcp.PlcFoundation.PlcDeviceAddResult TiaMcp.PlcFoundation.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+            "signature": "TiaMcp.Adapters.PlcDeviceAddResult TiaMcp.Adapters.PlcFoundationEngine::AddDeviceWithFallback(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
           }
         ]
       },
       "types": [
-        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+        "TiaMcp.Adapters.PlcFoundationEngine"
       ],
       "releases": [
         "14sp1",

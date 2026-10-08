@@ -132,7 +132,7 @@ return 0;
 async Task BuildVariant(string sourceRepo, string destination, string label, string key, string folder, string api, string variant, bool engine)
 {
     Directory.CreateDirectory(destination);
-    var project = engine ? $"src/Engine/TiaMcpServer.V{key}.csproj" : $"src/Adapters/{folder}/Adapter.{key}.csproj";
+    var project = engine ? $"src/Engine/TiaMcp.Engine.V{key}.csproj" : $"src/Adapters/{folder}/Adapter.{key}.csproj";
     await Run("dotnet", new[] { "build", project, "-c", "Release", "-p:SiemensEngineeringDirectory=" + api,
         "-p:TiaSharedAdapterPaths=" + (variant == "shared" ? "true" : "false"), "-p:RestoreSources=" + emptyFeed,
         "-p:NuGetAudit=false", "-m:1", "-nr:false", "-p:BuildInParallel=false" }, sourceRepo, Path.Combine(output, label + "-build.log"));

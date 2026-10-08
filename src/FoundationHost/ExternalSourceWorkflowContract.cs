@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal static class ExternalSourceWorkflowContract
 {
@@ -43,7 +43,7 @@ internal static class ExternalSourceWorkflowContract
         }
         return result;
     }
-    private static bool SameFile(string actual,string? requested)=>requested!=null && string.Equals(TiaMcp.PlcFoundation.MutationIdentityPolicy.AbsoluteFile(actual),TiaMcp.PlcFoundation.MutationIdentityPolicy.AbsoluteFile(requested),StringComparison.OrdinalIgnoreCase);
+    private static bool SameFile(string actual,string? requested)=>requested!=null && string.Equals(TiaMcp.Adapters.MutationIdentityPolicy.AbsoluteFile(actual),TiaMcp.Adapters.MutationIdentityPolicy.AbsoluteFile(requested),StringComparison.OrdinalIgnoreCase);
     private static void ValidateObjects(JsonNode? payload,string field)
     {
         if(payload is not JsonArray items) throw new InvalidDataException("Missing generation object list: "+field);

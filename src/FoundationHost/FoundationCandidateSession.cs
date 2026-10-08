@@ -5,7 +5,7 @@ using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Logic.V4;
 using TiaMcp.PlcWorker;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed partial class FoundationCandidateSession(IFoundationWorker worker)
 {

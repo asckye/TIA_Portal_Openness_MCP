@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using PlcExternalSourceImportPolicy = TiaMcp.Adapters.Contracts.ExternalSourceImportContract;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed class PlcExternalSourceImportPlan
     {

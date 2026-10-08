@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.SW.ExternalSources;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

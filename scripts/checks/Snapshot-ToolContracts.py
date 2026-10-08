@@ -513,7 +513,7 @@ def compare_migration(args):
             for field in ('profile', 'liteTools'):
                 if old.get(field) != new.get(field): problems.append(field + ': must stay unchanged')
             if release in ('20', '21'):
-                fixture = Path(__file__).resolve().parents[2] / ('tests/Engine/TiaMcp.EngineHost.Tests/Fixtures/EngineSource' + release + '.json')
+                fixture = Path(__file__).resolve().parents[2] / ('tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineSource' + release + '.json')
                 source = json.loads(fixture.read_text('utf-8'))
                 original = {t['name']: t for t in source['tools']}
                 original_families = {r['family']: set(r['entries']) for r in source['behaviorCapabilities']}

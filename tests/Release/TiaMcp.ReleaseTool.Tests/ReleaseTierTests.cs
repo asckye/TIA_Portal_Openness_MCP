@@ -34,7 +34,7 @@ public sealed class ReleaseTierTests
 
     [Theory]
     [InlineData("src/FoundationHost/Program.cs", "foundation-transport")]
-    [InlineData("src/Worker/Program.cs", "foundation-approval")]
+    [InlineData("src/PlcWorker/Program.cs", "foundation-approval")]
     [InlineData("src/Engine/Program.cs", "engine-responses")]
     [InlineData("src/Studio/Gui/App.xaml.cs", "gui-tests")]
     [InlineData("scripts/checks/Snapshot-ToolResponses.py", "responses-self-test")]
@@ -42,7 +42,7 @@ public sealed class ReleaseTierTests
     {
         var plan = ReleaseCheckPolicy.Load(Root).Select("quick", [path]);
         Assert.Contains(expected, plan.SelectedChecks);
-        if ((path.StartsWith("src/Engine/") || path.StartsWith("src/Worker/"))) Assert.Contains("engine-stability", plan.SelectedChecks);
+        if ((path.StartsWith("src/Engine/") || path.StartsWith("src/PlcWorker/"))) Assert.Contains("engine-stability", plan.SelectedChecks);
         else Assert.Contains("engine-stability", plan.SkippedChecks);
     }
 

@@ -6,8 +6,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
-using TiaMcp.LegacyHost;
-using HostOptions = TiaMcp.LegacyHost.HostOptions;
+using TiaMcp.FoundationHost;
+using HostOptions = TiaMcp.FoundationHost.HostOptions;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -28,7 +28,7 @@ TiaOpenness.Shared.DataLocations.PruneLogsAtStartup();
 var fileLogger = new HostFileLogger(options.ReleaseKey);
 fileLogger.Write("TiaMcpServer.log", DateTimeOffset.UtcNow.ToString("O") + " release=" + options.ReleaseKey);
 
-if (options.EngineWorkerExe != null) return await EngineHost.Run(options, fileLogger);
+if (options.EngineWorkerExe != null) return await EngineReleaseHost.Run(options, fileLogger);
 
 if (options.CatalogOnly)
 {

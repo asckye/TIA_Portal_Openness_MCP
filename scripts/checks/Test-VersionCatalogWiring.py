@@ -125,9 +125,9 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertIn('TiaOpenness.Configuration.Tests.csproj', build)
         self.assertIn('build-configurator', build)
         self.assertNotIn('/main:TiaMcpConfigurator.Tests', build)
-        package = read(ROOT / 'scripts/build/Package-Release.py')
+        package = read(ROOT / 'build-tools/Package-Release.py')
         self.assertIn('Logic/Siemens/TiaVersionCatalog.cs', package)
-        project = ET.parse(ROOT / 'tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj')
+        project = ET.parse(ROOT / 'tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj')
         linked = [e.get('Include', '').replace('\\', '/') for e in project.iter('Compile')]
         references = [e.get('Include', '').replace('\\', '/') for e in project.iter('ProjectReference')]
         self.assertTrue(any(p.endswith('/Logic/TiaMcp.Logic.csproj') for p in references))
@@ -135,7 +135,7 @@ class VersionCatalogWiring(unittest.TestCase):
             self.assertFalse(any(p.endswith(suffix) for p in linked), suffix)
             self.assertTrue((LOGIC / suffix).is_file(), suffix)
         self.assertIn('CheckSuite.Run(nameof(TiaVersionCatalogTests), TiaVersionCatalogTests.Run)',
-                      read(ROOT / 'tests/Engine/TiaMcpServer.Tests/OfflineChecks.cs'))
+                      read(ROOT / 'tests/Engine/TiaMcp.Engine.Tests/OfflineChecks.cs'))
 
 
 if __name__ == '__main__':

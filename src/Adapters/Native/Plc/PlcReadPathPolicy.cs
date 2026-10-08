@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class PlcReadCandidate<T>
     {

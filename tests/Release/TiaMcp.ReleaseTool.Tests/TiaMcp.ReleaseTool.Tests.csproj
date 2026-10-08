@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../../Engine/Shared/Xunit.props" />
+  <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>
+    <RootNamespace>TiaMcp.ReleaseTool.Tests</RootNamespace>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

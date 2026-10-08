@@ -6,7 +6,7 @@ using System.Xml.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Versioning;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     // Pure request validation, linked into the offline suite without Siemens references.
     internal static class PlcFoundationPolicy

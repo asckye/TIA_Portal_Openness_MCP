@@ -4,7 +4,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 internal sealed record Argument(string Name, string Type = "string", bool Required = true, object? Default = null);
 internal sealed record Definition(string Name, string Operation, string Description, Argument[] Arguments, string? ResponseMember = null);

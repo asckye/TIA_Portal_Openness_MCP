@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal static class PlcExchangePolicy
     {

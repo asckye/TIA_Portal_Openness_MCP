@@ -20,10 +20,10 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
 #if TIA_ENGINE_HOST
-        private static IToolCatalogView? _bridgeCatalog { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Catalog = value; }
-        private static IToolInvoker? _bridgeInvoker { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.Invoker = value; }
-        private static Func<bool> _bridgeIsLiteProfile { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.IsLiteProfile = value; }
-        private static ISet<string> _bridgeLiteToolNames { get => TiaMcp.LegacyHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.LegacyHost.EngineHostConfiguration.Current.LiteToolNames = value; }
+        private static IToolCatalogView? _bridgeCatalog { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog = value; }
+        private static IToolInvoker? _bridgeInvoker { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker = value; }
+        private static Func<bool> _bridgeIsLiteProfile { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile = value; }
+        private static ISet<string> _bridgeLiteToolNames { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames = value; }
 #else
         private static IToolCatalogView? _bridgeCatalog;
         private static IToolInvoker? _bridgeInvoker;
@@ -570,7 +570,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // Implemented in McpServer.Maintenance.cs (engine build); absent in the offline suite, where no portal exists.
         static partial void ReadSessionState(ref bool? connected, ref string? project);
 
-        /// <summary>Build gate (HttpTests generate-tools-list mode): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
+        /// <summary>Build gate (TiaMcp.Engine.Harness generate-tools-list mode): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
         public static IReadOnlyList<string> ValidateToolExamples()
         {
             var all = AllToolDescriptors(includeUnavailable: true);

@@ -17,9 +17,9 @@ using TiaMcpServer.ModelContextProtocol;
 
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost")]
 [assembly: InternalsVisibleTo("TiaMcp.EngineHost.Tests")]
-[assembly: InternalsVisibleTo("TiaMcpServer.LegacyHostTests")]
+[assembly: InternalsVisibleTo("TiaMcp.FoundationHost.Tests")]
 
-namespace TiaMcp.LegacyHost
+namespace TiaMcp.FoundationHost
 {
     public sealed record EngineReply(CallToolResult Result, bool NativeCallIssued, JsonNode? Binding, JsonNode? Session, string? NativeFault);
 
@@ -152,8 +152,8 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
-        internal static string ReleaseKey => TiaMcp.LegacyHost.EngineHostConfiguration.ReleaseKey;
-        internal static TiaMcp.LegacyHost.IEngineWorker Worker => TiaMcp.LegacyHost.EngineHostConfiguration.Worker;
+        internal static string ReleaseKey => TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        internal static TiaMcp.FoundationHost.IEngineWorker Worker => TiaMcp.FoundationHost.EngineHostConfiguration.Worker;
         internal static CancellationToken WorkerDispatchCancellation => McpDispatchCancellation.Value;
         internal static IMcpServer? CurrentCallServer => ProgressRequest.Value?.Server;
         internal static Action<string>? WorkerProgressRelay()
@@ -176,7 +176,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
         internal static void MarkSharedSessionUncertain() => SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
-        internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.LegacyHost.EngineHostConfiguration.StagingOwner();
+        internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.FoundationHost.EngineHostConfiguration.StagingOwner();
         static partial void RecordBridgeEvent(string id, string name, string phase);
         static partial void RecordCallRejection(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, CallToolResult result);
         static partial void ApprovalSessionKey(ref object? key)
@@ -184,7 +184,7 @@ namespace TiaMcpServer.ModelContextProtocol
             key = Worker.SessionKey;
             if (Worker.Faulted) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
         }
-        internal static void ObserveWorkerReply(string name, TiaMcp.LegacyHost.EngineReply reply)
+        internal static void ObserveWorkerReply(string name, TiaMcp.FoundationHost.EngineReply reply)
         {
             if (reply.NativeCallIssued && (bool?)reply.Result.StructuredContent?["data"]?["nativeOutcomeUnknown"] == true
                 && ToolTaxonomy.UsesOpennessLane(name))

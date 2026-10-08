@@ -183,7 +183,7 @@ def main() -> int:
     if not 1 <= args.iterations <= 100 or not 15 <= args.timeout_seconds <= 3600:
         parser.error("Iterations must be 1..100; timeout 15..3600 seconds")
     runner = args.runner.resolve(strict=True)
-    if runner.name != f"NativeTests.V{args.major}.exe":
+    if runner.name != f"TiaMcp.Engine.Native.Tests.V{args.major}.exe":
         parser.error("Runner filename must match the requested TIA version")
     output = args.output.resolve()
     command = [str(runner), "--run-live", "--confirm-new-portal", "--output", str(output / "native"), "--iterations", str(args.iterations)]

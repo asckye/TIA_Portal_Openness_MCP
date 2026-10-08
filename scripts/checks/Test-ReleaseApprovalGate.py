@@ -225,7 +225,7 @@ def run_engine(args) -> dict:
     exe, portal, api = args.exe.resolve(), args.portal_root.resolve(), args.public_api.resolve()
     harness = args.host_harness.resolve() if args.host_harness else None
     require(exe.is_file() and portal.is_dir() and (harness is None or harness.is_file()) and api.is_dir(), "Engine check input is missing")
-    require(harness is not None, "The default-on approval proof must run through the HttpTests harness")
+    require(harness is not None, "The default-on approval proof must run through the TiaMcp.Engine.Harness harness")
     count = 0
     results = {}
 

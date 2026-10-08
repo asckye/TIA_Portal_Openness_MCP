@@ -31,7 +31,7 @@ Python 桥接所用两个第三方项目只交付 `src`、PLC Tools 的八个 `p
 无发布构建时可查看当前文件投影，不执行 Release 或生成可发布资产：
 
 ```powershell
-python scripts/build/Package-Release.py --dry-run --include-untracked --stage-directory bin-build/delivery-preview
+python build-tools/Package-Release.py --dry-run --include-untracked --stage-directory bin-build/delivery-preview
 python scripts/checks/Check-Repository.py --root bin-build/delivery-preview --no-binaries
 dotnet run --project build-tools/release -- validate-bundle -BundleRoot bin-build/delivery-preview -PackageMode -Strict -NoBinaries
 ```
@@ -54,7 +54,7 @@ dotnet run --project build-tools/release -- run-release-build -Tier package -Pub
 dotnet run --project build-tools/release -- branch-gate -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/branch-checks
 ```
 
-构建缓存默认在主仓库软件目录的 `TiaMcp_Output/build-cache/`（Git 忽略），在清理 worktree 后仍可复用。
+构建缓存默认在主仓库软件目录的 `bin-build/build-cache/`（Git 忽略），在清理 worktree 后仍可复用。
 `-BuildCacheDirectory <absolute-directory>` 可指定其他目录；`-NoBuildCache` 禁用缓存。
 每个构建单元一个可读名称的子目录，`index.json` 列出 unit、inputHash、createdUtc、lastHitUtc 和 sizeBytes；
 每个输入哈希保存独立的完整输出。默认总容量上限为 10 GiB（条目的输出文件和元数据字节数，不含单元索引），
@@ -135,7 +135,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -Summary "Con
 6. Verify-ReleaseAsset.py 独立验证 ZIP 等于交付清单过滤后的 tag 文件集加记录哈希的运行文件（排除 `runtime/verification/`）。
 7. 推送 master，等待 validate-bundle 与 offline-checks，通过后创建 annotated tag vX.Y.Z 并推送。
 
-Build-Release 的程序集反射检查和工具清单生成运行在 net48 HttpTests harness modes 中；独立生成器和输入检查使用 .NET 10 C# file-based apps。工具矩阵在重新生成后可用 `Generate-ToolCapabilityMatrix.cs --check` 验证稳定字节。它们沿用 `manifest/release-build.json` 的既有字段和最小/精确检查计数。
+Build-Release 的程序集反射检查和工具清单生成运行在 net48 TiaMcp.Engine.Harness harness modes 中；独立生成器和输入检查使用 .NET 10 C# file-based apps。工具矩阵在重新生成后可用 `Generate-ToolCapabilityMatrix.cs --check` 验证稳定字节。它们沿用 `manifest/release-build.json` 的既有字段和最小/精确检查计数。
 8. Publish-release 创建草稿、上传 ZIP 和 SHA-256、回读大小及 digest，然后公开发布并置为 latest。
 9. 等待 Verify published release 下载并校验公开资产，再记录发布 URL、提交和验收状态。
 
@@ -165,7 +165,7 @@ dotnet run --project build-tools/release -- release -Version X.Y.Z -EarlyGatesOn
 
 | 共享资源 | 并发处理 |
 |---|---|
-| HTTP 端口 | HttpTests 与 Python 协议夹具均从系统申请端口 0；没有两版共用的固定监听端口 |
+| HTTP 端口 | TiaMcp.Engine.Harness 与 Python 协议夹具均从系统申请端口 0；没有两版共用的固定监听端口 |
 | Logic、Runtime、contracts、第三方项目的 obj/bin | 工作树路径派生的 mutex 保护还原、编译和运行文件复制；该短段串行，随后两版长耗时门禁并行 |
 | MSBuild/C# 服务 | 关闭节点复用和共享编译器；公共测试夹具、weaver 先构建一次，子流水线只读 |
 | TEMP/TMP、DOTNET_CLI_HOME、诊断目录及测试日志 | 各版独立目录；稳定性、生态证据沿用 GUID 子目录 |
@@ -211,13 +211,13 @@ V20/V21 契约和响应捕获各运行独立进程，使用独立输出与临时
 5. prompt-registration TRX 门禁。
 6. 普通 V4 tool contracts capture（V20/V21）；参数与 master 现行调用一致，传 repo root、PublicAPI root 和真实 EXE，不传 `--harness`。
 7. 与 `manifest/contracts/v4/baseline` 普通 compare；只在两版捕获完成后运行。
-8. 普通 V4 response capture（V20/V21），传 `--harness <HttpTests.exe>`；SDK-only 捕获通过测试宿主设置仅测试用的 readiness 标记。
+8. 普通 V4 response capture（V20/V21），传 `--harness <TiaMcp.Engine.Harness.exe>`；SDK-only 捕获通过测试宿主设置仅测试用的 readiness 标记。
 9. 与 `manifest/contracts/v4/responses` 普通 compare；只在两版捕获完成后运行，差异直接失败，不刷新基线。
 10. `Test-RelocatedBundle.py --bundle-root <extracted-package> --public-api-root <SDK-root>` 检查候选包在仓库外复制和读取时可用。
     当前用户必须位于 Siemens TIA Openness 组之外，检查会拒绝组内用户。该步骤只依赖已验证包，可与步骤 5–9 并行。
 
-第 08 步通过 `HttpTests.exe --harness` 加载真实 V20/V21 引擎宿主方法。`sdk-only-fixture` 仍复制 SDK 到临时安装布局；
-HttpTests 进程用仅测试用的 readiness 标记模拟 Openness 组已就绪，使 capture 能读取断开状态，并让产品默认审批在派发前拒绝写操作。
+第 08 步通过 `TiaMcp.Engine.Harness.exe --harness` 加载真实 V20/V21 引擎宿主方法。`sdk-only-fixture` 仍复制 SDK 到临时安装布局；
+TiaMcp.Engine.Harness 进程用仅测试用的 readiness 标记模拟 Openness 组已就绪，使 capture 能读取断开状态，并让产品默认审批在派发前拒绝写操作。
 该标记不由引擎读取，也不改变真实安装要求 Openness 组。步骤仍用 `Run-Command -ProductDefaults`，不创建审批设置文件。
 `Snapshot-ToolResponses.py --packaged-no-tia` 继续启动真实 EXE，并检查真实 no-TIA readiness 拒绝。
 

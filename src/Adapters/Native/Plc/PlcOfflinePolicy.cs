@@ -3,7 +3,7 @@ using TiaMcp.Adapters.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class PlcOfflineObservation
     {

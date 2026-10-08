@@ -79,20 +79,20 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
 | P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
 | P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
-| P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。迁移设计已随 P1-05/P1-06 完成归档；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
-| P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；当时两个 TransportFixture 协议不同，未合并或改名；预览夹具随后在 P4-A 删除 | done |
+| P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。迁移设计已随 P1-05/P1-06 完成归档；TiaMcp.Engine.Harness 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
+| P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.Diagnostics.Tests`；当时两个 TiaMcp.WorkerChannel.TransportFixture 协议不同，未合并或改名；预览夹具随后在 P4-A 删除 | done |
 | P1-07 | 目录整理第一批：设计验收记录曾单独维护，后由 4.0 工作台实现取代；启动器归入 `src/Studio/Launcher`；Glass 资源归入 `src/Studio/Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。G7 解耦及源码目录整理已完成 | done |
 
 ### 阶段 2：公共层（兼容）
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P2-01 | 统一响应信封构造器替代手写 `["success"]`/`["timestamp"]`；明确抛异常与返回失败的规则；返回结构逐字节兼容。设计见[响应信封与吞异常治理](response-and-errors.md)（族规则、构造器、E1–E6 离线证明、P2-01a–e）；须先加强 P0-06（原始文本哈希）。P2-01a 完成：快照格式 3（原始文本哈希）、序列化黄金字节与执行器表征（HttpTests `response-golden-only`，各 124 项）；P2-01bc 完成：`ResponseMeta`/`ResponseClock` 与 249 项逐字节比对，`Inventory-ResponseEnvelopes.py` 只减不增（timestamp 245、success 306）；P2-01d 完成：执行器与 meta 工厂原地改用构造器（黄金样本与全类别插桩 0 差异，245→236、306→295）；P2-01e0 完成：`Check-EnvelopeRewrite.py`（E4，三种封闭模板，自测接入 CI）与反射、生态、Git、用法试点 7 处（两版离线 4768、响应快照与织入全类别 0 差异）；P2-01e1–e3 完成：PLC、HMI/硬件/在线、会话/运行时/诊断三组 43 个文件 175 处内联调用点改用构造器（E4 全部匹配封闭模板；68 个领域两版各 3748 项逐字节、两版离线 4768、响应快照与织入全类别 0 差异），手写基线收紧为 timestamp 87、success 113；其余形状（多个动态尾字段、字符串时间戳、后写判定等）保持手写并按需标注 `// envelope: legacy-<variant>`，统一留到阶段 6 | done |
+| P2-01 | 统一响应信封构造器替代手写 `["success"]`/`["timestamp"]`；明确抛异常与返回失败的规则；返回结构逐字节兼容。设计见[响应信封与吞异常治理](response-and-errors.md)（族规则、构造器、E1–E6 离线证明、P2-01a–e）；须先加强 P0-06（原始文本哈希）。P2-01a 完成：快照格式 3（原始文本哈希）、序列化黄金字节与执行器表征（TiaMcp.Engine.Harness `response-golden-only`，各 124 项）；P2-01bc 完成：`ResponseMeta`/`ResponseClock` 与 249 项逐字节比对，`Inventory-ResponseEnvelopes.py` 只减不增（timestamp 245、success 306）；P2-01d 完成：执行器与 meta 工厂原地改用构造器（黄金样本与全类别插桩 0 差异，245→236、306→295）；P2-01e0 完成：`Check-EnvelopeRewrite.py`（E4，三种封闭模板，自测接入 CI）与反射、生态、Git、用法试点 7 处（两版离线 4768、响应快照与织入全类别 0 差异）；P2-01e1–e3 完成：PLC、HMI/硬件/在线、会话/运行时/诊断三组 43 个文件 175 处内联调用点改用构造器（E4 全部匹配封闭模板；68 个领域两版各 3748 项逐字节、两版离线 4768、响应快照与织入全类别 0 差异），手写基线收紧为 timestamp 87、success 113；其余形状（多个动态尾字段、字符串时间戳、后写判定等）保持手写并按需标注 `// envelope: legacy-<variant>`，统一留到阶段 6 | done |
 | P2-02 | 合并重复辅助函数：`RequireOneOf`（15 处）、`ParseObject`（9 处）、SHA-256 `Hash`（13 处）、两份 `InvocationJournal`/`NativeCallDiagnostics`（日志与诊断两份分支随 P2-04 一并决定） | done |
 | P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛。设计见[响应信封与吞异常治理](response-and-errors.md)（218 个空 catch、类别、标注与只减不增检查、P2-03a–z）；L5 之前原生路径不改为上抛。P2-03a 完成：`Check-SwallowedExceptions.py` 与基线（205 个空、194 个丢弃型，只减不增）；P2-03c 完成：引擎拆分领域外 88 处补写原因（只改注释，产物逐字节相同），基线 399 → 311；P2-03d 完成：Studio 与 Foundation 74 处，基线 → 237；P2-03b 完成：`SwallowedExceptions.Note` 与三个进程统一的 `TIA_MCP_LOG_SWALLOWED=1` 开关（默认不输出）；P3-18 完成：引擎领域内其余吞异常全部写明原因或改为记录，`swallowed-exceptions-baseline.json` 清零，只减不增检查继续在 CI 中运行 | done |
 | P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界。P2-04a 完成：Studio 桌面端与桥接改用 System.Text.Json（单一选项工厂，PascalCase、字符串枚举、日期往返与原 Newtonsoft 一致；29 个 DTO、24 个 RPC 方法黄金测试；Studio 产物不再含 Newtonsoft）；P2-04b 完成：Foundation worker 的 DTO 结果与失败证据改用单一 System.Text.Json 编解码（枚举仍为数值、宿主 STJ 解码一致；适配器契约 673 项含黄金样本）；P2-04c 完成：引擎与八版适配器共用无 JSON 库的 InvocationJournal 和原生诊断写入层，保留引擎日志与 Health 字节、验证旧 Newtonsoft 日志读取兼容并提供输出及关联 ID 接口（第 H 步接线），适配器移除 Newtonsoft，TiaMcp.Runtime 的 S7 Web API 客户端保留第三方 Newtonsoft 依赖 | done |
 | P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略。设计见[运行时布局与清理](runtime-layout.md)：新增 MCP 文本一律英文（维护者 2026-10-03 决定），现有文本冻结到 4.0；`*Leftovers` 随领域迁移消解。P2-05a 完成：`Check-CommentHygiene.py` 与 `Check-McpText.py` 只减不增（版本号注释 266、受约束中文字面量 316）；P2-05e 完成：Studio 剩余硬编码中文迁入 `Loc`（62 个词条，客户端配置 384 份逐字节不变）；P2-05b 完成：领域外注释改写，注释基线 348 → 248（只改注释，14 个产物逐字节相同）；P3-18 完成：领域内注释改写、`*Leftovers` 文件与迁移辅助垫片消解，`comment-hygiene-baseline.json` 清零；受约束中文字面量按语言策略冻结到 4.0 | done |
-| P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`src/Shared/LocalProcess.Run`（Python 伴随桥接）等；HttpTests 与生态程序集检查已同步引擎启动设置 | done |
+| P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`src/Shared/LocalProcess.Run`（Python 伴随桥接）等；TiaMcp.Engine.Harness 与生态程序集检查已同步引擎启动设置 | done |
 
 ### 阶段 3：拆分完整引擎（兼容）
 
@@ -100,7 +100,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 |---|---|---|
 | P3-01 | 设计：见[完整引擎拆分设计](engine-decomposition.md)（12 个领域、内核接口、`ToolCatalog`/依赖注入、17 步迁移顺序与验收） | done |
 | P3-02 | 步骤 2：`ToolCatalog`（工具按名称排序）、`EngineServices`、`EngineRegistration`，ToolBridge 夹具改为测试用工具类型；不迁移工具 | done |
-| P3-03 | 步骤 3：HttpTests `EngineSurface` 查找辅助（按工具名跨全部 `[McpServerToolType]` 类型、按成员名跨 `Portal` 与服务查找），只改测试；engineering-api 各新增 22 项自检 | done |
+| P3-03 | 步骤 3：TiaMcp.Engine.Harness `EngineSurface` 查找辅助（按工具名跨全部 `[McpServerToolType]` 类型、按成员名跨 `Portal` 与服务查找），只改测试；engineering-api 各新增 22 项自检 | done |
 | P3-04 | 步骤 4：内核接口 `IEngineeringSession`；四个精确解析器收入内核；`AdoptProject`/`ReleaseProject` 统一会话字段写入；纯静态辅助外移到 `EngineeringSessionHelpers` | done |
 | P3-05 | 步骤 5：试点领域（生态、Git、模板、质量审计、导入顺序、指南、工具用法、离线套件，约 30 个工具）迁入实例工具类；先补吞异常原因、再纯迁移，CLI 保留静态转发；30 个工具迁入 9 个实例类，契约与原始响应 0 差异，`Test-PilotTools.py` 覆盖完整/精简与隔离路径 | done |
 | P3-06 | 步骤 6：第一个 Portal 领域 CFC 迁为服务类 + 工具类，作为后续领域的样板；逐方法比对西门子调用序列（6 个方法 V20/V21 一致），`Siemens/Services/CfcService` + `CfcTools`，样板写入引擎拆分设计 | done |
@@ -185,7 +185,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-20 | CFC/TestSuite/V20Options/OptionalEngineering/SpecializedExchange 契约迁移；[路径清单](phase6-review.md#phase6-path-p6-20) | 03–07、I | T、V；两版能力差集；N 调用不变 | done |
 | P6-21 | DCC/Startdrive/Teamcenter 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-21) | 03–07、I | T、V；联合/动态属性；已知现场事故不标记已修复；N 调用不变 | done |
 | P6-22 | 库/Sivarc/VCI 契约迁移；本组工具/服务；[路径清单](phase6-review.md#phase6-path-p6-22) | 03–07、I | T、V；大小写、范围、selection 限制；N 调用不变，保留 G3/J 开关门槛 | done |
-| P6-23 | runtime 通道/PLCSIM/在线下载工具契约迁移；本组工具/服务及 `src/Runtime`、`src/Engine/Runtime` 适配边界；[路径清单](phase6-review.md#phase6-path-p6-23) | 03–07、I | T、V；未知写入不可变为重试；N 调用不变 | done |
+| P6-23 | runtime 通道/PLCSIM/在线下载工具契约迁移；本组工具/服务及 `src/OnlineChannels`、`src/Engine/Runtime` 适配边界；[路径清单](phase6-review.md#phase6-path-p6-23) | 03–07、I | T、V；未知写入不可变为重试；N 调用不变 | done |
 | P6-24 | 会话/工程/诊断契约及公共 Portal、ToolCatalog、注册/项目文件串行集成；清除旧工具目录注册；[路径清单](phase6-review.md#phase6-path-p6-24) | 08–23、I | T、V 全量；生成所有权覆盖每个入口，拒绝旧名/旧参数/二次编码；N 调用不变 | done |
 | P6-25 | CLI 和 Studio 的 V4 消费边界、错误展示、退出码；各自报告保留业务字段；[路径清单](phase6-review.md#phase6-path-p6-25) | 24 | T；CLI 0/2/3/4/5/64/70 黄金样本、Studio Loc 测试、partial/unknown 不显示成功 | done |
 | P6-26 | 先删文本判定再统一英文 MCP 文本；错误码消费者/FindTools/稳定性与快照脚本同步；[路径清单](phase6-review.md#phase6-path-p6-26) | 25 | T、V、MCP 文案检查；无消息子串控制安全动作，原生文本作为脱敏数据 | done |

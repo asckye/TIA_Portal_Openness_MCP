@@ -6,7 +6,7 @@
     <Project Path="src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
     <Project Path="src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Project Path="src/Logic/TiaMcp.Logic.csproj" />
-    <Project Path="src/FoundationHost/TiaMcpServer.LegacyHost.csproj" />
+    <Project Path="src/FoundationHost/TiaMcp.FoundationHost.csproj" />
   </Folder>
   <Folder Name="/Studio/">
     <Project Path="src/Studio/Bridge/TiaOpenness.Bridge.csproj" />
@@ -16,28 +16,28 @@
     <Project Path="src/Studio/Gui/TiaOpenness.Gui.csproj" />
   </Folder>
   <Folder Name="/Tests/Engine/">
-    <Project Path="tests/Engine/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.CompileCandidateTests/CompileCandidate.Tests.csproj" />
-    <Project Path="tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.DiagnosticsTests/FakeApi/FakeApi.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.PromptRegistrationTests/Fixture/Fixture.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.PromptRegistrationTests/OptionalDependency/OptionalDependency.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.PromptRegistrationTests/TiaMcpServer.PromptRegistrationTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.SoftwareReadTests/TiaMcpServer.SoftwareReadTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj" />
-    <Project Path="tests/Engine/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
+    <Project Path="tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj" />
+    <Project Path="tests/Adapters/TiaMcp.Adapters.CompileCandidate.Tests/TiaMcp.Adapters.CompileCandidate.Tests.csproj" />
+    <Project Path="tests/Adapters/TiaMcp.Adapters.FallbackNative.Tests/TiaMcp.Adapters.FallbackNative.Tests.csproj" />
+    <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/TiaMcp.FoundationHost.DeviceAdd.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.DiagnosticMembership.Tests/TiaMcp.Engine.DiagnosticMembership.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.Diagnostics.Tests/FakeApi/FakeApi.csproj" />
+    <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.HardwareCatalog.Tests/TiaMcp.FoundationHost.HardwareCatalog.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj" />
+    <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/Fixture/Fixture.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/OptionalDependency/OptionalDependency.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/TiaMcp.Engine.PromptRegistration.Tests.csproj" />
+    <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.SoftwareRead.Tests/TiaMcp.FoundationHost.SoftwareRead.Tests.csproj" />
+    <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.SpecialExportShape.Tests/TiaMcp.FoundationHost.SpecialExportShape.Tests.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj" />
+    <Project Path="tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/PlcAdapters/">
-    <Project Path="tests/Engine/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
+    <Project Path="tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" />
+    <Project Path="tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Studio/">
     <Project Path="tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj" />
@@ -56,6 +56,6 @@
     <Project Path="tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Updater/">
-    <Project Path="tests/Updater/TiaMcp.Updater.Tests.csproj" />
+    <Project Path="tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj" />
   </Folder>
 </Solution>

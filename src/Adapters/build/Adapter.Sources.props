@@ -44,14 +44,14 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcLifecyclePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOfflineChecks.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOfflinePolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcReadContracts.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcNativeReadContracts.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcReadPathPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/TiaVersionCatalog.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/EngineeringAssemblyIdentity.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Engine/Siemens/OpennessReleaseContract.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSupplementaryRead.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareRead.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcNativeSoftwareRead.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/PlcSoftwareReadPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSpecialExport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSpecialExportPolicy.cs" />

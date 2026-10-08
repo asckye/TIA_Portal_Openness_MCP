@@ -148,7 +148,7 @@
   ],
   "ladDocs": [
     {
-      "importPath": "__BUNDLE__\\plugin\\skill\\lad-cookbook",
+      "importPath": "__BUNDLE__\\templates\\mcp-full-e2e-verify\\plc\\blocks",
       "name": "MCPVerify_FC_LAD"
     }
   ],

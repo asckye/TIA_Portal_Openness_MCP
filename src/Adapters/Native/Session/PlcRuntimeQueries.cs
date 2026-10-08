@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using Siemens.Engineering;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

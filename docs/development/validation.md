@@ -59,7 +59,7 @@ HTTP concurrency、release approval gate 和快照 verify；复用完整链的�
 ```powershell
 python scripts/checks/Check-BundleLayout.py --self-test
 python scripts/checks/Verify-ReleaseAsset.py --self-test
-dotnet test tests/Updater/TiaMcp.Updater.Tests.csproj -c Release
+dotnet test tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj -c Release
 dotnet build src/Updater/TiaMcp.Updater.csproj -c Release -f net48
 bin-build/updater/TiaMcp.Updater.exe -SelfTest
 ```
@@ -116,7 +116,7 @@ Offline 指不需要 Siemens 程序集；NuGet 依赖仍须已缓存或可还原
 它包含 offline-checks CI 的全部工程及其依赖，也收录其他不依赖 Siemens 的工具、协议和测试。
 `dotnet test` 执行 Studio xunit 及已迁移的 MCP 回归工程；正式验收使用下面的 TRX 门禁核对最低数量。
 未迁移的控制台测试（包括 `TiaOpenness.Configuration.Tests`）仍须用
-`dotnet run --project <csproj> -c Release`。HttpTests、DiagnosticsTests 和 transport 夹具
+`dotnet run --project <csproj> -c Release`。TiaMcp.Engine.Harness、TiaMcp.Engine.Diagnostics.Tests 和 transport 夹具
 需由对应验证脚本提供参数；PromptRegistration 的两个依赖夹具不执行测试，直接 `dotnet test` 会明确拒绝。
 
 完整方案默认使用仓库内不入 Git 的 `sdk/` 目录（不存在时为仓库根目录）下的 `TIA_V14SP1_PublicAPI/V14 SP1`、
@@ -125,7 +125,7 @@ Offline 指不需要 Siemens 程序集；NuGet 依赖仍须已缓存或可还原
 单工程的 `-p:SiemensEngineeringDirectory=<绝对路径>` 始终优先，不要将同一版本的该参数传给完整方案。
 约定文件夹不存在时，引擎/NativeTests 保留已安装 SDK 的原有回退；缺少匹配程序集会报错并列出所需目录。
 
-完整方案排除 `reference/` 示例、`LibraryRenameProbe` 和没有合理默认版本的 `TiaMcpServer.PlcWorker`。
+完整方案排除 `reference/` 示例、`LibraryRenameProbe` 和没有合理默认版本的 `TiaMcp.PlcWorker`。
 worker 继续由 `build-plc-workers` 逐个传入 `TiaReleaseKey` 构建，产物统一位于 `bin/<key>/Release/net48/`；
 `ApiCompileChecks` 的独立/方案默认是 V21，现有脚本仍显式选择八版。
 V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器通过方案依赖先构建织入工具。
@@ -176,7 +176,7 @@ CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞�
 |---|---|
 | `python scripts/checks/Test-FoundationProxyIdentity.py --work-dir bin-build/proxy-identity` | 修改外部源规划、删除、批量导入身份检查后；编译实际生产方法，以新建但值相等的 API 代理验证身份语义，不需要 TIA/SDK |
 | `python -X utf8 scripts/checks/Test-Ecosystem.py` | 更新固定的 siemens-plc-tools 来源或 Python 桥接后；使用已装离线依赖的 Python，运行 plc-code、plc-iol、plc-trace 上游单元测试，不配置 live 端点 |
-| `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --engine-v20 <exe> --engine-v21 <exe> --harness <HttpTests.exe> --public-api-root <SDK-root> --evidence <new-worktree-dir> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA |
+| `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --engine-v20 <exe> --engine-v21 <exe> --harness <TiaMcp.Engine.Harness.exe> --public-api-root <SDK-root> --evidence <new-worktree-dir> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA |
 
 旧 LegacyOffline/Passive Python 检查由 `foundation` xUnit 套件中的
 OfflineBlockComposition、OfflineXmlBuilder、OfflineComposition、OfflineLadder、PassiveHostDiagnostics
@@ -275,7 +275,7 @@ B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`�
 任一总数增长即失败，减少允许且报告；`--update-baseline` 仅收缩上限，首次经审查建立基线才使用 `--allow-growth`。
 
 `ResponseMetaTests` 在 offline/offline-v20 各增加 249 项 E2 检查。每种构造器与注明文件/行号的原初始化器
-在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 HttpTests/Golden 中
+在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 TiaMcp.Engine.Harness/Golden 中
 V20/V21 的全部 36 项 E1 序列化记录。覆盖键追加、success 原位覆盖、null Meta、Local/UTC、数值 CLR 类型及异步时钟隔离。
 `ResponseClock.Pin` 仅在当前执行上下文生效，可嵌套并在释放时恢复；测试进程临时固定 +08:00 时区并恢复 BCL 缓存。
 `Complete(meta)` 保留 HMI 的 operationSuccess，显式 bool 重载用于无条件完成；`Failed(meta)` 只追加
@@ -288,11 +288,11 @@ operationSuccess/apiCallSuccess/dataComplete，异常文本、状态和 success 
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
 foundation 至少 6521 项通过、最多 1 项跳过；foundation-api 至少 7566 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 134、39、11、124、56、4 项通过，均不允许跳过。
 门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
-每次清除同名旧结果，在 `test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
+每次清除同名旧结果，在 `bin-build/test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
 开发时可直接运行 `dotnet test <csproj> -c Release`（V20 加 `-p:DefineConstants=TIA_V20`），正式门禁仍用脚本核对数量。
 普通 `dotnet run` 对已迁移工程返回 2；离线工程保留 `--local-process-fixture` 子进程入口。
-共享 [Harness.props](../../tests/Engine/Shared/Harness.props)已用于 PromptRegistration 的两个依赖夹具；其他未迁移框架保持原运行方式。
+共享 [Harness.props](../../tests/Shared/Harness.props)已用于 PromptRegistration 的两个依赖夹具；其他未迁移框架保持原运行方式。
 PromptRegistration 的既有 Windows 清理失败已仅在测试中修复：释放夹具引用、卸载上下文并通过有界 GC 等待确认，再删除临时目录；卸载或删除失败均记录为失败检查。
 
 ApiMetadata 是独立 theory；未设置 `TIA_MCP_TEST_PUBLIC_API_ROOT` 时在发现阶段跳过，foundation 门禁通过过滤器排除它，从而保持原有 1 项跳过预算。
@@ -388,14 +388,14 @@ dotnet run src/Adapters/build/Test-AdapterInputs.cs -- --source-root src --publi
 逐项日志和 `input-results.json` 写入证据目录。本检查手动运行，未接入 CI。
 ## Foundation 协议 2
 
-`TiaMcp.WorkerChannel` 同时以 net48/net10.0 构建，无 Siemens 引用。其信封使用与 LegacyHost 相同的 STJ 包版本，DTO 编解码保持原样。[规则与预览测试对应表](../../tests/Engine/TiaMcp.WorkerChannel.Tests/README.md)列出保留和不适用的规则。
+`TiaMcp.WorkerChannel` 同时以 net48/net10.0 构建，无 Siemens 引用。其信封使用与 LegacyHost 相同的 STJ 包版本，DTO 编解码保持原样。[规则与预览测试对应表](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)列出保留和不适用的规则。
 
 ```powershell
 python scripts/checks/Test-DotnetSuites.py --suite worker-channel
-dotnet publish src/FoundationHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/foundation-host
-dotnet build tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
+dotnet publish src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release -o bin-build/foundation-host
+dotnet build tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj -c Release
 # 如 CI foundation-transport：将 publish 文件复制到 runtime/v14sp1、v15.1、v16、v17、v18、v19，并写入各自 release-key.txt。
-python scripts/checks/Test-FoundationTransport.py --fixture tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --output bin-build/foundation-transport
+python scripts/checks/Test-FoundationTransport.py --fixture tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe --output bin-build/foundation-transport
 ```
 
 `worker-channel` 最低 98 项通过、0 跳过，验证 hello 的全部身份字段、双向帧限制、绑定纪元、单次分派、取消、超时、管道故障、迟到进度、未知/重复回复和 ReadFailed。夹具用 `TIA_FIXTURE_FAULT` 注入故障；正常传输另验证六个 STDIO 版本、两个独立 HTTP 会话、nonce 隔离及中文往返。系统 TEMP 受限时可加 `--temp-root <新的 worktree 目录>`，保留可审查的夹具日志。HTTP 只连接该脚本启动的本地模拟服务，不连接 TIA。
@@ -418,7 +418,7 @@ dotnet run --project build-tools/release -- release -SelfTest
 dotnet run --project build-tools/release -- build-release -SelfTest
 dotnet run --project build-tools/release -- run-release-build -SelfTest
 dotnet run --project build-tools/release -- run-release-build -DryRun
-python scripts/build/Package-MultiVersion.py --self-test
+python build-tools/Package-MultiVersion.py --self-test
 dotnet run --project build-tools/release -- validate-bundle -SelfTest
 dotnet run --project build-tools/release -- release -DocumentationOnly
 dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
@@ -474,8 +474,8 @@ PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOO
 及 V20/V21 lite 名单。3.2.0 的 16 份原始快照已逐字节迁至 [只读归档](../../manifest/history/contracts-v3/README.md)，由 provenance.json 与 Check-Repository.py 校验清单/字节并拒绝旧目录重建；改动 C# 并重新构建运行目录后执行：
 
 ```powershell
-python scripts/checks/Snapshot-ToolContracts.py capture --repo-root . --harness tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --output TiaMcp_Output/contracts
-python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/contracts/v4/baseline --current TiaMcp_Output/contracts
+python scripts/checks/Snapshot-ToolContracts.py capture --repo-root . --harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --output bin-build/contracts
+python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/contracts/v4/baseline --current bin-build/contracts
 ```
 
 删除工具或 lite 条目、删除参数、新增必填、类型/枚举/默认值变化等破坏性变化返回 1；新增工具或可选参数
@@ -483,18 +483,18 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 只用开发输出且本机缺少 ASP.NET Core 10 时，抓取前把 `DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
 
 返回结构另用当前 V4 的 `manifest/contracts/v4/responses` 守护。先在当前 worktree 依次构建 Release 的 V20、V21
-（指定对应 `SiemensEngineeringDirectory`），再构建 HttpTests 和 LegacyHost；`--exe` 指向这些新产物：
+（指定对应 `SiemensEngineeringDirectory`），再构建 TiaMcp.Engine.Harness 和 LegacyHost；`--exe` 指向这些新产物：
 
-V20/V21 的 `sdk-only-fixture` response capture 应提供 `--harness`。HttpTests 仅在 `protocol-host` 模式处理测试用 readiness 标记，
+V20/V21 的 `sdk-only-fixture` response capture 应提供 `--harness`。TiaMcp.Engine.Harness 仅在 `protocol-host` 模式处理测试用 readiness 标记，
 把该 capture 进程设为已就绪；脚本仍创建临时 SDK 安装布局并执行与真实 EXE 相同的工具调用清单。产品默认审批保持开启，
 写操作会在派发前被拒绝。该标记只由测试 harness 读取，不会放宽真实 EXE 的安装或用户组要求；`--packaged-no-tia` 仍验证真实 EXE 的拒绝路径。
 
 ```powershell
 $engine = 'src/Engine'
-$harness = 'tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
+$harness = 'tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe'
 $legacy = 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
-python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-10-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcp.Engine.V20.exe" --exe "21=$engine/bin/Release/net48/TiaMcp.Engine.V21.exe" --temp-root TiaMcp_Output/responses-temp --output TiaMcp_Output/responses
-python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/v4/responses --current TiaMcp_Output/responses
+python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-10-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcp.Engine.V20.exe" --exe "21=$engine/bin/Release/net48/TiaMcp.Engine.V21.exe" --temp-root bin-build/responses-temp --output bin-build/responses
+python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/v4/responses --current bin-build/responses
 ```
 
 脚本复用 STDIO 启动器和统一示例检查，每次 capture 在全新进程中连续抓取两轮，一致才写入。
@@ -518,7 +518,7 @@ Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立
 实际范围和结果由完整构建记录保存。
 
 ```powershell
-python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.Engine.V21.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
+python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.Engine.V21.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --rounds 50 --output bin-build/stability-v21
 ```
 
 输出目录必须不存在。脚本仅清理它创建的服务，不连接 TIA，不解禁原生交叉引用。
@@ -540,19 +540,19 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `Check-ScriptToolCalls.py` 检查 Python、PowerShell、CMD/BAT、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 HttpTests 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `Check-ScriptToolCalls.py` 检查 Python、PowerShell、CMD/BAT、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
 python scripts/checks/Check-ScriptToolCalls.py --self-test
 python scripts/checks/Check-ScriptToolCalls.py
 python scripts/mcp_results.py
 python scripts/checks/Test-ScriptClients.py
-python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe --public-api <V21-net48-SDK> --host-harness tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --major 21 --output bin-build/campaign-inputs
+python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe --public-api <V21-net48-SDK> --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --major 21 --output bin-build/campaign-inputs
 ```
 
 最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 校验全部 campaign 输入，不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
 
-沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`HttpTests.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
+沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`TiaMcp.Engine.Harness.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
 
 原生安全自测的合成夹具使用 `offline_fixtures.py` 在 `bin-build` 下创建唯一目录并继承 worktree 权限，使子进程可读取输入。清理前核对目录父路径；live 分支的入口和执行范围不变。
 

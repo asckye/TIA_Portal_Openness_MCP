@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>V20</RootNamespace>
+    <TiaMajor>20</TiaMajor>
+    <SiemensBaseAssembly>Siemens.Engineering</SiemensBaseAssembly>
+    <DefineConstants>$(DefineConstants);TIA_V20</DefineConstants>
+    <AssemblyName>V20</AssemblyName>
+  </PropertyGroup>
+  <Import Project="../NativeTests.props" />
+</Project>

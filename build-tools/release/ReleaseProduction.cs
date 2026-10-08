@@ -111,7 +111,7 @@ internal static partial class ReleaseCommands
         var plan = ReleasePlan(options);
         WriteTierRecord(plan, passed: false);
         var candidateOutput = Path.Combine(logRoot, "candidate");
-        RunReleaseExternal(python, [Path.Combine(Root, "scripts/build/Package-Release.py"), "--local", "--output-directory", candidateOutput],
+        RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--local", "--output-directory", candidateOutput],
             "candidate-package", logRoot, runTemp, publicApiRoot);
         RunProductionCandidateChecks(plan, options, publicApiRoot, logRoot, candidateOutput, runTemp, python);
         WriteTierRecord(plan, passed: true);
@@ -125,7 +125,7 @@ internal static partial class ReleaseCommands
         var gitExecutable = ResolveApplication(git);
         var packageDir = Path.Combine(Root, "bin-build/releases", "v" + version);
         var packageName = ReadDeliveryPackage(deliveryPath);
-        RunReleaseExternal(python, [Path.Combine(Root, "scripts/build/Package-Release.py"), "--git", gitExecutable], "package", logRoot, runTemp, publicApiRoot);
+        RunReleaseExternal(python, [Path.Combine(Root, "build-tools/Package-Release.py"), "--git", gitExecutable], "package", logRoot, runTemp, publicApiRoot);
         ReleaseCheckPolicy.Load(Root).RequireFullPackage(Path.Combine(packageDir, packageName + ".zip"));
         RunReleaseExternal(python, [Path.Combine(Root, "scripts/checks/Verify-ReleaseAsset.py"), Path.Combine(packageDir, packageName + ".zip"), "--git", gitExecutable], "verify-package", logRoot, runTemp, publicApiRoot);
         if (options.Has("NoPush")) { Console.WriteLine("stopped before push (-NoPush)"); return 0; }
@@ -228,11 +228,11 @@ internal static partial class ReleaseCommands
         RunSuiteForReleaseGates("write-guard", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);
         RunSuiteForReleaseGates("crash-evidence", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);
         RunReleaseSpec("release approval gate self-test", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
+        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         if (!File.Exists(harness))
         {
             var dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
-            var project = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj");
+            var project = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj");
             RunReleaseRaw(dotnet, ["build", project, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], Path.Combine(outputDirectory, "build-harness.log"), runTemp, cliHome, apiRoot, null, "HTTP harness build");
         }
         var engine = Path.Combine(Root, "runtime/v21/worker/TiaMcp.Engine.V21.exe");

@@ -4,6 +4,7 @@
 **/obj/
 **/obj-v20/
 **/TestResults/
+# Old scratch roots stay ignored for existing local checkouts; new output belongs in bin-build/.
 /test-results/
 **/bin/Debug/
 **/bin-v20/Debug/
@@ -53,9 +54,9 @@ TIA_V21_PublicAPI/
 /TiaOpenness.exe
 
 # Per-release compile-only foundation outputs; never distribute Siemens references.
-/tests/Engine/TiaMcpServer.ApiCompileChecks/bin/
-/tests/Engine/TiaMcp.Adapters.DiagnosticsTests/bin/
-/src/Worker/bin/
+/tests/Engine/TiaMcp.Engine.ApiCompileChecks/bin/
+/tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/bin/
+/src/PlcWorker/bin/
 /src/Adapters/*/bin/
 
 /runtime/v14sp1/

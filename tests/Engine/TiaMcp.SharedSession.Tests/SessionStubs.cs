@@ -63,5 +63,5 @@ namespace TiaMcpServer.Siemens
 }
 
 namespace TiaMcp.Versioning { internal static class TiaVersionCatalog { internal static void Get(string release) { } } }
-namespace TiaMcp.PlcFoundation { internal sealed class PlcDisconnectResult { internal int? ProcessId { get; set; } internal bool Detached { get; set; } internal string? Strategy { get; set; } internal string? LaunchMode { get; set; } } internal static class PlcFoundationPolicy { internal static void RequireName(string name) { } } }
+namespace TiaMcp.Adapters { internal sealed class PlcDisconnectResult { internal int? ProcessId { get; set; } internal bool Detached { get; set; } internal string? Strategy { get; set; } internal string? LaunchMode { get; set; } } internal static class PlcFoundationPolicy { internal static void RequireName(string name) { } } }
 namespace TiaOpenness.Shared { internal static class SessionBehavior { internal const string Recovery="Session reset required."; } }

@@ -1,4 +1,4 @@
-using Native = TiaMcp.PlcFoundation.WatchTechnologyPrimitives;
+using NativeCalls = TiaMcp.Adapters.WatchTechnologyPrimitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.WatchAndForceTables;
 #endif
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
@@ -18,21 +18,21 @@ namespace TiaMcp.PlcFoundation
 #if PLC_WATCH_READ
             var selected=ReadSelection(softwarePath);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            var root=Native.WatchGroup(selected.Value);
+            var root=NativeCalls.WatchGroup(selected.Value);
             if(root==null) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("WatchAndForceTableGroup unavailable.","export-plan",false);
             // Use the existing bounded read traversal to collect genuine typed objects.
             var objects=new Dictionary<string,PlcWatchTable>(StringComparer.Ordinal);
             var groups=new Dictionary<PlcWatchAndForceTableGroup,string> { [root]="" };
-            PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,g=>Native.WatchTables(g).Select(t=> {
-                var folder=groups[g]; var path=folder+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(Native.Name(t)));
-                objects.Add(path,t); return Native.Name(t);
-            }),g=>Native.Groups(g).Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(Native.Name(child)))+"/"); return child; }),g=>g.Name);
+            PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,g=>NativeCalls.WatchTables(g).Select(t=> {
+                var folder=groups[g]; var path=folder+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(t)));
+                objects.Add(path,t); return NativeCalls.Name(t);
+            }),g=>NativeCalls.Groups(g).Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/"); return child; }),g=>g.Name);
             if(!objects.TryGetValue(watchTableName,out var table)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact canonical watch-table path not found.");
-            return PlcSpecialExportPolicy.Run("watch-table",ReleaseKey,Project().Path.FullName,selected.ExactPath,watchTableName,exportPath,Native.IsConsistent(table),dryRun,expectedPlanHash,()=>RequireTargetOffline(selected),file=> {
+            return PlcSpecialExportPolicy.Run("watch-table",ReleaseKey,Project().Path.FullName,selected.ExactPath,watchTableName,exportPath,NativeCalls.IsConsistent(table),dryRun,expectedPlanHash,()=>RequireTargetOffline(selected),file=> {
 #if PLC_SPECIAL_EXPORT || PLC_WATCH_EXPORT
                 RequireTargetOffline(selected);
-                if(!Native.IsConsistent(table)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Watch table is no longer consistent.","export-plan",false);
-                Native.Export(table,file,ExportOptions.None);
+                if(!NativeCalls.IsConsistent(table)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Watch table is no longer consistent.","export-plan",false);
+                NativeCalls.Export(table,file,ExportOptions.None);
 #else
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Export method evidence is unknown for this release.","export-plan",false);
 #endif
@@ -46,19 +46,19 @@ namespace TiaMcp.PlcFoundation
             PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey);
             var selected=ReadSelection(softwarePath);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            var root=Native.TechnologyGroup(selected.Value);
+            var root=NativeCalls.TechnologyGroup(selected.Value);
             if(root==null) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("TechnologicalObjectGroup unavailable.","export-plan",false);
             var objects=new Dictionary<string,TechnologicalInstanceDB>(StringComparer.Ordinal);
             var groups=new Dictionary<TechnologicalInstanceDBGroup,string> { [root]="" };
-            PlcSupplementaryReadPolicy.Technologies(root,g=>Native.Objects(g).Select(t=> {
-                objects.Add(groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(Native.Name(t))),t); return TechnologyMetadata(t);
+            PlcSupplementaryReadPolicy.Technologies(root,g=>NativeCalls.Objects(g).Select(t=> {
+                objects.Add(groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(t))),t); return TechnologyMetadata(t);
             }),g=> {
 #if PLC_TECH_GROUP_READ
-                return Native.Groups(g).Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(Native.Name(child)))+"/"); return child; });
+                return NativeCalls.Groups(g).Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/"); return child; });
 #else
                 return new TechnologicalInstanceDBGroup[0];
 #endif
-            },g=>Native.Name(g));
+            },g=>NativeCalls.Name(g));
             if(!objects.TryGetValue(toName,out var item)) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Exact canonical technology-object path not found within this release's documented read scope.");
             if(item.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Know-how protected technology objects are outside this export scope.","export-plan",false);
             bool consistent=item.IsConsistent;

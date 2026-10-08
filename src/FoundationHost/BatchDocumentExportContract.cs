@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using System.Security.Cryptography;
 using System.Text;
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class BatchDocumentExportContract
 {
     private static string Hash(params string[] fields)

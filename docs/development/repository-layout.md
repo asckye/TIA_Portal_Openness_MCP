@@ -10,8 +10,8 @@
 | `TiaPortalOpenness.Offline.slnx` | 40 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
-| `src/Engine`、`src/FoundationHost`、`src/Worker` | V20/V21 完整引擎、六版 Foundation 宿主及八版 worker；源码目录迁移保留工程文件和命名空间；P6-36 已更新产品程序集与 EXE 名称 |
-| `src/Adapters`、`src/Adapters.Contracts`、`src/Runtime`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
+| `src/Engine`、`src/FoundationHost`、`src/PlcWorker` | V20/V21 完整引擎、六版 Foundation 宿主及八版 worker；项目文件名已与产品名称对齐；P6-36 已更新产品程序集与 EXE 名称 |
+| `src/Adapters`、`src/Adapters.Contracts`、`src/OnlineChannels`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
 | `src/Logic` | net48/net10.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
 | `src/Studio/Launcher` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
 | `src/Studio/Gui/Configuration` | 编译型 WPF 配置页、配置逻辑及中英资源字典；使用 Studio 调色板 |
@@ -22,7 +22,7 @@
 | `third_party` | 固定版本的第三方组件及其许可证 |
 | `third_party/tia-openness-studio` | Studio 上游 LICENSE、`UPSTREAM.json` 和完整源码/历史归档；来源记录内的导入路径仍相对原上游目录 |
 | `build-tools/native-call-weaver` | 仅构建期使用的原生调用点诊断插桩工具 |
-| `tests/Engine`、`tests/Studio`、`tests/test-suites.json` | 功能、协议、API、诊断、离线及可选原生测试；测试工程目录及工程文件保留原名 |
+| `tests/Engine`、`tests/Studio`、`tests/test-suites.json` | 功能、协议、API、诊断、离线及可选原生测试；测试按 Shared、FoundationHost、Engine、Adapters、WorkerChannel、Studio、Release、Tools、Updater 分组，目录与工程文件同名 |
 | `plugin/skill` | Claude Code 插件技能，引导 AI 使用当前版本的 GetToolUsage 示例 |
 | `scripts/operations/vci-watch` | 可选 V20/V21 工作区导出与本地 Git 提交脚本，不纳入交付包 |
 | `docs/development/evidence` | 历史迁移台账和手工验收清单 |
@@ -36,7 +36,7 @@
 | `templates` | 编程及工程模板 |
 | `manifest` | 生成的版本/工具/构建/交付哈希证据；`publication-v*.json` 保留在此 |
 | `manifest/history` | 一次性日期取证记录；API 审计和 legacy API 证据位于 `evidence/`，保留原始内容和适用版本 |
-| `scripts` | build、checks、generate、diagnostics、operations 分类脚本 |
+| `scripts` | checks、generate、diagnostics、operations 分类脚本；打包器与 bundled-dotnet.json 位于 build-tools |
 | `.github` | Actions、贡献/安全/行为规范 |
 | `.claude-plugin`、`hooks` | 插件定义和 Claude Code 钩子 |
 
@@ -45,6 +45,8 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 `TiaPublicApiRoot` 指定这些文件夹的父目录；单工程显式 `SiemensEngineeringDirectory` 优先。
 具体命令见[验证分层](validation.md)。SDK 不随仓库或公开交付包分发。
 `bin-build`、本机输出、用户工程、客户端配置及设计交接素材不属于版本化源码。
+开发检查输出、测试结果、暂存和仓库内数据都归入 `bin-build/`；开发根有解决方案文件时，默认数据目录为
+`bin-build/data/`。安装包仍使用 `data/`。构建缓存默认放在主 checkout 的 `bin-build/cache/`，各 worktree 共用。
 
 ## 运行时资源定位
 
@@ -60,7 +62,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 
 `src/Studio/Directory.Build.props` 保留 Studio 公共构建设置；
 `tests/Studio/Directory.Build.props` 显式导入它，保持原先的导入顺序及测试包引用。
-`tests/Engine/Shared` 保留 xunit 共享适配器。源码与工具导航集中在上表，仓库不再保留根目录 `tools/`。release tool 将构建日志写入 `bin-build/releases/v<Version>/`。
+`tests/Shared` 保留 xunit 共享适配器。源码与工具导航集中在上表，仓库不再保留根目录 `tools/`。release tool 将构建日志写入 `bin-build/releases/v<Version>/`。
 
 ## 辅助构建与测试工程
 
@@ -69,14 +71,14 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 | `src/Updater` | .NET Framework 4.8 更新器；下载、校验、备份、替换与回滚 |
 | `src/Tools/WriteGuard` | .NET 10 随包写保护钩子 |
 | `build-tools/release` | .NET 10 构建、发布、验包及预检入口 |
-| `tests/Release`、`tests/Updater`、`tests/Tools` | 发布工具、更新器与随包工具的 xUnit 回归 |
+| `tests/Release`、`tests/Updater/TiaMcp.Updater.Tests`、`tests/Tools` | 发布工具、更新器与随包工具的 xUnit 回归 |
 
-`tests/Engine/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj`
-是适配器的 net10.0 离线诊断控制台测试，程序集名保留为 `Diagnostics.Tests`，沿用逻辑库的
+`tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj`
+是适配器的 net10.0 离线诊断控制台测试，程序集名保留为 `TiaMcp.Adapters.Diagnostics.Tests`，沿用逻辑库的
 `InternalsVisibleTo`。运行时需要 worker bin 根目录和一个尚不存在的日志目录；命令见
 [适配器说明](../../src/Adapters/README.md#input-regression-checks)。
 
-`tests/Engine/TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的行 JSON 替身，
+`tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture` 是 Foundation 协议 2 的行 JSON 替身，
 由 `worker-channel`、`scripts/checks/Test-FoundationTransport.py` 使用，并由 CI 与
 `dotnet run --project build-tools/release -- build-multi-version` 构建。夹具不连接 TIA；第 A 步删除了无生产调用方的预览协议
 与两个预览夹具，规则映射见[适配器设计](adapter-merge.md#第-a-步最终规则核对)。

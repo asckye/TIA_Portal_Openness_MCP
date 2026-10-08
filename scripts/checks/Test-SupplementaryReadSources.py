@@ -19,7 +19,7 @@ for folder in ['Native','Policy']:
   assert f in files, f'Native source/policy omitted from explicit adapter source inventory: {f}'
 code='\n'.join(f.read_text(encoding='utf-8-sig') for f in files if f.name!='OpennessAdapter.cs')
 # Operation names are PascalCase literals; lower-case literals there are argument values (for example mode "preview").
-ops=set(re.findall(r'"([A-Z][A-Za-z]+)"',(src/'Worker/WorkerOperations.cs').read_text(encoding='utf-8-sig')))
+ops=set(re.findall(r'"([A-Z][A-Za-z]+)"',(src/'PlcWorker/WorkerOperations.cs').read_text(encoding='utf-8-sig')))
 methods=set(re.findall(r'public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(',code))
 assert ops<=methods, f'Worker operations absent from adapter sources: {sorted(ops-methods)}'
 spec=importlib.util.spec_from_file_location('tia_features',root/'scripts/checks/Check-TiaFeatures.py')
@@ -35,16 +35,16 @@ assert native.count('PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey')==2
 assert native.count('PlcSupplementaryReadPolicy.ReadSnapshot(')==2
 assert '.ForceTables' not in native and 'GetType().Get' not in native
 assert '()=>item.OfSystemLibElement,()=>item.OfSystemLibVersion' in native
-assert 'PlcSupplementaryReadPolicy.TechnologyMetadata(Native.Name(item)' in native
+assert 'PlcSupplementaryReadPolicy.TechnologyMetadata(NativeCalls.Name(item)' in native
 # Since P4-I2 the typed reads go through the shared watch/technology primitives, which also
 # carry engine write accessors; the read-only adapter path must not reach those.
-for forbidden in ['GetAttributeInfos', 'GetAttribute(', 'SetAttribute(', 'IEngineeringObject', 'Native.Attribute(', 'Native.SetAttribute(']:
+for forbidden in ['GetAttributeInfos', 'GetAttribute(', 'SetAttribute(', 'IEngineeringObject', 'NativeCalls.Attribute(', 'NativeCalls.SetAttribute(']:
  assert forbidden not in native, f'Technology metadata must use typed getters only: {forbidden}'
 assert not re.search(r'item\.OfSystemLib(?:Element|Version)\s*=(?!=)',native), 'No metadata setter permitted'
-worker=(src/'Worker/FoundationWorkerDispatcher.cs').read_text(encoding='utf-8-sig')
+worker=(src/'PlcWorker/FoundationWorkerDispatcher.cs').read_text(encoding='utf-8-sig')
 # The read-only dispatch list lives in WorkerOperations.IsReadOnly; the shared worker dispatcher must use it.
 assert 'WorkerOperations.IsReadOnly(name)' in worker
-readonly_list=re.search(r'IsReadOnly\(string name\)\s*=>(.*?);',(src/'Worker/WorkerOperations.cs').read_text(encoding='utf-8-sig'),re.S).group(1)
+readonly_list=re.search(r'IsReadOnly\(string name\)\s*=>(.*?);',(src/'PlcWorker/WorkerOperations.cs').read_text(encoding='utf-8-sig'),re.S).group(1)
 for name in ['ReadWatchTableNames','ReadTechnologyObjects','ReadState','ReadPortalProcessProjects','ReadPortalConnectReadiness']:
  assert f'name=="{name}"' in readonly_list, name
 print(f'PASS: {len(ops)} worker operations wired to explicit shared adapter sources; five supplementary/runtime read-only dispatch guards; eight release-symbol gates. Source checks only.')

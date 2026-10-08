@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class SupplementaryReadContract
 {
     internal const string WatchScope = "ordinary PLC root/user-group watch-table paths only; force tables, entries and live values excluded";

@@ -61,7 +61,7 @@ public sealed class ReleaseRecordParityTests
         {
             "src/Updater/Updater.cs", "src/Updater/TiaMcp.Updater.csproj", "src/Updater/App.config",
             "src/Updater/app.manifest", "src/Updater/UpdaterMessages.resx", "src/Tools/WriteGuard/Guard.cs",
-            "src/Tools/WriteGuard/Guard.resx", "tests/Updater/UpdaterTests.cs", "tests/Tools/GuardTests.cs",
+            "src/Tools/WriteGuard/Guard.resx", "tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs", "tests/Tools/GuardTests.cs",
             "tests/test-suites.json"
         };
         try
@@ -88,7 +88,7 @@ public sealed class ReleaseRecordParityTests
             var validation = ReleaseRecords.GetValidationInputs(root, "engine").Select(row => row.Path).ToHashSet(StringComparer.Ordinal);
             Assert.Contains("tests/test-suites.json", validation);
             Assert.Contains("src/Updater/Updater.cs", validation);
-            Assert.Contains("tests/Updater/UpdaterTests.cs", validation);
+            Assert.Contains("tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs", validation);
             Assert.Contains("build-tools/release/ReleaseTool.cs", validation);
             Assert.DoesNotContain("src/Updater/UpdaterMessages.resx", validation);
         }

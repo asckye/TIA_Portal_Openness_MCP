@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     // Pure snapshot and renderer. Snapshot enumeration must complete before rendering.
     internal sealed class PlcSoftwareTreeNode

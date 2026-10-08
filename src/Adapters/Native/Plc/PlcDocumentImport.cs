@@ -7,7 +7,7 @@ using System.Linq;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 #endif
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {

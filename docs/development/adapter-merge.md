@@ -62,7 +62,7 @@
 - **取消、超时、进度**：只在进入原生代码前和批量项之间检查取消。超时仍是宿主策略；原生调用已开始后超时一律为 Unknown，会话
   标记失效，调用不重放。进度为引擎线程上的同步 `IProgress`。
 - **引擎在进程内使用适配器（必需）**：HMI 和设备代码与 PLC 路径共用同一个 `TiaPortal`/`ProjectBase`，第二个 Openness 客户端会
-  与引擎的进程租约冲突。`TiaMcpServer.V20/V21` 引用 `Adapter.20/21`（都是 net48）；PLC 扩展面通过仅 net48 的类型化入口
+  与引擎的进程租约冲突。`TiaMcp.Engine.V20/V21` 引用 `Adapter.20/21`（都是 net48）；PLC 扩展面通过仅 net48 的类型化入口
   `PlcServices.Over(Func<ProjectBase>)` 建在阶段 3 内核持有的句柄上。Unified HMI、设备、在线和 Safety 仍留在引擎。
 - **织入**：适配器已在构建时织入并校验；`build-release`、`build-studio`、`validate-bundle` 对打包的副本重新校验。
   适配器日志增加输出接口，引擎只写一份带同一关联 ID 的日志（前提：P2-04 合并两份 `InvocationJournal`）。“西门子成员多重集
@@ -110,12 +110,12 @@ Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）�
 
 信封统一使用宿主已有的 `System.Text.Json 10.0.0-preview.4.25258.110`；worker 的 Newtonsoft DTO 结果和错误证据通过 `WriteRawValue` 原样嵌入，宿主的 DTO codec 仍是 STJ，P2-04 再统一 DTO codec。worker 部署包含 WorkerChannel、STJ 及 net48 的传递依赖；构建脚本既有的 DLL 复制规则会一起部署，三份发布文件清单分别校验它们。
 
-[worker-channel 回归套件及预览规则映射](../../tests/Engine/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
+[worker-channel 回归套件及预览规则映射](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcp.WorkerChannel.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
 
 **第 A 步删除 `TiaMcp.WorkerProtocol.*`**：8 个源码目录、7 个测试项目（实测 6,676 个断言）以及
 `TiaMcp.TransportFixture`/`TiaMcp.EndpointFixture`。理由：生产中没有使用；长度前缀分帧只在 Linux 上验证过；维护两套并行编解码，
 与 P2-04 的单一序列化边界相矛盾；JsonV2 不支持 net461，无法服务 14sp1–16 的 worker。删除前已把适用规则改写为协议 2 的要求，
-并在 `TiaMcpServer.TransportFixture` 上测试：启动 nonce 身份、每次调用前后核对绑定纪元、拒绝重放、只读失败类别、迟到进度
+并在 `TiaMcp.WorkerChannel.TransportFixture` 上测试：启动 nonce 身份、每次调用前后核对绑定纪元、拒绝重放、只读失败类别、迟到进度
 导致失效。
 
 ## 第 A 步最终规则核对
@@ -125,7 +125,7 @@ JsonLegacy 的 `DifferentialCodec.cs` 和两个夹具。原套件实测断言数
 JsonLegacy 5,462、HostPreview 78、AsyncPreview 203、HostTransport 102、Endpoint 383（含进程测试 302），
 共 **6,676**。删除 70 个版本化文件、10,572 行（其中 C# 25 个文件、3,156 行）。循环、差分语料和进程断言均按原计数器统计，不等同于 xunit 用例数。
 下表按断言规则归组；`P` = `ProtocolTests`，`S` = `ServerTests`，`X` = `ProcessTests`，
-`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../tests/Engine/TiaMcp.WorkerChannel.Tests)。
+`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../tests/WorkerChannel/TiaMcp.WorkerChannel.Tests)。
 
 | 预览断言组（包含循环变体） | 协议 2 测试或不移植原因 |
 |---|---|
@@ -183,7 +183,7 @@ foundation / foundation-api 的最低数量各减少上述 **10** 项；offline 
 | B | 新建 `TiaMcp.Adapters.Contracts`：原样移动 DTO，增加错误类型和黄金 JSON 测试；适配器源码链接的公开 `TiaMcp.Versioning.TiaVersionCatalog` 改为 internal | 无（各版本织入清单不变） | 是 | 独立 |
 | C | `build/TiaFeatures.props`，并用评估测试证明各项目 DefineConstants 不变 | 无（IL 相同） | 是 | 只动引擎 props |
 | D（P4-02） | F 移到 `Native/` 与 `Policy/`，扩展面以委托实现；更新 `Adapter.Sources.props`、`AdapterSourceClosureTests`、5 个假 SDK 测试项目和 `Test-WorkerIsolation.cs` | 无 | 是 | 独立 |
-| E（P4-02） | PlcWorker、LegacyHost、TransportFixture 和 `Test-FoundationTransport.py` 改用 WorkerChannel + 协议 2 | 低（解析改变，原生分派不变） | 八版 PublicAPI 构建和离线冒烟后仍须按真机台账逐 Foundation 版本验收 | P4-E1 已统一 net48；P4-E2 信封先用 STJ，DTO codec 留给 P2-04 |
+| E（P4-02） | PlcWorker、LegacyHost、TiaMcp.WorkerChannel.TransportFixture 和 `Test-FoundationTransport.py` 改用 WorkerChannel + 协议 2 | 低（解析改变，原生分派不变） | 八版 PublicAPI 构建和离线冒烟后仍须按真机台账逐 Foundation 版本验收 | P4-E1 已统一 net48；P4-E2 信封先用 STJ，DTO codec 留给 P2-04 |
 | F（P4-03） | Studio 桥接进程和客户端改用通道；方法名不变 | 无 | 是 | 独立 |
 | G（P4-03） | Studio `ITiaSession` 在 `TiaOpenness.Core` 中基于扩展面重新实现；桥接进程加载织入的 `TiaMcp.Adapter.<key>`；删除 `StudioOpenness.V*` | 高（替换连接和遍历代码，新增织入） | 否（构建开关） | 独立 |
 | H（P4-04，已完成） | 引擎引用 `Adapter.20/21`，打包并校验 DLL；日志输出接口；`EngineSurface` 也搜索适配器 | 无（尚无调用） | 是 | P2-04 日志合并及阶段 3 第 3–4 步之后 |
@@ -228,7 +228,7 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 
 ## 第 H 步接线与验收
 
-`TiaMcpServer.V20/V21` 通过项目引用复制 `TiaMcp.Adapter.20/21.dll` 与 Contracts；没有引擎领域调用适配器。
+`TiaMcp.Engine.V20/V21` 通过项目引用复制 `TiaMcp.Adapter.20/21.dll` 与 Contracts；没有引擎领域调用适配器。
 `PlcServices.Over(Func<ProjectBase>)` 是仅 net48 且 SDK 支持 ProjectBase 的类型化借用入口，构造 PLC program/data
 两个扩展面，不求值委托、不建立会话、不缓存或释放句柄、不切换线程；具体原语和引擎策略由第 I 步逐项添加。
 不复用 Foundation 的 STA 会话来承载引擎 MTA 调用。借用入口检查使用未初始化的托管引用，不执行西门子构造函数或属性。
@@ -251,7 +251,7 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 
 JIT 数量包含直接、反射、接口、对象分派和枚举输入等所有类别；加上未准备的开放泛型数，分别等于引擎清单
 12588/13038、适配器清单 1752/1749。开放泛型沿用独立泛型夹具验证，JIT 不执行原生调用。
-HttpTests engineering-api 每版增加 13 项，native-diagnostics 每版增加 8 项日志/适配器检查和适配器 JIT 清单；
+TiaMcp.Engine.Harness engineering-api 每版增加 13 项，native-diagnostics 每版增加 8 项日志/适配器检查和适配器 JIT 清单；
 旧检查保持不变。八版适配器全部织入并验证，引擎 ∪ 适配器不是合并程序集，也不改变 MCP 工具注册范围。
 
 ## 第 I 步的领域迁移样板（P4-I1：VCI）
@@ -372,7 +372,7 @@ python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/share
 驱动器先运行比较器自测和 [IL 读取器自测](../../scripts/checks/Test-SharedNativeIlReader.py)；后者离线编译合成 C#，
 通过真实读取器验证委托与空值守卫的正反例，不加载或执行 Siemens 类型。直接运行读取器自测前需构建 NativeCallWeaver，
 其 Mono.Cecil 仅用于元数据解析。所有生成的测试文件和日志留在当前 worktree 的 `bin-build`。
-随后跑离线 TRX 数量门禁、全部 HttpTests 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
+随后跑离线 TRX 数量门禁、全部 TiaMcp.Engine.Harness 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
 两种 Studio 的 Core/GUI 与 bridge smoke、八版织入，以及仓库、bundle、异常、注释、MCP 文本和信封门禁。
 真机新增项目见[验收台账](../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；
 接受这些结果前不能把开关默认值改为 `true`。
@@ -381,6 +381,6 @@ python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/share
 
 - `src/Adapters/build/Adapter.Sources.props`
 - `src/Adapters/Native/Session/PlcFoundationEngine.cs`
-- `src/Worker/Program.cs`
+- `src/PlcWorker/Program.cs`
 - `src/FoundationHost/WorkerClient.cs`
 - `src/Adapters/Native/Studio/OpennessSession.cs`

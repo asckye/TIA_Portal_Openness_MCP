@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost
+namespace TiaMcp.FoundationHost
 {
     // Keep the existing process memory bound while restricting handle access and
     // cleanup to the MCP session that parked the response.

@@ -226,7 +226,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "0c5246627eb9749af68e0fdd8746fad34412eaef70477f18cde9971951b6707d",
-      "path": "src/FoundationHost/LegacyHostPassiveDiagnostics.cs",
+      "path": "src/FoundationHost/FoundationPassiveDiagnostics.cs",
       "line": 46,
       "cjk": 23,
       "literal": [
@@ -4104,7 +4104,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "e56f01729bf896e7a607b8261a6cfb4e1f7c1676a9d2c69daaca64cc7e061f40",
-      "path": "src/FoundationHost/LegacyHostPassiveDiagnostics.cs",
+      "path": "src/FoundationHost/FoundationPassiveDiagnostics.cs",
       "line": 47,
       "cjk": 26,
       "literal": "\"请将当前 Windows 用户添加到本机“Siemens TIA Openness”组，注销并重新登录，然后重启 MCP 客户端。\"",

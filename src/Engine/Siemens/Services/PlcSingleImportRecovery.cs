@@ -10,7 +10,7 @@ using ModelContextProtocol.Protocol;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using TiaMcp.Logic.V4;
-using TiaMcp.PlcFoundation;
+using TiaMcp.Adapters;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens.Services

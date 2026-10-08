@@ -20,7 +20,7 @@ Environment.SetEnvironmentVariable("DOTNET_ADD_GLOBAL_TOOLS_TO_PATH", "false");
 
 var repo = FindRoot(Directory.GetCurrentDirectory());
 var adapterRoot = Path.Combine(repo, "src", "Adapters");
-var worker = Path.Combine(repo, "src", "Worker", "TiaMcpServer.PlcWorker.csproj");
+var worker = Path.Combine(repo, "src", "PlcWorker", "TiaMcp.PlcWorker.csproj");
 var results = new JsonArray();
 var passed = 0;
 var failed = 0;
@@ -33,7 +33,7 @@ foreach (var key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" 
     var correct = selection.ExitCode == 0 && HasSelectedReferences(selection.Output, "/Adapter." + key + ".csproj") && TargetFramework(selection.Output) == "net48";
     Record("selection-" + key, correct, selection.ExitCode);
 
-    var binary = Path.Combine(repo, "src", "Worker", "bin", key, "Release", "net48", "TiaMcp.Adapter." + key + ".dll");
+    var binary = Path.Combine(repo, "src", "PlcWorker", "bin", key, "Release", "net48", "TiaMcp.Adapter." + key + ".dll");
     var verifyLog = Path.Combine(evidenceDirectory, "verify-" + key + ".log");
     var verify = await Run(dotnet, new[] { weaver, "verify", binary, Path.Combine(evidenceDirectory, "coverage-" + key + ".json") }, repo);
     await File.WriteAllTextAsync(verifyLog, verify.Output, new UTF8Encoding(false));

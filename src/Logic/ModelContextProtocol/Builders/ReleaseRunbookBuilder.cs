@@ -42,8 +42,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["quickStartCommands"] = new JsonArray
                 {
                     "dotnet build \"" + workspaceRoot + "\\TiaPortalOpenness.slnx\" -c Release",
-                    "dotnet run --project \"" + workspaceRoot + "\\src\\Engine\\TiaMcpServer.V21.csproj\" -c Release -- --tia-major-version 21 --run-offline-release-suite --offline-release-suite-report-directory \"" + workspaceRoot + "\\reports\\offline_release_suite\"",
-                    "dotnet run --project \"" + workspaceRoot + "\\src\\Engine\\TiaMcpServer.V21.csproj\" -c Release -- --tia-major-version 21 --run-online-monitoring-safety-self-test"
+                    "dotnet run --project \"" + workspaceRoot + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-offline-release-suite --offline-release-suite-report-directory \"" + workspaceRoot + "\\reports\\offline_release_suite\"",
+                    "dotnet run --project \"" + workspaceRoot + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-online-monitoring-safety-self-test"
                 },
                 ["handoffChecklist"] = new JsonArray
                 {

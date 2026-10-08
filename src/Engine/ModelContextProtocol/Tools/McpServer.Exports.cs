@@ -2,7 +2,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 #if TIA_ENGINE_HOST
-using ExportStore = TiaMcp.LegacyHost.SessionExportStore;
+using ExportStore = TiaMcp.FoundationHost.SessionExportStore;
 #endif
 using System;
 using System.Collections.Generic;

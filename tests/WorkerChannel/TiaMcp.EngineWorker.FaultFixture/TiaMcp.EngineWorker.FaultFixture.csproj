@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>TiaMcp.EngineWorker.FaultFixture</RootNamespace>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <DefineConstants Condition="'$(TiaMcpEngineWorkerFaultFixture)' == 'true'">$(DefineConstants);TIA_MCP_ENGINE_WORKER_FAULT_FIXTURE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpEngineWorkerFaultFixture)' == 'true'">
+      <_Parameter1>TiaMcpEngineWorkerFaultFixture</_Parameter1><_Parameter2>true</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

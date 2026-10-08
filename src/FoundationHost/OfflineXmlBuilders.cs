@@ -4,7 +4,7 @@ using System.Xml;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 /// <summary>Pure-memory candidate generation. No SDK, file, process, or project access.</summary>
 internal static class OfflineXmlBuilders

@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--dotnet', default='dotnet')
     parser.add_argument('--no-build', action='store_true')
     parser.add_argument('--engine-major', choices=('20', '21'), default='21')
-    parser.add_argument('--results-directory', type=Path, default=ROOT / 'test-results/host-behavior-parity')
+    parser.add_argument('--results-directory', type=Path, default=ROOT / 'bin-build/test-results/host-behavior-parity')
     args = parser.parse_args()
     directory = args.results_directory.resolve()
     directory.mkdir(parents=True, exist_ok=True)
@@ -23,7 +23,7 @@ def main():
     summary = directory / 'host-behavior-parity.json'
     trx.unlink(missing_ok=True)
     summary.unlink(missing_ok=True)
-    command = [args.dotnet, 'test', str(ROOT / 'tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj'),
+    command = [args.dotnet, 'test', str(ROOT / 'tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj'),
                '-c', 'Release', '--disable-build-servers', '-m:1', '--filter', 'FullyQualifiedName~BehaviorParityTests',
                '--logger', f'trx;LogFileName={trx.name}', '--results-directory', str(directory)]
     if args.no_build:

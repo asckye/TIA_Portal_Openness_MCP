@@ -18,7 +18,7 @@ var root = FindRoot(Directory.GetCurrentDirectory());
 if (!sourceOnly)
 {
     if (string.IsNullOrWhiteSpace(exe)) exe = Path.Combine(root, "runtime", "v21", "worker", "TiaMcp.Engine.V21.exe");
-    var harness = Path.Combine(root, "tests", "Engine", "TiaMcpServer.HttpTests", "TiaMcpServer.HttpTests.csproj");
+    var harness = Path.Combine(root, "tests", "Engine", "TiaMcp.Engine.Harness", "TiaMcp.Engine.Harness.csproj");
     return await Run(dotnet, new[] { "run", "--project", harness, "-c", "Release", "--no-restore", "--", Path.GetFullPath(exe), "test-match-plc-name" }, root);
 }
 

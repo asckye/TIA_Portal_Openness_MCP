@@ -43,7 +43,7 @@
     {
       "name": "foundation",
       "types": [
-        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+        "TiaMcp.Adapters.PlcFoundationEngine"
       ],
       "releases": [
         "14sp1",
@@ -56,50 +56,50 @@
         "21"
       ],
       "methodScopes": {
-        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+        "TiaMcp.Adapters.PlcFoundationEngine": [
           {
             "method": "ExportBlocks",
-            "signature": "TiaMcp.PlcFoundation.PlcBatchExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportBlocks(System.String,System.String,System.String,System.Boolean,System.Int32,System.String,System.Boolean)"
+            "signature": "TiaMcp.Adapters.PlcBatchExportResult TiaMcp.Adapters.PlcFoundationEngine::ExportBlocks(System.String,System.String,System.String,System.Boolean,System.Int32,System.String,System.Boolean)"
           },
           {
             "method": "ExportTypes",
-            "signature": "TiaMcp.PlcFoundation.PlcBatchExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportTypes(System.String,System.String,System.String,System.Boolean,System.Int32,System.String,System.Boolean)"
+            "signature": "TiaMcp.Adapters.PlcBatchExportResult TiaMcp.Adapters.PlcFoundationEngine::ExportTypes(System.String,System.String,System.String,System.Boolean,System.Int32,System.String,System.Boolean)"
           },
           {
             "method": "BatchBlock",
-            "signature": "TiaMcp.PlcFoundation.PlcBatchImportObject TiaMcp.PlcFoundation.PlcFoundationEngine::BatchBlock(Siemens.Engineering.SW.Blocks.PlcBlock,System.String)"
+            "signature": "TiaMcp.Adapters.PlcBatchImportObject TiaMcp.Adapters.PlcFoundationEngine::BatchBlock(Siemens.Engineering.SW.Blocks.PlcBlock,System.String)"
           },
           {
             "method": "BatchReturnedBlock",
-            "signature": "TiaMcp.PlcFoundation.PlcBatchImportObject TiaMcp.PlcFoundation.PlcFoundationEngine::BatchReturnedBlock(Siemens.Engineering.SW.Blocks.PlcBlock,System.String,System.Object)"
+            "signature": "TiaMcp.Adapters.PlcBatchImportObject TiaMcp.Adapters.PlcFoundationEngine::BatchReturnedBlock(Siemens.Engineering.SW.Blocks.PlcBlock,System.String,System.Object)"
           },
           {
             "method": "BatchReturnedGroup",
-            "signature": "System.String TiaMcp.PlcFoundation.PlcFoundationEngine::BatchReturnedGroup(Siemens.Engineering.IEngineeringObject,System.Object,System.String)"
+            "signature": "System.String TiaMcp.Adapters.PlcFoundationEngine::BatchReturnedGroup(Siemens.Engineering.IEngineeringObject,System.Object,System.String)"
           },
           {
             "method": "BatchImportInventory",
-            "signature": "System.Collections.Generic.IEnumerable`1<TiaMcp.PlcFoundation.PlcBatchImportObject> TiaMcp.PlcFoundation.PlcFoundationEngine::BatchImportInventory(Siemens.Engineering.SW.PlcSoftware)"
+            "signature": "System.Collections.Generic.IEnumerable`1<TiaMcp.Adapters.PlcBatchImportObject> TiaMcp.Adapters.PlcFoundationEngine::BatchImportInventory(Siemens.Engineering.SW.PlcSoftware)"
           },
           {
             "method": "BatchImport",
-            "signature": "TiaMcp.PlcFoundation.PlcBatchImportResult TiaMcp.PlcFoundation.PlcFoundationEngine::BatchImport(TiaMcp.PlcFoundation.PlcBatchImportRequest)"
+            "signature": "TiaMcp.Adapters.PlcBatchImportResult TiaMcp.Adapters.PlcFoundationEngine::BatchImport(TiaMcp.Adapters.PlcBatchImportRequest)"
           },
           {
             "method": "ReadSoftwareInfo",
-            "signature": "TiaMcp.PlcFoundation.PlcSoftwareDetails TiaMcp.PlcFoundation.PlcFoundationEngine::ReadSoftwareInfo(System.String)"
+            "signature": "TiaMcp.Adapters.PlcSoftwareDetails TiaMcp.Adapters.PlcFoundationEngine::ReadSoftwareInfo(System.String)"
           },
           {
             "method": "ReadSoftwareTree",
-            "signature": "TiaMcp.PlcFoundation.PlcSoftwareTreeDetails TiaMcp.PlcFoundation.PlcFoundationEngine::ReadSoftwareTree(System.String)"
+            "signature": "TiaMcp.Adapters.PlcSoftwareTreeDetails TiaMcp.Adapters.PlcFoundationEngine::ReadSoftwareTree(System.String)"
           },
           {
             "method": "SnapshotBlocks",
-            "signature": "TiaMcp.PlcFoundation.PlcSoftwareTreeNode TiaMcp.PlcFoundation.PlcFoundationEngine::SnapshotBlocks(Siemens.Engineering.SW.Blocks.PlcBlockGroup,System.String,System.String,System.Collections.Generic.List`1<System.String>,TiaMcp.PlcFoundation.PlcSoftwareReadBudget,System.Int32)"
+            "signature": "TiaMcp.Adapters.PlcSoftwareTreeNode TiaMcp.Adapters.PlcFoundationEngine::SnapshotBlocks(Siemens.Engineering.SW.Blocks.PlcBlockGroup,System.String,System.String,System.Collections.Generic.List`1<System.String>,TiaMcp.Adapters.PlcSoftwareReadBudget,System.Int32)"
           },
           {
             "method": "SnapshotTypes",
-            "signature": "TiaMcp.PlcFoundation.PlcSoftwareTreeNode TiaMcp.PlcFoundation.PlcFoundationEngine::SnapshotTypes(Siemens.Engineering.SW.Types.PlcTypeGroup,System.String,System.String,TiaMcp.PlcFoundation.PlcSoftwareReadBudget,System.Int32)"
+            "signature": "TiaMcp.Adapters.PlcSoftwareTreeNode TiaMcp.Adapters.PlcFoundationEngine::SnapshotTypes(Siemens.Engineering.SW.Types.PlcTypeGroup,System.String,System.String,TiaMcp.Adapters.PlcSoftwareReadBudget,System.Int32)"
           }
         ]
       }

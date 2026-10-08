@@ -39,7 +39,7 @@ using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 
 #if TIA_SHARED_ADAPTER_PATHS
-using Native = TiaMcp.PlcFoundation.WatchTechnologyPrimitives;
+using Native = TiaMcp.Adapters.WatchTechnologyPrimitives;
 #else
 using Native = TiaMcpServer.Siemens.LocalWatchTechnology.WatchTechnologyPrimitives;
 #endif

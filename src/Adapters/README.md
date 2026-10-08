@@ -141,15 +141,15 @@ After eight builds, `dotnet run src/Adapters/build/Test-WorkerIsolation.cs --
 five deliberate coverage corruptions per release, invalid worker configurations,
 missing instrumentation tooling.
 
-`tests/Engine/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj`
+`tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj`
 builds only the API-independent runtime against net10.0, keeping the assembly name
-`Diagnostics.Tests` for `InternalsVisibleTo`. From the repository root, run:
+`TiaMcp.Adapters.Diagnostics.Tests` for `InternalsVisibleTo`. From the repository root, run:
 
 ```powershell
-dotnet run --project tests/Engine/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj -c Release -- <worker-bin-root> <new-writable-journal-directory>
+dotnet run --project tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests/TiaMcp.Adapters.Diagnostics.Tests.csproj -c Release -- <worker-bin-root> <new-writable-journal-directory>
 ```
 
-The worker bin root is `src/Worker/bin` after
+The worker bin root is `src/PlcWorker/bin` after
 building all eight workers; it contains `<release-key>/Release/<framework>/`
 subdirectories. The journal directory must not already exist. These checks
 exercise diagnostic behavior and inspect eight worker/adapter PE files without

@@ -177,7 +177,7 @@ results and failures with direct engine calls. The same suite is compiled for al
 release feature sets. Contract checks retain the 208 golden JSON cases and reject native/JSON
 references and non-contract facet parameter/return types.
 
-The fifth fake-SDK project is `TiaMcpServer.DiagnosticMembershipTests`; it links the full
+The fifth fake-SDK project is `TiaMcp.Engine.DiagnosticMembership.Tests`; it links the full
 engine's `Siemens/Openness.cs`, so it has no Foundation path to update. Worker isolation lives
 at `src/Adapters/build/Test-WorkerIsolation.cs` (there is no checks-directory copy) and has
 no old Foundation source path. Its selection checks now require exactly the selected adapter
@@ -233,11 +233,11 @@ Paths are relative to `TiaMcp.Adapters/`; original basenames are unchanged.
 | `PlcLifecyclePolicy.cs` | [Policy/PlcLifecyclePolicy.cs](../Adapters/Policy/PlcLifecyclePolicy.cs) |
 | `PlcOfflineChecks.cs` | [Native/Plc/PlcOfflineChecks.cs](../Adapters/Native/Plc/PlcOfflineChecks.cs) |
 | `PlcOfflinePolicy.cs` | [Native/Plc/PlcOfflinePolicy.cs](../Adapters/Native/Plc/PlcOfflinePolicy.cs) |
-| `PlcReadContracts.cs` | [Native/Plc/PlcReadContracts.cs](../Adapters/Native/Plc/PlcReadContracts.cs) |
+| `PlcReadContracts.cs` | [Native/Plc/PlcReadContracts.cs](../Adapters/Native/Plc/PlcNativeReadContracts.cs) |
 | `PlcReadPathPolicy.cs` | [Native/Plc/PlcReadPathPolicy.cs](../Adapters/Native/Plc/PlcReadPathPolicy.cs) |
 | `PlcRuntimeQueries.cs` | [Native/Session/PlcRuntimeQueries.cs](../Adapters/Native/Session/PlcRuntimeQueries.cs) |
 | `PlcRuntimeQueryPolicy.cs` | [Policy/PlcRuntimeQueryPolicy.cs](../Adapters/Policy/PlcRuntimeQueryPolicy.cs) |
-| `PlcSoftwareRead.cs` | [Native/Plc/PlcSoftwareRead.cs](../Adapters/Native/Plc/PlcSoftwareRead.cs) |
+| `PlcSoftwareRead.cs` | [Native/Plc/PlcSoftwareRead.cs](../Adapters/Native/Plc/PlcNativeSoftwareRead.cs) |
 | `PlcSoftwareReadPolicy.cs` | [Policy/PlcSoftwareReadPolicy.cs](../Adapters/Policy/PlcSoftwareReadPolicy.cs) |
 | `PlcSpecialExport.cs` | [Native/Plc/PlcSpecialExport.cs](../Adapters/Native/Plc/PlcSpecialExport.cs) |
 | `PlcSpecialExportPolicy.cs` | [Native/Plc/PlcSpecialExportPolicy.cs](../Adapters/Native/Plc/PlcSpecialExportPolicy.cs) |

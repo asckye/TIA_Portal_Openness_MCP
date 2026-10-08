@@ -17,7 +17,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class ToolCatalog : IToolCatalogView
     {
         // Reviewed registration metadata avoids loading unrelated embedded SDK/model types.
-        // HttpTests compares this roster with the attributed types in the built assembly.
+        // TiaMcp.Engine.Harness compares this roster with the attributed types in the built assembly.
         internal static readonly string[] ToolTypeNames = {
             "AddressesTools",
             "AlarmsTools",
@@ -166,7 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "V20OptionsService",
             "VersionControlService",
         };
-        internal static bool UsesRegistrationMetadata => typeof(ToolCatalog).Assembly.GetName().Name!.StartsWith("TiaMcp.Engine.", StringComparison.Ordinal);
+        internal static bool UsesRegistrationMetadata => typeof(ToolCatalog).Assembly.GetName().Name is "TiaMcp.Engine.V20" or "TiaMcp.Engine.V21";
         private static readonly Lazy<ToolCatalog> engine = new Lazy<ToolCatalog>(() =>
             new ToolCatalog(UsesRegistrationMetadata
                 ? ToolTypeNames.Select(name => typeof(ToolCatalog).Assembly.GetType("TiaMcpServer.ModelContextProtocol." + name, throwOnError: true)!)

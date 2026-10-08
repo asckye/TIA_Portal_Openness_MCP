@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 internal static class DocumentExportContract
 {
     internal static JsonObject Validate(JsonNode? payload,bool dryRun)

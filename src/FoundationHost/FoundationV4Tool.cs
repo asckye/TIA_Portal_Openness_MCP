@@ -8,7 +8,7 @@ using TiaMcp.Logic.V4.Construction;
 using TiaMcp.Logic.V4.Domain;
 using TiaMcp.Logic.V4.Inputs;
 
-namespace TiaMcp.LegacyHost;
+namespace TiaMcp.FoundationHost;
 
 // Only this boundary is registered. The existing host implementations retain their
 // worker protocol and bounded parsers; legacy names are not callable aliases.
@@ -239,7 +239,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                     HostBehavior.SessionReset(), true));
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
-                var readiness = readinessForTest?.Invoke() ?? LegacyHostPassiveDiagnostics.Readiness(release);
+                var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
                 if (!readiness["ready"]!.GetValue<bool>())
                     return Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
             }

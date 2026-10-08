@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     public enum BindingObservationState { Unknown, Unbound, Bound }
     public enum BindingIdentityStrength { None, WeakPidOnly, OsStartTimeAnchored }

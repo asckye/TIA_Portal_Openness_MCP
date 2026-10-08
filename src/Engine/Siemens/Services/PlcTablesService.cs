@@ -40,7 +40,7 @@ using Siemens.Engineering.SW.WatchAndForceTables;
 using TiaMcpServer.Runtime;
 
 #if TIA_SHARED_ADAPTER_PATHS
-using Native = TiaMcp.PlcFoundation.WatchTechnologyPrimitives;
+using Native = TiaMcp.Adapters.WatchTechnologyPrimitives;
 #else
 using Native = TiaMcpServer.Siemens.LocalWatchTechnology.WatchTechnologyPrimitives;
 #endif

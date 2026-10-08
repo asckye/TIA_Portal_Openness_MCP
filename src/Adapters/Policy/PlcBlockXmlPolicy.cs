@@ -3,7 +3,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     internal sealed class PlcBlockXmlCapability
     {

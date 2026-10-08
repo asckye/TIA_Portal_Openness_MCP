@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TiaMcp.PlcFoundation
+namespace TiaMcp.Adapters
 {
     // Cached attachment is deliberately not proof that the same OS process still exists.
     public sealed class PlcRuntimeState

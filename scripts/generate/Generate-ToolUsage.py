@@ -371,8 +371,8 @@ def generate():
     return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
             'sources': sources, 'documents': documents, 'tools': mappings,
             'languages': library['languages'], 'examples': library['examples'],
-            'engineSourceCalls': read(ROOT / 'tests/Engine/TiaMcpServer.Tests/Fixtures/EngineSourceExamples.json'),
-            'engineSourceSequences': read(ROOT / 'tests/Engine/TiaMcpServer.Tests/Fixtures/EngineSourceSequences.json'),
+            'engineSourceCalls': read(ROOT / 'tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json'),
+            'engineSourceSequences': read(ROOT / 'tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceSequences.json'),
             'calls': calls, 'sequences': sequences, **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
 
 

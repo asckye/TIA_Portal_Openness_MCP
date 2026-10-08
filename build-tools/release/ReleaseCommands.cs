@@ -189,7 +189,7 @@ internal static partial class ReleaseCommands
         }
 
         var cache = Path.Combine(repo, "bin-build/cache/dotnet-10.0.12");
-        foreach (var archive in ReleasePrerequisites.ReadPinnedArchives(Path.Combine(repo, "scripts/build/bundled-dotnet.json")))
+        foreach (var archive in ReleasePrerequisites.ReadPinnedArchives(Path.Combine(repo, "build-tools/bundled-dotnet.json")))
         {
             var path = Path.Combine(cache, archive.Name);
             probes.Add(new(archive.Name, () => ReleasePrerequisites.RequirePinnedArchive(archive, path)));
@@ -320,7 +320,7 @@ internal static partial class ReleaseCommands
         if (offlineError is not null) throw new ReleaseException(offlineError);
         var cacheDirectory = Path.GetFullPath(options.Get("BuildCacheDirectory", DefaultBuildCache()));
         var cacheRecords = Path.Combine(logs, "cache-records");
-        var runtimePin = ReleasePrerequisites.ReadPinnedArchives(Path.Combine(Root, "scripts/build/bundled-dotnet.json"));
+        var runtimePin = ReleasePrerequisites.ReadPinnedArchives(Path.Combine(Root, "build-tools/bundled-dotnet.json"));
         var runtimeCache = Path.Combine(Root, "bin-build/cache/dotnet-10.0.12");
         foreach (var archive in runtimePin)
             _ = ReleasePrerequisites.RequirePinnedArchive(archive, Path.Combine(runtimeCache, archive.Name));
@@ -344,7 +344,7 @@ internal static partial class ReleaseCommands
         var releaseTemp = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "tmr-" + Guid.NewGuid().ToString("N")[..8]));
         if (releaseTemp.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase)) throw new ReleaseException("Release temp root must be outside the repository");
         processEnv["TIA_MCP_RELEASE_TEMP_ROOT"] = releaseTemp;
-        var harness = Path.Combine(Root, "tests/Engine/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe");
+        var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         var activeLog = new AsyncLocal<string?>();
         var failedHostDataRetained = false;
         void RecordProcessOutput(CommandResult result)
@@ -457,7 +457,7 @@ internal static partial class ReleaseCommands
                 RunTool("build-multi-version", "-PublicApiRoot", api, "-CompleteOnly", "-Offline", "-Test", "-Dotnet", dotnet, "-Python", python, "-NuGetConfig", nugetConfig, "-MaxParallelism", maxParallelism.ToString(System.Globalization.CultureInfo.InvariantCulture));
             });
             RunStep("02-tier-record", () => WriteTierRecord(plan, passed: false, ReadCacheEvents(cacheRecords), options.Has("NoBuildCache")));
-            RunStep("03-package-local", () => RunPython("scripts/build/Package-Release.py", "--local", "--output-directory", output));
+            RunStep("03-package-local", () => RunPython("build-tools/Package-Release.py", "--local", "--output-directory", output));
             RunStep("04-validate-bundle", () =>
             {
                 var packagePath = Path.Combine(output, "package-result.json");
@@ -474,7 +474,7 @@ internal static partial class ReleaseCommands
             {
                 WriteTierRecord(plan, passed: true, ReadCacheEvents(cacheRecords), options.Has("NoBuildCache"));
                 var finalOutput = Path.Combine(output, "validated");
-                RunPython("scripts/build/Package-Release.py", "--local", "--output-directory", finalOutput);
+                RunPython("build-tools/Package-Release.py", "--local", "--output-directory", finalOutput);
                 File.Copy(Path.Combine(finalOutput, "package-result.json"), Path.Combine(output, "package-result.json"), true);
                 using var package = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "package-result.json")));
                 RunTool("validate-bundle", "-Strict", "-BundleRoot", ReleaseValidation.GetBundleDirectory(package.RootElement.GetProperty("path").GetString()!), "-PackageMode");
@@ -766,7 +766,7 @@ internal static partial class ReleaseCommands
 
     private static int GetBundledDotnet(Options options)
     {
-        var scriptDir = Path.Combine(Root, "scripts/build");
+        var scriptDir = Path.Combine(Root, "build-tools");
         using var pin = JsonDocument.Parse(File.ReadAllText(Path.Combine(scriptDir, "bundled-dotnet.json")));
         var version = pin.RootElement.GetProperty("version").GetString()!;
         var targetRelative = pin.RootElement.GetProperty("target").GetString()!;
@@ -995,7 +995,7 @@ internal static partial class ReleaseCommands
         EnsureWindows("build-plc-workers");
         var apiRoot = options.Get("PublicApiRoot") ?? throw new ReleaseException("-PublicApiRoot is required");
         var source = Path.GetFullPath(options.Get("SourceRoot", Path.Combine(Root, "src")));
-        var project = Path.Combine(Root, "src/Worker/TiaMcpServer.PlcWorker.csproj");
+        var project = Path.Combine(Root, "src/PlcWorker/TiaMcp.PlcWorker.csproj");
         var weaver = Path.GetFullPath(options.Get("NativeCallWeaverPath", Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll")));
         if (!File.Exists(weaver)) throw new ReleaseException($"Native call weaver missing: {weaver}");
         var output = Path.GetFullPath(options.Get("EvidenceDirectory", Path.Combine(Root, "bin-build/plc-adapter-workers")));
@@ -1008,7 +1008,7 @@ internal static partial class ReleaseCommands
         {
             var rel = key switch { "14sp1" => ("TIA_V14SP1_PublicAPI/V14 SP1", "Siemens.Engineering"), "15.1" => ("TIA_V15.1_PublicAPI/V15.1", "Siemens.Engineering"), "16" => ("TIA_V16_PublicAPI/V16", "Siemens.Engineering"), "17" => ("TIA_V17_PublicAPI/V17", "Siemens.Engineering"), "18" => ("TIA_V18_PublicAPI/V18", "Siemens.Engineering"), "19" => ("TIA_V19_PublicAPI/V19", "Siemens.Engineering"), "20" => ("TIA_V20_PublicAPI/V20", "Siemens.Engineering"), "21" => ("TIA_V21_PublicAPI/V21/net48", "Siemens.Engineering.Base"), _ => throw new ReleaseException("Unsupported precise release key: " + key) };
             var api = Path.GetFullPath(Path.Combine(apiRoot, rel.Item1));
-            var props = new List<string> { $"-p:TiaReleaseKey={key}", $"-p:SiemensEngineeringDirectory={api}", $"-p:AdapterSourceRoot={source}", $"-p:WorkerSourceRoot={Path.Combine(source, "Worker")}", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false" };
+            var props = new List<string> { $"-p:TiaReleaseKey={key}", $"-p:SiemensEngineeringDirectory={api}", $"-p:AdapterSourceRoot={source}", $"-p:WorkerSourceRoot={Path.Combine(source, "PlcWorker")}", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false" };
             if (options.Has("UseReferenceAssemblyPackage")) props.Add("-p:UseReferenceAssemblyPackage=true");
             props.Add($"-p:NativeCallWeaverPath={weaver}");
             if (!options.Has("NoRestore"))
@@ -1030,7 +1030,7 @@ internal static partial class ReleaseCommands
             var buildResult = CachedBuild(options.Get("Dotnet", Dotnet), build, () => ProcessRunner.Run(options.Get("Dotnet", Dotnet), build, Root));
             WriteLog(Path.Combine(output, $"build-{key}.log"), buildResult);
             ProcessRunner.RequireSuccess(buildResult, $"Worker compile failed for {key}; no native code was run");
-            var buildOutput = Path.Combine(Root, $"src/Worker/bin/{key}/Release/net48");
+            var buildOutput = Path.Combine(Root, $"src/PlcWorker/bin/{key}/Release/net48");
             var worker = Path.Combine(buildOutput, $"TiaMcp.PlcWorker.{key}.exe");
             var adapter = Path.Combine(buildOutput, $"TiaMcp.Adapter.{key}.dll");
             var verify = ProcessRunner.Run(options.Get("Dotnet", Dotnet), [weaver, "verify", adapter, Path.Combine(output, $"coverage-{key}.json")], Root);
@@ -1236,7 +1236,7 @@ internal static partial class ReleaseCommands
                 return 0;
             });
 
-            var hostProject = Path.Combine(Root, "src/FoundationHost/TiaMcpServer.LegacyHost.csproj");
+            var hostProject = Path.Combine(Root, "src/FoundationHost/TiaMcp.FoundationHost.csproj");
             var publish = Path.Combine(logs, "foundation-host");
             var publishArgs = new List<string> { "publish", hostProject, "-c", "Release", "-o", publish, "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", $"-p:Version={release}", $"-p:FileVersion={release}.0" };
             AddNugetConfig(publishArgs, nuget);
@@ -1258,7 +1258,7 @@ internal static partial class ReleaseCommands
                     releaseRows.Add(new { releaseKey = key, profile = "full-engine", toolCount = baseline.RootElement.GetProperty("tools").GetArrayLength(), nativeAcceptance = "NOT RUN" });
                     continue; // The engine build installs the woven worker and its exact catalog.
                 }
-                var workerBuild = Path.Combine(Root, $"src/Worker/bin/{key}/Release/net48");
+                var workerBuild = Path.Combine(Root, $"src/PlcWorker/bin/{key}/Release/net48");
                 if (!Directory.Exists(workerBuild)) throw new ReleaseException($"Worker build output missing: {workerBuild}");
                 foreach (var file in Directory.EnumerateFiles(workerBuild).Where(file => new[] { ".exe", ".dll", ".config" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)))
                     File.Copy(file, Path.Combine(worker, Path.GetFileName(file)), true);
@@ -1369,11 +1369,11 @@ internal static partial class ReleaseCommands
                 }
                 if (plan.Includes("foundation-transport"))
                 {
-                    var fixture = "tests/Engine/TiaMcpServer.TransportFixture/TransportFixture.csproj";
+                    var fixture = "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj";
                     ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, ["build", fixture, "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false"], logs, "fixture-build.log", nuget), "Transport fixture build failed");
                     WithIsolatedHost(runTemp, "foundation-transport", approvalEnabled: false, _ =>
                     {
-                        var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
+                        var result = RunLoggedProcess(python, ["scripts/checks/Test-FoundationTransport.py", "--fixture", "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe", "--releases", "14sp1", "15.1", "16", "17", "18", "19", "--output", Path.Combine(logs, "transport")], logs, "transport.log", null);
                         ProcessRunner.RequireSuccess(result, "Foundation transport test failed");
                         return 0;
                     });

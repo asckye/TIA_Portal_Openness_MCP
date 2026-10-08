@@ -27,7 +27,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 调用默认先由 Workbench 审批再派发；
 `TIA_MCP_PLC_TOOLS_PYTHON`，否则读取该环境的 `Scripts\python.exe`。LocalAppData 缺失、
 环境不可写或解释器不存在时返回 `IO_FAILED` 与路径，不从旧私人环境自动复制或执行。
 可用 `--environment-path <absolute-path>` 保留自选位置，或用 `--python <executable>` 选择 Python；
-维护者现有仓库 `TiaMcp_Output` 环境也必须显式选择，不作为默认值。
+维护者现有仓库 `bin-build` 环境也必须显式选择，不作为默认值。
 
 ## 现有工具用途
 

@@ -22,7 +22,7 @@
     <AdapterSourceRoot Condition="'$(AdapterSourceRoot)' == ''">$(MSBuildThisFileDirectory)../../</AdapterSourceRoot>
     <OutputType>Library</OutputType>
     <AssemblyName>TiaMcp.Adapter.$(AdapterReleaseKey)</AssemblyName>
-    <RootNamespace>TiaMcp.PlcFoundation</RootNamespace>
+    <RootNamespace>TiaMcp.Adapters</RootNamespace>
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <LangVersion>latest</LangVersion>

@@ -59,6 +59,6 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 
 响应兼容性包含属性顺序、null、转义、数值类型和时间戳的编码。SDK 默认选项、`BridgeJson`、
 `DisciplineJson` 与无参数 `ToJsonString()` 的事实由
-[HttpTests 黄金数据](../../tests/Engine/TiaMcpServer.HttpTests/README.md)记录；
+[TiaMcp.Engine.Harness 黄金数据](../../tests/Engine/TiaMcp.Engine.Harness/README.md)记录；
 修改响应代码须比较规范化快照和格式 3 原始文本哈希。`meta.error` 按维护者决策 D1 只将首行
 “类型: 消息”作为执行器黄金比较的契约，堆栈帧允许随迁移变化；这不授权改写实际返回内容。
