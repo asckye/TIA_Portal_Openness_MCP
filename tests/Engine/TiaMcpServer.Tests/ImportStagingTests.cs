@@ -153,7 +153,10 @@ namespace TiaMcpServer.Tests
             var nested = Path.Combine(bundle, new string('d', 100)); Directory.CreateDirectory(nested);
             var store = new ImportStagingStore(nested, "21", Guid.NewGuid().ToString("N"));
             var result = store.Run("StageImportFiles", new[] { File(new string('f', 124) + ".scl") });
-            Assert.False(result.Ok); Assert.Equal(TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation, result.Meta.Outcome);
+            // Only Windows hosts hand staged paths to net48 importers; elsewhere the preview has no such limit.
+            Assert.Equal(!OperatingSystem.IsWindows(), result.Ok);
+            if (!OperatingSystem.IsWindows()) return;
+            Assert.Equal(TiaMcp.Logic.V4.Outcome.RejectedBeforeOperation, result.Meta.Outcome);
             Assert.False(Directory.Exists(Path.Combine(nested, "staging")));
         }
         [Fact]
