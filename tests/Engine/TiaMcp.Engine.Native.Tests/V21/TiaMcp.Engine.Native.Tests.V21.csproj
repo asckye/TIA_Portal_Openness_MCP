@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>V21</RootNamespace>
     <TiaMajor>21</TiaMajor>
     <SiemensBaseAssembly>Siemens.Engineering.Base</SiemensBaseAssembly>
-    <AssemblyName>V21</AssemblyName>
+    <AssemblyName>TiaMcp.Engine.Native.Tests.V21</AssemblyName>
   </PropertyGroup>
   <Import Project="../NativeTests.props" />
 </Project>

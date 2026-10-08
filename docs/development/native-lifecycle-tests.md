@@ -4,7 +4,7 @@
 
 ## 实现与范围
 
-- [V20.csproj](../../tests/Engine/TiaMcp.Engine.Native.Tests/V20/V20.csproj) 使用 V20 单体 API；[V21.csproj](../../tests/Engine/TiaMcp.Engine.Native.Tests/V21/V21.csproj) 使用 V21 Base 模块，两者均为 x64/net48、`Private=False`。
+- [TiaMcp.Engine.Native.Tests.V20.csproj](../../tests/Engine/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj) 使用 V20 单体 API；[TiaMcp.Engine.Native.Tests.V21.csproj](../../tests/Engine/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj) 使用 V21 Base 模块，两者均为 x64/net48、`Private=False`。
 - [启动与安全检查](../../tests/Engine/TiaMcp.Engine.Native.Tests/Program.cs) 无 Siemens 类型引用；先从对应版本安装注册表找到 PublicAPI、检查主版本，再注册精确程序集身份解析器。独立 `NoInlining` 方法进入原生调用，显式单 MTA 线程执行。
 - [原生场景](../../tests/Engine/TiaMcp.Engine.Native.Tests/LiveSuite.cs) 只创建自己的 `WithoutUserInterface` 实例和唯一 scratch 目录；没有 Attach、现有工程路径、PLC 地址或进程 ID 参数。每轮创建工程，提交设备组事务，回滚另一个设备组事务，保存、关闭、重新打开自有工程并核对持久化，共 7 项语义断言。
 - 只对本轮创建/打开的 `Project` 调用 Close，只对本轮创建的 `TiaPortal` 调用 Dispose；不调用 `TiaPortalProcess.Dispose`，不操作用户已有实例。无法从单纯 Dispose 返回推断 TIA 服务进程一定已经退出。
@@ -20,10 +20,10 @@
 现有 `build-release` 命令自动编译两版，仅运行各自的 `--self-test` 和 Python 监督器的假进程故障测试；不运行 live 分支。单独构建示例（将 SDK 路径替换为实际路径）：
 
 ```powershell
-dotnet build tests/Engine/TiaMcp.Engine.Native.Tests/V20/V20.csproj -c Release -p:SiemensEngineeringDirectory=C:\SDK\V20
-dotnet build tests/Engine/TiaMcp.Engine.Native.Tests/V21/V21.csproj -c Release -p:SiemensEngineeringDirectory=C:\SDK\V21\net48
+dotnet build tests/Engine/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj -c Release -p:SiemensEngineeringDirectory=C:\SDK\V20
+dotnet build tests/Engine/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj -c Release -p:SiemensEngineeringDirectory=C:\SDK\V21\net48
 python scripts/checks/Test-NativeLifecycle.py --self-test
-& tests/Engine/TiaMcp.Engine.Native.Tests/V21/bin/Release/net48/NativeTests.V21.exe --self-test
+& tests/Engine/TiaMcp.Engine.Native.Tests/V21/bin/Release/net48/TiaMcp.Engine.Native.Tests.V21.exe --self-test
 ```
 
 裸运行 EXE 或监督器均不执行原生测试。EXE 的 `--preflight` 只读取匹配版本的安装注册表和 DLL 身份，不创建 TIA；不能证明许可、组权限或防火墙已配置。编译时可用离线 PublicAPI 副本，运行时必须从匹配的实际 TIA 安装解析。
@@ -34,7 +34,7 @@ python scripts/checks/Test-NativeLifecycle.py --self-test
 
 ```powershell
 python scripts/checks/Test-NativeLifecycle.py `
-  --runner tests/Engine/TiaMcp.Engine.Native.Tests/V21/bin/Release/net48/NativeTests.V21.exe `
+  --runner tests/Engine/TiaMcp.Engine.Native.Tests/V21/bin/Release/net48/TiaMcp.Engine.Native.Tests.V21.exe `
   --major 21 --run-live --confirm-new-portal `
   --output C:\TIA-Test-Runs\new-unique-run --iterations 1 --timeout-seconds 600
 ```

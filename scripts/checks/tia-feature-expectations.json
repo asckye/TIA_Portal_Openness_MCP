@@ -440,7 +440,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V20/V20.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
@@ -450,7 +450,7 @@
     ]
   },
   {
-    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V21/V21.csproj",
+    "project": "tests/Engine/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj",
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [

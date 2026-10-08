@@ -63,8 +63,8 @@
     <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.HardwareCatalog.Tests/TiaMcp.FoundationHost.HardwareCatalog.Tests.csproj" />
     <Project Path="tests/Engine/TiaMcp.Engine.Harness/TiaMcp.Engine.Harness.csproj" />
     <Project Path="tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj" />
-    <Project Path="tests/Engine/TiaMcp.Engine.Native.Tests/V20/V20.csproj" />
-    <Project Path="tests/Engine/TiaMcp.Engine.Native.Tests/V21/V21.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.Native.Tests/V20/TiaMcp.Engine.Native.Tests.V20.csproj" />
+    <Project Path="tests/Engine/TiaMcp.Engine.Native.Tests/V21/TiaMcp.Engine.Native.Tests.V21.csproj" />
     <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/Fixture/Fixture.csproj" />
     <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/OptionalDependency/OptionalDependency.csproj" />
     <Project Path="tests/Engine/TiaMcp.Engine.PromptRegistration.Tests/TiaMcp.Engine.PromptRegistration.Tests.csproj" />
