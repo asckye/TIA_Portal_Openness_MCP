@@ -56,12 +56,11 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertEqual(len(excluded), 11)
         registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources.all_text()))
         self.assertFalse(set(excluded) - registered)
-        self.assertIn('expected_full = len(catalog)', read(ROOT / 'scripts/checks/Test-WorkerIsolation.py'))
-        self.assertIn("['releases'][str(args.major)]", read(ROOT / 'scripts/checks/Test-WorkerIsolation.py'))
+        # Engine host checks compare with the engine's own roster; ToolProfiles is the FoundationHost product roster (P7-04).
+        self.assertIn("'Isolation changed the tool catalog'", read(ROOT / 'scripts/checks/Test-WorkerIsolation.py'))
         stability = read(ROOT / 'scripts/checks/Test-LocalStability.py')
-        self.assertIn('ToolProfiles.resx', stability)
-        self.assertIn('args.full_tool_count = len(roster)', stability)
-        self.assertIn("sum('lite' in row['profiles'] for row in roster)", stability)
+        self.assertIn('if getattr(args, key) is None: setattr(args, key, len(names))', stability)
+        self.assertNotIn('ToolProfiles.resx', stability)
 
     def test_legacy_contract_remains_unbound(self):
         source = sources.type_text('OpennessReleaseContract')

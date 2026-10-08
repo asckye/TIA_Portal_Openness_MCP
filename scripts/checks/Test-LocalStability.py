@@ -155,7 +155,11 @@ def run_profile(args, transport, profile, run_dir):
         roster = rpc('tools/list', 'roster')['result']['tools']
         names = {item['name'] for item in roster}
         require(len(names) == len(roster), 'Duplicate registered tools')
-        expected_count = args.full_tool_count if profile == 'full' else args.lite_tool_count
+        # The engine's own roster: the product roster (ToolProfiles) is FoundationHost's since P7-04,
+        # so the first run of each profile sets the count every later run must keep.
+        key = 'full_tool_count' if profile == 'full' else 'lite_tool_count'
+        if getattr(args, key) is None: setattr(args, key, len(names))
+        expected_count = getattr(args, key)
         require(len(names) == expected_count, f'{profile} roster changed: {len(names)} != {expected_count}')
 
         def execute(case, request_id):
@@ -330,17 +334,12 @@ def main():
     parser.add_argument('--transports', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     parser.add_argument('--concurrency', type=int, default=8)
     parser.add_argument('--isolate-openness', action='store_true', help='Exercise the supervised child host; still no TIA initialization/connection')
-    parser.add_argument('--full-tool-count', type=int, default=None, help='Defaults to the version-aware roster: V20=477, V21=488')
+    parser.add_argument('--full-tool-count', type=int, default=None, help="Defaults to the engine's own roster from the first run")
     parser.add_argument('--lite-tool-count', type=int, default=None)
     parser.add_argument('--max-private-mib', type=int, default=512)
     parser.add_argument('--max-handle-growth', type=int, default=128)
     parser.add_argument('--output', type=Path, required=True, help='Fresh directory for evidence; existing directories are refused')
     args = parser.parse_args()
-    import xml.etree.ElementTree as ET
-    catalog = json.loads(ET.parse(ROOT / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)
-    roster = catalog['releases'][str(args.major)]
-    if args.full_tool_count is None: args.full_tool_count = len(roster)
-    if args.lite_tool_count is None: args.lite_tool_count = sum('lite' in row['profiles'] for row in roster)
     require(os.name == 'nt', 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'host_harness', 'output'):
