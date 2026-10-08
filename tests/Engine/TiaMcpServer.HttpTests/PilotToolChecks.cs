@@ -35,8 +35,14 @@ internal static class PilotToolChecks
         string release = (string)facade.GetProperty("ReleaseKey", all)!.GetValue(null)!;
         var catalog = Program.FindServerType(server, "TiaOpenness.Shared.ToolUsageCatalog");
         // The engine serves its own source catalog (McpServer.RuntimeProfileEntries); reflection passes every optional argument.
-        var entries = ((JsonArray)catalog.GetMethod("ProfileEntries", all)!.Invoke(null, new object[] { release, 4, true })!)
+        var product = ((JsonArray)catalog.GetMethod("ProfileEntries", all)!.Invoke(null, new object[] { release, 4, false })!)
+            .Select(row => (string?)row!["currentName"]).ToHashSet(StringComparer.Ordinal);
+        var source = ((JsonArray)catalog.GetMethod("ProfileEntries", all)!.Invoke(null, new object[] { release, 4, true })!)
             .Where(row => (int?)row!["envelopeVersion"] == 4).ToArray();
+        // GetToolUsage refuses tools withdrawn from the product catalog; only ConnectProject is withdrawn (P7-04/P7-04b).
+        var withdrawn = source.Select(row => (string)row!["currentName"]!).Where(name => !product.Contains(name)).ToArray();
+        check(withdrawn.SequenceEqual(new[] { "ConnectProject" }), "Only ConnectProject is withdrawn from the product catalog");
+        var entries = source.Where(row => product.Contains((string?)row!["currentName"])).ToArray();
         check(entries.Length > 0, "Generated runtime data contains V4 entries");
         var usage = surface.Tool("GetToolUsage");
         var schemaType = Program.FindServerType(server, "TiaMcp.Logic.V4.Inputs.InputSchema");
