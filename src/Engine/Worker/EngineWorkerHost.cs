@@ -137,6 +137,8 @@ namespace TiaMcpServer.Worker
                     nativeFault ??= response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery;
                     foundationDispatch.SessionOutcome.MarkUncertain();
                     portal!.ClearFoundationSession(nativeFault);
+                    response = ChannelResponse.Error(new ChannelFailure(nativeFault, -32603, ChannelOutcome.Unknown,
+                        response.Failure?.EvidenceJson ?? "null"));
                 }
                 else if (response.Failure != null && reserved)
                 {
@@ -184,7 +186,15 @@ namespace TiaMcpServer.Worker
         private ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "engine.status") { Observe(); return ChannelResponse.Success(Status().ToJsonString()); }
-            if (request.Method.StartsWith("adapter.", StringComparison.Ordinal)) return DispatchFoundation(request);
+            string? fixtureFault = WorkerFaultInjection.Mode(typeof(EngineWorkerHost).Assembly);
+            WorkerFaultInjection.BeforeDispatch(fixtureFault, request);
+            if (fixtureFault == "tia-lost") ProcessLost("Fixture TIA process lost.");
+            if (request.Method.StartsWith("adapter.", StringComparison.Ordinal))
+            {
+                var response = DispatchFoundation(request);
+                return response.Failure != null ? response : ChannelResponse.WithSpill(response.ResultJson,
+                    () => WorkerReplySpill.Write(DataLocations.Current.WorkerSpillsDirectory, response.ResultJson));
+            }
             if (request.Method != "engine.invoke")
                 return ChannelResponse.Error(new ChannelFailure("Unknown engine operation.", -32602, ChannelOutcome.RejectedBeforeNative));
             using var document = JsonDocument.Parse(request.ArgumentsJson);
@@ -210,7 +220,12 @@ namespace TiaMcpServer.Worker
                 result = McpServer.V4Reject(name, new Error(OpennessReadiness.Cause + " " + OpennessReadiness.FixEn,
                     new ResourceUnavailableDetails("tia-openness-environment")), new JsonObject { ["environment"] = environment });
             }
-            else result = McpServer.ToolResult(McpServer.InvokeToolMethod(method!, call!));
+            else
+            {
+                using var progress = new WorkerProgressShim(request, args.TryGetProperty("progress", out var enabled) && enabled.ValueKind == JsonValueKind.True, EngineServices.Provider);
+                progress.Bind(method!, call!);
+                result = McpServer.ToolResult(McpServer.InvokeToolMethod(method!, call!));
+            }
             if (TiaOpenness.Shared.SessionBehavior.LocksSession(nativeCalls.NativeCallIssued,
                 (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)))
             {
@@ -224,16 +239,7 @@ namespace TiaMcpServer.Worker
             reply["nativeCallIssued"] = nativeCalls.NativeCallIssued;
             reply["result"] = JsonSerializer.SerializeToNode(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
             string wire = reply.ToJsonString();
-            if (System.Text.Encoding.UTF8.GetByteCount(wire) < ChannelLimits.ResponseBytes - 256)
-                return ChannelResponse.Success(wire);
-            string? execution = (string?)result.StructuredContent?["meta"]?["execution"];
-            bool unknown = (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown";
-            var limited = McpServer.V4Result(name, new JsonObject { ["nativeOutcomeUnknown"] = unknown },
-                new Error("Worker response exceeds its byte limit.", new LimitExceededDetails("response", ChannelLimits.ResponseBytes, System.Text.Encoding.UTF8.GetByteCount(wire))),
-                execution == "not-started" ? Outcome.RejectedBeforeOperation : execution == "read-only" ? Outcome.ReadFailed : Outcome.Failed,
-                execution == "not-started" ? Execution.NotStarted : execution == "read-only" ? Execution.ReadOnly : Execution.Completed, Completeness.None);
-            reply["result"] = JsonSerializer.SerializeToNode(limited, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
-            return ChannelResponse.Success(wire, reply.ToJsonString());
+            return ChannelResponse.WithSpill(wire, () => WorkerReplySpill.Write(DataLocations.Current.WorkerSpillsDirectory, wire));
         }
     }
 }

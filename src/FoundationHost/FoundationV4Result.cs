@@ -84,6 +84,8 @@ internal static class FoundationV4Result
             exceptionType = (string?)retained?["exceptionType"];
         }
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
+        if (!dispatched && exception?.Data["workerLimitBytes"] is int workerLimit)
+            return Reject(release, name, id, new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)), true);
         if (!dispatched && exception?.Data["foundationSessionPoisoned"] is true)
             return Reject(release, name, id, HostBehavior.SessionReset(), true);
         exception ??= new InvalidOperationException();

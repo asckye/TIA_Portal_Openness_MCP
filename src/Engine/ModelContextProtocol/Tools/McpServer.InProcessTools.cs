@@ -155,7 +155,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 object? result = method.Invoke(target, call);
                 if (result is Task task)
                 {
-                    task.GetAwaiter().GetResult();
+                    bool waited = false;
+                    WaitToolTask(task, ref waited);
+                    if (!waited) task.GetAwaiter().GetResult();
                     var resultProperty = task.GetType().GetProperty("Result");
                     result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
                 }
@@ -178,6 +180,7 @@ namespace TiaMcpServer.ModelContextProtocol
         static partial void EndCallProjection(IDisposable? observation, object? result);
         static partial void RecordCallRejection(string name, ToolArguments arguments, CallToolResult result);
         static partial void ValidateRuntimeBinding(MethodInfo method);
+        static partial void WaitToolTask(Task task, ref bool waited);
 
         private static readonly ConcurrentDictionary<(string Name, MethodInfo Method), JsonElement> InputSchemas =
             new ConcurrentDictionary<(string, MethodInfo), JsonElement>();

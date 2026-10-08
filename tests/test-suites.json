@@ -224,5 +224,20 @@
       "--filter",
       "FullyQualifiedName~SharedPipelineTests"
     ]
+  },
+  "worker-robustness": {
+    "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
+    "minimumPassed": 42,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~WorkerRobustnessTests"
+    ]
+  },
+  "worker-progress": {
+    "project": "tests/Engine/TiaMcp.WorkerProgress.Tests/TiaMcp.WorkerProgress.Tests.csproj",
+    "minimumPassed": 3,
+    "maximumSkipped": 0,
+    "arguments": []
   }
 }

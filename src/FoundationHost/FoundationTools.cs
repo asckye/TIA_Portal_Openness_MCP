@@ -101,6 +101,7 @@ internal sealed partial class FoundationTool : McpServerTool
     }
     internal IDisposable? EnterStagingRequest() => StagingSessions.TryGetValue(worker, out var session) ? session.EnterRequest() : null;
     internal bool SharedWorker => worker is IFoundationSessionWorker { SharedSession: true };
+    internal CallToolResult ParkWorkerResult(CallToolResult result, string name) => worker is IFoundationWorkerResult store ? store.ParkResult(result, name) : result;
     internal IDisposable? EnterSharedRequest(RequestContext<CallToolRequestParams> request) => (worker as IFoundationSessionWorker)?.EnterRequest(request);
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore> SharedStagingStores = new();
     private readonly Definition definition;

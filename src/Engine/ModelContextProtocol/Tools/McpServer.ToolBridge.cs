@@ -267,6 +267,11 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult TargetFailure(string tool, Exception error, bool issued)
         {
             error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
+            if (error.Data["workerRequestSent"] is false) issued = false;
+            if (!issued && error.Data["workerLimitBytes"] is int workerLimit)
+                return V4Reject(tool, new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)));
+            if (!issued && error is OperationCanceledException)
+                return V4Reject(tool, new Error("The request was cancelled before dispatch.", new CancelledDetails("tool-queue")));
             var classification = AllToolDescriptors(includeUnavailable: true).TryGetValue(tool, out var method)
                 ? ClassificationOf(method) : null;
             var fallback = classification == null ? ToolMetadata.Find(tool) : null;

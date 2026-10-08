@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
@@ -32,6 +33,10 @@ namespace TiaMcp.LegacyHost
         Task<JsonObject> Restart(bool confirmed, CancellationToken token);
         Task<IDisposable> Acquire(CancellationToken token);
         Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token);
+    }
+    public interface IEngineWorkerProgress
+    {
+        IDisposable UseProgress(Action<string>? report);
     }
 
     internal static class EngineHostConfiguration
@@ -101,6 +106,25 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static TiaMcp.LegacyHost.IEngineWorker Worker => TiaMcp.LegacyHost.EngineHostConfiguration.Worker;
         internal static CancellationToken WorkerDispatchCancellation => McpDispatchCancellation.Value;
         internal static IMcpServer? CurrentCallServer => ProgressRequest.Value?.Server;
+        internal static Action<string>? WorkerProgressRelay()
+        {
+            var request = ProgressRequest.Value;
+            var token = request?.Params?.ProgressToken;
+            if (token == null) return null;
+            var progressToken = JsonSerializer.SerializeToNode(token, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+            return json => {
+                try
+                {
+                    var payload = JsonNode.Parse(json)!.AsObject();
+                    payload["progressToken"] = progressToken!.DeepClone();
+                    // A cancelled/disconnected MCP client cannot poison the native pipe.
+                    _ = request!.Server.SendNotificationAsync("notifications/progress", payload, cancellationToken: CancellationToken.None)
+                        .ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+                }
+                catch (Exception error)
+                { InvocationJournal.Write(InvocationJournal.CorrelationId, request!.Params!.Name, "PROGRESS_DELIVERY_FAILED", details: new JsonObject { ["exceptionType"] = error.GetType().Name }); }
+            };
+        }
         internal static void MarkSharedSessionUncertain() => SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
         internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession SharedStagingOwner => TiaMcp.LegacyHost.EngineHostConfiguration.StagingOwner();
         static partial void RecordBridgeEvent(string id, string name, string phase);

@@ -19,6 +19,7 @@ internal sealed class HostOptions
     public string? EngineWorkerExe { get; init; }
     public string? EngineCatalog { get; init; }
     public int EngineTimeoutSeconds { get; init; } = 120;
+    public string? WorkerTimeoutConfig { get; init; }
     public bool WithUi { get; init; }
     public string? TiaPortalLocation { get; init; }
     public string Profile { get; init; } = "lite";
@@ -29,7 +30,7 @@ internal sealed class HostOptions
         string bundleRoot = TiaOpenness.Shared.BundleLayout.RequireRoot(directory, explicitRoot);
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
         var flags = new HashSet<string>(StringComparer.Ordinal);
-        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--profile" };
+        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile" };
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui") { flags.Add(args[i]); continue; }
@@ -90,6 +91,7 @@ internal sealed class HostOptions
             EngineWorkerExe = engine ? Path.GetFullPath(Value("--engine-worker")) : null,
             EngineCatalog = engine ? Path.GetFullPath(Value("--engine-catalog")) : null,
             EngineTimeoutSeconds = timeout, WithUi = flags.Contains("--with-ui"),
+            WorkerTimeoutConfig = options.ContainsKey("--worker-timeout-config") ? File.ReadAllText(Path.GetFullPath(Value("--worker-timeout-config"))) : null,
             TiaPortalLocation = options.ContainsKey("--tia-portal-location") ? Value("--tia-portal-location") : null, Profile = profile,
             WorkerExe = Value("--worker-exe", Path.Combine(bundleRoot, "runtime", version.RuntimeDirectory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
             BundledWorker = !options.ContainsKey("--worker-exe"),

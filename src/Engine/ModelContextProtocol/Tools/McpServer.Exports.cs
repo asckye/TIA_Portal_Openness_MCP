@@ -178,15 +178,18 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>超阈值就寄存并只回头部；其余情况原样返回同一个对象。</summary>
-        internal static CallToolResult Shrink(CallToolResult? result, string toolName, string target)
+        internal static CallToolResult Shrink(CallToolResult? result, string toolName, string target, bool force = false)
         {
             if (result == null) return result!;
+            if (!force && result.StructuredContent is JsonObject structured && structured["data"] is JsonObject parkedData
+                && parkedData["export"] is JsonObject parkedExport && parkedExport["id"] != null && structured["meta"] is JsonObject parkedMeta && parkedMeta["paging"] != null)
+                return result;
 
             // 错误结果不动：它们本来就短，而且是模型自我纠正最需要看全的东西。
-            if (result.IsError ?? false) return result;
+            if (!force && (result.IsError ?? false)) return result;
 
             int limit = McpServer.ResolvedMaxResponseChars();
-            if (limit <= 0) return result;
+            if (limit <= 0) { if (!force) return result; limit = McpServer.DefaultMaxResponseChars; }
 
             // 只处理「恰好一个文本块」这一种形状。多块、图片、资源链接一律放行 ——
             // 看不懂的形状去改它，改坏的概率比省下来的上下文值钱。
@@ -197,7 +200,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string full = text.Text ?? "";
             // 反向哨兵：没超阈值就在这里原样返回**同一个对象引用**，
             // 未超阈值的响应因此一字不变（含 StructuredContent、Meta、块类型）。
-            if (full.Length <= limit) return result;
+            if (!force && full.Length <= limit) return result;
 
             // 原子：寄存 + 取头部在同一把锁里完成。分成两步的话，中间别的线程 Put 时
             // 的淘汰可能把我们刚存的挤掉，Slice 就拿到 Error != null、Text=""，

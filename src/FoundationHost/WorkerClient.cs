@@ -11,6 +11,10 @@ internal interface IFoundationWorker : IDisposable
 {
     Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken cancellationToken);
 }
+internal interface IFoundationWorkerResult
+{
+    ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name);
+}
 
 internal interface IFoundationSessionWorker : IFoundationWorker
 {

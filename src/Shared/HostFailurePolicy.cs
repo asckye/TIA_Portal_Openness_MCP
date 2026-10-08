@@ -34,6 +34,7 @@ namespace TiaOpenness.Shared
             string? reportedOutcome = null, int? reportedCode = null, string? reportedExceptionType = null, bool nativeRead = true)
         {
             error = Unwrap(error);
+            if (dispatched && error.Data["workerOutcomeUnknown"] is true) return HostFailureKind.Unknown;
             if (Precondition(error) is AdapterPreconditionException precondition)
                 return precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition;
             if (reportedCode == -32602 && (!dispatched || readOnly || reportedOutcome == "rejected-before-operation")) return HostFailureKind.Argument;

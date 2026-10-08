@@ -104,6 +104,8 @@ namespace TiaMcp.WorkerChannel
                     }
                     byte[] reply;
                     try { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, response, profile); }
+                    catch (ChannelLimitException) when (profile == ChannelProfile.Engine && response.Spill != null) /* swallow(native-fallback): persist the complete result before emitting a bounded spill descriptor */
+                    { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.Spill()), profile); }
                     catch (ChannelLimitException) when (profile == ChannelProfile.Engine && response.OversizedResultJson != null) /* swallow(native-fallback): use the bounded engine refusal before emitting any response bytes */
                     { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.OversizedResultJson), profile); }
                     Emit(reply);

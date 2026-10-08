@@ -204,6 +204,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 (string?)body["error"]?["code"] == "CANCELLED" ? "unknown" : (string?)body["meta"]?["outcome"] ?? "unknown");
         }
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
+        if (sharedSession && inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
         return result;
     }
 
@@ -355,7 +356,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             finally { request.Params = original; }
         }
         catch (OperationCanceledException) /* swallow(privacy): cancellation is represented by the stable V4 code, without exception text */
-        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error("Request cancelled before completion.", new CancelledDetails("host")))); }
+        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(sharedSession ? "Request cancelled before dispatch." : "Request cancelled before completion.", new CancelledDetails(sharedSession ? "tool-queue" : "host")))); }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
         { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)

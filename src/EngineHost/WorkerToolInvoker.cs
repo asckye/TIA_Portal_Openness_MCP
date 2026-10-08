@@ -118,6 +118,7 @@ namespace TiaMcp.LegacyHost
             {
                 if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name, HostBehavior.SessionReset()), false);
                 var token = McpServer.WorkerDispatchCancellation;
+                using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
                 using var lane = TiaMcpServer.Isolation.ToolDispatchLanes.Enter(tool.Name, token);
                 var reply = worker.Invoke(TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId,
                     tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token).GetAwaiter().GetResult();

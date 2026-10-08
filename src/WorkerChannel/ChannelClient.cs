@@ -18,6 +18,8 @@ namespace TiaMcp.WorkerChannel
         private Pending? pending;
         private long sequence, epoch;
         private bool verified, poisoned, unknown, disposed;
+        private Exception? lastFault;
+        public Exception? LastFault { get { lock (gate) return lastFault; } }
         public bool Poisoned { get { lock (gate) return poisoned; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
@@ -175,6 +177,7 @@ namespace TiaMcp.WorkerChannel
             lock (gate)
             {
                 poisoned = true;
+                lastFault ??= cause;
                 unknown |= pending?.Dispatched == true;
                 var fault = new ChannelFault(cause.Message, unknown, cause);
                 hello.TrySetException(fault);

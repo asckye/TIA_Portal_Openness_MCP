@@ -256,6 +256,7 @@ namespace TiaOpenness.Shared
         }
         internal string ReportsDirectory => At("reports", Path.Combine(temporaryDirectory, "TiaMcpReports"));
         internal string TempDirectory => Ensure(At("temp", temporaryDirectory));
+        internal string WorkerSpillsDirectory => Ensure(At("worker-spills", Path.Combine(localApplicationData, "TiaMcp", "worker-spills")));
 
         private string At(string folder, string fallback) => Root == null ? fallback : Path.Combine(Root, folder);
         private static string UserPath(string root, string relative, string code)

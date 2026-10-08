@@ -39,8 +39,8 @@ namespace TiaMcp.WorkerChannel
     {
         public const int RequestBytes = 1024 * 1024;
         public const int ResponseBytes = 16 * 1024 * 1024;
-        public static void CheckRequest(string method, string argumentsJson)
-            => ChannelCodec.Request(long.MaxValue, method, argumentsJson, long.MaxValue);
+        public static void CheckRequest(string method, string argumentsJson, string? correlationId = null)
+            => ChannelCodec.Request(long.MaxValue, method, argumentsJson, long.MaxValue, correlationId);
     }
 
     public sealed class ChannelBinding
@@ -90,9 +90,11 @@ namespace TiaMcp.WorkerChannel
         public string ResultJson { get; }
         public ChannelFailure? Failure { get; }
         public string? OversizedResultJson { get; }
+        public Func<string>? Spill { get; private set; }
         private ChannelResponse(string resultJson, ChannelFailure? failure, string? oversizedResultJson = null)
         { ResultJson = resultJson; Failure = failure; OversizedResultJson = oversizedResultJson; }
         public static ChannelResponse Success(string resultJson, string? oversizedResultJson = null) => new ChannelResponse(resultJson, null, oversizedResultJson);
+        public static ChannelResponse WithSpill(string resultJson, Func<string> spill) => new ChannelResponse(resultJson, null) { Spill = spill };
         public static ChannelResponse Error(ChannelFailure failure) => new ChannelResponse("null", failure);
     }
 }
