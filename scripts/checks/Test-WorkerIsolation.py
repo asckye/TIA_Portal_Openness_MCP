@@ -97,11 +97,15 @@ def main():
                 state = call('GetOpennessWorkerStatus')[1]['data']['evidence']['worker']
                 check(state['state'] == 'NotStarted' and state['workerPid'] is None, 'Diagnostics launched worker')
                 roster = rpc('tools/list', 'list')['result']['tools']
-                import xml.etree.ElementTree as ET
-                catalog = json.loads(ET.parse(Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx').find(".//data[@name='Catalog']/value").text)['releases'][str(args.major)]
-                expected_full = len(catalog)
-                expected_lite = sum('lite' in row['profiles'] for row in catalog)
-                check(len(roster) == (expected_full if profile == 'full' else expected_lite), 'Version-aware tool catalog drift')
+                # Isolation must not change the engine's own catalog. The product catalog (ToolProfiles) is the
+                # FoundationHost roster since P7-04, so compare with the same executable without isolation.
+                with resources.server(args.exe, args.public_api, args.major, transport, profile, args.host_harness, args.public_api,
+                                      env_overrides=isolated_environment()) as (direct_rpc, _, _):
+                    direct_rpc('initialize', 'direct-init', {'protocolVersion': '2024-11-05', 'capabilities': {},
+                                                             'clientInfo': {'name': 'isolation-catalog-test', 'version': '1'}})
+                    direct_rpc('notifications/initialized', notification=True)
+                    direct = direct_rpc('tools/list', 'direct-list')['result']['tools']
+                check(sorted(t['name'] for t in roster) == sorted(t['name'] for t in direct), 'Isolation changed the tool catalog')
                 if profile == 'full':
                     check({'GetPlcBlockEditCapabilities', 'AnalyzePlcReferences', 'PatchPlcBlockDocument', 'ImportPlcBlockVerified'} <= {t['name'] for t in roster}, 'PLC editing tools missing from runtime catalog')
                 check(rpc('resources/list', 'resources')['result'] == {'resources': []}, 'Resources changed')
@@ -121,7 +125,10 @@ def main():
                       and not payload['meta']['requiresSessionReset'], 'Recovery allowed unbound write')
                 check(payload['data']['evidence']['worker']['explicitBindingRequired']
                       and not payload['data']['evidence']['automaticReplay'], 'Recovery guard lost binding/replay evidence')
-                _, rebound = call('ConnectProject', {'processId': 7, 'processStartUtc': '2026-01-01T00:00:00Z', 'projectPath': 'C:\\fixture\\rebound.ap21'})
+                rebind = {'processId': 7, 'processStartUtc': '2026-01-01T00:00:00Z', 'projectPath': 'C:\\fixture\\rebound.ap21'}
+                # The lite roster follows the V19 tool set since P7-04; reach ConnectProject through the bridge there.
+                _, rebound = (call('ConnectProject', rebind) if 'ConnectProject' in {t['name'] for t in roster}
+                              else call('CallTool', {'name': 'ConnectProject', 'arguments': rebind}))
                 check(rebound['ok'] and not rebound['meta']['requiresSessionReset'], 'Explicit project rebind did not complete')
                 result, payload = call('GetSessionState')
                 check(not result.get('isError') and payload['ok'], 'Worker remained blocked after explicit rebind')
