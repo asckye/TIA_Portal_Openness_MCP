@@ -34,7 +34,8 @@ internal static class PilotToolChecks
         var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         string release = (string)facade.GetProperty("ReleaseKey", all)!.GetValue(null)!;
         var catalog = Program.FindServerType(server, "TiaOpenness.Shared.ToolUsageCatalog");
-        var entries = ((JsonArray)catalog.GetMethod("ProfileEntries", all)!.Invoke(null, new object[] { release, 4 })!)
+        // The engine serves its own source catalog (McpServer.RuntimeProfileEntries); reflection passes every optional argument.
+        var entries = ((JsonArray)catalog.GetMethod("ProfileEntries", all)!.Invoke(null, new object[] { release, 4, true })!)
             .Where(row => (int?)row!["envelopeVersion"] == 4).ToArray();
         check(entries.Length > 0, "Generated runtime data contains V4 entries");
         var usage = surface.Tool("GetToolUsage");
