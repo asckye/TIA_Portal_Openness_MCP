@@ -3,8 +3,11 @@
 ## Current state
 
 The latest published release is [v3.3.0](../releases/v3.3.0.md). The 4.0 source is
-unreleased. Phase 6 tasks P6-01 through P6-41 and P6-44 through P6-48 are merged;
-P6-42 release-candidate validation and P6-43 release documentation are in progress.
+unreleased. Phase 6 is merged apart from P6-42 release-candidate validation and P6-43
+release documentation; the P6-69/P6-70 fixes are merged and wait for their V18/V19
+real-machine retest. In phase 7 (V20/V21 on the Foundation host, see the
+[refactor plan](refactor-plan.md)) P7-01 to P7-06 and P7-10 are merged; next are the
+P7-07 V20/V21 real-machine acceptance, then P7-08 and P7-11.
 Current 4.0 real-machine acceptance is pending. Offline tests, SDK builds, schemas,
 and static call evidence do not establish native TIA behavior.
 

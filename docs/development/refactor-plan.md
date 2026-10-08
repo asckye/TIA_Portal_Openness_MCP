@@ -256,10 +256,10 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P7-01 | V21 纵向切片：引擎 `--engine-worker` 模式与 `--write-tool-catalog` 工具目录导出、WorkerChannel Engine 配置、Foundation 主机的引擎 worker 客户端与目录加载、按引擎顺序的最小主机流程 | P6-69 | T、V；切片工具记录与响应同基线逐字节一致 | done |
 | P7-02 | 引擎内部改为工具描述符接口（ToolDescriptor、IToolCatalogView、IToolInvoker），桥接、批处理、审批、用法与提示改用描述符；执行位置表（45 个主机、446 个 worker）；行为不变 | P6-69 | T、V；20/21 契约与响应零差异 | done |
 | P7-03 | 主机流程源码共享为 net10 库 `src/EngineHost`；Foundation 主机（显式开启）为 20/21 发布全部工具（完整与 lite），stdio 与 HTTP 契约和响应同引擎逐字节一致；worker 代次与显式重启；三方主机行为一致性 | P7-01、P7-02 | T、V；契约与响应零差异；本地工具延迟 | done |
-| P7-04 | 八版共有工具统一（维护者要求“与其他六个一样”）：V20/V21 发布并执行 Foundation 目录的工具（V19 的 67 个），与 V14 SP1–V19 同一份代码、同样参数与用法（连接 ConnectPortal → AttachOpenProject 等）；20/21 worker 中 Foundation 代码与引擎代码共用一个 MTA 负责线程和一个 TIA 连接（14sp1–19 仍为 STA）；lite 目录为 V19 的 67 个工具加 6 个桥接工具；引擎自带的同名或同功能版本在 20/21 上停用 | P7-03 | T、V；八版同名工具输入结构一致；两类主机一致性用例 | todo |
-| P7-04b | 在共享会话上恢复 P7-04 停用的 5 个生命周期工具（RetrieveProjectArchive、SaveProjectCopy、ManageMultiuserSession、BuildProjectScaffold、ConnectIsolatedPortal），名称与输入结构同原 V4 基线；worker 内统一的生命周期接口保证绑定、租约与锁定只有一份；ConnectProject 作为重复连接入口保持停用 | P7-04 | T、V；共享会话夹具；契约迁移比较 | todo |
-| P7-05 | worker 健壮性：超时策略（长操作按类放宽）、派发后取消、超大请求与响应（转入导出句柄）、进度转发、worker 崩溃/卡死/TIA 进程丢失后的代次失效与锁定、故障注入夹具 | P7-04 | T、V；故障注入夹具 | todo |
-| P7-06 | 打包与布局切换：20/21 默认以 Foundation 主机加 `worker/` 子目录中的引擎 worker 运行；发布工具、BundleLayout 与版本目录产品类型、Studio、更新器按清单校验、插件与清单；候选包经 Foundation 主机截取 20/21（stdio 与 HTTP） | P7-04 | T、V；包校验、重定位、冒烟、更新器升级 | todo |
+| P7-04 | 八版共有工具统一（维护者要求“与其他六个一样”）：V20/V21 发布并执行 Foundation 目录的工具（V19 的 67 个），与 V14 SP1–V19 同一份代码、同样参数与用法（连接 ConnectPortal → AttachOpenProject 等）；20/21 worker 中 Foundation 代码与引擎代码共用一个 MTA 负责线程和一个 TIA 连接（14sp1–19 仍为 STA）；lite 目录为 V19 的 67 个工具加 6 个桥接工具；引擎自带的同名或同功能版本在 20/21 上停用 | P7-03 | T、V；八版同名工具输入结构一致；两类主机一致性用例 | done |
+| P7-04b | 在共享会话上恢复 P7-04 停用的 5 个生命周期工具（RetrieveProjectArchive、SaveProjectCopy、ManageMultiuserSession、BuildProjectScaffold、ConnectIsolatedPortal），名称与输入结构同原 V4 基线；worker 内统一的生命周期接口保证绑定、租约与锁定只有一份；ConnectProject 作为重复连接入口保持停用 | P7-04 | T、V；共享会话夹具；契约迁移比较 | done |
+| P7-05 | worker 健壮性：超时策略（长操作按类放宽）、派发后取消、超大请求与响应（转入导出句柄）、进度转发、worker 崩溃/卡死/TIA 进程丢失后的代次失效与锁定、故障注入夹具 | P7-04 | T、V；故障注入夹具 | done |
+| P7-06 | 打包与布局切换：20/21 默认以 Foundation 主机加 `worker/` 子目录中的引擎 worker 运行；发布工具、BundleLayout 与版本目录产品类型、Studio、更新器按清单校验、插件与清单；候选包经 Foundation 主机截取 20/21（stdio 与 HTTP） | P7-04 | T、V；包校验、重定位、冒烟、更新器升级 | done |
 | P7-07 | V20/V21 真机验收：与 V14 SP1–V19 相同的验收流程，加上只在 V20/V21 存在的工具、worker 重启与重新绑定、进程丢失 | P7-04b、P7-05、P7-06 | L5：V20、V21 | todo |
 | P7-08 | 退役引擎主机层（stdio/HTTP/隔离入口与相关文件），引擎程序无参数时提示新用法；隔离时期的说明经评审更新基线 | P7-07 | T、V；CLI 与原生调用清单不变 | todo |
 | P7-10 | 仓库整理第一部分：源码根目录清单集中、失效检查与孤立脚本清理、已删除 PowerShell 脚本的引用、解决方案补齐、历史记录归档、Studio 服务文件拆分、第三方来源文件名统一 | — | V、仓库检查 | done |
