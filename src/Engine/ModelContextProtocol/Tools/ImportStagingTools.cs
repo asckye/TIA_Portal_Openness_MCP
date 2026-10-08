@@ -33,12 +33,19 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static IDisposable? UseSession(RequestContext<CallToolRequestParams> request)
         {
             if (!HttpTransport || CurrentSession.Value != null) return null;
+            ImportStagingSession? session = null;
+#if TIA_ENGINE_HOST
+            // The SDK owns the HTTP session; the staging owner records that id as its MCP session id.
+            string? mcpSessionId = request.Server.SessionId;
+            if (mcpSessionId != null)
+                foreach (var candidate in HttpSessions.Values)
+                    if (candidate.McpSessionId == mcpSessionId) { session = candidate; break; }
+#else
             var meta = JsonSerializer.SerializeToNode(request.Params?.Meta, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
             string? token = (string?)meta?[SessionMetadata];
-#if TIA_ENGINE_HOST
-            token = request.Server.SessionId;
+            if (token != null) HttpSessions.TryGetValue(token, out session);
 #endif
-            if (token == null || !HttpSessions.TryGetValue(token, out var session)) throw new InvalidOperationException("The HTTP MCP session is unavailable; initialize a new session.");
+            if (session == null) throw new InvalidOperationException("The HTTP MCP session is unavailable; initialize a new session.");
             return new SessionScope(session);
         }
         private sealed class SessionScope : IDisposable
