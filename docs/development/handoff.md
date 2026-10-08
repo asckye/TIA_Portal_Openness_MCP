@@ -6,8 +6,10 @@ The latest published release is [v3.3.0](../releases/v3.3.0.md). The 4.0 source 
 unreleased. Phase 6 is merged apart from P6-42 release-candidate validation and P6-43
 release documentation; the P6-69/P6-70 fixes are merged and wait for their V18/V19
 real-machine retest. In phase 7 (V20/V21 on the Foundation host, see the
-[refactor plan](refactor-plan.md)) P7-01 to P7-06 and P7-10 are merged; next are the
-P7-07 V20/V21 real-machine acceptance, then P7-08 and P7-11.
+[refactor plan](refactor-plan.md)) P7-01 to P7-06, P7-07a (V20 findings 37–42) and P7-10 are
+merged; next are P7-11a (renames), the rest of the P7-07 V20/V21 real-machine acceptance, then P7-08 and P7-11b.
+Phase 8 (the former post-4.0 work) runs in parallel: the [port plan](phase8-port-plan.md) and the
+[Python plan](phase8-python-plan.md) are done; code tasks start after P7-11a.
 Current 4.0 real-machine acceptance is pending. Offline tests, SDK builds, schemas,
 and static call evidence do not establish native TIA behavior.
 
