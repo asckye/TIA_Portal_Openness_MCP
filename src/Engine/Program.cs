@@ -50,6 +50,7 @@ namespace TiaMcpServer
             });
         }
 
+        [MTAThread]
         public static async Task Main(string[] args)
         {
             Console.OutputEncoding = new UTF8Encoding(false);
@@ -121,7 +122,13 @@ namespace TiaMcpServer
                     Environment.ExitCode = 64;
                     return;
                 }
-                if (!options.IsolateOpennessExplicit && !options.OpennessWorkerChild)
+                if (options.ToolCatalogOutput != null)
+                {
+                    AppDomain.CurrentDomain.AssemblyResolve += Engineering.Resolver;
+                    Cli.ToolCatalogExport.Write(options.ToolCatalogOutput);
+                    return;
+                }
+                if (!options.IsolateOpennessExplicit && !options.OpennessWorkerChild && !options.EngineWorker)
                     options.IsolateOpenness = WorkerIsolationEnabledByDefault();
 
                 // Default logging to stderr (mode 1) when the user doesn't pass --logging,
@@ -190,7 +197,7 @@ namespace TiaMcpServer
                 // stdio is inherited, so MCP hosts and CLI callers are unaffected.
                 if (versionSupported && tiaVersionReliable && tiaMajorVersion != EngineRouter.CompiledTiaMajorVersion)
                 {
-                    if (EngineRouter.TryRedirect(tiaMajorVersion, args, LogDiag, out int routedExit))
+                    if (!options.EngineWorker && EngineRouter.TryRedirect(tiaMajorVersion, args, LogDiag, out int routedExit))
                     {
                         Environment.Exit(routedExit);
                         return;
@@ -477,6 +484,11 @@ namespace TiaMcpServer
                     }
                 }
                 else if (!OpennessReadiness.Ready) LogDiag("TIA environment not ready: " + OpennessReadiness.Guidance(false));
+                if (options.EngineWorker)
+                {
+                    Worker.EngineWorkerHost.Run();
+                    return;
+                }
                 if (opennessUserOk)
                 {
                     if (options.RunFlowLightTest)

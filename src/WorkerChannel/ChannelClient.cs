@@ -57,8 +57,9 @@ namespace TiaMcp.WorkerChannel
                 if (!verified) throw Poison(new IOException("Worker hello has not been verified."));
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
                 if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
-                    ? "Worker method must use adapter.<operation>." : "Invalid Studio method.");
+                    ? "Worker method must use adapter.<operation>." : profile == ChannelProfile.Engine ? "Worker method must use engine.<operation>." : "Invalid Studio method.");
                 try { bytes = ChannelCodec.Request(checked(sequence + 1), method, argumentsJson, epoch); }
+                catch (ChannelLimitException) when (profile == ChannelProfile.Engine) { throw; }
                 catch (Exception ex) { throw Poison(ex); }
                 // Cancellation here is still an unsent call. No id or epoch is consumed.
                 token.ThrowIfCancellationRequested();
@@ -79,7 +80,7 @@ namespace TiaMcp.WorkerChannel
                 return response.ResultJson;
             }
             catch (ChannelFailure ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
-            catch (ChannelFailure) { throw; } // Only Foundation treats an Unknown reply as terminal.
+            catch (ChannelFailure) { throw; } // Foundation and Engine treat a channel-level Unknown reply as terminal.
             catch (Exception ex) { throw Poison(ex); }
             finally { lock (gate) if (ReferenceEquals(pending, call)) pending = null; }
         }
@@ -120,7 +121,7 @@ namespace TiaMcp.WorkerChannel
                                 ChannelCodec.Fields(root, "jsonrpc", "method", "params");
                                 if (ChannelCodec.Text(root, "method") != "progress") throw new IOException("Duplicate or late worker hello/notification.");
                                 var progress = root.GetProperty("params");
-                                ChannelCodec.Fields(progress, profile == ChannelProfile.Studio ? new[] { "requestId", "sequence", "percent", "payload" } : new[] { "requestId", "sequence", "percent" });
+                                ChannelCodec.Fields(progress, profile != ChannelProfile.Foundation ? new[] { "requestId", "sequence", "percent", "payload" } : new[] { "requestId", "sequence", "percent" });
                                 if (pending == null || pending.Replied || ChannelCodec.Number(progress, "requestId") != pending.Id ||
                                     ChannelCodec.Number(progress, "sequence") != pending.Progress + 1 ||
                                     ChannelCodec.Number(progress, "percent") > 100 || ++pending.Progress > ChannelCodec.ProgressLimit)
@@ -147,7 +148,7 @@ namespace TiaMcp.WorkerChannel
                                 pending.Replied = true;
                                 epoch = after;
                                 pending.Completion.TrySetResult(response);
-                                if (profile == ChannelProfile.Foundation && response.Failure?.Outcome == ChannelOutcome.Unknown)
+                                if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown)
                                 {
                                     Poison(new IOException("Worker reported an unknown native outcome."));
                                     return;

@@ -19,6 +19,10 @@
     <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpEngineWorkerSdkFixture)' == 'true'">
+      <_Parameter1>TiaMcpEngineWorkerSdkFixture</_Parameter1>
+      <_Parameter2>true</_Parameter2>
+    </AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>TiaMcpWorkerIsolationDefault</_Parameter1>
       <_Parameter2>$(TiaMcpWorkerIsolationDefault)</_Parameter2>
@@ -52,6 +56,7 @@
   <ItemGroup>
     <ProjectReference Include="../Adapters/V21/Adapter.21.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" AdditionalProperties="SiemensEngineeringDirectory=$(SiemensEngineeringDirectory)" />
     <ProjectReference Include="../Runtime/TiaMcp.Runtime.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+    <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <ItemGroup>

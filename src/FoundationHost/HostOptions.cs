@@ -16,6 +16,12 @@ internal sealed class HostOptions
     public string Transport { get; init; } = "stdio";
     public string HttpPrefix { get; init; } = "http://127.0.0.1:8735/";
     public string ApiKey { get; init; } = "";
+    public string? EngineWorkerExe { get; init; }
+    public string? EngineCatalog { get; init; }
+    public int EngineTimeoutSeconds { get; init; } = 120;
+    public bool WithUi { get; init; }
+    public string? TiaPortalLocation { get; init; }
+    public string Profile { get; init; } = "lite";
 
     public static HostOptions Parse(string[] args, string directory)
     {
@@ -23,10 +29,10 @@ internal sealed class HostOptions
         string bundleRoot = TiaOpenness.Shared.BundleLayout.RequireRoot(directory, explicitRoot);
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
         var flags = new HashSet<string>(StringComparer.Ordinal);
-        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging" };
+        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--profile" };
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] is "--native-session" or "--offline" or "--catalog") { flags.Add(args[i]); continue; }
+            if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui") { flags.Add(args[i]); continue; }
             var name = args[i];
             if (!valued.Contains(name) || i + 1 == args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal))
                 throw new ArgumentException("Unknown or incomplete option: " + name);
@@ -44,6 +50,14 @@ internal sealed class HostOptions
         if (options.ContainsKey("--release-key") && options.ContainsKey("--tia-major-version"))
             TiaVersionCatalog.RequireMatchingEngine(release, Value("--tia-major-version"));
         var version = TiaVersionCatalog.RequireRunnable(release);
+        bool engine = options.ContainsKey("--engine-worker");
+        if (engine != options.ContainsKey("--engine-catalog") || engine && release != "21")
+            throw new ArgumentException("The engine slice requires release 21 and both --engine-worker and --engine-catalog.");
+        int timeout = 120;
+        if (options.ContainsKey("--worker-timeout-seconds") && (!int.TryParse(Value("--worker-timeout-seconds"), out timeout) || timeout <= 0))
+            throw new ArgumentException("--worker-timeout-seconds must be positive.");
+        string profile = Value("--profile", Environment.GetEnvironmentVariable("TIA_MCP_PROFILE") ?? "lite").Trim().ToLowerInvariant();
+        profile = profile is "full" or "all" ? "full" : "lite";
         var transport = Value("--transport", "stdio");
         if (transport is not ("stdio" or "http")) throw new ArgumentException("Use stdio or http transport.");
         var prefix = Value("--http-prefix", "http://127.0.0.1:8735/");
@@ -73,6 +87,10 @@ internal sealed class HostOptions
         }
         return new HostOptions {
             BundleRoot = bundleRoot, ReleaseKey = release,
+            EngineWorkerExe = engine ? Path.GetFullPath(Value("--engine-worker")) : null,
+            EngineCatalog = engine ? Path.GetFullPath(Value("--engine-catalog")) : null,
+            EngineTimeoutSeconds = timeout, WithUi = flags.Contains("--with-ui"),
+            TiaPortalLocation = options.ContainsKey("--tia-portal-location") ? Value("--tia-portal-location") : null, Profile = profile,
             WorkerExe = Value("--worker-exe", Path.Combine(bundleRoot, "runtime", version.RuntimeDirectory, "worker", "TiaMcp.PlcWorker." + release + ".exe")),
             BundledWorker = !options.ContainsKey("--worker-exe"),
             ApiDirectory = api, ApiDirectorySource = apiSource, NativeEnabled = !flags.Contains("--offline"), CatalogOnly = flags.Contains("--catalog"), Transport = transport, HttpPrefix = prefix, ApiKey = key

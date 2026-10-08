@@ -144,7 +144,7 @@
   },
   "worker-channel": {
     "project": "tests/Engine/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj",
-    "minimumPassed": 253,
+    "minimumPassed": 271,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -164,7 +164,7 @@
   },
   "fallback-vci-modern": {
     "project": "tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj",
-    "minimumPassed": 13,
+    "minimumPassed": 17,
     "maximumSkipped": 0,
     "arguments": [
       "-p:TestVciFamily=modern"
@@ -190,14 +190,27 @@
     "project": "tests/Engine/TiaMcpServer.PlcExchangeTests/TiaMcpServer.PlcExchangeTests.csproj",
     "minimumPassed": 84,
     "maximumSkipped": 0,
-    "arguments": ["-p:EngineRelease=21"],
+    "arguments": [
+      "-p:EngineRelease=21"
+    ],
     "publicApiRoot": true
   },
   "plc-exchange-v20": {
     "project": "tests/Engine/TiaMcpServer.PlcExchangeTests/TiaMcpServer.PlcExchangeTests.csproj",
     "minimumPassed": 84,
     "maximumSkipped": 0,
-    "arguments": ["-p:EngineRelease=20"],
+    "arguments": [
+      "-p:EngineRelease=20"
+    ],
     "publicApiRoot": true
+  },
+  "engine-host": {
+    "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
+    "minimumPassed": 13,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~EngineSliceTests"
+    ]
   }
 }

@@ -27,4 +27,13 @@
     <Compile Include="../Engine/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs" Link="EngineLocal/XmlBuilderTools.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="EngineLocal/XmlBuildResults.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="EngineLocal/ImportOrderTools.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" Link="EngineLocal/McpServer.Exports.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/ToolExamples.cs" Link="EngineLocal/ToolExamples.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/Responses.cs" Link="EngineLocal/Responses.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/Types.cs" Link="EngineLocal/Types.cs" />
+  </ItemGroup>
 </Project>

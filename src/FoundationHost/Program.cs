@@ -28,6 +28,8 @@ TiaOpenness.Shared.DataLocations.PruneLogsAtStartup();
 var fileLogger = new HostFileLogger(options.ReleaseKey);
 fileLogger.Write("TiaMcpServer.log", DateTimeOffset.UtcNow.ToString("O") + " release=" + options.ReleaseKey);
 
+if (options.EngineWorkerExe != null) return await EngineHost.Run(options, fileLogger);
+
 if (options.CatalogOnly)
 {
     using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false) { Bundled = options.BundledWorker };

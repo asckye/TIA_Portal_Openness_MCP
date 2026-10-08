@@ -80,7 +80,7 @@ namespace TiaMcp.WorkerChannel
                             RequireUsable();
                             if (!active || lastId != id || owner != Thread.CurrentThread.ManagedThreadId || percent < 0 || percent > 100 || ++progress > ChannelCodec.ProgressLimit)
                                 throw new IOException("Late, invalid or cross-thread worker progress.");
-                            if (payload != null && profile != ChannelProfile.Studio) throw new IOException("Unexpected worker progress payload.");
+                            if (payload != null && profile == ChannelProfile.Foundation) throw new IOException("Unexpected worker progress payload.");
                             Emit(ChannelCodec.Progress(id, progress, percent, payload));
                         }
                         catch (Exception ex) { throw Fault(ex); }
@@ -92,8 +92,18 @@ namespace TiaMcp.WorkerChannel
                     RequireUsable();
                     var after = observe();
                     RequireUsable();
-                    Emit(ChannelCodec.Reply(id, before.Epoch, after.Epoch, response, profile));
-                    if (profile == ChannelProfile.Foundation && response.Failure?.Outcome == ChannelOutcome.Unknown) throw new IOException("Worker native outcome is unknown; session stopped.");
+                    if (profile == ChannelProfile.Engine)
+                    {
+                        bool unchanged = method == "engine.status" || args.TryGetProperty("preview", out var preview) && preview.ValueKind == System.Text.Json.JsonValueKind.True;
+                        if (after.Epoch != before.Epoch && (unchanged || after.Epoch != checked(before.Epoch + 1)))
+                            throw new IOException("Unexpected engine binding epoch change.");
+                    }
+                    byte[] reply;
+                    try { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, response, profile); }
+                    catch (ChannelLimitException) when (profile == ChannelProfile.Engine && response.OversizedResultJson != null) /* swallow(native-fallback): use the bounded engine refusal before emitting any response bytes */
+                    { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.OversizedResultJson), profile); }
+                    Emit(reply);
+                    if (profile != ChannelProfile.Studio && response.Failure?.Outcome == ChannelOutcome.Unknown) throw new IOException("Worker native outcome is unknown; session stopped.");
                 }
             }
             catch (Exception ex) { throw Fault(ex); }

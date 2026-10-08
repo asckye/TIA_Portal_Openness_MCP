@@ -15,6 +15,7 @@ namespace TiaMcp.WorkerChannel
 
         internal static bool ValidMethod(string method, ChannelProfile profile) =>
             profile == ChannelProfile.Studio ? !string.IsNullOrWhiteSpace(method) :
+            profile == ChannelProfile.Engine ? method.StartsWith("engine.", StringComparison.Ordinal) && method.Length > 7 :
             method.StartsWith("adapter.", StringComparison.Ordinal) && method.Length > 8;
 
         internal static JsonDocument Parse(byte[] bytes, int limit)
@@ -53,14 +54,14 @@ namespace TiaMcp.WorkerChannel
                 {
                     writer.WriteStartObject(); writer.WriteString("jsonrpc", "2.0"); body(writer); writer.WriteEndObject();
                 }
-                if (stream.Length > limit) throw new IOException("Worker frame exceeds its byte limit.");
+                if (stream.Length > limit) throw new ChannelLimitException();
                 stream.WriteByte(10);
                 return stream.ToArray();
             }
         }
         internal static void Raw(Utf8JsonWriter writer, string name, string json, int limit)
         {
-            if (Encoding.UTF8.GetByteCount(json) > limit) throw new IOException("Worker payload exceeds its byte limit.");
+            if (Encoding.UTF8.GetByteCount(json) > limit) throw new ChannelLimitException();
             writer.WritePropertyName(name); writer.WriteRawValue(json);
         }
         internal static byte[] Hello(ChannelIdentity identity, ChannelBinding binding) => Encode(w =>

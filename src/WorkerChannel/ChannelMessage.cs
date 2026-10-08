@@ -28,7 +28,20 @@ namespace TiaMcp.WorkerChannel
 
     public enum ChannelOutcome { RejectedBeforeNative, ReadFailed, Unknown }
     public enum BindingChange { None, Advance, MayAdvance }
-    public enum ChannelProfile { Foundation, Studio }
+    public enum ChannelProfile { Foundation, Studio, Engine }
+
+    public sealed class ChannelLimitException : IOException
+    {
+        public ChannelLimitException() : base("Worker frame exceeds its byte limit.") { }
+    }
+
+    public static class ChannelLimits
+    {
+        public const int RequestBytes = 1024 * 1024;
+        public const int ResponseBytes = 16 * 1024 * 1024;
+        public static void CheckRequest(string method, string argumentsJson)
+            => ChannelCodec.Request(long.MaxValue, method, argumentsJson, long.MaxValue);
+    }
 
     public sealed class ChannelBinding
     {
@@ -75,8 +88,10 @@ namespace TiaMcp.WorkerChannel
     {
         public string ResultJson { get; }
         public ChannelFailure? Failure { get; }
-        private ChannelResponse(string resultJson, ChannelFailure? failure) { ResultJson = resultJson; Failure = failure; }
-        public static ChannelResponse Success(string resultJson) => new ChannelResponse(resultJson, null);
+        public string? OversizedResultJson { get; }
+        private ChannelResponse(string resultJson, ChannelFailure? failure, string? oversizedResultJson = null)
+        { ResultJson = resultJson; Failure = failure; OversizedResultJson = oversizedResultJson; }
+        public static ChannelResponse Success(string resultJson, string? oversizedResultJson = null) => new ChannelResponse(resultJson, null, oversizedResultJson);
         public static ChannelResponse Error(ChannelFailure failure) => new ChannelResponse("null", failure);
     }
 }

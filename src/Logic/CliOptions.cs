@@ -14,6 +14,8 @@ namespace TiaMcpServer
         public bool IsolateOpenness { get; set; }
         internal bool IsolateOpennessExplicit { get; private set; }
         public int WorkerTimeoutSeconds { get; set; } = 120;
+        public bool EngineWorker { get; set; }
+        public string? ToolCatalogOutput { get; set; }
         internal bool OpennessWorkerChild { get; set; }
         internal int WorkerParentPid { get; set; }
         internal long WorkerParentStart { get; set; }
@@ -808,6 +810,16 @@ namespace TiaMcpServer
                         options.PortalWithUserInterface = true;
                         break;
 
+                    case "--engine-worker":
+                        options.EngineWorker = true;
+                        break;
+
+                    case "--write-tool-catalog":
+                        if (++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--", System.StringComparison.Ordinal))
+                            throw new System.ArgumentException("--write-tool-catalog requires a file path.");
+                        options.ToolCatalogOutput = args[i];
+                        break;
+
                     case "--transport":
                         if (i + 1 < args.Length)
                         {
@@ -834,6 +846,8 @@ namespace TiaMcpServer
                 }
             }
             if (options.IsolateOpenness && options.OpennessWorkerChild) throw new System.ArgumentException("A worker cannot supervise another worker.");
+            if (options.EngineWorker && (options.IsolateOpenness || options.OpennessWorkerChild || options.ToolCatalogOutput != null))
+                throw new System.ArgumentException("Engine worker mode cannot be combined with another worker mode or catalog export.");
             return options;
         }
     }

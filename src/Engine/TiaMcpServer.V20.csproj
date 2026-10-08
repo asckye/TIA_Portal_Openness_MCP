@@ -52,6 +52,7 @@
   <ItemGroup>
     <ProjectReference Include="../Adapters/V20/Adapter.20.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" AdditionalProperties="SiemensEngineeringDirectory=$(SiemensEngineeringDirectory)" />
     <ProjectReference Include="../Runtime/TiaMcp.Runtime.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+    <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <ItemGroup>
