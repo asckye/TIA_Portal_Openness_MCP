@@ -3795,7 +3795,6 @@
           "AttachOpenProject",
           "ConnectIsolatedPortal",
           "ConnectPortal",
-          "ConnectProject",
           "OpenProject"
         ]
       },
@@ -3819,7 +3818,8 @@
           "GenerateBlocksFromExternalSource",
           "ImportPlcExternalSource",
           "ListPlcExternalSources",
-          "ManagePlcExternalSources"
+          "ManagePlcExternalSources",
+          "PlanPlcExternalSourceImport"
         ]
       },
       {
@@ -3900,7 +3900,6 @@
           "AttachOpenProject",
           "ConnectIsolatedPortal",
           "ConnectPortal",
-          "ConnectProject",
           "OpenProject"
         ]
       },
@@ -3924,7 +3923,8 @@
           "GenerateBlocksFromExternalSource",
           "ImportPlcExternalSource",
           "ListPlcExternalSources",
-          "ManagePlcExternalSources"
+          "ManagePlcExternalSources",
+          "PlanPlcExternalSourceImport"
         ]
       },
       {

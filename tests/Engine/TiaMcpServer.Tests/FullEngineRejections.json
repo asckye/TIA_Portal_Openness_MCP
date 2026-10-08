@@ -3795,7 +3795,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute ZIP containing the native chart XML (e.g. Charts.xml.zip); exportInstructionData writes a plain file. New output or existing import file."
           },
           "modelVersion": {
             "type": "string",
@@ -3869,7 +3870,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute cam data file. Text/point-list actions use the selected format and separator (e.g. Cam_1.txt); binary actions use the native binary format. New output or existing import file."
           },
           "format": {
             "type": "string",
@@ -3993,7 +3995,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute XLSX file for native ProDiag supervision exchange; new output or existing import file."
           },
           "importOptions": {
             "type": "string",
@@ -4222,7 +4225,7 @@
           "exportPath": {
             "type": "string",
             "default": null,
-            "description": "exportPath: full file path for the export, e.g. 'C:\\Temp\\AlarmClasses.xml'"
+            "description": "exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat'"
           }
         },
         "arguments": {
@@ -4824,7 +4827,8 @@
         "parameters": {
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: new absolute XLSX file in an existing directory."
           },
           "sourceCulture": {
             "type": "string",
@@ -4860,7 +4864,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: new absolute PDF for MicrosoftPrintToPdf, or XPS/OXPS for MicrosoftXpsDocumentWriter, in an existing directory."
           },
           "printer": {
             "type": "string",
@@ -5384,7 +5389,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: new absolute native source file in an existing directory, e.g. FC_Ready.scl; the selected blocks determine the source language."
           },
           "dryRun": {
             "type": "bool",
@@ -8116,7 +8122,7 @@
           "importPath": {
             "type": "string",
             "default": null,
-            "description": "importPath: full file path to import from"
+            "description": "importPath: existing absolute DAT file written by ExportAlarmClasses"
           }
         },
         "arguments": {
@@ -8152,7 +8158,8 @@
         "parameters": {
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: existing absolute AutomationML (.aml) file."
           },
           "logFilePath": {
             "type": "string",
@@ -8492,7 +8499,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts."
           },
           "cultures": {
             "type": "string[]",
@@ -9040,7 +9048,8 @@
         "parameters": {
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: existing absolute XLSX file exported by ExportProjectTexts."
           },
           "updateSourceLanguage": {
             "type": "bool",
@@ -22998,7 +23007,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute ZIP containing the native chart XML (e.g. Charts.xml.zip); exportInstructionData writes a plain file. New output or existing import file."
           },
           "modelVersion": {
             "type": "string",
@@ -23072,7 +23082,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute cam data file. Text/point-list actions use the selected format and separator (e.g. Cam_1.txt); binary actions use the native binary format. New output or existing import file."
           },
           "format": {
             "type": "string",
@@ -23196,7 +23207,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute XLSX file for native ProDiag supervision exchange; new output or existing import file."
           },
           "importOptions": {
             "type": "string",
@@ -23425,7 +23437,7 @@
           "exportPath": {
             "type": "string",
             "default": null,
-            "description": "exportPath: full file path for the export, e.g. 'C:\\Temp\\AlarmClasses.xml'"
+            "description": "exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat'"
           }
         },
         "arguments": {
@@ -24027,7 +24039,8 @@
         "parameters": {
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: new absolute XLSX file in an existing directory."
           },
           "sourceCulture": {
             "type": "string",
@@ -24063,7 +24076,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: new absolute PDF for MicrosoftPrintToPdf, or XPS/OXPS for MicrosoftXpsDocumentWriter, in an existing directory."
           },
           "printer": {
             "type": "string",
@@ -24587,7 +24601,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: new absolute native source file in an existing directory, e.g. FC_Ready.scl; the selected blocks determine the source language."
           },
           "dryRun": {
             "type": "bool",
@@ -27319,7 +27334,7 @@
           "importPath": {
             "type": "string",
             "default": null,
-            "description": "importPath: full file path to import from"
+            "description": "importPath: existing absolute DAT file written by ExportAlarmClasses"
           }
         },
         "arguments": {
@@ -27355,7 +27370,8 @@
         "parameters": {
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: existing absolute AutomationML (.aml) file."
           },
           "logFilePath": {
             "type": "string",
@@ -27695,7 +27711,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts."
           },
           "cultures": {
             "type": "string[]",
@@ -28243,7 +28260,8 @@
         "parameters": {
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: existing absolute XLSX file exported by ExportProjectTexts."
           },
           "updateSourceLanguage": {
             "type": "bool",
@@ -34330,7 +34348,8 @@
           },
           "filePath": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "filePath: absolute YML (.yml) layout file; new output or existing import file."
           },
           "dryRun": {
             "type": "bool",

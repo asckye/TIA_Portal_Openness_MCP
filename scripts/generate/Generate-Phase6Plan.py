@@ -1094,16 +1094,19 @@ def main():
     # Refresh derived package counts only; retain all build/source hash evidence.
     package_path = root / 'manifest/package-manifest.json'
     package = json.loads(package_path.read_text(encoding='utf-8-sig'))
+    recorded = json.loads(json.dumps(package))
     roster = json.loads(read('manifest/tools-list.json'))
     assert {t['name'] for t in roster['tools']} == registered_rosters['21'], 'Regenerate tools-list before package counts'
-    package['entrypoints']['mcpServerExe'] = 'runtime/v21/TiaMcp.Engine.V21.exe'
+    # Since P7-06 every release starts the Foundation host; the V20/V21 engine is the worker and the CLI.
+    package['entrypoints']['mcpServerExe'] = 'runtime/v21/TiaMcp.FoundationHost.exe'
     package['entrypoints']['configurator'] = 'TiaOpenness.exe'
-    package['cli']['exe'] = 'runtime/v21/TiaMcp.Engine.V21.exe'
-    package['cli']['description'] = 'Call runtime/v21/TiaMcp.Engine.V21.exe or runtime/v20/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.'
+    package['cli']['exe'] = 'runtime/v21/worker/TiaMcp.Engine.V21.exe'
+    package['cli']['description'] = 'Call runtime/v21/worker/TiaMcp.Engine.V21.exe or runtime/v20/worker/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.'
     package['capabilities']['mcpToolCount'] = len(roster['tools'])
     package['capabilities']['mcpToolLayers'] = dict(collections.Counter(t['layer'] for t in roster['tools']))
     package['capabilities']['liteProfile']['toolCount'] = len(lite_proposal['releases']['21'])
-    outputs[package_path] = json.dumps(package, ensure_ascii=False, indent=2) + '\n'
+    # The release tool owns this file's formatting; rewrite it only when a derived value changed.
+    if package != recorded: outputs[package_path] = json.dumps(package, ensure_ascii=False, indent=2) + '\n'
     matrix_path = root / 'reference/version-feature-matrix.json'
     matrix = json.loads(read('reference/version-feature-matrix.json'))
     matrix['behaviorCapabilities'] = behavior_capabilities
