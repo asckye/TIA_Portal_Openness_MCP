@@ -75,7 +75,7 @@
   },
   "foundation": {
     "project": "tests/Engine/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 6848,
+    "minimumPassed": 8789,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
