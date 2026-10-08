@@ -41,8 +41,8 @@ assert 'PlcSupplementaryReadPolicy.TechnologyMetadata(Native.Name(item)' in nati
 for forbidden in ['GetAttributeInfos', 'GetAttribute(', 'SetAttribute(', 'IEngineeringObject', 'Native.Attribute(', 'Native.SetAttribute(']:
  assert forbidden not in native, f'Technology metadata must use typed getters only: {forbidden}'
 assert not re.search(r'item\.OfSystemLib(?:Element|Version)\s*=(?!=)',native), 'No metadata setter permitted'
-worker=(src/'Worker/Program.cs').read_text(encoding='utf-8-sig')
-# The read-only dispatch list lives in WorkerOperations.IsReadOnly; the worker loop must use it.
+worker=(src/'Worker/FoundationWorkerDispatcher.cs').read_text(encoding='utf-8-sig')
+# The read-only dispatch list lives in WorkerOperations.IsReadOnly; the shared worker dispatcher must use it.
 assert 'WorkerOperations.IsReadOnly(name)' in worker
 readonly_list=re.search(r'IsReadOnly\(string name\)\s*=>(.*?);',(src/'Worker/WorkerOperations.cs').read_text(encoding='utf-8-sig'),re.S).group(1)
 for name in ['ReadWatchTableNames','ReadTechnologyObjects','ReadState','ReadPortalProcessProjects','ReadPortalConnectReadiness']:

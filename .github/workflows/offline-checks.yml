@@ -125,4 +125,4 @@ jobs:
             printf '%s' "$key" > "$target/release-key.txt"
           done
       - name: Six real STDIO hosts and isolated HTTP sessions
-        run: python scripts/checks/Test-FoundationTransport.py --fixture tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --output bin-build/ci-foundation-results
+        run: python scripts/checks/Test-FoundationTransport.py --fixture tests/Engine/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results
