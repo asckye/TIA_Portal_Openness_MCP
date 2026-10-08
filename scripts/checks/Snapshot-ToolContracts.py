@@ -487,6 +487,13 @@ def compare_migration(args):
         described = [name for name in changed_other if name not in guidance
                      and unhashed(phase6_groups.renamed(a[name], subs)) == unhashed(b[name])]
         problems += [name + ': unmigrated contract changed' for name in changed_other if name not in guidance + described]
+        if args.migration == 'P7-04b-followup':
+            problems += [name + ': untouched record changed' for name in changed_other]
+            if {k: v for k, v in old.items() if k != 'tools'} != {k: v for k, v in new.items() if k != 'tools'}:
+                problems.append('snapshot metadata must stay unchanged')
+            if release in ('20', '21'):
+                try: _p7_04b_description_checks(a, b)
+                except ValueError as error: problems.append(str(error))
         if args.migration == 'P7-04b':
             problems += [name + ': untouched record changed' for name in changed_other]
             for field in ('profile', 'liteTools'):
@@ -520,6 +527,25 @@ def compare_migration(args):
             print('  unexpected: ' + problem)
         failures += len(problems)
     return int(failures != 0)
+
+
+def _p7_04b_description_checks(old, new):
+    """Only the six parameters' fallback descriptions may become explicit annotations."""
+    import copy
+    from phase6_groups import P7_04B_DESCRIPTIONS
+    for name, parameters in P7_04B_DESCRIPTIONS.items():
+        if name not in old or name not in new:
+            raise ValueError(name + ': missing restored tool')
+        original = copy.deepcopy(old[name])
+        annotated = copy.deepcopy(new[name])
+        for parameter in parameters:
+            before = original['inputSchema']['properties'][parameter]
+            after = annotated['inputSchema']['properties'][parameter]
+            description = after.pop('description', None)
+            if not isinstance(description, str) or not description.strip() or description == before.pop('description', None):
+                raise ValueError(name + '.' + parameter + ': expected an updated nonempty description')
+        if annotated != original:
+            raise ValueError(name + ': changes beyond the six parameter descriptions')
 
 
 def _p6_07_checks(b):
@@ -822,6 +848,24 @@ def self_test(args):
     try: validate_contract_snapshot(invalid, 'negative.json')
     except ValueError: count += 1
     else: raise AssertionError('Missing contract field accepted: outputSchema')
+    from phase6_groups import P7_04B_DESCRIPTIONS
+    after = {t['name']: copy.deepcopy(t) for t in snapshot['tools'] if t['name'] in P7_04B_DESCRIPTIONS}
+    before = copy.deepcopy(after)
+    for name, parameters in P7_04B_DESCRIPTIONS.items():
+        for parameter in parameters:
+            before[name]['inputSchema']['properties'][parameter]['description'] = 'Fallback parameter description.'
+            after[name]['inputSchema']['properties'][parameter]['description'] = 'Parameter description.'
+    _p7_04b_description_checks(before, after)
+    for change in ('default', 'empty', 'extra', 'missing'):
+        invalid = copy.deepcopy(after)
+        properties = invalid['RetrieveProjectArchive']['inputSchema']['properties']
+        if change == 'default': properties['dryRun']['default'] = False
+        elif change == 'empty': properties['dryRun']['description'] = ' '
+        elif change == 'extra': invalid['RetrieveProjectArchive']['descriptionSha256'] = 'unreviewed'
+        else: properties['dryRun'].pop('description')
+        try: _p7_04b_description_checks(before, invalid)
+        except ValueError: count += 1
+        else: raise AssertionError('Unreviewed description migration accepted: ' + change)
     print(f'Contract negative self-tests: {count} passed, 0 failed.')
     return 0
 

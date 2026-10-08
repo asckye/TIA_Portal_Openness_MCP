@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（FoundationHost 的 V21 full 产品目录）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-07 22:50:07
+- 生成时间：2026-10-08 00:11:50
 - 产品文件版本：3.3.0.0
-- 工具数量：493
+- 工具数量：498
 
 ## 读法
 
@@ -14,30 +14,30 @@
 
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
-| `SESSION` | 会话与发现，不改工程 | 14 |
+| `SESSION` | 会话与发现，不改工程 | 15 |
 | `READ` | 读取已打开工程，不改动 | 152 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 194 |
-| `FILE` | 导出/导入文件或生成离线产物 | 51 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 197 |
+| `FILE` | 导出/导入文件或生成离线产物 | 52 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 34 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
 | `EXECUTE` | 执行编译/测试/自检 | 13 |
 
-描述里未显式标注操作类型的工具（194 个）由 `ToolTaxonomy.OperationOf` 按工具名推断，表中以 `*` 标记；显式标注优先。
+描述里未显式标注操作类型的工具（197 个）由 `ToolTaxonomy.OperationOf` 按工具名推断，表中以 `*` 标记；显式标注优先。
 
 ## 分类总览
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 47 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (7)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 65 | `Project` (21)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
+| `session` | 会话与基础设施 / Session & infrastructure | 48 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `project` | 工程与协作 / Project & collaboration | 69 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
 | `plc` | PLC 软件 / PLC software | 138 | `PLC-Software` (92)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
 | `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 26 | `Online-Monitoring` (20)、`Simulation` (6) |
 
-## session — 会话与基础设施 / Session & infrastructure（47）
+## session — 会话与基础设施 / Session & infrastructure（48）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -67,12 +67,13 @@
 | `PreviewToolBatch` | L2 | READ | Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute token bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage. Examples: GetToolUsage(toolName: "PreviewToolBatch"), optionally operation or language. |
 | `RunReadOnlyToolBatch` | L2 | READ | Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot. Examples: GetToolUsage(toolName: "RunReadOnlyToolBatch"), optionally operation or language. |
 
-### [Portal]（7）
+### [Portal]（8）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `GetPortalConnectionReadiness` | L0 | READ | [PLC foundation; native unverified] [runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "GetPortalConnectionReadiness"), optionally operation or language. |
 | `GetSessionState` | L0 | SESSION* | [PLC foundation; native unverified] [runtime-query-candidate] Cached attachment/project state only; IsAttached is not live connection proof. No runtime attach, project query or rebind. PID identity remains unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "GetSessionState"), optionally operation or language. |
+| `ConnectIsolatedPortal` | L1 | SESSION* | Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain ConnectPortal attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and DisconnectPortal. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ConnectIsolatedPortal"), optionally operation or language. |
 | `ConnectPortal` | L1 | SESSION | [PLC foundation; native unverified] [v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ConnectPortal"), optionally operation or language. |
 | `DisconnectPortal` | L1 | SESSION* | [PLC foundation; native unverified] [acknowledged-disconnect-candidate] End this worker session by detaching only a proven non-owning existing-process attachment. No project required; no save, project close, launch or automatic reconnect. Idle disconnect never starts a worker. Subsequent Attach requires a new explicit session. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "DisconnectPortal"), optionally operation or language. |
 | `EnsureOpennessUserGroup` | L1 | SESSION* | Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is OK. Examples: GetToolUsage(toolName: "EnsureOpennessUserGroup"), optionally operation or language. |
@@ -128,15 +129,16 @@
 | `BuildReleaseManifest` | L2 | OFFLINE* | Build an offline machine-readable release manifest from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: "BuildReleaseManifest"), optionally operation or language. |
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: "BuildReleaseRunbook"), optionally operation or language. |
 
-## project — 工程与协作 / Project & collaboration（65）
+## project — 工程与协作 / Project & collaboration（69）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
-### [Project]（21）
+### [Project]（25）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `AttachOpenProject` | L1 | SESSION* | [PLC foundation; native unverified] [v17-project-safe-v1] Bind an existing project/session only when both projectName and exact expectedProjectFile match; borrowed targets cannot be closed. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "AttachOpenProject"), optionally operation or language. |
+| `BuildProjectScaffold` | L1 | WRITE* | One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project. Example: {"spec":"{\u0022projectName\u0022:\u0022Demo\u0022,\u0022directoryPath\u0022:\u0022C:\\\\Projects\u0022,\u0022plcName\u0022:\u0022PLC_1\u0022,\u0022plcFamily\u0022:\u0022S7-1500\u0022}","dryRun":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "BuildProjectScaffold"), optionally operation or language. |
 | `CloseProject` | L1 | SESSION* | [PLC foundation; native unverified] [v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "CloseProject"), optionally operation or language. |
 | `CreateProject` | L1 | WRITE* | [PLC foundation; native unverified] [v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "CreateProject"), optionally operation or language. |
 | `GetProjectInfo` | L1 | READ* | [PLC foundation; native unverified] [v17-project-safe-v1] List projects and API-supported local sessions with exact file identities and attributes. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "GetProjectInfo"), optionally operation or language. |
@@ -151,11 +153,14 @@
 | `GetProjectSettings` | L2 | READ | Read TIA Portal settings folders (exact slash-separated folderPath; empty lists root folders) with scalar setting values, paginated; optional customIdentityKey reads the project-root CustomIdentityProvider value. Read-only; nothing modified. Examples: GetToolUsage(toolName: "GetProjectSettings"), optionally operation or language. |
 | `ImportProjectTexts` | L2 | WRITE | Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: "ImportProjectTexts"), optionally operation or language. |
 | `ListTestSuiteCases` | L2 | READ | Typed Test Suite read: category styleGuide (StyleGuideGroup.RuleSets), application (ApplicationTestGroup.TestCases, or kind testSet for ApplicationTestGroup.ApplicationTestSets) or system (SystemTestGroup.SystemTestCases). Rows carry the class and name plus the scope: TestCase.GetScope() (PLC name), SystemTestCase OPC UA server address / interface type (UserDefined \| StandardSIMATIC \| SiOMECompanionSpecification) / interface folder. Exact name or live offset pagination. NotSupported when the Test Suite package is missing; no test executed. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ListTestSuiteCases"), optionally operation or language. |
+| `ManageMultiuserSession` | L2 | WRITE | Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly. Examples: GetToolUsage(toolName: "ManageMultiuserSession"), optionally operation or language. |
 | `ManageProjectCompilationSettings` | L2 | WRITE | Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: "ManageProjectCompilationSettings"), optionally operation or language. |
 | `ManageProjectLanguage` | L2 | WRITE | Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness. Examples: GetToolUsage(toolName: "ManageProjectLanguage"), optionally operation or language. |
 | `ManageTestSuiteCase` | L2 | WRITE | Typed Test Suite definition management: read; rename (Name = newName); setScope - style guide: RuleSet.SetScope(updateOptions Add\|Override, scope objects from scope [{kind project \| deviceGroup (name) \| plc (softwarePath -> CPU device item) \| blocks \| tags \| types (softwarePath, optional groupPath below the system group) \| units (softwarePath -> PlcUnitProvider.UnitGroup)}], native bool reported), application: TestCase.SetScope(PlcSoftware at softwarePath[, instanceName, executionMode SystemManagedPLCSIMInstance \| ExternallyManagedPLCSIMInstance]; software controllers are refused natively), system: SystemTestCase.SetScope(opcUaServerAddress opc.tcp://server:port/path, serverInterfaceType UserDefined \| StandardSIMATIC \| SiOMECompanionSpecification[, interfaceFolderPath absolute directory]); copyScope (RuleSet.CopyScope(target rule set named by targetName)); createFromMasterCopy (RuleSetComposition / TestCaseComposition / SystemTestCaseComposition.CreateFrom(MasterCopy at masterCopyPath in the project library or the open global library libraryName), renamed to name when given); showInEditor (rule sets, test cases, test sets; WithUserInterface sessions). Default preview; readback after the change; no test run or automatic save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ManageTestSuiteCase"), optionally operation or language. |
+| `RetrieveProjectArchive` | L2 | WRITE | Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: "RetrieveProjectArchive"), optionally operation or language. |
 | `RunTestSuiteCase` | L2 | EXECUTE | Typed Test Suite execution through the executor service of the category's system group: one definition (name), several (names) or the whole group (runAll) - RuleSetExecutor.Run(RuleSet \| IEnumerable<RuleSet> \| StyleGuideSystemGroup), TestCaseExecutor.Run(TestCase \| IEnumerable<TestCase> \| ApplicationTestSystemGroup, or with kind testSet ApplicationTestSet \| IEnumerable<ApplicationTestSet>), SystemTestCaseExecutor.Run(SystemTestCase \| IEnumerable<SystemTestCase> \| SystemTestSystemGroup). Returns the typed TestResults (state Success\|Information\|Warning\|Error, error / warning counts, recursive messages with path, state, description, UTC time) and testPassed. runAll on an empty group is refused (2.7.42 real project: the application executor answered a native NullReferenceException, the system executor 'No test case(s) in the selected project'; only the style-guide executor returned Success for an empty group). Default preview; application / system runs need confirmExternalExecution=true because they start a PLCSIM Advanced instance (SystemManaged) or use the configured instance / OPC UA server (official: SupportSimulationNotEnabledException / OpcUaServerAddressNotValidException / LicenseNotFoundException are the recoverable failures). No automatic save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "RunTestSuiteCase"), optionally operation or language. |
 | `RunToolTransaction` | L2 | WRITE | Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save. Examples: GetToolUsage(toolName: "RunToolTransaction"), optionally operation or language. |
+| `SaveProjectCopy` | L2 | FILE* | Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "SaveProjectCopy"), optionally operation or language. |
 | `ShowObjectInEditor` | L2 | WRITE | IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true. Examples: GetToolUsage(toolName: "ShowObjectInEditor"), optionally operation or language. |
 
 ### [Library]（13）

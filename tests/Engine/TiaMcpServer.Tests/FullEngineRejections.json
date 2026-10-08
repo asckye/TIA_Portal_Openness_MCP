@@ -12497,21 +12497,25 @@
           "offset": {
             "type": "int",
             "default": "0",
+            "description": "offset: zero-based starting row for bound-session markings, server projects or local sessions; must be non-negative.",
             "value": 0
           },
           "limit": {
             "type": "int",
             "default": "100",
+            "description": "limit: maximum page size for bound-session markings, server projects or local sessions (1..500, default 100).",
             "value": 100
           },
           "confirmChange": {
             "type": "bool",
             "default": "false",
+            "description": "confirmChange: true is required together with dryRun=false to connect/disconnect a server or commit the bound session.",
             "value": false
           },
           "dryRun": {
             "type": "bool",
             "default": "true",
+            "description": "dryRun: true previews connectServer, disconnectServer and commit; false executes those mutations only with confirmChange=true. Read actions remain read-only.",
             "value": true
           }
         },
@@ -16901,7 +16905,8 @@
           },
           "destinationDirectory": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "destinationDirectory: absolute path of a new directory on the TIA machine; existing directories are refused (no merge or overwrite)."
           },
           "upgrade": {
             "type": "bool",
@@ -16912,6 +16917,7 @@
           "dryRun": {
             "type": "bool",
             "default": "true",
+            "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
             "value": true
           }
         },
@@ -31991,21 +31997,25 @@
           "offset": {
             "type": "int",
             "default": "0",
+            "description": "offset: zero-based starting row for bound-session markings, server projects or local sessions; must be non-negative.",
             "value": 0
           },
           "limit": {
             "type": "int",
             "default": "100",
+            "description": "limit: maximum page size for bound-session markings, server projects or local sessions (1..500, default 100).",
             "value": 100
           },
           "confirmChange": {
             "type": "bool",
             "default": "false",
+            "description": "confirmChange: true is required together with dryRun=false to connect/disconnect a server or commit the bound session.",
             "value": false
           },
           "dryRun": {
             "type": "bool",
             "default": "true",
+            "description": "dryRun: true previews connectServer, disconnectServer and commit; false executes those mutations only with confirmChange=true. Read actions remain read-only.",
             "value": true
           }
         },
@@ -36794,7 +36804,8 @@
           },
           "destinationDirectory": {
             "type": "string",
-            "default": null
+            "default": null,
+            "description": "destinationDirectory: absolute path of a new directory on the TIA machine; existing directories are refused (no merge or overwrite)."
           },
           "upgrade": {
             "type": "bool",
@@ -36805,6 +36816,7 @@
           "dryRun": {
             "type": "bool",
             "default": "true",
+            "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
             "value": true
           }
         },

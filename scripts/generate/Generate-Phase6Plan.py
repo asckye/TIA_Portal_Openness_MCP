@@ -1086,7 +1086,9 @@ def main():
             if args.check:
                 assert path.read_bytes().replace(b'\r\n', b'\n') == expected, 'stale generated output: ' + str(path.relative_to(root))
             else: path.write_bytes(expected)
-        print('Shared Foundation catalogs: V20=482, V21=493; lite=73 each')
+        baselines = {k: json.loads((root / 'manifest/contracts/v4/baseline' / f'{k}.json').read_text('utf-8-sig')) for k in ('20', '21')}
+        print('Shared Foundation catalogs: ' + ', '.join(f"V{k}={len(v['tools'])}" for k, v in baselines.items())
+              + '; lite=' + '/'.join(str(len(v.get('liteTools') or [])) for v in baselines.values()))
         return
     # Refresh derived package counts only; retain all build/source hash evidence.
     package_path = root / 'manifest/package-manifest.json'

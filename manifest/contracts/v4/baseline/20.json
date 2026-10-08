@@ -32433,12 +32433,12 @@
           },
           "confirmChange": {
             "default": false,
-            "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
+            "description": "confirmChange: true is required together with dryRun=false to connect/disconnect a server or commit the bound session.",
             "type": "boolean"
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "description": "dryRun: true previews connectServer, disconnectServer and commit; false executes those mutations only with confirmChange=true. Read actions remain read-only.",
             "type": "boolean"
           },
           "host": {
@@ -32448,13 +32448,13 @@
           },
           "limit": {
             "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
+            "description": "limit: maximum page size for bound-session markings, server projects or local sessions (1..500, default 100).",
             "minimum": 1,
             "type": "integer"
           },
           "offset": {
             "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "description": "offset: zero-based starting row for bound-session markings, server projects or local sessions; must be non-negative.",
             "minimum": 0,
             "type": "integer"
           },
@@ -39308,12 +39308,12 @@
             "type": "string"
           },
           "destinationDirectory": {
-            "description": "destinationDirectory: folder on the TIA machine that receives the output.",
+            "description": "destinationDirectory: absolute path of a new directory on the TIA machine; existing directories are refused (no merge or overwrite).",
             "type": "string"
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
             "type": "boolean"
           },
           "upgrade": {

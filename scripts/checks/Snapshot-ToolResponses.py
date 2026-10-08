@@ -1181,6 +1181,18 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_lifecycle_description_group_is_release_scoped(self):
+        import phase6_groups
+        members = {'RetrieveProjectArchive', 'ManageMultiuserSession'}
+        task = 'P7-04b-followup'
+        self.assertEqual(members, phase6_groups.names(task))
+        self.assertEqual(set(), phase6_groups.removals(task))
+        self.assertEqual({}, phase6_groups.rename_map(task))
+        for release in RELEASES:
+            self.assertEqual(set(), phase6_groups.additions(task, release))
+            self.assertEqual(members if release in ('20', '21') else set(), phase6_groups.group(task, release, members))
+            self.assertEqual(set(), phase6_groups.group(task, release, {'Existing'}))
+
     def test_restored_lifecycle_group_is_release_scoped(self):
         import phase6_groups
         restored = {'RetrieveProjectArchive', 'SaveProjectCopy', 'ManageMultiuserSession', 'BuildProjectScaffold', 'ConnectIsolatedPortal'}

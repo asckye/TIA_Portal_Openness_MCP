@@ -37,11 +37,7 @@ NEW_FOUNDATION_TOOLS = {
     'ListPlcUserConstants': ('ReadPlcUserConstants', 'READ', 'Reads user constant declarations from the bound project.'),
     'PlanPlcExternalSourceImport': ('PlanPlcExternalSourceImport', 'OFFLINE', 'Plans an external source import; no import execution.'),
 }
-WITHDRAWN = {
-    'ConnectIsolatedPortal': 'ConnectIsolated', 'ConnectProject': 'ConnectToProject',
-    'BuildProjectScaffold': 'ScaffoldProject', 'RetrieveProjectArchive': 'RetrieveProjectArchive',
-    'SaveProjectCopy': 'SaveAsProject', 'ManageMultiuserSession': 'ManageMultiuserSession',
-}
+WITHDRAWN = {'ConnectProject': 'ConnectToProject'}
 REBASED_SOURCES = {
     'ExportPlcBlockDocuments': 'ExportAsDocuments', 'ExportPlcBlocksDocuments': 'ExportBlocksAsDocuments',
     'ImportPlcBlockDocuments': 'ImportFromDocuments', 'ImportPlcBlocksDocuments': 'ImportBlocksFromDocuments',

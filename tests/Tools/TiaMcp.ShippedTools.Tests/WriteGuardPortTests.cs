@@ -35,7 +35,23 @@ public sealed class WriteGuardPortTests
             if (operation == "WRITE")
                 fixture.ExpectDeny(fixture.Call(name, new JsonObject { ["dryRun"] = false }, ("TIA_MCP_GUARD_DENY_OPERATIONS", "WRITE")), name);
         }
-        foreach (var name in new[] { "ConnectProject", "ConnectIsolatedPortal", "BuildProjectScaffold", "RetrieveProjectArchive", "SaveProjectCopy", "ManageMultiuserSession", "CreatePlcFuture" })
+        var restored = new Dictionary<string, string> {
+            ["ConnectIsolatedPortal"] = "SESSION", ["BuildProjectScaffold"] = "WRITE", ["RetrieveProjectArchive"] = "WRITE",
+            ["SaveProjectCopy"] = "FILE", ["ManageMultiuserSession"] = "WRITE"
+        };
+        foreach (var (name, operation) in restored)
+        {
+            Assert.Equal(operation, (string?)fixture.Entry(name)["operation"]);
+            fixture.ExpectAllow(fixture.Call(name, new JsonObject()));
+            fixture.ExpectAllow(fixture.Call("CallTool", new JsonObject { ["name"] = name, ["arguments"] = new JsonObject() }));
+            var arguments = new JsonObject();
+            if (fixture.Entry(name)["parameters"]!.AsArray().Any(parameter => (string?)parameter == "dryRun"))
+                arguments["dryRun"] = false;
+            fixture.ExpectDeny(fixture.Call(name, arguments, ("TIA_MCP_GUARD_DENY_OPERATIONS", operation)), name);
+            fixture.ExpectDeny(fixture.Call("CallTool", new JsonObject { ["name"] = name, ["arguments"] = arguments.DeepClone() },
+                ("TIA_MCP_GUARD_DENY_OPERATIONS", operation)), name);
+        }
+        foreach (var name in new[] { "ConnectProject", "CreatePlcFuture" })
         {
             fixture.ExpectDeny(fixture.Call(name, new JsonObject(), ("TIA_MCP_ALLOW_ONLINE_WRITE", "1")), "tool list is out of date");
             fixture.ExpectDeny(fixture.Call("CallTool", new JsonObject { ["name"] = name, ["arguments"] = new JsonObject() }), name);
