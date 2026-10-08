@@ -137,7 +137,9 @@ def exercise(client, key, logfile, expected_before):
 
 
 def exercise_engine(client, key, close=True, ready=False):
-    client.call('initialize', INIT)
+    capabilities = client.call('initialize', INIT)['capabilities']
+    # Per-session tool collections must not drop the resource and prompt capabilities of the engine host.
+    assert {'tools', 'resources', 'prompts'} <= set(capabilities), capabilities
     tools = client.call('tools/list', {})['tools']
     expected = json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))
     assert {t['name'] for t in tools} == {t['name'] for t in expected['tools']}

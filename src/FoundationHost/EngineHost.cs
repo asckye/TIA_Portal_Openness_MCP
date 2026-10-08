@@ -92,7 +92,9 @@ internal static class EngineHost
                     await session.Worker.Status(token);
                     var tools = new McpServerPrimitiveCollection<McpServerTool>();
                     foreach (var tool in session.Pipeline.Tools) tools.Add(tool);
-                    server.Capabilities = new ServerCapabilities { Tools = new ToolsCapability { ToolCollection = tools } };
+                    // Keep the resource and prompt capabilities registered on the server builder; only the tools are per session.
+                    server.Capabilities ??= new ServerCapabilities();
+                    server.Capabilities.Tools = new ToolsCapability { ToolCollection = tools };
                     context.Items["engineSession"] = session;
                 }
                 catch { session.Dispose(); throw; }
