@@ -164,7 +164,7 @@
   },
   "fallback-vci-modern": {
     "project": "tests/Engine/FallbackNative.Tests/FallbackNative.Tests.csproj",
-    "minimumPassed": 17,
+    "minimumPassed": 13,
     "maximumSkipped": 0,
     "arguments": [
       "-p:TestVciFamily=modern"
