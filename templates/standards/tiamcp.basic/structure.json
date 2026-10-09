@@ -1,0 +1,42 @@
+{
+  "groups": [
+    {
+      "id": "system",
+      "kind": "blocks",
+      "path": "00_System",
+      "required": true
+    },
+    {
+      "id": "modes",
+      "kind": "blocks",
+      "path": "10_Modes",
+      "required": true
+    },
+    {
+      "id": "units",
+      "kind": "blocks",
+      "path": "20_Units/{{unit.id}}",
+      "required": true
+    },
+    {
+      "id": "hmi",
+      "kind": "blocks",
+      "path": "90_Hmi",
+      "required": true
+    },
+    {
+      "id": "types",
+      "kind": "types",
+      "path": "00_System",
+      "required": true
+    }
+  ],
+  "numberRanges": [
+    {
+      "id": "sequence",
+      "kind": "DB",
+      "start": 100,
+      "end": 999
+    }
+  ]
+}

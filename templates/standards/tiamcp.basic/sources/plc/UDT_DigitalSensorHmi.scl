@@ -1,0 +1,6 @@
+TYPE "UDT_DigitalSensorHmi"
+VERSION : 1.0
+STRUCT
+    Status : "UDT_DigitalSensorStatus";
+END_STRUCT;
+END_TYPE

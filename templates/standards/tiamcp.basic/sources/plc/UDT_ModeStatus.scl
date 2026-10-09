@@ -1,0 +1,8 @@
+TYPE "UDT_ModeStatus"
+VERSION : 1.0
+STRUCT
+    Basic : "UDT_BasicStatus";
+    Mode : Int;
+    Permit : Bool;
+END_STRUCT;
+END_TYPE

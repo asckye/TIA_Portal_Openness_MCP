@@ -1,0 +1,106 @@
+{
+  "deviceType": "valve.2pos",
+  "title": {
+    "en-US": "Valve",
+    "zh-CN": "阀"
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "CycleMs": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000,
+        "default": 10
+      },
+      "TravelTimeoutMs": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3600000,
+        "default": 3000
+      },
+      "programAlarm": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "CycleMs",
+      "TravelTimeoutMs",
+      "programAlarm"
+    ],
+    "additionalProperties": false
+  },
+  "signals": [
+    {
+      "role": "open",
+      "dir": "DO",
+      "type": "Bool"
+    },
+    {
+      "role": "close",
+      "dir": "DO",
+      "type": "Bool"
+    },
+    {
+      "role": "opened",
+      "dir": "DI",
+      "type": "Bool"
+    },
+    {
+      "role": "closed",
+      "dir": "DI",
+      "type": "Bool"
+    }
+  ],
+  "emit": [
+    {
+      "kind": "plc.tag",
+      "forEach": "signals",
+      "table": "{{unit.tagTable}}",
+      "name": "{{naming.tag(device,signal)}}",
+      "address": "{{alloc.io(signal)}}"
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.valve2Pos@^1",
+      "name": "{{naming.idb(device)}}",
+      "callIn": "{{unit.callBlock}}",
+      "bind": {
+        "Permit": "{{naming.unitIdb(device)}}.Hmi.Status.Permit",
+        "OpenFeedback": "{{tag(signal.opened)}}",
+        "ClosedFeedback": "{{tag(signal.closed)}}",
+        "OpenCommand": "{{tag(signal.open)}}",
+        "CloseCommand": "{{tag(signal.close)}}",
+        "CycleMs": "{{device.params.CycleMs}}",
+        "TravelTimeoutMs": "{{device.params.TravelTimeoutMs}}"
+      }
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.programAlarm@^1",
+      "name": "IDB_{{unit.id}}-Z{{device.id}}",
+      "callIn": "{{unit.callBlock}}",
+      "when": {
+        "equals": {
+          "path": "device.params.programAlarm",
+          "value": true
+        }
+      },
+      "bind": {
+        "Signal": "{{naming.idb(device)}}.Hmi.Status.Basic.Error"
+      }
+    },
+    {
+      "kind": "alarm",
+      "class": "Fault",
+      "textKey": "valve.fault"
+    },
+    {
+      "kind": "hmi.widget",
+      "template": "sources/hmi/valve.2pos.json",
+      "screen": "{{device.hmi.screen}}",
+      "slot": "auto"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+FUNCTION_BLOCK "FB_MotorDol"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+VAR_INPUT
+    Permit : Bool;
+    Feedback : Bool;
+    Overload : Bool;
+    CycleMs : DInt;
+    FeedbackTimeoutMs : DInt;
+END_VAR
+VAR_OUTPUT
+    Run : Bool;
+END_VAR
+VAR
+    Hmi : "UDT_MotorDolHmi";
+    RunLatch : Bool;
+    FaultLatch : Bool;
+    MissingMs : DInt;
+END_VAR
+BEGIN
+IF #Overload THEN
+        #FaultLatch := TRUE;
+    ELSIF #Hmi.CmdReset THEN
+        #FaultLatch := FALSE;
+        #MissingMs := 0;
+    END_IF;
+    IF NOT #Permit OR #Hmi.CmdStop OR #FaultLatch THEN
+        #RunLatch := FALSE;
+    ELSIF #Hmi.CmdStart THEN
+        #RunLatch := TRUE;
+    END_IF;
+    IF #RunLatch AND NOT #Feedback THEN
+        IF (#CycleMs > 0) AND (#FeedbackTimeoutMs > 0) THEN
+            IF #MissingMs < (#FeedbackTimeoutMs - #CycleMs) THEN
+                #MissingMs := #MissingMs + #CycleMs;
+            ELSE
+                #MissingMs := #FeedbackTimeoutMs;
+                #FaultLatch := TRUE;
+                #RunLatch := FALSE;
+            END_IF;
+        END_IF;
+    ELSE
+        #MissingMs := 0;
+    END_IF;
+    #Run := #RunLatch AND #Permit AND NOT #FaultLatch;
+    #Hmi.Status.Feedback := #Feedback;
+    #Hmi.Status.Permitted := #Permit;
+    #Hmi.Status.Basic.Active := #Run;
+    #Hmi.Status.Basic.Ready := #Permit AND NOT #FaultLatch;
+    #Hmi.Status.Basic.Error := #FaultLatch;
+    #Hmi.Status.Basic.Warning := (#CycleMs <= 0) OR (#FeedbackTimeoutMs <= 0);
+    #Hmi.Status.Basic.State := 0;
+    #Hmi.Status.Basic.ErrorCode := 0;
+    IF #Run THEN #Hmi.Status.Basic.State := 2; END_IF;
+    IF #FaultLatch THEN
+        #Hmi.Status.Basic.State := 3;
+        #Hmi.Status.Basic.ErrorCode := 1;
+    END_IF;
+END_FUNCTION_BLOCK

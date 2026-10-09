@@ -1,0 +1,532 @@
+{
+  "schema": "tiamcp.machine/1",
+  "machine": {
+    "id": "BasicLine",
+    "name": {
+      "en-US": "Basic machine",
+      "zh-CN": "基础机器"
+    }
+  },
+  "standard": {
+    "package": "tiamcp.basic",
+    "version": "^1.0"
+  },
+  "target": {
+    "release": "21",
+    "project": {
+      "mode": "existing",
+      "projectIdentity": "basic-example-project",
+      "softwarePath": "PLC1"
+    }
+  },
+  "stations": [
+    {
+      "id": "PLC1",
+      "role": "plc.main",
+      "article": "6ES7 513-1AL02-0AB0",
+      "firmware": "V2.0"
+    },
+    {
+      "id": "HMI1",
+      "role": "hmi.panel",
+      "kind": "WinCCUnifiedPC"
+    }
+  ],
+  "topology": [
+    {
+      "id": "U01",
+      "kind": "unit",
+      "name": {
+        "en-US": "Unit 1",
+        "zh-CN": "单元 1"
+      },
+      "children": [
+        {
+          "id": "EM01",
+          "kind": "equipmentModule",
+          "name": {
+            "en-US": "Equipment",
+            "zh-CN": "设备"
+          }
+        }
+      ]
+    }
+  ],
+  "devices": [
+    {
+      "id": "00U01",
+      "type": "unit",
+      "parent": "U01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "Unit control",
+        "zh-CN": "单元控制"
+      },
+      "params": {
+        "programAlarm": true
+      },
+      "io": {},
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M01",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M1",
+        "zh-CN": "M1"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M02",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M2",
+        "zh-CN": "M2"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M03",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M3",
+        "zh-CN": "M3"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M04",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M4",
+        "zh-CN": "M4"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M05",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M5",
+        "zh-CN": "M5"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M06",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M6",
+        "zh-CN": "M6"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M07",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M7",
+        "zh-CN": "M7"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "M08",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "M8",
+        "zh-CN": "M8"
+      },
+      "params": {
+        "CycleMs": 10,
+        "FeedbackTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "V01",
+      "type": "valve.2pos",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "V1",
+        "zh-CN": "V1"
+      },
+      "params": {
+        "CycleMs": 10,
+        "TravelTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "open": "auto",
+        "close": "auto",
+        "opened": "auto",
+        "closed": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "V02",
+      "type": "valve.2pos",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "V2",
+        "zh-CN": "V2"
+      },
+      "params": {
+        "CycleMs": 10,
+        "TravelTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "open": "auto",
+        "close": "auto",
+        "opened": "auto",
+        "closed": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "V03",
+      "type": "valve.2pos",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "V3",
+        "zh-CN": "V3"
+      },
+      "params": {
+        "CycleMs": 10,
+        "TravelTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "open": "auto",
+        "close": "auto",
+        "opened": "auto",
+        "closed": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "V04",
+      "type": "valve.2pos",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "V4",
+        "zh-CN": "V4"
+      },
+      "params": {
+        "CycleMs": 10,
+        "TravelTimeoutMs": 3000,
+        "programAlarm": true
+      },
+      "io": {
+        "open": "auto",
+        "close": "auto",
+        "opened": "auto",
+        "closed": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "S01",
+      "type": "sensor.digital",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "S1",
+        "zh-CN": "S1"
+      },
+      "params": {
+        "CycleMs": 10,
+        "DebounceMs": 30,
+        "Invert": false
+      },
+      "io": {
+        "input": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "S02",
+      "type": "sensor.digital",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "S2",
+        "zh-CN": "S2"
+      },
+      "params": {
+        "CycleMs": 10,
+        "DebounceMs": 30,
+        "Invert": false
+      },
+      "io": {
+        "input": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "S03",
+      "type": "sensor.digital",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "S3",
+        "zh-CN": "S3"
+      },
+      "params": {
+        "CycleMs": 10,
+        "DebounceMs": 30,
+        "Invert": false
+      },
+      "io": {
+        "input": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "S04",
+      "type": "sensor.digital",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "S4",
+        "zh-CN": "S4"
+      },
+      "params": {
+        "CycleMs": 10,
+        "DebounceMs": 30,
+        "Invert": false
+      },
+      "io": {
+        "input": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "S05",
+      "type": "sensor.digital",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "S5",
+        "zh-CN": "S5"
+      },
+      "params": {
+        "CycleMs": 10,
+        "DebounceMs": 30,
+        "Invert": false
+      },
+      "io": {
+        "input": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "S06",
+      "type": "sensor.digital",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "S6",
+        "zh-CN": "S6"
+      },
+      "params": {
+        "CycleMs": 10,
+        "DebounceMs": 30,
+        "Invert": false
+      },
+      "io": {
+        "input": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "A01",
+      "type": "analog.in",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "A1",
+        "zh-CN": "A1"
+      },
+      "params": {
+        "RawMin": 0,
+        "RawMax": 27648,
+        "EngMin": 0,
+        "EngMax": 100,
+        "programAlarm": true
+      },
+      "io": {
+        "raw": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    },
+    {
+      "id": "A02",
+      "type": "analog.in",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "en-US": "A2",
+        "zh-CN": "A2"
+      },
+      "params": {
+        "RawMin": 0,
+        "RawMax": 27648,
+        "EngMin": 0,
+        "EngMax": 100,
+        "programAlarm": true
+      },
+      "io": {
+        "raw": "auto"
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    }
+  ],
+  "options": {
+    "languages": [
+      "en-US",
+      "zh-CN"
+    ]
+  }
+}

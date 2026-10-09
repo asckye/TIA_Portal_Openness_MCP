@@ -1,0 +1,100 @@
+{
+  "deviceType": "motor.dol",
+  "title": {
+    "en-US": "Motor",
+    "zh-CN": "电机"
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "CycleMs": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000,
+        "default": 10
+      },
+      "FeedbackTimeoutMs": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3600000,
+        "default": 3000
+      },
+      "programAlarm": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "CycleMs",
+      "FeedbackTimeoutMs",
+      "programAlarm"
+    ],
+    "additionalProperties": false
+  },
+  "signals": [
+    {
+      "role": "run",
+      "dir": "DO",
+      "type": "Bool"
+    },
+    {
+      "role": "feedback",
+      "dir": "DI",
+      "type": "Bool"
+    },
+    {
+      "role": "overload",
+      "dir": "DI",
+      "type": "Bool"
+    }
+  ],
+  "emit": [
+    {
+      "kind": "plc.tag",
+      "forEach": "signals",
+      "table": "{{unit.tagTable}}",
+      "name": "{{naming.tag(device,signal)}}",
+      "address": "{{alloc.io(signal)}}"
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.motorDol@^1",
+      "name": "{{naming.idb(device)}}",
+      "callIn": "{{unit.callBlock}}",
+      "bind": {
+        "Permit": "{{naming.unitIdb(device)}}.Hmi.Status.Permit",
+        "Feedback": "{{tag(signal.feedback)}}",
+        "Overload": "{{tag(signal.overload)}}",
+        "Run": "{{tag(signal.run)}}",
+        "CycleMs": "{{device.params.CycleMs}}",
+        "FeedbackTimeoutMs": "{{device.params.FeedbackTimeoutMs}}"
+      }
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.programAlarm@^1",
+      "name": "IDB_{{unit.id}}-Z{{device.id}}",
+      "callIn": "{{unit.callBlock}}",
+      "when": {
+        "equals": {
+          "path": "device.params.programAlarm",
+          "value": true
+        }
+      },
+      "bind": {
+        "Signal": "{{naming.idb(device)}}.Hmi.Status.Basic.Error"
+      }
+    },
+    {
+      "kind": "alarm",
+      "class": "Fault",
+      "textKey": "motor.fault"
+    },
+    {
+      "kind": "hmi.widget",
+      "template": "sources/hmi/motor.dol.json",
+      "screen": "{{device.hmi.screen}}",
+      "slot": "auto"
+    }
+  ]
+}

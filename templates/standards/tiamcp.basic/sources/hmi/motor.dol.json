@@ -1,0 +1,111 @@
+{
+  "screen": {
+    "name": "{{device.hmi.screen}}",
+    "BackColor": "0xFFF3F6FA"
+  },
+  "items": [
+    {
+      "type": "Rectangle",
+      "name": "{{device.id}}_Frame",
+      "left": 0,
+      "top": 0,
+      "width": 280,
+      "height": 176,
+      "properties": {
+        "BackColor": "0xFFF3F6FA",
+        "BorderColor": "0xFFD4DDE8",
+        "BorderWidth": 1
+      }
+    },
+    {
+      "type": "Text",
+      "name": "{{device.id}}_Title",
+      "left": 12,
+      "top": 8,
+      "width": 256,
+      "height": 24,
+      "text": "{{text(device.name)}}"
+    },
+    {
+      "type": "IOField",
+      "name": "{{device.id}}_Status_Basic_Active",
+      "left": 12,
+      "top": 40,
+      "width": 256,
+      "height": 22,
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "binding": {
+        "plcSymbol": "{{naming.idb(device)}}.Hmi.Status.Basic.Active",
+        "direction": "read"
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "{{device.id}}_Status_Basic_Error",
+      "left": 12,
+      "top": 64,
+      "width": 256,
+      "height": 22,
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "binding": {
+        "plcSymbol": "{{naming.idb(device)}}.Hmi.Status.Basic.Error",
+        "direction": "read"
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "{{device.id}}_CmdStart",
+      "left": 12,
+      "top": 88,
+      "width": 256,
+      "height": 22,
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "binding": {
+        "plcSymbol": "{{naming.idb(device)}}.Hmi.CmdStart",
+        "direction": "write"
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "{{device.id}}_CmdStop",
+      "left": 12,
+      "top": 112,
+      "width": 256,
+      "height": 22,
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "binding": {
+        "plcSymbol": "{{naming.idb(device)}}.Hmi.CmdStop",
+        "direction": "write"
+      }
+    },
+    {
+      "type": "IOField",
+      "name": "{{device.id}}_CmdReset",
+      "left": 12,
+      "top": 136,
+      "width": 256,
+      "height": 22,
+      "properties": {
+        "ForeColor": "0xFF172033"
+      },
+      "binding": {
+        "plcSymbol": "{{naming.idb(device)}}.Hmi.CmdReset",
+        "direction": "write"
+      }
+    }
+  ],
+  "interfaceType": "UDT_MotorDolHmi",
+  "layout": {
+    "width": 280,
+    "height": 176,
+    "slot": "auto"
+  }
+}

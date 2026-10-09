@@ -1,0 +1,68 @@
+{
+  "deviceType": "sensor.digital",
+  "title": {
+    "en-US": "Digital sensor",
+    "zh-CN": "数字传感器"
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "CycleMs": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000,
+        "default": 10
+      },
+      "DebounceMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 60000,
+        "default": 30
+      },
+      "Invert": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "CycleMs",
+      "DebounceMs",
+      "Invert"
+    ],
+    "additionalProperties": false
+  },
+  "signals": [
+    {
+      "role": "input",
+      "dir": "DI",
+      "type": "Bool"
+    }
+  ],
+  "emit": [
+    {
+      "kind": "plc.tag",
+      "forEach": "signals",
+      "table": "{{unit.tagTable}}",
+      "name": "{{naming.tag(device,signal)}}",
+      "address": "{{alloc.io(signal)}}"
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.digitalSensor@^1",
+      "name": "{{naming.idb(device)}}",
+      "callIn": "{{unit.callBlock}}",
+      "bind": {
+        "Input": "{{tag(signal.input)}}",
+        "CycleMs": "{{device.params.CycleMs}}",
+        "DebounceMs": "{{device.params.DebounceMs}}",
+        "Invert": "{{upper(device.params.Invert)}}"
+      }
+    },
+    {
+      "kind": "hmi.widget",
+      "template": "sources/hmi/sensor.digital.json",
+      "screen": "{{device.hmi.screen}}",
+      "slot": "auto"
+    }
+  ]
+}

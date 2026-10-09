@@ -1,0 +1,144 @@
+{
+  "rules": [
+    {
+      "id": "device",
+      "kind": "device",
+      "template": "{{station.id}}",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "tag",
+      "kind": "tag",
+      "template": "{{unit.id}}-{{device.id}}_{{upper(signal.role)}}",
+      "pattern": "^[A-Za-z0-9_]+-[A-Za-z0-9_]+_[A-Z][A-Z0-9_]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "idb",
+      "kind": "instanceDb",
+      "template": "IDB_{{unit.id}}-{{device.id}}",
+      "pattern": "^IDB_[A-Za-z0-9_]+-[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "tagTable",
+      "kind": "tagTable",
+      "template": "Tags_{{unit.id}}",
+      "pattern": "^Tags_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "callBlock",
+      "kind": "FC",
+      "template": "FC_{{unit.id}}_Calls",
+      "pattern": "^FC_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "hmiDb",
+      "kind": "DB",
+      "template": "DB_HMI_Interface",
+      "pattern": "^DB_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "FB",
+      "kind": "FB",
+      "template": "{{device.id}}",
+      "pattern": "^FB_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "UDT",
+      "kind": "UDT",
+      "template": "{{device.id}}",
+      "pattern": "^UDT_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "DB",
+      "kind": "DB",
+      "template": "{{device.id}}",
+      "pattern": "^DB_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "OB",
+      "kind": "OB",
+      "template": "{{device.id}}",
+      "pattern": "^OB_[A-Za-z0-9_]+$",
+      "maxLength": 128
+    },
+    {
+      "id": "blockGroup",
+      "kind": "blockGroup",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "typeGroup",
+      "kind": "typeGroup",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "project",
+      "kind": "project",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "network",
+      "kind": "network",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "alarm",
+      "kind": "alarm",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "screen",
+      "kind": "screen",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "widget",
+      "kind": "widget",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "screenItem",
+      "kind": "screenItem",
+      "template": "{{device.id}}",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$",
+      "maxLength": 128
+    },
+    {
+      "id": "source",
+      "kind": "externalSource",
+      "template": "{{device.id}}",
+      "pattern": "^source_[a-f0-9]{16}_[a-f0-9]{16}\\.scl$",
+      "maxLength": 128
+    },
+    {
+      "id": "unitIdb",
+      "kind": "instanceDb",
+      "template": "IDB_{{unit.id}}-00{{unit.id}}",
+      "pattern": "^IDB_[A-Za-z0-9_]+-00[A-Za-z0-9_]+$",
+      "maxLength": 128
+    }
+  ]
+}

@@ -17,3 +17,7 @@ manifest/history/contracts-v3/** -text
 # GitHub language statistics: renderer goldens are test data and the tool examples are snippets in target languages.
 tests/Engine/TiaMcp.Engine.Tests/Fixtures/PlcRender/** linguist-generated
 reference/tool-examples/** linguist-documentation
+
+# Standard inventories and SCL golden bytes must survive Windows/Linux checkout.
+templates/standards/tiamcp.basic/** text eol=lf
+tests/Generation/**/Golden/** text eol=lf

@@ -1,0 +1,8 @@
+TYPE "UDT_Valve2PosStatus"
+VERSION : 1.0
+STRUCT
+    Basic : "UDT_BasicStatus";
+    Open : Bool;
+    Closed : Bool;
+END_STRUCT;
+END_TYPE

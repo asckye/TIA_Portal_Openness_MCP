@@ -1,0 +1,41 @@
+FUNCTION_BLOCK "FB_DigitalSensor"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+VAR_INPUT
+    Input : Bool;
+    Invert : Bool;
+    CycleMs : DInt;
+    DebounceMs : DInt;
+END_VAR
+VAR
+    Hmi : "UDT_DigitalSensorHmi";
+    Stable : Bool;
+    ElapsedMs : DInt;
+END_VAR
+VAR_TEMP
+    Sample : Bool;
+END_VAR
+BEGIN
+#Sample := #Input XOR #Invert;
+    IF #Sample = #Stable THEN
+        #ElapsedMs := 0;
+    ELSIF #DebounceMs <= 0 THEN
+        #Stable := #Sample;
+        #ElapsedMs := 0;
+    ELSIF #CycleMs > 0 THEN
+        IF #ElapsedMs < (#DebounceMs - #CycleMs) THEN
+            #ElapsedMs := #ElapsedMs + #CycleMs;
+        ELSE
+            #Stable := #Sample;
+            #ElapsedMs := 0;
+        END_IF;
+    END_IF;
+    #Hmi.Status.Raw := #Input;
+    #Hmi.Status.Value := #Stable;
+    #Hmi.Status.Basic.Active := #Stable;
+    #Hmi.Status.Basic.Ready := #CycleMs > 0;
+    #Hmi.Status.Basic.Error := FALSE;
+    #Hmi.Status.Basic.Warning := #CycleMs <= 0;
+    #Hmi.Status.Basic.State := 0;
+    IF #Stable THEN #Hmi.Status.Basic.State := 1; END_IF;
+END_FUNCTION_BLOCK

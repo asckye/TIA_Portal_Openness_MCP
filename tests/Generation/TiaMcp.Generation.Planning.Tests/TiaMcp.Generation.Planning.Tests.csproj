@@ -9,5 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" />
     <None Update="Golden/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Golden/Basic/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../templates/standards/tiamcp.basic/**/*" Link="BasicPackage/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,8 @@
+TYPE "UDT_DigitalSensorStatus"
+VERSION : 1.0
+STRUCT
+    Basic : "UDT_BasicStatus";
+    Raw : Bool;
+    Value : Bool;
+END_STRUCT;
+END_TYPE

@@ -1,0 +1,1245 @@
+{
+  "types": [
+    {
+      "id": "udt.motordolstatus",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Basic",
+            "type": "UDT_BasicStatus",
+            "role": "static.Basic"
+          },
+          {
+            "name": "Feedback",
+            "type": "Bool",
+            "role": "static.Feedback"
+          },
+          {
+            "name": "Permitted",
+            "type": "Bool",
+            "role": "static.Permitted"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_MotorDolStatus.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.motordolhmi",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "CmdStart",
+            "type": "Bool",
+            "role": "static.CmdStart"
+          },
+          {
+            "name": "CmdStop",
+            "type": "Bool",
+            "role": "static.CmdStop"
+          },
+          {
+            "name": "CmdReset",
+            "type": "Bool",
+            "role": "static.CmdReset"
+          },
+          {
+            "name": "Status",
+            "type": "UDT_MotorDolStatus",
+            "role": "static.Status"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_MotorDolHmi.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.valve2posstatus",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Basic",
+            "type": "UDT_BasicStatus",
+            "role": "static.Basic"
+          },
+          {
+            "name": "Open",
+            "type": "Bool",
+            "role": "static.Open"
+          },
+          {
+            "name": "Closed",
+            "type": "Bool",
+            "role": "static.Closed"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_Valve2PosStatus.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.valve2poshmi",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "CmdOpen",
+            "type": "Bool",
+            "role": "static.CmdOpen"
+          },
+          {
+            "name": "CmdClose",
+            "type": "Bool",
+            "role": "static.CmdClose"
+          },
+          {
+            "name": "CmdReset",
+            "type": "Bool",
+            "role": "static.CmdReset"
+          },
+          {
+            "name": "Status",
+            "type": "UDT_Valve2PosStatus",
+            "role": "static.Status"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_Valve2PosHmi.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.digitalsensorstatus",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Basic",
+            "type": "UDT_BasicStatus",
+            "role": "static.Basic"
+          },
+          {
+            "name": "Raw",
+            "type": "Bool",
+            "role": "static.Raw"
+          },
+          {
+            "name": "Value",
+            "type": "Bool",
+            "role": "static.Value"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_DigitalSensorStatus.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.digitalsensorhmi",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Status",
+            "type": "UDT_DigitalSensorStatus",
+            "role": "static.Status"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_DigitalSensorHmi.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.analoginstatus",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Basic",
+            "type": "UDT_BasicStatus",
+            "role": "static.Basic"
+          },
+          {
+            "name": "Valid",
+            "type": "Bool",
+            "role": "static.Valid"
+          },
+          {
+            "name": "Clamped",
+            "type": "Bool",
+            "role": "static.Clamped"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_AnalogInStatus.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.analoginhmi",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Status",
+            "type": "UDT_AnalogInStatus",
+            "role": "static.Status"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_AnalogInHmi.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.modestatus",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Basic",
+            "type": "UDT_BasicStatus",
+            "role": "static.Basic"
+          },
+          {
+            "name": "Mode",
+            "type": "Int",
+            "role": "static.Mode"
+          },
+          {
+            "name": "Permit",
+            "type": "Bool",
+            "role": "static.Permit"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_ModeStatus.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.modehmi",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "RequestedMode",
+            "type": "Int",
+            "role": "static.RequestedMode"
+          },
+          {
+            "name": "CmdStart",
+            "type": "Bool",
+            "role": "static.CmdStart"
+          },
+          {
+            "name": "CmdStop",
+            "type": "Bool",
+            "role": "static.CmdStop"
+          },
+          {
+            "name": "CmdReset",
+            "type": "Bool",
+            "role": "static.CmdReset"
+          },
+          {
+            "name": "Status",
+            "type": "UDT_ModeStatus",
+            "role": "static.Status"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_ModeHmi.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "udt.basicStatus",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "Active",
+            "type": "Bool",
+            "role": "static.Active"
+          },
+          {
+            "name": "Ready",
+            "type": "Bool",
+            "role": "static.Ready"
+          },
+          {
+            "name": "Error",
+            "type": "Bool",
+            "role": "static.Error"
+          },
+          {
+            "name": "Warning",
+            "type": "Bool",
+            "role": "static.Warning"
+          },
+          {
+            "name": "State",
+            "type": "Int",
+            "role": "static.State"
+          },
+          {
+            "name": "ErrorCode",
+            "type": "Int",
+            "role": "static.ErrorCode"
+          },
+          {
+            "name": "Setpoint",
+            "type": "Real",
+            "role": "static.Setpoint"
+          },
+          {
+            "name": "Actual",
+            "type": "Real",
+            "role": "static.Actual"
+          },
+          {
+            "name": "Output",
+            "type": "Real",
+            "role": "static.Output"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/UDT_BasicStatus.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "db.hmiInterface",
+      "kind": "DB",
+      "version": "1.0.0",
+      "interface": {
+        "static": [
+          {
+            "name": "CmdEnable",
+            "type": "Bool",
+            "role": "static.CmdEnable"
+          },
+          {
+            "name": "CmdDisable",
+            "type": "Bool",
+            "role": "static.CmdDisable"
+          },
+          {
+            "name": "CmdReset",
+            "type": "Bool",
+            "role": "static.CmdReset"
+          },
+          {
+            "name": "CmdApply",
+            "type": "Bool",
+            "role": "static.CmdApply"
+          },
+          {
+            "name": "StatusActive",
+            "type": "Bool",
+            "role": "static.StatusActive"
+          },
+          {
+            "name": "StatusError",
+            "type": "Bool",
+            "role": "static.StatusError"
+          },
+          {
+            "name": "StatusWarning",
+            "type": "Bool",
+            "role": "static.StatusWarning"
+          },
+          {
+            "name": "StepNo",
+            "type": "Int",
+            "role": "static.StepNo"
+          },
+          {
+            "name": "Setpoint",
+            "type": "Real",
+            "role": "static.Setpoint"
+          },
+          {
+            "name": "Actual",
+            "type": "Real",
+            "role": "static.Actual"
+          },
+          {
+            "name": "Output",
+            "type": "Real",
+            "role": "static.Output"
+          },
+          {
+            "name": "OutputMin",
+            "type": "Real",
+            "role": "static.OutputMin"
+          },
+          {
+            "name": "OutputMax",
+            "type": "Real",
+            "role": "static.OutputMax"
+          },
+          {
+            "name": "CounterPreset",
+            "type": "DInt",
+            "role": "static.CounterPreset"
+          },
+          {
+            "name": "CounterValue",
+            "type": "DInt",
+            "role": "static.CounterValue"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/DB_HMI_Interface.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.motorDol",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Permit",
+            "type": "Bool",
+            "role": "Permit"
+          },
+          {
+            "name": "Feedback",
+            "type": "Bool",
+            "role": "Feedback"
+          },
+          {
+            "name": "Overload",
+            "type": "Bool",
+            "role": "Overload"
+          },
+          {
+            "name": "CycleMs",
+            "type": "DInt",
+            "role": "CycleMs"
+          },
+          {
+            "name": "FeedbackTimeoutMs",
+            "type": "DInt",
+            "role": "FeedbackTimeoutMs"
+          }
+        ],
+        "out": [
+          {
+            "name": "Run",
+            "type": "Bool",
+            "role": "Run"
+          }
+        ],
+        "static": [
+          {
+            "name": "Hmi",
+            "type": "UDT_MotorDolHmi",
+            "role": "hmi.interface"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_MotorDol.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.valve2Pos",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Permit",
+            "type": "Bool",
+            "role": "Permit"
+          },
+          {
+            "name": "OpenFeedback",
+            "type": "Bool",
+            "role": "OpenFeedback"
+          },
+          {
+            "name": "ClosedFeedback",
+            "type": "Bool",
+            "role": "ClosedFeedback"
+          },
+          {
+            "name": "CycleMs",
+            "type": "DInt",
+            "role": "CycleMs"
+          },
+          {
+            "name": "TravelTimeoutMs",
+            "type": "DInt",
+            "role": "TravelTimeoutMs"
+          }
+        ],
+        "out": [
+          {
+            "name": "OpenCommand",
+            "type": "Bool",
+            "role": "OpenCommand"
+          },
+          {
+            "name": "CloseCommand",
+            "type": "Bool",
+            "role": "CloseCommand"
+          }
+        ],
+        "static": [
+          {
+            "name": "Hmi",
+            "type": "UDT_Valve2PosHmi",
+            "role": "hmi.interface"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_Valve2Pos.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.digitalSensor",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Input",
+            "type": "Bool",
+            "role": "Input"
+          },
+          {
+            "name": "Invert",
+            "type": "Bool",
+            "role": "Invert"
+          },
+          {
+            "name": "CycleMs",
+            "type": "DInt",
+            "role": "CycleMs"
+          },
+          {
+            "name": "DebounceMs",
+            "type": "DInt",
+            "role": "DebounceMs"
+          }
+        ],
+        "out": [],
+        "static": [
+          {
+            "name": "Hmi",
+            "type": "UDT_DigitalSensorHmi",
+            "role": "hmi.interface"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_DigitalSensor.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.analogIn",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Raw",
+            "type": "Int",
+            "role": "Raw"
+          },
+          {
+            "name": "RawMin",
+            "type": "Real",
+            "role": "RawMin"
+          },
+          {
+            "name": "RawMax",
+            "type": "Real",
+            "role": "RawMax"
+          },
+          {
+            "name": "EngMin",
+            "type": "Real",
+            "role": "EngMin"
+          },
+          {
+            "name": "EngMax",
+            "type": "Real",
+            "role": "EngMax"
+          }
+        ],
+        "out": [],
+        "static": [
+          {
+            "name": "Hmi",
+            "type": "UDT_AnalogInHmi",
+            "role": "hmi.interface"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_AnalogIn.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.modeManager",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Enable",
+            "type": "Bool",
+            "role": "Enable"
+          },
+          {
+            "name": "FaultInput",
+            "type": "Bool",
+            "role": "FaultInput"
+          }
+        ],
+        "out": [],
+        "static": [
+          {
+            "name": "Hmi",
+            "type": "UDT_ModeHmi",
+            "role": "hmi.interface"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_ModeManager.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.basicLatch",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Enable",
+            "type": "Bool",
+            "role": "in.Enable"
+          },
+          {
+            "name": "Disable",
+            "type": "Bool",
+            "role": "in.Disable"
+          },
+          {
+            "name": "FaultInput",
+            "type": "Bool",
+            "role": "in.FaultInput"
+          },
+          {
+            "name": "Reset",
+            "type": "Bool",
+            "role": "in.Reset"
+          }
+        ],
+        "out": [
+          {
+            "name": "Active",
+            "type": "Bool",
+            "role": "out.Active"
+          },
+          {
+            "name": "Fault",
+            "type": "Bool",
+            "role": "out.Fault"
+          },
+          {
+            "name": "Healthy",
+            "type": "Bool",
+            "role": "out.Healthy"
+          }
+        ],
+        "static": [
+          {
+            "name": "ActiveLatch",
+            "type": "Bool",
+            "role": "static.ActiveLatch"
+          },
+          {
+            "name": "FaultLatch",
+            "type": "Bool",
+            "role": "static.FaultLatch"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_BasicLatch.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.stepSequence",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Enable",
+            "type": "Bool",
+            "role": "in.Enable"
+          },
+          {
+            "name": "Next",
+            "type": "Bool",
+            "role": "in.Next"
+          },
+          {
+            "name": "Reset",
+            "type": "Bool",
+            "role": "in.Reset"
+          },
+          {
+            "name": "ConditionOk",
+            "type": "Bool",
+            "role": "in.ConditionOk"
+          }
+        ],
+        "out": [
+          {
+            "name": "StepNo",
+            "type": "Int",
+            "role": "out.StepNo"
+          },
+          {
+            "name": "Ready",
+            "type": "Bool",
+            "role": "out.Ready"
+          },
+          {
+            "name": "Busy",
+            "type": "Bool",
+            "role": "out.Busy"
+          },
+          {
+            "name": "Done",
+            "type": "Bool",
+            "role": "out.Done"
+          },
+          {
+            "name": "Progress",
+            "type": "Real",
+            "role": "out.Progress"
+          }
+        ],
+        "static": [
+          {
+            "name": "State",
+            "type": "Int",
+            "role": "static.State"
+          },
+          {
+            "name": "LastNext",
+            "type": "Bool",
+            "role": "static.LastNext"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_StepSequenceDemo.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.timerCounter",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Enable",
+            "type": "Bool",
+            "role": "in.Enable"
+          },
+          {
+            "name": "CountPulse",
+            "type": "Bool",
+            "role": "in.CountPulse"
+          },
+          {
+            "name": "Reset",
+            "type": "Bool",
+            "role": "in.Reset"
+          },
+          {
+            "name": "PresetCount",
+            "type": "DInt",
+            "role": "in.PresetCount"
+          }
+        ],
+        "out": [
+          {
+            "name": "Running",
+            "type": "Bool",
+            "role": "out.Running"
+          },
+          {
+            "name": "CounterDone",
+            "type": "Bool",
+            "role": "out.CounterDone"
+          },
+          {
+            "name": "CountValue",
+            "type": "DInt",
+            "role": "out.CountValue"
+          },
+          {
+            "name": "RemainingCount",
+            "type": "DInt",
+            "role": "out.RemainingCount"
+          },
+          {
+            "name": "DonePercent",
+            "type": "Real",
+            "role": "out.DonePercent"
+          }
+        ],
+        "static": [
+          {
+            "name": "LastCountPulse",
+            "type": "Bool",
+            "role": "static.LastCountPulse"
+          },
+          {
+            "name": "Accum",
+            "type": "DInt",
+            "role": "static.Accum"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_TimerCounterDemo.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fc.scaleLimit",
+      "kind": "FC",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "RawValue",
+            "type": "Real",
+            "role": "in.RawValue"
+          },
+          {
+            "name": "RawMin",
+            "type": "Real",
+            "role": "in.RawMin"
+          },
+          {
+            "name": "RawMax",
+            "type": "Real",
+            "role": "in.RawMax"
+          },
+          {
+            "name": "EngMin",
+            "type": "Real",
+            "role": "in.EngMin"
+          },
+          {
+            "name": "EngMax",
+            "type": "Real",
+            "role": "in.EngMax"
+          }
+        ],
+        "out": [
+          {
+            "name": "EngValue",
+            "type": "Real",
+            "role": "out.EngValue"
+          },
+          {
+            "name": "Valid",
+            "type": "Bool",
+            "role": "out.Valid"
+          },
+          {
+            "name": "Clamped",
+            "type": "Bool",
+            "role": "out.Clamped"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FC_BasicScaleLimit.scl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fb.programAlarm",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Signal",
+            "type": "Bool",
+            "role": "Signal"
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "releases": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "kind": "sclSource",
+          "files": [
+            "sources/plc/FB_BasicProgramAlarm.scl"
+          ]
+        }
+      ]
+    }
+  ],
+  "libraries": []
+}

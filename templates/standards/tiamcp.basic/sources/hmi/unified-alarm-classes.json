@@ -1,0 +1,21 @@
+{
+  "releases": [
+    "20",
+    "21"
+  ],
+  "category": "alarmClasses",
+  "classes": [
+    {
+      "id": "Fault",
+      "priority": 100,
+      "acknowledgement": "single",
+      "color": "#DC2626"
+    },
+    {
+      "id": "Warning",
+      "priority": 50,
+      "acknowledgement": "none",
+      "color": "#F59E0B"
+    }
+  ]
+}

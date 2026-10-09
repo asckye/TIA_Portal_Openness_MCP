@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" />
     <None Update="Examples/*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../templates/standards/tiamcp.basic/**/*" Link="BasicPackage/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System.IO.Compression" />

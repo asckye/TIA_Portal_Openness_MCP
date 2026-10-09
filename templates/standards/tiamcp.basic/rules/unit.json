@@ -1,0 +1,123 @@
+{
+  "deviceType": "unit",
+  "title": {
+    "en-US": "Unit controller",
+    "zh-CN": "单元控制器"
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "programAlarm": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "programAlarm"
+    ],
+    "additionalProperties": false
+  },
+  "signals": [],
+  "emit": [
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.motordolstatus@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.motordolhmi@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.valve2posstatus@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.valve2poshmi@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.digitalsensorstatus@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.digitalsensorhmi@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.analoginstatus@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.analoginhmi@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.modestatus@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.modehmi@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/udt.basicStatus@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/db.hmiInterface@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/fb.basicLatch@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/fb.stepSequence@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/fb.timerCounter@^1"
+    },
+    {
+      "kind": "plc.type",
+      "type": "lib:tiamcp.basic/fc.scaleLimit@^1"
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.modeManager@^1",
+      "name": "{{naming.idb(device)}}",
+      "callIn": "{{unit.callBlock}}",
+      "bind": {
+        "Enable": "TRUE",
+        "FaultInput": "FALSE"
+      }
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.programAlarm@^1",
+      "name": "IDB_{{unit.id}}-Z00Unit",
+      "callIn": "{{unit.callBlock}}",
+      "when": {
+        "equals": {
+          "path": "device.params.programAlarm",
+          "value": true
+        }
+      },
+      "bind": {
+        "Signal": "{{naming.idb(device)}}.Hmi.Status.Basic.Error"
+      }
+    },
+    {
+      "kind": "alarm",
+      "class": "Fault",
+      "textKey": "unit.fault"
+    },
+    {
+      "kind": "hmi.widget",
+      "template": "sources/hmi/unit.json",
+      "screen": "{{device.hmi.screen}}",
+      "slot": "auto"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+FUNCTION_BLOCK "FB_AnalogIn"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+VAR_INPUT
+    Raw : Int;
+    RawMin : Real;
+    RawMax : Real;
+    EngMin : Real;
+    EngMax : Real;
+END_VAR
+VAR
+    Hmi : "UDT_AnalogInHmi";
+END_VAR
+BEGIN
+    IF (#RawMax > #RawMin) AND (#EngMax >= #EngMin) THEN
+        "FC_BasicScaleLimit"(RawValue := INT_TO_REAL(#Raw), RawMin := #RawMin, RawMax := #RawMax,
+            EngMin := #EngMin, EngMax := #EngMax, EngValue => #Hmi.Status.Basic.Actual,
+            Valid => #Hmi.Status.Valid, Clamped => #Hmi.Status.Clamped);
+    ELSE
+        #Hmi.Status.Basic.Actual := #EngMin;
+        #Hmi.Status.Valid := FALSE;
+        #Hmi.Status.Clamped := FALSE;
+    END_IF;
+    #Hmi.Status.Basic.Active := #Hmi.Status.Valid;
+    #Hmi.Status.Basic.Ready := #Hmi.Status.Valid;
+    #Hmi.Status.Basic.Error := NOT #Hmi.Status.Valid;
+    #Hmi.Status.Basic.Warning := #Hmi.Status.Clamped;
+    #Hmi.Status.Basic.Output := #Hmi.Status.Basic.Actual;
+    #Hmi.Status.Basic.State := 0;
+    #Hmi.Status.Basic.ErrorCode := 0;
+    IF NOT #Hmi.Status.Valid THEN
+        #Hmi.Status.Basic.State := 3;
+        #Hmi.Status.Basic.ErrorCode := 1;
+    END_IF;
+END_FUNCTION_BLOCK

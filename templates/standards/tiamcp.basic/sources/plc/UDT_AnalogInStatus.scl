@@ -1,0 +1,8 @@
+TYPE "UDT_AnalogInStatus"
+VERSION : 1.0
+STRUCT
+    Basic : "UDT_BasicStatus";
+    Valid : Bool;
+    Clamped : Bool;
+END_STRUCT;
+END_TYPE

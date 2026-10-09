@@ -1,0 +1,84 @@
+{
+  "license": "MIT",
+  "sourceRepository": "https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP",
+  "snapshotCommit": "84f948c1624fba5a97d054b38e17ec55ff45b4e1",
+  "hashDefinition": "SHA-256 of repository blob bytes before package adaptations",
+  "sources": [
+    {
+      "path": "LICENSE",
+      "sha256": "60e8f88a84929e2d4b1eebde26c73f7212c544424a960443305374b365852ec1",
+      "license": "MIT"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "03e5813483d8fb84babaa07270bbb4f1617493d96f3a8d7657c1d4f3d5915602",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/plc/plcbuild-json/udt_basic_status.json",
+      "sha256": "58ea5dbe646cfd8df4ee3b71c1402a9176b7fd9bd56543b16796283fdc0142ce",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/plc/plcbuild-json/db_hmi_interface.json",
+      "sha256": "b483bcde59d2222a6824f842a5a54557d26d045c8917b68eee2d1422fcf79edd",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/plc/scl-examples/FB_BasicLatch.scl",
+      "sha256": "2c2df01a43e0b9c5004f5a1276c2d2cf355d014efd40de966faeccd3fc7b3f8d",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/plc/scl-examples/FB_StepSequenceDemo.scl",
+      "sha256": "ee997ffe199f47fba3a4f9fb57ce6548eb71f5ad37ec295d1f0d42977f4054e1",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/plc/scl-examples/FB_TimerCounterDemo.scl",
+      "sha256": "fb4bb5d29343b32c60dabdbe56c1bed32524415879697dc21c04c3a3532f039f",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/plc/scl-examples/FC_BasicScaleLimit.scl",
+      "sha256": "7090e19563297a4d99b57c642b411dc698dbc761e163bcbb42b021c0513a42bf",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_basic_dashboard_1024x768.json",
+      "sha256": "807fdfb9dc8f77a8e8e860c3df5735e22a7c2286f895f11fe9c4c0e7436e2e93",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_basic_event_log_1024x768.json",
+      "sha256": "3c2ed9800324a87adce9d7620e228e4f47916e859216de503071869411a1aaa7",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_basic_tag_diagnostics_1024x768.json",
+      "sha256": "c91e9e2f27bfdef88c7b2aa13542090f52bcf45e2a6daf7e88807df96a0a6399",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_control_strip_1024x768.json",
+      "sha256": "1cffbebb09aa8aad8601a04765d4cda3a74257373651833d31747e4e3968cdaf",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_overview_1280x800.json",
+      "sha256": "0c5c857c0fd313faae3bb364d628a6f102f22d95452ce2cd6410075750b1bab8",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_parameter_page_1024x768.json",
+      "sha256": "546b42722398c5c3d5156b17059186bc23e372f700f173409391b02c83890614",
+      "license": "MIT"
+    },
+    {
+      "path": "templates/hmi/unified_trend_page_1024x768.json",
+      "sha256": "0330ab0d71c912b4f4ca16ac237484cb970ab239ef68cb7ef6d19474e638b39f",
+      "license": "MIT"
+    }
+  ],
+  "snapshotRepository": "https://github.com/asckye/TIA_Portal_Openness_MCP"
+}

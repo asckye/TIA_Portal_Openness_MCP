@@ -1,0 +1,10 @@
+TYPE "UDT_ModeHmi"
+VERSION : 1.0
+STRUCT
+    RequestedMode : Int;
+    CmdStart : Bool;
+    CmdStop : Bool;
+    CmdReset : Bool;
+    Status : "UDT_ModeStatus";
+END_STRUCT;
+END_TYPE

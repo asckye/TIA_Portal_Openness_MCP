@@ -1,0 +1,145 @@
+{
+  "profiles": [
+    {
+      "id": "wide",
+      "kind": "WinCCUnified",
+      "width": 1280,
+      "height": 800
+    },
+    {
+      "id": "standard",
+      "kind": "WinCCUnified",
+      "width": 1024,
+      "height": 768
+    }
+  ],
+  "theme": {
+    "background": "#F3F6FA",
+    "header": "#111827",
+    "text": "#172033",
+    "accent": "#3B82F6",
+    "fault": "#DC2626",
+    "warning": "#F59E0B"
+  },
+  "screens": [
+    {
+      "id": "screen0",
+      "name": "Basic_basic_dashboard_1024x768",
+      "template": "sources/hmi/unified_basic_dashboard_1024x768.json",
+      "profile": "standard"
+    },
+    {
+      "id": "screen1",
+      "name": "Basic_basic_event_log_1024x768",
+      "template": "sources/hmi/unified_basic_event_log_1024x768.json",
+      "profile": "standard"
+    },
+    {
+      "id": "screen2",
+      "name": "Basic_basic_tag_diagnostics_1024x768",
+      "template": "sources/hmi/unified_basic_tag_diagnostics_1024x768.json",
+      "profile": "standard"
+    },
+    {
+      "id": "screen3",
+      "name": "Basic_control_strip_1024x768",
+      "template": "sources/hmi/unified_control_strip_1024x768.json",
+      "profile": "standard"
+    },
+    {
+      "id": "screen4",
+      "name": "Basic_overview_1280x800",
+      "template": "sources/hmi/unified_overview_1280x800.json",
+      "profile": "wide"
+    },
+    {
+      "id": "screen5",
+      "name": "Basic_parameter_page_1024x768",
+      "template": "sources/hmi/unified_parameter_page_1024x768.json",
+      "profile": "standard"
+    },
+    {
+      "id": "screen6",
+      "name": "Basic_trend_page_1024x768",
+      "template": "sources/hmi/unified_trend_page_1024x768.json",
+      "profile": "standard"
+    }
+  ],
+  "widgets": [
+    {
+      "id": "motor.dol",
+      "deviceType": "motor.dol",
+      "kind": "elementGroup",
+      "template": "sources/hmi/motor.dol.json",
+      "interfaceMap": {
+        "Status.Basic.Active": "{{naming.idb(device)}}.Hmi.Status.Basic.Active",
+        "Status.Basic.Error": "{{naming.idb(device)}}.Hmi.Status.Basic.Error",
+        "CmdStart": "{{naming.idb(device)}}.Hmi.CmdStart",
+        "CmdStop": "{{naming.idb(device)}}.Hmi.CmdStop",
+        "CmdReset": "{{naming.idb(device)}}.Hmi.CmdReset"
+      }
+    },
+    {
+      "id": "valve.2pos",
+      "deviceType": "valve.2pos",
+      "kind": "elementGroup",
+      "template": "sources/hmi/valve.2pos.json",
+      "interfaceMap": {
+        "Status.Basic.Active": "{{naming.idb(device)}}.Hmi.Status.Basic.Active",
+        "Status.Basic.Error": "{{naming.idb(device)}}.Hmi.Status.Basic.Error",
+        "CmdOpen": "{{naming.idb(device)}}.Hmi.CmdOpen",
+        "CmdClose": "{{naming.idb(device)}}.Hmi.CmdClose",
+        "CmdReset": "{{naming.idb(device)}}.Hmi.CmdReset"
+      }
+    },
+    {
+      "id": "sensor.digital",
+      "deviceType": "sensor.digital",
+      "kind": "elementGroup",
+      "template": "sources/hmi/sensor.digital.json",
+      "interfaceMap": {
+        "Status.Basic.Active": "{{naming.idb(device)}}.Hmi.Status.Basic.Active",
+        "Status.Basic.Error": "{{naming.idb(device)}}.Hmi.Status.Basic.Error",
+        "Status.Raw": "{{naming.idb(device)}}.Hmi.Status.Raw",
+        "Status.Value": "{{naming.idb(device)}}.Hmi.Status.Value"
+      }
+    },
+    {
+      "id": "analog.in",
+      "deviceType": "analog.in",
+      "kind": "elementGroup",
+      "template": "sources/hmi/analog.in.json",
+      "interfaceMap": {
+        "Status.Basic.Active": "{{naming.idb(device)}}.Hmi.Status.Basic.Active",
+        "Status.Basic.Error": "{{naming.idb(device)}}.Hmi.Status.Basic.Error",
+        "Status.Basic.Actual": "{{naming.idb(device)}}.Hmi.Status.Basic.Actual",
+        "Status.Valid": "{{naming.idb(device)}}.Hmi.Status.Valid",
+        "Status.Clamped": "{{naming.idb(device)}}.Hmi.Status.Clamped"
+      }
+    },
+    {
+      "id": "unit",
+      "deviceType": "unit",
+      "kind": "elementGroup",
+      "template": "sources/hmi/unit.json",
+      "interfaceMap": {
+        "Status.Basic.Active": "{{naming.idb(device)}}.Hmi.Status.Basic.Active",
+        "Status.Basic.Error": "{{naming.idb(device)}}.Hmi.Status.Basic.Error",
+        "RequestedMode": "{{naming.idb(device)}}.Hmi.RequestedMode",
+        "CmdStart": "{{naming.idb(device)}}.Hmi.CmdStart",
+        "CmdStop": "{{naming.idb(device)}}.Hmi.CmdStop",
+        "CmdReset": "{{naming.idb(device)}}.Hmi.CmdReset",
+        "Status.Mode": "{{naming.idb(device)}}.Hmi.Status.Mode",
+        "Status.Permit": "{{naming.idb(device)}}.Hmi.Status.Permit",
+        "Status.Basic.State": "{{naming.idb(device)}}.Hmi.Status.Basic.State"
+      }
+    }
+  ],
+  "tagGroups": [
+    {
+      "id": "unit",
+      "name": "Hmi_{{unit.id}}",
+      "path": "90_Hmi"
+    }
+  ]
+}

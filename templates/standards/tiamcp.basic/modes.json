@@ -1,0 +1,178 @@
+{
+  "models": [
+    {
+      "id": "basic",
+      "implementationType": "fb.modeManager",
+      "dataType": "udt.modestatus",
+      "modes": [
+        {
+          "id": "automatic",
+          "number": 0,
+          "title": {
+            "en-US": "Automatic",
+            "zh-CN": "自动"
+          }
+        },
+        {
+          "id": "manual",
+          "number": 1,
+          "title": {
+            "en-US": "Manual",
+            "zh-CN": "手动"
+          }
+        },
+        {
+          "id": "maintenance",
+          "number": 2,
+          "title": {
+            "en-US": "Maintenance",
+            "zh-CN": "维护"
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "stopped",
+          "number": 0,
+          "title": {
+            "en-US": "Stopped",
+            "zh-CN": "停止"
+          }
+        },
+        {
+          "id": "ready",
+          "number": 1,
+          "title": {
+            "en-US": "Ready",
+            "zh-CN": "就绪"
+          }
+        },
+        {
+          "id": "running",
+          "number": 2,
+          "title": {
+            "en-US": "Running",
+            "zh-CN": "运行"
+          }
+        },
+        {
+          "id": "fault",
+          "number": 3,
+          "title": {
+            "en-US": "Fault",
+            "zh-CN": "故障"
+          }
+        }
+      ],
+      "commands": [
+        {
+          "id": "start",
+          "number": 1,
+          "title": {
+            "en-US": "Start",
+            "zh-CN": "启动"
+          }
+        },
+        {
+          "id": "stop",
+          "number": 2,
+          "title": {
+            "en-US": "Stop",
+            "zh-CN": "停止"
+          }
+        },
+        {
+          "id": "reset",
+          "number": 3,
+          "title": {
+            "en-US": "Reset",
+            "zh-CN": "复位"
+          }
+        }
+      ],
+      "transitions": [
+        {
+          "from": "stopped",
+          "to": "ready",
+          "completed": true
+        },
+        {
+          "from": "ready",
+          "to": "running",
+          "command": "start"
+        },
+        {
+          "from": "ready",
+          "to": "stopped",
+          "command": "stop"
+        },
+        {
+          "from": "running",
+          "to": "stopped",
+          "command": "stop"
+        },
+        {
+          "from": "stopped",
+          "to": "fault",
+          "completed": true
+        },
+        {
+          "from": "ready",
+          "to": "fault",
+          "completed": true
+        },
+        {
+          "from": "running",
+          "to": "fault",
+          "completed": true
+        },
+        {
+          "from": "fault",
+          "to": "stopped",
+          "command": "reset"
+        }
+      ],
+      "availability": [
+        {
+          "mode": "automatic",
+          "states": [
+            "stopped",
+            "ready",
+            "running",
+            "fault"
+          ]
+        },
+        {
+          "mode": "manual",
+          "states": [
+            "stopped",
+            "ready",
+            "running",
+            "fault"
+          ]
+        },
+        {
+          "mode": "maintenance",
+          "states": [
+            "stopped",
+            "ready",
+            "running",
+            "fault"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "id": "unitHmi",
+          "kind": "hmi",
+          "type": "UDT_ModeHmi",
+          "members": {
+            "mode": "Status.Mode",
+            "state": "Status.Basic.State",
+            "permit": "Status.Permit"
+          }
+        }
+      ]
+    }
+  ]
+}

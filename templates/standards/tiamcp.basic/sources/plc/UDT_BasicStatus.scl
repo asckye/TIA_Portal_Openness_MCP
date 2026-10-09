@@ -1,0 +1,14 @@
+TYPE "UDT_BasicStatus"
+VERSION : 1.0
+STRUCT
+    Active : Bool;
+    Ready : Bool;
+    Error : Bool;
+    Warning : Bool;
+    State : Int;
+    ErrorCode : Int;
+    Setpoint : Real;
+    Actual : Real;
+    Output : Real;
+END_STRUCT;
+END_TYPE

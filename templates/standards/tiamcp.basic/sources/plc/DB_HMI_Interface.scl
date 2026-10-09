@@ -1,0 +1,27 @@
+DATA_BLOCK "DB_HMI_Interface"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 1.0
+VAR
+    CmdEnable : Bool := FALSE;
+    CmdDisable : Bool := FALSE;
+    CmdReset : Bool := FALSE;
+    CmdApply : Bool := FALSE;
+    _pad1_0_4 : Bool := FALSE;
+    _pad1_0_5 : Bool := FALSE;
+    _pad1_0_6 : Bool := FALSE;
+    _pad1_0_7 : Bool := FALSE;
+    StatusActive : Bool := FALSE;
+    StatusError : Bool := FALSE;
+    StatusWarning : Bool := FALSE;
+    StepNo : Int := 0;
+    Setpoint : Real := 0.0;
+    Actual : Real := 0.0;
+    Output : Real := 0.0;
+    OutputMin : Real := 0.0;
+    OutputMax : Real := 100.0;
+    CounterPreset : DInt := 10;
+    CounterValue : DInt := 0;
+END_VAR
+BEGIN
+
+END_DATA_BLOCK

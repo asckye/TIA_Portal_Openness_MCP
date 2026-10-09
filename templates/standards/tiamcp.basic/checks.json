@@ -1,0 +1,42 @@
+{
+  "rules": [
+    {
+      "id": "names",
+      "kind": "naming",
+      "severity": "error",
+      "description": {
+        "en-US": "Use approved FB names",
+        "zh-CN": "使用规定 FB 名称"
+      },
+      "objectKind": "FB",
+      "namingRule": "FB"
+    },
+    {
+      "id": "source",
+      "kind": "sclLint",
+      "severity": "error",
+      "description": {
+        "en-US": "Check external SCL before import",
+        "zh-CN": "导入前检查外部 SCL"
+      }
+    },
+    {
+      "id": "groups",
+      "kind": "structure",
+      "severity": "warning",
+      "description": {
+        "en-US": "Check the required structure groups",
+        "zh-CN": "检查必需结构分组"
+      }
+    },
+    {
+      "id": "hmi",
+      "kind": "hmi",
+      "severity": "warning",
+      "description": {
+        "en-US": "Use symbolic instance HMI interfaces",
+        "zh-CN": "使用符号实例 HMI 接口"
+      }
+    }
+  ]
+}

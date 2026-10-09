@@ -1,0 +1,204 @@
+FUNCTION "FC_U01_Calls" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+BEGIN
+    "IDB_U01-00U01"(
+        "Enable" := TRUE,
+        "FaultInput" := FALSE
+    );
+    "IDB_U01-A01"(
+        "EngMax" := 100,
+        "EngMin" := 0,
+        "Raw" := "U01-A01_RAW",
+        "RawMax" := 27648,
+        "RawMin" := 0
+    );
+    "IDB_U01-A02"(
+        "EngMax" := 100,
+        "EngMin" := 0,
+        "Raw" := "U01-A02_RAW",
+        "RawMax" := 27648,
+        "RawMin" := 0
+    );
+    "IDB_U01-M01"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M01_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M01_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M01_RUN"
+    );
+    "IDB_U01-M02"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M02_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M02_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M02_RUN"
+    );
+    "IDB_U01-M03"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M03_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M03_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M03_RUN"
+    );
+    "IDB_U01-M04"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M04_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M04_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M04_RUN"
+    );
+    "IDB_U01-M05"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M05_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M05_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M05_RUN"
+    );
+    "IDB_U01-M06"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M06_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M06_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M06_RUN"
+    );
+    "IDB_U01-M07"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M07_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M07_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M07_RUN"
+    );
+    "IDB_U01-M08"(
+        "CycleMs" := 10,
+        "Feedback" := "U01-M08_FEEDBACK",
+        "FeedbackTimeoutMs" := 3000,
+        "Overload" := "U01-M08_OVERLOAD",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "Run" => "U01-M08_RUN"
+    );
+    "IDB_U01-S01"(
+        "CycleMs" := 10,
+        "DebounceMs" := 30,
+        "Input" := "U01-S01_INPUT",
+        "Invert" := FALSE
+    );
+    "IDB_U01-S02"(
+        "CycleMs" := 10,
+        "DebounceMs" := 30,
+        "Input" := "U01-S02_INPUT",
+        "Invert" := FALSE
+    );
+    "IDB_U01-S03"(
+        "CycleMs" := 10,
+        "DebounceMs" := 30,
+        "Input" := "U01-S03_INPUT",
+        "Invert" := FALSE
+    );
+    "IDB_U01-S04"(
+        "CycleMs" := 10,
+        "DebounceMs" := 30,
+        "Input" := "U01-S04_INPUT",
+        "Invert" := FALSE
+    );
+    "IDB_U01-S05"(
+        "CycleMs" := 10,
+        "DebounceMs" := 30,
+        "Input" := "U01-S05_INPUT",
+        "Invert" := FALSE
+    );
+    "IDB_U01-S06"(
+        "CycleMs" := 10,
+        "DebounceMs" := 30,
+        "Input" := "U01-S06_INPUT",
+        "Invert" := FALSE
+    );
+    "IDB_U01-V01"(
+        "ClosedFeedback" := "U01-V01_CLOSED",
+        "CycleMs" := 10,
+        "OpenFeedback" := "U01-V01_OPENED",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "TravelTimeoutMs" := 3000,
+        "CloseCommand" => "U01-V01_CLOSE",
+        "OpenCommand" => "U01-V01_OPEN"
+    );
+    "IDB_U01-V02"(
+        "ClosedFeedback" := "U01-V02_CLOSED",
+        "CycleMs" := 10,
+        "OpenFeedback" := "U01-V02_OPENED",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "TravelTimeoutMs" := 3000,
+        "CloseCommand" => "U01-V02_CLOSE",
+        "OpenCommand" => "U01-V02_OPEN"
+    );
+    "IDB_U01-V03"(
+        "ClosedFeedback" := "U01-V03_CLOSED",
+        "CycleMs" := 10,
+        "OpenFeedback" := "U01-V03_OPENED",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "TravelTimeoutMs" := 3000,
+        "CloseCommand" => "U01-V03_CLOSE",
+        "OpenCommand" => "U01-V03_OPEN"
+    );
+    "IDB_U01-V04"(
+        "ClosedFeedback" := "U01-V04_CLOSED",
+        "CycleMs" := 10,
+        "OpenFeedback" := "U01-V04_OPENED",
+        "Permit" := "IDB_U01-00U01"."Hmi"."Status"."Permit",
+        "TravelTimeoutMs" := 3000,
+        "CloseCommand" => "U01-V04_CLOSE",
+        "OpenCommand" => "U01-V04_OPEN"
+    );
+    "IDB_U01-Z00Unit"(
+        "Signal" := "IDB_U01-00U01"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZA01"(
+        "Signal" := "IDB_U01-A01"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZA02"(
+        "Signal" := "IDB_U01-A02"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM01"(
+        "Signal" := "IDB_U01-M01"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM02"(
+        "Signal" := "IDB_U01-M02"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM03"(
+        "Signal" := "IDB_U01-M03"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM04"(
+        "Signal" := "IDB_U01-M04"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM05"(
+        "Signal" := "IDB_U01-M05"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM06"(
+        "Signal" := "IDB_U01-M06"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM07"(
+        "Signal" := "IDB_U01-M07"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZM08"(
+        "Signal" := "IDB_U01-M08"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZV01"(
+        "Signal" := "IDB_U01-V01"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZV02"(
+        "Signal" := "IDB_U01-V02"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZV03"(
+        "Signal" := "IDB_U01-V03"."Hmi"."Status"."Basic"."Error"
+    );
+    "IDB_U01-ZV04"(
+        "Signal" := "IDB_U01-V04"."Hmi"."Status"."Basic"."Error"
+    );
+END_FUNCTION

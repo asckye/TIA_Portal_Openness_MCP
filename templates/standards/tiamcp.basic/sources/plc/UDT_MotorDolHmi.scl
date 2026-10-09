@@ -1,0 +1,9 @@
+TYPE "UDT_MotorDolHmi"
+VERSION : 1.0
+STRUCT
+    CmdStart : Bool;
+    CmdStop : Bool;
+    CmdReset : Bool;
+    Status : "UDT_MotorDolStatus";
+END_STRUCT;
+END_TYPE

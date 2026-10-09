@@ -1,0 +1,117 @@
+{
+  "classes": [
+    {
+      "id": "Fault",
+      "priority": 100,
+      "acknowledgement": "single",
+      "color": "#DC2626"
+    },
+    {
+      "id": "Warning",
+      "priority": 50,
+      "acknowledgement": "none",
+      "color": "#F59E0B"
+    }
+  ],
+  "templates": [
+    {
+      "id": "motor.fault",
+      "deviceType": "motor.dol",
+      "class": "Fault",
+      "textKey": "motor.fault",
+      "backend": "Program_Alarm",
+      "cause": {
+        "en-US": "Input fault or invalid configuration",
+        "zh-CN": "输入故障或配置无效"
+      },
+      "consequence": {
+        "en-US": "Operation inhibited",
+        "zh-CN": "禁止运行"
+      },
+      "remedy": {
+        "en-US": "Inspect the input and configuration before reset",
+        "zh-CN": "复位前检查输入和配置"
+      }
+    },
+    {
+      "id": "valve.fault",
+      "deviceType": "valve.2pos",
+      "class": "Fault",
+      "textKey": "valve.fault",
+      "backend": "Program_Alarm",
+      "cause": {
+        "en-US": "Input fault or invalid configuration",
+        "zh-CN": "输入故障或配置无效"
+      },
+      "consequence": {
+        "en-US": "Operation inhibited",
+        "zh-CN": "禁止运行"
+      },
+      "remedy": {
+        "en-US": "Inspect the input and configuration before reset",
+        "zh-CN": "复位前检查输入和配置"
+      }
+    },
+    {
+      "id": "analog.invalid",
+      "deviceType": "analog.in",
+      "class": "Fault",
+      "textKey": "analog.invalid",
+      "backend": "Program_Alarm",
+      "cause": {
+        "en-US": "Input fault or invalid configuration",
+        "zh-CN": "输入故障或配置无效"
+      },
+      "consequence": {
+        "en-US": "Operation inhibited",
+        "zh-CN": "禁止运行"
+      },
+      "remedy": {
+        "en-US": "Inspect the input and configuration before reset",
+        "zh-CN": "复位前检查输入和配置"
+      }
+    },
+    {
+      "id": "unit.fault",
+      "deviceType": "unit",
+      "class": "Fault",
+      "textKey": "unit.fault",
+      "backend": "Program_Alarm",
+      "cause": {
+        "en-US": "Input fault or invalid configuration",
+        "zh-CN": "输入故障或配置无效"
+      },
+      "consequence": {
+        "en-US": "Operation inhibited",
+        "zh-CN": "禁止运行"
+      },
+      "remedy": {
+        "en-US": "Inspect the input and configuration before reset",
+        "zh-CN": "复位前检查输入和配置"
+      }
+    }
+  ],
+  "texts": {
+    "motor.fault": {
+      "en-US": "{{device.id}}: Motor fault",
+      "zh-CN": "{{device.id}}：电机故障"
+    },
+    "valve.fault": {
+      "en-US": "{{device.id}}: Valve fault",
+      "zh-CN": "{{device.id}}：阀故障"
+    },
+    "analog.invalid": {
+      "en-US": "{{device.id}}: Invalid analog range",
+      "zh-CN": "{{device.id}}：模拟量量程无效"
+    },
+    "unit.fault": {
+      "en-US": "{{device.id}}: Unit fault",
+      "zh-CN": "{{device.id}}：单元故障"
+    }
+  },
+  "numbering": {
+    "start": 1000,
+    "end": 1999,
+    "template": "{{seq('alarms')}}"
+  }
+}

@@ -1,0 +1,44 @@
+FUNCTION_BLOCK "FB_ModeManager"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+VAR_INPUT
+    Enable : Bool;
+    FaultInput : Bool;
+END_VAR
+VAR
+    Hmi : "UDT_ModeHmi";
+    State : Int;
+    Mode : Int;
+    FaultLatch : Bool;
+END_VAR
+BEGIN
+IF #FaultInput THEN
+        #FaultLatch := TRUE;
+    ELSIF #Hmi.CmdReset THEN
+        #FaultLatch := FALSE;
+    END_IF;
+    IF #FaultLatch THEN
+        #State := 3;
+    ELSIF NOT #Enable OR #Hmi.CmdStop THEN
+        #State := 0;
+    ELSIF #State = 3 THEN
+        #State := 0;
+    ELSIF #State = 0 THEN
+        #State := 1;
+    ELSIF (#State = 1) AND #Hmi.CmdStart THEN
+        #State := 2;
+    END_IF;
+    // Mode changes require a stopped unit. 0=automatic, 1=manual, 2=maintenance.
+    IF (#State = 0) AND (#Hmi.RequestedMode >= 0) AND (#Hmi.RequestedMode <= 2) THEN
+        #Mode := #Hmi.RequestedMode;
+    END_IF;
+    #Hmi.Status.Mode := #Mode;
+    #Hmi.Status.Permit := (#State = 2) AND #Enable AND NOT #FaultLatch;
+    #Hmi.Status.Basic.Active := #State = 2;
+    #Hmi.Status.Basic.Ready := #State = 1;
+    #Hmi.Status.Basic.Error := #FaultLatch;
+    #Hmi.Status.Basic.Warning := (#Hmi.RequestedMode < 0) OR (#Hmi.RequestedMode > 2);
+    #Hmi.Status.Basic.State := #State;
+    #Hmi.Status.Basic.ErrorCode := 0;
+    IF #FaultLatch THEN #Hmi.Status.Basic.ErrorCode := 1; END_IF;
+END_FUNCTION_BLOCK

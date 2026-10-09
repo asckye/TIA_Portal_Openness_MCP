@@ -1,0 +1,9 @@
+TYPE "UDT_Valve2PosHmi"
+VERSION : 1.0
+STRUCT
+    CmdOpen : Bool;
+    CmdClose : Bool;
+    CmdReset : Bool;
+    Status : "UDT_Valve2PosStatus";
+END_STRUCT;
+END_TYPE

@@ -1,0 +1,6 @@
+TYPE "UDT_AnalogInHmi"
+VERSION : 1.0
+STRUCT
+    Status : "UDT_AnalogInStatus";
+END_STRUCT;
+END_TYPE

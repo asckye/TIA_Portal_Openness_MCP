@@ -1,0 +1,99 @@
+{
+  "deviceType": "analog.in",
+  "title": {
+    "en-US": "Analog input",
+    "zh-CN": "模拟输入"
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "RawMin": {
+        "type": "number",
+        "minimum": -32768,
+        "maximum": 32767
+      },
+      "RawMax": {
+        "type": "number",
+        "minimum": -32768,
+        "maximum": 32767
+      },
+      "EngMin": {
+        "type": "number",
+        "minimum": -1000000,
+        "maximum": 1000000
+      },
+      "EngMax": {
+        "type": "number",
+        "minimum": -1000000,
+        "maximum": 1000000
+      },
+      "programAlarm": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "RawMin",
+      "RawMax",
+      "EngMin",
+      "EngMax",
+      "programAlarm"
+    ],
+    "additionalProperties": false
+  },
+  "signals": [
+    {
+      "role": "raw",
+      "dir": "AI",
+      "type": "Int"
+    }
+  ],
+  "emit": [
+    {
+      "kind": "plc.tag",
+      "forEach": "signals",
+      "table": "{{unit.tagTable}}",
+      "name": "{{naming.tag(device,signal)}}",
+      "address": "{{alloc.io(signal)}}"
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.analogIn@^1",
+      "name": "{{naming.idb(device)}}",
+      "callIn": "{{unit.callBlock}}",
+      "bind": {
+        "Raw": "{{tag(signal.raw)}}",
+        "RawMin": "{{device.params.RawMin}}",
+        "RawMax": "{{device.params.RawMax}}",
+        "EngMin": "{{device.params.EngMin}}",
+        "EngMax": "{{device.params.EngMax}}"
+      }
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:tiamcp.basic/fb.programAlarm@^1",
+      "name": "IDB_{{unit.id}}-Z{{device.id}}",
+      "callIn": "{{unit.callBlock}}",
+      "when": {
+        "equals": {
+          "path": "device.params.programAlarm",
+          "value": true
+        }
+      },
+      "bind": {
+        "Signal": "{{naming.idb(device)}}.Hmi.Status.Basic.Error"
+      }
+    },
+    {
+      "kind": "alarm",
+      "class": "Fault",
+      "textKey": "analog.invalid"
+    },
+    {
+      "kind": "hmi.widget",
+      "template": "sources/hmi/analog.in.json",
+      "screen": "{{device.hmi.screen}}",
+      "slot": "auto"
+    }
+  ]
+}

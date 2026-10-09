@@ -1,0 +1,65 @@
+FUNCTION_BLOCK "FB_Valve2Pos"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+VAR_INPUT
+    Permit : Bool;
+    OpenFeedback : Bool;
+    ClosedFeedback : Bool;
+    CycleMs : DInt;
+    TravelTimeoutMs : DInt;
+END_VAR
+VAR_OUTPUT
+    OpenCommand : Bool;
+    CloseCommand : Bool;
+END_VAR
+VAR
+    Hmi : "UDT_Valve2PosHmi";
+    TargetOpen : Bool;
+    FaultLatch : Bool;
+    TravelMs : DInt;
+END_VAR
+VAR_TEMP
+    AtTarget : Bool;
+END_VAR
+BEGIN
+IF #OpenFeedback AND #ClosedFeedback THEN
+        #FaultLatch := TRUE;
+    ELSIF #Hmi.CmdReset THEN
+        #FaultLatch := FALSE;
+        #TravelMs := 0;
+    END_IF;
+    IF #Hmi.CmdClose THEN
+        #TargetOpen := FALSE;
+    ELSIF #Hmi.CmdOpen THEN
+        #TargetOpen := TRUE;
+    END_IF;
+    #AtTarget := (#TargetOpen AND #OpenFeedback) OR (NOT #TargetOpen AND #ClosedFeedback);
+    IF #Permit AND NOT #AtTarget AND NOT #FaultLatch THEN
+        IF (#CycleMs > 0) AND (#TravelTimeoutMs > 0) THEN
+            IF #TravelMs < (#TravelTimeoutMs - #CycleMs) THEN
+                #TravelMs := #TravelMs + #CycleMs;
+            ELSE
+                #TravelMs := #TravelTimeoutMs;
+                #FaultLatch := TRUE;
+            END_IF;
+        END_IF;
+    ELSE
+        #TravelMs := 0;
+    END_IF;
+    #OpenCommand := #Permit AND #TargetOpen AND NOT #FaultLatch;
+    #CloseCommand := #Permit AND NOT #TargetOpen AND NOT #FaultLatch;
+    #Hmi.Status.Open := #OpenFeedback;
+    #Hmi.Status.Closed := #ClosedFeedback;
+    #Hmi.Status.Basic.Active := #Permit AND NOT #FaultLatch;
+    #Hmi.Status.Basic.Ready := #AtTarget AND NOT #FaultLatch;
+    #Hmi.Status.Basic.Error := #FaultLatch;
+    #Hmi.Status.Basic.Warning := (#CycleMs <= 0) OR (#TravelTimeoutMs <= 0);
+    #Hmi.Status.Basic.State := 0;
+    #Hmi.Status.Basic.ErrorCode := 0;
+    IF #OpenFeedback THEN #Hmi.Status.Basic.State := 2; END_IF;
+    IF #ClosedFeedback THEN #Hmi.Status.Basic.State := 1; END_IF;
+    IF #FaultLatch THEN
+        #Hmi.Status.Basic.State := 3;
+        #Hmi.Status.Basic.ErrorCode := 1;
+    END_IF;
+END_FUNCTION_BLOCK

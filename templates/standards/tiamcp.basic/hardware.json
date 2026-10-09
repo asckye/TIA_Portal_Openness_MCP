@@ -1,0 +1,25 @@
+{
+  "roles": [],
+  "allocation": {
+    "io": [
+      {
+        "id": "inputs",
+        "direction": "DI",
+        "start": "%I0.0",
+        "end": "%I15.7"
+      },
+      {
+        "id": "outputs",
+        "direction": "DO",
+        "start": "%Q0.0",
+        "end": "%Q15.7"
+      },
+      {
+        "id": "analog",
+        "direction": "AI",
+        "start": "%IW32",
+        "end": "%IW62"
+      }
+    ]
+  }
+}

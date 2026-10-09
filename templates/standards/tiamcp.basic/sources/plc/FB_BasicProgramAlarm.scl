@@ -1,0 +1,15 @@
+FUNCTION_BLOCK "FB_BasicProgramAlarm"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 1.0
+VAR_INPUT
+    Signal : Bool;
+END_VAR
+VAR
+    Alarm : Program_Alarm;
+    Error : Bool;
+    Status : Word;
+END_VAR
+BEGIN
+// S7-1500 adapter; alarm text/number configuration is completed in TIA.
+    #Alarm(SIG := #Signal, Error => #Error, Status => #Status);
+END_FUNCTION_BLOCK

@@ -14,7 +14,8 @@
 实际订货号、PLC/HMI 名称、分辨率和工程路径需按工程确认，模板本身不构成现场验收。
 
 标准包格式 1 的 [JSON Schema 与加载/哈希约定](../schemas/standards/v1/README.md) 已实现；
-内置标准包预留 `templates/standards/<id>/`，包内容由后续任务提供。
+内置基础包 [tiamcp.basic](standards/tiamcp.basic/README.md) 提供五种设备规则、八版 PLC SCL、
+报警和 Unified 控件接口。包清单包含完整文件库存与 MIT 来源声明；原生验收状态见包说明。
 
 ## 可选外部参考
 

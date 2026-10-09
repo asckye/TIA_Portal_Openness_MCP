@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "id": "tiamcp.basic",
+  "version": "1.0.0",
+  "title": {
+    "en-US": "Basic automation",
+    "zh-CN": "\u57FA\u7840\u81EA\u52A8\u5316"
+  },
+  "publisher": "asckye",
+  "license": "MIT",
+  "targets": {
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "plcFamilies": [
+      "S7-1200",
+      "S7-1500"
+    ],
+    "hmi": [
+      "WinCCUnified"
+    ]
+  },
+  "requires": {
+    "framework": "^1",
+    "optionalProducts": []
+  },
+  "languages": {
+    "required": [
+      "en-US",
+      "zh-CN"
+    ],
+    "default": "en-US"
+  },
+  "parts": {
+    "naming": "naming.json",
+    "structure": "structure.json",
+    "hardware": "hardware.json",
+    "library": "library.json",
+    "modes": "modes.json",
+    "alarms": "alarms.json",
+    "hmi": "hmi.json",
+    "checks": "checks.json",
+    "rules": [
+      "rules/motor.dol.json",
+      "rules/valve.2pos.json",
+      "rules/sensor.digital.json",
+      "rules/analog.in.json",
+      "rules/unit.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "1efd9cdb8a6198d44d038651f73af28b885960fadf13ee0648e41a5d8cb4d054"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "7ba44f840fe9bb4f8120bedf1ca7d10ed4195c25186c951829db5f57ea457932"
+    },
+    {
+      "path": "README.md",
+      "sha256": "756cd92b3919143731da1f4f23a7d3029b5307d5d0d578e0dadad0960bba65e6"
+    },
+    {
+      "path": "alarms.json",
+      "sha256": "e14869b0499ef0d7c5c3f3831e5f77e608f4a7b6f463c4e3802055022ccb2ee8"
+    },
+    {
+      "path": "checks.json",
+      "sha256": "7511fa022197769e0fb3318b5370dc041deb1c8f2b8c420ed0b97d7e74f6fba2"
+    },
+    {
+      "path": "examples/machine.json",
+      "sha256": "9506ce85760e80c8a7660355ec29bdccaacc4c488d5725506c45a7d51b21c045"
+    },
+    {
+      "path": "hardware.json",
+      "sha256": "5867d76302197d2dbc709b7dd71b9245cd5e735ead6d349a8c9c85525e925d1e"
+    },
+    {
+      "path": "hmi.json",
+      "sha256": "d388c97e77e4a26ba708e107deb4e0e2ad7fd23852858eb077fad5042c6a83b3"
+    },
+    {
+      "path": "library.json",
+      "sha256": "3f37485121d76e288fee393af2ef1028ca017418455b2cd44a1ae877fcd58cbd"
+    },
+    {
+      "path": "modes.json",
+      "sha256": "ddd0f170e2e811bf76cf6650c7f3b17bf6d04047dc4c6dc427b9fa7096166c24"
+    },
+    {
+      "path": "naming.json",
+      "sha256": "251ff47d1a6c0f8c9ccd73528498689da5bc6219a5f9bbe1b65b5ce6bec2c0fd"
+    },
+    {
+      "path": "rules/analog.in.json",
+      "sha256": "480fe9fccec4e12d0b68f4d2e149f9fad4379cdfa4db41516b8718f66c2025fa"
+    },
+    {
+      "path": "rules/motor.dol.json",
+      "sha256": "6ead6e7d3f2eb7973c83608e7122e58162bae807c621b423152104290ce26299"
+    },
+    {
+      "path": "rules/sensor.digital.json",
+      "sha256": "ba8bc3c560702d3e0d12d78b8e28ba604e3b6b02b0c949c7ac82b1969a2e8232"
+    },
+    {
+      "path": "rules/unit.json",
+      "sha256": "ed464ea5cfb4e90341c93bd2c1c968abc4de18c735437ab170fbcdef04fb2533"
+    },
+    {
+      "path": "rules/valve.2pos.json",
+      "sha256": "80f42f5b66adb0a1e4392ea05fdfa4b6ecb2bbd1cf71df52b21c19b4dd33b14c"
+    },
+    {
+      "path": "sources.json",
+      "sha256": "e2975b3026315801093c8267ec579ee346b75b2a472bd3a8dbc73afb9d692a4c"
+    },
+    {
+      "path": "sources/hmi/analog.in.json",
+      "sha256": "c7bb787a894568921c7d58e25adbc2bc06822bb67e9eeb83578a46a63f1e321f"
+    },
+    {
+      "path": "sources/hmi/motor.dol.json",
+      "sha256": "29a529fc1e57693de6758b7c34a85b5b328a8e88d2a5bb40a827a94031d3d3ac"
+    },
+    {
+      "path": "sources/hmi/sensor.digital.json",
+      "sha256": "daffd702f82d09650e3504ffb215e60643512c01a673f61b162d89a44428bcd0"
+    },
+    {
+      "path": "sources/hmi/unified-alarm-classes.json",
+      "sha256": "7477417a87ae897393f18c460258c3a49c5d7b55318c2ba89fc149fd84cf69f0"
+    },
+    {
+      "path": "sources/hmi/unified_basic_dashboard_1024x768.json",
+      "sha256": "7cf3ab185d47f6cf494c08eb6fb24f31e7128ca1938f990b0c2b74acc3b9983e"
+    },
+    {
+      "path": "sources/hmi/unified_basic_event_log_1024x768.json",
+      "sha256": "90be66b3aa6a1cfa32c63e1434698b0fb63b465c422a0aaba03c6ef23f78c381"
+    },
+    {
+      "path": "sources/hmi/unified_basic_tag_diagnostics_1024x768.json",
+      "sha256": "acffd6a1df733b486bacb02684e59514f026259d882ff6a994315006259a4a27"
+    },
+    {
+      "path": "sources/hmi/unified_control_strip_1024x768.json",
+      "sha256": "6a52a167b7a682334fafb957c224c2800a0000238e5e40bb5048a1aaa3fdc67d"
+    },
+    {
+      "path": "sources/hmi/unified_overview_1280x800.json",
+      "sha256": "75bb1ef5123d7af6294a0ba366a8c81f6622788499393fecd8fa190549e1491f"
+    },
+    {
+      "path": "sources/hmi/unified_parameter_page_1024x768.json",
+      "sha256": "b27f5da3994c9753a469a66bd4ef532d482048ec50f01c1d45ff84fd830b59e5"
+    },
+    {
+      "path": "sources/hmi/unified_trend_page_1024x768.json",
+      "sha256": "0e37cb7329eacb68c301be310b3cfdcb8cbdfe566044d2afeeb8864d82db8934"
+    },
+    {
+      "path": "sources/hmi/unit.json",
+      "sha256": "ff0016987a53afc8a7b1a4c3bb58db2a28ded7d9506e70e950bf627c055bef40"
+    },
+    {
+      "path": "sources/hmi/valve.2pos.json",
+      "sha256": "b561837a8bf1f0b355e61011f173fa90c6bc7343cd2309a0e51fb33d357b0697"
+    },
+    {
+      "path": "sources/plc/DB_HMI_Interface.scl",
+      "sha256": "3030b07d094960bb6fd47b6e6b6d63ba06e37a4a68bf409925d19e0c9c48683f"
+    },
+    {
+      "path": "sources/plc/FB_AnalogIn.scl",
+      "sha256": "3812775aff616606d93cea98de29675271a78488d14bf4232b7a9fd120225a6a"
+    },
+    {
+      "path": "sources/plc/FB_BasicLatch.scl",
+      "sha256": "558a47cc038954a959a5f3911fd5188d7e1a44486cb68e084b64874fa70fd9d1"
+    },
+    {
+      "path": "sources/plc/FB_BasicProgramAlarm.scl",
+      "sha256": "eb2f2f1bbace4afcc978e6515971a7712ae59b72d3f854fee3195a4a7822d880"
+    },
+    {
+      "path": "sources/plc/FB_DigitalSensor.scl",
+      "sha256": "bff490f5266afa8de988be25ef2e5dca010098ca4114af7b67a7213d666f37f4"
+    },
+    {
+      "path": "sources/plc/FB_ModeManager.scl",
+      "sha256": "cc1ebc3582006e735ebe410c82c7a7c9ade4acb6da3c57be6f06ed2f25aec794"
+    },
+    {
+      "path": "sources/plc/FB_MotorDol.scl",
+      "sha256": "8157c4c80dca59e004559ae4aa179efb0ba0065113cda97fd14a801a569a9e74"
+    },
+    {
+      "path": "sources/plc/FB_StepSequenceDemo.scl",
+      "sha256": "f288cca3e2d1fac335957501f1de3c9bc53e521a0937dfdfe0d1da24d0106d70"
+    },
+    {
+      "path": "sources/plc/FB_TimerCounterDemo.scl",
+      "sha256": "2e79e22bef4c7372fc4206510467f9e542f248fe649fcee3cbcab7ada05949fb"
+    },
+    {
+      "path": "sources/plc/FB_Valve2Pos.scl",
+      "sha256": "7fcffd546d5c3c84f14d8c59c77aec7c979fca72e467d8364c1194c7c4dc4b15"
+    },
+    {
+      "path": "sources/plc/FC_BasicScaleLimit.scl",
+      "sha256": "55911742a2ce64f3a0af339d2775948eb33a1d9cbb62ae5a6e12740a9c2c25ff"
+    },
+    {
+      "path": "sources/plc/UDT_AnalogInHmi.scl",
+      "sha256": "ec68e1710233806f5ae1d430a1ba598013ff85140566a55415f71fe090ff343f"
+    },
+    {
+      "path": "sources/plc/UDT_AnalogInStatus.scl",
+      "sha256": "4396d320d888177c3678d4d913287be33a3b05c70621298ca9d12c6512ea0866"
+    },
+    {
+      "path": "sources/plc/UDT_BasicStatus.scl",
+      "sha256": "9da7a89541e39b47d9cc11eb02e950ffb96c9110b26c8b9df533aa52ae9800bb"
+    },
+    {
+      "path": "sources/plc/UDT_DigitalSensorHmi.scl",
+      "sha256": "121e0616aed8b1bf5ee5b2450ea76247c3f8645661b43e2100240b8d83ba5fc8"
+    },
+    {
+      "path": "sources/plc/UDT_DigitalSensorStatus.scl",
+      "sha256": "4eee5d1647aeffaf783d21af7520d7cb426d62fff3292cd0b7f47e72bf528b7b"
+    },
+    {
+      "path": "sources/plc/UDT_ModeHmi.scl",
+      "sha256": "9300f9c9dbd573c7e77c37690040149f5c0bbb17e1f0aa4bd3550189112ea305"
+    },
+    {
+      "path": "sources/plc/UDT_ModeStatus.scl",
+      "sha256": "bb1c3aa2bb8d6ec61793db5740e0200157c6f54fc6f713b2e49156a1d12712ac"
+    },
+    {
+      "path": "sources/plc/UDT_MotorDolHmi.scl",
+      "sha256": "3054cb8020500c8cd90b62225d9ee1b38c167516c5ba7089363894e528e823bd"
+    },
+    {
+      "path": "sources/plc/UDT_MotorDolStatus.scl",
+      "sha256": "f159960382a44d1cd80bed765046816a63409877708830b23734fddf980a4a98"
+    },
+    {
+      "path": "sources/plc/UDT_Valve2PosHmi.scl",
+      "sha256": "32a2c786a6e9f6742f00fdbe8f7ab9379e1f3ed2be29af67e3f08d96aa631277"
+    },
+    {
+      "path": "sources/plc/UDT_Valve2PosStatus.scl",
+      "sha256": "73b4e2f13ef4d4718fda40bf243fffc1079fa1c3c6a57fb52da4aa2dd1225ced"
+    },
+    {
+      "path": "structure.json",
+      "sha256": "cb30fc2bdf915327b64dadfa0551f2808321d93f336a3f2280855826e79c516c"
+    }
+  ]
+}

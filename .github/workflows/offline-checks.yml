@@ -25,7 +25,7 @@ jobs:
         run: python scripts/checks/Check-SwallowedExceptions.py --self-test
       - name: TRX gate self-checks
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
-      - name: Offline regression and MCP SDK version policy
+      - name: Offline regression, generation basic package and MCP SDK version policy
         run: dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
 
   source-contracts:
