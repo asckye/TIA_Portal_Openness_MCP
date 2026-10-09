@@ -7017,6 +7017,143 @@
       }
     },
     {
+      "descriptionSha256": "26046978f87acaff918c9b39be46165e30b1dd53e07b3841485da1393195da37",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "packageId": {
+            "description": "Exact installed package id.",
+            "type": "string"
+          },
+          "version": {
+            "description": "Exact installed SemVer version.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "packageId",
+          "version"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeStandardPackage",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "73ab0149727014457706f7951d76f85dc7a76cc735c2187617aa9c15bf54932e",
       "inputSchema": {
         "additionalProperties": false,
@@ -13591,6 +13728,130 @@
       }
     },
     {
+      "descriptionSha256": "21876ed790306bb7df4c1bd99b2f158d886966ff93f2225a7ce6567b8afdd75e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ListStandardPackages",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "7520f28f29e7d5e06edaa4b84326da5798491c4eccd5cf9bb026693e7c396a91",
       "inputSchema": {
         "additionalProperties": false,
@@ -14146,6 +14407,187 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "682ead8810e1b11e2e55411b4549b1b2d598ff1c68a80a37b1a7daf2944c897b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "validate, import, export or exportTemplate.",
+            "enum": [
+              "validate",
+              "import",
+              "export",
+              "exportTemplate"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "true previews; false executes file writes after approval.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact planHash from fresh preview; required for file execution.",
+            "type": "string"
+          },
+          "format": {
+            "default": "json",
+            "description": "json or csv; xlsx is deferred. exportTemplate requires csv.",
+            "enum": [
+              "json",
+              "csv"
+            ],
+            "type": "string"
+          },
+          "inputPath": {
+            "default": "",
+            "description": "Existing absolute JSON file or package-generated CSV directory; import only.",
+            "type": "string"
+          },
+          "machine": {
+            "description": "Structured tiamcp.machine/1 JSON for validate/export; omitted for import/exportTemplate.",
+            "type": "object"
+          },
+          "outputPath": {
+            "default": "",
+            "description": "Optional new absolute .json file for import, required new .json file or CSV directory for export/template.",
+            "type": "string"
+          },
+          "packageId": {
+            "description": "Exact installed package id.",
+            "type": "string"
+          },
+          "version": {
+            "description": "Exact installed SemVer version.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "packageId",
+          "version"
+        ],
+        "type": "object"
+      },
+      "name": "ManageMachineDescription",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "f83d8c31ee2f24faecb7b0b57713ed926f2d8fa95db7305c509be5b46c369a05",
       "inputSchema": {
         "additionalProperties": false,
@@ -14305,6 +14747,185 @@
       },
       "name": "ManagePortInterconnection",
       "outputSchema": null
+    },
+    {
+      "descriptionSha256": "353e294712e194ddfb1198465a35712c2b170b56a3d869596bbbbb07e0cd727c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "import, export, copy, fork or remove.",
+            "enum": [
+              "import",
+              "export",
+              "copy",
+              "fork",
+              "remove"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "true previews; false executes the file operation after approval.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact planHash returned by a fresh preview; required for execution.",
+            "type": "string"
+          },
+          "newId": {
+            "default": "",
+            "description": "New package id; copy/fork only, distinct from the original.",
+            "type": "string"
+          },
+          "newVersion": {
+            "default": "",
+            "description": "Explicit new SemVer version; copy/fork only.",
+            "type": "string"
+          },
+          "outputPath": {
+            "default": "",
+            "description": "New absolute local .zip path under an existing parent; export only.",
+            "type": "string"
+          },
+          "packageId": {
+            "default": "",
+            "description": "Exact installed package id; empty for import.",
+            "type": "string"
+          },
+          "sourcePath": {
+            "default": "",
+            "description": "Existing absolute local package directory or zip; import only.",
+            "type": "string"
+          },
+          "version": {
+            "default": "",
+            "description": "Exact installed SemVer version; empty for import.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageStandardPackage",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "4eac8d28a466b517b74fcc9a7bafd643c65132f0d7a999d397cd53343695074c",
@@ -17933,6 +18554,146 @@
         "type": "object"
       },
       "name": "StageImportFiles",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "05eac58480cb4b5fca487396ea7d13ef00b5a1dee2a3188968b4f82d5ce6d5b7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "packageId": {
+            "default": "",
+            "description": "Exact installed package id, or empty when sourcePath is supplied.",
+            "type": "string"
+          },
+          "sourcePath": {
+            "default": "",
+            "description": "Optional existing absolute package directory/zip instead of an installed identity.",
+            "type": "string"
+          },
+          "version": {
+            "default": "",
+            "description": "Exact installed SemVer version, or empty for sourcePath.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ValidateStandardPackage",
       "outputSchema": {
         "additionalProperties": false,
         "properties": {

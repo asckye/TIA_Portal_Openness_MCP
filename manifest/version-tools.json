@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 157,
+      "toolCount": 162,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -48,6 +48,7 @@
         "CreateProject",
         "DeleteExportHandle",
         "DeletePlcExternalSource",
+        "DescribeStandardPackage",
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeSystemDiagnosticsSettings",
@@ -116,6 +117,7 @@
         "ListPlcUserConstants",
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
@@ -124,8 +126,10 @@
         "ManageHardwareObject",
         "ManageHardwareUtilities",
         "ManageIoSystem",
+        "ManageMachineDescription",
         "ManageNetworkDomain",
         "ManagePortInterconnection",
+        "ManageStandardPackage",
         "ManageTransferArea",
         "OpenProject",
         "PatchPlcBlockDocument",
@@ -163,12 +167,13 @@
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
         "StageImportFiles",
+        "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 158,
+      "toolCount": 163,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -211,6 +216,7 @@
         "CreateProject",
         "DeleteExportHandle",
         "DeletePlcExternalSource",
+        "DescribeStandardPackage",
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeSystemDiagnosticsSettings",
@@ -280,6 +286,7 @@
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
@@ -288,8 +295,10 @@
         "ManageHardwareObject",
         "ManageHardwareUtilities",
         "ManageIoSystem",
+        "ManageMachineDescription",
         "ManageNetworkDomain",
         "ManagePortInterconnection",
+        "ManageStandardPackage",
         "ManageTransferArea",
         "OpenProject",
         "PatchPlcBlockDocument",
@@ -327,12 +336,13 @@
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
         "StageImportFiles",
+        "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 160,
+      "toolCount": 165,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -375,6 +385,7 @@
         "CreateProject",
         "DeleteExportHandle",
         "DeletePlcExternalSource",
+        "DescribeStandardPackage",
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeSystemDiagnosticsSettings",
@@ -446,6 +457,7 @@
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
@@ -454,8 +466,10 @@
         "ManageHardwareObject",
         "ManageHardwareUtilities",
         "ManageIoSystem",
+        "ManageMachineDescription",
         "ManageNetworkDomain",
         "ManagePortInterconnection",
+        "ManageStandardPackage",
         "ManageTransferArea",
         "OpenProject",
         "PatchPlcBlockDocument",
@@ -493,12 +507,13 @@
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
         "StageImportFiles",
+        "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 160,
+      "toolCount": 165,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -541,6 +556,7 @@
         "CreateProject",
         "DeleteExportHandle",
         "DeletePlcExternalSource",
+        "DescribeStandardPackage",
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeSystemDiagnosticsSettings",
@@ -612,6 +628,7 @@
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
@@ -620,8 +637,10 @@
         "ManageHardwareObject",
         "ManageHardwareUtilities",
         "ManageIoSystem",
+        "ManageMachineDescription",
         "ManageNetworkDomain",
         "ManagePortInterconnection",
+        "ManageStandardPackage",
         "ManageTransferArea",
         "OpenProject",
         "PatchPlcBlockDocument",
@@ -659,12 +678,13 @@
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
         "StageImportFiles",
+        "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 160,
+      "toolCount": 165,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -707,6 +727,7 @@
         "CreateProject",
         "DeleteExportHandle",
         "DeletePlcExternalSource",
+        "DescribeStandardPackage",
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeSystemDiagnosticsSettings",
@@ -778,6 +799,7 @@
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
@@ -786,8 +808,10 @@
         "ManageHardwareObject",
         "ManageHardwareUtilities",
         "ManageIoSystem",
+        "ManageMachineDescription",
         "ManageNetworkDomain",
         "ManagePortInterconnection",
+        "ManageStandardPackage",
         "ManageTransferArea",
         "OpenProject",
         "PatchPlcBlockDocument",
@@ -825,12 +849,13 @@
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
         "StageImportFiles",
+        "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 170,
+      "toolCount": 175,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -880,6 +905,7 @@
         "CreateProject",
         "DeleteExportHandle",
         "DeletePlcExternalSource",
+        "DescribeStandardPackage",
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeSystemDiagnosticsSettings",
@@ -951,6 +977,7 @@
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
@@ -959,8 +986,10 @@
         "ManageHardwareObject",
         "ManageHardwareUtilities",
         "ManageIoSystem",
+        "ManageMachineDescription",
         "ManageNetworkDomain",
         "ManagePortInterconnection",
+        "ManageStandardPackage",
         "ManageTransferArea",
         "ManageUnifiedCwcPackage",
         "OpenProject",
@@ -1001,12 +1030,13 @@
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
         "StageImportFiles",
+        "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 495,
+      "toolCount": 500,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1104,6 +1134,7 @@
         "DescribeObjectProperty",
         "DescribePlcBlockLogic",
         "DescribeService",
+        "DescribeStandardPackage",
         "DescribeUnifiedHmiButtonEventScript",
         "DescribeUnifiedScreenItemType",
         "DisconnectOnlinePlc",
@@ -1316,6 +1347,7 @@
         "ListSivarcBlockDefinitions",
         "ListSivarcRules",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListTestSuiteCases",
         "ListToolCategories",
@@ -1354,6 +1386,7 @@
         "ManageLibraryMasterCopy",
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
+        "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageMultiuserSession",
         "ManageNetworkDomain",
@@ -1388,6 +1421,7 @@
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
         "ManageSivarcTableRule",
+        "ManageStandardPackage",
         "ManageStartdriveParameter",
         "ManageSyslogServers",
         "ManageTeamcenterConnection",
@@ -1497,6 +1531,7 @@
         "ValidateClassicHmiMinimalPackageFiles",
         "ValidateClassicHmiMinimalPackagePlcSync",
         "ValidatePlcDocumentSchemas",
+        "ValidateStandardPackage",
         "ValidateUnifiedObject",
         "WriteClassicHmiMinimalPackageFiles",
         "WritePlcSclSourceFile",
@@ -1507,7 +1542,7 @@
     },
     "21": {
       "profile": "full-engine",
-      "toolCount": 506,
+      "toolCount": 511,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1605,6 +1640,7 @@
         "DescribeObjectProperty",
         "DescribePlcBlockLogic",
         "DescribeService",
+        "DescribeStandardPackage",
         "DescribeUnifiedHmiButtonEventScript",
         "DescribeUnifiedScreenItemType",
         "DisconnectOnlinePlc",
@@ -1819,6 +1855,7 @@
         "ListSivarcBlockDefinitions",
         "ListSivarcRules",
         "ListStagedImportFiles",
+        "ListStandardPackages",
         "ListTechnologyObjects",
         "ListTestSuiteCases",
         "ListToolCategories",
@@ -1860,6 +1897,7 @@
         "ManageLibraryMasterCopy",
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
+        "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageMultiuserSession",
         "ManageNetworkDomain",
@@ -1900,6 +1938,7 @@
         "ManageSivarcRuleContainer",
         "ManageSivarcScreenLayout",
         "ManageSivarcTableRule",
+        "ManageStandardPackage",
         "ManageStartdriveParameter",
         "ManageSyslogServers",
         "ManageTeamcenterConnection",
@@ -2009,6 +2048,7 @@
         "ValidateClassicHmiMinimalPackageFiles",
         "ValidateClassicHmiMinimalPackagePlcSync",
         "ValidatePlcDocumentSchemas",
+        "ValidateStandardPackage",
         "ValidateUnifiedObject",
         "WriteClassicHmiMinimalPackageFiles",
         "WritePlcSclSourceFile",
@@ -2019,7 +2059,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 157,
+    "all-releases": 162,
     "shared-subset": 338,
     "release-only": 11
   },
@@ -3139,6 +3179,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeStandardPackage",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5487,6 +5542,21 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "ListStandardPackages",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "ListTechnologyObjects",
       "releases": [
         "14sp1",
@@ -5901,6 +5971,21 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "ManageMachineDescription",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "ManageMotionAxis",
       "releases": [
         "20",
@@ -6264,6 +6349,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageStandardPackage",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7470,6 +7570,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ValidateStandardPackage",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

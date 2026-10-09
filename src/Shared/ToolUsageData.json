@@ -4025,6 +4025,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "DescribeStandardPackage": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "DescribeUnifiedHmiButtonEventScript": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -7050,6 +7057,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ListStandardPackages": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ListTechnologyObjects": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -7649,6 +7663,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ManageMachineDescription": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ManageMotionAxis": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -8162,6 +8183,13 @@
           "delivery": "link to official manual example; not a vendored code sample"
         }
       ]
+    },
+    "ManageStandardPackage": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
     },
     "ManageStartdriveParameter": {
       "relationship": "related-api-patterns",
@@ -9732,6 +9760,13 @@
       ]
     },
     "ValidatePlcDocumentSchemas": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "ValidateStandardPackage": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -33239,6 +33274,1776 @@
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
           ]
+        },
+        "ListStandardPackages": {
+          "arguments": {},
+          "operations": {},
+          "note": "Offline inventory. Repository packages are read-only; exact installed id/version and canonical hashes are returned.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "DescribeStandardPackage": {
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "operations": {},
+          "note": "Read device parameter schemas/signals and CPU selection before preparing a MachineDescription. programAlarm=false for S7-1200; true requires S7-1500 CPU/firmware acceptance (NOT RUN).",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "ValidateStandardPackage": {
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "operations": {
+            "source": {
+              "arguments": {
+                "sourcePath": "C:/Standards/example.zip"
+              },
+              "meaning": "Validate a bounded local directory/zip, inventory hashes, declarative rules, dependencies and target coverage. No writes."
+            }
+          },
+          "note": "valid is document validity; inspect coverage.missingImplementations separately. Native acceptance remains NOT RUN.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "ManageStandardPackage": {
+          "arguments": {
+            "action": "fork",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "newId": "example.basic",
+            "newVersion": "1.0.0",
+            "dryRun": true
+          },
+          "operations": {
+            "import": {
+              "arguments": {
+                "action": "import",
+                "sourcePath": "C:/Standards/example.zip",
+                "dryRun": true
+              },
+              "meaning": "Preview import; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "export": {
+              "arguments": {
+                "action": "export",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "outputPath": "C:/Standards/basic.zip",
+                "dryRun": true
+              },
+              "meaning": "Preview export; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "copy": {
+              "arguments": {
+                "action": "copy",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "newId": "example.copy",
+                "newVersion": "1.0.0",
+                "dryRun": true
+              },
+              "meaning": "Preview copy; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "fork": {
+              "arguments": {
+                "action": "fork",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "newId": "example.basic",
+                "newVersion": "1.0.0",
+                "dryRun": true
+              },
+              "meaning": "Preview fork; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "remove": {
+              "arguments": {
+                "action": "remove",
+                "packageId": "example.basic",
+                "version": "1.0.0",
+                "dryRun": true
+              },
+              "meaning": "Preview remove; execute only with the returned expectedPlanHash and Workbench approval."
+            }
+          },
+          "note": "Preview each FILE operation, copy data.planHash, then merge dryRun=false and expectedPlanHash. Existing approval and audit apply. No overwrite; repository removal is refused; notices retained.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "ManageMachineDescription": {
+          "arguments": {
+            "action": "validate",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "machine": {
+              "schema": "tiamcp.machine/1",
+              "machine": {
+                "id": "BasicLine",
+                "name": {
+                  "en-US": "Basic machine",
+                  "zh-CN": "基础机器"
+                }
+              },
+              "standard": {
+                "package": "tiamcp.basic",
+                "version": "^1.0"
+              },
+              "target": {
+                "release": "21",
+                "project": {
+                  "mode": "existing",
+                  "projectIdentity": "basic-example-project",
+                  "softwarePath": "PLC1"
+                }
+              },
+              "stations": [
+                {
+                  "id": "PLC1",
+                  "role": "plc.main",
+                  "article": "6ES7 513-1AL02-0AB0",
+                  "firmware": "V2.0"
+                },
+                {
+                  "id": "HMI1",
+                  "role": "hmi.panel",
+                  "kind": "WinCCUnifiedPC"
+                }
+              ],
+              "topology": [
+                {
+                  "id": "U01",
+                  "kind": "unit",
+                  "name": {
+                    "en-US": "Unit 1",
+                    "zh-CN": "单元 1"
+                  },
+                  "children": [
+                    {
+                      "id": "EM01",
+                      "kind": "equipmentModule",
+                      "name": {
+                        "en-US": "Equipment",
+                        "zh-CN": "设备"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "devices": [
+                {
+                  "id": "00U01",
+                  "type": "unit",
+                  "parent": "U01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "Unit control",
+                    "zh-CN": "单元控制"
+                  },
+                  "params": {
+                    "programAlarm": true
+                  },
+                  "io": {},
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M01",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M1",
+                    "zh-CN": "M1"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M02",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M2",
+                    "zh-CN": "M2"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M03",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M3",
+                    "zh-CN": "M3"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M04",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M4",
+                    "zh-CN": "M4"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M05",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M5",
+                    "zh-CN": "M5"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M06",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M6",
+                    "zh-CN": "M6"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M07",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M7",
+                    "zh-CN": "M7"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M08",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M8",
+                    "zh-CN": "M8"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V01",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V1",
+                    "zh-CN": "V1"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V02",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V2",
+                    "zh-CN": "V2"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V03",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V3",
+                    "zh-CN": "V3"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V04",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V4",
+                    "zh-CN": "V4"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S01",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S1",
+                    "zh-CN": "S1"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S02",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S2",
+                    "zh-CN": "S2"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S03",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S3",
+                    "zh-CN": "S3"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S04",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S4",
+                    "zh-CN": "S4"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S05",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S5",
+                    "zh-CN": "S5"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S06",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S6",
+                    "zh-CN": "S6"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "A01",
+                  "type": "analog.in",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "A1",
+                    "zh-CN": "A1"
+                  },
+                  "params": {
+                    "RawMin": 0,
+                    "RawMax": 27648,
+                    "EngMin": 0,
+                    "EngMax": 100,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "raw": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "A02",
+                  "type": "analog.in",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "A2",
+                    "zh-CN": "A2"
+                  },
+                  "params": {
+                    "RawMin": 0,
+                    "RawMax": 27648,
+                    "EngMin": 0,
+                    "EngMax": 100,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "raw": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                }
+              ],
+              "options": {
+                "languages": [
+                  "en-US",
+                  "zh-CN"
+                ]
+              }
+            },
+            "dryRun": true
+          },
+          "operations": {
+            "validate": {
+              "arguments": {
+                "action": "validate",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "machine": {
+                  "schema": "tiamcp.machine/1",
+                  "machine": {
+                    "id": "BasicLine",
+                    "name": {
+                      "en-US": "Basic machine",
+                      "zh-CN": "基础机器"
+                    }
+                  },
+                  "standard": {
+                    "package": "tiamcp.basic",
+                    "version": "^1.0"
+                  },
+                  "target": {
+                    "release": "21",
+                    "project": {
+                      "mode": "existing",
+                      "projectIdentity": "basic-example-project",
+                      "softwarePath": "PLC1"
+                    }
+                  },
+                  "stations": [
+                    {
+                      "id": "PLC1",
+                      "role": "plc.main",
+                      "article": "6ES7 513-1AL02-0AB0",
+                      "firmware": "V2.0"
+                    },
+                    {
+                      "id": "HMI1",
+                      "role": "hmi.panel",
+                      "kind": "WinCCUnifiedPC"
+                    }
+                  ],
+                  "topology": [
+                    {
+                      "id": "U01",
+                      "kind": "unit",
+                      "name": {
+                        "en-US": "Unit 1",
+                        "zh-CN": "单元 1"
+                      },
+                      "children": [
+                        {
+                          "id": "EM01",
+                          "kind": "equipmentModule",
+                          "name": {
+                            "en-US": "Equipment",
+                            "zh-CN": "设备"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "devices": [
+                    {
+                      "id": "00U01",
+                      "type": "unit",
+                      "parent": "U01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "Unit control",
+                        "zh-CN": "单元控制"
+                      },
+                      "params": {
+                        "programAlarm": true
+                      },
+                      "io": {},
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M01",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M1",
+                        "zh-CN": "M1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M02",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M2",
+                        "zh-CN": "M2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M03",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M3",
+                        "zh-CN": "M3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M04",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M4",
+                        "zh-CN": "M4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M05",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M5",
+                        "zh-CN": "M5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M06",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M6",
+                        "zh-CN": "M6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M07",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M7",
+                        "zh-CN": "M7"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M08",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M8",
+                        "zh-CN": "M8"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V01",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V1",
+                        "zh-CN": "V1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V02",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V2",
+                        "zh-CN": "V2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V03",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V3",
+                        "zh-CN": "V3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V04",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V4",
+                        "zh-CN": "V4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S01",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S1",
+                        "zh-CN": "S1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S02",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S2",
+                        "zh-CN": "S2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S03",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S3",
+                        "zh-CN": "S3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S04",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S4",
+                        "zh-CN": "S4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S05",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S5",
+                        "zh-CN": "S5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S06",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S6",
+                        "zh-CN": "S6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A01",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A1",
+                        "zh-CN": "A1"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A02",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A2",
+                        "zh-CN": "A2"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    }
+                  ],
+                  "options": {
+                    "languages": [
+                      "en-US",
+                      "zh-CN"
+                    ]
+                  }
+                },
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "import": {
+              "arguments": {
+                "action": "import",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "inputPath": "C:/MachineInputs/edited-basic",
+                "format": "csv",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "importJson": {
+              "arguments": {
+                "action": "import",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "inputPath": "C:/MachineInputs/machine.json",
+                "format": "json",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "export": {
+              "arguments": {
+                "action": "export",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "machine": {
+                  "schema": "tiamcp.machine/1",
+                  "machine": {
+                    "id": "BasicLine",
+                    "name": {
+                      "en-US": "Basic machine",
+                      "zh-CN": "基础机器"
+                    }
+                  },
+                  "standard": {
+                    "package": "tiamcp.basic",
+                    "version": "^1.0"
+                  },
+                  "target": {
+                    "release": "21",
+                    "project": {
+                      "mode": "existing",
+                      "projectIdentity": "basic-example-project",
+                      "softwarePath": "PLC1"
+                    }
+                  },
+                  "stations": [
+                    {
+                      "id": "PLC1",
+                      "role": "plc.main",
+                      "article": "6ES7 513-1AL02-0AB0",
+                      "firmware": "V2.0"
+                    },
+                    {
+                      "id": "HMI1",
+                      "role": "hmi.panel",
+                      "kind": "WinCCUnifiedPC"
+                    }
+                  ],
+                  "topology": [
+                    {
+                      "id": "U01",
+                      "kind": "unit",
+                      "name": {
+                        "en-US": "Unit 1",
+                        "zh-CN": "单元 1"
+                      },
+                      "children": [
+                        {
+                          "id": "EM01",
+                          "kind": "equipmentModule",
+                          "name": {
+                            "en-US": "Equipment",
+                            "zh-CN": "设备"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "devices": [
+                    {
+                      "id": "00U01",
+                      "type": "unit",
+                      "parent": "U01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "Unit control",
+                        "zh-CN": "单元控制"
+                      },
+                      "params": {
+                        "programAlarm": true
+                      },
+                      "io": {},
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M01",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M1",
+                        "zh-CN": "M1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M02",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M2",
+                        "zh-CN": "M2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M03",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M3",
+                        "zh-CN": "M3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M04",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M4",
+                        "zh-CN": "M4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M05",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M5",
+                        "zh-CN": "M5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M06",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M6",
+                        "zh-CN": "M6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M07",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M7",
+                        "zh-CN": "M7"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M08",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M8",
+                        "zh-CN": "M8"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V01",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V1",
+                        "zh-CN": "V1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V02",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V2",
+                        "zh-CN": "V2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V03",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V3",
+                        "zh-CN": "V3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V04",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V4",
+                        "zh-CN": "V4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S01",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S1",
+                        "zh-CN": "S1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S02",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S2",
+                        "zh-CN": "S2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S03",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S3",
+                        "zh-CN": "S3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S04",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S4",
+                        "zh-CN": "S4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S05",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S5",
+                        "zh-CN": "S5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S06",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S6",
+                        "zh-CN": "S6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A01",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A1",
+                        "zh-CN": "A1"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A02",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A2",
+                        "zh-CN": "A2"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    }
+                  ],
+                  "options": {
+                    "languages": [
+                      "en-US",
+                      "zh-CN"
+                    ]
+                  }
+                },
+                "outputPath": "C:/MachineInputs/exported-basic",
+                "format": "csv",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "exportTemplate": {
+              "arguments": {
+                "action": "exportTemplate",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "outputPath": "C:/MachineInputs/basic-template",
+                "format": "csv",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            }
+          },
+          "note": "CSV directory has Machine, Stations, Units, Devices and Lists.csv. UTF-8 BOM and LF. Param columns contain JSON values; IO columns addresses or auto. Fill machine/stations/topology/device rows from Lists parameter schemas and signal roles, then import. JSON is the only generation input; xlsx deferred.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
         }
       },
       "full-engine": {
@@ -49438,6 +51243,1776 @@
           "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
           "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
           "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+        },
+        "ListStandardPackages": {
+          "arguments": {},
+          "operations": {},
+          "note": "Offline inventory. Repository packages are read-only; exact installed id/version and canonical hashes are returned.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "DescribeStandardPackage": {
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "operations": {},
+          "note": "Read device parameter schemas/signals and CPU selection before preparing a MachineDescription. programAlarm=false for S7-1200; true requires S7-1500 CPU/firmware acceptance (NOT RUN).",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "ValidateStandardPackage": {
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "operations": {
+            "source": {
+              "arguments": {
+                "sourcePath": "C:/Standards/example.zip"
+              },
+              "meaning": "Validate a bounded local directory/zip, inventory hashes, declarative rules, dependencies and target coverage. No writes."
+            }
+          },
+          "note": "valid is document validity; inspect coverage.missingImplementations separately. Native acceptance remains NOT RUN.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "ManageStandardPackage": {
+          "arguments": {
+            "action": "fork",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "newId": "example.basic",
+            "newVersion": "1.0.0",
+            "dryRun": true
+          },
+          "operations": {
+            "import": {
+              "arguments": {
+                "action": "import",
+                "sourcePath": "C:/Standards/example.zip",
+                "dryRun": true
+              },
+              "meaning": "Preview import; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "export": {
+              "arguments": {
+                "action": "export",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "outputPath": "C:/Standards/basic.zip",
+                "dryRun": true
+              },
+              "meaning": "Preview export; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "copy": {
+              "arguments": {
+                "action": "copy",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "newId": "example.copy",
+                "newVersion": "1.0.0",
+                "dryRun": true
+              },
+              "meaning": "Preview copy; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "fork": {
+              "arguments": {
+                "action": "fork",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "newId": "example.basic",
+                "newVersion": "1.0.0",
+                "dryRun": true
+              },
+              "meaning": "Preview fork; execute only with the returned expectedPlanHash and Workbench approval."
+            },
+            "remove": {
+              "arguments": {
+                "action": "remove",
+                "packageId": "example.basic",
+                "version": "1.0.0",
+                "dryRun": true
+              },
+              "meaning": "Preview remove; execute only with the returned expectedPlanHash and Workbench approval."
+            }
+          },
+          "note": "Preview each FILE operation, copy data.planHash, then merge dryRun=false and expectedPlanHash. Existing approval and audit apply. No overwrite; repository removal is refused; notices retained.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
+        },
+        "ManageMachineDescription": {
+          "arguments": {
+            "action": "validate",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "machine": {
+              "schema": "tiamcp.machine/1",
+              "machine": {
+                "id": "BasicLine",
+                "name": {
+                  "en-US": "Basic machine",
+                  "zh-CN": "基础机器"
+                }
+              },
+              "standard": {
+                "package": "tiamcp.basic",
+                "version": "^1.0"
+              },
+              "target": {
+                "release": "21",
+                "project": {
+                  "mode": "existing",
+                  "projectIdentity": "basic-example-project",
+                  "softwarePath": "PLC1"
+                }
+              },
+              "stations": [
+                {
+                  "id": "PLC1",
+                  "role": "plc.main",
+                  "article": "6ES7 513-1AL02-0AB0",
+                  "firmware": "V2.0"
+                },
+                {
+                  "id": "HMI1",
+                  "role": "hmi.panel",
+                  "kind": "WinCCUnifiedPC"
+                }
+              ],
+              "topology": [
+                {
+                  "id": "U01",
+                  "kind": "unit",
+                  "name": {
+                    "en-US": "Unit 1",
+                    "zh-CN": "单元 1"
+                  },
+                  "children": [
+                    {
+                      "id": "EM01",
+                      "kind": "equipmentModule",
+                      "name": {
+                        "en-US": "Equipment",
+                        "zh-CN": "设备"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "devices": [
+                {
+                  "id": "00U01",
+                  "type": "unit",
+                  "parent": "U01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "Unit control",
+                    "zh-CN": "单元控制"
+                  },
+                  "params": {
+                    "programAlarm": true
+                  },
+                  "io": {},
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M01",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M1",
+                    "zh-CN": "M1"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M02",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M2",
+                    "zh-CN": "M2"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M03",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M3",
+                    "zh-CN": "M3"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M04",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M4",
+                    "zh-CN": "M4"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M05",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M5",
+                    "zh-CN": "M5"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M06",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M6",
+                    "zh-CN": "M6"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M07",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M7",
+                    "zh-CN": "M7"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "M08",
+                  "type": "motor.dol",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "M8",
+                    "zh-CN": "M8"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "FeedbackTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "run": "auto",
+                    "feedback": "auto",
+                    "overload": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V01",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V1",
+                    "zh-CN": "V1"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V02",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V2",
+                    "zh-CN": "V2"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V03",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V3",
+                    "zh-CN": "V3"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "V04",
+                  "type": "valve.2pos",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "V4",
+                    "zh-CN": "V4"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "TravelTimeoutMs": 3000,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "open": "auto",
+                    "close": "auto",
+                    "opened": "auto",
+                    "closed": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S01",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S1",
+                    "zh-CN": "S1"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S02",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S2",
+                    "zh-CN": "S2"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S03",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S3",
+                    "zh-CN": "S3"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S04",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S4",
+                    "zh-CN": "S4"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S05",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S5",
+                    "zh-CN": "S5"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "S06",
+                  "type": "sensor.digital",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "S6",
+                    "zh-CN": "S6"
+                  },
+                  "params": {
+                    "CycleMs": 10,
+                    "DebounceMs": 30,
+                    "Invert": false
+                  },
+                  "io": {
+                    "input": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "A01",
+                  "type": "analog.in",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "A1",
+                    "zh-CN": "A1"
+                  },
+                  "params": {
+                    "RawMin": 0,
+                    "RawMax": 27648,
+                    "EngMin": 0,
+                    "EngMax": 100,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "raw": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                },
+                {
+                  "id": "A02",
+                  "type": "analog.in",
+                  "parent": "EM01",
+                  "station": "PLC1",
+                  "name": {
+                    "en-US": "A2",
+                    "zh-CN": "A2"
+                  },
+                  "params": {
+                    "RawMin": 0,
+                    "RawMax": 27648,
+                    "EngMin": 0,
+                    "EngMax": 100,
+                    "programAlarm": true
+                  },
+                  "io": {
+                    "raw": "auto"
+                  },
+                  "hmi": {
+                    "screen": "U01"
+                  }
+                }
+              ],
+              "options": {
+                "languages": [
+                  "en-US",
+                  "zh-CN"
+                ]
+              }
+            },
+            "dryRun": true
+          },
+          "operations": {
+            "validate": {
+              "arguments": {
+                "action": "validate",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "machine": {
+                  "schema": "tiamcp.machine/1",
+                  "machine": {
+                    "id": "BasicLine",
+                    "name": {
+                      "en-US": "Basic machine",
+                      "zh-CN": "基础机器"
+                    }
+                  },
+                  "standard": {
+                    "package": "tiamcp.basic",
+                    "version": "^1.0"
+                  },
+                  "target": {
+                    "release": "21",
+                    "project": {
+                      "mode": "existing",
+                      "projectIdentity": "basic-example-project",
+                      "softwarePath": "PLC1"
+                    }
+                  },
+                  "stations": [
+                    {
+                      "id": "PLC1",
+                      "role": "plc.main",
+                      "article": "6ES7 513-1AL02-0AB0",
+                      "firmware": "V2.0"
+                    },
+                    {
+                      "id": "HMI1",
+                      "role": "hmi.panel",
+                      "kind": "WinCCUnifiedPC"
+                    }
+                  ],
+                  "topology": [
+                    {
+                      "id": "U01",
+                      "kind": "unit",
+                      "name": {
+                        "en-US": "Unit 1",
+                        "zh-CN": "单元 1"
+                      },
+                      "children": [
+                        {
+                          "id": "EM01",
+                          "kind": "equipmentModule",
+                          "name": {
+                            "en-US": "Equipment",
+                            "zh-CN": "设备"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "devices": [
+                    {
+                      "id": "00U01",
+                      "type": "unit",
+                      "parent": "U01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "Unit control",
+                        "zh-CN": "单元控制"
+                      },
+                      "params": {
+                        "programAlarm": true
+                      },
+                      "io": {},
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M01",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M1",
+                        "zh-CN": "M1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M02",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M2",
+                        "zh-CN": "M2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M03",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M3",
+                        "zh-CN": "M3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M04",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M4",
+                        "zh-CN": "M4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M05",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M5",
+                        "zh-CN": "M5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M06",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M6",
+                        "zh-CN": "M6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M07",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M7",
+                        "zh-CN": "M7"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M08",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M8",
+                        "zh-CN": "M8"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V01",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V1",
+                        "zh-CN": "V1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V02",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V2",
+                        "zh-CN": "V2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V03",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V3",
+                        "zh-CN": "V3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V04",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V4",
+                        "zh-CN": "V4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S01",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S1",
+                        "zh-CN": "S1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S02",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S2",
+                        "zh-CN": "S2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S03",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S3",
+                        "zh-CN": "S3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S04",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S4",
+                        "zh-CN": "S4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S05",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S5",
+                        "zh-CN": "S5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S06",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S6",
+                        "zh-CN": "S6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A01",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A1",
+                        "zh-CN": "A1"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A02",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A2",
+                        "zh-CN": "A2"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    }
+                  ],
+                  "options": {
+                    "languages": [
+                      "en-US",
+                      "zh-CN"
+                    ]
+                  }
+                },
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "import": {
+              "arguments": {
+                "action": "import",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "inputPath": "C:/MachineInputs/edited-basic",
+                "format": "csv",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "importJson": {
+              "arguments": {
+                "action": "import",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "inputPath": "C:/MachineInputs/machine.json",
+                "format": "json",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "export": {
+              "arguments": {
+                "action": "export",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "machine": {
+                  "schema": "tiamcp.machine/1",
+                  "machine": {
+                    "id": "BasicLine",
+                    "name": {
+                      "en-US": "Basic machine",
+                      "zh-CN": "基础机器"
+                    }
+                  },
+                  "standard": {
+                    "package": "tiamcp.basic",
+                    "version": "^1.0"
+                  },
+                  "target": {
+                    "release": "21",
+                    "project": {
+                      "mode": "existing",
+                      "projectIdentity": "basic-example-project",
+                      "softwarePath": "PLC1"
+                    }
+                  },
+                  "stations": [
+                    {
+                      "id": "PLC1",
+                      "role": "plc.main",
+                      "article": "6ES7 513-1AL02-0AB0",
+                      "firmware": "V2.0"
+                    },
+                    {
+                      "id": "HMI1",
+                      "role": "hmi.panel",
+                      "kind": "WinCCUnifiedPC"
+                    }
+                  ],
+                  "topology": [
+                    {
+                      "id": "U01",
+                      "kind": "unit",
+                      "name": {
+                        "en-US": "Unit 1",
+                        "zh-CN": "单元 1"
+                      },
+                      "children": [
+                        {
+                          "id": "EM01",
+                          "kind": "equipmentModule",
+                          "name": {
+                            "en-US": "Equipment",
+                            "zh-CN": "设备"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "devices": [
+                    {
+                      "id": "00U01",
+                      "type": "unit",
+                      "parent": "U01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "Unit control",
+                        "zh-CN": "单元控制"
+                      },
+                      "params": {
+                        "programAlarm": true
+                      },
+                      "io": {},
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M01",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M1",
+                        "zh-CN": "M1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M02",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M2",
+                        "zh-CN": "M2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M03",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M3",
+                        "zh-CN": "M3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M04",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M4",
+                        "zh-CN": "M4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M05",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M5",
+                        "zh-CN": "M5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M06",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M6",
+                        "zh-CN": "M6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M07",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M7",
+                        "zh-CN": "M7"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "M08",
+                      "type": "motor.dol",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "M8",
+                        "zh-CN": "M8"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "FeedbackTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "run": "auto",
+                        "feedback": "auto",
+                        "overload": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V01",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V1",
+                        "zh-CN": "V1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V02",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V2",
+                        "zh-CN": "V2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V03",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V3",
+                        "zh-CN": "V3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "V04",
+                      "type": "valve.2pos",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "V4",
+                        "zh-CN": "V4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "TravelTimeoutMs": 3000,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "open": "auto",
+                        "close": "auto",
+                        "opened": "auto",
+                        "closed": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S01",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S1",
+                        "zh-CN": "S1"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S02",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S2",
+                        "zh-CN": "S2"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S03",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S3",
+                        "zh-CN": "S3"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S04",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S4",
+                        "zh-CN": "S4"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S05",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S5",
+                        "zh-CN": "S5"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "S06",
+                      "type": "sensor.digital",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "S6",
+                        "zh-CN": "S6"
+                      },
+                      "params": {
+                        "CycleMs": 10,
+                        "DebounceMs": 30,
+                        "Invert": false
+                      },
+                      "io": {
+                        "input": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A01",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A1",
+                        "zh-CN": "A1"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    },
+                    {
+                      "id": "A02",
+                      "type": "analog.in",
+                      "parent": "EM01",
+                      "station": "PLC1",
+                      "name": {
+                        "en-US": "A2",
+                        "zh-CN": "A2"
+                      },
+                      "params": {
+                        "RawMin": 0,
+                        "RawMax": 27648,
+                        "EngMin": 0,
+                        "EngMax": 100,
+                        "programAlarm": true
+                      },
+                      "io": {
+                        "raw": "auto"
+                      },
+                      "hmi": {
+                        "screen": "U01"
+                      }
+                    }
+                  ],
+                  "options": {
+                    "languages": [
+                      "en-US",
+                      "zh-CN"
+                    ]
+                  }
+                },
+                "outputPath": "C:/MachineInputs/exported-basic",
+                "format": "csv",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            },
+            "exportTemplate": {
+              "arguments": {
+                "action": "exportTemplate",
+                "packageId": "tiamcp.basic",
+                "version": "1.0.0",
+                "outputPath": "C:/MachineInputs/basic-template",
+                "format": "csv",
+                "dryRun": true
+              },
+              "meaning": "Return validated canonical JSON/hash or preview new output files. File execution requires expectedPlanHash; CSV metadata binds the exact package hash."
+            }
+          },
+          "note": "CSV directory has Machine, Stations, Units, Devices and Lists.csv. UTF-8 BOM and LF. Param columns contain JSON values; IO columns addresses or auto. Fill machine/stations/topology/device rows from Lists parameter schemas and signal roles, then import. JSON is the only generation input; xlsx deferred.",
+          "validation": "Offline contract and regression checks; native acceptance NOT RUN. No Openness calls.",
+          "resultReading": [
+            "Read ok/error and meta.outcome/execution. data.contentHash binds every package resource; data.machineHash binds the complete canonical machine. A preview has executed=false. Inputs/target changes invalidate data.planHash; re-preview before execution."
+          ]
         }
       }
     }
@@ -52099,6 +55674,132 @@
             }
           },
           "expect": "data.awaitingConfirmation=true. A human confirms/clears; no project operation follows automatically."
+        }
+      ]
+    },
+    {
+      "id": "sequence/standard-package-offline-foundation",
+      "topic": "standard-package-offline",
+      "purpose": "Inspect a standard package, fork it and prepare canonical machine input offline.",
+      "preconditions": "Installed bundle with tiamcp.basic 1.0.0 and an existing local output parent. No TIA connection required.",
+      "notes": "Review preview, use returned planHash as expectedPlanHash when executing FILE writes, and approve in Workbench. Repository packages are read-only. S7-1200 uses programAlarm=false; S7-1500 Program_Alarm native acceptance remains NOT RUN. CSV import returns canonical JSON for the planning tools delivered in P8-31e.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Offline contract/regression checked; native acceptance NOT RUN.",
+      "steps": [
+        {
+          "tool": "ListStandardPackages",
+          "arguments": {},
+          "expect": "Select exact id/version and content hash."
+        },
+        {
+          "tool": "DescribeStandardPackage",
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "expect": "Inspect schemas, signals, release coverage and CPU selection."
+        },
+        {
+          "tool": "ValidateStandardPackage",
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "expect": "valid=true with coverage reviewed."
+        },
+        {
+          "tool": "ManageStandardPackage",
+          "arguments": {
+            "action": "fork",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "newId": "example.basic",
+            "newVersion": "1.0.0",
+            "dryRun": true
+          },
+          "expect": "Preview fork; executed=false and planHash."
+        },
+        {
+          "tool": "ManageMachineDescription",
+          "arguments": {
+            "action": "exportTemplate",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "outputPath": "C:/MachineInputs/basic-template",
+            "format": "csv",
+            "dryRun": true
+          },
+          "expect": "Preview package-generated CSV template, then fill and import it."
+        }
+      ]
+    },
+    {
+      "id": "sequence/standard-package-offline-engine",
+      "topic": "standard-package-offline",
+      "purpose": "Inspect a standard package, fork it and prepare canonical machine input offline.",
+      "preconditions": "Installed bundle with tiamcp.basic 1.0.0 and an existing local output parent. No TIA connection required.",
+      "notes": "Review preview, use returned planHash as expectedPlanHash when executing FILE writes, and approve in Workbench. Repository packages are read-only. S7-1200 uses programAlarm=false; S7-1500 Program_Alarm native acceptance remains NOT RUN. CSV import returns canonical JSON for the planning tools delivered in P8-31e.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Offline contract/regression checked; native acceptance NOT RUN.",
+      "steps": [
+        {
+          "tool": "ListStandardPackages",
+          "arguments": {},
+          "expect": "Select exact id/version and content hash."
+        },
+        {
+          "tool": "DescribeStandardPackage",
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "expect": "Inspect schemas, signals, release coverage and CPU selection."
+        },
+        {
+          "tool": "ValidateStandardPackage",
+          "arguments": {
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0"
+          },
+          "expect": "valid=true with coverage reviewed."
+        },
+        {
+          "tool": "ManageStandardPackage",
+          "arguments": {
+            "action": "fork",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "newId": "example.basic",
+            "newVersion": "1.0.0",
+            "dryRun": true
+          },
+          "expect": "Preview fork; executed=false and planHash."
+        },
+        {
+          "tool": "ManageMachineDescription",
+          "arguments": {
+            "action": "exportTemplate",
+            "packageId": "tiamcp.basic",
+            "version": "1.0.0",
+            "outputPath": "C:/MachineInputs/basic-template",
+            "format": "csv",
+            "dryRun": true
+          },
+          "expect": "Preview package-generated CSV template, then fill and import it."
         }
       ]
     }

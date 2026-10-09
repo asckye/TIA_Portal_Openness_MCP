@@ -389,16 +389,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 发布键 | 当前广告工具 | 当前 lite | string …Json | 涉及工具 | V4 工具 | V4 lite 提案 |
 |---|---|---|---|---|---|---|
-| 14sp1 | 149 | 不设 | 72 | 37 | 149 | 不设 |
-| 15.1 | 150 | 不设 | 72 | 37 | 150 | 不设 |
-| 16 | 152 | 不设 | 72 | 37 | 152 | 不设 |
-| 17 | 152 | 不设 | 72 | 37 | 152 | 不设 |
-| 18 | 152 | 不设 | 72 | 37 | 152 | 不设 |
-| 19 | 162 | 不设 | 74 | 39 | 162 | 不设 |
-| 20 | 482 | 63 | 272 | 156 | 480 | 81 |
-| 21 | 493 | 63 | 289 | 164 | 491 | 81 |
+| 14sp1 | 154 | 不设 | 72 | 37 | 154 | 不设 |
+| 15.1 | 155 | 不设 | 72 | 37 | 155 | 不设 |
+| 16 | 157 | 不设 | 72 | 37 | 157 | 不设 |
+| 17 | 157 | 不设 | 72 | 37 | 157 | 不设 |
+| 18 | 157 | 不设 | 72 | 37 | 157 | 不设 |
+| 19 | 167 | 不设 | 74 | 39 | 167 | 不设 |
+| 20 | 487 | 63 | 272 | 156 | 485 | 82 |
+| 21 | 498 | 63 | 289 | 164 | 496 | 82 |
 
-八版当前名称并集 501；V4 名称并集 499；改名/合并入口 183；不变 318。数字只指目录，不代表原生能力验收。
+八版当前名称并集 506；V4 名称并集 504；改名/合并入口 183；不变 323。数字只指目录，不代表原生能力验收。
 
 <details>
 <summary>A. 全量 current name → 4.0 name（包括不变项）</summary>
@@ -498,6 +498,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `DescribeObject` | `DescribeObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `DescribeObjectProperty` | `DescribeObjectProperty` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `DescribeService` | `DescribeService` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `DescribeStandardPackage` | `DescribeStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 READ；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `DescribeUnifiedHmiButtonEventScript` | `DescribeUnifiedHmiButtonEventScript` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `DescribeUnifiedScreenItemType` | `DescribeUnifiedScreenItemType` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
 | `DiagnosePortalConnectReadiness` | `GetPortalConnectionReadiness` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/FoundationHost/FoundationTools.cs) |
@@ -645,6 +646,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ListObjectChildren` | `ListObjectChildren` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `ListPortalProcessProjects` | `ListPortalProcessProjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | `ListStagedImportFiles` | `ListStagedImportFiles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-67；操作分类 READ；[源码](../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs) |
+| `ListStandardPackages` | `ListStandardPackages` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 READ；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ListToolCategories` | `ListToolCategories` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `ListUnifiedGlobalScripts` | `ListUnifiedGlobalScripts` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
 | `ListUnifiedHmiApiTypes` | `ListUnifiedHmiApiTypes` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
@@ -679,6 +681,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageLibraryMasterCopy` | `ManageLibraryMasterCopy` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryType` | `ManageLibraryType` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryTypeVersion` | `ManageLibraryTypeVersion` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageMachineDescription` | `ManageMachineDescription` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 FILE；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ManageMotionAxis` | `ManageMotionAxis` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageMultiuserSession` | `ManageMultiuserSession` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `ManageNetworkDomain` | `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
@@ -719,6 +722,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageSivarcRuleContainer` | `ManageSivarcRuleContainer` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
 | `ManageSivarcScreenLayout` | `ManageSivarcScreenLayout` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
 | `ManageSivarcTableRule` | `ManageSivarcTableRule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageStandardPackage` | `ManageStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 FILE；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ManageStartdriveParameter` | `ManageStartdriveParameter` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageSyslogServers` | `ManageSyslogServers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
 | `ManageTeamcenterConnection` | `ManageTeamcenterConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TeamcenterTools.cs) |
@@ -900,6 +904,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ValidateClassicHmiMinimalPackageFiles` | `ValidateClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `ValidateClassicHmiMinimalPackagePlcSync` | `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `ValidatePlcXmlSchemas` | `ValidatePlcDocumentSchemas` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
+| `ValidateStandardPackage` | `ValidateStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 OFFLINE；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ValidateUnifiedObject` | `ValidateUnifiedObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `WriteClassicHmiMinimalPackageFiles` | `WriteClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
@@ -1620,12 +1625,28 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):671 | `if (entries.Count >= options.MaximumObjects) throw CanonicalJson.Failure("/expected", "limit", "Expanded model exceeds its object budget.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):51 | `if (schemas.Count != 14) throw new InvalidOperationException("Generation schema resources are missing.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):57 | `if (errors.Count >= 100) return;` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):15 | `private const int MaximumBytes = 16 * 1024 * 1024, MaximumRows = 10001, MaximumColumns = 1024;` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):63 | `if (files.Values.Sum(b => (long)b.Length) > MaximumBytes) throw new ArgumentException("CSV output exceeds 16 MiB.");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):80 | `if (rows.Length > MaximumRows - 1 \|\| columns.Length > MaximumColumns) throw new ArgumentException("CSV table exceeds row/column limits.");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):84 | `if (bytes.Length > 4 * 1024 * 1024) throw new ArgumentException("CSV table exceeds 4 MiB.");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):88 | `if (values.Any(c => c.Length > 65536)) throw new ArgumentException("CSV cell exceeds 65536 characters.");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):109 | `if (input.Length > 4 * 1024 * 1024 \|\| total > MaximumBytes) throw new ArgumentException("CSV size limit exceeded.", "inputPath");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):143 | `if (!seen.Add(parent) \|\| seen.Count > 32 \|\| !nodes.ContainsKey(parent)) throw new ArgumentException("Invalid or cyclic topology parent.", "inputPath");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):226 | `if (row.Count > MaximumColumns) throw new ArgumentException("Too many CSV columns.", "inputPath");` |
+| [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):230 | `if (rows.Count > MaximumRows \|\| cell.Length > 65536) throw new ArgumentException("CSV row/cell limit exceeded.", "inputPath");` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):141 | `if (files.Count >= limits.MaximumFiles) throw CanonicalJson.Failure(name, "file-count", "Too many package files.");` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):169 | `if (source.Length > limits.MaximumArchiveBytes) throw CanonicalJson.Failure("", "archive-size", "Archive exceeds the compressed size limit.");` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):171 | `if (archive.Entries.Count > limits.MaximumEntries) throw CanonicalJson.Failure("", "entry-count", "Too many archive entries.");` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):190 | `if (files.Count >= limits.MaximumFiles) throw CanonicalJson.Failure(name, "file-count", "Too many package files.");` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):202 | `if (name.Length == 0 \|\| name.Length > 240 \|\| name.Split('/').Length > 16 \|\| name != name.Normalize(NormalizationForm.FormC)` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):245 | `if (output.Length + read > limits.MaximumFileBytes) throw CanonicalJson.Failure(name, "file-size", "Decompressed file exceeds the size limit.");` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):18 | `private const int MaximumPackages = 256;` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):121 | `if (examples.Length > 16) throw new ArgumentException("At most 16 machine examples can be self-checked.");` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):176 | `if (zip.LongLength > new PackageLoadLimits().MaximumArchiveBytes) throw new ArgumentException("Export exceeds the import archive limit.", "outputPath");` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):228 | `if (Encoding.UTF8.GetByteCount(machineJson) > 4 * 1024 * 1024) throw new ArgumentException("Machine JSON exceeds 4 MiB.", "machine");` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):282 | `if (entries.Count >= MaximumPackages) throw new ArgumentException("Too many installed packages.");` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):290 | `if (directories.Length > MaximumPackages) throw new ArgumentException("Too many package directories.");` |
+| [Generation/StandardPackageStore.cs](../../src/Logic/Generation/StandardPackageStore.cs):436 | `if (stream.Length > 4 * 1024 * 1024) throw new ArgumentException("Machine JSON exceeds 4 MiB.", "inputPath");` |
 | [ModelContextProtocol/BatchPlanStore.cs](../../src/Logic/ModelContextProtocol/BatchPlanStore.cs):24 | `if (_plans.Count >= 32) throw new InvalidOperationException("Too many pending previews; use or wait for expiry.");` |
 | [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../src/Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):24 | `if (rules.Count > 50) throw new ArgumentException("At most 50 XML rules.");` |
 | [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../src/Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):33 | `if (xpath.Length == 0 \|\| xpath.Length > 1024) throw new ArgumentException("Each rule needs an XPath selecting elements (max 1024 chars).");` |
@@ -1842,7 +1863,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/Host/OfflineAnalysisTools.cs](../../src/Shared/Host/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [src/Shared/Host/PlcDocumentationTools.cs](../../src/Shared/Host/PlcDocumentationTools.cs):145 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
 
-共 313 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 329 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1983,6 +2004,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `CreatePlcUserConstant` | `CreatePlcUserConstant` | Shared Foundation contract | 20, 21 |
 | `CreateProject` | `CreateProject` | Shared Foundation contract | 20, 21 |
 | `DeletePlcExternalSource` | `DeletePlcExternalSource` | Shared Foundation contract | 20, 21 |
+| `DescribeStandardPackage` | `DescribeStandardPackage` | Shared Foundation contract | 20, 21 |
 | `DisconnectPortal` | `DisconnectPortal` | Shared Foundation contract | 20, 21 |
 | `ExportPlcBlock` | `ExportPlcBlock` | Shared Foundation contract | 20, 21 |
 | `ExportPlcBlocks` | `ExportPlcBlocks` | Shared Foundation contract | 20, 21 |

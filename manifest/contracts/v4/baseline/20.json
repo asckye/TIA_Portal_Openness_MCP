@@ -15360,7 +15360,7 @@
         "additionalProperties": false,
         "properties": {
           "folderPath": {
-            "description": "folderPath: existing absolute Git working-tree folder the text files are written to.",
+            "description": "folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree.",
             "type": "string"
           },
           "workspaceName": {

@@ -1,13 +1,13 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "78f19c6b570aa7c3b0652aa6bf1d38d343277ff594cb476f2687eef36cbc50fd",
-  "uniqueTools": 506,
+  "catalogSha256": "028d97e480d5edb50f249dabea7878566affe73828ea5c624543bf6a473c6ee3",
+  "uniqueTools": 511,
   "documents": 89,
-  "versionToolPairs": 1966,
-  "offlineCallExecutions": 75,
+  "versionToolPairs": 2006,
+  "offlineCallExecutions": 115,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 32,
+  "callSequences": 34,
   "languages": [
     "scl",
     "scl-sd",
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 258,
-  "noDirectVendoredExampleMappings": 248,
+  "noDirectVendoredExampleMappings": 253,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -48,13 +48,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 157,
-      "checkedToolCount": 157,
+      "registeredToolCount": 162,
+      "checkedToolCount": 162,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 50,
+      "operationExampleCount": 59,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -65,7 +65,12 @@
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -459,6 +464,13 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1176,6 +1188,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1418,6 +1437,34 @@
           ]
         },
         {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1477,6 +1524,39 @@
             },
             {
               "operation": "disconnect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -1834,6 +1914,13 @@
         },
         {
           "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1855,13 +1942,13 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 158,
-      "checkedToolCount": 158,
+      "registeredToolCount": 163,
+      "checkedToolCount": 163,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 50,
+      "operationExampleCount": 59,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -1872,7 +1959,12 @@
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -2266,6 +2358,13 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2995,6 +3094,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3237,6 +3343,34 @@
           ]
         },
         {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3296,6 +3430,39 @@
             },
             {
               "operation": "disconnect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -3653,6 +3820,13 @@
         },
         {
           "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3674,13 +3848,13 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 160,
-      "checkedToolCount": 160,
+      "registeredToolCount": 165,
+      "checkedToolCount": 165,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 50,
+      "operationExampleCount": 59,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -3691,7 +3865,12 @@
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -4085,6 +4264,13 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4836,6 +5022,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5078,6 +5271,34 @@
           ]
         },
         {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5137,6 +5358,39 @@
             },
             {
               "operation": "disconnect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -5494,6 +5748,13 @@
         },
         {
           "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -5515,13 +5776,13 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 160,
-      "checkedToolCount": 160,
+      "registeredToolCount": 165,
+      "checkedToolCount": 165,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 50,
+      "operationExampleCount": 59,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -5532,7 +5793,12 @@
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -5926,6 +6192,13 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6677,6 +6950,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6919,6 +7199,34 @@
           ]
         },
         {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6978,6 +7286,39 @@
             },
             {
               "operation": "disconnect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -7335,6 +7676,13 @@
         },
         {
           "toolName": "StageImportFiles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -7356,13 +7704,13 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 160,
-      "checkedToolCount": 160,
+      "registeredToolCount": 165,
+      "checkedToolCount": 165,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 50,
+      "operationExampleCount": 59,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -7373,7 +7721,12 @@
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -7767,6 +8120,13 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8518,6 +8878,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8760,6 +9127,34 @@
           ]
         },
         {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8819,6 +9214,39 @@
             },
             {
               "operation": "disconnect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -9182,6 +9610,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidateStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "WritePlcSclSourceFile",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -9197,13 +9632,13 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 170,
-      "checkedToolCount": 170,
+      "registeredToolCount": 175,
+      "checkedToolCount": 175,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 52,
+      "operationExampleCount": 61,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -9215,7 +9650,12 @@
         "BuildPlcUdt",
         "BuildStructuredText",
         "BuildUnifiedHmiButtonActionScript",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -9667,6 +10107,13 @@
           "operations": []
         },
         {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10415,6 +10862,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10657,6 +11111,34 @@
           ]
         },
         {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageNetworkDomain",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10716,6 +11198,39 @@
             },
             {
               "operation": "disconnect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -11117,6 +11632,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidateStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "WritePlcSclSourceFile",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -11132,13 +11654,13 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 495,
-      "checkedToolCount": 495,
+      "registeredToolCount": 500,
+      "checkedToolCount": 500,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 493,
+      "operationExampleCount": 502,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -11150,7 +11672,12 @@
         "BuildPlcUdt",
         "BuildStructuredText",
         "BuildUnifiedHmiButtonActionScript",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -12049,6 +12576,13 @@
             "guides/skills/engineering-objects/SKILL.md",
             "guides/skills/object-tree-walking/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -14174,6 +14708,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -15384,6 +15925,34 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -16678,6 +17247,39 @@
             },
             {
               "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -18205,6 +18807,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidateStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ValidateUnifiedObject",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -18255,13 +18864,13 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 506,
-      "checkedToolCount": 506,
+      "registeredToolCount": 511,
+      "checkedToolCount": 511,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 545,
+      "operationExampleCount": 554,
       "programmingExampleCount": 25,
-      "callSequenceCount": 32,
+      "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -18273,7 +18882,12 @@
         "BuildPlcUdt",
         "BuildStructuredText",
         "BuildUnifiedHmiButtonActionScript",
-        "PlanArtifactImportOrder"
+        "DescribeStandardPackage",
+        "ListStandardPackages",
+        "ManageMachineDescription",
+        "ManageStandardPackage",
+        "PlanArtifactImportOrder",
+        "ValidateStandardPackage"
       ],
       "exampleCallsExecuted": false,
       "tools": [
@@ -19172,6 +19786,13 @@
             "guides/skills/engineering-objects/SKILL.md",
             "guides/skills/object-tree-walking/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -21317,6 +21938,13 @@
           "operations": []
         },
         {
+          "toolName": "ListStandardPackages",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListTechnologyObjects",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -22612,6 +23240,34 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageMachineDescription",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "validate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "exportTemplate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -24182,6 +24838,39 @@
           ]
         },
         {
+          "toolName": "ManageStandardPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "import",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "export",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "copy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "fork",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "remove",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageStartdriveParameter",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -25697,6 +26386,13 @@
         },
         {
           "toolName": "ValidatePlcDocumentSchemas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],

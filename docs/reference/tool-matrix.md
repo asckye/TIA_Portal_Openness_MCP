@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（FoundationHost 的 V21 full 产品目录）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-09 12:10:00
+- 生成时间：2026-10-09 12:25:59
 - 产品文件版本：3.3.0.0
-- 工具数量：506
+- 工具数量：511
 
 ## 读法
 
@@ -16,10 +16,10 @@
 |---|---|---:|
 | `UI` | 改变工作台界面状态：切页、定位或预填，不改工程，不需要 TIA 会话 | 6 |
 | `SESSION` | 会话与发现，包含工程保存、另存与关闭；写操作须审批 | 16 |
-| `READ` | 读取已打开工程，不改动 | 154 |
+| `READ` | 读取已打开工程，不改动 | 156 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 197 |
-| `FILE` | 导出/导入文件或生成离线产物 | 51 |
-| `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 34 |
+| `FILE` | 导出/导入文件或生成离线产物 | 53 |
+| `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 35 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
 | `EXECUTE` | 执行编译/测试/自检 | 13 |
@@ -31,7 +31,7 @@
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 56 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6)、`Workbench` (8) |
-| `project` | 工程与协作 / Project & collaboration | 69 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
+| `project` | 工程与协作 / Project & collaboration | 74 | `Project` (30)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
 | `plc` | PLC 软件 / PLC software | 138 | `PLC-Software` (92)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
@@ -143,11 +143,11 @@
 | `ShowWorkbenchLadder` | L1 | UI | Locate a block and optionally open a ladder render registered in this MCP session. Without a render, return the human next step. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchLadder"), optionally operation or language. |
 | `ShowWorkbenchPage` | L1 | UI | Show an allowed Workbench page. Human activity, modal dialogs and the UI control switch can refuse the request. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchPage"), optionally operation or language. |
 
-## project — 工程与协作 / Project & collaboration（69）
+## project — 工程与协作 / Project & collaboration（74）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
-### [Project]（25）
+### [Project]（30）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -155,10 +155,15 @@
 | `BuildProjectScaffold` | L1 | WRITE* | One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project. Example: {"spec":"{\u0022projectName\u0022:\u0022Demo\u0022,\u0022directoryPath\u0022:\u0022C:\\\\Projects\u0022,\u0022plcName\u0022:\u0022PLC_1\u0022,\u0022plcFamily\u0022:\u0022S7-1500\u0022}","dryRun":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "BuildProjectScaffold"), optionally operation or language. |
 | `CloseProject` | L1 | SESSION* | [PLC foundation; native unverified] [v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "CloseProject"), optionally operation or language. |
 | `CreateProject` | L1 | WRITE* | [PLC foundation; native unverified] [v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "CreateProject"), optionally operation or language. |
+| `DescribeStandardPackage` | L1 | READ | Describe exact installed standard package and resolved inheritance: device parameter schemas/signals/emits, naming rules, library implementations, release coverage and source/licence notices. Exposes basic programAlarm=false for S7-1200; true selects the isolated S7-1500 adapter, with native CPU/firmware acceptance NOT RUN. Offline, no writes or Openness calls. Examples: GetToolUsage(toolName: "DescribeStandardPackage"), optionally operation or language. Examples: GetToolUsage(toolName: "DescribeStandardPackage"), optionally operation or language. |
 | `GetProjectInfo` | L1 | READ* | [PLC foundation; native unverified] [v17-project-safe-v1] List projects and API-supported local sessions with exact file identities and attributes. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "GetProjectInfo"), optionally operation or language. |
 | `GetProjectTree` | L1 | READ* | [PLC foundation; native unverified] [v17-project-safe-v1] Actual device groups, devices, nested items and software, including ungrouped devices and exact software paths. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "GetProjectTree"), optionally operation or language. |
+| `ListStandardPackages` | L1 | READ | List validated repository and user standard packages with exact id/version, canonical content hash, inventory and release targets. Repository templates/standards is read-only; user packages live under bundle data/standards. Offline on all eight releases; no Openness calls. Examples: GetToolUsage(toolName: "ListStandardPackages"), optionally operation or language. Examples: GetToolUsage(toolName: "ListStandardPackages"), optionally operation or language. |
+| `ManageMachineDescription` | L1 | FILE | Offline validate/import/export/exportTemplate for canonical MachineDescription JSON. Pass machine as a structured object. CSV uses a package-generated directory with Machine, Stations, Units, Devices and Lists.csv (UTF-8 BOM, LF, quoted cells); Param cells are JSON values, IO cells addresses/auto. CPU-specific programAlarm selection is validated. import without outputPath and validate only return JSON; file writes preview by default and require expectedPlanHash plus approval. Outputs never overwrite. JSON input <=4 MiB; CSV <=4 MiB/file,16 MiB total,10000 rows. xlsx deferred. No TIA calls. Examples: GetToolUsage(toolName: "ManageMachineDescription"), optionally operation or language. Examples: GetToolUsage(toolName: "ManageMachineDescription"), optionally operation or language. |
+| `ManageStandardPackage` | L1 | FILE | Offline standard package import (directory or bounded zip), export (new canonical zip), copy/fork (new id and version), or remove (user packages only). Exact identities; no overwrite. Source/licence notices and immutable inventories retained; JSON canonicalized, resource bytes preserved. Preview defaults true; writes require dryRun=false and expectedPlanHash from preview, with existing approval/audit. Zip limits: 1024 files, 2048 entries, 16 MiB/file, 64 MiB total, 32 MiB archive. No TIA calls. Examples: GetToolUsage(toolName: "ManageStandardPackage"), optionally operation or language. Examples: GetToolUsage(toolName: "ManageStandardPackage"), optionally operation or language. |
 | `OpenProject` | L1 | SESSION* | [PLC foundation; native unverified] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "OpenProject"), optionally operation or language. |
 | `SaveProject` | L1 | SESSION* | [PLC foundation; native unverified] [v17-project-safe-v1] Explicitly save the exact bound project/local session locally; no server commit. Preview by default. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "SaveProject"), optionally operation or language. |
+| `ValidateStandardPackage` | L1 | OFFLINE | Validate an installed package or local directory/zip: bounded loader, schema, cross-references, inventory hashes, restricted declarations, pinned dependencies/inheritance and release implementation coverage. Coverage is reported separately from validity; native acceptance NOT RUN. No writes or Openness calls. Examples: GetToolUsage(toolName: "ValidateStandardPackage"), optionally operation or language. Examples: GetToolUsage(toolName: "ValidateStandardPackage"), optionally operation or language. |
 | `ArchiveSavedProject` | L2 | FILE | Create a native compressed .zap20/.zap21 archive of an already saved project. Default dryRun=true. Rejects unsaved state, unsupported sessions and existing target files. Does not save, change project path, close the project, or test retrieval. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ArchiveSavedProject"), optionally operation or language. |
 | `CompareProjects` | L2 | READ | Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified. Examples: GetToolUsage(toolName: "CompareProjects"), optionally operation or language. |
 | `ExchangeTestSuiteCase` | L2 | WRITE | Typed Test Suite definition exchange: export (RuleSet / TestCase / SystemTestCase.SaveToFile(FileInfo) -> new .xml / .tat / .tst file verified by size and SHA-256; native bool reported), import (RuleSetComposition / TestCaseComposition / SystemTestCaseComposition.LoadFromFile(file, importOptions None\|Override\|SkipInactiveCultures\|ActivateInactiveCultures, loadOptions: style guide RSLoadOptions None\|IgnorePropertyErrors\|IgnoreMissingAttributes\|SkipInvalidObjects joined with \|, application / system TCLoadOptions None\|IgnoreInvalidObject); the file may hold several definitions, name is optional and only verified afterwards), importTestSets (application only: ApplicationTestSystemGroup.LoadFromFile(file, importOptions, TSLoadOptions None\|IgnoreInvalidObject) returns the imported test sets and test cases), delete (Delete() on the case or, with kind testSet, the ApplicationTestSet; verified absent). Default preview; no test execution or automatic save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExchangeTestSuiteCase"), optionally operation or language. |
