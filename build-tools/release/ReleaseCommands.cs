@@ -371,7 +371,10 @@ internal static partial class ReleaseCommands
                 ["TEMP"] = Path.Combine(root, "temp"),
                 ["TMP"] = Path.Combine(root, "temp")
             };
-            var result = ProcessRunner.Run(executable, args, workingDirectory ?? Root, env);
+            // test-suites is a subcommand of this tool (formerly Test-DotnetSuites.py); run it in process with the isolated environment.
+            var result = executable == "test-suites"
+                ? DotnetSuites.Run(Root, Options.Parse(args.ToArray(), new HashSet<string> { "SelfTest", "NoRestore" }), env)
+                : ProcessRunner.Run(executable, args, workingDirectory ?? Root, env);
             RecordProcessOutput(result);
             if (result.ExitCode == 0)
             {
