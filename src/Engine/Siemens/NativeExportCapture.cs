@@ -21,6 +21,7 @@ namespace TiaMcpServer.Siemens
         internal string State = "Unknown", DiagnosticsStatus = "notRead", Phase = "prepare";
         internal string? Format, FailurePhase;
         private readonly string scope;
+        private string? outputDirectory;
         private static readonly object LogGate = new object();
         private static string? DiagnosticLog
         {
@@ -56,6 +57,7 @@ namespace TiaMcpServer.Siemens
 
         private void ReadCore(object target, bool libraryVersion, DirectoryInfo directory)
         {
+            outputDirectory = directory.FullName;
             object? result;
             try
             {
@@ -228,7 +230,7 @@ namespace TiaMcpServer.Siemens
         internal JsonObject Status()
         {
             bool ok = ApiCallSuccess && NativeSuccess && InspectionComplete;
-            return new JsonObject { ["path"] = scope, ["kind"] = "nativeExportStatus", ["status"] = ok ? "ok" : ExportAttempted ? "failed" : "notAttempted",
+            var status = new JsonObject { ["path"] = scope, ["kind"] = "nativeExportStatus", ["status"] = ok ? "ok" : ExportAttempted ? "failed" : "notAttempted",
                 ["operationId"] = OperationId, ["apiCallSuccess"] = ApiCallSuccess, ["nativeState"] = State,
                 ["exportAttempted"] = ExportAttempted, ["method"] = Method,
                 ["diagnosticLog"] = DiagnosticLog,
@@ -240,6 +242,12 @@ namespace TiaMcpServer.Siemens
                     : !ApiCallSuccess ? "Native call did not return successfully."
                     : !InspectionComplete ? "The native call returned, but result inspection failed at " + FailurePhase + ". nativeState is the previously observed raw value; it does not establish complete data."
                     : "Native call and result inspection returned, but the native state was " + State + ". Inspect diagnostics and the file summary." };
+            if (ApiCallSuccess && (State == "Error" || State == "Failure" || State == "Failed"))
+            {
+                TiaMcp.Logic.V4.NativeResultState.Record(status, State, false, DiagnosticLog, messages: new JsonArray(Rows.Select(r => (JsonNode)r.DeepClone()).ToArray()));
+                status["targetFiles"] = new JsonArray(Directory.GetFiles(outputDirectory!).Select(p => (JsonNode)TiaMcp.Logic.V4.NativeResultState.FileRow(p)).ToArray());
+            }
+            return status;
         }
     }
 }

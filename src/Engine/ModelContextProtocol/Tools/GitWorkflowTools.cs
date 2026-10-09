@@ -29,7 +29,14 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta = ResponseMeta.Unstamped(false, ("action", action), ("offlineOnly", true));
             try
             {
-                if (!Path.IsPathRooted(repositoryPath) || !Directory.Exists(repositoryPath)) throw new ArgumentException("repositoryPath must exist and be absolute.");
+                if (string.IsNullOrWhiteSpace(repositoryPath) || !Path.IsPathRooted(repositoryPath))
+                    throw new OfflineContracts.Rejected(new TiaMcp.Logic.V4.Error("repositoryPath must be an existing absolute Git working tree directory.", new TiaMcp.Logic.V4.InvalidArgumentDetails("repositoryPath", Array.Empty<string>())));
+                if (!Directory.Exists(repositoryPath))
+                    throw new OfflineContracts.Rejected(new TiaMcp.Logic.V4.Error("repositoryPath does not exist: " + repositoryPath, new TiaMcp.Logic.V4.NotFoundDetails(repositoryPath)));
+                var workingTree = new DirectoryInfo(repositoryPath);
+                while (workingTree != null && !Directory.Exists(Path.Combine(workingTree.FullName, ".git")) && !File.Exists(Path.Combine(workingTree.FullName, ".git"))) workingTree = workingTree.Parent;
+                if (workingTree == null)
+                    throw new OfflineContracts.Rejected(new TiaMcp.Logic.V4.Error("repositoryPath is not in a Git working tree: " + repositoryPath, new TiaMcp.Logic.V4.InvalidArgumentDetails("repositoryPath", Array.Empty<string>())));
                 if (limit < 1 || limit > 200) throw new ArgumentException("limit must be 1..200.");
                 var nodes = JsonNode.Parse(filesJson) as JsonArray ?? throw new ArgumentException("filesJson must be an array.");
                 if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");
@@ -67,6 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["executed"] = true; meta["mayHaveModifiedRepository"] = action == "stage" || action == "commit";
                 return new ResponseMessage { Message = "Git action finished; inspect exitCode and output.", Meta = meta };
             }
+            catch (OfflineContracts.Rejected) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Git action failed: " + ex.Message, Meta = meta }; }
         }
     }

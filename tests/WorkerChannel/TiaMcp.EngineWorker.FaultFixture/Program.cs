@@ -15,7 +15,7 @@ var identity = new ChannelIdentity(release, Hash(exe), Hash(Path.Combine(Path.Ge
     Environment.ProcessId, Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_NONCE")!);
 bool bound = false;
 long epoch = 0;
-JsonObject Status() => new() { ["releaseKey"] = release, ["readiness"] = new JsonObject { ["ready"] = true },
+JsonObject Status() => new() { ["releaseKey"] = release, ["diagnosticsDirectory"] = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY"), ["readiness"] = new JsonObject { ["ready"] = true },
     ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
     ["binding"] = bound ? new JsonObject { ["projectPath"] = "C:/fixture.ap" + release } : null,
     ["session"] = new JsonObject { ["isConnected"] = bound }, ["nativeFault"] = null };

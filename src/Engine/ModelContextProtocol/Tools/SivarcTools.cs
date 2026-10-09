@@ -113,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool confirmDelete=false,
             bool dryRun=true)
         => _sivarc.ManageSivarcTableRule(category,tablePath,rulePath,kind,action,propertiesJson,referencesJson,deviceSelectionJson,deviceNamesJson,libraryName,masterCopyPath,createOption,confirmDelete,dryRun);
-        [McpServerTool(Name="ListSivarcBlockDefinitions"), Description("[L2][PLC-Software][READ] SiVArc data of one code block (blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending.")]
+        [McpServerTool(Name="ListSivarcBlockDefinitions"), Description("[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ListSivarcBlockDefinitionsV4(
             string softwarePath,
             string blockPath,

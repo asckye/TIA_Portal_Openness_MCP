@@ -70,23 +70,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ReadNativeInvocationLog([Description("Number of recent entries, 1..500.")] int take = 100)
         {
-            if (take < 1 || take > 500) throw new ArgumentException("take must be 1..500.");
-            var root = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
-            if (!Path.IsPathRooted(root)) throw new ArgumentException("Diagnostics directory must be absolute.");
-            var files = Directory.Exists(root) ? new DirectoryInfo(root).GetFiles("calls-*.jsonl*")
-                .Where(f => f.Name.EndsWith(".jsonl", StringComparison.Ordinal) || f.Name.EndsWith(".jsonl.previous", StringComparison.Ordinal))
-                .OrderByDescending(f => f.LastWriteTimeUtc).Take(6).Reverse().ToArray() : Array.Empty<FileInfo>();
-            var queue = new Queue<JsonNode>(); int malformed = 0;
-            foreach (var file in files)
-                using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-                using (var reader = new StreamReader(stream))
-                    while (reader.ReadLine() is string line)
-                    {
-                        try { var row = JsonNode.Parse(line); if (row != null) { queue.Enqueue(row); if (queue.Count > take) queue.Dequeue(); } }
-                        catch (System.Text.Json.JsonException) { /* swallow(parse-fallback): Malformed diagnostic records are counted and skipped so the remaining bounded log window can be read. */ malformed++; }
-                    }
-            return new ResponseMessage { Message = "Recent journal entries read; partial trailing records are counted separately.", Meta = new JsonObject {
-                ["success"] = true, ["directory"] = root, ["records"] = new JsonArray(queue.ToArray()), ["malformedLines"] = malformed, ["filesRead"] = files.Length } };
+            var meta = TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.Read(TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory, take);
+            return new ResponseMessage { Message = "Recent journal entries read; partial trailing records are counted separately.", Meta = meta };
         }
     }
 }

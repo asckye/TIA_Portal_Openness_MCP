@@ -84,11 +84,7 @@ namespace TiaMcpServer.Siemens.Services
             var state = result?.State.ToString() ?? "Unknown";
             var ok = result != null && result.State != TransferResultState.Error;
 
-            if (!ok && !File.Exists(filePath))
-            {
-                throw new PortalException(PortalErrorCode.ExportFailed,
-                    $"CAx/AML export failed (state={state}): " + (messageLines.Count > 0 ? string.Join(" | ", messageLines) : "no detail returned"));
-            }
+            // A returned Error is an explicit file-operation failure even when no file exists.
 
             return new ModelContextProtocol.CaxExportResult
             {

@@ -168,6 +168,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = Failure(false, evidence); }
 
+            if (NativeResultState.TryFailure(evidence, write, out var nativeOutcome, out var nativeError))
+                return Result(tool, body, nativeError, nativeOutcome, current, write, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete);
             Paging? paging = null;
             if (evidence["offset"] != null && evidence["limit"] != null && (evidence["total"] ?? evidence["expectedCount"]) != null)
                 paging = McpServer.OffsetPage((int)evidence["offset"]!, (int)evidence["limit"]!, (int)(evidence["total"] ?? evidence["expectedCount"])!);

@@ -90,6 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string path = Path.Combine(root, "calls-" + ProcessKey + ".jsonl");
                 string text = row();
                 RequireDiskFlush(text, ref flush);
+                if (text.IndexOf("\"tool\":\"native:", StringComparison.Ordinal) >= 0 || text.IndexOf("\"nativeCallId\":", StringComparison.Ordinal) >= 0) flush = true;
                 long now = Stopwatch.GetTimestamp();
                 bool checkRetention = settingsRead == 0 || now - settingsRead >= Stopwatch.Frequency;
                 if (checkRetention)

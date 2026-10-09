@@ -141,6 +141,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 && (evidence["total"] ?? evidence["totalCount"] ?? evidence["expectedCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
             Clean(data);
+            if (NativeResultState.TryFailure(evidence, writes, out var nativeOutcome, out var nativeError)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             if (outcome != Outcome.Succeeded) data.Remove("summary");
             if (data["items"] is JsonArray lines)
                 for (int i = 0; i < lines.Count; i++)

@@ -19,6 +19,50 @@ using Parameter = enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDes
 
 public sealed class WorkerRobustnessTests
 {
+    private static string HostDiagnosticsDirectory()
+    {
+        var type = typeof(Foundation.WorkerClient).Assembly.GetType("TiaOpenness.Shared.DataLocations")
+            ?? typeof(Meta).Assembly.GetType("TiaOpenness.Shared.DataLocations", true)!;
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+        var current = type.GetProperty("Current", flags)!.GetValue(null)!;
+        return (string)type.GetProperty("DiagnosticsDirectory", flags)!.GetValue(current)!;
+    }
+
+    [Theory]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Worker_inherits_host_diagnostics_directory(string release)
+    {
+        using var scope = new Scope("", release);
+        var status = await scope.Worker.Status(CancellationToken.None);
+        Assert.Equal(HostDiagnosticsDirectory(), (string?)status["diagnosticsDirectory"]);
+    }
+
+    [Fact]
+    public async Task Plc_worker_inherits_host_diagnostics_directory()
+    {
+        string? previousLog = Environment.GetEnvironmentVariable("TIA_FIXTURE_LOG");
+        string? previousFault = Environment.GetEnvironmentVariable("TIA_FIXTURE_FAULT");
+        string log = Path.Combine(Path.GetTempPath(), "p707b-worker-" + Guid.NewGuid().ToString("N") + ".jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_FIXTURE_LOG", log);
+            Environment.SetEnvironmentVariable("TIA_FIXTURE_FAULT", "");
+            string exe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"));
+            Assert.True(File.Exists(exe), exe);
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter.19.dll"), "offline fixture identity");
+            using var worker = new Foundation.WorkerClient("19", exe, Path.GetDirectoryName(exe)!, true) { Bundled = false };
+            var state = await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
+            Assert.Equal(HostDiagnosticsDirectory(), (string?)state!["diagnosticsDirectory"]);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TIA_FIXTURE_LOG", previousLog);
+            Environment.SetEnvironmentVariable("TIA_FIXTURE_FAULT", previousFault);
+            if (File.Exists(log)) File.Delete(log);
+        }
+    }
+
     private sealed class Catalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {
         public IReadOnlyDictionary<string, Descriptor> All { get; }

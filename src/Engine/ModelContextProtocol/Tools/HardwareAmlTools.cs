@@ -6,6 +6,7 @@ using ModelContextProtocol.Protocol;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -40,6 +41,8 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _service.ExportDeviceConfigurationAml(devicePath, exportPath);
+                var evidence = ResponseMeta.Basic(DateTime.Now, result.Success);
+                NativeResultState.Record(evidence, result.State, false, targetPath: result.FilePath, messages: new System.Text.Json.Nodes.JsonArray(result.Messages?.Select(m => (JsonNode)m).ToArray() ?? Array.Empty<JsonNode>()));
                 return new ResponseExportDeviceAml
                 {
                     Message = $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' (state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",
@@ -50,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ErrorCount = result.ErrorCount,
                     WarningCount = result.WarningCount,
                     Messages = result.Messages,
-                    Meta = ResponseMeta.Basic(DateTime.Now, true)
+                    Meta = evidence
                 };
             }
             catch (PortalException pex)

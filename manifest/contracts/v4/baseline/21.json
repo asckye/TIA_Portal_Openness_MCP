@@ -16919,7 +16919,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "6d17339213b1f294eadf54ccab39382f836669d69510668580a28940f41d836b",
+      "descriptionSha256": "f7faf57c0f291b2e71c34a53452830c55bf2fa59789c38ade98fe2b21091ae1b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16966,7 +16966,7 @@
           },
           "skipChartPreflight": {
             "default": false,
-            "description": "skipChartPreflight: true skips the chart-folder preflight (only when the PLC is known to have charts).",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
             "type": "boolean"
           },
           "softwarePath": {
@@ -29257,7 +29257,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "fe8f14491cd1bbf225dfcb9d9bf42d096da5ce5bad009ed062a28e6593caa87f",
+      "descriptionSha256": "cce7d74d3dfe9c496adbf018ff1a86e046d0166b8180a60dd550de58c92c926a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -29926,7 +29926,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "e7eac768311052f3a4f2425e822cf92c8d0b2608c410e653376d6728bbfc315d",
+      "descriptionSha256": "439900e043e2b5d33938d9ce008f4890f5bc351ee77faa6ab74fa9faccb1c87c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -29967,7 +29967,7 @@
           },
           "skipChartPreflight": {
             "default": false,
-            "description": "skipChartPreflight: true skips the chart-folder preflight (only when the PLC is known to have charts).",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
             "type": "boolean"
           },
           "softwarePath": {

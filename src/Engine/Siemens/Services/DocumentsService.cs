@@ -145,6 +145,7 @@ namespace TiaMcpServer.Siemens.Services
                             PlcExchangeContract.StartWrite("document-export");
                             var result = Documents.ExportOptional(group, exportPath, blockName);
 
+                            PlcExchangeContract.ObserveNativeResult(result?.State.ToString(), false, result == null ? null : _session.DocumentMessages(result.Messages), exportPath, blockName);
                             if (result != null && Documents.State(result) == DocumentResultState.Success)
                             {
                                 PlcExchangeContract.ConfirmWrite();
@@ -292,6 +293,7 @@ namespace TiaMcpServer.Siemens.Services
                         continue;
                     }
 
+                    PlcExchangeContract.ObserveNativeResult(Documents.State(result).ToString(), false, _session.DocumentMessages(result.Messages), exportPath, Documents.Name(block));
                     if (Documents.State(result) == DocumentResultState.Success)
                     {
                         PlcExchangeContract.ConfirmWrite();
@@ -400,6 +402,7 @@ namespace TiaMcpServer.Siemens.Services
 
             try
             {
+                PlcExchangeContract.ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : _session.DocumentMessages(result.Messages), dir.FullName, fileNameWithoutExtension);
                 if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
                 {
                     throw new PortalException(PortalErrorCode.ImportFailed,
@@ -545,6 +548,7 @@ namespace TiaMcpServer.Siemens.Services
                     LastImportFromDocumentsAttempted++;
                     PlcExchangeContract.StartWrite("document-import");
                     result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => Documents.Import(Documents.Blocks(group), dir, name, option));
+                    PlcExchangeContract.ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : _session.DocumentMessages(result.Messages), dir.FullName, name);
                     if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
                     {
                         failures.Add($"{name}: native state={Documents.OptionalState(result)?.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."

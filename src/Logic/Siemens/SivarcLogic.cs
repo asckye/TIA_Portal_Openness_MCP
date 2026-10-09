@@ -11,6 +11,18 @@ namespace TiaMcpServer.Siemens
     // settings, the expression resolver, screen layout data and the definitions upgrader.
     internal static class SivarcLogic
     {
+        internal static void RequireSupportedBlockClass(string blockClass)
+        {
+            if (blockClass != "FB" && blockClass != "FC")
+                throw new NotSupportedException("Block-level SiVArc data is restricted to FB and FC; " + blockClass + " is unsupported. OB access crashed TIA Portal V20 (finding 44).");
+        }
+
+        internal static T BlockProvider<T>(string blockClass, Func<T> getProvider)
+        {
+            RequireSupportedBlockClass(blockClass);
+            return getProvider();
+        }
+
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 128)
             => ArgumentRules.RequireText(value, parameter, max);

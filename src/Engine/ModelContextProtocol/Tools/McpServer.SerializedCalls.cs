@@ -16,6 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             using var document = System.Text.Json.JsonDocument.Parse(row);
             string tool = document.RootElement.GetProperty("tool").GetString() ?? "";
+            if (tool.StartsWith("native:", StringComparison.Ordinal) || document.RootElement.TryGetProperty("nativeCallId", out _)) { flush = true; return; }
             // Local READ rows have no native crash evidence. Native boundaries,
             // writes and session calls retain synchronous hardware flushes.
             if (!ToolTaxonomy.UsesOpennessLane(tool) && ToolTaxonomy.OperationOf(tool, null).Operation == "READ") flush = false;

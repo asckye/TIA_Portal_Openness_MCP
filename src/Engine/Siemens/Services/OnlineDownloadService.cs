@@ -1,3 +1,4 @@
+using TiaMcp.Logic.V4;
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering.Cax;
 using Siemens.Engineering.Compiler;
@@ -1138,6 +1139,7 @@ namespace TiaMcpServer.Siemens.Services
             if (legitimation != null)
                 foreach (var kv in legitimation) meta[kv.Key] = kv.Value?.DeepClone();
             meta["success"] = ok;
+            NativeResultState.Record(meta, result.State.ToString(), true, messages: new JsonArray(errors.Concat(warnings).Select(m => (JsonNode)JsonValue.Create(m)!).ToArray()));
 
             return new ResponseDownload
             {
@@ -1376,6 +1378,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["uploadState"] = result?.State.ToString(); meta["errorCount"] = result?.ErrorCount; meta["warningCount"] = result?.WarningCount;
                 meta["errors"] = new JsonArray(errors.Select(e => (JsonNode)e).ToArray()); meta["warnings"] = new JsonArray(warnings.Select(w => (JsonNode)w).ToArray());
                 var station = result?.UploadedStation;
+                NativeResultState.Record(meta, result?.State.ToString(), true, messages: new JsonArray(errors.Concat(warnings).Select(m => (JsonNode)JsonValue.Create(m)!).ToArray()));
                 meta["uploadedStation"] = station?.Name; meta["devicesAfter"] = _session.CurrentProject.Devices.Count;
                 bool ok = result != null && result.State != UploadResultState.Error && station != null && _session.CurrentProject.Devices.Any(d => d.Name == station.Name);
                 meta["operationSuccess"] = ok; meta["dataComplete"] = false;
@@ -1453,6 +1456,8 @@ namespace TiaMcpServer.Siemens.Services
                 directory.Refresh();
                 var files = directory.Exists ? directory.GetFiles("*", SearchOption.AllDirectories) : Array.Empty<FileInfo>();
                 meta["filesWritten"] = files.Length; meta["bytesWritten"] = files.Sum(f => f.Length); meta["dataComplete"] = false;
+                NativeResultState.Record(meta, result?.State.ToString(), false, messages: new JsonArray(errors.Concat(warnings).Select(m => (JsonNode)JsonValue.Create(m)!).ToArray()));
+                meta["targetFiles"] = new JsonArray(files.Select(f => (JsonNode)NativeResultState.FileRow(f.FullName)).ToArray());
                 bool ok = result != null && result.State != DownloadResultState.Error && files.Length > 0;
                 meta["operationSuccess"] = ok;
                 if (!ok) throw new InvalidOperationException("Folder download did not produce a verified image: " + (result?.State.ToString() ?? "no result") + policy.UnansweredSummary());

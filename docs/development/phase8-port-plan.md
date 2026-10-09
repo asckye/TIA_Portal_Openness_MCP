@@ -210,11 +210,31 @@
 | I6 | 文件、导出与暂存 | `NativeInputPolicy` 路径规范化、`NativeExportCapture`、`EngineeringExport`、`EngineeringFileNames`；导出句柄（宿主 `McpServer.Exports`）；暂存（P6-67） | F09–F15、F21–F25、F28、F33 | 路径规则已共享；导出句柄随 B1 迁出引擎目录 |
 | I7 | 编译 | Foundation `CompileAdapter`；引擎 `PlcCompilation` | F09、F17、F22、F30、F05 | 复用 Foundation 编译族（P6-COMPILE） |
 | I8 | 在线路由与凭据 | `ConnectionConfiguration`/PG-PC 接口选择、`OnlineToolPolicy`、`EngineeringCredentialRules`（SecureString，不回显） | F22、F12、F31 在线部分、F07、F30、F33（Teamcenter） | 一处实现；ONLINE-WRITE 审批与安全闸门不变 |
-| I9 | HMI 访问与崩溃隔离 | `HmiExactAccess`、`HmiSnapshot`、`Portal.Software.UnifiedHmiHelpers` 反射助手；已知崩溃规避（SyntaxCheck、脚本改名、Classic 画面尺寸、CFC 未知图表保护查询） | F24–F29、F32 | 隔离规则逐条带入适配器，不得在迁移中丢失 |
+| I9 | HMI 访问与崩溃隔离 | `HmiExactAccess`、`HmiSnapshot`、`Portal.Software.UnifiedHmiHelpers` 反射助手；已知崩溃规避（SyntaxCheck、脚本改名、Classic 画面尺寸、SiVArc OB 定义访问、CFC 无图表预检/未知图表保护查询；见下方 P7-07b 记录） | F24–F29、F32 | 隔离规则逐条带入适配器，不得在迁移中丢失 |
 | I10 | 原生调用诊断与织入 | `InvocationJournal`、`NativeCallDiagnostics`、`NativeCallWeaver` verify | 全部适配器代码 | 已为八版适配器强制；新文件加入 `Adapter.Sources.props` 白名单 |
 | I11 | 第三方 | TiaGitAddIn.Core（`RenderPlcVisualDiff`）、SiemensOpcUaModelled（F15）、Esprima/YamlDotNet（F28、Unified 脚本）、Sharp7/S7 WebAPI/Workstation.UaClient（`src/OnlineChannels`，F04/F12）、PLCSIM Adv API（运行时定位）、siemens-plc-tools Python（`RunPlcCompanionTool`） | F01–F04、F12、F15、F28 | 只放宿主或 Siemens 无关库；不得进入适配器（边界检查） |
 | I12 | 工具描述符与目录 | V20/V21 目录由引擎 `--write-tool-catalog` 生成并经 `EngineCatalog` 校验执行所有权；`ToolMetadata`、`ToolExecution`、`BehaviorCapabilities`、`GetToolUsage` 示例 | 全部 | P8-02 须先给描述符一个不依赖引擎的来源（见第 5 节），否则 P8-04 无法退役引擎 |
 | I13 | DTO/JSON 边界 | 引擎服务直接返回 `JsonObject`/`ResponseMessage`；适配器禁止引用 Logic/JSON 库（`scripts/checks/Check-AdapterBoundary.py`） | 全部 Openness 族 | 每族在 `src/Adapters.Contracts` 定义类型化 DTO，worker 用 `WorkerJson` 序列化，宿主映射为与基线一致的 V4 JSON |
+
+I9 崩溃隔离补充（P7-07b，证据：V20 VM .129、包 c975ca39，2026-10-09 第二轮发现 44/45）：
+
+| 原生边界 | 观察到的故障 | 迁移必须保留的防护 |
+|---|---|---|
+| SiVArc 块定义 | `ListSivarcBlockDefinitions(PLC_1, Main)` 中 Main 为 OB1；访问 `SivarcDataProvider.TagDefinitions/TextDefinitions` 后约 4.9 秒 TIA V20 进程消失 | 两个块级工具共用 FB/FC 白名单；OB、DB、未知块类在 `GetService<SivarcDataProvider>` 前返回 `UNSUPPORTED_CAPABILITY`。定位 PLC/块仍需要原生读取，防护保证不进入 SiVArc 服务边界。 |
+| CFC 保护预览 | `ManageCfcChartProtection(PLC_1, Chart_1, read, dryRun=true)`；PLC 无 CFC 图表，约 4.1 秒 TIA V20 进程消失 | 旧顺序为 provider → `CompleteExport` 预检 → ZIP inventory → `GetChartProtection`。第一处 CFC 操作是 `CompleteExport`，现有证据不能证明已运行后面的保护查询。V20/V21 全部保护操作和三种导出在 provider 前拒绝；`skipChartPreflight` 也不能绕过。import 维持原有路径。 |
+
+本地 SDK 文档依据：V20 `TIA_V20_PublicAPI/V20/Siemens.Engineering.xml` 与 V21
+`TIA_V21_PublicAPI/V21/net48/Siemens.Engineering.Sivarc.xml` 的
+`T:Siemens.Engineering.SiVArc.SivarcDataProvider` 仅说明它是 blocks/compile units 的数据提供器，
+没有列出可支持的块子类。FB/FC 是此次保守准入策略，不能把该 XML 概述当成 OB/DB 安全性的保证；
+FB/FC 的原生可用性仍须在 VM 复验。两版的 `ChartProvider`/`ChartProviderS7` SDK 公共成员只有导入、
+导出和保护方法，没有独立、已验证安全的图表枚举入口。因此本次接受正常 CFC 导出/保护也被拒绝的
+功能限制，直到得到安全 inventory 方案与 VM 证据；不能恢复以 `CompleteExport` 来证明调用自身安全的预检。
+
+I10 同步要求：宿主显式把配置的 diagnostics directory 传给 engine worker 与 PlcWorker；
+所有 `native:`/`nativeCallId` 行必须同步 `Flush(true)`，宿主工具的吞吐分类不能降低原生 BEFORE 的持久性。
+后续会话读取所有会话及轮转文件，按行 UTC 合并后取最近 `take` 条，不能只扫描最后六个文件。
+杀掉离线 fixture 后能够读取未配对 BEFORE；它定位中断边界，不能单凭该行证明 TIA 崩溃根因。
 
 ### 3.2 族间依赖
 

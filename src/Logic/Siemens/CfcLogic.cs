@@ -11,6 +11,12 @@ namespace TiaMcpServer.Siemens
     // V20 / V21): ChartProvider XML (ZIP) exchange, chart passwords and the ChartProviderS7 instruction data export.
     internal static class CfcLogic
     {
+        internal static void RequireSafeChartInventory(int tiaMajor, string purpose)
+        {
+            if (tiaMajor == 20 || tiaMajor == 21)
+                throw new NotSupportedException(purpose + " is unavailable: the SDK has no independent CFC chart inventory. CompleteExport preflight on a chartless PLC preceded the V20 finding 45 crash; unknown-chart GetChartProtection and ExportInstructionData crashed V21. skipChartPreflight cannot bypass this guard.");
+        }
+
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireText(string value, string parameter, int max = 256)
             => ArgumentRules.RequireText(value, parameter, max);

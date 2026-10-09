@@ -156,6 +156,14 @@ namespace TiaMcpServer.ModelContextProtocol
         { if (Active.Value is Observation value) value.Confirmed++; }
         internal static void Changed()
         { if (Active.Value is Observation value) value.Changed = true; }
+        internal static void ObserveNativeResult(string? state, bool changesProject, JsonNode? messages, string directory, string name)
+        {
+            if (Active.Value is not Observation observation) return;
+            // Retain the first explicit failure when later files in a batch succeed.
+            if (NativeResultState.TryFailure(observation.Fields, true, out _, out _)) return;
+            NativeResultState.Record(observation.Fields, state, changesProject, messages: messages);
+            observation.Fields["targetFiles"] = new JsonArray(new[] { ".s7dcl", ".s7res" }.Select(ext => (JsonNode)NativeResultState.FileRow(Path.Combine(directory, name + ext))).ToArray());
+        }
         internal static void Observe(string key, JsonNode? value)
         { if (Active.Value is Observation observation) observation.Fields[key] = value?.DeepClone(); }
 
@@ -207,6 +215,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 data["executionEvidence"] = new JsonObject { ["issued"] = observation.Issued, ["confirmed"] = observation.Confirmed,
                     ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage };
             }
+            if (NativeResultState.TryFailure(data, write, out var nativeOutcome, out var nativeError))
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
             bool unknown = observation != null && observation.Issued > observation.Confirmed
                 || (string?)data["outcome"] == "unknown" || Flag(data, "outcomeUnknown") == true
@@ -263,6 +274,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = new JsonObject { ["executionEvidence"] = new JsonObject { ["issued"] = observation.Issued,
                 ["confirmed"] = observation.Confirmed, ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage } };
             foreach (var pair in observation.Fields) data[pair.Key] = pair.Value?.DeepClone();
+            if (NativeResultState.TryFailure(data, write, out var nativeOutcome, out var nativeError))
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             if (observation.Issued > observation.Confirmed) return Result(tool, data,
                 new Error("An issued write outcome is unknown; inspect state before another write.", new OutcomeUnknownDetails(observation.Stage, Evidence(data))),
                 Outcome.Unknown, Execution.Unknown, Completeness.Unknown, current: current);

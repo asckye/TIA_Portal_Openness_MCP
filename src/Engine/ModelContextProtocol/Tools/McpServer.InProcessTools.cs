@@ -186,6 +186,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (export?.NativeMessage == null || !InvocationJournal.NativeCallIssued || result.StructuredContent is not JsonObject original
                 || (string?)original["meta"]?["outcome"] is not ("unknown" or "failed")) return result;
+            if ((bool?)original["error"]?["details"]?["evidence"]?["nativeResultReturned"] == true) return result;
             var data = original["data"]?.DeepClone() as JsonObject ?? new JsonObject();
             data["nativeMessage"] = export.NativeMessage;
             if (!export.NoFileWritten)

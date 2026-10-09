@@ -107,6 +107,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (total >= 0) paging = McpServer.OffsetPage(offset.Value, pageSize, total.Value);
             }
             Clean(evidence);
+            var nativeFailure = NativeResultState.FindFailure(evidence);
+            if (nativeFailure != null && NativeResultState.TryFailure(nativeFailure, writes, out var nativeOutcome, out var nativeError))
+            { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Partial; }
             // This exact page is accepted by GraphicSelectionPage[] and retains
             // the existing snapshot scope identifier, including its native label.
             if (tool == "GetUnifiedGraphicSelection") data["page"] = evidence.DeepClone();

@@ -1117,8 +1117,12 @@ namespace TiaMcpServer.Siemens.Services
                     var res = PlcNative.ImportDocuments(PlcNative.Blocks(targetGroup), new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName, ImportDocumentOptions.Override);
                     if (res == null || PlcNative.State(res) != DocumentResultState.Success)
                     {
-                        throw new PortalException(PortalErrorCode.ImportFailed,
+                        var evidence = new JsonObject();
+                        TiaMcp.Logic.V4.NativeResultState.Record(evidence, res?.State.ToString(), true, messages: res == null ? null : _session.DocumentMessages(res.Messages));
+                        var failure = new PortalException(PortalErrorCode.ImportFailed,
                             $"Re-import of '{blockName}' into '{targetGroupPath}' failed (documents)");
+                        failure.Data["nativeResultEvidence"] = evidence;
+                        throw failure;
                     }
                     method = "documents(.s7dcl)";
                 }

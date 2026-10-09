@@ -3836,7 +3836,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: true skips the chart-folder preflight (only when the PLC is known to have charts).",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
             "value": false
           }
         },
@@ -10652,7 +10652,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: true skips the chart-folder preflight (only when the PLC is known to have charts).",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
             "value": false
           }
         },
@@ -23048,7 +23048,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: true skips the chart-folder preflight (only when the PLC is known to have charts).",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
             "value": false
           }
         },
@@ -29948,7 +29948,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: true skips the chart-folder preflight (only when the PLC is known to have charts).",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
             "value": false
           }
         },

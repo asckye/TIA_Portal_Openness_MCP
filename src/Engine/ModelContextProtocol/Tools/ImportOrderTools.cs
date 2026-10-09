@@ -37,7 +37,7 @@ namespace TiaMcpServer.ModelContextProtocol
     // execution order and file bytes; no target result is serialized into a message.
     internal static class OfflineContracts
     {
-        private sealed class Rejected : Exception
+        internal sealed class Rejected : Exception
         {
             internal Error Error { get; }
             internal Rejected(Error error) => Error = error;

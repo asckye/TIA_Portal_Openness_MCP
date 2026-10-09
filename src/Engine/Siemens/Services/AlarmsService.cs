@@ -1,3 +1,4 @@
+using TiaMcp.Logic.V4;
 using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
@@ -151,11 +152,11 @@ namespace TiaMcpServer.Siemens.Services
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 TextListXlsxResult result = provider.ExportToXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)));
                 var state = result?.State.ToString() ?? "Unknown";
-                bool ok = result?.State != TextListXlsxResultState.Error;
+                bool ok = result != null && result.State != TextListXlsxResultState.Error;
                 return new ResponseMessage
                 {
                     Message = ok ? $"Alarm text lists exported to '{exportPath}' (State={state})." : $"Alarm text list export reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
-                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["fileExists"] = File.Exists(exportPath), ["success"] = ok }
+                    Meta = NativeXlsxEvidence(new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["fileExists"] = File.Exists(exportPath), ["success"] = ok }, state, false, result?.LogFilePath?.FullName, exportPath)
                 };
             }
             catch (Exception ex)
@@ -178,11 +179,11 @@ namespace TiaMcpServer.Siemens.Services
                 if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false)) };
                 TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)), ImportOptions.None);
                 var state = result?.State.ToString() ?? "Unknown";
-                bool ok = result?.State != TextListXlsxResultState.Error;
+                bool ok = result != null && result.State != TextListXlsxResultState.Error;
                 return new ResponseMessage
                 {
                     Message = ok ? $"Alarm text lists imported from '{importPath}' (State={state}); compile afterwards." : $"Alarm text list import reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
-                    Meta = new JsonObject { ["importPath"] = importPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["success"] = ok }
+                    Meta = NativeXlsxEvidence(new JsonObject { ["importPath"] = importPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["success"] = ok }, state, true, result?.LogFilePath?.FullName, importPath)
                 };
             }
             catch (Exception ex)
@@ -210,11 +211,11 @@ namespace TiaMcpServer.Siemens.Services
                 var languages = EngineeringGroupOperations.Items(_session.CurrentProject!.LanguageSettings.ActiveLanguages).Cast<Language>().ToList();
                 PlcAlarmTextXlsxResult result = provider.ExportInstanceTextsToXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)), languages, option);
                 var state = result?.State.ToString() ?? "Unknown";
-                bool ok = result?.State != PlcAlarmTextXlsxResultState.Error;
+                bool ok = result != null && result.State != PlcAlarmTextXlsxResultState.Error;
                 return new ResponseMessage
                 {
                     Message = ok ? $"Alarm instance texts exported to '{exportPath}' (State={state}, languages {string.Join(", ", languages.Select(l => l.Culture?.Name))})." : $"Alarm instance text export reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
-                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["fileExists"] = File.Exists(exportPath), ["option"] = option.ToString(), ["success"] = ok }
+                    Meta = NativeXlsxEvidence(new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["fileExists"] = File.Exists(exportPath), ["option"] = option.ToString(), ["success"] = ok }, state, false, result?.LogFilePath?.FullName, exportPath)
                 };
             }
             catch (Exception ex)
@@ -223,6 +224,12 @@ namespace TiaMcpServer.Siemens.Services
                 _session.Logger?.LogError(ex, "ExportAlarmInstanceTexts failed for {SoftwarePath}", softwarePath);
                 return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false) };
             }
+        }
+
+        private static JsonObject NativeXlsxEvidence(JsonObject meta, string state, bool changesProject, string? log, string path)
+        {
+            NativeResultState.Record(meta, state, changesProject, log, path);
+            return meta;
         }
 
         #endregion
@@ -254,6 +261,7 @@ namespace TiaMcpServer.Siemens.Services
                     meta["mayHaveWrittenFiles"] = true;
                     TextListXlsxResult result = languages.Length == 0 ? provider.ExportToXlsx(file) : provider.ExportToXlsx(file, request.TextLists, languages);
                     meta["apiCallSuccess"] = true; meta["nativeState"] = result?.State.ToString(); meta["logFile"] = result?.LogFilePath?.FullName;
+                    NativeResultState.Record(meta, result?.State.ToString(), false, result?.LogFilePath?.FullName, file.FullName);
                     if (result?.State == TextListXlsxResultState.Error) throw new PortalException(PortalErrorCode.ExportFailed, "ExportToXlsx reported Error (see logFile " + result.LogFilePath?.FullName + ").");
                     meta["file"] = NativeFileOutput.Verify(file);
                     return "Alarm text lists exported to XLSX and hashed; no project change.";
@@ -265,6 +273,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["mayHaveChanged"] = true;
                 TextListXlsxResult imported = provider.ImportFromXlsx(source, option);
                 meta["apiCallSuccess"] = true; meta["nativeState"] = imported?.State.ToString(); meta["logFile"] = imported?.LogFilePath?.FullName;
+                NativeResultState.Record(meta, imported?.State.ToString(), true, imported?.LogFilePath?.FullName, source.FullName);
                 if (imported?.State == TextListXlsxResultState.Error) throw new PortalException(PortalErrorCode.ImportFailed, "ImportFromXlsx reported Error (see logFile " + imported.LogFilePath?.FullName + ").");
                 return "Alarm text lists imported from XLSX (native state attached); project not saved / compiled.";
             });
@@ -288,6 +297,7 @@ namespace TiaMcpServer.Siemens.Services
                 var result = (PlcAlarmTextXlsxResult)EngineeringGroupOperations.Call(provider, "ImportInstanceTextsFromXlsx", signature, file, languages);
                 meta["apiCallSuccess"] = true; meta["nativeResult"] = EngineeringScalarProperties.Read(result);
                 meta["nativeState"] = result.State.ToString(); meta["logFilePath"] = result.LogFilePath?.FullName;
+                NativeResultState.Record(meta, result.State.ToString(), true, result.LogFilePath?.FullName, file.FullName);
                 meta["operationSuccess"] = result.State.ToString() != "Error"; meta["dataComplete"] = false;
                 return "Native alarm instance text import returned; inspect nativeState/logFilePath. Text changes require separate export/readback; no save/compile/download.";
             });

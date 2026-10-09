@@ -1,3 +1,4 @@
+using TiaMcp.Logic.V4;
 using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Collections.Generic;
@@ -360,12 +361,14 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         // ---- tools: block definitions (SivarcDataProvider on a CodeBlock) ----------------------------------------------------------------
-        private (CodeBlock block, SivarcDataProvider provider) RequireSivarcBlock(string softwarePath, string blockPath, bool writing)
+        private (CodeBlock block, SivarcDataProvider provider) RequireSivarcBlock(string softwarePath, string blockPath, bool writing, JsonObject meta)
         {
             var plc = _session.ExactPlcForEngineering(softwarePath, writing);
-            var block = _session.ExactObjectUnder(plc.BlockGroup, blockPath, "Blocks", "PLC block") as CodeBlock ?? throw new ArgumentException("SivarcDataProvider applies to code blocks (OB / FB / FC), not to " + blockPath + ".");
-            var provider = block.GetService<SivarcDataProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SivarcDataProvider unavailable on this block (SiVArc option package not installed).");
-            return (block, provider);
+            var block = _session.ExactObjectUnder(plc.BlockGroup, blockPath, "Blocks", "PLC block") as CodeBlock;
+            try { Logic.RequireSupportedBlockClass(block?.GetType().Name ?? "non-code block"); }
+            catch (NotSupportedException) { meta["v4Rejection"] = "UNSUPPORTED_CAPABILITY"; meta["mayHaveChanged"] = false; throw; }
+            var provider = Logic.BlockProvider(block!.GetType().Name, () => block.GetService<SivarcDataProvider>()) ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SivarcDataProvider unavailable on this block (SiVArc option package not installed).");
+            return (block!, provider);
         }
         private static JsonObject TagDefinitionRow(TagDefinition d) => new JsonObject { ["name"] = d.Name, ["value"] = d.Value, ["comment"] = d.Comment };
         private JsonObject TextDefinitionRow(TextDefinition d) => new JsonObject { ["name"] = d.Name, ["expression"] = d.Expression, ["comment"] = d.Comment, ["text"] = _session.MultilingualJson(d.Text) };
@@ -393,7 +396,7 @@ namespace TiaMcpServer.Siemens.Services
             => _session.RunHmiStepTool("ListSivarcBlockDefinitions", meta =>
             {
                 EngineeringGroupOperations.Parts(blockPath);
-                var (block, provider) = RequireSivarcBlock(softwarePath, blockPath, false);
+                var (block, provider) = RequireSivarcBlock(softwarePath, blockPath, false, meta);
                 TagDefinitionComposition tags = provider.TagDefinitions; TextDefinitionComposition texts = provider.TextDefinitions;
                 meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath; meta["block"] = new JsonObject { ["name"] = block.Name, ["blockClass"] = block.GetType().Name, ["number"] = block.Number };
                 meta["tagDefinitions"] = new JsonArray(EngineeringGroupOperations.Items(tags).Cast<TagDefinition>().Take(500).Select(d => (JsonNode)TagDefinitionRow(d)).ToArray()); meta["tagDefinitionCount"] = tags.Count;
@@ -411,7 +414,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 bool write = Logic.ValidateDefinitionRequest(blockPath, kind, name, action, propertiesJson, textsJson, confirmDelete, dryRun);
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
-                var (block, provider) = RequireSivarcBlock(softwarePath, blockPath, write);
+                var (block, provider) = RequireSivarcBlock(softwarePath, blockPath, write, meta);
                 var properties = Logic.ParseObject(propertiesJson, "propertiesJson"); var texts = Logic.ParseObject(textsJson, "textsJson");
                 meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath; meta["kind"] = kind; meta["name"] = name; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 string S(string key) => properties[key]?.GetValue<string>() ?? "";
@@ -532,6 +535,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["mayHaveChanged"] = true;
                 LayoutDataImportResult result = layout.Import(input);
                 meta["result"] = new JsonObject { ["state"] = result.State.ToString(), ["numberOfLayouts"] = result.NumberOfLayouts };
+                NativeResultState.Record(meta, result.State.ToString(), true);
                 if (result.State != LayoutImportResultState.Success) meta["operationSuccess"] = false;
                 return "SiVArc screen layouts imported (LayoutData.Import); inspect result.state; project not saved.";
 #endif

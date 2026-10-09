@@ -259,6 +259,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
                 if (options.WithUi) start.ArgumentList.Add("--with-ui");
                 start.Environment["TIA_MCP_ENGINE_NONCE"] = nonce;
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
+                start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Engine worker did not start."); WorkerJob.Bind(process);
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
                 process.BeginErrorReadLine();

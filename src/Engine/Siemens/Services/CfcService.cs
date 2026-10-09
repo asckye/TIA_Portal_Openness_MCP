@@ -14,11 +14,10 @@ namespace TiaMcpServer.Siemens.Services
     // Official entry: PlcSoftware.GetService<ChartProviderS7>() (null when CFC is not installed); ChartProvider
     // carries CompleteExport / SelectiveExport / Import (XML packed as ZIP) and the chart password functions, ChartProviderS7 adds
     // ExportInstructionData. Requirements per manual: PLC offline, protected charts are skipped by the export.
-    // TIA V21 evidence, 2026-09-20 (docs/reference/real-machine-ledger.md): on CPU 1510SP F with CFC installed but no chart folder, CompleteExport
-    // wrote an empty 484-byte ZIP, yet GetChartProtection("MCP_NONE") and ExportInstructionData(path) each took TIA Portal V21 down
-    // (NonRecoverableException, process gone). The provider has no chart enumeration, so every name-bound or PLC-bound
-    // action first takes the chart inventory from a CompleteExport preflight into a temporary ZIP and refuses when it is empty or the
-    // chart is missing.
+    // V21 chartless-PLC calls GetChartProtection / ExportInstructionData crashed in the 2026-09-20 capture.
+    // V20 finding 45 (2026-10-09) crashed during protection preview, whose first CFC call was CompleteExport.
+    // Neither SDK exposes an independent chart inventory. Refuse protected/name-bound calls and all exports
+    // before provider access; even skipChartPreflight cannot bypass the guard. Imports retain the native path.
     internal sealed class CfcService
     {
         private readonly IEngineeringSession _session;
@@ -63,6 +62,7 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                 var r = Logic.ValidateExchangeRequest(action, filePath, modelVersion, filter, chartNamesJson, deleteAtTarget, dryRun);
+                if (action != "import") Logic.RequireSafeChartInventory(int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), "CFC " + action);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
                 var provider = RequireChartProvider(plc);
@@ -96,6 +96,7 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                 var r = Logic.ValidateProtectionRequest(action, chartName, currentPassword, newHashedPassword, dryRun);
+                if (action != "import") Logic.RequireSafeChartInventory(int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), "CFC " + action);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
                 var provider = RequireChartProvider(plc);
