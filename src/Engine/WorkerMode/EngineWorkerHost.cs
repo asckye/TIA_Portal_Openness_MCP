@@ -324,16 +324,13 @@ namespace TiaMcpServer.Worker
             string id = args.GetProperty("requestId").GetString()!;
             string name = args.GetProperty("name").GetString()!;
             bool preview = args.GetProperty("preview").GetBoolean();
-            bool nativeDocument = name == "RenderPlcBlockDocument" && args.GetProperty("arguments").TryGetProperty("blockPath", out var blockPath)
-                && blockPath.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(blockPath.GetString())
-                && (!args.GetProperty("arguments").TryGetProperty("filePath", out var filePath) || filePath.ValueKind == JsonValueKind.Null
-                    || filePath.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(filePath.GetString()));
             using var correlation = InvocationJournal.UseCorrelation(id);
             using var previewScope = preview ? McpServer.BeginReadOnlyApprovalPreview() : null;
             using var auditPreview = preview ? AuditInvocation.ReadOnlyPreview() : null;
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             var error = McpServer.BindV4Call(name, new ToolArguments(args.GetProperty("arguments")), out var method, out var call);
             CallToolResult result;
+            bool missingPortal = false;
             if (error != null) result = McpServer.V4Reject(name, error);
             else if (ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey).OfType<JsonObject>()
                 .All(row => (string?)row["currentName"] != name || row["profiles"]!.AsArray().Any(p => (string?)p == "plc-foundation")))
@@ -346,16 +343,23 @@ namespace TiaMcpServer.Worker
                 result = McpServer.V4Reject(name, new Error(OpennessReadiness.Cause + " " + OpennessReadiness.FixEn,
                     new ResourceUnavailableDetails("tia-openness-environment")), new JsonObject { ["environment"] = environment });
             }
-            else if ((ToolTaxonomy.RequiresConnectedPortal(name) || nativeDocument) && (bool?)CachedSession()?["isConnected"] != true)
-                result = McpServer.V4Reject(name, new Error(SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)));
             else
             {
-                if (ToolTaxonomy.MayCallOpenness(name) || nativeDocument)
+                // Engine tools retain their own typed refusal, including diagnostic
+                // data. The shared Foundation boundary guards adapter Portal() calls.
+                missingPortal = ToolTaxonomy.CanRefuseUnknownWithoutPortal(name)
+                    && (bool?)CachedSession()?["isConnected"] != true;
+                if (ToolTaxonomy.MayCallOpenness(name))
                     processLease?.BeginRequest();
                 using var progress = new WorkerProgressShim(request, args.TryGetProperty("progress", out var enabled) && enabled.ValueKind == JsonValueKind.True, EngineServices.Provider);
                 progress.Bind(method!, call!);
                 result = McpServer.ToolResult(McpServer.InvokeWorkerToolMethod(method!, call!, id));
             }
+            if (missingPortal && !nativeCalls.NativeCallIssued && nativeFault == null && foundationDispatch?.Ended != true
+                && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
+                result = McpServer.V4Result(name, result.StructuredContent?["data"] is JsonObject data ? (JsonObject)data.DeepClone() : null,
+                    new Error(SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),
+                    Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: true);
             if (TiaOpenness.Shared.SessionBehavior.LocksSession(nativeCalls.NativeCallIssued,
                 (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)
                     || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE"))

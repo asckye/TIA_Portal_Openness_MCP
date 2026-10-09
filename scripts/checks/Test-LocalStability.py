@@ -240,6 +240,14 @@ def run_profile(args, transport, profile, run_dir):
                         and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
                         and value['data']['queried'] is False and value['data']['complete'] is False,
                         label + ': refusal reported as completed/empty')
+            elif expectation == 'portal_refused':
+                require(value.get('ok') is False and value['error']['code'] == 'PRECONDITION_FAILED'
+                        and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
+                        and meta['outcome'] == 'rejected-before-operation' and meta['requiresSessionReset'] is False,
+                        label + ': missing portal reported as an unknown write: ' + json.dumps(value))
+                if label == 'build_import_portal_refused':
+                    require(value['data']['offlineBuildOk'] is True and value['data']['importedBlocks'] == []
+                            and value['data']['writtenFiles'], label + ': lost offline build evidence')
             else:
                 require(value.get('ok') is True and meta['outcome'] == 'succeeded', label + ': expected success: ' + json.dumps(value))
                 if expectation == 'state':
@@ -254,6 +262,17 @@ def run_profile(args, transport, profile, run_dir):
 
         # Warm every case once before measuring the steady sequence, including JIT/error paths.
         scenario = cases(args.major, source)
+        if args.engine_worker is not None:
+            scenario.append(('block_group_portal_refused', 'CreatePlcBlockGroup',
+                             {'softwarePath': '__soak_no_plc__', 'groupPath': '__soak_missing__'}, 'portal_refused'))
+            scenario.append(('build_import_portal_refused', 'BuildAndImportPlcArtifact',
+                             {'softwarePath': '__soak_no_plc__', 'kind': 'fc', 'dryRun': False,
+                              'spec': {'blockName': 'FC_Soak', 'blockNumber': 12,
+                                       'inputs': [{'name': 'Start', 'datatype': 'Bool'}],
+                                       'outputs': [{'name': 'Run', 'datatype': 'Bool'}],
+                                       'structuredText': {'operations': [{'op': 'if', 'condition': 'Start'},
+                                                                         {'op': 'assign', 'target': 'Run', 'indent': 2, 'literalValue': 'TRUE'},
+                                                                         {'op': 'endif'}]}}}, 'portal_refused'))
         for index, case in enumerate(scenario):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))

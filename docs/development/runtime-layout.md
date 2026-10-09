@@ -65,7 +65,7 @@ MCP 会话结束（含未调用 `DisconnectPortal`）、stdio EOF、Ctrl+C、控
 worker 在原有 owner 线程上非拥有式分离并写入 `RELEASED\n`；不保存或关闭工程。仅请求仍在进行或等待超时才结束 worker。
 强制结束空闲 worker 时保留 IDLE，下次可接管；中断原生请求时保留 BUSY，未知结果退出时保留 UNCERTAIN。正常替换安装包不需要重启 TIA；只有中断的原生调用、未知结果（含旧 ACTIVE 的不确定性）需要重启。
 这些文件状态不增加 Siemens 调用，持久刷新的逐请求耗时记录在本任务的离线证据中。
-没有连接的 `AttachOpenProject` 及其他需要 portal 的操作，在分发前返回类型化 `PRECONDITION_FAILED`，提示先调用 `ConnectPortal`，不锁住会话。
+没有连接的 `AttachOpenProject` 及其他调用 adapter `Portal()` 的 Foundation 操作，在分发前返回类型化 `PRECONDITION_FAILED`，提示先调用 `ConnectPortal`，不锁住会话。全引擎工具保留自身的拒绝数据与元数据（包括交叉引用的 `queried=false`、`complete=false`）；仅已确认会把未连接误报为未知写入的旧包装器，在未发出 native 调用时把未知结果改为此连接前提拒绝。
 
 ### 安装根与开发输出
 

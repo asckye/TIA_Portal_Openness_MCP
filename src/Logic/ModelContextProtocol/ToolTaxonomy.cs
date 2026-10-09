@@ -45,13 +45,18 @@ namespace TiaMcpServer.ModelContextProtocol
             var row = For(name);
             return !IsSafeWithoutTia(name) && !WithoutPortal.Contains(name) && row.Operation != "OFFLINE" && CategoryOf(row.Domain) != "runtime";
         }
-        public static bool RequiresConnectedPortal(string name)
+        // These legacy wrappers can classify a missing project as an unknown write.
+        // Apply this policy only after dispatch, when no native call was issued and
+        // the result is unknown; their existing typed refusals and previews survive.
+        private static readonly HashSet<string> UnknownWithoutPortal = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            return MayCallOpenness(name) && !DispatchesTargets(name) && name != "ConnectPortal" && name != "ConnectProject"
-                && name != "ConnectIsolatedPortal" && name != "DisconnectPortal" && name != "RestartOpennessWorker"
-                && name != "GetSessionState" && name != "GetPortalInfo" && name != "ListPortalProcessProjects"
-                && name != "DiagnosePortalConnectReadiness" && name != "EnsureOpennessUserGroup";
-        }
+            "BuildAndImportPlcArtifact", "CompileHmiDiagnostics", "ConnectDeviceNodesToProfinetSubnet", "CreatePlcBlockGroup", "CreatePlcTypeGroup",
+            "DeleteEmptyPlcBlockGroup", "DeletePlcBlock", "DeletePlcTagTable", "DeletePlcType", "GenerateOpcUaModelledInterface",
+            "EnsureUnifiedHmiButtonAction", "EnsureUnifiedHmiConnection", "ExportHmiProgram",
+            "ExportPlcWatchTablesToDirectory", "ImportMasterCopyFromGlobalLibrary",
+            "ImportPlcTagTablesFromDirectory", "MovePlcBlockToGroup", "RepairAndReimportPlcBlock", "SeedProjectFromReference"
+        };
+        public static bool CanRefuseUnknownWithoutPortal(string name) => UnknownWithoutPortal.Contains(name);
         public static bool UsesOpennessLane(string name) => !WithoutTia.Contains(name) || SessionReaders.Contains(name);
         public static bool DispatchesTargets(string name) => string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "RunReadOnlyToolBatch", StringComparison.OrdinalIgnoreCase)

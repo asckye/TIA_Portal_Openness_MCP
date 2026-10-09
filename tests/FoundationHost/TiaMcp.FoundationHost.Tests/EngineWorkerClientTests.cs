@@ -141,16 +141,19 @@ public sealed class EngineWorkerClientTests
     }
 
     [Fact]
-    public void Portal_admission_keeps_offline_runtime_and_connection_discovery_available()
+    public void Lease_policy_distinguishes_native_dispatch_from_local_tools()
     {
         foreach (string name in new[] { "AttachOpenProject", "OpenProject", "GetProjectInfo", "CompileDevice", "ReadPlcTags", "GetHmiScreenSnapshot" })
-            Assert.True(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.RequiresConnectedPortal(name), name);
-        foreach (string name in new[] { "ConnectPortal", "DisconnectPortal", "GetSessionState", "ListPortalProcessProjects", "GetPortalInfo",
-            "ComparePlcBlockDocuments", "GeneratePlcDocumentation", "ExtractPlcBlockMetrics", "BuildStructuredText", "CheckProductUpdate", "GetUnifiedRuntimeTags" })
-            Assert.False(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.RequiresConnectedPortal(name), name);
+            Assert.True(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.MayCallOpenness(name), name);
         foreach (string name in new[] { "GetUnifiedRuntimeTags", "BuildStructuredText", "CheckProductUpdate", "GeneratePlcDocumentation", "DescribeUnifiedScreenItemType" })
             Assert.False(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.MayCallOpenness(name), name);
         Assert.True(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.MayCallOpenness("ConnectPortal"));
+        foreach (string name in new[] { "CompileHmiDiagnostics", "ConnectDeviceNodesToProfinetSubnet", "CreatePlcBlockGroup",
+            "EnsureUnifiedHmiButtonAction", "EnsureUnifiedHmiConnection", "ExportHmiProgram", "ExportPlcWatchTablesToDirectory",
+            "ImportMasterCopyFromGlobalLibrary", "ImportPlcTagTablesFromDirectory", "MovePlcBlockToGroup", "RepairAndReimportPlcBlock", "SeedProjectFromReference" })
+            Assert.True(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.CanRefuseUnknownWithoutPortal(name), name);
+        foreach (string name in new[] { "GetPlcCrossReferences", "GetProjectInfo", "ConnectIsolatedPortal", "ConnectPortal" })
+            Assert.False(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.CanRefuseUnknownWithoutPortal(name), name);
     }
 
     private sealed class ClientBridge : IFoundationWorker
