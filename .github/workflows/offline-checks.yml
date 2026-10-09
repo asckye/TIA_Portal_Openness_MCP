@@ -26,7 +26,7 @@ jobs:
       - name: TRX gate self-checks
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression and MCP SDK version policy
-        run: dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy -Suite generation-model
+        run: dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy -Suite generation-model -Suite workbench-control-protocol
 
   source-contracts:
     # Source contracts: .NET 10 and Python, without Siemens SDKs or TIA.
@@ -115,7 +115,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Foundation contracts and functional tests
-        run: dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic
+        run: dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite compile-candidate -Suite compile-candidate-no-safety -Suite fallback-vci-modern -Suite fallback-vci-initial -Suite fallback-vci-classic -Suite workbench-control-protocol
       - name: Build host and synthetic worker without Siemens SDKs
         shell: bash
         run: |
