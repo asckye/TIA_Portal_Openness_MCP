@@ -17,7 +17,6 @@ internal static class SessionToolChecks
         var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
-        var isControl = server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost", true)!.GetMethod("IsControl", all)!;
         foreach (var domain in new[] { (Name: "Session", Count: 9), (Name: "ProjectSession", Count: 11), (Name: "Diagnostics", Count: 1) })
         {
             var type = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
@@ -44,7 +43,7 @@ internal static class SessionToolChecks
                 var forwarder = facade.GetMethod(method.Name, all, null, method.GetParameters().Select(p => p.ParameterType).ToArray(), null)!;
                 check(forwarder == null && ReferenceEquals(surface.Target(method), provider.GetService(method.DeclaringType!)),
                     name + " resolves directly through EngineServices without a static compatibility forwarder");
-                check(!(bool)isControl.Invoke(null, new object[] { name })!, name + " remains proxied to the isolated worker");
+                check(((System.Collections.Generic.IReadOnlyDictionary<string, string>)Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.ToolExecution").GetField("Table", all)!.GetValue(null)!)[name] == "worker", name + " remains assigned to the engine worker");
 
             }
         }

@@ -381,7 +381,7 @@ internal static partial class ReleaseCommands
         }
         if (plan.Includes("http-concurrency"))
         {
-            VerifyHttpConcurrency(harness, exe, api, outputDirectory, runTemp, cliHome, apiRoot, major);
+            VerifyHttpConcurrency(dotnet, outputDirectory, runTemp, cliHome, apiRoot, nuget, major);
         }
         (string Worker, string Catalog)? protocolWorker = null;
         (string Worker, string Catalog) ProtocolWorker() => protocolWorker ??= PrepareReleaseSdkWorker(dotnet, api, major,
@@ -397,8 +397,10 @@ internal static partial class ReleaseCommands
         var workerProtocol = 0;
         if (plan.Includes("engine-worker-isolation"))
         {
-            var workerText = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], outputDirectory, runTemp, cliHome, apiRoot, major);
-            workerFaults = RequireCount("worker supervisor", workerText, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
+            var faultResults = Path.Combine(outputDirectory, "worker-fault-suites-v" + major);
+            RunDotnetSuiteForRelease("worker-robustness", "worker-supervisor", dotnet, faultResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+            workerFaults = ReadSuitePassed(faultResults, "worker-robustness");
+            CheckReleaseCount("workerFaults", workerFaults, "Foundation worker fault coverage incomplete");
             var protocolText = RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
                 "--releases", major.ToString(), "--output", Path.Combine(outputDirectory, "foundation-transport")], outputDirectory, runTemp, cliHome, apiRoot, major);
             workerProtocol = RequireCount("worker protocol", protocolText, "COMPLETE: (\\d+) Foundation transport checks passed", "workerProtocol");
@@ -419,7 +421,7 @@ internal static partial class ReleaseCommands
             var engineeringText = RunBuildSpec("engineering-api", harness, [exe, "engineering-api-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
             engineering = RequireCount("engineering API", engineeringText, "COMPLETE: (\\d+) engineering API checks passed", major == 20 ? "engineeringApiV20" : "engineeringApiV21");
             var httpText = RunBuildSpec("http", harness, [exe], outputDirectory, runTemp, cliHome, apiRoot, major);
-            http = RequireCount("HTTP regression", httpText, "COMPLETE: (\\d+) passed");
+            http = RequireCount("HTTP regression", httpText, "COMPLETE: (\\d+) Foundation transport checks passed");
             var hmiText = RunBuildSpec("hmi", harness, [exe, "hmi-only", major.ToString(), fileVersion], outputDirectory, runTemp, cliHome, apiRoot, major);
             var hmiMatch = Regex.Match(hmiText, "(\\d+) HMI traversal assertions, 0 failed");
             if (!hmiMatch.Success) throw new ReleaseException("HMI traversal regression did not report complete success");
@@ -542,11 +544,11 @@ internal static partial class ReleaseCommands
         return diagnostics;
     }
 
-    private static void VerifyHttpConcurrency(string harness, string exe, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major)
+    private static void VerifyHttpConcurrency(string dotnet, string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget, int major)
     {
-        var text = RunBuildSpec("http-concurrency", harness, [exe, "concurrency-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
-        if (!text.Contains("PASS classification", StringComparison.Ordinal) || !text.Contains("PASS concurrent audit", StringComparison.Ordinal))
-            throw new ReleaseException("HTTP concurrency regression did not complete");
+        var results = Path.Combine(outputDirectory, "concurrency-suites-v" + major);
+        RunDotnetSuiteForRelease("engine-host", "http-concurrency", dotnet, results, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+        if (ReadSuitePassed(results, "engine-host") < 19) throw new ReleaseException("Foundation concurrency regression did not complete");
     }
 
     private static JsonElement VerifyEngineApproval(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, (string Worker, string Catalog) protocolWorker)
@@ -573,11 +575,12 @@ internal static partial class ReleaseCommands
         RunBuildSpec(isolated ? "isolated-local-stability" : "local-stability", python,
             [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(), "--host-harness", harness,
              "--public-api", api, "--rounds", rounds, "--output", output,
-             "--engine-worker", protocolWorker.Worker, "--engine-catalog", protocolWorker.Catalog, .. isolated ? new[] { "--isolate-openness" } : Array.Empty<string>()], outputDirectory, runTemp, cliHome, apiRoot, major);
+             "--engine-worker", protocolWorker.Worker, "--engine-catalog", protocolWorker.Catalog, "--concurrency", isolated ? "16" : "8"], outputDirectory, runTemp, cliHome, apiRoot, major);
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "result.json")));
         var result = doc.RootElement.Clone();
         if (GetJsonString(result, "status") != "passed" || GetArrayLength(result, "runs") != 4 ||
-            (isolated && !GetJsonBool(result, "isolatedWorker")) || GetJsonString(result, "runtimeSha256") != ReleaseRecords.HashFile(exe))
+            (isolated && !GetJsonBool(result, "isolatedWorker")) || GetJsonString(result, "runtimeSha256") != ReleaseRecords.HashFile(exe) ||
+            GetJsonString(result, "hostSha256") != ReleaseRecords.HashFile(Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(exe))!, "TiaMcp.FoundationHost.exe")))
             throw new ReleaseException("Local stability checks failed or used a different EXE");
         return result;
     }
@@ -657,6 +660,7 @@ internal static partial class ReleaseCommands
         var spec = ReleaseCommandTable.Get(tableName);
         using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root, "tests/test-suites.json")));
         var suite = catalog.RootElement.GetProperty(name);
+        RestoreBuildProject(dotnet, Path.Combine(Root, suite.GetProperty("project").GetString()!), nuget, outputDirectory, runTemp, cliHome, apiRoot);
         var buildProperties = suite.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).Where(arg => arg.StartsWith("-p:", StringComparison.OrdinalIgnoreCase)).ToArray();
         RunBuildRaw(dotnet, ["build", suite.GetProperty("project").GetString()!, "-c", "Release", "--no-restore", "-v:q", .. buildProperties],
             Path.Combine(outputDirectory, name + "-harness-build.log"), runTemp, cliHome, apiRoot, nuget, name + " harness build");

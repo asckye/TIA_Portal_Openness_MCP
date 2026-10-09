@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-09T16:40:46.8194729+00:00",
+  "generatedAt": "2026-10-09T17:44:16.7549904+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "a04b504c4d89e40416128132c1d4243df4edc9c2f82ebc8579ef80892dd1c8e8",
+  "workerSha256": "1b1bcb4439b614bd5c0345b01a3edff16b9a63ade76bb9ec5a5cc5ba4c7136a8",
   "toolCount": 498,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -9082,7 +9082,7 @@
       "method": "GetOpennessWorkerStatusV4",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. Use --isolate-openness or --no-isolate-openness to override the build default; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: \"GetOpennessWorkerStatus\"), optionally operation or language.",
+      "description": "[L0][Diagnostics][READ] Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one engine worker per MCP session; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: \"GetOpennessWorkerStatus\"), optionally operation or language.",
       "example": "{}"
     },
     {

@@ -73,7 +73,8 @@ def run(args):
     args.output.mkdir()
     journal = args.output / 'diagnostics'
     env = dict(os.environ, TIA_MCP_PROFILE='full', TIA_MCP_DIAGNOSTICS_DIRECTORY=str(journal))
-    command = [str(args.exe), '--transport', 'stdio', '--tia-major-version', str(args.major), '--isolate-openness', '--worker-timeout-seconds', '180']
+    require(args.exe.name == 'TiaMcp.FoundationHost.exe', 'Native MCP sessions require FoundationHost')
+    command = [str(args.exe), '--transport', 'stdio', '--release-key', str(args.major)]
     replies = queue.Queue()
     report = {'status': 'FAILED', 'nativeExecuted': False, 'utc': datetime.now(timezone.utc).isoformat(),
               'scope': 'production MCP: owned headless portal create/save/close/reopen/identity/disconnect only; no PLC/HMI family acceptance', 'completedTools': []}

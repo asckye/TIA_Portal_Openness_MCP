@@ -310,15 +310,16 @@ namespace TiaMcp.Engine.Tests
             }
         }
 
-        [Fact]
-        public void Approval_wait_preserves_native_budget_but_cannot_pause_indefinitely()
+        [Theory]
+        [InlineData("--isolate-openness")]
+        [InlineData("--no-isolate-openness")]
+        [InlineData("--openness-worker-child")]
+        [InlineData("--transport")]
+        [InlineData("--http-prefix")]
+        public void Engine_refuses_retired_host_modes(string option)
         {
-            var now = TimeSpan.Zero; var budget = new TiaMcpServer.Isolation.ApprovalWaitBudget(() => now);
-            budget.Signal("begin", 120); now += TimeSpan.FromSeconds(100); Assert.Equal(now, budget.Excluded);
-            budget.Signal("end", 120); now += TimeSpan.FromSeconds(10); Assert.Equal(TimeSpan.FromSeconds(100), budget.Excluded);
-            budget.Signal("begin", 1); now += TimeSpan.FromSeconds(10); Assert.Equal(TimeSpan.FromSeconds(102), budget.Excluded);
-            budget.Signal("end", 1); budget.Signal("begin", 999999); now += TimeSpan.FromDays(1);
-            Assert.Equal(TimeSpan.FromSeconds(102), budget.Excluded);
+            var error = Assert.Throws<ArgumentException>(() => TiaMcpServer.CliOptions.ParseArgs(new[] { option }));
+            Assert.Contains("FoundationHost", error.Message);
         }
         [Fact]
         public async Task Approval_frames_refuse_oversize_truncation_and_self_decision_shape()

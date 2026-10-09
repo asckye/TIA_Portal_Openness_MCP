@@ -292,7 +292,8 @@ GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-versi
   Keys 14sp1, 15.1, 16, 17, 18, 19 are planned only and cannot run.
   Original V14 and V15 are outside the target scope and are unsupported.
   Put project/spec paths before global flags. help/version/schema need no TIA installation.
-MCP SERVER FLAGS (no subcommand): --isolate-openness, --no-isolate-openness, --worker-timeout-seconds 10..180 (default 120)
+ENGINE MODES: --engine-worker | --write-tool-catalog <path> | <CLI verb> [options]
+MCP ENTRY: TiaMcp.FoundationHost.exe --release-key <20|21>
   Isolation follows the release build default (currently off); either flag overrides it for this process.
   Local tests do not establish native TIA stability. See docs/guides/openness-worker-isolation.md.
 Tool exit codes: 0 = complete success, 2 = rejected, 3 = failed, 4 = partial, 5 = unknown;

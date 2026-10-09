@@ -12,7 +12,7 @@ using TiaOpenness.Shared;
 using Xunit;
 using Xunit.Abstractions;
 
-public sealed class PipelineTests(ITestOutputHelper output)
+public sealed partial class PipelineTests(ITestOutputHelper output)
 {
     [Theory]
     [InlineData(false)] [InlineData(true)]
@@ -308,7 +308,8 @@ public sealed class PipelineTests(ITestOutputHelper output)
             ["recommendedFix"] = "fixture-worker-fix", ["recommendedFixZh"] = "fixture-worker-fix-zh" } };
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) { RestartConfirmed = confirmed; return Task.FromResult(new JsonObject { ["success"] = true }); }
-        public Task<IDisposable> Acquire(CancellationToken token) { Acquired++; return Task.FromResult<IDisposable>(new Lane()); }
+        private readonly SemaphoreSlim gate = new(1, 1);
+        public async Task<IDisposable> Acquire(CancellationToken token) { await gate.WaitAsync(token); Acquired++; return new Lane(gate); }
         public async Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
             Calls.Add(name); Started.TrySetResult();
@@ -321,6 +322,6 @@ public sealed class PipelineTests(ITestOutputHelper output)
             return new EngineReply(result, Native, Binding, null, null);
         }
         public void Dispose() { }
-        private sealed class Lane : IDisposable { public void Dispose() { } }
+        private sealed class Lane(SemaphoreSlim gate) : IDisposable { public void Dispose() => gate.Release(); }
     }
 }

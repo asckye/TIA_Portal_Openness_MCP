@@ -56,11 +56,24 @@ def self_test():
     print("PASS SDK-only fixture layouts for V20/V21 contain copied API assemblies and no TIA executable")
 
 
-def engine_fixture_evidence(worker):
+def foundation_host_executable(exe=None):
+    override = os.environ.get('TIA_MCP_TEST_HOST_PATH')
+    if override:
+        return Path(override)
+    if exe is not None:
+        exe = Path(exe).resolve()
+        if exe.name == 'TiaMcp.FoundationHost.exe':
+            return exe
+        packaged = exe.parent.parent / 'TiaMcp.FoundationHost.exe'
+        if exe.parent.name == 'worker' and packaged.is_file():
+            return packaged
+    return Path(__file__).resolve().parents[2] / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe'
+
+
+def engine_fixture_evidence(worker, exe=None):
     if worker is None:
         return {}
-    host = Path(os.environ.get('TIA_MCP_TEST_HOST_PATH',
-        str(Path(__file__).resolve().parents[2] / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe')))
+    host = foundation_host_executable(exe)
     return {'hostSha256': hashlib.sha256(host.read_bytes()).hexdigest(),
             'sdkWorkerSha256': hashlib.sha256(worker.read_bytes()).hexdigest(),
             'workerModel': 'combined-host-supervised-worker'}
@@ -68,10 +81,10 @@ def engine_fixture_evidence(worker):
 
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
-           *, env_overrides=None, process_observer=None, isolate=False, evidence_directory=None,
+           *, env_overrides=None, process_observer=None, evidence_directory=None,
            engine_worker=None, engine_catalog=None):
     require((engine_worker is None) == (engine_catalog is None), 'Both SDK worker and catalog are required')
-    inputs = dict(env_overrides=env_overrides, process_observer=process_observer, isolate=isolate,
+    inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
                   evidence_directory=evidence_directory, engine_worker=engine_worker, engine_catalog=engine_catalog)
     if engine_worker is not None:
         require(public_api is not None, 'SDK worker checks require --public-api')
@@ -86,7 +99,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
 
 @contextmanager
 def _server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
-           *, env_overrides=None, process_observer=None, isolate=False, evidence_directory=None,
+           *, env_overrides=None, process_observer=None, evidence_directory=None,
            engine_worker=None, engine_catalog=None):
     port = 0
     if transport == 'http':
@@ -95,26 +108,23 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             port = sock.getsockname()[1]
     endpoint = f'http://127.0.0.1:{port}/mcp'
     key = secrets.token_urlsafe(24)
-    if harness is not None and engine_worker is not None:
-        # P8-03a moved the bridge and offline tools out of the engine MCP roster.
-        exe = Path(os.environ.get('TIA_MCP_TEST_HOST_PATH',
-            str(Path(__file__).resolve().parents[2] / 'src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe')))
-    foundation = exe.name == 'TiaMcp.FoundationHost.exe'
-    args = [str(exe), '--release-key' if foundation else '--tia-major-version', str(major)]
-    if engine_worker is not None or engine_catalog is not None:
-        require(foundation and engine_worker is not None and engine_catalog is not None,
-                'SDK worker capture requires FoundationHost and both worker/catalog paths')
-        args += ['--engine-worker', str(engine_worker.resolve()), '--engine-catalog', str(engine_catalog.resolve())]
+    worker = engine_worker
+    catalog = engine_catalog
+    if exe.name != 'TiaMcp.FoundationHost.exe':
+        worker = worker or exe.resolve()
+        catalog = catalog or worker.with_name('tool-catalog.json')
+        exe = foundation_host_executable(exe)
+    foundation = True
+    bundle_root = (env_overrides or {}).get('TIA_MCP_BUNDLE_ROOT') or os.environ.get('TIA_MCP_BUNDLE_ROOT') or str(Path(__file__).resolve().parents[2])
+    args = [str(exe), '--bundle-root', bundle_root, '--release-key', str(major)]
+    if worker is not None:
+        require(catalog is not None and catalog.is_file(), 'A freshly exported engine worker catalog is required')
+        args += ['--engine-worker', str(worker.resolve()), '--engine-catalog', str(catalog.resolve())]
     if portal_root is not None:
         args += ['--tia-portal-location', str(portal_root)]
     args += ['--transport', transport, '--logging', '1']
     if transport == 'http':
         args += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
-    if isolate and not foundation:
-        args += ['--isolate-openness', '--worker-timeout-seconds', '10']
-    if harness and not foundation:
-        require(public_api is not None, '--public-api is required with --host-harness')
-        args = [str(harness), str(exe), 'protocol-host', str(public_api)] + args[1:]
     env = dict(os.environ, TIA_MCP_PROFILE=profile)
     if engine_worker is not None:
         env['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
@@ -222,7 +232,7 @@ def main():
     parser.add_argument('--exe', required=True, type=Path)
     parser.add_argument('--portal-root', required=True, type=Path)
     parser.add_argument('--major', required=True, type=int, choices=(20, 21))
-    parser.add_argument('--host-harness', type=Path, help='Load the EXE host methods without changing local Openness group membership')
+    parser.add_argument('--host-harness', type=Path, help='Compatibility argument; MCP always runs in FoundationHost')
     parser.add_argument('--public-api', type=Path)
     parser.add_argument('--engine-worker', type=Path, help='Explicitly marked SDK-only worker for offline usage examples')
     parser.add_argument('--engine-catalog', type=Path)

@@ -4,7 +4,7 @@ using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcp.Logic.V4.Domain
 {
-    // HttpMcpServer.cs:181 and PrepareRawRequest's JSON depth, shared by typed and
+    // PrepareRawRequest's JSON depth, shared by typed and
     // expert messages. Byte measurement and traversal use the common input budget.
     internal static class OpenPipeLimits
     {

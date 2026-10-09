@@ -49,8 +49,8 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/McpPrompts.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/McpPromptRegistration.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/InvocationJournal.cs" />
-    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/Isolation/ToolDispatchLanes.cs" />
-    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/Isolation/OpennessReadinessGuard.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/ToolDispatchLanes.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/OpennessReadinessGuard.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/McpServer.Worker.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/EngineeringDiagnosticsTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcOfflineTools.cs" />

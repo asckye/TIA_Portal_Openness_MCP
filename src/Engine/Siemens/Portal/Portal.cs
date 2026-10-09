@@ -305,7 +305,7 @@ namespace TiaMcpServer.Siemens
                 InvalidateHmiSoftwareCache(); ResetHmiReadHealth();
                 // TiaPortal.Dispose detaches an attached client; never call
                 // TiaPortalProcess.Dispose, which terminates the actual TIA process.
-                bool uncertain = _bindingFault != null || Isolation.IsolatedWorkerHost.NativeFault != null;
+                bool uncertain = _bindingFault != null;
                 _binding = null; _bindingFault = null;
                 var lease = _processLease; _processLease = null;
                 try { connection?.Dispose(); if (!uncertain) lease?.ReleaseCleanly(); }

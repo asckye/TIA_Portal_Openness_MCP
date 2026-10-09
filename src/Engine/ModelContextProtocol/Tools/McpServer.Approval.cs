@@ -33,7 +33,6 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly AsyncLocal<Func<object?>?> ApprovalSessionOverride = new AsyncLocal<Func<object?>?>();
         internal static Func<object?>? ApprovalSessionKeyForTests { get => ApprovalSessionOverride.Value; set => ApprovalSessionOverride.Value = value; }
         static partial void ApprovalSessionKey(ref object? key);
-        static partial void IsolationParent(ref bool parent);
         private static object? CurrentApprovalSession()
         {
             if (ApprovalSessionOverride.Value is { } test) return test();
@@ -52,8 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write, bool nativeCallIssued)
         {
             var body = ResultBody(result);
-            bool parent = false; IsolationParent(ref parent);
-            if (parent || (string?)body?["meta"]?["outcome"] != "unknown" || !ToolTaxonomy.UsesOpennessLane(name)) return result;
+            if ((string?)body?["meta"]?["outcome"] != "unknown" || !ToolTaxonomy.UsesOpennessLane(name)) return result;
             var data = body?["data"] as JsonObject;
             bool True(JsonNode? value) => value is JsonValue flag && flag.TryGetValue<bool>(out var truth) && truth;
             bool nativeIssued = nativeCallIssued || True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);

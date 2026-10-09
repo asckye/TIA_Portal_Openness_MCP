@@ -131,27 +131,12 @@ namespace PlcExchangeTests
         }
 
         [Fact]
-        public async Task ParentSupervisorAdmitsRenamedExportReadsDuringRebind()
+        public void WorkerHasNoRetiredSupervisorOrMcpHost()
         {
-            var supervisorType = Engine.GetType("TiaMcpServer.Isolation.OpennessWorkerSupervisor", true)!;
-            var constructor = supervisorType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
-            var call = supervisorType.GetMethod("CallAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
-            foreach (var name in new[] { "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "GetExport", "ListExports" })
-                foreach (bool bridge in new[] { false, true })
-                {
-                    int starts = 0;
-                    Func<ProcessStartInfo> start = () => { starts++; throw new InvalidOperationException("Offline start sentinel; no process is launched."); };
-                    using var supervisor = (IDisposable)constructor.Invoke(new object[] { start, 21, "fixture", Array.Empty<string>(), TimeSpan.FromSeconds(1) });
-                    supervisorType.GetField("bindingRequired", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(supervisor, true);
-                    var parameters = new JsonObject { ["name"] = name.ToLowerInvariant(), ["arguments"] = new JsonObject() };
-                    if (bridge) parameters = new JsonObject { ["name"] = "CallTool", ["arguments"] = parameters };
-                    var task = (Task<JsonObject>)call.Invoke(supervisor, new object?[] { parameters, null, CancellationToken.None })!;
-                    var error = await Assert.ThrowsAnyAsync<Exception>(() => task);
-                    Assert.Equal("WorkerCallException", error.GetType().Name);
-                    bool diagnostic = name == "GetExportContent" || name == "ListExportHandles";
-                    Assert.Equal(diagnostic ? 1 : 0, starts);
-                    Assert.StartsWith(diagnostic ? "Worker could not start/validate" : "Recovery requires an explicit", error.Message);
-                }
+            foreach (var name in new[] { "TiaMcpServer.Isolation.OpennessWorkerSupervisor", "TiaMcpServer.HttpMcpServer", "TiaMcpServer.McpHttpResponseRouter" })
+                Assert.Null(Engine.GetType(name, false));
+            Assert.Null(Engine.GetType("TiaMcpServer.Program", true)!.GetMethod("RunStdioHost", BindingFlags.Public | BindingFlags.Static));
+            Assert.NotNull(Engine.GetType("TiaMcpServer.Worker.EngineWorkerHost", true));
         }
 
         [Fact]

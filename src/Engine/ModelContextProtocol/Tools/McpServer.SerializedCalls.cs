@@ -40,29 +40,11 @@ namespace TiaMcpServer.ModelContextProtocol
             public void Dispose() { ProgressRequest.Value = previous; McpDispatchCancellation.Value = previousToken; }
         }
         static partial void EnterTargetLane(string name, string arguments, ref IDisposable? lane)
-            => lane = Isolation.ToolDispatchLanes.Enter(name, McpDispatchCancellation.Value);
+            => lane = Dispatch.ToolDispatchLanes.Enter(name, McpDispatchCancellation.Value);
 #if !TIA_ENGINE_HOST
-        private sealed class WorkerGenerationKey
-        {
-            internal long Generation = -1;
-            internal object Key = new object();
-        }
-        private static readonly ConditionalWeakTable<object, WorkerGenerationKey> WorkerApprovalSessions = new ConditionalWeakTable<object, WorkerGenerationKey>();
-        // The isolation child keeps the session fault; a worker lost mid-call is faulted by the supervisor.
-        static partial void IsolationParent(ref bool parent) => parent = Isolation.IsolatedWorkerHost.Current != null && !Isolation.IsolatedWorkerHost.IsChild;
         static partial void ApprovalSessionKey(ref object? key)
         {
-            if (Isolation.IsolatedWorkerHost.Current is { } worker)
-            {
-                var generation = worker.Snapshot()["generation"]!.GetValue<long>();
-                var state = WorkerApprovalSessions.GetValue(worker, _ => new WorkerGenerationKey());
-                lock (state)
-                {
-                    if (state.Generation != generation) { state.Generation = generation; state.Key = new object(); }
-                    key = state.Key;
-                }
-            }
-            else if (TiaMcpServer.Runtime.OpennessReadiness.Ready) key = ReadyApprovalSessionKey();
+            if (TiaMcpServer.Runtime.OpennessReadiness.Ready) key = ReadyApprovalSessionKey();
         }
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static object? ReadyApprovalSessionKey() => EngineServices.GetIfInitialized(typeof(Siemens.Portal));
@@ -70,16 +52,6 @@ namespace TiaMcpServer.ModelContextProtocol
 #if !TIA_ENGINE_HOST
         static partial void ApprovalBindingIdentity(ref string? identity) => identity = InvocationJournal.BindingSnapshot?.Invoke()?.ToJsonString();
 #endif
-        static partial void ApprovalWaitSignal(string phase, int seconds)
-        {
-            if (Isolation.IsolatedWorkerHost.IsChild && ProgressRequest.Value is { } request)
-            {
-                var meta = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(request.Params?.Meta));
-                request.Server.SendNotificationAsync("notifications/progress", new System.Text.Json.Nodes.JsonObject {
-                    ["tiaApprovalWait"] = phase, ["seconds"] = seconds,
-                    ["tiaMcpWorkerRequestId"] = (string?)meta?["tiaMcpWorkerRequestId"] }).GetAwaiter().GetResult();
-            }
-        }
         static partial void RecordBridgeEvent(string id, string name, string phase)
         { if (!TiaOpenness.Shared.AuditInvocation.IsReadOnlyPreview) InvocationJournal.Write(id, name, phase); }
 #if !TIA_ENGINE_HOST
@@ -197,15 +169,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
             bool disabled = write && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
             string? correlation = null;
-            if (Isolation.IsolatedWorkerHost.IsChild)
-            {
-                try
-                {
-                    var meta = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(request?.Params?.Meta, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
-                    correlation = meta?["tiaMcpWorkerCorrelation"]?.GetValue<string>();
-                }
-                catch (System.Exception) /* swallow(parse-fallback): malformed optional correlation metadata uses a new audit id */ { }
-            }
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
                 "engine", McpServer.ReleaseKey, ProtocolTool.Name, correlation);
             var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
@@ -227,15 +190,6 @@ namespace TiaMcpServer.ModelContextProtocol
             using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request?.Server?.SessionId, request?.Server);
             using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
             string? correlation = null;
-            if (Isolation.IsolatedWorkerHost.IsChild)
-            {
-                try
-                {
-                    var meta = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(request.Params?.Meta, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
-                    correlation = meta?["tiaMcpWorkerCorrelation"]?.GetValue<string>();
-                }
-                catch /* swallow(parse-fallback): malformed optional correlation metadata uses a new journal id without leaking the call gate */ { /* Malformed optional metadata must not leak the serialization gate. */ }
-            }
             // The call projection starts at the transport boundary. The tool's BEFORE row is written inside its lane,
             // after approval, so journal BEFORE/terminal pairs never overlap on the Openness lane.
             string id = InvocationJournal.NewId(correlation ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
@@ -250,9 +204,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string arguments = System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>());
             var precheck = await McpServer.PrecheckBeforeApproval(ProtocolTool.Name, arguments, async previewArguments =>
             {
-                var previewLane = await Isolation.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false);
+                var previewLane = await Dispatch.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false);
                 using var heldPreviewLane = previewLane;
-                Isolation.ToolDispatchLanes.Activate(previewLane);
+                Dispatch.ToolDispatchLanes.Activate(previewLane);
                 // The precheck preview is journaled as its own pair inside the lane; its native reads correlate with this id.
                 InvocationJournal.Begin(ProtocolTool.Name, id);
                 var original = request!.Params;
@@ -278,12 +232,12 @@ namespace TiaMcpServer.ModelContextProtocol
             if (approval?.Reason != null)
             { var rejection = McpServer.ApprovalRefusal(approval); journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(rejection, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)); return rejection; }
             IDisposable? lane;
-            try { lane = await Isolation.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false); }
+            try { lane = await Dispatch.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false); }
             catch (System.OperationCanceledException) /* swallow(privacy): report typed cancellation before dispatch without exposing exception text */
             { return McpServer.FinishApproval(McpServer.V4TargetReject(ProtocolTool.Name, new TiaMcp.Logic.V4.Error("The request was cancelled before dispatch.", new TiaMcp.Logic.V4.CancelledDetails("tool-queue")),
                 McpServer.CurrentBehaviorTargets(ProtocolTool.Name, System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()))), approval, completion: "unknown"); }
             using var dispatchLane = lane;
-            Isolation.ToolDispatchLanes.Activate(lane);
+            Dispatch.ToolDispatchLanes.Activate(lane);
             InvocationJournal.Begin(ProtocolTool.Name, id);
             bool previousContext = McpServer.EnterMcpApprovalContext();
             bool issued = false;
@@ -305,7 +259,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // A batch's read-only session prelude ends before target approval.
                     // Pure local batches do not need a project/session validation.
                     bool sessionPrelude = RequiresSessionPrelude(request);
-                    using var auditLane = Isolation.ToolDispatchLanes.Enter(sessionPrelude ? "GetSessionState" : "GetToolUsage", cancellationToken);
+                    using var auditLane = Dispatch.ToolDispatchLanes.Enter(sessionPrelude ? "GetSessionState" : "GetToolUsage", cancellationToken);
                     if (sessionPrelude) McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
                     TiaOpenness.Shared.AuditInvocation.StartCurrent();
                 }
@@ -313,7 +267,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 McpServer.ValidateCallerInputFiles(ProtocolTool.Name, arguments);
                 var result = McpServer.DiscloseTargets(McpServer.ToolResult(await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)), ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
-                ExitFaultedWorker(id, approval);
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");
                 return McpServer.FinishApproval(McpServer.ObserveSessionOutcome(ProtocolTool.Name, result, McpServer.ApprovalWrite(ProtocolTool.Name, arguments), nativeCalls.NativeCallIssued), approval);
@@ -322,7 +275,6 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 _ = PortalFailureClassifier.IsPortalProcessLost(ex);
                 InvocationJournal.Write(id, ProtocolTool.Name, "THREW");
-                ExitFaultedWorker(id, approval);
                 var result = McpServer.DiscloseTargets(McpServer.TargetFailure(ProtocolTool.Name, ex, issued), ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.SerializeToElement(request?.Params?.Arguments ?? new System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>()));
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
@@ -342,13 +294,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (call.TryGetProperty("name", out var name) && name.ValueKind == System.Text.Json.JsonValueKind.String
                         && ToolTaxonomy.UsesOpennessLane(name.GetString() ?? "")) return true;
             return false;
-        }
-        private void ExitFaultedWorker(string id, TiaOpenness.Shared.ApprovalOutcome? approval)
-        {
-            if (!Isolation.IsolatedWorkerHost.IsChild || Isolation.IsolatedWorkerHost.NativeFault == null) return;
-            InvocationJournal.Write(id, ProtocolTool.Name, "NATIVE_CHANNEL_FAULT");
-            if (approval != null) TiaOpenness.Shared.ApprovalClient.Complete(approval, "unknown").GetAwaiter().GetResult();
-            System.Environment.Exit(75); // Client process only; no save/retry/TIA process termination.
         }
     }
 }

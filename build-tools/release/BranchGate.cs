@@ -87,9 +87,10 @@ internal static partial class ReleaseCommands
                 var api = ResolveReleaseApi(null, apiRoot, major);
                 var exe = Path.Combine(Root, $"runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe");
                 VerifyNativeJit(dotnet, harness, exe, api, majorLogs, temp, cli, apiRoot, major);
-                var worker = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], majorLogs, temp, cli, apiRoot, major);
-                RequireCount("worker supervisor", worker, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
-                VerifyHttpConcurrency(harness, exe, api, majorLogs, temp, cli, apiRoot, major);
+                var faultResults = Path.Combine(majorLogs, "worker-fault-suites");
+                RunDotnetSuiteForRelease("worker-robustness", "worker-supervisor", dotnet, faultResults, majorLogs, temp, cli, apiRoot, nuget);
+                CheckReleaseCount("workerFaults", ReadSuitePassed(faultResults, "worker-robustness"), "Foundation worker fault coverage incomplete");
+                VerifyHttpConcurrency(dotnet, majorLogs, temp, cli, apiRoot, nuget, major);
                 var protocolWorker = PrepareReleaseSdkWorker(dotnet, api, major, majorLogs, temp, cli, apiRoot, nuget);
                 VerifyEngineApproval(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, protocolWorker);
                 foreach (var isolated in new[] { false, true }) VerifyStability(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, rounds.ToString(), isolated, protocolWorker);

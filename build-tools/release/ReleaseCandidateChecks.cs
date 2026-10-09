@@ -81,8 +81,8 @@ internal static partial class ReleaseCommands
         {
             if (!File.Exists(path)) throw new ReleaseException(explanation + ": " + path);
         }
-        string[] CaptureArgs(string release, bool engineSource) => [.. snapshotArgs, "--releases", release, "--exe", release + "=" + Path.Combine(Root, engineSource ? $"runtime/v{release}/worker/TiaMcp.Engine.V{release}.exe" : $"runtime/v{release}/TiaMcp.FoundationHost.exe")];
-        void CaptureSnapshots(string script, string name, bool responses, string[] releases, string transport = "stdio", bool engineSource = false)
+        string[] CaptureArgs(string release, bool sourceLayout) => [.. snapshotArgs, "--releases", release, "--exe", release + "=" + Path.Combine(Root, $"runtime/v{release}/TiaMcp.FoundationHost.exe")];
+        void CaptureSnapshots(string script, string name, bool responses, string[] releases, string transport = "stdio", bool sourceLayout = false)
         {
             var combined = Path.Combine(logs, name);
             Directory.CreateDirectory(combined);
@@ -90,20 +90,13 @@ internal static partial class ReleaseCommands
             {
                 var perRelease = Path.Combine(logs, name + "-v" + release);
                 var args = new List<string> { "capture" };
-                args.AddRange(CaptureArgs(release, engineSource));
+                args.AddRange(CaptureArgs(release, sourceLayout));
                 if (release is "20" or "21")
                 {
-                    if (engineSource)
-                    {
-                        args.Add("--engine-source");
-                        if (responses) args.AddRange(["--harness", harness]);
-                    }
-                    else
-                    {
-                        args.AddRange(["--engine-host", Path.Combine(Root, $"runtime/v{release}/TiaMcp.FoundationHost.exe"), "--transport", transport]);
-                        if (responses) args.AddRange(["--engine-worker", release + "=" + fixtureWorkers[release],
-                            "--engine-catalog", release + "=" + Path.Combine(Path.GetDirectoryName(fixtureWorkers[release])!, "tool-catalog.json")]);
-                    }
+                    var host = Path.Combine(Root, sourceLayout ? "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe" : $"runtime/v{release}/TiaMcp.FoundationHost.exe");
+                    args.AddRange(["--engine-host", host, "--transport", transport]);
+                    if (responses) args.AddRange(["--engine-worker", release + "=" + fixtureWorkers[release],
+                        "--engine-catalog", release + "=" + Path.Combine(Path.GetDirectoryName(fixtureWorkers[release])!, "tool-catalog.json")]);
                 }
                 if (responses) args.AddRange(["--dotnet-root", Path.Combine(Root, "runtime/dotnet")]);
                 args.AddRange(["--output", perRelease]);
@@ -130,7 +123,10 @@ internal static partial class ReleaseCommands
                     CaptureSnapshots("scripts/checks/Snapshot-ToolContracts.py", "contracts-http", false, ["20", "21"], "http");
                     runPython("scripts/checks/Snapshot-ToolContracts.py", ["compare", "--baseline", "manifest/contracts/v4/baseline", "--current", Path.Combine(logs, "contracts-http"), "--releases", "20", "21"]);
                 });
-                runStep("07-engine-contracts-ab", () => CaptureSnapshots("scripts/checks/Snapshot-ToolContracts.py", "engine-contracts-ab", false, ["20", "21"], engineSource: true));
+                runStep("07-engine-contracts-source-layout", () => {
+                    CaptureSnapshots("scripts/checks/Snapshot-ToolContracts.py", "engine-contracts-source-layout", false, ["20", "21"], sourceLayout: true);
+                    runPython("scripts/checks/Snapshot-ToolContracts.py", ["compare", "--baseline", "manifest/contracts/v4/baseline", "--current", Path.Combine(logs, "engine-contracts-source-layout"), "--releases", "20", "21"]);
+                });
                 return new PipelineResult("contracts", 0, "Contract capture and comparison passed." + Environment.NewLine, "");
             }),
             ("responses", () =>
@@ -141,7 +137,7 @@ internal static partial class ReleaseCommands
                     CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "responses-http", true, ["20", "21"], "http");
                     runPython("scripts/checks/Snapshot-ToolResponses.py", ["compare", "--baseline", "manifest/contracts/v4/responses", "--current", Path.Combine(logs, "responses-http"), "--releases", "20", "21"]);
                 });
-                runStep("09-engine-responses-ab", () => CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "engine-responses-ab", true, ["20", "21"], engineSource: true));
+                runStep("09-engine-responses-source-layout", () => CaptureSnapshots("scripts/checks/Snapshot-ToolResponses.py", "engine-responses-source-layout", true, ["20", "21"], sourceLayout: true));
                 return new PipelineResult("responses", 0, "Response capture and comparison passed." + Environment.NewLine, "");
             }),
             ("relocated-bundle", () =>

@@ -12,7 +12,7 @@ using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Runtime;
 
-namespace TiaMcpServer.Isolation
+namespace TiaMcpServer.Dispatch
 {
     internal static class OpennessReadinessGuard
     {
@@ -50,9 +50,6 @@ namespace TiaMcpServer.Isolation
 
             public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
             {
-                // The isolated parent never initializes or loads Openness; the worker owns this check.
-                if (IsolatedWorkerHost.Current != null && !IsolatedWorkerHost.IsChild && OpennessReadiness.Ready)
-                    return inner.InvokeAsync(request, cancellationToken);
                 var target = NativeTarget(ProtocolTool.Name, request.Params?.Arguments);
                 if (target == null || OpennessReadiness.Ready) return inner.InvokeAsync(request, cancellationToken);
                 var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments

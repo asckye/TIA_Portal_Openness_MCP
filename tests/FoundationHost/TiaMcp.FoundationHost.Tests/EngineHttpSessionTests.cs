@@ -146,9 +146,10 @@ public sealed class EngineHttpSessionTests
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)(await a.Tool("GetSessionState", ok: false))["error"]?["code"]);
         await b.Tool("GetSessionState"); await b.Tool("CompileDevice");
         var stageArgs = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }), ["dryRun"] = false };
-        await b.Tool("StageImportFiles", stageArgs);
+        await b.Tool("StageImportFiles", stageArgs, metadata: new JsonObject { ["tiaMcpStagingSession"] = "caller-peer-token", ["other"] = "kept" });
         var batches = (await a.Tool("ListStagedImportFiles"))["data"]!.ToJsonString();
         Assert.Contains(b.Id!, batches);
+        Assert.DoesNotContain("caller-peer-token", batches);
         Assert.DoesNotContain("\"currentSession\":true", batches);
         await a.End(); await b.End();
     }
@@ -181,6 +182,24 @@ public sealed class EngineHttpSessionTests
         Assert.True((bool?)ready!["mcpHostReady"]); Assert.Equal("21", (string?)ready["releaseKey"]); Assert.Equal("NOT RUN", (string?)ready["nativeAcceptance"]);
     }
 
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Shutdown_drains_an_open_http_request_and_stops_its_session_worker(string release)
+    {
+        using var host = await Fixture.Start(release, gracefulShutdown: true);
+        using var session = new Session(host.Url); await session.Initialize();
+        int pid = (int)(await session.Tool("CompileDevice"))["data"]!["fixturePid"]!;
+        using var worker = Process.GetProcessById(pid);
+        // Hold a POST body open: shutdown must cancel transport reads as well as session workers.
+        using var upload = new TcpClient(); await upload.ConnectAsync("127.0.0.1", new Uri(host.Url).Port);
+        var bytes = System.Text.Encoding.ASCII.GetBytes("POST /mcp HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer fixture-key\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\n{");
+        await upload.GetStream().WriteAsync(bytes);
+        await Task.Delay(100);
+        host.Stop();
+        Assert.True(worker.WaitForExit(5000), "Session worker outlived graceful host shutdown.");
+        // Kestrel gives an incomplete request the configured 30-second shutdown grace.
+        Assert.True(await host.WaitForExit(TimeSpan.FromSeconds(40)), "HTTP shutdown did not drain within its bound.");
+    }
+
     private sealed class Session(string url) : IDisposable
     {
         private readonly HttpClient client = new(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(20) };
@@ -198,9 +217,11 @@ public sealed class EngineHttpSessionTests
             Assert.Null(reply["error"]); return reply["result"]!;
         }
         internal Task Initialize() => Call("initialize", new() { ["protocolVersion"] = "2025-03-26", ["capabilities"] = new JsonObject(), ["clientInfo"] = new JsonObject { ["name"] = "engine-session-fixture", ["version"] = "1" } });
-        internal async Task<JsonNode> Tool(string name, JsonObject? arguments = null, bool ok = true)
+        internal async Task<JsonNode> Tool(string name, JsonObject? arguments = null, bool ok = true, JsonObject? metadata = null)
         {
-            var result = await Call("tools/call", new() { ["name"] = name, ["arguments"] = arguments ?? new JsonObject() });
+            var input = new JsonObject { ["name"] = name, ["arguments"] = arguments ?? new JsonObject() };
+            if (metadata != null) input["_meta"] = metadata;
+            var result = await Call("tools/call", input);
             var body = result["structuredContent"]!;
             Assert.True((bool?)body["ok"] == ok, body.ToJsonString()); Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse((string)result["content"]![0]!["text"]!)));
             return body;
@@ -213,7 +234,7 @@ public sealed class EngineHttpSessionTests
     {
         internal string Url => url;
         internal string DataDirectory => directory;
-        internal static async Task<Fixture> Start(string release, bool shortTimeout = false)
+        internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false)
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../.."));
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
@@ -242,8 +263,9 @@ public sealed class EngineHttpSessionTests
                 ["tools"] = tools, ["descriptors"] = descriptors, ["liteTools"] = new JsonArray(), ["serverInstructions"] = "Offline session fixture." }.ToJsonString());
             using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); int port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
             string url = "http://127.0.0.1:" + port;
-            var start = new ProcessStartInfo(Path.ChangeExtension(typeof(foundationhost::TiaMcp.FoundationHost.HostOptions).Assembly.Location, ".exe")) {
-                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+            var start = new ProcessStartInfo(gracefulShutdown ? exe : Path.ChangeExtension(typeof(foundationhost::TiaMcp.FoundationHost.HostOptions).Assembly.Location, ".exe")) {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = gracefulShutdown };
+            if (gracefulShutdown) start.ArgumentList.Add("--foundation-http-fixture");
             foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--engine-worker", exe, "--engine-catalog", catalog, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
             if (shortTimeout)
             {
@@ -273,6 +295,12 @@ public sealed class EngineHttpSessionTests
                 throw new TimeoutException("Fixture host did not listen.");
             }
             catch { fixture.Dispose(); throw; }
+        }
+        internal void Stop() => process.StandardInput.Close();
+        internal async Task<bool> WaitForExit(TimeSpan timeout)
+        {
+            try { await process.WaitForExitAsync().WaitAsync(timeout); return process.ExitCode == 0; }
+            catch (TimeoutException) { return false; }
         }
         public void Dispose() { if (!process.HasExited) { process.Kill(); process.WaitForExit(5000); } process.Dispose(); }
     }

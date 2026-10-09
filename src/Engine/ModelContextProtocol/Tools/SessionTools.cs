@@ -46,32 +46,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     Transport = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
                 };
 
-                bool isolatedParent = Isolation.IsolatedWorkerHost.Current != null && !Isolation.IsolatedWorkerHost.IsChild;
                 if (OpennessReadiness.GroupOk.HasValue) env.OpennessGroupOk = OpennessReadiness.GroupOk.Value;
-                else if (isolatedParent) env.OpennessGroupOk = EnvironmentDoctor.CurrentUserInOpennessGroup();
                 else if (OpennessReadiness.Ready)
                 {
                     try { env.OpennessGroupOk = ReadBootstrapOpennessGroup(); }
                     catch /* swallow(env-probe): if group membership cannot be checked, Bootstrap does not claim Openness access is ready */ { env.OpennessGroupOk = false; }
-                }
-
-                if (isolatedParent && OpennessReadiness.Ready)
-                {
-                    if (env.OpennessGroupOk != true)
-                    {
-                        const string cause = "Current user is not in the required Siemens TIA Openness group.";
-                        OpennessReadiness.MarkUnavailable(cause, EnvironmentDoctor.OpennessGroupFixEn,
-                            EnvironmentDoctor.OpennessGroupFixZh, false);
-                    }
-                    else
-                    {
-                        var check = EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, env.TiaVersionDetected)
-                            .FirstOrDefault(item => item.Gating && !item.Ok);
-                        if (check != null)
-                            OpennessReadiness.MarkUnavailable(check.DetailEn, check.FixEn ?? EnvironmentDoctor.DefaultFixEn,
-                                check.FixZh ?? EnvironmentDoctor.DefaultFixZh, true);
-                        else OpennessReadiness.MarkReady(true);
-                    }
                 }
 
                 var portalDto = OpennessReadiness.Ready ? ReadBootstrapPortal() : new BootstrapPortal { Connected = false };

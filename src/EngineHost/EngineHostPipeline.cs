@@ -194,7 +194,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 && ToolTaxonomy.UsesOpennessLane(name))
                 SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
         }
-        static partial void IsolationParent(ref bool parent) => parent = false;
         static partial void ApprovalBindingIdentity(ref string? identity)
         {
             _ = Worker.Status(WorkerDispatchCancellation).GetAwaiter().GetResult();

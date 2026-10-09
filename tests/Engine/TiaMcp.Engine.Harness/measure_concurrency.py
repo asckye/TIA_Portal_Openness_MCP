@@ -3,9 +3,11 @@ import argparse
 import concurrent.futures
 import json
 import os
+import re
 from pathlib import Path
 import socket
 import subprocess
+import sys
 import threading
 import time
 import urllib.request
@@ -72,18 +74,13 @@ def stats(values, seconds):
                 maxMs=max(values), callsPerSecond=len(values)/seconds)
 
 
-def measure(command, data, http=False, fake=False, baseline=False):
+def measure(command, data, http=False):
     port = 0
     if http:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        if fake:
-            command = command + ['http', str(port)]
-        else:
-            command = command + ['--transport', 'http', '--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', 'p6-58-test-key']
-    elif fake:
-        command = command + ['stdio', '0']
+        command = command + ['--transport', 'http', '--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', 'p6-58-test-key']
     started = time.perf_counter()
     client = Stdio(command, data)
     try:
@@ -140,10 +137,6 @@ def measure(command, data, http=False, fake=False, baseline=False):
         local = dict(name='GetToolUsage', arguments={'toolName': 'GetSessionState'})
         assert 'result' in call('tools/call', local)
         with concurrent.futures.ThreadPoolExecutor(max_workers=9) as pool:
-            held = pool.submit(call, 'tools/call', dict(name='GetSessionState', arguments={})) if fake else None
-            if fake:
-                time.sleep(.25)
-
             def timed(i):
                 then = time.perf_counter()
                 response = call('tools/call', local, i % 4)
@@ -153,12 +146,8 @@ def measure(command, data, http=False, fake=False, baseline=False):
             then = time.perf_counter()
             values = list(pool.map(timed, range(40)))
             metrics = stats(values, time.perf_counter() - then)
-            if held:
-                assert 'result' in held.result(timeout=100)
-        if fake and not baseline:
-            assert metrics['p95Ms'] < 100, metrics
         return dict(startupMs=startup, toolsListMs=listing, local=metrics, sessions=4 if http else 1,
-                    concurrentClients=8, fakeSeconds=60 if fake else 0)
+                    concurrentClients=8, workerModel='session-worker')
     finally:
         client.close()
 
@@ -167,25 +156,33 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--engine', type=Path, required=True)
     parser.add_argument('--foundation', type=Path, required=True)
-    parser.add_argument('--harness', type=Path, required=True)
+    parser.add_argument('--public-api', type=Path, help='PublicAPI directory for an explicitly built SDK fixture worker')
+    parser.add_argument('--harness', type=Path, help='Accepted for older measurement commands; the host owns dispatch')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--baseline', action='store_true')
     parser.add_argument('--stdio-only', action='store_true')
     parser.add_argument('--sequential', action='store_true', help='Measure startup without competing transport jobs')
     args = parser.parse_args()
     common = ['--bundle-root', str(ROOT)]
-    engine = [str(args.engine.resolve())] + common + ['--no-isolate-openness', '--logging', '0']
+    release = re.search(r'V(20|21)', args.engine.name).group(1)
+    engine = [str(args.foundation.resolve())] + common + ['--release-key', release,
+        '--engine-worker', str(args.engine.resolve()), '--engine-catalog', str(args.engine.with_name('tool-catalog.json').resolve())]
+    if args.public_api:
+        sys.path.insert(0, str(ROOT / 'scripts/checks'))
+        from importlib import import_module
+        installation = import_module('Test-ResourceDiscovery').sdk_only_installation(
+            args.public_api, int(release), args.output.parent / (args.output.stem + '-installation'))
+        engine += ['--tia-portal-location', str(installation.resolve())]
+        os.environ['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
     foundation = [str(args.foundation.resolve())] + common + ['--offline', '--release-key', '19']
-    fixture = [str(args.harness.resolve()), str(args.engine.resolve()), 'performance-host']
-    jobs = [('engine-stdio', engine, False, False), ('engine-http', engine, True, False),
-            ('foundation-stdio', foundation, False, False), ('foundation-http', foundation, True, False),
-            ('fake-stdio', fixture, False, True), ('fake-http', fixture, True, True)]
+    jobs = [('session-worker-stdio', engine, False), ('session-worker-http', engine, True),
+            ('foundation-stdio', foundation, False), ('foundation-http', foundation, True)]
     result = {}
     if args.stdio_only:
         jobs = [job for job in jobs if not job[2]]
     with concurrent.futures.ThreadPoolExecutor(max_workers=1 if args.sequential else 6) as pool:
         futures = {pool.submit(measure, command, args.output.parent / (args.output.stem + '-' + name),
-                               http, fake, args.baseline): name for name, command, http, fake in jobs}
+                               http): name for name, command, http in jobs}
         for future in concurrent.futures.as_completed(futures):
             name = futures[future]
             try:

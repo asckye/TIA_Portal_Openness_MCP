@@ -121,7 +121,7 @@ namespace TiaMcp.FoundationHost
                 if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name, HostBehavior.SessionReset()), false);
                 var token = McpServer.WorkerDispatchCancellation;
                 using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
-                using var lane = TiaMcpServer.Isolation.ToolDispatchLanes.Enter(tool.Name, token);
+                using var lane = TiaMcpServer.Dispatch.ToolDispatchLanes.Enter(tool.Name, token);
                 string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId;
                 string phase = "THREW";
                 InvocationJournal.Write(id, "worker:" + tool.Name, "BEFORE");

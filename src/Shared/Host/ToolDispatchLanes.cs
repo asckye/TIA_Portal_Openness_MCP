@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Isolation
+namespace TiaMcpServer.Dispatch
 {
     internal static class ToolDispatchLanes
     {

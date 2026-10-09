@@ -13,7 +13,7 @@ namespace TiaMcp.FoundationHost;
 
 internal static class EngineReleaseHost
 {
-    internal static async Task<int> Run(HostOptions options, HostFileLogger logger)
+    internal static async Task<int> Run(HostOptions options, HostFileLogger logger, CancellationToken stoppingToken = default)
     {
         using var session = CreateSession(options);
         var worker = session.Worker;
@@ -37,7 +37,7 @@ internal static class EngineReleaseHost
         {
             // Verify the release and capabilities before listening; sessions never use this probe.
             session.Dispose();
-            await RunHttp(options, logger, pipeline);
+            await RunHttp(options, logger, pipeline, stoppingToken);
         }
         else
         {
@@ -50,7 +50,7 @@ internal static class EngineReleaseHost
             pipeline.RegisterHandlers(mcp);
             using var host = builder.Build();
             using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
-            await host.RunAsync();
+            await host.RunAsync(stoppingToken);
         }
         return 0;
     }
@@ -82,7 +82,7 @@ internal static class EngineReleaseHost
         public void Dispose() { worker.SessionLocked = null; worker.Dispose(); pipeline.Dispose(); }
     }
 
-    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe)
+    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, CancellationToken stoppingToken)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
         builder.Logging.ClearProviders();
@@ -125,7 +125,7 @@ internal static class EngineReleaseHost
         app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = "full-engine" });
         app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
         using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
-        await app.RunAsync();
+        await ((IHost)app).RunAsync(stoppingToken);
     }
 
 }

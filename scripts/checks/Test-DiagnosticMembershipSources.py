@@ -28,7 +28,7 @@ tokens, _ = lexer.Lexer(doctor).scan()
 pairs = lexer.matching_pairs(tokens)
 cursor = doctor.index('if (!Runtime.OpennessReadiness.Ready)')
 branches = []
-for marker in ('if (!Runtime.OpennessReadiness.Ready)', 'else if (isolatedParent)', 'else if (fix)', 'else'):
+for marker in ('if (!Runtime.OpennessReadiness.Ready)', 'else if (fix)', 'else'):
     assert doctor.startswith(marker, cursor)
     opening = next(i for i, token in enumerate(tokens) if token.start >= cursor + len(marker) and token.value == '{')
     closing = pairs[opening]
@@ -36,10 +36,9 @@ for marker in ('if (!Runtime.OpennessReadiness.Ready)', 'else if (isolatedParent
     cursor = tokens[closing].end
     while doctor[cursor].isspace():
         cursor += 1
-unready, isolated, repair, no_fix = branches
+unready, repair, no_fix = branches
 assert 'Runtime.OpennessReadiness.GroupOk == true' in unready
 assert 'ReadOpennessGroup(' not in unready and 'ReadPortalState(' not in unready
-assert 'ReadOpennessGroup(' not in isolated
 assert 'await ReadOpennessGroup(fix: true)' in repair and 'await ReadOpennessGroup(fix: false)' in no_fix
 assert doctor.count('ReadOpennessGroup(') == 2
 assert 'ReadPortalState()' in block_after(doctor, 'if (Runtime.OpennessReadiness.Ready)')
@@ -84,9 +83,9 @@ startup = sources.member('Main')
 assert "OpennessReadiness.Ready" in startup
 assert "OpennessReadiness.MarkUnavailable" in startup
 assert not re.search(r"Openness\.IsUserInGroup\s*\(", startup)
-assert "if (mcpHostInvocation)" in startup
-assert 'Starting MCP host in environment-not-ready mode.' in startup
-assert "await RunHttpHost(options)" in startup and "await RunStdioHost(options)" in startup
+assert "if (options.EngineWorker)" in startup
+assert "Environment.ExitCode = 64;" in startup
+assert "Worker.EngineWorkerHost.Run();" in startup and "Engine usage:" in startup
 assert "User is not in the required group 'Siemens TIA Openness'. Exiting." in startup
 assert "Environment.ExitCode = 2;" in startup
 assert "OpennessReadiness.Guidance(false)" in startup

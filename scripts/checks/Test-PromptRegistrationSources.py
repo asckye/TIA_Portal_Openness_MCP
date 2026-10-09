@@ -6,22 +6,19 @@ from pathlib import Path
 from engine_sources import EngineSources, block_after
 
 sources = EngineSources()
-program = sources.member('BuildStdioHost') + sources.member('BuildHttpMcpHost')
+root = Path(__file__).resolve().parents[2]
+program = (root / 'src/FoundationHost/EngineReleaseHost.cs').read_text(encoding='utf-8-sig')
+pipeline = (root / 'src/EngineHost/EngineHostPipeline.cs').read_text(encoding='utf-8-sig')
 registration = sources.type_text('McpPromptRegistration')
 assert "WithPromptsFromAssembly(" not in sources.all_text()
-assert program.count("ModelContextProtocol.McpPromptRegistration.Configure(mcp);") == 1
-assert program.count("ModelContextProtocol.McpPromptRegistration.Configure(mcpHttp);") == 1
-assert "MCP registration failed: ReflectionTypeLoadException" in program
+assert program.count("pipeline.RegisterHandlers(mcp);") == 1
+assert program.count("probe.RegisterHandlers(mcp);") == 1
+assert "McpPromptRegistration.Configure(builder)" in pipeline
 assert "WithToolsFromAssembly failed:" not in sources.all_text()
-loader_catch = block_after(sources.member('BuildStdioHost'), "catch (ReflectionTypeLoadException ex)")
-assert "throw;" in loader_catch and "ex.LoaderExceptions" in loader_catch
-assert "catch" not in registration
-assert "GetTypes(" not in registration
+assert "catch" not in registration and "GetTypes(" not in registration
 assert "builder.WithPrompts(new[] {" in registration
-http_host = sources.member('RunHttpHost')
-assert "Task.WhenAny(mcpTask, transportTask)" in http_host
-assert "Task.WhenAll(mcpTask, transportTask)" in http_host
-assert "BuildHttpMcpHost(options, httpToMcp, mcpToHttp)" in http_host
+assert "WithStdioServerTransport()" in program and "WithHttpTransport(" in program
+assert "WorkerShutdown.StopAll" in program
 startup = sources.member('Main')
 assert "Environment.ExitCode = 70;" in startup and "throw;" in startup
 

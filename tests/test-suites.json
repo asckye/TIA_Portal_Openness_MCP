@@ -19,26 +19,26 @@
   },
   "offline": {
     "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
-    "minimumPassed": 5153,
+    "minimumPassed": 5157,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 5152,
+        "minimumPassed": 5156,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
   },
   "offline-v20": {
     "project": "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj",
-    "minimumPassed": 5153,
+    "minimumPassed": 5157,
     "maximumSkipped": 0,
     "arguments": [
       "-p:DefineConstants=TIA_V20"
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 5152,
+        "minimumPassed": 5156,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
@@ -87,7 +87,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 11135,
+    "minimumPassed": 11137,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -96,7 +96,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 8591,
+    "minimumPassed": 8593,
     "maximumSkipped": 1,
     "arguments": []
   },
@@ -218,7 +218,7 @@
   },
   "engine-host": {
     "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
-    "minimumPassed": 19,
+    "minimumPassed": 40,
     "maximumSkipped": 0,
     "arguments": []
   },

@@ -58,7 +58,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 bool envOk = checks.All(c => c.Ok);
                 string? firstEnvProblem = checks.FirstOrDefault(c => !c.Ok)?.Name;
-                bool isolatedParent = Isolation.IsolatedWorkerHost.Current != null && !Isolation.IsolatedWorkerHost.IsChild;
 
                 // 2) Openness group membership (+ optional auto-fix)
                 bool groupOk;
@@ -72,10 +71,6 @@ namespace TiaMcpServer.ModelContextProtocol
                         Detail = Runtime.OpennessReadiness.Cause,
                         Fix = Runtime.OpennessReadiness.FixEn
                     });
-                }
-                else if (isolatedParent)
-                {
-                    groupOk = Runtime.EnvironmentDoctor.CurrentUserInOpennessGroup();
                 }
                 else if (fix)
                 {
@@ -95,30 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Fix = groupOk ? null : "Run GetEnvironmentDiagnostics with fix=true (prompts UAC to add you), or manually add your Windows user to the 'Siemens TIA Openness' local group and sign out/in. Admin rights required."
                 });
 
-#if !TIA_ENGINE_HOST
-                if (isolatedParent && Runtime.OpennessReadiness.Ready)
-                {
-                    var failedPrerequisite = checks.FirstOrDefault(check => !check.Ok && check.Name != "Openness user group"
-                        && check.Name != "TIA connection / project");
-                    if (failedPrerequisite != null)
-                    {
-                        var source = Runtime.EnvironmentDoctor.Run(int.Parse(McpServer.ReleaseKey), inUse ?? detected)
-                            .FirstOrDefault(check => !check.Ok);
-                        var cause = source?.DetailEn ?? failedPrerequisite.Detail ?? "TIA Openness environment is not ready.";
-                        var repair = source?.FixEn ?? failedPrerequisite.Fix ?? Runtime.EnvironmentDoctor.DefaultFixEn;
-                        Runtime.OpennessReadiness.MarkUnavailable(cause, repair,
-                            source?.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh, groupOk);
-                    }
-                    else if (!groupOk)
-                    {
-                        const string cause = "Current user is not in the required Siemens TIA Openness group.";
-                        Runtime.OpennessReadiness.MarkUnavailable(cause, Runtime.EnvironmentDoctor.OpennessGroupFixEn,
-                            Runtime.EnvironmentDoctor.OpennessGroupFixZh, false);
-                    }
-                    else Runtime.OpennessReadiness.MarkReady(true);
-                }
 
-#endif
 
                 // 3) Connection + project state
                 bool connected = false; string? projectName = null;

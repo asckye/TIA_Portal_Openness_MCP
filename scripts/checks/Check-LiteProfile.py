@@ -62,8 +62,9 @@ def tools_for_profile(profile):
     # "unset the env var" silently stopped meaning "full" the day lite became the default.
     env = dict(os.environ)
     env.pop("TIA_MCP_PROFILE", None)
-    args = ([str(HOST), str(EXE), 'protocol-host', str(PUBLIC_API), '--tia-major-version', str(MAJOR), '--transport', 'stdio']
-            if HOST and EXE.name != 'TiaMcp.FoundationHost.exe' else [str(EXE), '--release-key', str(MAJOR)]) + ['--logging', '0']
+    if EXE.name != 'TiaMcp.FoundationHost.exe':
+        raise ValueError('Lite profile checks require FoundationHost and its engine worker')
+    args = [str(EXE), '--release-key', str(MAJOR), '--logging', '0']
     if profile:
         args += ["--profile", profile]
     p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,

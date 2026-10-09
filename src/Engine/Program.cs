@@ -1,12 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -18,7 +14,6 @@ using System.Xml;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Runtime;
 using TiaMcpServer.Siemens;
-using McpProtocol = global::ModelContextProtocol.Protocol;
 
 namespace TiaMcpServer
 {
@@ -26,33 +21,17 @@ namespace TiaMcpServer
     {
         private static string LogReleaseKey => EngineRouter.CompiledTiaMajorVersion.ToString();
 
-        private static void ConfigureResourceDiscovery(IMcpServerBuilder builder)
-        {
-            // Engineering data is exposed through tools. The MCP resource catalog
-            // is empty; register both list handlers so discovery succeeds on either
-            // transport. The SDK advertises resources without subscriptions or
-            // list-change notifications when these handlers are registered.
-            builder.WithListResourcesHandler((request, cancellationToken) =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return new ValueTask<McpProtocol.ListResourcesResult>(new McpProtocol.ListResourcesResult
-                {
-                    Resources = Array.Empty<McpProtocol.Resource>()
-                });
-            });
-            builder.WithListResourceTemplatesHandler((request, cancellationToken) =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return new ValueTask<McpProtocol.ListResourceTemplatesResult>(new McpProtocol.ListResourceTemplatesResult
-                {
-                    ResourceTemplates = Array.Empty<McpProtocol.ResourceTemplate>()
-                });
-            });
-        }
-
         [MTAThread]
         public static async Task Main(string[] args)
         {
+            if (args.Length == 0)
+            {
+                Console.Error.WriteLine("Engine usage: --engine-worker | --write-tool-catalog <path> | <CLI verb> [options]");
+                Console.Error.WriteLine("CLI verbs: gen, patch, compile, export, import, describe, prewarm, config, doctor, install-plc-tools, schema, version, help, audit.");
+                Console.Error.WriteLine("Start MCP with TiaMcp.FoundationHost.exe --release-key " + LogReleaseKey + ". Run this engine with help for CLI details.");
+                Environment.ExitCode = 64;
+                return;
+            }
             Console.OutputEncoding = new UTF8Encoding(false);
             Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
             try
@@ -127,8 +106,6 @@ namespace TiaMcpServer
                     ExportToolCatalog(options.ToolCatalogOutput);
                     return;
                 }
-                if (!options.IsolateOpennessExplicit && !options.OpennessWorkerChild && !options.EngineWorker)
-                    options.IsolateOpenness = WorkerIsolationEnabledByDefault();
 
                 // Default logging to stderr (mode 1) when the user doesn't pass --logging,
                 // so errors are visible out of the box. Users can opt out with --logging 0
@@ -403,22 +380,6 @@ namespace TiaMcpServer
                     return;
                 }
 
-                if (options.IsolateOpenness)
-                {
-                    // Parent owns protocol/diagnostics only; Openness initialization happens in the child.
-                    if (OpennessReadiness.Ready && Engineering.TiaMajorVersion >= 20)
-                        MarkUnavailableIfOpennessAssembliesMissing();
-                    Isolation.IsolatedWorkerHost.Configure(options);
-                    try
-                    {
-                        if (string.Equals(options.Transport, "http", StringComparison.OrdinalIgnoreCase)) await RunHttpHost(options);
-                        else await RunStdioHost(options);
-                    }
-                    finally { Isolation.IsolatedWorkerHost.Stop(); }
-                    return;
-                }
-                if (options.OpennessWorkerChild) Isolation.IsolatedWorkerHost.BeginChild(options);
-
                 bool opennessInitialized = false;
                 if (OpennessReadiness.Ready && Engineering.TiaMajorVersion >= 20
                     && !MarkUnavailableIfOpennessAssembliesMissing())
@@ -676,30 +637,13 @@ namespace TiaMcpServer
                         return;
                     }
 
-                    if (string.Equals(options.Transport, "http", StringComparison.OrdinalIgnoreCase))
-                    {
-                        await RunHttpHost(options);
-                    }
-                    else
-                    {
-                        await RunStdioHost(options);
-                    }
                 }
                 else
                 {
-                    if (mcpHostInvocation)
-                    {
-                        LogDiag("Starting MCP host in environment-not-ready mode.");
-                        if (string.Equals(options.Transport, "http", StringComparison.OrdinalIgnoreCase)) await RunHttpHost(options);
-                        else await RunStdioHost(options);
-                    }
-                    else
-                    {
-                        LogDiag("User is not in the required group 'Siemens TIA Openness'. Exiting.");
-                        LogDiag("FIX: " + OpennessReadiness.Guidance(false));
-                        LogDiag("Repair: " + OpennessReadiness.Guidance(false));
-                        Environment.ExitCode = 2;
-                    }
+                    LogDiag("User is not in the required group 'Siemens TIA Openness'. Exiting.");
+                    LogDiag("FIX: " + OpennessReadiness.Guidance(false));
+                    LogDiag("Repair: " + OpennessReadiness.Guidance(false));
+                    Environment.ExitCode = 2;
                 }
             }
             catch (Exception ex)
@@ -752,251 +696,6 @@ namespace TiaMcpServer
             return true;
         }
 
-        public static async Task RunStdioHost(CliOptions? options)
-        {
-            using var host = BuildStdioHost(options);
-            await host.RunAsync();
-        }
-
-        internal static IHost BuildStdioHost(CliOptions? options)
-        {
-            var builder = Host.CreateEmptyApplicationBuilder(settings: null);
-            if (options != null && options.Logging != null)
-            {
-                switch (options.Logging)
-                {
-                    case 1:
-                        // ATTENTION: For STDIO, logs must go to stderr!
-                        builder.Logging.AddConsole(options =>
-                        {
-                            options.LogToStandardErrorThreshold = LogLevel.Trace;
-                        });
-                        break;
-
-                    case 2:
-                        // Visual Studio Debug Output / Sysinternals.DebugView
-                        builder.Logging.AddDebug();
-                        builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
-                        builder.Logging.AddFilter("ModelContextProtocol", LogLevel.Information);
-                        builder.Logging.AddFilter("TiaMcpServer", LogLevel.Debug);
-
-                        // Log Level for Debug Output
-                        builder.Logging.SetMinimumLevel(LogLevel.Debug);
-                        break;
-
-                    case 3:
-                        // Windows Event Log
-                        builder.Logging.AddEventLog();
-                        break;
-
-                    default:
-                        // no logging
-                        break;
-                }
-            }
-
-            try
-            {
-                var mcp = builder.Services
-                    .AddMcpServer(o =>
-                    {
-                        // Injected into the model's context by the host at initialize time —
-                        // reaches EVERY MCP client, including ones that never load SKILL.md.
-                        o.ServerInstructions = ModelContextProtocol.McpGuides.ServerInstructions;
-                    })
-                    .WithStdioServerTransport();
-                // TIA_MCP_PROFILE=lite → only [L0]/[L1] essentials (weak models / capped hosts).
-                //
-                // 两个分支都必须先取得工具列表再走 WrapTools，保证每个工具都有参数诊断和大响应分页。
-                // 诊断必须在 SDK 参数绑定前执行；超阈值的响应必须能通过寄存句柄读取剩余内容。
-                mcp.WithTools(ModelContextProtocol.McpServer.WrapTools(
-                    ModelContextProtocol.McpServer.IsLiteProfile()
-                        ? ModelContextProtocol.McpServer.GetLiteTools()
-                        : ModelContextProtocol.McpServer.GetAllTools()));
-                ModelContextProtocol.McpPromptRegistration.Configure(mcp);
-                ConfigureResourceDiscovery(mcp);
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                LogDiag("MCP registration failed: ReflectionTypeLoadException");
-                LogDiag(ex.ToString());
-                if (ex.LoaderExceptions != null)
-                {
-                    foreach (var le in ex.LoaderExceptions)
-                    {
-                        if (le == null) continue;
-                        LogDiag("LoaderException:");
-                        LogDiag(le.ToString());
-                    }
-                }
-                throw;
-            }
-
-            // The isolated parent owns only protocol services; the child uses this same host with a session.
-            builder.Services.AddEngine(includeSession: Isolation.IsolatedWorkerHost.Current == null);
-
-            var host = builder.Build();
-
-            // Set the service provider for the MCP server, to retrieve Portal with injected logger
-            EngineServices.SetServiceProvider(host.Services);
-
-            // Set the logger for the MCP server
-            McpServer.Logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("McpServer");
-            var swallowedLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("TiaMcpServer.Swallowed");
-            // TIA_MCP_LOG_SWALLOWED=1 writes to stderr like the bridge and the workers; otherwise only Debug logging shows it.
-            TiaMcp.Shared.SwallowedExceptions.Sink = Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1"
-                ? message => Console.Error.WriteLine(message)
-                : message => swallowedLogger.LogDebug("{SwallowedException}", message);
-
-            // log a bit of information about the server start
-            if (options != null && options.Logging != null && options.Logging > 0)
-            {
-                var logger = host.Services.GetRequiredService<ILogger<Program>>();
-
-                logger.LogInformation($"=== TIA Portal MCP Server '{DateTime.Now.ToShortTimeString()}' ===");
-
-                switch (options.Logging)
-                {
-                    case 1:
-                        logger.LogInformation("Logging to stderr");
-                        break;
-                    case 2:
-                        logger.LogInformation("Logging to debug output");
-                        break;
-                    case 3:
-                        logger.LogInformation("Logging to Windows event log");
-                        break;
-                }
-            }
-
-            return host;
-        }
-
-        public static async Task RunHttpHost(CliOptions? options)
-        {
-            McpHostReadiness.Set("Initializing");
-            // Two blocking streams form the bidirectional channel between HTTP and the MCP server.
-            var httpToMcp = new McpBlockingStream();
-            var mcpToHttp = new McpBlockingStream();
-            using var transportLifetime = new CancellationTokenSource();
-
-            var mcpTask = Task.Run(async () =>
-            {
-                try
-                {
-                    using var host = BuildHttpMcpHost(options, httpToMcp, mcpToHttp);
-                    host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStarted.Register(() => McpHostReadiness.Set("Ready"));
-                    await host.RunAsync(transportLifetime.Token);
-                }
-                catch (Exception ex) when (!(ex is OperationCanceledException && transportLifetime.IsCancellationRequested))
-                {
-                    var error = ex.Message;
-                    if (!string.IsNullOrEmpty(options?.HttpApiKey)) error = error.Replace(options!.HttpApiKey!, "[REDACTED]");
-                    McpHostReadiness.Set("Failed", error);
-                    throw;
-                }
-                finally
-                {
-                    if (McpHostReadiness.Snapshot()["phase"]?.ToString() != "Failed") McpHostReadiness.Set("Stopped");
-                    mcpToHttp.CompleteWriting();
-                    transportLifetime.Cancel();
-                }
-            });
-
-            var transportTask = HttpMcpServer.Run(options, httpToMcp, mcpToHttp, LogDiag, transportLifetime.Token);
-            Exception? hostFailure = null;
-            try
-            {
-                var first = await Task.WhenAny(mcpTask, transportTask).ConfigureAwait(false);
-                if (first == mcpTask) await mcpTask.ConfigureAwait(false);
-                else await transportTask.ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (!(ex is OperationCanceledException && transportLifetime.IsCancellationRequested)) hostFailure = ex;
-            }
-            finally
-            {
-                transportLifetime.Cancel();
-                httpToMcp.CompleteWriting();
-                mcpToHttp.CompleteWriting();
-            }
-            try { await Task.WhenAll(mcpTask, transportTask).ConfigureAwait(false); }
-            catch (OperationCanceledException) when (transportLifetime.IsCancellationRequested) /* swallow(teardown): HTTP shutdown cancels the sibling MCP host */ { }
-            catch (Exception ex) { hostFailure ??= ex; }
-            if (hostFailure != null) ExceptionDispatchInfo.Capture(hostFailure).Throw();
-        }
-
-        internal static IHost BuildHttpMcpHost(CliOptions? options, McpBlockingStream httpToMcp, McpBlockingStream mcpToHttp)
-        {
-            var builder = Host.CreateEmptyApplicationBuilder(settings: null);
-            if (options?.Logging != null)
-            {
-                switch (options.Logging)
-                {
-                    case 1:
-                        builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
-                        break;
-                    case 2:
-                        builder.Logging.AddDebug();
-                        builder.Logging.SetMinimumLevel(LogLevel.Debug);
-                        break;
-                    case 3:
-                        builder.Logging.AddEventLog();
-                        break;
-                }
-            }
-
-            try
-            {
-                var mcpHttp = builder.Services
-                    .AddMcpServer(o => o.ServerInstructions = ModelContextProtocol.McpGuides.ServerInstructions)
-                    .WithStreamServerTransport(httpToMcp, mcpToHttp);
-                mcpHttp.WithTools(ModelContextProtocol.McpServer.WrapTools(
-                    ModelContextProtocol.McpServer.IsLiteProfile()
-                        ? ModelContextProtocol.McpServer.GetLiteTools()
-                        : ModelContextProtocol.McpServer.GetAllTools()));
-                ModelContextProtocol.McpPromptRegistration.Configure(mcpHttp);
-                ConfigureResourceDiscovery(mcpHttp);
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                LogMcpRegistrationFailure(ex);
-                throw;
-            }
-
-            builder.Services.AddEngine(includeSession: Isolation.IsolatedWorkerHost.Current == null);
-            var host = builder.Build();
-            ConfigureBuiltHost(host);
-            return host;
-        }
-
-        private static void ConfigureBuiltHost(IHost host)
-        {
-            EngineServices.SetServiceProvider(host.Services);
-            McpServer.Logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("McpServer");
-            var swallowedLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("TiaMcpServer.Swallowed");
-            // TIA_MCP_LOG_SWALLOWED=1 writes to stderr like the bridge and the workers; otherwise only Debug logging shows it.
-            TiaMcp.Shared.SwallowedExceptions.Sink = Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1"
-                ? message => Console.Error.WriteLine(message)
-                : message => swallowedLogger.LogDebug("{SwallowedException}", message);
-        }
-
-        private static void LogMcpRegistrationFailure(ReflectionTypeLoadException ex)
-        {
-            LogDiag("MCP registration failed: ReflectionTypeLoadException");
-            LogExceptionSafe(ex);
-            if (ex.LoaderExceptions == null) return;
-            foreach (var loaderException in ex.LoaderExceptions)
-            {
-                if (loaderException != null)
-                {
-                    LogDiag("LoaderException:");
-                    LogExceptionSafe(loaderException);
-                }
-            }
-        }
-
         private static Assembly? ResolveFromBaseDir(object? sender, ResolveEventArgs args)
         {
             try
@@ -1018,13 +717,6 @@ namespace TiaMcpServer
             {
                 return null;
             }
-        }
-
-        internal static bool WorkerIsolationEnabledByDefault(Assembly? assembly = null)
-        {
-            var marker = (assembly ?? Assembly.GetExecutingAssembly()).GetCustomAttributes<AssemblyMetadataAttribute>()
-                .FirstOrDefault(attribute => attribute.Key == "TiaMcpWorkerIsolationDefault")?.Value;
-            return string.Equals(marker, "true", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string DescribeSafely(object? exception)

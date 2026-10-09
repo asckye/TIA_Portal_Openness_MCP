@@ -24,10 +24,6 @@
       <_Parameter1>TiaMcpEngineWorkerSdkFixture</_Parameter1>
       <_Parameter2>true</_Parameter2>
     </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>TiaMcpWorkerIsolationDefault</_Parameter1>
-      <_Parameter2>$(TiaMcpWorkerIsolationDefault)</_Parameter2>
-    </AssemblyAttribute>
     <Compile Include="../Shared/LibraryToolContract.cs" Link="Shared/LibraryToolContract.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +67,10 @@
     <Compile Include="../PlcWorker/WorkerOperationModule.cs" Link="Worker/WorkerOperationModule.cs" />
     <Compile Include="../PlcWorker/WorkerFailurePolicy.cs" Link="Worker/WorkerFailurePolicy.cs" />
     <Compile Include="../PlcWorker/WorkerSessionOutcomeState.cs" Link="Worker/WorkerSessionOutcomeState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/Host/ToolDispatchLanes.cs" Link="Host/ToolDispatchLanes.cs" />
+    <Compile Include="../Shared/Host/OpennessReadinessGuard.cs" Link="Host/OpennessReadinessGuard.cs" />
   </ItemGroup>
   <Import Project="../EngineHost/EngineHostSources.props" />
   <ItemGroup>

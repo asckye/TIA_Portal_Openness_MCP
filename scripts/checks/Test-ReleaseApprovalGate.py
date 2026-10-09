@@ -3,7 +3,7 @@
 This is an offline process check. It never attaches to or connects to TIA.
 Each host process receives a private TIA_MCP_DATA_DIRECTORY and an explicit
 approval.settings file. Foundation releases do not advertise CallTool, so that
-bridge case is run for the two engine hosts and recorded as unavailable for
+bridge case is run for the two combined Foundation hosts and recorded as unavailable for
 Foundation rather than changing its public tool catalog.
 """
 from __future__ import annotations
@@ -225,7 +225,7 @@ def run_engine(args) -> dict:
     exe, portal, api = args.exe.resolve(), args.portal_root.resolve(), args.public_api.resolve()
     harness = args.host_harness.resolve() if args.host_harness else None
     require(exe.is_file() and portal.is_dir() and (harness is None or harness.is_file()) and api.is_dir(), "Engine check input is missing")
-    require(harness is not None, "The default-on approval proof must run through the TiaMcp.Engine.Harness harness")
+    require(args.engine_worker is not None and args.engine_catalog is not None, "Default-on approval requires FoundationHost with an explicit SDK-only worker and catalog")
     count = 0
     results = {}
 
@@ -266,11 +266,7 @@ def run_engine(args) -> dict:
 
     readiness_root, readiness_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-readiness", approval_enabled=None)
     with retained_on_failure(readiness_root):
-        readiness_install = readiness_root / "sdk-only-tia-install"
-        readiness_install.mkdir()
-        readiness_api = readiness_install / "PublicAPI" / f"V{args.major}"
-        readiness_api.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(api, readiness_api)
+        readiness_install = resources.sdk_only_installation(api, args.major, readiness_root)
         with resources.server(exe, readiness_install, args.major, "stdio", "full", None, api,
                               env_overrides=readiness_env) as (rpc, _, logs):
             initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
@@ -391,7 +387,7 @@ def main() -> int:
     report = run_engine(args) if args.product == "engine" else run_foundation(args)
     if report["checksPassed"] != report["checksExpected"]:
         raise CheckFailure(f"Check count mismatch: {report}")
-    report.update(resources.engine_fixture_evidence(args.engine_worker))
+    report.update(resources.engine_fixture_evidence(args.engine_worker, args.exe))
     report["status"] = "passed"
     report["approvalSettings"] = ("explicit enabled=true; timeoutSeconds=120 for approval proof; absent for real-EXE readiness proof"
                                    if args.product == "engine" else "explicit enabled=true; timeoutSeconds=120")
@@ -400,7 +396,7 @@ def main() -> int:
     report["resultPath"] = str(args.output / "result.json")
     (args.output / "result.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if args.product == "engine":
-        proof = "combined host" if args.engine_worker is not None else "harness"
+        proof = "FoundationHost with an SDK-only engine worker"
         print(f"COMPLETE: {report['checksPassed']} approval/readiness checks passed for V{args.major}; {proof} proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted")
     else:
         print(f"COMPLETE: {report['checksPassed']} default-approval checks passed across six Foundation releases; CallTool is not advertised by the Foundation V4 contract; no TIA connection attempted")

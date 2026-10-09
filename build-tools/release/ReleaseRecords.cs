@@ -153,7 +153,8 @@ internal static class ReleaseRecords
                     if (!runtime.TryGetProperty(name, out var stability) || GetString(stability, "status") != "passed" ||
                         !stability.TryGetProperty("runs", out var runs) || runs.ValueKind != JsonValueKind.Array || runs.GetArrayLength() != 4)
                         return $"V{major} validation incomplete";
-                    if (name == "isolatedLocalStability" && !GetBool(stability, "isolatedWorker")) return $"V{major} validation incomplete";
+                    if (!GetBool(stability, "isolatedWorker") || GetString(stability, "workerModel") != "combined-host-supervised-worker" ||
+                        GetString(stability, "hostSha256").Length != 64 || GetString(stability, "sdkWorkerSha256").Length != 64) return $"V{major} validation incomplete";
                 }
                 if (includes("engine-approval") && (!runtime.TryGetProperty("approvalSafety", out var approval) || GetString(approval, "status") != "passed" ||
                     GetInt(approval, "checksPassed") != 7 || !GetBool(approval, "defaultEnabled") ||

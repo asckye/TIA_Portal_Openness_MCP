@@ -211,6 +211,10 @@ def main():
                         f'V{major} extended isolated proof is not an isolated run')
                 proofs.append(isolated_extended)
         for stability in proofs:
+            require(stability.get('workerModel') == 'combined-host-supervised-worker' and stability.get('isolatedWorker') is True,
+                    f'V{major} stability proof must use FoundationHost and its session worker')
+            require(stability.get('hostSha256') == sha(files[f'runtime/v{major}/TiaMcp.FoundationHost.exe']),
+                    f'V{major} stability proof used a different Foundation host')
             require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
                     f'V{major} local stability validation missing')
             require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/worker/TiaMcp.Engine.V{major}.exe']),

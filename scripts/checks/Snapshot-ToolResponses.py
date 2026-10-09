@@ -110,7 +110,7 @@ FOUNDATION_COVERAGE_FIELDS = {'registeredTools', 'calledTools', 'directRejectedT
 
 # Safety proof for every full-engine tool, including no-argument tools:
 # ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs::WrapTools wraps both
-# profiles in VersionPolicyTool (non-isolated server; isolation is never enabled).
+# profiles in the Foundation host VersionPolicyTool.
 # McpServer.VersionPolicy.cs::InvokeAsync delegates to V4Admission/BindV4Call,
 # rejecting duplicate names BEFORE version/schema checks and inner.InvokeAsync.
 # McpServer.Profile.cs::GetAllTools/GetLiteTools supply the advertised rosters.
@@ -126,23 +126,18 @@ REJECT_ARGUMENTS = {'SnapshotReject': True, 'snapshotReject': True}
 SELF_MARKER = "CallTool cannot invoke itself. Pass the target tool's own name."
 
 
-def v4_tools(release=None, engine_source=False):
+def v4_tools(release=None):
     """Current and archived source names with V4 envelopes; preserve the reviewed masks for both capture paths.
-    With a release: the product roster, or the retired engine's own source roster for the A/B capture."""
+    With a release: the combined Foundation product roster."""
     import xml.etree.ElementTree as ET
     resource = Path(__file__).resolve().parents[2] / 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
     data = json.loads(ET.parse(resource).find(".//data[@name='Catalog']/value").text)
     if release is None:
         releases = [*data['releases'].items(), *data.get('engineSourceReleases', {}).items()]
     else:
-        releases = list((data.get('engineSourceReleases', {}) if engine_source else data['releases']).items())
+        releases = list(data['releases'].items())
     names = {row['currentName'] for key, rows in releases if release in (None, key)
              for row in rows if row.get('envelopeVersion') == 4}
-    if engine_source:
-        # The archived masks retain B1 names, whose implementations now compile
-        # only into the host. Keep admission coverage exact for the source roster.
-        names -= {tool for name, family in ported_families(resource.parents[3]).items()
-                  if name in ('F01', 'F02', 'F03') for tool in family['tools']}
     return names
 
 
@@ -733,16 +728,13 @@ def capture_release(args, release, exe, public_api):
                 else: session_write_refusal(result, name, args.packaged_no_tia)
             decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
                                        'includeProducts': False})
-            if not args.engine_source:
-                decoded('ListToolCategories', {})
-                decoded('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
-                decoded('FindTools', {'query': 'no-such-snapshot-tool', 'limit': 3})
-                decoded('PreviewToolCall', {'name': 'ListDevices', 'arguments': {}})
-                decoded('PreviewToolCall', {'name': 'ListPlcBlocks', 'arguments': {}})
+            decoded('ListToolCategories', {})
+            decoded('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
+            decoded('FindTools', {'query': 'no-such-snapshot-tool', 'limit': 3})
+            decoded('PreviewToolCall', {'name': 'ListDevices', 'arguments': {}})
+            decoded('PreviewToolCall', {'name': 'ListPlcBlocks', 'arguments': {}})
 
             for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
-                if args.engine_source and name not in registered:
-                    continue
                 result = decoded(name, arguments)
                 meta = result['meta']
                 if name == 'CheckProductUpdate':
@@ -761,12 +753,12 @@ def capture_release(args, release, exe, public_api):
             # The existing audit performs schema/operation checks and executes its
             # literal in-memory allowlist, using the same public examples as users.
             usage = check_usage(decoded, tools, release, exhaustive=True, verify_documents=False,
-                                registered_only=args.engine_source)
+                                registered_only=False)
 
             def example(name):
                 return unwrap_usage(decoded('GetToolUsage', {'toolName': name}))['example']['request']['params']['arguments']
 
-            pure_examples = [name for name in PURE_EXAMPLES if not args.engine_source or name in registered]
+            pure_examples = list(PURE_EXAMPLES)
             for name in pure_examples:
                 arguments = example(name)
                 resources.require(not arguments.get('filePath'), 'Pure example acquired a file input')
@@ -777,16 +769,16 @@ def capture_release(args, release, exe, public_api):
                 match = re.match(r'^\s*\[L1\]\[(?:Category:)?([^\]]+)\]', tool['description'])
                 if match:
                     domains.setdefault(match[1].strip(), set()).add(tool['name'])
-            resources.require(set(domains) <= set(DOMAIN_CALLS) if args.engine_host or args.engine_source else set(domains) == set(DOMAIN_CALLS),
+            resources.require(set(domains) <= set(DOMAIN_CALLS) if args.engine_host else set(domains) == set(DOMAIN_CALLS),
                               'L1 taxonomy changed; review offline domain representatives')
             domain_calls = dict(DOMAIN_CALLS)
             if 'GetExportContent' in domains.get('Exports', set()):
                 domain_calls['Exports'] = 'GetExportContent'
             for domain, name in sorted(domain_calls.items()):
-                if (args.engine_host or args.engine_source) and (domain not in domains or name not in domains[domain]):
+                if (args.engine_host) and (domain not in domains or name not in domains[domain]):
                     # Shared Foundation descriptions use the V19 taxonomy. Their
                     # explicit safe calls above and admission sweep cover them;
-                    # B1 representatives are absent from the retired source server.
+                    # Shared host admission probes cover each combined entry.
                     continue
                 resources.require(name in domains[domain], name + ' moved out of its L1 domain')
                 call(name, example(name))
@@ -800,21 +792,19 @@ def capture_release(args, release, exe, public_api):
             # Unknown argument, wrong JSON type, and missing required argument.
             # Safe targets ensure even a diagnostic regression cannot attach TIA.
             call('GetSessionState', {'unknownParameter': True})
-            if not args.engine_source:
-                call('FindTools', {'query': 'PLC', 'limit': {'wrong': 'type'}})
+            call('FindTools', {'query': 'PLC', 'limit': {'wrong': 'type'}})
             call('BuildPlcUdt', {})
             if release == '20':
                 for name in V21_ONLY:
                     call(name, {})
-                    if not args.engine_source:
-                        decoded('PreviewToolCall', {'name': name, 'arguments': {}})
-                        call('CallTool', {'name': name, 'arguments': {}})
+                    decoded('PreviewToolCall', {'name': name, 'arguments': {}})
+                    call('CallTool', {'name': name, 'arguments': {}})
 
             behavior_calls = sorted({entry['tool'] for entry in entries.values()} & registered)
             selected_operations = sorted({(entry['tool'], str(entry['arguments'][key]))
                 for entry in entries.values() for key in ('action', 'operation')
                 if key in entry['arguments'] and entry['tool'] != 'GetToolUsage'})
-            resources.require(registered == v4_tools(release, args.engine_source), 'Every full-engine entry must have a generated V4 contract')
+            resources.require(registered == v4_tools(release), 'Every full-engine entry must have a generated V4 contract')
             for name in sorted(registered):
                 reply = call(name, REJECT_ARGUMENTS)
                 # Invalid-argument probes keep their ordinary V4 rejection;
@@ -830,7 +820,7 @@ def capture_release(args, release, exe, public_api):
                     'usageTools': usage['checkedToolCount'], 'usageOperations': usage['operationExampleCount'],
                     'offlineExamples': sorted(usage['offlineCallExamplesExecuted'] + pure_examples),
                     'l1Domains': {domain: name for domain, name in domain_calls.items()
-                                  if not args.engine_source or domain in domains and name in domains[domain]}}}
+                                  }}}
         resources.require(not any('Invocation journal unavailable' in line for line in logs),
                           'Invocation journal failed during capture')
         server = (contracts.engine_host_server(args, release, portal_root, 'lite', env) if args.engine_host
@@ -838,23 +828,6 @@ def capture_release(args, release, exe, public_api):
                               args.harness.resolve() if args.harness else None, public_api, env_overrides=env))
         with server as (rpc, _, logs):
             lite = initialize(rpc)
-            if args.engine_source:
-                # CallTool moved with B1. The retired server's lite profile now
-                # advertises native tools directly; probe every advertised entry.
-                lite_names = {tool['name'] for tool in lite}
-                resources.require('CallTool' not in lite_names and lite_names <= registered,
-                                  'Unexpected engine-source lite roster')
-                lite_call = recorder(rpc, entries, 'lite', release)
-                for name in sorted(lite_names):
-                    v4_rejection(lite_call(name, REJECT_ARGUMENTS), name)
-                snapshot['coverage'].update(bridgeRejectedTools=[], bridgeSelfGuardTools=[],
-                    bridgeSkipped={name: 'CallTool belongs to the host; engine-source lite advertises tools directly.'
-                                   for name in sorted(registered)},
-                    liteAdvertisedTools=sorted(lite_names))
-                resources.require(not any('Invocation journal unavailable' in line for line in logs),
-                                  'Invocation journal failed during source lite capture')
-                snapshot['calls'] = [compact(entries[key], args.include_text_evidence) for key in sorted(entries)]
-                return snapshot
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
             bridge = recorder(rpc, entries, 'lite', release)
             for name in sorted(registered):
@@ -952,9 +925,9 @@ def capture(args):
     snapshots = {}
     requested_host = args.engine_host
     for release in args.releases:
-        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'worker/TiaMcp.Engine.V{release}.exe' if args.engine_source and release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcp.FoundationHost.exe')
         if release in FULL_RELEASES:
-            args.engine_host = requested_host or (None if args.engine_source else exe)
+            args.engine_host = requested_host or exe
             api = None if args.packaged_no_tia else api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if api is not None and release == '21':
                 api /= 'net48'
@@ -1580,7 +1553,6 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', required=True, type=Path)
-    capture_parser.add_argument('--engine-source', action='store_true', help='A/B capture through the retired engine host')
     capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost with SDK fixture workers')
     capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')

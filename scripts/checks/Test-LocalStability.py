@@ -25,7 +25,7 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[2]
 TARGET_DISPATCHERS = {'calltool', 'runreadonlytoolbatch', 'previewtoolbatch', 'applytoolbatch'}
 LOCAL_LANE_BOUND = 8
-WORKER_PIPE_BOUND = 8  # OpennessWorkerSupervisor forwarding gate
+WORKER_PIPE_BOUND = 8  # Foundation host worker forwarding bound
 
 
 def openness_lane_classifier():
@@ -188,6 +188,8 @@ def run_profile(args, transport, profile, run_dir):
     source = run_dir / 'soak.s7dcl'
     source.write_text('FUNCTION "Soak" : Void\nBEGIN\nEND_FUNCTION\n', encoding='utf-8-sig')
     diagnostics = run_dir / 'diagnostics'
+    data = run_dir / 'data'; config = data / 'config'; config.mkdir(parents=True)
+    (config / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=1\n', encoding='utf-8')
     owned = []
     latencies, samples, worker_samples = [], [], []
     worker_process = None
@@ -195,9 +197,10 @@ def run_profile(args, transport, profile, run_dir):
     sequence = 0
     started = time.monotonic()
     with resources.server(args.exe, args.public_api, args.major, transport, profile,
-            args.host_harness, args.public_api, process_observer=owned.append, isolate=args.isolate_openness,
+            args.host_harness, args.public_api, process_observer=owned.append,
             evidence_directory=run_dir, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog,
-            env_overrides={'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
+            env_overrides={'TIA_MCP_DATA_DIRECTORY': str(data.resolve()),
+                           'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
                            'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics)}) as (rpc, http, logs):
         hello = rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {},
                     'clientInfo': {'name': 'local-stability', 'version': '1'}})
@@ -206,7 +209,7 @@ def run_profile(args, transport, profile, run_dir):
         roster = rpc('tools/list', 'roster')['result']['tools']
         names = {item['name'] for item in roster}
         require(len(names) == len(roster), 'Duplicate registered tools')
-        # The engine's own roster: the product roster (ToolProfiles) is FoundationHost's since P7-04,
+        # Foundation owns the product roster and the first profile probe fixes its count,
         # so the first run of each profile sets the count every later run must keep.
         key = 'full_tool_count' if profile == 'full' else 'lite_tool_count'
         if getattr(args, key) is None: setattr(args, key, len(names))
@@ -276,12 +279,11 @@ def run_profile(args, transport, profile, run_dir):
         for index, case in enumerate(scenario):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))
-        if args.isolate_openness or args.engine_worker is not None:
-            state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
-            worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker) if args.engine_worker is not None else state['workerPid']
-            require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
-            worker_process = SimpleNamespace(pid=worker_pid)
-            worker_samples.append(process_sample(worker_process))
+        state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
+        worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker) if args.engine_worker is not None else state['workerPid']
+        require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
+        worker_process = SimpleNamespace(pid=worker_pid)
+        worker_samples.append(process_sample(worker_process))
         concurrency = args.concurrency if transport == 'http' else 1
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
             for batch in range(args.rounds):
@@ -385,8 +387,6 @@ def run_profile(args, transport, profile, run_dir):
         child_calls = {(row['id'], row['tool']) for _, row in projections
                        if row['mcpProcessId'] == worker_process.pid}
         require(forwarded and forwarded <= child_calls, 'Host/child invocation correlation lost')
-    elif args.isolate_openness:
-        require(forwarded and forwarded <= executed, 'Host/child invocation correlation lost')
     log_text = ''.join(logs)
     (run_dir / 'host-stderr.log').write_text(log_text, encoding='utf-8')
     ordered = sorted(latencies)
@@ -405,14 +405,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exe', type=Path, required=True)
     parser.add_argument('--public-api', type=Path, required=True)
-    parser.add_argument('--host-harness', type=Path, required=True)
-    parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
-    parser.add_argument('--engine-catalog', type=Path)
+    parser.add_argument('--host-harness', type=Path, help='Compatibility hash evidence; no engine MCP host is started')
+    parser.add_argument('--engine-worker', type=Path, required=True, help='Explicit SDK-only worker for the combined net10 host')
+    parser.add_argument('--engine-catalog', type=Path, required=True)
     parser.add_argument('--major', type=int, choices=(20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--transports', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
     parser.add_argument('--concurrency', type=int, default=8)
-    parser.add_argument('--isolate-openness', action='store_true', help='Exercise the supervised child host; still no TIA initialization/connection')
     parser.add_argument('--full-tool-count', type=int, default=None, help="Defaults to the engine's own roster from the first run")
     parser.add_argument('--lite-tool-count', type=int, default=None)
     parser.add_argument('--max-private-mib', type=int, default=512)
@@ -421,16 +420,16 @@ def main():
     args = parser.parse_args()
     require(os.name == 'nt', 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
-    for name in ('exe', 'public_api', 'host_harness', 'output'):
+    for name in ('exe', 'public_api', 'output'):
         setattr(args, name, getattr(args, name).resolve())
     args.output.mkdir(parents=True, exist_ok=False)
     report = {'schemaVersion': 1, 'major': args.major, 'startedAtUtc': datetime.now(timezone.utc).isoformat(),
-        'runtimeSha256': sha(args.exe), 'harnessSha256': sha(args.host_harness), 'scriptSha256': sha(Path(__file__)),
+        'runtimeSha256': sha(args.exe), 'harnessSha256': sha(args.host_harness) if args.host_harness else None, 'scriptSha256': sha(Path(__file__)),
         'resourceHelperSha256': sha(Path(resources.__file__)),
         'scope': 'Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.',
-        'rounds': args.rounds, 'isolatedWorker': args.isolate_openness or args.engine_worker is not None,
-        'workerModel': 'combined-host-supervised-worker' if args.engine_worker is not None else 'engine-protocol-harness', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
-    report.update(resources.engine_fixture_evidence(args.engine_worker))
+        'rounds': args.rounds, 'isolatedWorker': True,
+        'workerModel': 'combined-host-supervised-worker', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
+    report.update(resources.engine_fixture_evidence(args.engine_worker, args.exe))
     try:
         for transport in args.transports:
             for profile in ('full', 'lite'):

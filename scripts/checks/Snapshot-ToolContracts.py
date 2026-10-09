@@ -228,10 +228,10 @@ def capture(args):
         fixture_root.mkdir()
     requested_host = args.engine_host
     for release in args.releases:
-        exe = executables.get(release, root / 'runtime' / ('v' + release) / (f'worker/TiaMcp.Engine.V{release}.exe' if args.engine_source and release in ('20', '21') else 'TiaMcp.FoundationHost.exe'))
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcp.FoundationHost.exe')
         snapshot = {'formatVersion': FORMAT_VERSION, 'release': release}
         if release in ('20', '21'):
-            args.engine_host = requested_host or (None if args.engine_source else exe)
+            args.engine_host = requested_host or exe
             public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if release == '21':
                 public_api /= 'net48'
@@ -578,8 +578,7 @@ def main():
     commands.add_parser('self-test', help='Exercise capability/output/schema negative cases').set_defaults(run=self_test)
     capture_parser = commands.add_parser('capture')
     capture_parser.add_argument('--repo-root', type=Path, required=True)
-    capture_parser.add_argument('--engine-source', action='store_true', help='A/B capture through the retired engine host')
-    capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through the opt-in FoundationHost')
+    capture_parser.add_argument('--engine-host', type=Path, help='Capture 20/21 through FoundationHost')
     capture_parser.add_argument('--engine-worker', action='append', default=[], metavar='RELEASE=PATH', help='SDK fixture engine worker built with TiaMcpEngineWorkerSdkFixture=true')
     capture_parser.add_argument('--engine-catalog', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--transport', choices=('stdio', 'http'), default='stdio', help='EngineHost transport')

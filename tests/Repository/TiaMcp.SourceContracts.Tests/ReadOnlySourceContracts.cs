@@ -38,7 +38,7 @@ public sealed class ReadOnlySourceContracts
         var pairs = MatchingPairs.Find(tokens);
         var cursor = doctor.IndexOf("if (!Runtime.OpennessReadiness.Ready)", StringComparison.Ordinal);
         var branches = new List<string>();
-        foreach (var marker in new[] { "if (!Runtime.OpennessReadiness.Ready)", "else if (isolatedParent)", "else if (fix)", "else" })
+        foreach (var marker in new[] { "if (!Runtime.OpennessReadiness.Ready)", "else if (fix)", "else" })
         {
             Assert.StartsWith(marker, doctor[cursor..]);
             var opening = Enumerable.Range(0, tokens.Count).First(i => tokens[i].OffsetStart >= cursor + marker.Length && tokens[i].Value == "{");
@@ -49,8 +49,7 @@ public sealed class ReadOnlySourceContracts
         }
         Contains(branches[0], "Runtime.OpennessReadiness.GroupOk == true");
         Excludes(branches[0], "ReadOpennessGroup(", "ReadPortalState(");
-        Excludes(branches[1], "ReadOpennessGroup(");
-        Contains(branches[2], "await ReadOpennessGroup(fix: true)"); Contains(branches[3], "await ReadOpennessGroup(fix: false)");
+        Contains(branches[1], "await ReadOpennessGroup(fix: true)"); Contains(branches[2], "await ReadOpennessGroup(fix: false)");
         Count(doctor, "ReadOpennessGroup(", 2); Count(doctor, "ReadPortalState()", 1);
         Contains(EngineSources.BlockAfter(doctor, "if (Runtime.OpennessReadiness.Ready)"), "ReadPortalState()");
         Contains(doctorGroup, "HostToolServices.Observe(fix ? \"group.fix\" : \"group\", new JsonObject())"); Excludes(doctorGroup, "Siemens.Openness.");
@@ -75,24 +74,23 @@ public sealed class ReadOnlySourceContracts
         Assert.Matches(@"\A\s*\{\s*return Api\.Global\.Openness\(\)\.IsUserInGroup\(\);\s*\}\s*\z", Sources.Member("IsUserInGroupNoFix", bodyOnly: true));
     }
     [Fact]
-    public void DiagnosticStartupKeepsMcpAvailableAndNonMcpExitExplicit()
+    public void DiagnosticStartupKeepsWorkerAvailableAndNonWorkerExitExplicit()
     {
         var source = Sources.Member("Main");
-        Contains(source, "OpennessReadiness.Ready", "OpennessReadiness.MarkUnavailable", "if (mcpHostInvocation)", "Starting MCP host in environment-not-ready mode.", "await RunHttpHost(options)", "await RunStdioHost(options)", "User is not in the required group 'Siemens TIA Openness'. Exiting.", "Environment.ExitCode = 2;", "OpennessReadiness.Guidance(false)");
+        Contains(source, "OpennessReadiness.Ready", "OpennessReadiness.MarkUnavailable", "if (options.EngineWorker)", "Worker.EngineWorkerHost.Run();", "Engine usage:", "Environment.ExitCode = 64;", "User is not in the required group 'Siemens TIA Openness'. Exiting.", "Environment.ExitCode = 2;", "OpennessReadiness.Guidance(false)");
         Assert.DoesNotMatch(@"Openness\.IsUserInGroup\s*\(", source);
     }
     [Fact]
     public void PromptContainersAreExplicitCompleteAndFatalOnLoadFailure()
     {
-        var stdio = Sources.Member("BuildStdioHost");
-        var program = stdio + Sources.Member("BuildHttpMcpHost");
+        var program = Read("src/FoundationHost/EngineReleaseHost.cs");
         var registration = Sources.TypeText("McpPromptRegistration");
+        var pipeline = Read("src/EngineHost/EngineHostPipeline.cs");
         Excludes(Sources.AllText(), "WithPromptsFromAssembly(", "WithToolsFromAssembly failed:");
-        Count(program, "ModelContextProtocol.McpPromptRegistration.Configure(mcp);", 1); Count(program, "ModelContextProtocol.McpPromptRegistration.Configure(mcpHttp);", 1);
-        Contains(program, "MCP registration failed: ReflectionTypeLoadException");
-        Contains(EngineSources.BlockAfter(stdio, "catch (ReflectionTypeLoadException ex)"), "throw;", "ex.LoaderExceptions");
+        Count(program, "pipeline.RegisterHandlers(mcp);", 1); Count(program, "probe.RegisterHandlers(mcp);", 1);
+        Contains(pipeline, "McpPromptRegistration.Configure(builder)");
         Excludes(registration, "catch", "GetTypes("); Contains(registration, "builder.WithPrompts(new[] {");
-        Contains(Sources.Member("RunHttpHost"), "Task.WhenAny(mcpTask, transportTask)", "Task.WhenAll(mcpTask, transportTask)", "BuildHttpMcpHost(options, httpToMcp, mcpToHttp)");
+        Contains(program, "WithStdioServerTransport()", "WithHttpTransport(", "WorkerShutdown.StopAll");
         Contains(Sources.Member("Main"), "Environment.ExitCode = 70;", "throw;");
         var containers = new List<string>(); var promptCount = 0;
         foreach (var text in Sources.Sources.Values)

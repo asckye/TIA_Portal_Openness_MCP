@@ -22,12 +22,12 @@ public sealed partial class VersionCatalogWiring
     private static string[] Split(string source, string separator, int limit = int.MaxValue) => source.Split(new[] { separator }, limit == int.MaxValue ? limit : limit + 1, StringSplitOptions.None);
 
     [Fact]
-    public void PolicyWrapsDirectAndIsolatedDispatch()
+    public void PolicyWrapsFoundationDispatch()
     {
         var wiring = Sources.Member("WrapTools");
-        Assert.Contains("Isolation.IsolatedWorkerHost.Wrap(tools)", wiring, StringComparison.Ordinal);
+        Assert.DoesNotContain("IsolatedWorkerHost", wiring, StringComparison.Ordinal);
         Assert.Contains("WrapWithSerializedCalls(WrapWithResponseGuard(tools))", wiring, StringComparison.Ordinal);
-        Assert.Contains("WrapWithVersionPolicy(Isolation.OpennessReadinessGuard.Wrap(guarded))", wiring, StringComparison.Ordinal);
+        Assert.Contains("WrapWithVersionPolicy(Dispatch.OpennessReadinessGuard.Wrap(guarded))", wiring, StringComparison.Ordinal);
         var wrapper = Sources.Member("InvokeAsync", owner: "VersionPolicyTool");
         Assert.True(Find(wrapper, "V4Admission") < Find(wrapper, "return inner.InvokeAsync"));
         Assert.DoesNotContain("VersionCallProblem", wrapper, StringComparison.Ordinal);

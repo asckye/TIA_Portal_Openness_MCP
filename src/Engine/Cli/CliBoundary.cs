@@ -11,7 +11,7 @@ namespace TiaMcpServer.Cli
     {
         private static readonly string[] Tools = { "gen", "patch", "compile", "export", "import", "describe" };
         private static readonly string[] Commands = { "gen", "patch", "compile", "export", "import", "describe", "prewarm", "config", "doctor", "install-plc-tools", "schema", "version", "help", "--help", "-h", "audit" };
-        private static readonly string[] Values = { "--plc", "--out", "--block", "--from", "--host", "--python", "--environment-path", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--worker-timeout-seconds" };
+        private static readonly string[] Values = { "--plc", "--out", "--block", "--from", "--host", "--python", "--environment-path", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile" };
         private static string Canonical(string option) => new[] { "-tia-major-version", "-tia-portal-location", "-profile", "-logging", "-with-ui" }.Contains(option.ToLowerInvariant()) ? "-" + option : option;
 
         internal static bool IsTool(string[] args) => args.Length > 0 && Tools.Contains(args[0].ToLowerInvariant());
@@ -42,7 +42,7 @@ namespace TiaMcpServer.Cli
                 return;
             }
             var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            allowed.UnionWith(new[] { "--with-ui", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--full", "--lite", "--isolate-openness", "--no-isolate-openness", "--worker-timeout-seconds" });
+            allowed.UnionWith(new[] { "--with-ui", "--tia-portal-location", "--tia-version", "--tia-major-version", "--logging", "--profile", "--full", "--lite" });
             switch (verb)
             {
                 case "gen": allowed.UnionWith(new[] { "--dry-run", "--json" }); break;
@@ -80,7 +80,7 @@ namespace TiaMcpServer.Cli
             foreach (string required in verb == "export" ? new[] { "--out", "--block" } : verb == "import" ? new[] { "--from" } : Array.Empty<string>())
                 if (!seen.Contains(required)) throw new ArgumentException(verb + " requires " + required + ".");
             if (seen.Contains("--full") && seen.Contains("--lite")) throw new ArgumentException("--full and --lite conflict.");
-            // The shared parser owns version selection and worker timeout validation.
+            // The shared parser owns version selection validation.
             CliOptions.ParseArgs(args);
         }
 

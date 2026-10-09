@@ -8,17 +8,8 @@ namespace TiaMcpServer
         // Tool roster: "lite" (default) or "full" (everything).
         // null = not given on the command line; TIA_MCP_PROFILE then decides.
         public string? Profile { get; set; }
-        public string? Transport { get; set; } // "stdio" (default) or "http"
-        public string? HttpPrefix { get; set; } // e.g. "http://127.0.0.1:8765/"
-        public string? HttpApiKey { get; set; } // optional X-API-Key header value
-        public bool IsolateOpenness { get; set; }
-        internal bool IsolateOpennessExplicit { get; private set; }
-        public int WorkerTimeoutSeconds { get; set; } = 120;
         public bool EngineWorker { get; set; }
         public string? ToolCatalogOutput { get; set; }
-        internal bool OpennessWorkerChild { get; set; }
-        internal int WorkerParentPid { get; set; }
-        internal long WorkerParentStart { get; set; }
         public bool RunFlowLightTest { get; set; }
         public bool FixCurrentFlowBinding { get; set; }
         public bool ProbeS71200Device { get; set; }
@@ -185,19 +176,10 @@ namespace TiaMcpServer
                         options.WorkspaceRoot = args[i];
                         options.RequireWorkspaceRoot();
                         break;
-                    case "--isolate-openness": options.IsolateOpenness = true; options.IsolateOpennessExplicit = true; break;
-                    case "--no-isolate-openness": options.IsolateOpenness = false; options.IsolateOpennessExplicit = true; break;
-                    case "--openness-worker-child": options.OpennessWorkerChild = true; break;
-                    case "--worker-timeout-seconds":
-                        if (++i >= args.Length || !int.TryParse(args[i], out int workerTimeout) || workerTimeout < 10 || workerTimeout > 180)
-                            throw new System.ArgumentException("--worker-timeout-seconds must be 10..180 (below the HTTP transport deadline).");
-                        options.WorkerTimeoutSeconds = workerTimeout; break;
-                    case "--worker-parent-pid":
-                        if (++i >= args.Length || !int.TryParse(args[i], out int parentPid) || parentPid <= 0) throw new System.ArgumentException("Invalid worker parent PID.");
-                        options.WorkerParentPid = parentPid; break;
-                    case "--worker-parent-start":
-                        if (++i >= args.Length || !long.TryParse(args[i], out long parentStart) || parentStart <= 0) throw new System.ArgumentException("Invalid worker parent identity.");
-                        options.WorkerParentStart = parentStart; break;
+                    case "--isolate-openness": case "--no-isolate-openness": case "--openness-worker-child":
+                    case "--worker-parent-pid": case "--worker-parent-start": case "--worker-timeout-seconds":
+                    case "--transport": case "--http-prefix": case "--http-api-key":
+                        throw new System.ArgumentException("Engine MCP host modes have retired. Start TiaMcp.FoundationHost.exe --release-key <20|21>.");
                     case "-tia-major-version":
                     case "--tia-major-version":
                     case "--tia-version":
@@ -820,33 +802,9 @@ namespace TiaMcpServer
                         options.ToolCatalogOutput = args[i];
                         break;
 
-                    case "--transport":
-                        if (i + 1 < args.Length)
-                        {
-                            options.Transport = args[i + 1].ToLowerInvariant();
-                            i++;
-                        }
-                        break;
-
-                    case "--http-prefix":
-                        if (i + 1 < args.Length)
-                        {
-                            options.HttpPrefix = args[i + 1];
-                            i++;
-                        }
-                        break;
-
-                    case "--http-api-key":
-                        if (i + 1 < args.Length)
-                        {
-                            options.HttpApiKey = args[i + 1];
-                            i++;
-                        }
-                        break;
                 }
             }
-            if (options.IsolateOpenness && options.OpennessWorkerChild) throw new System.ArgumentException("A worker cannot supervise another worker.");
-            if (options.EngineWorker && (options.IsolateOpenness || options.OpennessWorkerChild || options.ToolCatalogOutput != null))
+            if (options.EngineWorker && (options.ToolCatalogOutput != null))
                 throw new System.ArgumentException("Engine worker mode cannot be combined with another worker mode or catalog export.");
             return options;
         }
