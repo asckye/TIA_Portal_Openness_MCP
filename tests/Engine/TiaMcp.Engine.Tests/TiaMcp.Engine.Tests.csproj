@@ -198,4 +198,11 @@
     <Compile Include="../../../src/Updater/Updater.cs" Link="Updater/Updater.cs" />
     <Compile Include="../../../src/Updater/UpdaterText.cs" Link="Updater/UpdaterText.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
+    <Compile Include="../../../src/Shared/DeclaredToolMetadata.cs" Link="Shared/DeclaredToolMetadata.cs" />
+    <Compile Include="../../../src/Shared/PortedToolDeclarations.cs" Link="Shared/PortedToolDeclarations.cs" />
+    <Compile Include="../../../src/Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/HardwareAddressingService.cs" Link="Shared/HardwareAddressingService.cs" /></ItemGroup>
 </Project>

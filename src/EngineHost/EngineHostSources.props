@@ -1,5 +1,10 @@
 <Project>
   <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DeclaredToolMetadata.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PortedToolDeclarations.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressingService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareToolContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ToolDescriptor.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/McpServer.Approval.cs" />

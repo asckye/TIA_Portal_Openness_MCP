@@ -87,8 +87,10 @@ public sealed class BehaviorCapabilityTests
                 Assert.Equal(BehaviorPolicy.Current, V4Json.Deserialize<Envelope>(McpResult.From(body).Content[0].Text).Meta.BehaviorPolicy);
             }
             if (release is "20" or "21") continue;
-            var definition = FoundationTools.Definitions.Single(d => FoundationV4Tool.Name(d.Name) == name);
-            var tool = new FoundationV4Tool(new FoundationTool(definition, worker), release);
+            var implementation = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                ? PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == name)
+                : new FoundationTool(FoundationTools.Definitions.Single(d => FoundationV4Tool.Name(d.Name) == name), worker);
+            var tool = new FoundationV4Tool(implementation, release);
             Assert.Contains("behaviorPolicy=current", tool.ProtocolTool.Description);
             Assert.Contains("V4 native acceptance is pending", tool.ProtocolTool.Description);
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {

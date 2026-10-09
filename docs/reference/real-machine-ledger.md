@@ -157,6 +157,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
 | 14sp1 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
 | 14sp1 | P6-FALLBACK | current | NOT RUN | — |
+| 14sp1 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 15.1 | P6-DEVICE | current | NOT RUN | — |
 | 15.1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
 | 15.1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
@@ -165,6 +166,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
 | 15.1 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
 | 15.1 | P6-FALLBACK | current | NOT RUN | — |
+| 15.1 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 16 | P6-DEVICE | current | NOT RUN | — |
 | 16 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
 | 16 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
@@ -173,6 +175,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
 | 16 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
 | 16 | P6-FALLBACK | current | NOT RUN | — |
+| 16 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 17 | P6-DEVICE | current | NOT RUN | — |
 | 17 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
 | 17 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
@@ -181,6 +184,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
 | 17 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
 | 17 | P6-FALLBACK | current | NOT RUN | — |
+| 17 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 18 | P6-DEVICE | current | NOT RUN | — |
 | 18 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
 | 18 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
@@ -189,6 +193,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
 | 18 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
 | 18 | P6-FALLBACK | current | NOT RUN | — |
+| 18 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 19 | P6-DEVICE | current | NOT RUN | CreateHardwareDevice |
 | 19 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcType |
 | 19 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
@@ -197,6 +202,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, PlanPlcExternalSourceImport |
 | 19 | P6-COMPILE | current | NOT RUN | CompilePlcDiagnostics, CompilePlcSoftware |
 | 19 | P6-FALLBACK | current | NOT RUN | — |
+| 19 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 20 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 20 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlockDocuments, ImportPlcBlocksDocuments, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 20 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |

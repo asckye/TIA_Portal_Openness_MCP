@@ -9,6 +9,8 @@ import json
 import pathlib
 import re
 import sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'checks'))
+from ported_families import additions as ported_additions
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -53,10 +55,12 @@ def load_mapping(old_by_key, new_by_key):
         actual = tuple(key for key in KEYS if name in new_by_key[key])
         if mapping[name] != name or declared_keys[name] != actual:
             fail(f"{name}: non-archived mapping row is not a V4-only entry.")
+    ported_by_key = {key: ported_additions(ROOT, key) for key in KEYS}
     for old_name in sorted(archived_names):
         actual = tuple(key for key in KEYS if old_name in old_by_key[key])
-        if declared_keys[old_name] != actual:
-            fail(f"{old_name}: mapping availability {declared_keys[old_name]} != 3.x archive {actual}.")
+        expected = tuple(key for key in KEYS if key in actual or mapping[old_name] in ported_by_key[key])
+        if declared_keys[old_name] != expected:
+            fail(f"{old_name}: mapping availability {declared_keys[old_name]} != archive + reviewed ports {expected}.")
     return {name: mapping[name] for name in archived_names}
 
 

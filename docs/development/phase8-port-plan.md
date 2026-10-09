@@ -52,7 +52,7 @@
 | F16 | 软件单元与 PLC 完整性（校验和/指纹/写保护） | 5/6 | R3 W3 | worker6 | ManagePlcBlockWriteProtection | SoftwareUnitDeepTools, SoftwareUnitManagementTools | Svc/SoftwareUnitDeepService, Portal/Portal.SoftwareUnitDeep, Svc/SoftwareUnitManagementService |
 | F17 | 设备与 HMI 编译 | 2/2 | X2 | worker2 | — | HardwareServicesTools, HmiDescribeTools | Portal/Portal.CompileCandidate, Tools/PlcCompilation |
 | F18 | 硬件设备、模块、属性、设备分组与硬件服务 | 19/19 | R8 W9 F2 | worker19 | — | DevicesTools, HardwareManagementTools, HardwareNetworkTools, HardwareServicesTools, ModulesTools | Svc/DevicesService, Portal/Portal.Devices, Svc/ModulesService, Svc/HardwareManagementService, Svc/HardwareServicesService, Portal/Portal.HardwareServices, DeviceServiceObjectRules, HardwareUtilityRules |
-| F19 | 硬件地址（IO/IP/HW 标识） | 5/5 | R3 W2 | worker5 | — | AddressesTools | Svc/AddressesService |
+| F19 | 硬件地址（IO/IP/HW 标识），P8-02 已迁 | 5/5 | R3 W2 | Foundation adapter5 | — | [共享声明](../../src/Shared/HardwareAddressTools.cs) | [HardwareAddressing](../../src/Adapters/Native/Hardware/HardwareAddressing.cs)；原 AddressesService 已删除 |
 | F20 | 网络：子网、IO 系统、拓扑、域、通道、传输区、通信连接 | 17/19 | R9 W9 Off1 | worker19 | ListCommunicationConnections, ManageCommunicationConnection | HardwareNetworkTools, HardwareServicesTools | Svc/HardwareNetworkService, Portal/Portal.HardwareNetwork |
 | F21 | CAx / AutomationML 设备交换 | 3/3 | F2 Off1 | worker3 | — | HardwareAmlTools | Svc/HardwareAmlService |
 | F22 | 在线、下载、上传、在线比较与在线数据 | 15/15 | R2 F2 On8 OnW3 | worker15 | — | NativeExchangeTools, OnlineDownloadTools, PlcBlocksTools | Svc/OnlineDownloadService, Svc/OnlineDownloadService.FallbackCandidate, Portal/Portal.Download, Tools/OnlineToolPolicy |
@@ -293,13 +293,35 @@ P8-02 在样板族上应确定并留下的框架（其余批次照抄）：
 | 引擎删除 | 同一 PR 删除该族工具声明、服务、Portal partial 与只被其使用的帮助代码 |
 | 旧版启用 | 每族一个行为族条目（`current / NOT RUN`），按第 2 节逐版开关；partial 动作在原生调用前返回 `UNSUPPORTED_CAPABILITY` |
 
+### 5.1 P8-02 已建成的框架与 P8-03 操作顺序
+
+F19 的五个工具已在八版启用。V20/V21 走 engine worker 的 MTA `adapter.hardware-addressing.*` 通道；14sp1–19 走 PlcWorker 的 STA 通道，行为保持 `current / NOT RUN`。G9/G10 由审查者在 VM 验收；迁移前的表格和计数仍是 P8-01 的调查口径。
+
+| 后续族需修改的文件 | 已建成的机制 |
+|---|---|
+| `src/Shared/<Family>Tools.cs`、`PortedToolDeclarations.cs`、`DeclaredToolMetadata.cs` | 无 Siemens 依赖的声明保留原签名、描述、schema hint；共享反射生成工具与描述符。引擎 `ToolCatalogExport` 先排除 `PortedFamilies`，`EngineCatalog` 在检查原引擎所有权后加入共享声明并按原 ordinal 顺序排序。full/lite 名单保持原定义 |
+| `src/Adapters.Contracts/PortedFamilies.cs` | 唯一的显式族/操作前缀/发布键/工具表；宿主、worker 和 Python roster 检查共同读取。可选 action 表只允许显式列出的发布键，拒绝发生在 ReadState 和任何原生调用前 |
+| `src/FoundationHost/PortedToolContract.cs`、`src/Shared/<Family>Service.cs`、`<Family>Contract.cs` | 使用现有参数预算、预检、审批和会话 lane；本族 typed RPC service 创建目标，共享映射保留 V4 信封、读回与未知结果证据。F19 对应 `HardwareAddressingService`、`HardwareToolContract`，宿主 `HardwareAddressingWire` 拒绝畸形回复 |
+| `src/Adapters/Native/Hardware/<Family>.cs`、`<Family>Policy.cs`、`src/Adapters.Contracts/<Family>Contracts.cs` | 原生调用与纯逻辑分开；DTO 只包含托管值。F19 的共用定位、owner path、地址行、属性写入/读回位于 `HardwareObjectLocation.cs`、`HardwareAddressPrimitives.cs`；适配器不引用 JSON 库 |
+| `src/Adapters/build/Adapter.Sources.props`、`src/Shared/TiaFeatures.props` | 每个源文件显式注册；过程映像分支为 `PLC_ADDRESS_PROCESS_IMAGE_SERVICE`（21），属性批量写的 delegate 分支为 `PLC_ATTRIBUTE_DELEGATE`（18–21）。14sp1–17 的 SDK 无 delegate 重载，逐属性写入并保留拒绝与读回证据；八版真实 SDK 编译和 PE 元数据检查覆盖两组分支 |
+| `src/PlcWorker/WorkerOperations.cs`、`WorkerOperationModule.cs`、`FoundationWorkerDispatcher.cs` | 每族注册精确操作名单；模块拒绝缺失、静态、继承和重复方法。旧 67 个操作及候选操作保持原名称；reply 统一实现 `IWorkerOperationReply`，携带 reset/change/read-block 标志 |
+| `src/Engine/WorkerMode/EngineWorkerHost.cs`、Engine/Host/Tests 的 Compile 链接 | 20/21 复用原共享会话的 IsProjectNull、edit access、GetBlock、RunHmiStepTool 钩子，保持原生调用与线程归属；IO 保留原项目绑定检查，IP 保留服务和 GetDevice 的两次检查。族写入的公共预检核对缓存身份，原步骤仍在原位置检查原生绑定，避免额外读取 Project.Path 或引入 PLC local-session 限制。旧版及旧操作继续使用原身份检查。删除该族原引擎服务，跨族仍需使用的帮助方法保留 |
+| `src/Logic/ModelContextProtocol/ToolExecution.cs`、生成器与 `reference/tool-examples/calls.json` | 所有权设为 foundation。旧版 roster = 冻结 v3 + 已评审 P6 增量 + 本表启用族；生成旧版行为族和示例，使用生成器和 capture 工具更新输出，禁止手改冻结 v3 与哈希 |
+| `tests/Adapters`、`tests/FoundationHost`、API compile checks、`tests/test-suites.json` | policy、DTO golden/往返、精确模块分发、宿主/引擎映射和真实 SDK 分支证据；最低通过数只提高，跳过上限不变。每批执行第 6 节闸门并列出生成文件逐行 diff |
+
+F19 原生比较：核心加被内联的三个共享调用点为 V20 32、V21 34；连同共用定位/读回原语为 **107 / 109**，Siemens 成员多重集相等，核心方法内调用顺序相同。迁移前八版适配器边界全部保留，新增边界只属于 F19。共享 JSON 映射和遍历包装不作为 Siemens 成员引用计数；两端完整 weave/verify 清单另行保留。
+
+属性证据在适配器内转换为标量，枚举等值保持原字符串格式；复杂或引用属性由现有 optional-failure 记录报告，不把原生对象带过 worker 边界。标准地址属性的标量值保留原格式；实际设备的属性类型与复杂属性表现仍需 G9/G10 核对。
+
+`legacy-host-passive-diagnostics-v1` 的 InitializeEnvironment/RunCapabilitySelfTest 必须报告实际完整注册名单和行为族，包括已迁移族；不能为保留旧快照而过滤工具。迁移族报告主 `wiredOperation` 及完整 `wiredOperations`（含预览、后备读取和托管会话状态读取），结构检查核对每个操作的模块 allow-list。P8-02-followup2 授权重新捕获受影响的诊断 response 记录；其余记录及 V20/V21 完整引擎快照保持不变，后续族沿用此真实性边界。
+
 ## 6. 每批验收方式
 
 | 闸门 | 内容 | 通过标准 |
 |---|---|---|
 | G1 V20/V21 契约零差异 | 同一构建捕获两次（`Snapshot-ToolContracts.py`），比对 `manifest/contracts/v4/baseline/20.json`、`21.json` | 逐字节一致（tools、inputSchema、descriptionSha256、liteTools、behaviorCapabilities）；不手改哈希 |
 | G2 V20/V21 响应零差异 | `Snapshot-ToolResponses.py`（sdk-only-fixture）比对 `responses/20.json`、`21.json` | 已迁工具的直接拒绝、桥接拒绝、`GetToolUsage` 摘要与离线行为调用逐字节一致（V20 当前 2044 次调用，420 个独有工具全部有调用） |
-| G3 旧版契约增量 | 14sp1–19 基线只新增被启用的工具记录与响应调用 | 原 62–67 个工具记录不变；新增逐条评审 |
+| G3 旧版契约增量 | 14sp1–19 基线新增被启用的工具记录与响应调用；P8-02-followup2 另授权修正两个完整名单诊断的成功响应 | 原工具契约和其他响应记录不变；新增与授权诊断变化逐条评审 |
 | G4 实现归属与删除 | `ToolExecution` 所有者变更；引擎中该族声明、服务、Portal partial 删除；`EngineCatalog` 所有权检查通过 | 引擎源码不再包含该族工具名的实现 |
 | G5 原生调用清单守恒 | 用 `NativeCallWeaver` 的 inventory/verify：该族 Siemens 成员引用多重集“原引擎 = 新适配器”（V20/V21）；旧版适配器只增该族成员 | 与 `src/Adapters/README.md` Studio 迁移相同的逐站点比较，无未解释差异 |
 | G6 单元与夹具 | Policy 纯逻辑测试（net10）、DTO golden JSON（`TiaMcp.Adapters.Contracts.Tests`）、worker 白名单/分发、两类主机一致性用例（P6-65）、每个版本差异分支至少一例 | `Test-DotnetSuites.py` 最低数只升不降（`tests/test-suites.json`） |

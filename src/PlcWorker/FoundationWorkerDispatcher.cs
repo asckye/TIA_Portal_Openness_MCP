@@ -41,13 +41,19 @@ namespace TiaMcp.PlcWorker
             bool sessionCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-SESSION");
             bool importCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-IMPORT");
             bool exportCandidateEnabled = TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-EXPORT");
-            methods = typeof(PlcFoundationEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(m => WorkerOperations.Names.Contains(m.Name) || deviceCandidateEnabled && m.Name == WorkerOperations.DeviceCreationCandidate
-                    || importCandidateEnabled && m.Name == WorkerOperations.PlcImportCandidate
-                    || exportCandidateEnabled && m.Name == WorkerOperations.PlcExportCandidate
-                    || sessionCandidateEnabled && m.Name == WorkerOperations.SessionCandidate
-                    || saveCloseCandidateEnabled && m.Name == WorkerOperations.SaveCloseCandidate || sourceCandidateEnabled && m.Name == WorkerOperations.SourceCandidate || compileCandidateEnabled && m.Name == WorkerOperations.CompileCandidate).ToDictionary(m => m.Name, StringComparer.Ordinal);
-            if(methods.Count!=WorkerOperations.Names.Count + (deviceCandidateEnabled ? 1 : 0) + (importCandidateEnabled ? 1 : 0) + (exportCandidateEnabled ? 1 : 0) + (sessionCandidateEnabled ? 1 : 0) + (saveCloseCandidateEnabled ? 1 : 0) + (sourceCandidateEnabled ? 1 : 0) + (compileCandidateEnabled ? 1 : 0)) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
+            var names = WorkerOperations.Names.Concat(new[] {
+                deviceCandidateEnabled ? WorkerOperations.DeviceCreationCandidate : null,
+                importCandidateEnabled ? WorkerOperations.PlcImportCandidate : null,
+                exportCandidateEnabled ? WorkerOperations.PlcExportCandidate : null,
+                sessionCandidateEnabled ? WorkerOperations.SessionCandidate : null,
+                saveCloseCandidateEnabled ? WorkerOperations.SaveCloseCandidate : null,
+                sourceCandidateEnabled ? WorkerOperations.SourceCandidate : null,
+                compileCandidateEnabled ? WorkerOperations.CompileCandidate : null
+            }.Where(n => n != null).Select(n => n!));
+            var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), names) };
+            foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
+                modules.Add(new WorkerOperationModule(family.OperationPrefix, typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));
+            methods = WorkerOperationModule.Register(modules);
         }
         internal ChannelBinding Observe()
         {
@@ -94,7 +100,8 @@ namespace TiaMcp.PlcWorker
                         MutationIdentityPolicy.ValidateTarget(false,confirm.GetBoolean(),expected.GetString()!,name,releaseKey,
                             WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
                             WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
-                            WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",engine.RequireProjectIdentity);
+                            WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",
+                            WorkerOperations.MutationIdentity(name,engine.RequireProjectIdentity,engine.SharedFamilyMutationIdentity));
                     }
                     catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
                 }
@@ -103,21 +110,8 @@ namespace TiaMcp.PlcWorker
                 enteredOperation=true;
                 if(name=="Disconnect") disconnectAttempted=true;
                 var result = method.Invoke(engine, call);
-                if (result is TiaMcp.Adapters.Contracts.Candidates.DeviceCandidateReply deviceCandidate && deviceCandidate.RequiresSessionReset
-                    || result is TiaMcp.Adapters.Contracts.Candidates.ImportCandidateReply importCandidate && importCandidate.RequiresSessionReset
-                    || result is TiaMcp.Adapters.Contracts.Candidates.ExportCandidateReply exportCandidate && exportCandidate.RequiresSessionReset
-                    || result is TiaMcp.Adapters.Contracts.Candidates.SessionCandidateReply sessionCandidate && sessionCandidate.RequiresSessionReset
-                    || result is TiaMcp.Adapters.Contracts.Candidates.SaveCloseReply saveCloseCandidate && saveCloseCandidate.RequiresSessionReset || result is TiaMcp.Adapters.Contracts.Candidates.SourceReply sourceCandidate && sourceCandidate.RequiresSessionReset || result is TiaMcp.Adapters.Contracts.Candidates.CompileReply compileCandidate && compileCandidate.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
-                if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
-                if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcExternalSourceDeleteResult deleted && deleted.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcExternalSourceWorkflowResult source && source.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcBatchDocumentExportResult documents && documents.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcDocumentExportResult document && document.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcSpecialExportResult special && special.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcBatchExportResult batch && batch.RequiresSessionReset) sessionOutcome.MarkUncertain();
-                if(result is PlcBatchImportResult imported && imported.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                if (result is IWorkerOperationReply reply && reply.RequiresSessionReset)
+                    sessionOutcome.MarkUncertain(blockReads: reply.BlockReadsAfterUncertain);
                 if (result is TiaMcp.Adapters.Contracts.Candidates.SaveCloseReply closeReply && closeReply.Attempt?.Issued == true
                     && (string?)values["candidate"].GetProperty("Check").GetProperty("Request").GetProperty("Action").GetString() == "disconnect")
                 { disconnectAttempted = true; disconnected = closeReply.Attempt.Fault == null; }

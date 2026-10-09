@@ -138,9 +138,9 @@ internal sealed partial class FoundationTool : McpServerTool
         }
     }
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)
-        => InvokeCoreAsync(request, cancellationToken);
+        => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken);
     internal ValueTask<CallToolResult> InvokeV4Async(RequestContext<CallToolRequestParams> request, string release, string id, CancellationToken cancellationToken)
-        => InvokeCoreAsync(request, cancellationToken, release, id);
+        => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken, release, id);
     internal async ValueTask<CallToolResult> InvokeDeviceCandidateAsync(IReadOnlyDictionary<string, JsonElement> args, string release, string id, CancellationToken cancellationToken)
     {
         var values = new JsonObject();
@@ -225,7 +225,7 @@ internal sealed partial class FoundationTool : McpServerTool
         (worker as IFoundationSessionWorker)?.MarkUncertain();
     }
     internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)
-        => ReadArguments(arguments, new JsonObject());
+    { if (portedMethod == null) ReadArguments(arguments, new JsonObject()); }
     private void ReadArguments(IReadOnlyDictionary<string, JsonElement>? arguments, JsonObject values)
     {
         if(arguments != null) foreach(var pair in arguments!)

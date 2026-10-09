@@ -90,6 +90,13 @@ internal sealed class FoundationV4Tool : McpServerTool
             && (policyForTest?.Invoke("P6-SOURCE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SOURCE")) == BehaviorPolicy.SafeV4;
         compileCandidate = CompileContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-COMPILE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-COMPILE")) == BehaviorPolicy.SafeV4;
+        if (inner is FoundationTool { Ported: true })
+        {
+            tool = new Tool { Name = source.Name, Title = source.Title,
+                Description = source.Description + " Native behaviorPolicy=current; V4 native acceptance is pending.",
+                InputSchema = source.InputSchema, OutputSchema = source.OutputSchema, Annotations = source.Annotations, Meta = source.Meta };
+            return;
+        }
         var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
         var properties = schema["properties"]!.AsObject();
         JsonElement? typedSchema = null;

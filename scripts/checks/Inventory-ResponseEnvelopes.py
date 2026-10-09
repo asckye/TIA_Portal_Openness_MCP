@@ -81,8 +81,8 @@ def method_ranges(tokens, pairs):
 
 
 def builder_ranges(tokens, pairs):
-    # Only the central builder is exempt from the *hand-written* ratchet. Match
-    # its qualified type, not its path, so moving it cannot alter the allowance.
+    # Central envelope/evidence builders remain in the inventory. Match their
+    # qualified owner, not their path, so moving them cannot alter the allowance.
     namespace = ''
     ranges = []
     for i, token in enumerate(tokens):
@@ -92,6 +92,14 @@ def builder_ranges(tokens, pairs):
         if (namespace == 'TiaMcpServer.ModelContextProtocol' and token.value == 'class'
                 and [t.value for t in tokens[i + 1:i + 3]] == ['ResponseMeta', '{']):
             ranges.append((i + 2, pairs[i + 2]))
+        if (namespace == 'TiaMcp.Adapters' and token.value == 'class'
+                and [t.value for t in tokens[i + 1:i + 3]] == ['PlcFoundationEngine', '{']):
+            # This worker-only Dictionary evidence preserves the released step
+            # wrapper on old releases. It does not construct an MCP envelope;
+            # Check-AdapterBoundary separately forbids JSON in this layer.
+            for lo, hi, name in method_ranges(tokens, pairs):
+                if i + 2 < lo < hi < pairs[i + 2] and name == 'RunHardwareAddressStep':
+                    ranges.append((lo, hi))
     return ranges
 
 
@@ -352,6 +360,16 @@ class SelfTests(unittest.TestCase):
         self.assertEqual(1, counts['success_assignments'])
         self.assertEqual(0, handwritten['success_assignments'])
         self.assertEqual(1, scan_tokens(lexer.Lexer('namespace Other { ' + source + ' }').scan()[0])[1]['success_assignments'])
+
+    def test_worker_evidence_builder_is_qualified_and_method_bounded(self):
+        source = '''class PlcFoundationEngine {
+            private HardwareAddressingReply RunHardwareAddressStep() { meta["success"] = false; return reply; }
+            private void Other() { meta["success"] = true; }
+        }'''
+        counts, written = scan_tokens(lexer.Lexer('namespace TiaMcp.Adapters { ' + source + ' }').scan()[0])
+        self.assertEqual(2, counts['success_assignments'])
+        self.assertEqual(1, written['success_assignments'])
+        self.assertEqual(2, scan_tokens(lexer.Lexer('namespace Other { ' + source + ' }').scan()[0])[1]['success_assignments'])
 
     def test_move_exclusions_and_determinism(self):
         with lexer.scratch_directory() as root:

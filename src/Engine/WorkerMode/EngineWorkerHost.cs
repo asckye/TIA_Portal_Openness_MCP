@@ -87,6 +87,30 @@ namespace TiaMcpServer.Worker
             foundationDispatch = new FoundationWorkerDispatcher(foundation, typeof(EngineWorkerHost).Assembly,
                 error => { _ = PortalFailureClassifier.IsPortalProcessLost(error); });
             portal = (Portal)EngineServices.Get(typeof(Portal));
+            var engineering = (IEngineeringSession)portal;
+            foundation.AcquireEngineeringEditAccess = engineering.AcquireHmiEditAccess;
+            foundation.EngineeringProjectMissing = engineering.IsProjectNull;
+            foundation.ResolveEngineeringBlock = (software, block) => engineering.GetBlock(software, block);
+            // The shared binding and host lane already capture the target. Its
+            // original engineering step performs native binding checks at the
+            // original point; do not add Project.Path reads or PLC local-session
+            // restrictions to a migrated engineering operation.
+            foundation.SharedFamilyMutationIdentity = expected => TiaMcp.Adapters.MutationIdentityPolicy.RequireSameProject(expected, foundation.ReadState().ProjectFile);
+            foundation.EngineeringStep = (tool, action) => {
+                var step = engineering.RunHmiStepTool(tool, meta => {
+                    var values = meta.ToDictionary(p => p.Key, p => (object?)p.Value);
+                    try { return action(values); }
+                    catch (TiaMcp.Adapters.Contracts.HardwareAddressingException failure)
+                    { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), failure.Status), failure.Message); }
+                    finally { foreach (var pair in values) meta[pair.Key] = pair.Value is JsonNode node ? node.DeepClone() : JsonSerializer.SerializeToNode(pair.Value); }
+                });
+                return new TiaMcp.Adapters.Contracts.HardwareAddressingReply {
+                    Message = step.Message, Meta = step.Meta.ToDictionary(p => p.Key, p =>
+                        p.Value is JsonValue value && value.TryGetValue<bool>(out var flag) ? (object?)flag : p.Value),
+                    RequiresSessionReset = (bool?)step.Meta["connectionUnavailable"] == true
+                        || (bool?)step.Meta["mayHaveChanged"] == true && step.Meta["after"] == null
+                };
+            };
             lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {
                 nativeFault = reason;
                 // Keep the original attachment solely for an owner-thread recovery
@@ -102,6 +126,13 @@ namespace TiaMcpServer.Worker
             portal.UseSharedLifecycle(lifecycle, () => {
                 foundation.Disconnect(); foundationDispatch.EndSharedSession();
             });
+            HardwareAddressWorkerBridge.HasProject = () => !string.IsNullOrEmpty(foundation.ReadState().ProjectFile);
+            HardwareAddressWorkerBridge.ProjectIdentity = () => foundation.ReadState().ProjectFile;
+            HardwareAddressWorkerBridge.Call = (operation, arguments) => {
+                var response = DispatchFoundation(new ChannelRequest(0, "adapter." + operation, arguments.ToJsonString(), (_, __) => { }, InvocationJournal.CorrelationId));
+                if (response.Failure != null) throw new InvalidOperationException(response.Failure.Message);
+                return JsonNode.Parse(response.ResultJson);
+            };
             RefreshFromFoundation();
         }
 
@@ -189,8 +220,11 @@ namespace TiaMcpServer.Worker
                     nativeFault ??= response.Failure?.Message ?? TiaOpenness.Shared.SessionBehavior.Recovery;
                     foundationDispatch.SessionOutcome.MarkUncertain();
                     lifecycle!.Lock(nativeFault);
-                    response = ChannelResponse.Error(new ChannelFailure(nativeFault, -32603, ChannelOutcome.Unknown,
-                        response.Failure?.EvidenceJson ?? "null"));
+                    // A typed family reply retains before/after evidence while the
+                    // shared session is latched. Channel failures have no such reply.
+                    if (response.Failure != null || !WorkerOperations.IsFamilyOperation(request.Method.Substring("adapter.".Length)))
+                        response = ChannelResponse.Error(new ChannelFailure(nativeFault, -32603, ChannelOutcome.Unknown,
+                            response.Failure?.EvidenceJson ?? "null"));
                 }
                 else if (response.Failure != null && reserved)
                 {

@@ -38,8 +38,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public string Action { get; set; } = "observe";
         public SaveCloseCheck? Check { get; set; }
     }
-    public sealed class SaveCloseReply
+    public sealed class SaveCloseReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.Issued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public SaveCloseObservation? Observation { get; set; }
         public SaveCloseAttempt? Attempt { get; set; }
         public CandidateFault? Fault { get; set; }

@@ -70,8 +70,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public PlcExportRequest Request { get; set; } = new PlcExportRequest();
         public PlcExportCheck? Check { get; set; }
     }
-    public sealed class ExportCandidateReply
+    public sealed class ExportCandidateReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.Issued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public CandidateIdentity? Identity { get; set; }
         public PlcExportObject[]? Objects { get; set; }
         public bool OverwriteSupported { get; set; }

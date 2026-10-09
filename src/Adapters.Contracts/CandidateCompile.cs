@@ -75,8 +75,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public CompileCheck? Check { get; set; }
         public string Password { get; set; } = "";
     }
-    public sealed class CompileReply
+    public sealed class CompileReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.CompileIssued == true || Attempt?.LoginIssued == true || Attempt?.LogoutIssued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public CompileObservation? Observation { get; set; }
         public CompileAttempt? Attempt { get; set; }
         public CandidateFault? Fault { get; set; }

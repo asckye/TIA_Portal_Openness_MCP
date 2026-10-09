@@ -33,10 +33,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Renders one tool's signature the way the model needs to call it through CallTool.</summary>
         // Keep infrastructure parameters out of bridge signatures and argument binding.
-        internal static bool IsInfrastructureParameter(Type type)
-            => type.Name == "IMcpServer" || (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("RequestContext", StringComparison.Ordinal))
-               || (type.Namespace != null && type.Namespace.StartsWith("ModelContextProtocol", StringComparison.Ordinal));
-
         private static string RenderSignature(string name, MethodInfo m)
         {
             var parts = new List<string>();
@@ -314,28 +310,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static McpServerTool CreateInProcessTool(string name, MethodInfo method, out ToolDescriptor descriptor)
         {
-            var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
-            var description = attribute?.Description ?? "";
-            var decorated = method.GetCustomAttribute<TiaMcp.Logic.V4.BehaviorCandidateAttribute>() != null
-                ? description + TiaOpenness.Shared.ToolUsageCatalog.Hint(name)
-                : ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
-            var tool = ReferenceEquals(decorated, description) || decorated == description
-                ? ToolCatalog.CreateTool(method)
-                : ToolCatalog.CreateTool(method, new McpServerToolCreateOptions { Name = name, Description = decorated });
-            // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
-            var hinted = WithSchemaHints(tool, name, SpecsOf(method), (schema, original) => PreserveTypedSchemas(schema, original, method));
-            var specs = SpecsOf(method);
-            var parameters = method.GetParameters().Where(p => !IsInfrastructureParameter(p.ParameterType)).Select((p, i) =>
-                new ToolParameterDescriptor(p.Name!, specs[i].Kind, p.ParameterType.FullName!, specs[i].Required, specs[i].DefaultText,
-                    p.DefaultValue?.ToString(), specs[i].Description, specs[i].Synthesized, specs[i].AllowedValues)).ToArray();
-            var classification = ClassificationOf(method);
-            var dryRun = method.GetParameters().FirstOrDefault(p => p.Name == "dryRun" && p.ParameterType == typeof(bool));
-            descriptor = new ToolDescriptor(name, description, hinted.ProtocolTool, classification == null ? null :
-                new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification.BatchWrite),
-                RenderSignature(name, method), parameters, new ToolDryRunDescriptor(dryRun != null,
-                    dryRun?.DefaultValue is not bool value || value), method.GetCustomAttribute<BehaviorCandidateAttribute>()?.Family,
-                ToolExecution.Table.TryGetValue(name, out var execution) ? execution : "worker");
-            return new InfrastructureInputTool(hinted, descriptor, (arguments, schema) => ValidateReflectedArguments(method, arguments, schema));
+            var tool = DeclaredToolMetadata.Create(name, method, request =>
+                request.Services?.GetService(method.DeclaringType!) ?? EngineServices.Get(method.DeclaringType!), out descriptor);
+            return new InfrastructureInputTool(tool, descriptor, (arguments, schema) => ValidateReflectedArguments(method, arguments, schema));
         }
 
     }

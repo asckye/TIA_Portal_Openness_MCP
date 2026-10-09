@@ -4,8 +4,10 @@ using System.Linq;
 
 namespace TiaMcp.Adapters
 {
-    public sealed class PlcSpecialExportResult
+    public sealed class PlcSpecialExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || RequiresSessionReset;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; set; }
         public string ProjectFile { get; set; } = "";
         public string SoftwarePath { get; set; } = "";

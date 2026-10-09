@@ -13,8 +13,10 @@ namespace TiaMcp.Adapters
         public string Status { get; set; } = "planned";
         public string[] Files { get; set; } = new string[0];
     }
-    public sealed class PlcBatchDocumentExportResult
+    public sealed class PlcBatchDocumentExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || RequiresSessionReset;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; set; }
         public string ReleaseKey { get; set; } = "";
         public string ProjectFile { get; set; } = "";

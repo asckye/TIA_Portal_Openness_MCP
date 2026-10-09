@@ -58,6 +58,7 @@ def registered_rosters(root=ROOT):
     """Source registrations, never stale build outputs or generated profile data."""
     sys.path.insert(0, str(root / 'scripts/checks'))
     import engine_sources
+    import ported_families
     engine = engine_sources.EngineSources(root)
     targets = appendix_names(root)
     additions = new_v4_tools(root)
@@ -68,6 +69,10 @@ def registered_rosters(root=ROOT):
         for key in entry['releases']:
             assert name not in {t['name'] for t in baseline[key]}, ('New tool exists in 3.x', name)
             baseline[key].append({'name': name})
+    ported = {key: ported_families.additions(root, key) for key in baseline}
+    targets.update({name: name for names in ported.values() for name in names})
+    for key in tuple(baseline)[:6]:
+        baseline[key].extend({'name': name} for name in sorted(ported[key]))
     full = set()
     for source in engine.sources.values():
         full.update(re.findall(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source))
@@ -97,7 +102,7 @@ def registered_rosters(root=ROOT):
                     and not (response == 'SpecialExport' and major < 16)
                     and not (response in ('DocumentExport', 'BatchDocumentExport', 'DocumentImport', 'BatchDocumentImport') and major < 20)
                     and not (n in ('GetPlcWatchTables', 'ListPlcWatchTables') and key == '14sp1')}
-        registered = {host_map.get(n, n) for n in accepted | helpers}
+        registered = {host_map.get(n, n) for n in accepted | helpers} | ported[key]
         resolve_names([t['name'] for t in baseline[key]], registered, targets)
         rosters[key] = registered
     policy = (root / 'src/EngineHost/SharedToolCatalog.cs').read_text('utf-8')
@@ -377,6 +382,22 @@ def generate():
 
 
 class RosterTests(unittest.TestCase):
+    def test_ported_roster_keeps_optional_action_switches(self):
+        sys.path.insert(0, str(ROOT / 'scripts/checks'))
+        import ported_families
+        rows = ported_families.parse('''new Family("test", "test", new[] { "20", "21" },
+            new[] { "Tool" }, new Dictionary<string, string[]> { ["write"] = new[] { "21" } })''')
+        self.assertEqual(["20", "21"], rows["test"]["releases"])
+        self.assertEqual(["Tool"], rows["test"]["tools"])
+
+    def test_ported_roster_refuses_unparsed_and_duplicate_rows(self):
+        sys.path.insert(0, str(ROOT / 'scripts/checks'))
+        import ported_families
+        row = 'new Family("test", "test", new[] { "20" }, new[] { "Tool" })'
+        for source in (row + row, row + 'new Family("other", "other", releases, tools)'):
+            with self.subTest(source=source), self.assertRaises(AssertionError):
+                ported_families.parse(source)
+
     def test_retest_lessons(self):
         validate_retest_examples(read(ROOT / 'reference/tool-examples/calls.json'),
                                  read(ROOT / 'reference/tool-examples/sequences.json'),

@@ -94,8 +94,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public SourceRequest Request { get; set; } = new SourceRequest();
         public SourceCheck? Check { get; set; }
     }
-    public sealed class SourceReply
+    public sealed class SourceReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.Issued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public SourceObservation? Observation { get; set; }
         public SourceAttempt? Attempt { get; set; }
         public string[] PathCandidates { get; set; } = Array.Empty<string>();

@@ -35,8 +35,10 @@ namespace TiaMcp.Adapters
         public string Path { get; internal set; } = "";
         public string Error { get; internal set; } = "";
     }
-    public sealed class PlcBatchImportResult
+    public sealed class PlcBatchImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Items.Any(x => x.Attempted);
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; internal set; }
         public string ProjectFile { get; internal set; } = "";
         public string SoftwarePath { get; internal set; } = "";

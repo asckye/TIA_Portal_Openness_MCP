@@ -9,6 +9,11 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDelete.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressing.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressingSteps.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressPrimitives.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareObjectLocation.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcHardwareCatalog.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/BindingSnapshotContract.cs" />

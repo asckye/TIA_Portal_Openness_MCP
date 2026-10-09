@@ -3347,6 +3347,18 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
       }
     ],
     "15.1": [
@@ -3426,6 +3438,18 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
       }
     ],
     "16": [
@@ -3505,6 +3529,18 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
       }
     ],
     "17": [
@@ -3584,6 +3620,18 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
       }
     ],
     "18": [
@@ -3663,6 +3711,18 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
       }
     ],
     "19": [
@@ -3744,6 +3804,18 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
       }
     ],
     "20": [

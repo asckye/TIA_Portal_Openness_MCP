@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 62,
+      "toolCount": 67,
       "tools": [
         "AttachOpenProject",
         "BuildFlgNetCall",
@@ -34,6 +34,9 @@
         "ExportPlcType",
         "ExportPlcTypes",
         "GenerateBlocksFromExternalSource",
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -68,12 +71,14 @@
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress",
         "StageImportFiles"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 63,
+      "toolCount": 68,
       "tools": [
         "AttachOpenProject",
         "BuildFlgNetCall",
@@ -102,6 +107,9 @@
         "ExportPlcType",
         "ExportPlcTypes",
         "GenerateBlocksFromExternalSource",
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -137,12 +145,14 @@
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress",
         "StageImportFiles"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 65,
+      "toolCount": 70,
       "tools": [
         "AttachOpenProject",
         "BuildFlgNetCall",
@@ -173,6 +183,9 @@
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -208,12 +221,14 @@
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress",
         "StageImportFiles"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 65,
+      "toolCount": 70,
       "tools": [
         "AttachOpenProject",
         "BuildFlgNetCall",
@@ -244,6 +259,9 @@
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -279,12 +297,14 @@
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress",
         "StageImportFiles"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 65,
+      "toolCount": 70,
       "tools": [
         "AttachOpenProject",
         "BuildFlgNetCall",
@@ -315,6 +335,9 @@
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -350,12 +373,14 @@
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress",
         "StageImportFiles"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 67,
+      "toolCount": 72,
       "tools": [
         "AttachOpenProject",
         "BuildFlgNetCall",
@@ -387,6 +412,9 @@
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -423,6 +451,8 @@
         "RunCapabilitySelfTest",
         "SaveProject",
         "SearchHardwareCatalog",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress",
         "StageImportFiles"
       ]
     },
@@ -1425,8 +1455,8 @@
     }
   },
   "groupCounts": {
-    "shared-subset": 425,
-    "all-releases": 62,
+    "shared-subset": 420,
+    "all-releases": 67,
     "release-only": 11
   },
   "tools": [
@@ -3035,10 +3065,16 @@
     {
       "name": "GetDeviceAddressing",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3062,10 +3098,16 @@
     {
       "name": "GetDeviceIpAddress",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3080,10 +3122,16 @@
     {
       "name": "GetDeviceItemIoAddresses",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5943,10 +5991,16 @@
     {
       "name": "SetDeviceAddress",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5970,10 +6024,16 @@
     {
       "name": "SetDeviceItemIoAddress",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

@@ -401,6 +401,42 @@
       "releaseKey": "21",
       "state": "current",
       "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
     }
   ],
   "behaviorEntries": [
@@ -3636,6 +3672,324 @@
         "refreshReadHandle": false,
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceAddressing",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceIpAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceItemIoAddresses",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetDeviceAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "ioType": "None",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetDeviceItemIoAddress",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "ioType": "Input",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceAddressing",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceIpAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceItemIoAddresses",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetDeviceAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "ioType": "None",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetDeviceItemIoAddress",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "ioType": "Input",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceAddressing",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceIpAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceItemIoAddresses",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetDeviceAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "ioType": "None",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetDeviceItemIoAddress",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "ioType": "Input",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceAddressing",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceIpAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceItemIoAddresses",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetDeviceAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "ioType": "None",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetDeviceItemIoAddress",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "ioType": "Input",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceAddressing",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceIpAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceItemIoAddresses",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetDeviceAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "ioType": "None",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetDeviceItemIoAddress",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "ioType": "Input",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceAddressing",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceIpAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceItemIoAddresses",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetDeviceAddress",
+      "family": "F19",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "ioType": "None",
+        "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetDeviceItemIoAddress",
+      "family": "F19",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "ioType": "Input",
+        "startAddress": 1,
+        "dryRun": true
       }
     },
     {
@@ -19855,6 +20209,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceIpAddress",
+        "currentName": "GetDeviceIpAddress",
+        "sourceName": "GetDeviceIpAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemIoAddresses",
+        "currentName": "GetDeviceItemIoAddresses",
+        "sourceName": "GetDeviceItemIoAddresses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -20159,6 +20537,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
+        "sourceName": "ReadDeviceAddressing",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -20251,6 +20643,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetDeviceItemIoAddress",
+        "currentName": "SetDeviceItemIoAddress",
+        "sourceName": "SetDeviceItemIoAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "ioType": "Input",
+          "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -20265,6 +20672,26 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceAddress",
+        "currentName": "SetDeviceAddress",
+        "sourceName": "UpdateDeviceAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "ioType": "None",
+          "startAddress": 1,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -20826,6 +21253,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceIpAddress",
+        "currentName": "GetDeviceIpAddress",
+        "sourceName": "GetDeviceIpAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemIoAddresses",
+        "currentName": "GetDeviceItemIoAddresses",
+        "sourceName": "GetDeviceItemIoAddresses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -21142,6 +21593,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
+        "sourceName": "ReadDeviceAddressing",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -21234,6 +21699,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetDeviceItemIoAddress",
+        "currentName": "SetDeviceItemIoAddress",
+        "sourceName": "SetDeviceItemIoAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "ioType": "Input",
+          "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -21248,6 +21728,26 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceAddress",
+        "currentName": "SetDeviceAddress",
+        "sourceName": "UpdateDeviceAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "ioType": "None",
+          "startAddress": 1,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -21841,6 +22341,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceIpAddress",
+        "currentName": "GetDeviceIpAddress",
+        "sourceName": "GetDeviceIpAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemIoAddresses",
+        "currentName": "GetDeviceItemIoAddresses",
+        "sourceName": "GetDeviceItemIoAddresses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -22157,6 +22681,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
+        "sourceName": "ReadDeviceAddressing",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -22249,6 +22787,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetDeviceItemIoAddress",
+        "currentName": "SetDeviceItemIoAddress",
+        "sourceName": "SetDeviceItemIoAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "ioType": "Input",
+          "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -22263,6 +22816,26 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceAddress",
+        "currentName": "SetDeviceAddress",
+        "sourceName": "UpdateDeviceAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "ioType": "None",
+          "startAddress": 1,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -22856,6 +23429,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceIpAddress",
+        "currentName": "GetDeviceIpAddress",
+        "sourceName": "GetDeviceIpAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemIoAddresses",
+        "currentName": "GetDeviceItemIoAddresses",
+        "sourceName": "GetDeviceItemIoAddresses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -23172,6 +23769,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
+        "sourceName": "ReadDeviceAddressing",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -23264,6 +23875,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetDeviceItemIoAddress",
+        "currentName": "SetDeviceItemIoAddress",
+        "sourceName": "SetDeviceItemIoAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "ioType": "Input",
+          "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -23278,6 +23904,26 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceAddress",
+        "currentName": "SetDeviceAddress",
+        "sourceName": "UpdateDeviceAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "ioType": "None",
+          "startAddress": 1,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -23871,6 +24517,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceIpAddress",
+        "currentName": "GetDeviceIpAddress",
+        "sourceName": "GetDeviceIpAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemIoAddresses",
+        "currentName": "GetDeviceItemIoAddresses",
+        "sourceName": "GetDeviceItemIoAddresses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -24187,6 +24857,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
+        "sourceName": "ReadDeviceAddressing",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -24279,6 +24963,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetDeviceItemIoAddress",
+        "currentName": "SetDeviceItemIoAddress",
+        "sourceName": "SetDeviceItemIoAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "ioType": "Input",
+          "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -24293,6 +24992,26 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceAddress",
+        "currentName": "SetDeviceAddress",
+        "sourceName": "UpdateDeviceAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "ioType": "None",
+          "startAddress": 1,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -24903,6 +25622,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceIpAddress",
+        "currentName": "GetDeviceIpAddress",
+        "sourceName": "GetDeviceIpAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemIoAddresses",
+        "currentName": "GetDeviceItemIoAddresses",
+        "sourceName": "GetDeviceItemIoAddresses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -25219,6 +25962,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAddressing",
+        "currentName": "GetDeviceAddressing",
+        "sourceName": "ReadDeviceAddressing",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -25323,6 +26080,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetDeviceItemIoAddress",
+        "currentName": "SetDeviceItemIoAddress",
+        "sourceName": "SetDeviceItemIoAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "ioType": "Input",
+          "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -25337,6 +26109,26 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceAddress",
+        "currentName": "SetDeviceAddress",
+        "sourceName": "UpdateDeviceAddress",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "ioType": "None",
+          "startAddress": 1,
           "dryRun": true
         },
         "envelopeVersion": 4

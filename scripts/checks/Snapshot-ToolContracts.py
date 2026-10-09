@@ -745,6 +745,10 @@ def current_parameters(root):
         if 'Dry()' in line:
             fields.update(dryRun=True, confirm=False, expectedProjectFile='')
         params[('plc-foundation', renames.get(match[1], match[1]))] = fields
+    import ported_families
+    for family in ported_families.families(root).values():
+        for name in family['tools']:
+            params[('plc-foundation', name)] = params[('full-engine', name)]
     return params
 
 

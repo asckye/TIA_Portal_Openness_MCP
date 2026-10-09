@@ -75,7 +75,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 8789,
+    "minimumPassed": 9238,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -84,7 +84,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 7914,
+    "minimumPassed": 8379,
     "maximumSkipped": 1,
     "arguments": []
   },
@@ -126,17 +126,17 @@
   },
   "adapter-contracts": {
     "project": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-    "minimumPassed": 673,
+    "minimumPassed": 707,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 670,
+        "minimumPassed": 704,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       },
       "macos": {
-        "minimumPassed": 670,
+        "minimumPassed": 704,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       }

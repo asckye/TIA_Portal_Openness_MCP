@@ -11,6 +11,7 @@ internal static class ApiMetadataTests
         {
             string directory=key=="14sp1" ? "TIA_V14SP1_PublicAPI/V14 SP1" : $"TIA_V{key}_PublicAPI/V{key}"+(key=="21"?"/net48":"");
             var core=Path.Combine(apiRoot,directory,key=="21"?"Siemens.Engineering.Base.dll":"Siemens.Engineering.dll");
+            CheckHardwareBranches(Path.Combine(apiRoot,directory),key,check);
             CheckMembers(core,"Siemens.Engineering.Online.OnlineProvider",new[]{"State"},true,check);
             if(key!="14sp1") CheckMembers(core,"Siemens.Engineering.Online.RHOnlineProvider",new[]{"PrimaryState","BackupState"},true,check);
             var identity=AssemblyName.GetAssemblyName(core);
@@ -183,5 +184,37 @@ internal static class ApiMetadataTests
         var type=md.TypeDefinitions.Select(md.GetTypeDefinition).Single(t=>md.GetString(t.Namespace)+"."+md.GetString(t.Name)==fullName);
         var names=properties ? type.GetProperties().Select(h=>md.GetString(md.GetPropertyDefinition(h).Name)).ToHashSet() : type.GetMethods().Select(h=>md.GetString(md.GetMethodDefinition(h).Name)).ToHashSet();
         foreach(var name in members) check(names.Contains(name),"Real API member "+fullName+"."+name);
+    }
+
+    private static void CheckHardwareBranches(string directory,string key,Action<bool,string> check)
+    {
+        bool directAssignment=false,serviceAssignment=false,attributeDelegate=false;
+        foreach(var dll in Directory.GetFiles(directory,"Siemens.Engineering*.dll"))
+        {
+            using var stream=File.OpenRead(dll); using var pe=new PEReader(stream);
+            if(!pe.HasMetadata) continue;
+            var md=pe.GetMetadataReader();
+            foreach(var handle in md.TypeDefinitions)
+            {
+                var type=md.GetTypeDefinition(handle);
+                string name=md.GetString(type.Namespace)+"."+md.GetString(type.Name);
+                foreach(var methodHandle in type.GetMethods())
+                {
+                    var method=md.GetMethodDefinition(methodHandle);
+                    string member=md.GetString(method.Name);
+                    if(member=="AssignProcessImageToOrganizationBlock")
+                    {
+                        directAssignment |= name=="Siemens.Engineering.HW.Address";
+                        serviceAssignment |= name=="Siemens.Engineering.SW.ProcessImageProvider";
+                    }
+                    if(name=="Siemens.Engineering.IEngineeringObject" && member=="SetAttributes")
+                        attributeDelegate |= method.GetParameters().Select(md.GetParameter).Count(p=>p.SequenceNumber>0)==2;
+                }
+            }
+        }
+        check(key=="21" ? serviceAssignment && !directAssignment : directAssignment,
+            key+" F19 process-image branch binds the released native entry point");
+        check(attributeDelegate==(key is "18" or "19" or "20" or "21"),
+            key+" F19 attribute-write branch matches the real delegate overload");
     }
 }

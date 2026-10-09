@@ -23,4 +23,23 @@ internal static class ApiCompileChecks
     internal static PlcUserConstantComposition UserConstants(PlcTagTable table) => table.UserConstants;
     internal static PlcSystemConstantComposition SystemConstants(PlcTagTable table) => table.SystemConstants;
     internal static PlcUserConstant CreateConstant(PlcTagTable table, string name, string type, string value) => table.UserConstants.Create(name, type, value);
+    internal static AddressComposition Addresses(DeviceItem item) => item.Addresses;
+    internal static HwIdentifierComposition Identifiers(HardwareObject owner) => owner.HwIdentifiers;
+    internal static AddressAssociation RegisteredAddresses(DeviceItem item) => ((IEngineeringServiceProvider)item).GetService<AddressController>().RegisteredAddresses;
+    internal static void AssignAddressProcessImage(Address address, OB block)
+    {
+#if PLC_ADDRESS_PROCESS_IMAGE_SERVICE
+        address.GetService<ProcessImageProvider>().AssignProcessImageToOrganizationBlock(block);
+#else
+        address.AssignProcessImageToOrganizationBlock(block);
+#endif
+    }
+    internal static void WriteAddressAttributes(IEngineeringObject address, IEnumerable<KeyValuePair<string, object>> pairs)
+    {
+#if PLC_ATTRIBUTE_DELEGATE
+        address.SetAttributes(pairs, configuration => configuration.CurrentSelection = AttributeChoiceSelection.Ignore);
+#else
+        foreach (var pair in pairs) address.SetAttribute(pair.Key, pair.Value);
+#endif
+    }
 }

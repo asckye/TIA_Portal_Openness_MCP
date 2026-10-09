@@ -5,8 +5,10 @@
     <!-- A standalone/solution compile checks the current engine release; scripts select all eight. -->
     <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">21</TiaReleaseKey>
     <TiaPublicApiReleaseKey>$(TiaReleaseKey)</TiaPublicApiReleaseKey>
+    <TiaFeatureProfile>HardwareAddressing</TiaFeatureProfile>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../../src/Shared/TiaPublicApi.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../../../src/Shared/TiaFeatures.props" />
   <PropertyGroup>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net48</TargetFramework>
     <OutputType>Library</OutputType>

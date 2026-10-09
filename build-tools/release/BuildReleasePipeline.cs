@@ -187,6 +187,16 @@ internal static partial class ReleaseCommands
             var args = new List<string> { "build", project, "-c", "Release", "--disable-build-servers", "-m:1", "-nodeReuse:false",
                 "-p:UseSharedCompilation=false", "-p:NuGetAudit=false" };
             if (api != null) { args.Add("-p:SiemensEngineeringDirectory=" + api); args.Add("-p:NativeCallWeaverPath=" + weaver); }
+            if (api != null && options.Get("SdkFixtureDirectory") is string fixtureRoot)
+            {
+                // Offline capture workers use the same compilation entry point and
+                // an isolated output; production worker binaries remain separate.
+                string release = name == "engine-v20" ? "20" : "21";
+                string fixture = Path.GetFullPath(Path.Combine(fixtureRoot, release));
+                args.Add("-p:TiaMcpEngineWorkerSdkFixture=true");
+                args.Add("-p:AppendTargetFrameworkToOutputPath=false");
+                args.Add("-p:OutputPath=" + fixture);
+            }
             var result = RunLoggedProcess(dotnet, args, logs, name + ".log", nuget);
             ProcessRunner.RequireSuccess(result, name + " compilation failed");
             Console.WriteLine("PASS " + name + " compilation; " + Path.Combine(logs, name + ".log"));

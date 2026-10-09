@@ -200,21 +200,31 @@ internal static class FoundationPassiveDiagnostics
         return false;
     }
 
-    internal static JsonObject Inspect(string releaseKey, bool nativeSessionConfigured, IReadOnlyList<McpServerTool> tools)
+    internal static JsonObject Inspect(string releaseKey, bool nativeSessionConfigured, IReadOnlyList<McpServerTool> tools,
+        IReadOnlySet<string>? sourceOperations = null)
     {
         var release = TiaVersionCatalog.Get(releaseKey);
         if (tools.Count > MaxTools) throw new InvalidOperationException();
+        sourceOperations ??= WorkerOperations.Names.Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
+            family => WorkerOperations.FamilyNames(family.Name).Select(operation => family.OperationPrefix + "." + operation)))
+            .ToHashSet(StringComparer.Ordinal);
         var names = tools.Select(t => t.ProtocolTool.Name).ToArray();
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
-        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || WorkerOperations.Names.Contains(d.Operation)));
+        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
+            && TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(family => family.Available(releaseKey)).SelectMany(family => family.Tools)
+                .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
         var roster = new JsonArray();
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal))
         {
             var name = tool.ProtocolTool.Name;
             if (name.Length > 128) throw new InvalidOperationException();
             var definition = FoundationTools.Definitions.SingleOrDefault(d => FoundationV4Tool.Name(d.Name) == name);
-            roster.Add(new JsonObject { ["name"] = name, ["execution"] = definition == null || definition.ResponseMember == "ImportStaging" ? "host-only" : "worker-protocol", ["wiredOperation"] = definition?.ResponseMember == "ImportStaging" ? null : definition?.Operation, ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) });
+            bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name);
+            var operations = ported ? PortedToolContract.WiredOperations(name) : null;
+            var row = new JsonObject { ["name"] = name, ["execution"] = ported || definition != null && definition.ResponseMember != "ImportStaging" ? "worker-protocol" : "host-only", ["wiredOperation"] = ported ? operations![0] : definition?.ResponseMember == "ImportStaging" ? null : definition?.Operation, ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) };
+            if (ported) row["wiredOperations"] = new JsonArray(operations!.Select(operation => (JsonNode)JsonValue.Create(operation)!).ToArray());
+            roster.Add(row);
         }
         var probes = new JsonObject();
         foreach (var key in new[] { "installedTia", "installedPublicApi", "sdkCompatibility", "groupMembership", "permission", "connectReadiness", "workerAvailability", "connectionState", "portalProcesses", "projectState", "automationContext", "nativeAcceptance" }) probes[key] = "not-probed";
@@ -245,7 +255,7 @@ internal static class LegacyHostToolRegistry
         Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null)
     {
         TiaVersionCatalog.Get(releaseKey);
-        var tools = FoundationTools.Create(worker, releaseKey).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
+        var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
         tools.Add(new ImportOrderTool());
         Func<JsonObject> readiness = readinessProvider ?? (() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource));
         tools.AddRange(FoundationPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools, readiness));
@@ -255,6 +265,11 @@ internal static class LegacyHostToolRegistry
         {
             // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
             Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
+            if (tools[i] is FoundationTool { Ported: true } ported && (releaseKey == "20" || releaseKey == "21"))
+            {
+                wrapped[i] = PortedToolContract.Wrap(ported);
+                return;
+            }
             wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, null, readinessForTest: readinessForTool,
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });

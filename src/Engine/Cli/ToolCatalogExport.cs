@@ -14,7 +14,7 @@ namespace TiaMcpServer.Cli
     {
         internal static void Write(string path)
         {
-            var tools = McpServer.GetAllTools();
+            var tools = McpServer.GetAllTools().Where(t => !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name)).ToArray();
             var catalog = new {
                 formatVersion = 1, release = McpServer.ReleaseKey,
                 workerSha256 = Worker.EngineWorkerHost.Hash(Assembly.GetExecutingAssembly().Location),

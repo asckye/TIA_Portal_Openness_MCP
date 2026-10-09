@@ -1,35 +1,34 @@
-using TiaMcp.Logic.V4.Hmi;
-using TiaMcp.Logic.V4.Inputs;
-using TiaMcp.Logic.V4;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Protocol;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using ModelContextProtocol;
-using ModelContextProtocol.Server;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Nodes;
+using ModelContextProtocol;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+using TiaMcp.Logic.V4;
+using TiaMcp.Logic.V4.Inputs;
 using TiaMcpServer.Siemens;
-
-using TiaMcpServer.Siemens.Services;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
+    internal interface IHardwareAddressingService
+    {
+        bool HasProject { get; }
+        IReadOnlyList<TiaMcp.Adapters.Contracts.IoAddressInfo>? GetDeviceItemAddresses(string path);
+        List<string> DescribeChildItemsWithAddresses(string path);
+        (bool ok, string message, TiaMcp.Adapters.Contracts.IoAddressInfo? before, TiaMcp.Adapters.Contracts.IoAddressInfo? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress);
+        ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson, int offset, int limit);
+        ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson, string attributesJson, string softwarePath, string processImageObName, bool dryRun);
+        JsonObject GetDeviceIpAddress(string path);
+    }
+
     [McpServerToolType]
     internal sealed class AddressesTools
     {
-        private readonly AddressesService _service;
+        private readonly IHardwareAddressingService _service;
 
-        public AddressesTools(AddressesService service) => _service = service;
+        public AddressesTools(IHardwareAddressingService service) => _service = service;
         #region io addresses
 
         [McpServerTool(Name = "GetDeviceItemIoAddresses"), Description(

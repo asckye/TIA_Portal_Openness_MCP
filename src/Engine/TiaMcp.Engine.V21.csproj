@@ -66,8 +66,16 @@
     <Compile Include="../PlcWorker/FoundationWorkerDispatcher.cs" Link="Worker/FoundationWorkerDispatcher.cs" />
     <Compile Include="../PlcWorker/WorkerJson.cs" Link="Worker/WorkerJson.cs" />
     <Compile Include="../PlcWorker/WorkerOperations.cs" Link="Worker/WorkerOperations.cs" />
+    <Compile Include="../PlcWorker/WorkerOperationModule.cs" Link="Worker/WorkerOperationModule.cs" />
     <Compile Include="../PlcWorker/WorkerFailurePolicy.cs" Link="Worker/WorkerFailurePolicy.cs" />
     <Compile Include="../PlcWorker/WorkerSessionOutcomeState.cs" Link="Worker/WorkerSessionOutcomeState.cs" />
   </ItemGroup>
   <Import Project="../EngineHost/EngineHostSources.props" />
+  <ItemGroup>
+    <Compile Include="../Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
+    <Compile Include="../Shared/DeclaredToolMetadata.cs" Link="Shared/DeclaredToolMetadata.cs" />
+    <Compile Include="../Shared/PortedToolDeclarations.cs" Link="Shared/PortedToolDeclarations.cs" />
+    <Compile Include="../Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../Shared/HardwareAddressingService.cs" Link="Shared/HardwareAddressingService.cs" /></ItemGroup>
 </Project>

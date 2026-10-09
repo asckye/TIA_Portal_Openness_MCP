@@ -9,6 +9,8 @@
     <Compile Include="../../../src/Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
     <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="HardwareAddressingPolicy.cs" />
     <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />

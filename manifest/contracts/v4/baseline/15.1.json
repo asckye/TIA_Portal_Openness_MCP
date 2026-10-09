@@ -76,6 +76,18 @@
       "family": "P6-FALLBACK",
       "l5": "NOT RUN",
       "state": "current"
+    },
+    {
+      "entries": [
+        "GetDeviceAddressing",
+        "GetDeviceIpAddress",
+        "GetDeviceItemIoAddresses",
+        "SetDeviceAddress",
+        "SetDeviceItemIoAddress"
+      ],
+      "family": "F19",
+      "l5": "NOT RUN",
+      "state": "current"
     }
   ],
   "formatVersion": 1,
@@ -6443,6 +6455,80 @@
       }
     },
     {
+      "descriptionSha256": "d979eb5a041285af52b99c5a95abd9a252bfcd13e478d0ffe32efea3d34ccfa4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDeviceAddressing",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "d4581b82a18f5717b38db7e6bd4a7fdf57ac58ac9296a0d168512b5ee5f87e00",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDeviceIpAddress",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "8318bc5f07b84ecf6bf42be195b01b4dc09625f0d878c5e477d174fec676b599",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceItemPath": {
+            "description": "deviceItemPath: path in the project structure to the device item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deviceItemPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetDeviceItemIoAddresses",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "8f2c141cd38f7a74da8869e92738874b8e5599cb84f533b7d6fe631ad279a34d",
       "inputSchema": {
         "additionalProperties": false,
@@ -11469,6 +11555,138 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "17dae950c7a85687fb21c395f5977837b5fed4deb831133d4ef7ef748a3d0d47",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "ioType": {
+            "description": "ioType: None | Input | Output | Substitute | Diagnosis.",
+            "enum": [
+              "None",
+              "Input",
+              "Output",
+              "Substitute",
+              "Diagnosis"
+            ],
+            "type": "string"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "processImageObName": {
+            "default": "",
+            "description": "processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "startAddress": {
+            "description": "startAddress: new start address (byte).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath",
+          "ioType",
+          "startAddress"
+        ],
+        "type": "object"
+      },
+      "name": "SetDeviceAddress",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "b50300c9e8590ff9683697271de9739783f457a957c8045859dfe0de7e63b202",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceItemPath": {
+            "description": "deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) only previews the change; set false to actually write it",
+            "type": "boolean"
+          },
+          "ioType": {
+            "description": "ioType: Input, Output, Diagnosis or Substitute",
+            "type": "string"
+          },
+          "startAddress": {
+            "description": "startAddress: new start address as engine raw byte offset (%I2.0 -> 2)",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deviceItemPath",
+          "ioType",
+          "startAddress"
+        ],
+        "type": "object"
+      },
+      "name": "SetDeviceItemIoAddress",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "1fdfe61bd9052aa3e3324efed1ed6e59d31faa79275f81131e47739c343b52e3",

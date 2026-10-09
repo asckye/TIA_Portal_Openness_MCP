@@ -3,6 +3,10 @@
        Each row owns one feature's release range. Profiles select each consumer's
        compiler symbols; Adapter also compiles the Studio native sources.
        Pipe delimiters keep service/minor releases distinct from major-version aliases. -->
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter' Or '$(TiaFeatureProfile)' == 'HardwareAddressing'">
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_ADDRESS_PROCESS_IMAGE_SERVICE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ATTRIBUTE_DELEGATE</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SOURCE_RESULTS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_RH</DefineConstants>

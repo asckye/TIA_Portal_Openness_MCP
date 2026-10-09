@@ -43,7 +43,6 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.HardwareManagementService",
         "TiaMcpServer.Siemens.Services.HardwareAmlService",
         "TiaMcpServer.Siemens.Services.ModulesService",
-        "TiaMcpServer.Siemens.Services.AddressesService",
         "TiaMcpServer.Siemens.Services.HardwareNetworkService",
         "TiaMcpServer.Siemens.Services.HardwareServicesService",
         "TiaMcpServer.Siemens.Services.OnlineDownloadService",

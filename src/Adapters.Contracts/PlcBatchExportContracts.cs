@@ -13,8 +13,10 @@ namespace TiaMcp.Adapters
         public string[] Warnings { get; internal set; } = new string[0];
         public Dictionary<string,string> Evidence { get; internal set; } = new Dictionary<string,string>();
     }
-    public sealed class PlcBatchExportResult
+    public sealed class PlcBatchExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || RequiresSessionReset;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; internal set; }
         public string ProjectFile { get; internal set; } = "";
         public string SoftwarePath { get; internal set; } = "";

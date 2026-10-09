@@ -1,4 +1,4 @@
-using static TiaMcpServer.Siemens.Services.AddressesService;
+using TiaMcp.Adapters.Contracts;
 using static TiaMcpServer.Siemens.Services.DevicesService;
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering.HW;
@@ -466,7 +466,7 @@ namespace TiaMcpServer.Siemens.Services
             });
             if (verifyItem != null)
             {
-                result.Addresses = ReadAddresses(verifyItem);
+                result.Addresses = TiaMcp.Adapters.PlcFoundationEngine.ReadAddresses(verifyItem);
             }
 
             result.Ok = true;

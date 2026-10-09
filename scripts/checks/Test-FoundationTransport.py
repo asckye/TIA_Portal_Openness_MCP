@@ -216,6 +216,8 @@ def engine_transports(args, temp, counts):
             finally:
                 if client.p.poll() is None:
                     client.p.terminate(); client.p.wait(10)
+        if args.stdio_only:
+            continue
         with socket.socket() as port:
             port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
         url = f'http://127.0.0.1:{number}'
@@ -290,6 +292,7 @@ def main():
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
     parser.add_argument('--engine-fixture', type=Path, help='LegacyHostTests fixture executable for successful native-shaped engine HTTP calls without TIA; stdio still uses the real no-TIA worker')
+    parser.add_argument('--stdio-only', action='store_true', help='Run no HTTP/socket checks when network services are prohibited')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     counts = {}
@@ -319,7 +322,7 @@ def main():
             calls = [r for r in records if r['stage'] == 'call']
             assert [r['Id'] for r in calls] == [1, 2, 3], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
-        for key in (key for key in args.releases if key not in ('20', '21')):
+        for key in (key for key in args.releases if key not in ('20', '21') and not args.stdio_only):
             with socket.socket() as port:
                 port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
             url = f'http://127.0.0.1:{number}'
@@ -365,8 +368,8 @@ def main():
                     p.terminate(); p.wait(10)
         engine_transports(args, temp, counts)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
-    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': len(args.releases) * 2, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
-    print(f'COMPLETE: {sum(counts.values()) * 3} Foundation transport checks passed; {len(counts)} releases; native TIA NOT RUN')
+    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 0 if args.stdio_only else len(args.releases) * 2, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
+    print(f'COMPLETE: {sum(counts.values()) * (1 if args.stdio_only else 3)} Foundation transport checks passed; {len(counts)} releases; native TIA NOT RUN')
 
 
 if __name__ == '__main__':

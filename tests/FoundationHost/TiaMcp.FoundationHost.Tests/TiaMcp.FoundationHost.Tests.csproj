@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>
-    <RootNamespace>TiaMcp.FoundationHost.Tests</RootNamespace><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+    <RootNamespace>TiaMcp.FoundationHost.Tests</RootNamespace><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><DefineConstants>$(DefineConstants);TIA_FOUNDATION_TEST_HOST</DefineConstants></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../WorkerChannel/TiaMcp.EngineWorker.FaultFixture/TiaMcp.EngineWorker.FaultFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="TiaMcpEngineWorkerFaultFixture=true" />
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="DefineConstants" />
@@ -62,6 +62,8 @@
     <Compile Include="../../../src/FoundationHost/FoundationCandidateSession.cs" Link="FoundationCandidateSession.cs" />
     <Compile Include="../../../src/FoundationHost/CandidateWire.cs" Link="CandidateWire.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationTools.cs" Link="FoundationTools.cs" />
+    <Compile Include="../../../src/FoundationHost/PortedToolContract.cs" Link="PortedToolContract.cs" />
+    <Compile Include="../../../src/FoundationHost/HardwareAddressingWire.cs" Link="HardwareAddressingWire.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerJob.cs" Link="WorkerJob.cs" />

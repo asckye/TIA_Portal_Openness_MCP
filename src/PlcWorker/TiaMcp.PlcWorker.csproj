@@ -24,6 +24,7 @@
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="$(WorkerSourceRoot)/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerFailurePolicy.cs" Link="WorkerFailurePolicy.cs" />
     <Compile Include="../Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />

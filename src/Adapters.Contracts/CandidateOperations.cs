@@ -11,8 +11,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public string DeviceName { get; set; } = "";
         public DeviceCreateCheck? Check { get; set; }
     }
-    public sealed class DeviceCandidateReply
+    public sealed class DeviceCandidateReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.Issued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public CandidateIdentity? Identity { get; set; }
         public DeviceCatalogEntry[]? Catalog { get; set; }
         public DeviceInventoryItem[]? Inventory { get; set; }
@@ -30,8 +32,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public PlcImportInput? Input { get; set; }
         public PlcImportCheck? Check { get; set; }
     }
-    public sealed class ImportCandidateReply
+    public sealed class ImportCandidateReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.Issued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public CandidateIdentity? Identity { get; set; }
         public PlcImportInput[]? Inputs { get; set; }
         public PlcImportObject[]? Inventory { get; set; }

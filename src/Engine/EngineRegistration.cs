@@ -19,6 +19,9 @@ namespace TiaMcpServer
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             services.TryAddSingleton(catalog);
+            services.TryAddSingleton<IHardwareAddressingService>(_ => new HardwareAddressingService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
             services.TryAddSingleton<ImportStagingHostLifetime>();
             if (includeSession && OpennessReadiness.Ready)
             {

@@ -61,8 +61,10 @@ namespace TiaMcp.Adapters.Contracts.Candidates
         public string Action { get; set; } = "observe";
         public SessionCheck? Check { get; set; }
     }
-    public sealed class SessionCandidateReply
+    public sealed class SessionCandidateReply : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempt?.Issued == true;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public SessionObservation? Observation { get; set; }
         public SessionAttempt? Attempt { get; set; }
         public CandidateFault? Fault { get; set; }

@@ -235,7 +235,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {
 #if TIA_ENGINE_HOST
-            if (CatalogView.Find(name)?.Execution == "foundation")
+            if (CatalogView.Find(name)?.Execution == "foundation" && !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name))
             {
                 var refusal = beforeDispatch?.Invoke();
                 return refusal ?? ToolInvoker.Invoke(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0).Result;

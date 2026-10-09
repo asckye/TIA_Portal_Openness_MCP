@@ -12,8 +12,10 @@ namespace TiaMcp.Adapters
         public PlcDocumentImportResult? Outcome {get;internal set;}
         public string[] PostInventory {get;internal set;}=new string[0];
     }
-    public sealed class PlcBatchDocumentImportResult
+    public sealed class PlcBatchDocumentImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempted;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;
         public string Policy => "batch-document-global-db-v1";
         public string PlanHash {get;internal set;}="";
         public string Status {get;internal set;}="planned";

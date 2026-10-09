@@ -73,6 +73,7 @@ from contextlib import redirect_stdout
 
 from offline_fixtures import fixture_directory
 from tool_usage_checks import check_usage, unwrap_usage
+from ported_families import additions as ported_additions
 
 
 def helper(filename):
@@ -783,11 +784,12 @@ def capture_release(args, release, exe, public_api):
 
 
 @contextmanager
-def foundation_v4_capture():
+def foundation_v4_capture(release):
     # Foundation has no ToolProfiles rows. Enable the existing V4 correlation
     # masks only during this profile's capture; full-engine capture is unchanged.
     previous = V4_TOOLS.copy()
-    V4_TOOLS.update(FOUNDATION_WORKER_TOOLS | set(FOUNDATION_MARKERS))
+    V4_TOOLS.update(FOUNDATION_WORKER_TOOLS | set(FOUNDATION_MARKERS)
+                    | ported_additions(Path(__file__).resolve().parents[2], release))
     try:
         yield
     finally:
@@ -796,7 +798,8 @@ def foundation_v4_capture():
 
 
 def capture_foundation(args, release, exe):
-    with foundation_v4_capture(), scratch_directory(args.temp_root) as scratch:
+    worker_tools = FOUNDATION_WORKER_TOOLS | ported_additions(args.repo_root, release)
+    with foundation_v4_capture(release), scratch_directory(args.temp_root) as scratch:
         # Shared server launcher accepts release keys verbatim. LegacyHost
         # HostOptions.Parse accepts --tia-major-version/--tia-portal-location;
         # no harness, --catalog, worker executable or native-session flag is used.
@@ -815,7 +818,7 @@ def capture_foundation(args, release, exe):
             for tool in sorted(tools, key=lambda t: t['name']):
                 name = tool['name']
                 marker = ('INVALID_ARGUMENT'
-                          if name in FOUNDATION_WORKER_TOOLS else FOUNDATION_MARKERS.get(name))
+                          if name in worker_tools else FOUNDATION_MARKERS.get(name))
                 props = tool['inputSchema'].get('properties', {})
                 if marker is None or any(key.lower() == 'snapshotreject' for key in props):
                     skipped[name] = 'No reviewed host argument rejection before the worker/builder; not invoked.'
@@ -1604,8 +1607,9 @@ def verify_coverage(release, baseline, snapshot, lite):
         if snapshot['profiles'] != ['plc-foundation'] or 'liteAdvertisedTools' in coverage:
             raise ValueError(f'V{release}: Foundation must not advertise a lite roster')
         # Match capture_foundation's reviewed host-side admission allowlist.
+        worker_tools = FOUNDATION_WORKER_TOOLS | ported_additions(Path(__file__).resolve().parents[2], release)
         rejected = {tool['name'] for tool in baseline['tools']
-                    if (tool['name'] in FOUNDATION_WORKER_TOOLS or tool['name'] in FOUNDATION_MARKERS)
+                    if (tool['name'] in worker_tools or tool['name'] in FOUNDATION_MARKERS)
                     and not any(key.lower() == 'snapshotreject'
                                 for key in tool['inputSchema'].get('properties', {}))}
         passive, profile = {'InitializeEnvironment', 'RunCapabilitySelfTest'}, 'plc-foundation'

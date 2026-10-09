@@ -5,8 +5,10 @@ using System.Linq;
 namespace TiaMcp.Adapters
 {
     // Deliberately narrower than the original probing tool: selection is read-only, creation is once.
-    public sealed class PlcDeviceAddResult
+    public sealed class PlcDeviceAddResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempted;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public string Status { get; internal set; } = "planned";
         public bool Attempted { get; internal set; }
         public bool Executed { get; internal set; }

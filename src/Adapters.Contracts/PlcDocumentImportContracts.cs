@@ -4,8 +4,10 @@ using System.Linq;
 
 namespace TiaMcp.Adapters
 {
-    public sealed class PlcDocumentImportResult
+    public sealed class PlcDocumentImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => MayHaveChanged;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public string Status {get;internal set;}="planned";
         public bool Executed {get;internal set;}
         public bool Attempted {get;internal set;}
