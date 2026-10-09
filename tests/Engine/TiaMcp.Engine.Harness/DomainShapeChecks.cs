@@ -56,7 +56,7 @@ internal static class DomainShapeChecks
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
             (Name: "SoftwareUnitDeep", Count: 7),
             (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11),
-            (Name: "Library", Count: 18), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
+            (Name: "Library", Count: 14), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
         };
         foreach (var domain in domains)
         {

@@ -18,7 +18,7 @@ internal static class UnifiedHmiDomainShapeChecks
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
         foreach (var domain in new[] {
-            (Name: "UnifiedHmi", Count: 22), (Name: "UnifiedObjectServices", Count: 12),
+            (Name: "UnifiedHmi", Count: 18), (Name: "UnifiedObjectServices", Count: 12),
             (Name: "UnifiedUiModel", Count: 7), (Name: "UnifiedScreenItems", Count: 2),
             (Name: "UnifiedEngineering", Count: 3), (Name: "UnifiedExchange", Count: 3),
             (Name: "UnifiedEvents", Count: 1), (Name: "UnifiedHmiGroups", Count: 1)
@@ -95,8 +95,6 @@ internal static class UnifiedHmiDomainShapeChecks
         ["SetUnifiedHmiRuntimeState"] = "EnsureStartStopUnifiedHmi",
         ["GetUnifiedHmiTexts"] = "ReadUnifiedHmiTexts",
         ["ApplyUnifiedHmiScreenDesign"] = "ApplyUnifiedHmiScreenDesignJson",
-        ["BuildUnifiedHmiThemeDesign"] = "BuildUnifiedHmiThemeDesignJson",
-        ["BuildUnifiedHmiLayoutDesign"] = "BuildUnifiedHmiLayoutDesignJson",
         ["GetUnifiedObjectEvents"] = "ReadUnifiedObjectEvents",
         ["GetUnifiedAlarmCommon"] = "ReadUnifiedAlarmCommon",
         ["GetUnifiedAuditSettings"] = "ReadUnifiedAuditSettings"

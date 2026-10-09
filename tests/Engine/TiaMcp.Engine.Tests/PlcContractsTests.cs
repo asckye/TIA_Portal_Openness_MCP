@@ -162,7 +162,7 @@ namespace TiaMcp.Engine.Tests
             while (dir != null && !File.Exists(Path.Combine(dir.FullName, "AGENTS.md"))) dir = dir.Parent;
             Assert.NotNull(dir);
             var files = new[] { "PlcBlocksTools.cs", "PlcSoftwareTools.cs", "PlcTablesTools.cs", "TypesTools.cs" };
-            var sources = files.Select(f => File.ReadAllText(Path.Combine(dir!.FullName, "src", "Engine", "ModelContextProtocol", "Tools", f))).ToArray();
+            var sources = files.Select(f => File.ReadAllText(Path.Combine(dir!.FullName, "src", "Engine", "ModelContextProtocol", "Tools", f))).Concat(new[] { File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcOfflineTools.cs")) }).ToArray();
             var names = sources.SelectMany(s => Regex.Matches(s, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value)).ToArray();
             string[] expected = {
             "GetPlcBlockInfo",
@@ -219,8 +219,8 @@ namespace TiaMcp.Engine.Tests
             "SeedProjectFromReference",
             "ExportPlcTypes",
             };
-            Assert.Equal(expected.OrderBy(n => n), names.OrderBy(n => n));
-            Assert.Equal(53, names.Distinct().Count());
+            Assert.Equal(expected.Append("WritePlcSclSourceFile").OrderBy(n => n), names.OrderBy(n => n));
+            Assert.Equal(54, names.Distinct().Count());
             Assert.Contains("PlcCompilation.CompileAndDiagnoseCore(softwarePath, password)", sources[0]);
             Assert.Contains("_session.CompileSoftware(softwarePath, password)", sources[1]);
         }

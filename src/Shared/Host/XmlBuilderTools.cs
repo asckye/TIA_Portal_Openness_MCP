@@ -24,11 +24,14 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class XmlBuilderTools
     {
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "BuildClassicHmiScreen"), Description("[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI screen XML document from structured JSON. It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
         public CallToolResult BuildClassicHmiScreenXmlV4(
             [Description("design: ClassicScreenSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] ClassicScreenSpec design)
             => OfflineContracts.Run("BuildClassicHmiScreen", () => BuildClassicHmiScreenXml(design.ToBuilderInput().ToJsonString()), writes: false, current: false);
+#endif
 
+#if !TIA_ENGINE_PORTED
         public ResponseXmlBuild BuildClassicHmiScreenXml(
             [Description("designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus Name/Left/Top/Width/Height/Text/Properties.")] string designJson)
         {
@@ -41,6 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error building Classic HMI screen XML offline: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
+#endif
 
         [McpServerTool(Name = "BuildPlcUdt"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
         public CallToolResult BuildPlcUdtXmlV4(

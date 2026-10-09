@@ -194,7 +194,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             // Target approval must finish before acquiring its lane. The identity
             // check and audit start belong inside that lane, immediately before dispatch.
-            var refusal = McpApprovalContext.Value ? PrecheckBeforeApproval(name, arguments, previewArgs => Task.FromResult(CallTool(name,
+            var refusal = McpApprovalContext.Value ? PrecheckBeforeApproval(name, arguments, previewArgs => Task.FromResult(CallToolCore(name,
                 new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs)))), McpDispatchCancellation.Value).GetAwaiter().GetResult() : SessionPrecheckRefusal(name);
             if (refusal != null) return refusal;
             var approval = McpApprovalContext.Value && ApprovalPreviewDepth.Value == 0

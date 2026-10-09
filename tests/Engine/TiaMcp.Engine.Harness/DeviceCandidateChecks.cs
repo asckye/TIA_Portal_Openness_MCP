@@ -57,15 +57,13 @@ internal static class DeviceCandidateChecks
             var sample = usage["data"]!["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             check(facade.GetMethod("ValidateV4Arguments", All)!.Invoke(null,
                 new object[] { method, JsonSerializer.SerializeToElement(sample), schema }) == null, name + " usage example satisfies the selected schema");
-            var found = facade.GetMethod("FindTools", All)!.Invoke(null, new object[] { name, 1, "", "" })!;
-            var lines = ((IEnumerable<string>)found.GetType().GetProperty("Items")!.GetValue(found)!).ToArray();
-            check(lines[0].Contains("expectedPlanHash") == safe && lines[0].Contains(name), name + " FindTools signature matches registration");
-            var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "preferredMlfb" : "expectedPlanHash"] = "obsolete-schema";
+                var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "preferredMlfb" : "expectedPlanHash"] = "obsolete-schema";
             foreach (var call in new[] {
                 (Name: name, Args: invalid),
                 (Name: "CallTool", Args: new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }),
                 (Name: "PreviewToolBatch", Args: new JsonObject { ["operations"] = new JsonArray(new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }), ["expectedProject"] = "Fixture" }) })
             {
+                if (EngineSurface.IsHostTool(server, call.Name)) continue;
                 var rejected = Body(Invoke(call.Name, call.Args));
                 check((string?)rejected["error"]?["code"] == "INVALID_ARGUMENT" && (string?)rejected["meta"]?["execution"] == "not-started",
                     name + " rejects the other schema through " + call.Name);

@@ -596,7 +596,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 bool committed = TransactionExecution.Run(prepared.Count, () => _session.BeginTransaction(text), index =>
                 {
                     var call = prepared[index];
-                    var payload = ResultBody(CallTool(call.Name, call.Arguments));
+                    var payload = ResultBody(DispatchNestedTool(call.Name, call.Arguments));
                     bool ok = payload?["ok"]?.GetValue<bool?>() == true;
                     results.Add(new JsonObject { ["name"] = call.Name, ["ok"] = ok, ["result"] = payload });
                     if (!ok) meta["stoppedAt"] = call.Name;

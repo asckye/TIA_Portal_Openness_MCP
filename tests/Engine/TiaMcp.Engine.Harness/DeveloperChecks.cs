@@ -216,13 +216,14 @@ internal static class DeveloperChecks
             var engineType = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
             var logicPath = Path.Combine(runtime, "TiaMcp.Logic.dll");
             var logic = Assembly.LoadFrom(logicPath);
-            var bridge = engineType.GetMethods(All).First(m => m.Name == "CallTool");
+            var bridge = engineType.GetMethods(All).First(m => m.Name == "DispatchNestedTool");
             var argumentType = bridge.GetParameters()[1].ParameterType.GetGenericArguments()[0];
             var parse = logic.GetType("TiaMcp.Logic.V4.V4Json", true)!.GetMethod("ParseInput", BindingFlags.NonPublic | BindingFlags.Static)!;
 
             JsonObject Call(string name, object args)
             {
                 var json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 }.Serialize(args);
+                if (EngineSurface.IsHostTool(server, name)) return HostPortRunner.Call(server, name, JsonNode.Parse(json)!.AsObject());
                 var parsed = parse.Invoke(null, new object[] { json });
                 var typed = Activator.CreateInstance(argumentType, new[] { parsed })!;
                 var result = bridge.Invoke(null, new[] { (object)name, typed })!;
@@ -372,6 +373,7 @@ internal static class DeveloperChecks
         Reset();
         AddResolver(server, publicApiDirectory);
         var runtimePath = Path.GetDirectoryName(server.Location)!;
+        string release = server.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major.ToString();
         var logic = Assembly.LoadFrom(Path.Combine(runtimePath, "TiaMcp.Logic.dll"));
         var type = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         var taxonomy = logic.GetType("TiaMcpServer.ModelContextProtocol.ToolTaxonomy", true)!;
@@ -393,8 +395,16 @@ internal static class DeveloperChecks
 
         // Keep validating the engine recipe library; product examples below use the
         // same schema-aware usage library as FoundationHost, excluding withdrawn tools.
-        var recipeProblems = (IEnumerable)type.GetMethod("ValidateToolRecipes", All)!.Invoke(null, null)!;
-        var recipeErrors = recipeProblems.Cast<object>().Select(x => x.ToString()).ToArray();
+        var engineDescriptors = (IDictionary)type.GetMethod("AllToolDescriptors", All)!.Invoke(null, new object[] { true })!;
+        Func<string, IReadOnlyList<KeyValuePair<string, bool>>?> recipeParameters = name => {
+            if (engineDescriptors.Contains(name)) return ((IEnumerable)Get(engineDescriptors[name]!, "Parameters")!).Cast<object>()
+                .Select(p => new KeyValuePair<string, bool>((string)Get(p, "Name")!, (bool)Get(p, "Required")!)).ToArray();
+            if (!EngineSurface.IsHostTool(server, name)) return null;
+            return HostPortRunner.Metadata(server, name)["parameters"]!.AsArray().Select(p =>
+                new KeyValuePair<string, bool>((string)p!["name"]!, (bool)p["required"]!)).ToArray();
+        };
+        var recipeErrors = ((IEnumerable)logic.GetType("TiaMcpServer.ModelContextProtocol.ToolRecipes", true)!
+            .GetMethod("ValidateAgainst", All)!.Invoke(null, new object[] { recipeParameters })!).Cast<string>().ToArray();
         Check(recipeErrors.Length == 0, recipeErrors.Length == 0 ? "ToolRecipes.ValidateAgainst accepts every recipe" : string.Join("; ", recipeErrors));
 
         using var product = ProductCatalog(server, foundationHost, bundleRoot, outputPath);
@@ -415,7 +425,7 @@ internal static class DeveloperChecks
         var methods = ((IEnumerable)catalogType.GetProperty("Methods", All)!.GetValue(catalog)!).Cast<object>()
             .ToDictionary(entry => Get(entry, "Key")!.ToString()!, entry => (MethodInfo)Get(entry, "Value")!, StringComparer.Ordinal);
         var usageType = logic.GetType("TiaOpenness.Shared.ToolUsageCatalog", true)!;
-        var profiles = (IEnumerable)usageType.GetMethod("ProfileEntries", All)!.Invoke(null, new object[] { "21", 4, false })!;
+        var profiles = (IEnumerable)usageType.GetMethod("ProfileEntries", All)!.Invoke(null, new object[] { release, 4, false })!;
         var profileRows = profiles.Cast<JsonObject>().ToDictionary(row => (string)row["currentName"]!, StringComparer.Ordinal);
         var productNames = productTools.EnumerateArray().Select(entry => entry.GetProperty("name").GetString()!).ToArray();
         var rows = new List<(string Name, JsonObject Value)>();
@@ -428,7 +438,7 @@ internal static class DeveloperChecks
             var profile = profileRows[name];
             bool shared = profile["profiles"]!.AsArray().Any(value => (string?)value == "plc-foundation");
             var usage = (JsonObject)usageType.GetMethod("Describe", All)!.Invoke(null, new object?[] {
-                name, "21", shared ? "plc-foundation" : "full-engine", description,
+                name, release, shared ? "plc-foundation" : "full-engine", description,
                 JsonNode.Parse(schema.GetRawText())!.AsObject(), null, null, "", productNames, null, null
             })!;
             var example = usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
@@ -452,8 +462,8 @@ internal static class DeveloperChecks
                 ["domain"] = domain,
                 ["operation"] = opName,
                 ["operationInferred"] = opInferred,
-                ["method"] = shared ? "FoundationV4Tool.InvokeAsync" : method!.Name,
-                ["returnType"] = shared ? "CallToolResult" : method!.ReturnType.Name,
+                ["method"] = shared ? "FoundationV4Tool.InvokeAsync" : method?.Name ?? HostPortRunner.Metadata(server, name)["method"]!.GetValue<string>(),
+                ["returnType"] = shared ? "CallToolResult" : method?.ReturnType.Name ?? "CallToolResult",
                 ["parameters"] = parameters,
                 ["description"] = description,
                 ["example"] = JsonValue.Create(example.ToJsonString())
@@ -479,7 +489,7 @@ internal static class DeveloperChecks
         {
             ["package"] = packageName,
             ["generatedAt"] = DateTimeOffset.UtcNow.ToString("o"),
-            ["source"] = "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
+            ["source"] = "FoundationHost V" + release + " full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
             ["fileVersion"] = FileVersionInfo.GetVersionInfo(foundationHost).FileVersion,
             ["exeSha256"] = Sha256(foundationHost),
             ["workerSha256"] = Sha256(server.Location),
@@ -511,6 +521,7 @@ internal static class DeveloperChecks
 
     private static JsonDocument ProductCatalog(Assembly server, string foundationHost, string bundleRoot, string outputPath)
     {
+        string release = server.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major.ToString();
         var directory = Path.GetDirectoryName(Path.GetFullPath(outputPath))!;
         Directory.CreateDirectory(directory);
         var catalogPath = Path.Combine(directory, ".guard-engine-catalog-" + Guid.NewGuid().ToString("N") + ".json");
@@ -522,7 +533,7 @@ internal static class DeveloperChecks
             string Quote(string value) => "\"" + Regex.Replace(Regex.Replace(value, @"(\\*)""", "$1$1\\\""), @"\\+$", "$0$0") + "\"";
             var start = new ProcessStartInfo(Path.GetFullPath(foundationHost)) {
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
-                Arguments = "--catalog --offline --profile full --release-key 21 --bundle-root " + Quote(Path.GetFullPath(bundleRoot))
+                Arguments = "--catalog --offline --profile full --release-key " + release + " --bundle-root " + Quote(Path.GetFullPath(bundleRoot))
                     + " --engine-worker " + Quote(server.Location) + " --engine-catalog " + Quote(catalogPath)
             };
             using var process = Process.Start(start)!;
@@ -533,9 +544,9 @@ internal static class DeveloperChecks
             var error = stderr.GetAwaiter().GetResult();
             if (process.ExitCode != 0) throw new InvalidOperationException("Foundation product catalog failed: " + error);
             var product = JsonDocument.Parse(text);
-            if (product.RootElement.GetProperty("releaseKey").GetString() != "21"
+            if (product.RootElement.GetProperty("releaseKey").GetString() != release
                 || product.RootElement.GetProperty("profile").GetString() != "full-engine")
-            { product.Dispose(); throw new InvalidDataException("Guard roster requires the V21 full product catalog."); }
+            { product.Dispose(); throw new InvalidDataException("Guard roster requires the matching full product catalog."); }
             return product;
         }
         finally { if (File.Exists(catalogPath)) File.Delete(catalogPath); }

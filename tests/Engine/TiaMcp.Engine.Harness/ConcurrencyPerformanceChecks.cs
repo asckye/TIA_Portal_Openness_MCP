@@ -143,12 +143,11 @@ internal static class ConcurrencyPerformanceChecks
         var occupying = Wrap(new FakeTool("GetSessionState", async token => { occupied.SetResult(true); await releaseSession.Task; }));
         var sessionCall = occupying.InvokeAsync(Request("GetSessionState")).AsTask();
         await Bound(occupied.Task);
-        var batchRequest = Request("RunReadOnlyToolBatch");
-        batchRequest.Params = new CallToolRequestParams { Name = "RunReadOnlyToolBatch", Arguments = new Dictionary<string, JsonElement> {
-            ["operations"] = JsonSerializer.SerializeToElement(new[] { new { name = "GetToolUsage", arguments = new { toolName = "GetSessionState" } } }) } };
-        var batch = Wrap(tools.Single(tool => tool.ProtocolTool.Name == "RunReadOnlyToolBatch"));
-        var batchCall = batch.InvokeAsync(batchRequest).AsTask();
-        try { await Bound(batchCall, 1000); if (batchCall.Result.IsError == true) throw new Exception("Local batch failed while the native lane was occupied."); }
+        var batchCall = Task.Run(() => HostPortRunner.Call(engine, "RunReadOnlyToolBatch", new JsonObject {
+            ["operations"] = new JsonArray(new JsonObject { ["name"] = "GetOpennessGuidance",
+                ["arguments"] = new JsonObject { ["query"] = "threading" } })
+        }));
+        try { await Bound(batchCall, 10000); if ((bool?)batchCall.Result["ok"] != true) throw new Exception("Host batch failed while the native lane was occupied."); }
         finally { releaseSession.SetResult(true); await Bound(sessionCall); }
         var lanes = engine.GetType("TiaMcpServer.Isolation.ToolDispatchLanes", true)!;
         Task<IDisposable?> Acquire(object session, CancellationToken token = default) => (Task<IDisposable?>)lanes.GetMethod("AcquireForSession", All)!

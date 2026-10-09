@@ -56,9 +56,11 @@ namespace TiaMcpServer.ModelContextProtocol
             return "";
         }
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "ListToolCategories"), Description("[L0][Meta][READ] List the tool taxonomy, layers and current full-catalog counts. Use FindTools to browse a category or domain.")]
         public static CallToolResult ListToolCategoriesV4()
             => InfrastructureResult("ListToolCategories", ListToolCategories());
+#endif
 
         [Description(
             "[L0][Meta][READ] The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), " +
@@ -106,6 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "FindTools"), Description("[L0][Meta][READ] Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match.")]
         public static CallToolResult FindToolsV4(
             [Description("Space-separated capability words; empty lists all tools.")] string query = "",
@@ -124,6 +127,7 @@ namespace TiaMcpServer.ModelContextProtocol
             response.Items = lines.Skip(offset * 3L > int.MaxValue ? int.MaxValue : offset * 3).Take(limit > int.MaxValue / 3 ? int.MaxValue : limit * 3).ToArray();
             return InfrastructureResult("FindTools", response, OffsetPage(offset, limit, count));
         }
+#endif
 
         [Description(
             "[L0][Meta][READ] Search the FULL tool roster, including tools not listed in this session. " +
@@ -226,11 +230,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "CallTool"), Description("[L0][Meta] Invoke a tool in the full version-gated catalog. arguments must be an object matching the target inputSchema. Returns the target result unchanged; dispatch failures use the V4 envelope. Nested orchestration is refused.")]
         public static CallToolResult CallTool(
             [Description("Exact currently registered tool name from FindTools.")] string name,
             [Description("Target arguments as an object. Omit for a tool with no arguments; strings and null are invalid.")] ToolArguments? arguments = null)
             => CallToolCore(name, arguments);
+#endif
+
+        internal static CallToolResult DispatchNestedTool(string name, ToolArguments? arguments) => CallToolCore(name, arguments);
 
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {
@@ -399,6 +407,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // PreflightLogic builds the report (pure, offline-tested); only session state comes from the engine,
         // through a partial method the offline suite does not implement.
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "PreviewToolCall"), Description("[L0][Meta][SESSION] Validate a planned call against the target inputSchema and version gates without executing it. Returns signature, prerequisites and a worked example. No native calls.")]
         public static CallToolResult PreviewToolCall(
             [Description("Exact currently registered tool name.")] string name,
@@ -413,6 +422,7 @@ namespace TiaMcpServer.ModelContextProtocol
             report.Meta!["success"] = true;
             return InfrastructureResult("PreviewToolCall", report);
         }
+#endif
 
         public static ResponseStringList PreflightToolCall(string name, string argumentsJson)
         {
@@ -603,11 +613,20 @@ namespace TiaMcpServer.ModelContextProtocol
             if (name == "CallTool" || name == "PreviewToolCall")
                 return ToolInvoker.Bind((string)arguments["name"]!, arguments["arguments"] == null ? EmptyArguments()
                     : new ToolArguments(JsonSerializer.SerializeToElement(arguments["arguments"])), out _);
+#if !TIA_ENGINE_PORTED
             if (name == "RunReadOnlyToolBatch" || name == "PreviewToolBatch")
                 return ValidateBatch(JsonSerializer.Deserialize<ToolCall[]>(arguments["operations"]!.ToJsonString(), V4BindingJson)!, name == "PreviewToolBatch", out _);
+
+#endif
             return null;
         }
 
+        internal static bool? ResultSucceeded(JsonNode? body)
+        {
+            if (body is not JsonObject obj) return null;
+            if (obj["schemaVersion"]?.GetValue<int?>() == 4) return obj["ok"]?.GetValue<bool?>();
+            return null;
+        }
         private static int CommonPrefixLength(string a, string b)
         {
             int n = Math.Min(a.Length, b.Length), i = 0;

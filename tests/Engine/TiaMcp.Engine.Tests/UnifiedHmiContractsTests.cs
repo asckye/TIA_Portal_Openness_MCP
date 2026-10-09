@@ -77,7 +77,8 @@ namespace TiaMcp.Engine.Tests
             while (dir != null && !File.Exists(Path.Combine(dir.FullName, "AGENTS.md"))) dir = dir.Parent;
             Assert.NotNull(dir);
             var source = File.ReadAllText(Path.Combine(dir!.FullName, "src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs"));
-            var coreNames = Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value);
+            var hostSource = File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/HmiOfflineTools.cs"));
+            var coreNames = Regex.Matches(source + hostSource, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value).Where(n => !new[] { "AnalyzeGlobalLibraryPackage", "PlanGlobalLibraryTemplateReuse", "AnalyzeHmiTemplateReference", "AnalyzeUnifiedHmiTemplateLayout" }.Contains(n));
             Assert.Equal(expected.OrderBy(n => n), methods.Keys.Concat(coreNames).OrderBy(n => n));
             Assert.Contains("UnifiedScreenSpec design", source);
             Assert.Contains("UnifiedThemeSpec theme", source);

@@ -55,6 +55,7 @@ internal static class SecurityContractChecks
             if (batch) calls.Add(("PreviewToolBatch", "{\"operations\":[{\"name\":\"" + name + "\",\"arguments\":" + arguments + "}],\"expectedProject\":\"Fixture\"}"));
             foreach (var call in calls)
             {
+                if (EngineSurface.IsHostTool(server, call.Name)) continue;
                 var body = Body(Invoke(call.Name, call.Arguments));
                 check((string?)body["error"]?["code"] == code && (string?)body["meta"]?["outcome"] == "rejected-before-operation"
                     && (string?)body["meta"]?["execution"] == "not-started", "P6-14 " + name + " rejected through " + call.Name + ": " + code
@@ -110,6 +111,7 @@ internal static class SecurityContractChecks
                 ("CallTool", "{\"name\":\"ManageSafetyFunction\",\"arguments\":" + arguments + "}"),
                 ("PreviewToolBatch", "{\"operations\":[{\"name\":\"ManageSafetyFunction\",\"arguments\":" + arguments + "}],\"expectedProject\":\"Fixture\"}") })
             {
+                if (EngineSurface.IsHostTool(server, call.Item1)) continue;
                 var body = Body(Invoke(call.Item1, call.Item2));
                 check((string?)body["error"]?["code"] == "UNSUPPORTED_CAPABILITY" && (string?)body["meta"]?["execution"] == "not-started",
                     "P6-14 preserves the V20 version gate through " + call.Item1);

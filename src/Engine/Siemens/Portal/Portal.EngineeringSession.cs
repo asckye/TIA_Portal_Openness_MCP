@@ -227,7 +227,6 @@ namespace TiaMcpServer.Siemens
         IEnumerable<(string Path, object Value)> IEngineeringSession.ScopedObjects(object group, string collection, string prefix, int depth) => ScopedObjects(group, collection, prefix, depth);
         PlcType? IEngineeringSession.ExportType(string softwarePath, string typePath, string exportPath, bool preservePath) => ExportType(softwarePath, typePath, exportPath, preservePath);
         List<CrossReferenceEntry>? IEngineeringSession.GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind) => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried, unitName, unitKind);
-        (string TempDir, string XmlPath) IEngineeringSession.ExportBlockDocumentForAnalysis(string softwarePath, string blockPath) => ExportBlockDocumentForAnalysis(softwarePath, blockPath);
         ResponseMessage IEngineeringSession.ManageProjectLanguage(string action, string culture, bool dryRun) => ManageProjectLanguage(action, culture, dryRun);
         ResponseMessage IEngineeringSession.RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade, bool dryRun) => RetrieveProjectArchive(archivePath, destinationDirectory, upgrade, dryRun);
         ResponseMessage IEngineeringSession.ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun) => ExportProjectTexts(filePath, sourceCulture, targetCulture, dryRun);

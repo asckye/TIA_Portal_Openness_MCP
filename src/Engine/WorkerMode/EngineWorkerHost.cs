@@ -91,6 +91,8 @@ namespace TiaMcpServer.Worker
             foundation.AcquireEngineeringEditAccess = engineering.AcquireHmiEditAccess;
             foundation.EngineeringProjectMissing = engineering.IsProjectNull;
             foundation.ResolveEngineeringBlock = (software, block) => engineering.GetBlock(software, block);
+            foundation.EngineeringBlockGroupPath = group => engineering.GetPlcBlockGroupPath((global::Siemens.Engineering.SW.Blocks.PlcBlockGroup)group);
+            foundation.EngineeringRecordExportPath = portal.RecordAnalysisExportPath;
             // The shared binding and host lane already capture the target. Its
             // original engineering step performs native binding checks at the
             // original point; do not add Project.Path reads or PLC local-session
@@ -250,6 +252,7 @@ namespace TiaMcpServer.Worker
         private JsonObject Status() => new JsonObject {
             ["releaseKey"] = McpServer.ReleaseKey, ["behaviorCapabilities"] = McpServer.CatalogView.BehaviorCapabilities.DeepClone(),
             ["readiness"] = new JsonObject { ["ready"] = OpennessReadiness.Ready, ["cause"] = OpennessReadiness.Cause,
+                ["groupOk"] = OpennessReadiness.GroupOk,
                 ["recommendedFix"] = OpennessReadiness.FixEn, ["recommendedFixZh"] = OpennessReadiness.FixZh },
             ["binding"] = JsonNode.Parse(binding), ["session"] = CachedSession(), ["nativeFault"] = nativeFault
         };
@@ -267,6 +270,18 @@ namespace TiaMcpServer.Worker
         private ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "engine.status") { Observe(); return ChannelResponse.Success(Status().ToJsonString()); }
+            if (request.Method == "host.observe")
+            {
+                try
+                {
+                    var observation = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
+                    return ChannelResponse.Success(HostObservations.Read((string)observation["operation"]!, observation["arguments"]!.AsObject())?.ToJsonString() ?? "null");
+                }
+                catch (Exception observationError)
+                {
+                    return ChannelResponse.Error(new ChannelFailure(observationError.Message, -32603, ChannelOutcome.ReadFailed));
+                }
+            }
             string? fixtureFault = WorkerFaultInjection.Mode(typeof(EngineWorkerHost).Assembly);
             WorkerFaultInjection.BeforeDispatch(fixtureFault, request);
             if (fixtureFault == "tia-lost") ProcessLost("Fixture TIA process lost.");

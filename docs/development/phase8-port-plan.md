@@ -27,6 +27,18 @@
 - **矩阵口径**：以 V20 的 API 面为参照（V21 独有 API/工具不算旧版缺口）。`yes` 族内各工具所需关键成员齐全；`partial` 族可迁但部分工具或动作缺 API（应在原生调用前按动作拒绝）；`no` 族核心入口缺失；`unknown` 无法用元数据证明。
   **API 存在不等于许可证、可选组件已安装或行为正确**；所有在旧版启用的族保持 `current / NOT RUN`，直到该版真机验收。不按工具名、相邻版本或 API 名称推断。
 
+## B1 迁移状态（P8-03a）
+
+F01、F02、F03 的 64 个声明与工具实现已迁出 Engine 源码，全部由 net10 宿主执行；
+`PortedFamilies` 显式限定这三族只在 20、21 发布。TiaGitAddIn.Core 提供 netstandard2.0 资产，
+本批没有因 net48 依赖留在 worker 的工具。Engine 保留其他族仍使用的公共辅助方法与原生会话查询。
+`RenderPlcBlockDocument` 与 `ComparePlcBlockDocuments` 的块路径导出走 `plc-analysis.ExportBlockDocument` 适配器。
+`GenerateAcceptanceReport` 的可选连接、树查询使用会话事实通道；这些额外原生依赖是实现核对发现的计划差异。
+
+B1b 仍开放：F01 旧版产品决策 U8 尚未决定，F02 的 V20/V21 文档格式与 F03 的 Classic V21 / Unified V19+
+产物格式仍需逐版审查。不得仅因纯托管代码可运行就开放 V14 SP1–V19。验证结果和待审事项见
+`bin-build/refactor/P8-03a.result.md`（本地工作记录；G9 由审查者执行）。
+
 ## 1. 能力族清单
 
 操作缩写：R=READ、W=WRITE、F=FILE、Off=OFFLINE、On=ONLINE、OnW=ONLINE-WRITE、X=EXECUTE、S=SESSION。执行位置：host=Foundation 主机内（net10），worker=引擎 worker 内（net48）。
@@ -34,9 +46,9 @@
 
 | 族 | 名称 | V20/V21 | 操作构成 | 执行位置 | V21 独有 | 引擎工具文件 | 主要服务/类（src/Engine/…） |
 |---|---|---:|---|---|---|---|---|
-| F01 | 宿主元工具与诊断报告（无 Openness 原生调用） | 28/28 | R11 W4 F4 Off3 X2 S4 | host20 worker8 | — | DiagnosticsTools, EcosystemTools, EngineeringDiagnosticsTools, ExportTools, McpServer.Batch, McpServer.Doctor, McpServer.Maintenance, McpServer.ToolBridge, McpServer.Worker, OfflineSuiteTools, V21EcosystemTools | — |
-| F02 | PLC 离线分析、文档与模板（无 TIA） | 16/16 | R3 F6 Off7 | host6 worker10 | — | EcosystemTools, EngineeringDiagnosticsTools, OfflineAnalysisTools, PlcBlocksTools, PlcDocumentationTools, PlcExternalSourcesTools, QualityAuditTools, TemplateTools, V21EcosystemTools | — |
-| F03 | HMI 离线设计、包与校验（无 TIA） | 20/20 | R2 F2 Off12 X4 | host3 worker17 | — | LibraryTools, OfflineSuiteTools, UnifiedHmiTools, V21EcosystemTools, XmlBuilderTools | — |
+| F01 | 宿主元工具与诊断报告（P8-03a 已迁；可选会话查询保留） | 28/28 | R11 W4 F4 Off3 X2 S4 | host28 | — | DiagnosticsTools, EcosystemTools, EngineeringDiagnosticsTools, ExportTools, McpServer.Batch, McpServer.Doctor, McpServer.Maintenance, McpServer.ToolBridge, McpServer.Worker, OfflineSuiteTools, V21EcosystemTools | — |
+| F02 | PLC 离线分析、文档与模板（P8-03a 已迁；可选导出走适配器） | 16/16 | R3 F6 Off7 | host16 | — | EcosystemTools, EngineeringDiagnosticsTools, OfflineAnalysisTools, PlcBlocksTools, PlcDocumentationTools, PlcExternalSourcesTools, QualityAuditTools, TemplateTools, V21EcosystemTools | — |
+| F03 | HMI 离线设计、包与校验（P8-03a 已迁） | 20/20 | R2 F2 Off12 X4 | host20 | — | LibraryTools, OfflineSuiteTools, UnifiedHmiTools, V21EcosystemTools, XmlBuilderTools | — |
 | F04 | 运行时通道与仿真（S7/Web API/OPC UA 客户端/Open Pipe/PLCSIM Adv） | 19/19 | R2 On10 OnW6 X1 | worker19 | — | EcosystemTools, PlcSimAdvancedTools, RuntimeChannelTools, RuntimeTools | Runtime/PlcSimAdvancedChannel |
 | F05 | 门户会话与工程生命周期 | 9/9 | R2 W3 F2 S2 | worker9 | — | DevicesTools, HmiInspectionTools, NativeExchangeTools, ProjectSecurityTools, ProjectSessionTools, SessionTools | Tools/ScaffoldOperations, ProjectArchive, Portal/Portal.FoundationSession, Worker/SharedSessionLifecycle |
 | F06 | 工程服务：语言与项目文本、设置、比较、对象标识、事务 | 10/10 | R4 W5 F1 | worker10 | — | NativeExchangeTools, ProjectSecurityTools, ProjectSessionTools, SoftwareUnitDeepTools | Portal/Portal.ProjectExchange, Portal/Portal.ObjectIdentity, Portal/Portal.Transactions, ToolTransactionRules, ObjectIdentityRules |

@@ -30,7 +30,7 @@ internal static class PassiveHostDiagnosticsTests
             var worker = new ForbiddenWorker();
             var registry = LegacyHostToolRegistry.Create(worker, release.Key, native);
             check(registry.Where(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name)).Select(t => t.ProtocolTool.Name).Order().SequenceEqual(
-                TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(f => f.Available(release.Key)).SelectMany(f => f.Tools).Order()),
+                PortedToolContract.Families(release.Key).SelectMany(f => f.Tools).Order()),
                 "actual registry adds exactly the reviewed ported families");
             foreach (var name in new[] { "InitializeEnvironment", "RunCapabilitySelfTest" })
             {

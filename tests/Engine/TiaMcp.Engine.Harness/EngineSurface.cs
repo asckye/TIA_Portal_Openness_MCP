@@ -85,6 +85,30 @@ internal sealed class EngineSurface
 
     internal static EngineSurface For(Assembly engine) => surfaces.GetValue(engine, Create);
 
+    internal static string[] HostTools(Assembly engine)
+    {
+        var families = Program.FindReferencedType(engine, "TiaMcp.Adapters.Contracts.PortedFamilies");
+        return ((System.Collections.IEnumerable)families.GetField("All")!.GetValue(null)!).Cast<object>()
+            .Where(f => (string)f.GetType().GetProperty("Name")!.GetValue(f)! != "F19")
+            .SelectMany(f => (string[])f.GetType().GetProperty("Tools")!.GetValue(f)!).ToArray();
+    }
+
+    internal static bool IsHostTool(Assembly engine, string name) => HostTools(engine).Contains(name, StringComparer.Ordinal);
+
+    internal static void CheckHostRetirement(Assembly engine, Action<bool, string> check)
+    {
+        var names = HostTools(engine);
+        check(names.Length == 64 && names.Distinct(StringComparer.Ordinal).Count() == 64, "G4 B1 has exactly 64 host declarations");
+        var catalog = engine.GetType("TiaMcpServer.ModelContextProtocol.ToolCatalog", true)!;
+        var instance = catalog.GetProperty("Engine", All)!.GetValue(null)!;
+        var methods = ((System.Collections.IEnumerable)catalog.GetProperty("Methods", All)!.GetValue(instance)!).Cast<object>()
+            .Select(p => (string)p.GetType().GetProperty("Key")!.GetValue(p)!).ToArray();
+        foreach (var name in names) check(!methods.Contains(name, StringComparer.Ordinal), "G4 engine does not register " + name);
+        foreach (var name in new[] { "PlcOfflineTools", "HmiOfflineTools", "HostMetaTools", "EngineeringDiagnosticsTools", "OfflineAnalysisTools", "PlcDocumentationTools", "ExportTools", "TemplateTools", "QualityAuditTools", "V21EcosystemTools" })
+            check(engine.GetType("TiaMcpServer.ModelContextProtocol." + name, false) == null, "G4 engine has no " + name + " implementation");
+
+    }
+
     internal static void CheckPortedHardwareRetirement(Assembly engine, Action<bool, string> check)
     {
         var families = Program.FindReferencedType(engine, "TiaMcp.Adapters.Contracts.PortedFamilies");

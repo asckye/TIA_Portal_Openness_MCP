@@ -34,7 +34,7 @@ namespace TiaMcpServer
 
         internal static void RunOnlineMonitoringSafetySelfTest()
         {
-            var result = EngineServices.Get<DiagnosticsTools>().RunOnlineMonitoringSafetySelfTest();
+            var result = HostToolCommand.Run<ResponseSafetySelfTest>("RunOnlineMonitoringSafetySelfTest", new JsonObject());
             var json = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -1174,11 +1174,11 @@ namespace TiaMcpServer
 
         internal static async Task RunGenerateAcceptanceReport(CliOptions options)
         {
-            var response = await EngineServices.Get<DiagnosticsTools>().GenerateAcceptanceReport(
-                outputDirectory: options.AcceptanceReportDirectory ?? string.Empty,
-                connectIfNeeded: options.CapabilitySelfTestConnect,
-                includeProjectTree: options.CapabilitySelfTestProjectTree,
-                inspectPortalProcesses: options.CapabilitySelfTestInspectProcesses);
+            var response = HostToolCommand.Run<ResponseAcceptanceReport>("GenerateAcceptanceReport", new JsonObject {
+                ["outputDirectory"] = options.AcceptanceReportDirectory ?? string.Empty,
+                ["connectIfNeeded"] = options.CapabilitySelfTestConnect,
+                ["includeProjectTree"] = options.CapabilitySelfTestProjectTree,
+                ["inspectPortalProcesses"] = options.CapabilitySelfTestInspectProcesses });
             var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true
@@ -1188,12 +1188,12 @@ namespace TiaMcpServer
 
         internal static void RunGenerateErrorReport(CliOptions options)
         {
-            var response = EngineServices.Get<DiagnosticsTools>().GenerateErrorReport(
-                errorCode: options.ErrorReportCode ?? "UnknownError",
-                summary: options.ErrorReportSummary ?? "No summary provided.",
-                detail: options.ErrorReportDetail ?? string.Empty,
-                recommendedNextActions: options.ErrorReportActions ?? string.Empty,
-                outputDirectory: options.ErrorReportDirectory ?? string.Empty);
+            var response = HostToolCommand.Run<ResponseErrorReport>("GenerateErrorReport", new JsonObject {
+                ["errorCode"] = options.ErrorReportCode ?? "UnknownError",
+                ["summary"] = options.ErrorReportSummary ?? "No summary provided.",
+                ["detail"] = options.ErrorReportDetail ?? string.Empty,
+                ["recommendedNextActions"] = options.ErrorReportActions ?? string.Empty,
+                ["outputDirectory"] = options.ErrorReportDirectory ?? string.Empty });
             var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true

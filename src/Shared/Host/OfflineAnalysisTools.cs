@@ -1,3 +1,4 @@
+#if !TIA_ENGINE_PORTED
 using ModelContextProtocol.Protocol;
 using System;
 using System.ComponentModel;
@@ -15,7 +16,6 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class OfflineAnalysisTools
     {
-#if !TIA_ENGINE_HOST
         [McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]
         public CallToolResult ComparePlcBlockDocumentsV4(
             [Description("leftFilePath: full path of the left document on the TIA machine.")] string leftFilePath = "",
@@ -62,7 +62,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             });
 
-#endif
         [McpServerTool(Name = "ScanPlcSourceAnnotations"), Description("[L2][Validation][FILE] Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]) for annotation markers in comments, block/network titles and network comments. markers default [\"TODO\",\"FIXME\",\"HACK\",\"XXX\",\"NOTE\",\"BUG\"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
         public CallToolResult ScanPlcSourceAnnotationsV4(
             [Description("directory: See the operation description and its bounds.")] string directory,
@@ -167,3 +166,5 @@ namespace TiaMcpServer.ModelContextProtocol
 
     }
 }
+
+#endif

@@ -27,6 +27,12 @@ internal static class EngineReleaseHost
             return 0;
         }
         await worker.Status(CancellationToken.None);
+        if (options.HostCommand != null)
+        {
+            using var context = pipeline.EnterSession();
+            await HostToolCommand.Run(options.HostCommand, pipeline);
+            return 0;
+        }
         if (options.Transport == "http")
         {
             // Verify the release and capabilities before listening; sessions never use this probe.

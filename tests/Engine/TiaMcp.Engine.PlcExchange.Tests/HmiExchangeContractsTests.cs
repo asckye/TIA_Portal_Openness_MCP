@@ -87,7 +87,7 @@ namespace PlcExchangeTests
         [InlineData("{}")]
         [InlineData("[null]")]
         [InlineData("[42]")]
-        public async Task DirectBridgeAndBatchRejectErasedOrInvalidArraysBeforeService(string value)
+        public async Task DirectAndNestedDispatchRejectErasedOrInvalidArraysBeforeService(string value)
         {
             string json = "{\"softwarePath\":\"HMI\",\"action\":\"import\",\"directory\":\"C:/fixture\",\"expectedTagNames\":" + value + "}";
             var method = Method("ExchangeUnifiedTags");
@@ -96,8 +96,7 @@ namespace PlcExchangeTests
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new CallToolRequestParams { Name = "ExchangeUnifiedTags", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) }
             };
-            var batch = McpServer.PreviewToolBatch(new[] { new ToolCall("ExchangeUnifiedTags", Args(json)) }, "Fixture");
-            foreach (var result in new[] { await direct.InvokeAsync(request), McpServer.CallTool("ExchangeUnifiedTags", Args(json)), batch })
+            foreach (var result in new[] { await direct.InvokeAsync(request), (CallToolResult)Boundary("DispatchNestedTool", "ExchangeUnifiedTags", Args(json))! })
             {
                 var body = Body(result);
                 Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
@@ -112,7 +111,7 @@ namespace PlcExchangeTests
         [InlineData("ExpectedTagNames", "[]")]
         public void OldAndWrongCaseParametersAreRejected(string parameter, string value)
         {
-            var result = McpServer.CallTool("ExchangeUnifiedTags", Args("{\"softwarePath\":\"HMI\",\"action\":\"import\",\"directory\":\"C:/fixture\",\"" + parameter + "\":" + value + "}"));
+            var result = (CallToolResult)Boundary("DispatchNestedTool", "ExchangeUnifiedTags", Args("{\"softwarePath\":\"HMI\",\"action\":\"import\",\"directory\":\"C:/fixture\",\"" + parameter + "\":" + value + "}"))!;
             Assert.Equal("INVALID_ARGUMENT", (string?)Body(result)["error"]!["code"]);
         }
 

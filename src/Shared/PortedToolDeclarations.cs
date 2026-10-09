@@ -9,15 +9,21 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal static class PortedToolDeclarations
     {
-        private static readonly IReadOnlyDictionary<string, Type> Types = new Dictionary<string, Type>(StringComparer.Ordinal) {
-            ["F19"] = typeof(AddressesTools)
+        private static readonly IReadOnlyDictionary<string, Type[]> Types = new Dictionary<string, Type[]>(StringComparer.Ordinal) {
+#if !TIA_ENGINE_PORTED
+            ["F01"] = new[] { typeof(McpServer), typeof(HostMetaTools), typeof(ExportTools), typeof(OfflineSuiteTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
+            ["F02"] = new[] { typeof(PlcOfflineTools), typeof(PlcDocumentationTools), typeof(OfflineAnalysisTools), typeof(TemplateTools), typeof(QualityAuditTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
+            ["F03"] = new[] { typeof(HmiOfflineTools), typeof(OfflineSuiteTools), typeof(XmlBuilderTools), typeof(V21EcosystemTools) },
+#endif
+            ["F19"] = new[] { typeof(AddressesTools) }
         };
 
         internal static IEnumerable<MethodInfo> Methods(string release)
         {
             foreach (var family in PortedFamilies.All.Where(f => f.Available(release)))
             {
-                var methods = Types[family.Name].GetMethods().Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
+                if (!Types.TryGetValue(family.Name, out var types)) continue;
+                var methods = types.SelectMany(t => t.GetMethods()).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() is { } attribute && family.Tools.Contains(attribute.Name, StringComparer.Ordinal)).ToArray();
                 var names = methods.Select(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).ToArray();
                 if (names.Length != family.Tools.Length || names.Distinct(StringComparer.Ordinal).Count() != names.Length
                     || names.Except(family.Tools, StringComparer.Ordinal).Any())

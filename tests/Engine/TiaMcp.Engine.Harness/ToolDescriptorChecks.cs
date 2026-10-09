@@ -14,7 +14,8 @@ internal static class ToolDescriptorChecks
         var complete = (IDictionary)catalogType.GetProperty("IncludingUnavailable", flags)!.GetValue(catalog)!;
         var executionType = Assembly.Load("TiaMcp.Logic").GetType("TiaMcpServer.ModelContextProtocol.ToolExecution", true)!;
         var execution = (IDictionary)executionType.GetField("Table", flags)!.GetValue(null)!;
-        check(complete.Count == 491 && execution.Count == complete.Count, "complete execution table matches the engine catalog");
+        check(complete.Count == 491 - EngineSurface.HostTools(engine).Length && execution.Count == 491,
+            "complete execution table includes the host declarations excluded from the engine catalog");
         foreach (DictionaryEntry pair in complete)
         {
             string name = (string)pair.Key;

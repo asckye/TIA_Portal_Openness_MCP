@@ -1,3 +1,4 @@
+extern alias enginehost;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,8 +18,40 @@ using Xunit;
 
 namespace PlcExchangeTests
 {
-    public sealed class PlcExchangeContractsTests
+    public sealed class PlcExchangeContractsTests : IDisposable
     {
+        private static readonly Assembly Host = typeof(enginehost::TiaMcp.FoundationHost.EngineHostPipeline).Assembly;
+        private static Type HostType(string name) => Host.GetType(name, true)!;
+        public PlcExchangeContractsTests()
+        {
+            var configuration = HostType("TiaMcp.FoundationHost.EngineHostConfiguration");
+            configuration.GetProperty("Worker", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null, new HostWorker());
+            configuration.GetField("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!.SetValue(null,
+                Engine.GetName().Name!.EndsWith("V20", StringComparison.Ordinal) ? "20" : "21");
+        }
+        public void Dispose()
+        {
+            var context = HostType("TiaMcp.FoundationHost.EngineHostConfiguration").GetProperty("Current", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
+            ((IDisposable)context.GetType().GetProperty("Exports", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context)!).Dispose();
+        }
+        private sealed class HostWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+        {
+            public bool Faulted => false;
+            public JsonNode? Binding => null;
+            public object SessionKey { get; } = new();
+            public JsonObject Snapshot() => new();
+            public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
+            public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
+            public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
+            public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
+            public void Dispose() { }
+        }
+        private static string Park(string tool, string target, string content)
+        {
+            var result = ((string id, ExportSlice head))HostType("TiaMcp.FoundationHost.SessionExportStore")
+                .GetMethod("PutAndSlice", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { tool, target, content, 4 })!;
+            return result.id;
+        }
         public static int Main() => 2;
         static PlcExchangeContractsTests()
         {
@@ -36,11 +69,16 @@ namespace PlcExchangeTests
         }
         private static readonly Assembly Engine = typeof(McpServer).Assembly;
         private static Type Type(string name) => Engine.GetType("TiaMcpServer.ModelContextProtocol." + name, true)!;
-        private static readonly string[] Owners = { "DocumentsTools", "ExportTools", "NativeExchangeTools", "PlcExternalSourcesTools" };
+        private static readonly string[] Owners = { "DocumentsTools", "NativeExchangeTools", "PlcExternalSourcesTools" };
         private static Dictionary<string, MethodInfo> Entries() => Owners.SelectMany(n => Type(n).GetMethods())
+            .Concat(HostType("TiaMcpServer.ModelContextProtocol.ExportTools").GetMethods())
+            .Concat(HostType("TiaMcpServer.ModelContextProtocol.PlcOfflineTools").GetMethods()
+                .Where(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == "WritePlcSclSourceFile"))
             .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
             .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!, m => m);
-        private static object Instance(Type type) => Activator.CreateInstance(type, type.GetConstructors().Single().GetParameters().Select(_ => (object?)null).ToArray())!;
+        // These admission cases must return before using either injected native
+        // dependency. Avoid resolving Siemens constructor signatures in CI.
+        private static object Instance(Type type) => System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type);
         private static JsonObject Body(CallToolResult result)
         {
             Assert.Single(result.Content);
@@ -312,7 +350,7 @@ namespace PlcExchangeTests
             Directory.CreateDirectory(directory);
             try
             {
-                var entry = ExportStore.Get(ExportStore.Put("Fixture", "target", "Hello 中文"))!;
+                var entry = ExportStore.Get(Park("Fixture", "target", "Hello 中文"))!;
                 var page = Invoke("GetExportContent", entry.Id, 0, 3);
                 Assert.Equal("Hel", (string?)page["data"]!["text"]);
                 Assert.Equal(3, (int)page["meta"]!["paging"]!["nextOffset"]!);
@@ -337,9 +375,9 @@ namespace PlcExchangeTests
             ExportStore.Clear(0);
             try
             {
-                ExportStore.Put("Fixture", "first", "one");
-                ExportStore.Put("Fixture", "second", "two");
-                ExportStore.Put("Other", "third", "three");
+                Park("Fixture", "first", "one");
+                Park("Fixture", "second", "two");
+                Park("Other", "third", "three");
                 var body = Invoke("ListExportHandles", "Fixture", 1);
                 Verdict(body, "succeeded", "read-only");
                 Assert.Equal("partial", (string?)body["meta"]!["completeness"]);

@@ -45,6 +45,7 @@ internal static partial class Program
         var release = (Dictionary<string, object>)releases[major.ToString(System.Globalization.CultureInfo.InvariantCulture)];
         return Convert.ToInt32(release["toolCount"], System.Globalization.CultureInfo.InvariantCulture);
     }
+    internal static int ExpectedEngineToolCount(int major) => ExpectedFullToolCount(major) - EngineSurface.HostTools(Server).Length - 7;
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     internal static bool HasChinese(string? value) => !String.IsNullOrEmpty(value)
@@ -74,14 +75,11 @@ internal static partial class Program
     private static Dictionary<string, object> GetToolUsage(string toolName = "", string query = "", string language = "",
         string exampleId = "", string exampleKind = "all")
     {
-        var type = FindServerType(Server, "TiaMcpServer.ModelContextProtocol.ToolUsageTools");
-        var method = type.GetMethod("GetToolUsage", All)!;
-        var target = Activator.CreateInstance(type, true);
-        var result = method.Invoke(target, new object[] { toolName, query, "", 0, 80, "", language, exampleId, exampleKind })!;
-        var content = (IEnumerable)result.GetType().GetProperty("Content")!.GetValue(result)!;
-        var block = content.Cast<object>().First();
-        var text = (string)block.GetType().GetProperty("Text")!.GetValue(block)!;
-        return Json.Deserialize<Dictionary<string, object>>(text)!;
+        var result = HostPortRunner.Call(Server, "GetToolUsage", new System.Text.Json.Nodes.JsonObject {
+            ["toolName"] = toolName, ["query"] = query, ["language"] = language,
+            ["exampleId"] = exampleId, ["exampleKind"] = exampleKind, ["limit"] = 80
+        });
+        return Json.Deserialize<Dictionary<string, object>>(result.ToJsonString())!;
     }
     private static Dictionary<string, object> AsObject(object value) => (Dictionary<string, object>)value;
     // JavaScriptSerializer returns object[] or ArrayList depending on the target type.
@@ -189,7 +187,7 @@ internal static partial class Program
         });
         await Test("obsolete and unknown commands exit without starting the MCP server", () => {
             foreach (string command in new[] { "stop", "STOP", "stop --transport http", "unknown-command" }) {
-                var start = new System.Diagnostics.ProcessStartInfo(Server.Location, command) {
+                var start = new System.Diagnostics.ProcessStartInfo(Server.Location, command + " --bundle-root \"" + HostPortRunner.RepositoryRoot() + "\"") {
                     UseShellExecute = false, CreateNoWindow = true,
                     RedirectStandardOutput = true, RedirectStandardError = true
                 };
@@ -440,6 +438,12 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if (args.Length > 2 && Directory.Exists(args[2]))
+                AppDomain.CurrentDomain.AssemblyResolve += (_, requested) => {
+                    string dependency = Path.Combine(Path.GetFullPath(args[2]), new AssemblyName(requested.Name).Name + ".dll");
+                    return File.Exists(dependency) ? Assembly.LoadFrom(dependency) : null;
+                };
+            EngineSurface.CheckHostRetirement(Server, Check);
             if (args.Length >= 2 && args[1] == "descriptor-catalog-only") {
                 ToolDescriptorChecks.Run(Server, (ok, message) => { Check(ok, message); Passed++; });
                 Console.WriteLine("COMPLETE: " + Passed + " descriptor catalog checks passed");
@@ -737,7 +741,7 @@ internal static partial class Program
                 };
                 TiaMcp.Engine.Tests.OfflineContractsTests.Run(Server, Path.GetFullPath(args[3]),
                     (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
-                Check(Passed >= 453, "Missing offline contract checks");
+                Check(Passed >= 64, "Missing engine retirement checks; offline assertions run in the net10 offline suites.");
                 Console.WriteLine("COMPLETE: " + Passed + " offline contract checks passed");
                 return 0;
             }

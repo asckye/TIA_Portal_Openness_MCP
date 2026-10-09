@@ -179,7 +179,6 @@ namespace TiaMcpServer.Siemens
 
         PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false);
         List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind);
-        (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string softwarePath, string blockPath);
         ResponseMessage ManageProjectLanguage(string action = "read", string culture = "", bool dryRun = true);
         ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade = false, bool dryRun = true);
         ResponseMessage ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun = true);

@@ -122,7 +122,7 @@ internal static class HttpStartupNoTiaChecks
                         page++;
                     } while (!String.IsNullOrEmpty(cursor));
 
-                    int expected = Program.ExpectedFullToolCount(major);
+                    int expected = Program.ExpectedEngineToolCount(major);
                     Check(count == expected, "V" + major + " HTTP " + (isolate ? "isolated" : "direct")
                         + " roster has " + count + " tools; expected " + expected + ".");
 

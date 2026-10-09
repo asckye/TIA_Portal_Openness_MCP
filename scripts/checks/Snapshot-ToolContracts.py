@@ -663,7 +663,7 @@ def verified_contracts(directory, root):
         raise ValueError('Full-engine registered source inventory differs from generated catalog: '
                          + f'missing={sorted(catalog_engine - source_engine)}, '
                          + f'unregistered={sorted(source_engine - catalog_engine)}')
-    source_foundation = foundation_registered_names(root, contracts)
+    source_foundation = foundation_registered_names(root, contracts, RELEASES[:6])
     catalog_foundation = set().union(*(rosters[release][0] for release in RELEASES[:6]))
     if source_foundation != catalog_foundation:
         raise ValueError('Foundation registered source inventory differs from generated catalog: '
@@ -752,9 +752,13 @@ def current_parameters(root):
     return params
 
 
-def foundation_registered_names(root, parameters=None):
+def foundation_registered_names(root, parameters=None, releases=RELEASES):
     parameters = parameters if parameters is not None else current_parameters(root)
     names = {name for (profile, name) in parameters if profile == 'plc-foundation'}
+    import ported_families
+    for family in ported_families.families(root).values():
+        if not set(releases) & set(family['releases']):
+            names.difference_update(family['tools'])
     names.difference_update(FOUNDATION_UNAVAILABLE_BELOW_20)
     wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
     renames = dict(re.findall(r'\["([^"\n]+)"\]\s*=\s*"([^"\n]+)"', wrapper))

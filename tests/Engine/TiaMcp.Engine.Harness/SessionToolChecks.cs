@@ -18,7 +18,7 @@ internal static class SessionToolChecks
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
         var isControl = server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost", true)!.GetMethod("IsControl", all)!;
-        foreach (var domain in new[] { (Name: "Session", Count: 9), (Name: "ProjectSession", Count: 11), (Name: "Diagnostics", Count: 4) })
+        foreach (var domain in new[] { (Name: "Session", Count: 9), (Name: "ProjectSession", Count: 11), (Name: "Diagnostics", Count: 1) })
         {
             var type = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             var target = provider.GetService(type);
@@ -45,16 +45,13 @@ internal static class SessionToolChecks
                 check(forwarder == null && ReferenceEquals(surface.Target(method), provider.GetService(method.DeclaringType!)),
                     name + " resolves directly through EngineServices without a static compatibility forwarder");
                 check(!(bool)isControl.Invoke(null, new object[] { name })!, name + " remains proxied to the isolated worker");
-                var preflight = Invoke("PreviewToolCall", new JsonObject { ["name"] = name,
-                    ["arguments"] = new JsonObject { ["probe"] = true } }.ToJsonString());
-                check((string?)preflight["error"]?["code"] == "INVALID_ARGUMENT",
-                    name + " preflight resolves the migrated tool before argument rejection");
+
             }
         }
 
         JsonObject Invoke(string name, string arguments)
         {
-            var method = surface.Tool(name);
+            var method = name == "CallTool" ? surface.ToolMethod("DispatchNestedTool", all) : surface.Tool(name);
             var values = JsonNode.Parse(arguments)!.AsObject();
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var args = method.GetParameters().Select(parameter => values.TryGetPropertyValue(parameter.Name!, out var value)
@@ -68,20 +65,6 @@ internal static class SessionToolChecks
         var scaffold = Invoke("CallTool", "{\"name\":\"BuildProjectScaffold\",\"arguments\":{\"spec\":\"{\\\"projectName\\\":\\\"Offline\\\",\\\"directoryPath\\\":\\\"C:/domain-offline\\\"}\",\"dryRun\":true}}");
         check(scaffold["ok"]!.GetValue<bool>() && scaffold["data"]!["summary"]!.GetValue<string>().Contains("0 ok, 0 failed"),
             "CallTool invokes the migrated BuildProjectScaffold preview without connecting");
-        var read = Invoke("RunReadOnlyToolBatch", "{\"operations\":[{\"name\":\"GetSessionState\",\"arguments\":{}},{\"name\":\"GetPortalInfo\",\"arguments\":{\"includeProcesses\":false}}]}");
-        check(read["data"]!["items"]!.AsArray().Count == 2 && read["ok"]!.GetValue<bool>(),
-            "RunReadOnlyToolBatch resolves both migrated session readers offline");
-        var validate = facade.GetMethod("ValidateBatch", all)!;
-        var batchArguments = new object?[] { JsonSerializer.Deserialize(
-            "[{\"name\":\"ShowObjectInEditor\",\"arguments\":{\"dryRun\":false}}]", validate.GetParameters()[0].ParameterType,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }), true, null };
-        check(validate.Invoke(null, batchArguments) == null, "Write batch validation accepts the session preview tool");
-        var plan = JsonNode.Parse(JsonSerializer.Serialize(batchArguments[2], batchArguments[2]!.GetType(),
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))!.AsArray();
-        check(plan[0]!["arguments"]!["dryRun"]!.GetValue<bool>(), "Write batch validation resolves ShowObjectInEditor and forces preview");
-        var apply = Invoke("ApplyToolBatch", "{\"token\":\"offline-invalid-token\"}");
-        check(!apply["ok"]!.GetValue<bool>() && (string?)apply["error"]?["code"] == "NOT_FOUND"
-            && (string?)apply["meta"]?["execution"] == "not-started",
-            "ApplyToolBatch rejects an invalid token before any project write");
+        EngineSurface.CheckHostRetirement(server, check);
     }
 }

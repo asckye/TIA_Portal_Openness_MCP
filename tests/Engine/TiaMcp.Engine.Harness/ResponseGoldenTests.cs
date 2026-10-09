@@ -224,45 +224,6 @@ internal sealed class ResponseGoldenTests
     private Exception PortalError() => (Exception)Activator.CreateInstance(Type("Siemens.PortalException"),
         Enum.Parse(Type("Siemens.PortalErrorCode"), "NotFound"), "synthetic portal failure", new[] { "候选" }, null)!;
 
-    private void CaptureBatch(string name, object target, bool succeeded, Action<bool, string> check)
-    {
-        bool rejected = false;
-        try { surface.Invoke(surface.ToolMethod("ToolResult"), new[] { target }); }
-        catch (TargetInvocationException ex) when (ex.InnerException is JsonException || ex.InnerException is InvalidDataException)
-        { rejected = true; }
-        check(rejected, "batch/" + name + " cannot dispatch a legacy executor result as a tool envelope");
-        // Legacy executor DTOs remain internal evidence. They cannot cross the
-        // tool boundary; construct the synthetic V4 child before aggregation.
-        var data = JsonNode.Parse(Serialize(target, bridge))!.AsObject();
-        check(surface.Invoke(surface.ToolMethod("ResultSucceeded"), new object[] { data }) == null,
-            "batch/" + name + " does not infer a verdict from a V3 result");
-        // Use the current envelope factory and real aggregate; target bodies are
-        // synthetic, and their original executor bytes are checked separately.
-        var factory = Type("ModelContextProtocol.McpServer").GetMethods(All)
-            .Single(m => m.Name == "V4Result" && m.GetParameters().Length == 8);
-        var parameters = factory.GetParameters();
-        var error = succeeded ? null : surface.Invoke(surface.ToolMethod("InvalidInput"), new object[] { "fixture" });
-        var protocol = surface.Invoke(factory, new object?[] { "GoldenHmi", data, error,
-            Enum.Parse(parameters[3].ParameterType, succeeded ? "Succeeded" : "ReadFailed"),
-            Enum.Parse(parameters[4].ParameterType, "ReadOnly"),
-            Enum.Parse(parameters[5].ParameterType, succeeded ? "Complete" : "None"), null, false })!;
-        var row = (JsonObject)surface.Invoke(surface.ToolMethod("BatchRow"), new object[] { 0, "GoldenHmi", protocol })!;
-        var rows = new JsonArray(row);
-        string retained = rows.ToJsonString();
-        var result = (CallToolResult)surface.Invoke(surface.ToolMethod("BatchResult"), new object[] { "RunReadOnlyToolBatch", rows, false })!;
-        var body = result.StructuredContent!.AsObject();
-        check(result.Content.Count == 1 && result.Content[0] is TextContentBlock text
-            && JsonNode.DeepEquals(JsonNode.Parse(text.Text), body), "batch/" + name + " text and structured envelopes agree");
-        check(body["schemaVersion"]!.GetValue<int>() == 4 && body["ok"]!.GetValue<bool>() == succeeded
-            && result.IsError == !succeeded && (body["error"] == null) == succeeded
-            && body["meta"]!["outcome"]!.GetValue<string>() == (succeeded ? "succeeded" : "read-failed")
-            && body["meta"]!["execution"]!.GetValue<string>() == "read-only"
-            && body["meta"]!["completeness"]!.GetValue<string>() == (succeeded ? "complete" : "none"),
-            "batch/" + name + " retains the target verdict in the V4 envelope");
-        check(body["data"]!["items"]!.ToJsonString() == retained && body["data"]!["rollbackPerformed"]!.GetValue<bool>() == false,
-            "batch/" + name + " retains every target field and reports no rollback");
-    }
-
     private void Executors(Action<bool, string> check)
     {
         var actions = new (string Name, Func<JsonObject, string> Action)[]
@@ -280,12 +241,10 @@ internal sealed class ResponseGoldenTests
             var target = hmi.Invoke(portal, new object[] { "GoldenHmi", action.Action, false })!;
             Capture("hmi/" + action.Name, target);
             Capture("offline/" + action.Name, surface.Invoke(surface.Method("RunOfflineAnalysisTool", All), new object[] { "GoldenOffline", action.Action })!);
-            CaptureBatch(action.Name, target, action.Name == "success", check);
+            EngineSurface.CheckHostRetirement(server, check);
         }
         // The old delegate could return text without setting success. Preserve
         // that refusal to infer success when a target has no explicit verdict.
-        CaptureBatch("missing-verdict", Response("ResponseMessage", ("Message", "synthetic result without verdict"),
-            ("Meta", new JsonObject { ["rows"] = new JsonArray(1, "中文", null) })), false, check);
         bool invoked = false;
         Func<JsonObject, string> unreachable = meta => { invoked = true; throw new Exception("Blocked action ran"); };
         Capture("hmi/no-project", hmi.Invoke(portal, new object[] { "GoldenHmi", unreachable, true })!);

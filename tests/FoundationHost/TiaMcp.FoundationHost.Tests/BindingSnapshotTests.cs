@@ -9,6 +9,7 @@ internal static class BindingSnapshotTests
     static BindingObservation Capture(FakeProject source,BindingProcessObservation? anchor=null,FakeProcess? processes=null)=>BindingObservationPolicy.Capture(source,processes??new FakeProcess(),anchor);
     internal static void Run(Action<bool,string> Check)
     {
+        var before = AppDomain.CurrentDomain.GetAssemblies().ToHashSet();
         void Unknown(BindingObservation observation,string name)=>Check(observation.State==BindingObservationState.Unknown&&!observation.AllowsV2Admission,name);
         void Throws(Action action,string name) { try { action(); } catch(InvalidOperationException) { Check(true,name); return; } throw new Exception(name); }
         var detached=Capture(Detached()); Check(detached.AllowsV2Admission&&detached.State==BindingObservationState.Unbound,"fresh detached known unbound");
@@ -104,7 +105,7 @@ internal static class BindingSnapshotTests
             return detached;
         }),"diagnostic reentry faults without nested native capture");
         Check(callbacks==0,"diagnostic nested callback never executes");
-        Check(!AppDomain.CurrentDomain.GetAssemblies().Any(a=>a.GetName().Name!.StartsWith("Siemens.",StringComparison.Ordinal)),"no Siemens assembly loaded");
+        Check(!AppDomain.CurrentDomain.GetAssemblies().Except(before).Any(a=>a.GetName().Name!.StartsWith("Siemens.",StringComparison.Ordinal)),"binding observations load no Siemens assembly");
     }
     sealed class FakeProcess : IBindingProcessObservationSource
     {

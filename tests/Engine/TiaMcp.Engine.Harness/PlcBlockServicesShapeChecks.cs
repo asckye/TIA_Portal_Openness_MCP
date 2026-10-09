@@ -101,7 +101,7 @@ internal static class PlcBlockServicesShapeChecks
         foreach (var name in new[] { "GetPlcBlockInfo", "ListPlcBlocks", "GetPlcBlockHierarchy", "ExportPlcBlock", "ImportPlcBlock",
             "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory", "CompilePlcDiagnostics", "RepairAndReimportPlcBlock", "ExportPlcBlocks",
             "DescribePlcBlockLogic", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "SetPlcProgram", "GetPlcBlockFingerprints",
-            "GetPlcBlockEditCapabilities", "AnalyzePlcReferences", "PatchPlcBlockDocument", "ImportPlcBlockVerified",
+            "GetPlcBlockEditCapabilities", "ImportPlcBlockVerified",
             "DeletePlcBlock", "DeletePlcTagTable", "DeletePlcType", "CreatePlcTypeGroup", "DeleteEmptyPlcBlockGroup",
             "CreatePlcBlockGroup", "MovePlcBlockToGroup", "ManagePlcUserGroup" })
         {

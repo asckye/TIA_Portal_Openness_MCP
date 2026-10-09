@@ -1,3 +1,4 @@
+#if !TIA_ENGINE_PORTED
 using TiaMcp.Logic.V4.Domain;
 using ModelContextProtocol.Protocol;
 using System;
@@ -8,7 +9,6 @@ using System.Text;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
-using TiaMcpServer.Siemens.Services;
 using static TiaMcpServer.ModelContextProtocol.McpServer;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -16,10 +16,6 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class PlcDocumentationTools
     {
-        private readonly IEngineeringSession _session;
-
-        public PlcDocumentationTools(IEngineeringSession session) => _session = session;
-
         [McpServerTool(Name = "RenderPlcBlockDocument"), Description("[L2][Validation][OFFLINE] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded.")]
         public CallToolResult RenderPlcBlockDocumentV4(
             [Description("filePath: See the operation description and its bounds.")] string filePath = "",
@@ -57,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     else
                     {
-                        var export = _session.ExportBlockDocumentForAnalysis(softwarePath, blockPath);
+                        var export = HostToolServices.ExportBlockDocument(softwarePath, blockPath);
                         temp = export.TempDir; path = export.XmlPath;
                         meta["source"] = new JsonObject { ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
                     }
@@ -166,3 +162,5 @@ namespace TiaMcpServer.ModelContextProtocol
             });
     }
 }
+
+#endif

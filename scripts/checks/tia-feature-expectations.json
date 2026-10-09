@@ -142,6 +142,7 @@
     "defineConstants": [
       "RELEASE",
       "TIA_ENGINE_LOCAL_PRIMITIVES",
+      "TIA_ENGINE_PORTED",
       "TIA_V20",
       "TRACE"
     ]
@@ -154,6 +155,7 @@
       "PLC_EXTERNAL_SOURCE_GROUP_RENAME",
       "RELEASE",
       "TIA_ENGINE_LOCAL_PRIMITIVES",
+      "TIA_ENGINE_PORTED",
       "TRACE"
     ]
   },

@@ -34,15 +34,9 @@ internal static class SimulationDocumentationShapeChecks
         check(server.GetReferencedAssemblies().All(a => !a.Name.StartsWith("Siemens.Simatic.Simulation", StringComparison.OrdinalIgnoreCase)), "server does not reference the PLCSIM Advanced assembly at compile time (late binding only)");
 
         // ---- offline documentation / lint / AML: no dryRun (pure file tools), outputs are NEW files, taxonomy tags present
-        var render = Tool("RenderPlcBlockDocument");
-        check(Equals(Default(render, "mermaidDirection"), "LR") && Equals(Default(render, "outputPath"), "") && Description(render).StartsWith("[L2][Validation][OFFLINE]", StringComparison.Ordinal), "RenderPlcBlockDocument defaults + tag");
-        var handbook = Tool("GeneratePlcDocumentation");
-        check(handbook.GetParameters().Any(p => p.Name == "outputPath" && !p.HasDefaultValue) && Equals(Default(handbook, "recursive"), true) && Description(handbook).StartsWith("[L2][Validation][FILE]", StringComparison.Ordinal), "GeneratePlcDocumentation requires outputPath, recursive by default, FILE");
-        var lint = Tool("AnalyzePlcSclSource");
-        check(Equals(Default(lint, "limit"), 500) && Description(lint).StartsWith("[L2][Validation][OFFLINE]", StringComparison.Ordinal), "AnalyzePlcSclSource defaults + tag");
         var aml = Tool("BuildDeviceAmlDocument");
         check(aml.GetParameters().Any(p => p.Name == "outputPath" && !p.HasDefaultValue) && Equals(Default(aml, "referenceAmlPath"), "") && Description(aml).StartsWith("[L2][Hardware][OFFLINE]", StringComparison.Ordinal), "BuildDeviceAmlDocument requires outputPath, optional reference, OFFLINE");
-        foreach (var name in new[] { "RenderPlcBlockDocument", "GeneratePlcDocumentation", "AnalyzePlcSclSource", "BuildDeviceAmlDocument" })
+        foreach (var name in new[] { "BuildDeviceAmlDocument" })
             check(Tool(name).GetParameters().All(p => p.Name != "dryRun"), name + " has no dryRun (pure offline tool)");
         var docLogic = Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.PlcDocumentationLogic");
         check(docLogic.GetMethod("RuleCatalog") != null && docLogic.GetMethod("ParseFlgNet") != null && docLogic.GetMethod("Mermaid") != null, "PlcDocumentationLogic rendering/lint entry points");

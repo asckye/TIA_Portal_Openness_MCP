@@ -212,7 +212,7 @@ internal static class FoundationPassiveDiagnostics
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
         bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
-            && TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(family => family.Available(releaseKey)).SelectMany(family => family.Tools)
+            && PortedToolContract.Families(releaseKey).SelectMany(family => family.Tools)
                 .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
         var roster = new JsonArray();
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal))

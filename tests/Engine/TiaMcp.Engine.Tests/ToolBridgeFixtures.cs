@@ -243,7 +243,7 @@ namespace TiaMcp.Engine.Tests
         public void AssemblyDiscoveryIncludesEveryAttributedTypeOnly()
         {
             Assert.Equal(new ToolCatalog(new[] {
-                typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools),
+                typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(HostMetaTools), typeof(ExportTools), typeof(EngineeringDiagnosticsTools), typeof(HmiInspectionTools), typeof(MigrationReadTools),
                 typeof(RuntimeSettingsTools), typeof(OnlineDownloadTools), typeof(PlcSimAdvancedTools), typeof(RuntimeChannelTools), typeof(RuntimeTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools),
                 typeof(AddressesTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
                 typeof(GitWorkflowTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(OfflineAnalysisTools), typeof(OfflineSuiteTools),

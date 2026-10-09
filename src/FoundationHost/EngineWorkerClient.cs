@@ -9,8 +9,19 @@ using TiaMcp.PlcWorker;
 
 namespace TiaMcp.FoundationHost;
 
-internal sealed class EngineWorkerClient(HostOptions options, string workerHash) : IEngineWorker, IEngineWorkerProgress, IFoundationSessionWorker, IFoundationWorkerResult
+internal sealed class EngineWorkerClient(HostOptions options, string workerHash) : IEngineWorker, IEngineWorkerProgress, IFoundationSessionWorker, IFoundationWorkerResult, TiaMcpServer.ModelContextProtocol.IHostToolServices
 {
+    public async Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
+    {
+        using var lane = await AcquireLane(token).ConfigureAwait(false);
+        if (Poisoned) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
+        await Start(token).ConfigureAwait(false);
+        bool connects = operation == "session.ConnectPortal";
+        var wire = await channel!.CallAsync("host.observe", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }.ToJsonString(),
+            connects ? BindingChange.MayAdvance : BindingChange.None, !connects, timeouts.For("status"), token).ConfigureAwait(false);
+        if (connects) await ReadStatus(CancellationToken.None).ConfigureAwait(false);
+        return JsonNode.Parse(wire);
+    }
     private static readonly AsyncLocal<EngineWorkerClient?> Held = new();
     private readonly SemaphoreSlim serial = new(1, 1);
     private readonly WorkerTimeoutPolicy timeouts = new(options.EngineTimeoutSeconds, options.WorkerTimeoutConfig,

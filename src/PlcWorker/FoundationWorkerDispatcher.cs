@@ -51,6 +51,8 @@ namespace TiaMcp.PlcWorker
                 compileCandidateEnabled ? WorkerOperations.CompileCandidate : null
             }.Where(n => n != null).Select(n => n!));
             var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), names) };
+            if (releaseKey == "20" || releaseKey == "21")
+                modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
                 modules.Add(new WorkerOperationModule(family.OperationPrefix, typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));
             methods = WorkerOperationModule.Register(modules);

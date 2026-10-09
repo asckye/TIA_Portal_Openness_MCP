@@ -5,6 +5,7 @@
     <RootNamespace>TiaMcp.Engine.V20</RootNamespace>
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);TIA_ENGINE_PORTED</DefineConstants>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
     <DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
@@ -24,6 +25,7 @@
       <_Parameter1>TiaMcpEngineWorkerSdkFixture</_Parameter1>
       <_Parameter2>true</_Parameter2>
     </AssemblyAttribute>
+    <Compile Include="../Shared/LibraryToolContract.cs" Link="Shared/LibraryToolContract.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esprima" Version="3.0.5" />
@@ -74,9 +76,25 @@
   <Import Project="../EngineHost/EngineHostSources.props" />
   <ItemGroup>
     <Compile Include="../Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
+    <Compile Include="../Shared/UnifiedHmiContract.cs" Link="Shared/UnifiedHmiContract.cs" />
+    <Compile Include="../Shared/OnlineMonitoringPolicy.cs" Link="Shared/OnlineMonitoringPolicy.cs" />
+    <Compile Include="../Shared/Host/EnvironmentDoctor.cs" Link="Shared/Host/EnvironmentDoctor.cs" />
+    <Compile Include="../Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" Link="Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" />
+    <Compile Include="../Shared/HmiDesignBuilder.cs" Link="Shared/HmiDesignBuilder.cs" />
+    <Compile Include="../Shared/CapabilitySelfTestLogic.cs" Link="Shared/CapabilitySelfTestLogic.cs" />
     <Compile Include="../Shared/DeclaredToolMetadata.cs" Link="Shared/DeclaredToolMetadata.cs" />
     <Compile Include="../Shared/PortedToolDeclarations.cs" Link="Shared/PortedToolDeclarations.cs" />
     <Compile Include="../Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../Shared/HardwareAddressingService.cs" Link="Shared/HardwareAddressingService.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/Host/McpServer.ToolBridge.cs" Link="Shared/Host/McpServer.ToolBridge.cs" />
+    <Compile Include="../Shared/Host/McpServer.Exports.cs" Link="Shared/Host/McpServer.Exports.cs" />
+    <Compile Include="../Shared/Host/EcosystemTools.cs" Link="Shared/Host/EcosystemTools.cs" />
+    <Compile Include="../Shared/Host/XmlBuilderTools.cs" Link="Shared/Host/XmlBuilderTools.cs" />
+    <Compile Include="../Shared/Host/OfflineSuiteTools.cs" Link="Shared/Host/OfflineSuiteTools.cs" />
+    <Compile Include="../Shared/Host/OfflineToolExecution.cs" Link="Shared/Host/OfflineToolExecution.cs" />
+    <Compile Include="../Shared/Host/ExportTools.cs" Link="Shared/Host/ExportTools.cs" />
+    <Compile Include="../Shared/PlcToolContract.cs" Link="Shared/PlcToolContract.cs" />
+  </ItemGroup>
 </Project>

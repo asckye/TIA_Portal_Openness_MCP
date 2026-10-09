@@ -78,7 +78,7 @@ public sealed class PipelineTests(ITestOutputHelper output)
     {
         using var fixture = new Fixture(release, all: true);
         Assert.Equal(count, fixture.Catalog.All.Count);
-        Assert.Equal(45, fixture.Catalog.All.Values.Count(t => t.Execution == "host"));
+        Assert.Equal(80, fixture.Catalog.All.Values.Count(t => t.Execution == "host"));
         Assert.All(fixture.Catalog.All.Values, tool => Assert.Equal(ToolExecution.Table[tool.Name], tool.Execution));
         Assert.Equal(count, McpServer.GetAllTools().Count);
     }

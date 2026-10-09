@@ -16,6 +16,7 @@ using EngineFixture = enginefixture::TiaMcp.Engine.Tests.BehaviorParityEngine;
 
 internal static class EngineHostParity
 {
+    internal static IDisposable EnterScope() => new Scope(false, true);
     internal static string Run(string scenario) => Execute(() => EngineFixture.Run(scenario), true);
     internal static string RunPrecondition(string tool, string message, string? parameter, bool argument, bool wrapped, bool typed, string arguments)
         => Execute(() => EngineFixture.RunPrecondition(tool, message, parameter, argument, wrapped, typed, arguments), false);
@@ -35,10 +36,19 @@ internal static class EngineHostParity
         public IReadOnlyList<Descriptor> Lite => All.Values.ToArray();
         public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var value) ? value : null;
         public JsonArray BehaviorCapabilities { get; }
-        internal Catalog(string release)
+        internal Catalog(string release, bool complete = false)
         {
-            All = JsonSerializer.Deserialize<Descriptor[]>(EngineFixture.CatalogJson(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!
+            var all = JsonSerializer.Deserialize<Descriptor[]>(EngineFixture.CatalogJson(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!
                 .ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
+            if (complete)
+                foreach (var method in enginehost::TiaMcpServer.ModelContextProtocol.PortedToolDeclarations.Methods(release))
+                {
+                    var name = method.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>()!.Name!;
+                    if (all.ContainsKey(name)) continue;
+                    enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
+                    all.Add(name, descriptor);
+                }
+            All = all;
             BehaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(Catalog).Assembly, release);
         }
     }
@@ -48,13 +58,13 @@ internal static class EngineHostParity
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly bool context;
         private readonly bool approvalContext;
-        internal Scope(bool approvalContext)
+        internal Scope(bool approvalContext, bool complete = false)
         {
             var type = typeof(EngineFixture).Assembly.GetType("TiaMcpServer.ModelContextProtocol.McpServer")!;
             string release = (string)type.GetProperty("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
             enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = new Worker();
-            var catalog = new Catalog(release);
+            var catalog = new Catalog(release, complete);
             var invoker = new Invoker(catalog, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, lifetime);
             if (EngineFixture.ExternalStagingStore is ImportStagingStore store)
                 invoker.SetLocalTarget(typeof(enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingTools),

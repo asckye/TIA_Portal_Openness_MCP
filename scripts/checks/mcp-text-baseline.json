@@ -6,7 +6,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "010eb48b6539b1b21a5f6e34ea66de332feed08cf915a1846b7b881ef698829a",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 54,
       "cjk": 4,
       "literal": "\"Unified HMI 模板布局 QA\"",
@@ -26,7 +26,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "013b15d6bd49324da4d8f8e25a7fd1fa45fadbdf3538f4823afeb502128402fd",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 87,
       "cjk": 15,
       "literal": "\"请使用与已安装 TIA Portal 版本匹配的 TIA MCP 引擎和 Openness API。\"",
@@ -146,7 +146,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "06fd721fcf485173a5585d85f5a50701ff2869bccdf9590aa4d5919158e51557",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 83,
       "cjk": 29,
       "literal": "\"请安装受支持的 TIA Portal 版本并选择 Openness 组件，或将 TiaPortalLocation 设置为安装目录；运行 `tia doctor` 查看详情。\"",
@@ -304,7 +304,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "0f5c44cdf9c0339ed38134c5a3efd856f24d92ba6c339a587a388945bf6014f5",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 41,
       "cjk": 2,
       "literal": "\"TIA V21 PublicAPI net48 可用\"",
@@ -344,7 +344,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "148c9945ecffc8dd0a6afab99d2add35a53cd1681f2e6acaf96d196c176ccfb7",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 235,
       "cjk": 3,
       "literal": [
@@ -392,7 +392,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "154ee398ecf30b0d1b01a3b015f194f8342c4fad39fb0b6ab87ac0870cbc1918",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 57,
       "cjk": 10,
       "literal": "\"在线监视安全红线自检\"",
@@ -412,7 +412,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "15af5411a941deed17a0bbd7795e5ef93e2860aa9a91b2b4514c9cf772404b42",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 143,
       "cjk": 11,
       "literal": "\"确认 tag、ControllerTag、动态绑定和按钮事件。\"",
@@ -442,7 +442,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "1a680e0f2b075d68df6ca614e18f6b3e2a3447e58308c0aa4fa19ac255ab4f77",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 47,
       "cjk": 14,
       "literal": "\"导入顺序已明确：变量表先于画面\"",
@@ -572,7 +572,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "22e2e711e322201cccbcc2f71583e1264a630a6e1d81c02ca6f73490d315859c",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 235,
       "cjk": 4,
       "literal": "\"未检测到\"",
@@ -592,7 +592,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "2351d41a45c0f3f4c64f9d0f0f7b4b5262719b3a5346d87f7dab8b06fe7e97b2",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 60,
       "cjk": 19,
       "literal": "\"临时导入预检：不连接 TIA Portal，不创建项目，不导入 HMI/PLC 对象。\"",
@@ -712,7 +712,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "25f7ff074c15edafa09a1509ae269e74fde6a3ec3dd1ce865e2b0f04d410fa2c",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 140,
       "cjk": 9,
       "literal": "\"只使用临时工程硬件。\"",
@@ -742,7 +742,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "26f175558f10da5044d65ba4421bb62d67b3c29286731fcc4828b0b87f5ad652",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 144,
       "cjk": 18,
       "literal": "\"未确认 API 前只允许发现，不允许保存真实工程。\"",
@@ -962,7 +962,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "2f2a0989effe5f3a00898c591bc4f7d16ec59b12cfcf4e9435c72da854058b5c",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 50,
       "cjk": 4,
       "literal": "\"PLC Builder 离线套件\"",
@@ -1042,7 +1042,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "385fc897b84fb0f76b7488578efed6a62c214d633232d650d8b438cf67f52a35",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 71,
       "cjk": 22,
       "literal": "\"只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
@@ -1162,7 +1162,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "3f8e6cbf83f8989f3d4611e8afb6aabd49bb2ba3c94d9a00458e3e53fc52d91e",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 139,
       "cjk": 10,
       "literal": "\"只在临时目录创建项目。\"",
@@ -1212,7 +1212,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "42bf4e1a9455feb0fba2795dfb866cd3a6d5f1ddc7f71a8bf01a3bfc6a71ad0a",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 216,
       "cjk": 4,
       "literal": [
@@ -1310,7 +1310,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "4670053fcda0268cb7f75053ea01ef9d1bb4891ad625099a4942439154880634",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 74,
       "cjk": 14,
       "literal": "\"请运行 `tia doctor` 检查 TIA Openness 安装并查看修复步骤。\"",
@@ -1718,7 +1718,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "5a703e5a77229c11c43e7a1dc8a1b0dc7a54b44f23c62633d24fe253fd5492a8",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 42,
       "cjk": 7,
       "literal": "\"TIA Portal V21 可执行文件可用\"",
@@ -1768,7 +1768,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "5b49780dda9b99d721a4787bbd1e5a3b6ade1f8d9ee7aff3223a255b776d2f2b",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 85,
       "cjk": 20,
       "literal": "\"请修复与 TIA Portal 版本匹配的 Openness 安装，并确认相应 PublicAPI 文件完整。\"",
@@ -1838,7 +1838,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "609d04689abccb72e93af4cc8a82cf6edccc241560c813018d6d5d53e8e2d065",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 70,
       "cjk": 20,
       "literal": "\"发布级离线验收：不连接 TIA Portal，不打开工程，不导入 PLC/HMI 对象。\"",
@@ -1968,7 +1968,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "6739bd18cb4c460e2f2d3a63f36a1641a875c3569f36821864b022adcb6078d9",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 56,
       "cjk": 8,
       "literal": "\"Unified HMI 模板 PLC 符号同步预检\"",
@@ -1978,7 +1978,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "674bc8283315ec4f9b9a36f9a34e416e95ddc8ad1ac88ba37cfc5113e03b0a25",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 173,
       "cjk": 2,
       "literal": "\"TIA Portal 安装\"",
@@ -1988,7 +1988,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "67a9d2728a2475b9a8e0f572227049e357902e168a31b6444d5bf978a2eec568",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 145,
       "cjk": 5,
       "literal": "\"仅临时工程。\"",
@@ -2088,7 +2088,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "6d346d1177edf4a89b52edc2d254ac09b40eb3e63f3fa453b480a797ec3bfe9f",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 52,
       "cjk": 6,
       "literal": "\"Classic HMI 临时导入预检\"",
@@ -2118,7 +2118,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "6dd8318c7ccd532826310a21a2627d353ed1f5cd63fcb8c56eec87051379eeb8",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 244,
       "cjk": 25,
       "literal": "\"- 在线监视仅执行静态安全自检，确认无 Force 工具并保留只读红线。\"",
@@ -2128,7 +2128,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "6e346e6ef6cdc2bd594230a0c93f33cdd7f2e3aaa05501f100cc250083641c4e",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 44,
       "cjk": 9,
       "literal": "\"Classic HMI 文件包齐全且 XML 可解析\"",
@@ -2178,7 +2178,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "7319ad5114c621d15cfff975ef0fb92e3eaf36bdf6f7e76db5430392b397b25e",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 191,
       "cjk": 4,
       "literal": "\"原因未知\"",
@@ -2218,7 +2218,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "7685eff466519cd3729c923abbf3475423c890299e47696786e0d2aa6dad5366",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 271,
       "cjk": 11,
       "literal": "\"文件未被 Windows 标记为网络来源 (MOTW)\"",
@@ -2228,7 +2228,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "776d3fec8c0091c8ddccaca1e058fd59c434d51207942c9de4cfc9148671009c",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 273,
       "cjk": 8,
       "literal": [
@@ -2594,7 +2594,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "8f893e5a52f52b8e0c95e74eea48487510417918ddc9dabb976384bddb840977",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 205,
       "cjk": 22,
       "literal": "\"- 只写 reports 目录下的预检文件和报告，不修改工程、reference 或交付包。\"",
@@ -2644,7 +2644,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "93aefd50165abdbee5be09bb3d68a5128d8167f6ff8dc5f764073ed44ec00dab",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 43,
       "cjk": 7,
       "literal": "\"当前用户属于 Siemens TIA Openness 组\"",
@@ -2714,7 +2714,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "97740d562c05b05412c069574b4c35e92332af1f8ac1f44286d755e767a09349",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 216,
       "cjk": 6,
       "literal": "\"，本机版本未知\"",
@@ -2794,7 +2794,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "9cf180573cdac9ca72fbd838a35d3acc534a1ac77750df29e6f526560d8c0c1b",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 177,
       "cjk": 27,
       "literal": [
@@ -2832,7 +2832,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "9f8176d023a5ea5b679a069f61a76173f63022c52f2b4e15159b2dee1e0e926e",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 189,
       "cjk": 4,
       "literal": "\"Openness 编程接口 DLL\"",
@@ -2892,7 +2892,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "a2b05c820d0a4f3e654c1329e7c05c0bfde9d8325526f93100af7738400a50a3",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 242,
       "cjk": 20,
       "literal": "\"- 发布级离线验收，不连接 TIA Portal，不打开工程，不导入 PLC/HMI 对象。\"",
@@ -2942,7 +2942,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "a5ff2dd705ff36935114f3d96ffdb8bc3b839ff49955954fd9e443ce0728b041",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 275,
       "cjk": 5,
       "literal": [
@@ -2960,7 +2960,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "a76ca02b2bc5149c9f7d6b4e47c823bbbce973e31188990538414f643685baea",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 273,
       "cjk": 16,
       "literal": "\"引擎目录下的文件没有网络来源标记\"",
@@ -3130,7 +3130,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b19dd848215be3dc7d580ee0eaedf8baf58b65e4a82428b1ad615b2d7671e74b",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 51,
       "cjk": 4,
       "literal": "\"Classic HMI 离线套件\"",
@@ -3140,7 +3140,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b1f71f144383f850074fc062b150f16573f0f12aec82e0449ee64f422ef678e6",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 204,
       "cjk": 15,
       "literal": "\"- 预检不连接 TIA Portal，不创建项目，不导入 HMI/PLC 对象。\"",
@@ -3270,7 +3270,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b82c8f106f08ade4b6f6b9001d486cc0d3196f8fb5bc0fa0d41a7837bbc111ff",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 61,
       "cjk": 22,
       "literal": "\"只写 reports 目录下的预检文件和报告，不修改工程、reference 或交付包。\"",
@@ -3280,7 +3280,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b8b2325bbd74853519179c6bae24395c58cb6edfc01c9d4a3b10d7f14accd409",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 193,
       "cjk": 33,
       "literal": "\"装了 TIA 不等于装了 Openness。重新运行 TIA Portal 安装程序补装『Openness』组件，然后确认 <安装目录>\\\\PublicAPI\\\\V<版本>\\\\ 下存在 Siemens.Engineering.dll（V20）或 Siemens.Engineering.Base.dll（V21）。\"",
@@ -3290,7 +3290,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b94ac25ede0af64103809390e1deb4b800c52d3a4f7aa09de92ae3321735515f",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 191,
       "cjk": 4,
       "literal": "\"无法解析——\"",
@@ -3310,7 +3310,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b9af5bf711b6545ca1c72e5fb6cc65f6129c24ed98016759ebd9255ec571e397",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 45,
       "cjk": 7,
       "literal": "\"PLC XML 可提取符号清单\"",
@@ -3350,7 +3350,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "be3a875530bda736d1ccaf823317eeec261615dae1dfd7362ccc2197f26f51b2",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 72,
       "cjk": 26,
       "literal": "\"在线监视仅执行静态安全自检，确认没有 Force 工具并保留只读红线。\"",
@@ -3360,7 +3360,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "be6b55c9e83e08589d880ded869d31e643dc4d3d2e0a0384bac056ca32921061",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 235,
       "cjk": 6,
       "literal": [
@@ -3398,7 +3398,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "c28b2f1988a3e9a3112716aec0cebbf27f6ce69c89f7011057c66cbb26a4aec2",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 216,
       "cjk": 5,
       "literal": [
@@ -3486,7 +3486,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "c8a664bcb535efdfbfe74eb10d6a1e4b65e904630569c58615e0bb51d7f1843c",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 214,
       "cjk": 7,
       "literal": "\"引擎 exe 与 TIA 版本匹配\"",
@@ -3496,7 +3496,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "c8f725eab1e4713bcc1b5b94f883886703d902ff6f922391c20971197209a2a3",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 53,
       "cjk": 8,
       "literal": "\"PLC 符号清单提取探针\"",
@@ -3556,7 +3556,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "ca57baaa8ea9b88df4d58b9146e595cc59a65e3294f91f9ca45235f90aceb87e",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 62,
       "cjk": 37,
       "literal": "\"只有所有 gate 通过后，才允许进入临时工程导入/读回/编译诊断执行链；真实工程仍需二次确认。\"",
@@ -3816,7 +3816,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "d91652885aa3f5032c1c811962d06d0f8e95a31fc6715d03b96256859a1f0d28",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 46,
       "cjk": 8,
       "literal": "\"HMI ControllerTag 均存在于 PLC 符号清单\"",
@@ -3866,7 +3866,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "daeb029088de0468fe15251849cf3a203aee56e3d2df3b12796479961b134ecf",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 175,
       "cjk": 21,
       "literal": "\"未检测到 TIA Portal（注册表 / TiaPortalLocation 环境变量 / 默认安装目录都查过了）\"",
@@ -3966,7 +3966,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "e15c4fed99736c2abc3a5e97ece516aa98d3ca29a35c3cb0da0f0f6f017e804b",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 243,
       "cjk": 22,
       "literal": "\"- 只写 reports 目录下的套件文件和报告，不修改工程、reference 或交付包。\"",
@@ -3986,7 +3986,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "e2b77275a9b10232363645e22557a0ace0966e9e6b23c40f0223496d4f6c60db",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 218,
       "cjk": 28,
       "literal": [
@@ -4056,7 +4056,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "e45ce0abec2fee76af12766446c8431947e224bcb051a9aede8c016cdb7dc9c4",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 175,
       "cjk": 3,
       "literal": [
@@ -4094,7 +4094,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "e56f01729bf896e7a607b8261a6cfb4e1f7c1676a9d2c69daaca64cc7e061f40",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 72,
       "cjk": 26,
       "literal": "\"请将当前 Windows 用户添加到本机“Siemens TIA Openness”组，注销并重新登录，然后重启 MCP 客户端。\"",
@@ -4204,7 +4204,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "ebb015dbee80fa3955d5603d26ff56eceed4a8429e578d910c483e5f91d04f78",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 191,
       "cjk": 3,
       "literal": "\"可解析：\"",
@@ -4262,7 +4262,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "f334998129450d87cc52cdddf983fee21ebc07b18dd1623804e792dfc51bd1cb",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 55,
       "cjk": 8,
       "literal": "\"HMI 动作脚本配方探针\"",
@@ -4272,7 +4272,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "f41da0c07f76279a400bb828c618fa264ec2241219456f402e6f2e255d9198de",
-      "path": "src/Engine/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs",
+      "path": "src/Shared/Host/OfflineReleaseValidationSuite.cs",
       "line": 263,
       "cjk": 32,
       "literal": "\"- 该套件通过后，下一步仍需执行临时 TIA 工程导入/读回/编译诊断，补齐真实 Openness 验证链。\"",
@@ -4372,7 +4372,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "f828c26db74b3b3f6b9d059c74c5c16e92ef9b18263202d8a0553b51e14e50a1",
-      "path": "src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs",
+      "path": "src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs",
       "line": 155,
       "cjk": 36,
       "literal": "\"当前预检只生成执行计划；真正执行应在临时工程中导入本预检输出的 tag table 与 screen XML，并读回验证。\"",
@@ -4482,7 +4482,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "fce26b764d87a3537a1d28b9586b88453231b3d82f4dbd1fdebd7828096f72b8",
-      "path": "src/Engine/Runtime/EnvironmentDoctor.cs",
+      "path": "src/Shared/Host/EnvironmentDoctor.cs",
       "line": 237,
       "cjk": 10,
       "literal": "\"安装 .NET Framework 4.8 运行时（Windows 10 1903 及以上、Windows 11 自带）。\"",

@@ -223,57 +223,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildUnifiedHmiThemeDesign"), Description("[L2][HMI-Unified][OFFLINE] Build ApplyUnifiedHmiScreenDesign-compatible JSON from a theme/palette. It does not connect to TIA Portal or modify projects.")]
-        public CallToolResult BuildUnifiedHmiThemeDesignJsonV4(
-            [Description("theme: JSON {name?, palette:{Page?,Surface?,Text?,Border?,...}} with TIA ARGB colors like 0xFFF4F6F8.")] UnifiedThemeSpec theme)
-            => UnifiedHmiContract.Run("BuildUnifiedHmiThemeDesign", false, false, () => BuildUnifiedHmiThemeDesignJson(theme.ToBuilderInput().ToJsonString()));
 
-        public ResponseJsonReport BuildUnifiedHmiThemeDesignJson(string themeJson)
-        {
-            try
-            {
-                var root = JsonNode.Parse(themeJson) as JsonObject
-                    ?? throw new ArgumentException("themeJson root must be an object.");
-                var design = HmiUnifiedThemeLayoutBuilder.BuildThemeDesign(root);
-                return new ResponseJsonReport
-                {
-                    Ok = true,
-                    Message = "Unified HMI theme design JSON built offline",
-                    Data = design,
-                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Invalid Unified HMI theme JSON: {ex.Message}", ex, McpErrorCode.InvalidParams);
-            }
-        }
 
-        [McpServerTool(Name = "BuildUnifiedHmiLayoutDesign"), Description("[L2][HMI-Unified][OFFLINE] Build ApplyUnifiedHmiScreenDesign-compatible JSON from a grid layout. It does not connect to TIA Portal or modify projects.")]
-        public CallToolResult BuildUnifiedHmiLayoutDesignJsonV4(
-            [Description("layout: JSON {grid?,left?,top?,gap?,columns?,cellWidth?,cellHeight?,items:[{name,type?,row?,col?,rowSpan?,colSpan?,text?,properties?}]}.")] UnifiedLayoutSpec layout)
-            => UnifiedHmiContract.Run("BuildUnifiedHmiLayoutDesign", false, false, () => BuildUnifiedHmiLayoutDesignJson(layout.ToBuilderInput().ToJsonString()));
 
-        public ResponseJsonReport BuildUnifiedHmiLayoutDesignJson(string layoutJson)
-        {
-            try
-            {
-                var root = JsonNode.Parse(layoutJson) as JsonObject
-                    ?? throw new ArgumentException("layoutJson root must be an object.");
-                var design = HmiUnifiedThemeLayoutBuilder.BuildLayoutDesign(root);
-                return new ResponseJsonReport
-                {
-                    Ok = true,
-                    Message = "Unified HMI layout design JSON built offline",
-                    Data = design,
-                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Invalid Unified HMI layout JSON: {ex.Message}", ex, McpErrorCode.InvalidParams);
-            }
-        }
+
+
+
+
 
         [McpServerTool(Name = "ApplyUnifiedHmiTheme"), Description("[L2][HMI-Unified] Apply a theme/palette to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; verify with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiThemeV4(
@@ -288,7 +244,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var design = BuildUnifiedHmiThemeDesignJson(themeJson).Data?.ToJsonString() ?? "{}";
+                var design = HmiDesignBuilder.BuildUnifiedHmiThemeDesignJson(themeJson).Data?.ToJsonString() ?? "{}";
                 return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design);
             }
             catch (Exception ex) when (ex is not McpException)
@@ -310,7 +266,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var design = BuildUnifiedHmiLayoutDesignJson(layoutJson).Data?.ToJsonString() ?? "{}";
+                var design = HmiDesignBuilder.BuildUnifiedHmiLayoutDesignJson(layoutJson).Data?.ToJsonString() ?? "{}";
                 return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design);
             }
             catch (Exception ex) when (ex is not McpException)
@@ -456,64 +412,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildUnifiedHmiButtonActionScript"), Description("[L2][HMI-Unified]Build a safe Unified HMI button action script from a high-level action recipe without connecting to TIA.")]
-        public CallToolResult BuildUnifiedHmiButtonActionScriptV4(
-            [Description("actionKind: set-bit, reset-bit, toggle-bit, open-popup, goto-screen, confirm-write")] string actionKind,
-            [Description("eventType: HmiButtonEventType value, e.g. Down (press), Up (release), Tapped — NOT Pressed/Released")] string eventType,
-            [Description("targetTag: target HMI tag for set/reset/toggle actions")] string targetTag = "",
-            [Description("targetScreen: target screen for goto-screen actions")] string targetScreen = "",
-            [Description("targetPopup: target popup for open-popup actions")] string targetPopup = "")
-            => UnifiedHmiContract.Run("BuildUnifiedHmiButtonActionScript", false, false, () => BuildUnifiedHmiButtonActionScript(actionKind, eventType, targetTag, targetScreen, targetPopup));
 
-        public ResponseMessage BuildUnifiedHmiButtonActionScript(string actionKind,
-            string eventType,
-            string targetTag = "",
-            string targetScreen = "",
-            string targetPopup = "")
-        {
-            try
-            {
-                var tags = string.IsNullOrWhiteSpace(targetTag)
-                    ? Array.Empty<string>()
-                    : new[] { targetTag };
-                var recipe = HmiActionScriptRecipeBuilder.Build(actionKind, eventType, tags, targetScreen, targetPopup);
-                return new ResponseMessage
-                {
-                    Message = recipe["ok"]?.GetValue<bool>() == true
-                        ? "Unified HMI button action script recipe built."
-                        : "Unified HMI button action script recipe has validation errors.",
-                    Meta = recipe
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error building Unified HMI button action script: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
 
-        [McpServerTool(Name = "RunHmiActionScriptRecipeSafetySelfTest"), Description("[L2][Diagnostics]Offline-only helper: prove deterministic HMI button action scripts are allowed only for safe set/reset/toggle bit recipes, while high-risk writes and unverified navigation/popup recipes are blocked.")]
-        public CallToolResult RunHmiActionScriptRecipeSafetySelfTestV4()
-            => UnifiedHmiContract.Run("RunHmiActionScriptRecipeSafetySelfTest", false, false, () => RunHmiActionScriptRecipeSafetySelfTest());
 
-        public ResponseJsonReport RunHmiActionScriptRecipeSafetySelfTest()
-        {
-            try
-            {
-                var data = HmiActionScriptRecipeBuilder.RunSafetySelfTest();
-                var ok = data["ok"]?.GetValue<bool>() == true;
-                return new ResponseJsonReport
-                {
-                    Ok = ok,
-                    Message = ok ? "HMI action script recipe safety self-test passed" : "HMI action script recipe safety self-test failed",
-                    Data = data,
-                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error running HMI action script recipe safety self-test: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
+
+
+
+
 
         [McpServerTool(Name = "EnsureUnifiedHmiButtonAction"), Description("[L2][HMI-Unified]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiButtonActionV4(

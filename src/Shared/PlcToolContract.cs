@@ -70,10 +70,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     return Result(tool, new JsonObject { ["evidence"] = nativeEvidence.DeepClone() }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
             if (exception is Rejection rejection)
                 return Result(tool, null, rejection.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
+            #if !TIA_ENGINE_HOST
             if (exception is PlcBlockVerificationException)
                 return Result(tool, new JsonObject { ["verification"] = "mismatch", ["importReturned"] = true },
                     new Error("The imported block does not match the declared attributes.", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())),
                     Outcome.Failed, Completeness.Partial, current);
+            #endif
             // Exceptions after a write may have been issued cannot establish its outcome.
             // The original exception remains in the existing diagnostic log, not the wire data.
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, true, !writes, nativeRead: InvocationJournal.NativeCallIssued);

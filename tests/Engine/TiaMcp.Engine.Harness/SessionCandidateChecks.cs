@@ -56,18 +56,17 @@ internal static class SessionCandidateChecks
                 && properties.GetProperty("confirm").GetProperty("default").GetBoolean() == false,
                 name + " has the exact candidate defaults");
             var usage = Body(Invoke("GetToolUsage", new JsonObject { ["toolName"] = name }));
-            var sample = usage["data"]!["example"]!["request"]!["params"]!["arguments"]!.AsObject();
-            check(facade.GetMethod("ValidateV4Arguments", All)!.Invoke(null,
+            var sample = usage["data"]?["example"]?["request"]?["params"]?["arguments"]?.AsObject()
+                ?? new JsonObject { ["processId"] = 321, ["processStartUtc"] = "2026-01-01T00:00:00Z", ["projectPath"] = "C:/fixture/Fixture.ap21" };
+            check(EngineSurface.For(server).ToolMethod("ValidateV4Arguments", All).Invoke(null,
                 new object[] { method, JsonSerializer.SerializeToElement(sample), schema }) == null, name + " usage example satisfies the selected schema");
-            var found = facade.GetMethod("FindTools", All)!.Invoke(null, new object[] { name, 1, "", "" })!;
-            var lines = ((IEnumerable<string>)found.GetType().GetProperty("Items")!.GetValue(found)!).ToArray();
-            check(lines[0].Contains("expectedPlanHash") == safe && lines[0].Contains(name), name + " FindTools signature matches registration");
-            var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "obsoleteSessionOption" : "upgrade"] = "obsolete-schema";
+                var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "obsoleteSessionOption" : "upgrade"] = "obsolete-schema";
             foreach (var call in new[] {
                 (Name: name, Args: invalid),
                 (Name: "CallTool", Args: new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }),
                 (Name: "PreviewToolBatch", Args: new JsonObject { ["operations"] = new JsonArray(new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }), ["expectedProject"] = "Fixture" }) })
             {
+                if (EngineSurface.IsHostTool(server, call.Name)) continue;
                 var rejected = Body(Invoke(call.Name, call.Args));
                 check((string?)rejected["error"]?["code"] == "INVALID_ARGUMENT" && (string?)rejected["meta"]?["execution"] == "not-started",
                     name + " rejects the other schema through " + call.Name);

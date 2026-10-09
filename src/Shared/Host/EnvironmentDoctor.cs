@@ -10,6 +10,7 @@ using System.Security.Principal;
 namespace TiaMcpServer.Runtime
 {
     /// <summary>Startup state shared by the MCP admission guard and environment diagnostics.</summary>
+    #if !TIA_ENGINE_HOST
     public static class OpennessReadiness
     {
         private static readonly object Sync = new object();
@@ -54,6 +55,8 @@ namespace TiaMcpServer.Runtime
                 + " " + (chinese ? fixZh ?? EnvironmentDoctor.DefaultFixZh : fixEn ?? EnvironmentDoctor.DefaultFixEn);
         }
     }
+
+    #endif
 
     /// <summary>
     /// The environment checks behind both `tia doctor` (CLI) and the Doctor MCP tool.
@@ -141,6 +144,10 @@ namespace TiaMcpServer.Runtime
 
         public static List<Check> Run(int compiledTiaMajorVersion, int? detectedTiaMajorVersion)
         {
+#if TIA_ENGINE_HOST
+            return System.Text.Json.JsonSerializer.Deserialize<List<Check>>(TiaMcpServer.ModelContextProtocol.HostToolServices.Observe("environment", new System.Text.Json.Nodes.JsonObject())!.ToJsonString(), new System.Text.Json.JsonSerializerOptions { IncludeFields = true })!;
+#else
+
             var checks = new List<Check>
             {
                 TiaInstall(detectedTiaMajorVersion),
@@ -160,6 +167,7 @@ namespace TiaMcpServer.Runtime
                 });
             }
             return checks;
+        #endif
         }
 
         private static Check TiaInstall(int? detected)
@@ -196,7 +204,11 @@ namespace TiaMcpServer.Runtime
 
         private static Check EngineVersionMatch(int compiled, int? detected)
         {
+            #if TIA_ENGINE_HOST
+            return EngineVersionMatch(compiled, detected, _ => null);
+#else
             return EngineVersionMatch(compiled, detected, Siemens.EngineRouter.FindSiblingExe);
+#endif
         }
 
         internal static Check EngineVersionMatch(int compiled, int? detected, Func<int, string?> findSibling)

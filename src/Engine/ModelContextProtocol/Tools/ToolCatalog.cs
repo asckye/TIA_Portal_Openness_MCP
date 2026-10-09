@@ -31,8 +31,6 @@ namespace TiaMcpServer.ModelContextProtocol
             "DocumentsTools",
             "EcosystemTools",
             "EngineeringAuditTools",
-            "EngineeringDiagnosticsTools",
-            "ExportTools",
             "FallbackCandidateTools",
             "GitWorkflowTools",
             "GlobalScriptEditTools",
@@ -53,14 +51,12 @@ namespace TiaMcpServer.ModelContextProtocol
             "ModulesTools",
             "MotionProDiagClassicHmiTools",
             "NativeExchangeTools",
-            "OfflineAnalysisTools",
             "OfflineSuiteTools",
             "OnlineDownloadTools",
             "OpcUaTools",
             "OptionalEngineeringTools",
             "PlcBlocksTools",
             "PlcBuildTools",
-            "PlcDocumentationTools",
             "PlcExportCandidateTools",
             "PlcExternalSourcesTools",
             "PlcImportCandidateTools",
@@ -70,7 +66,6 @@ namespace TiaMcpServer.ModelContextProtocol
             "PlcTablesTools",
             "ProjectSecurityTools",
             "ProjectSessionTools",
-            "QualityAuditTools",
             "ReflectionTools",
             "RuntimeChannelTools",
             "RuntimeSettingsTools",
@@ -88,7 +83,6 @@ namespace TiaMcpServer.ModelContextProtocol
             "StartdriveTools",
             "TeamcenterTools",
             "TechnologyObjectsTools",
-            "TemplateTools",
             "TestSuiteTools",
             "ToolUsageTools",
             "TypesTools",
@@ -101,7 +95,6 @@ namespace TiaMcpServer.ModelContextProtocol
             "UnifiedScreenItemsTools",
             "UnifiedUiModelTools",
             "V20OptionsTools",
-            "V21EcosystemTools",
             "VersionControlTools",
             "XmlBuilderTools",
         };
@@ -209,6 +202,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     var attribute = method.GetCustomAttribute<McpServerToolAttribute>();
                     if (attribute == null) continue;
                     var name = attribute.Name ?? method.Name;
+#if TIA_ENGINE_PORTED
+                    if (TiaMcp.Adapters.Contracts.PortedFamilies.All.Any(f => f.Name != "F19" && f.Tools.Contains(name, StringComparer.Ordinal)))
+                        throw new InvalidOperationException("A host-owned tool is still registered in the engine: " + name);
+#endif
                     if (methods.TryGetValue(name, out var previous))
                         throw new InvalidOperationException("Duplicate MCP tool name '" + name + "': "
                             + previous.DeclaringType!.FullName + "." + previous.Name + " and "

@@ -204,7 +204,7 @@ def rename_product_references(path):
     old_name = 'TiaMcp' + 'Server.exe'
     for row in [*entries, *allowed]:
         literal = row['literal']
-        if row['path'] != 'src/Engine/Runtime/EnvironmentDoctor.cs' or not isinstance(literal, list):
+        if row['path'] != 'src/Shared/Host/EnvironmentDoctor.cs' or not isinstance(literal, list):
             continue
         segments = literal[2]
         for index, segment in enumerate(segments):

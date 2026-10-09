@@ -446,7 +446,7 @@ namespace TiaMcpServer
             var reportDir = string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "offline_release_suite")
                 : options.OfflineReleaseSuiteReportDirectory!;
-            var root = OfflineReleaseValidationSuite.Run(workspaceRoot, reportDir);
+            var root = HostToolCommand.Run<JsonObject>("OfflineReleaseValidationSuite", new JsonObject { ["workspaceRoot"] = workspaceRoot, ["reportDir"] = reportDir });
             Program.LogDiag("Offline release validation suite report written:");
             Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
             Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
@@ -692,7 +692,7 @@ namespace TiaMcpServer
             var jsonPath = Path.Combine(reportDir, "monitoring_readonly_" + stamp + ".json");
             var mdPath = Path.Combine(reportDir, "monitoring_readonly_" + stamp + ".md");
 
-            var safety = report.Capture("RunOnlineMonitoringSafetySelfTest", () => EngineServices.Get<DiagnosticsTools>().RunOnlineMonitoringSafetySelfTest());
+            var safety = report.Capture("RunOnlineMonitoringSafetySelfTest", () => HostToolCommand.Run<ResponseSafetySelfTest>("RunOnlineMonitoringSafetySelfTest", new JsonObject()));
             var root = new JsonObject
             {
                 ["timestamp"] = DateTime.Now.ToString("O"),
@@ -1127,7 +1127,7 @@ namespace TiaMcpServer
                 root["ensureTag"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag(hmiSoftwarePath, tagTableName, tagName, "Bool", "", tagName, "", "", false));
                 root["ensureButton"] = ResponseMessageToJson(EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreenItem(hmiSoftwarePath, screenName, buttonName, "Button", 40, 40, 160, 56, "Start"));
 
-                var build = EngineServices.Get<UnifiedHmiTools>().BuildUnifiedHmiButtonActionScript(actionKind, eventType, tagName);
+                var build = HmiDesignBuilder.BuildUnifiedHmiButtonActionScript(actionKind, eventType, tagName);
                 root["recipe"] = ResponseMessageToJson(build);
                 var script = build.Meta?["script"]?.ToString() ?? "";
                 if (string.IsNullOrWhiteSpace(script))

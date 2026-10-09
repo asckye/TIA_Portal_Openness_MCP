@@ -5,8 +5,9 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
+        internal void RecordAnalysisExportPath(string? path) => LastExportedFile = path;
         // Exports one block to a fresh temp directory and returns the single SimaticML file; used only when
-        // ComparePlcBlockDocuments is asked for a block path instead of a file. Requires an open project and
+        // GetPlcBlockEditCapabilities uses its native block-path mode. Requires an open project and
         // a consistent block (ExportBlock enforces both); nothing is saved, compiled or downloaded.
         public (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string softwarePath, string blockPath)
         {

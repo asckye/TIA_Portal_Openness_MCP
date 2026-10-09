@@ -60,15 +60,13 @@ internal static class CompileCandidateChecks
             var sample = usage["data"]!["example"]!["request"]!["params"]!["arguments"]!.AsObject();
             check(facade.GetMethod("ValidateV4Arguments", All)!.Invoke(null,
                 new object[] { method, JsonSerializer.SerializeToElement(sample), schema }) == null, name + " usage example satisfies the selected schema");
-            var found = facade.GetMethod("FindTools", All)!.Invoke(null, new object[] { name, 1, "", "" })!;
-            var lines = ((IEnumerable<string>)found.GetType().GetProperty("Items")!.GetValue(found)!).ToArray();
-            check(lines[0].Contains("expectedPlanHash") == safe && lines[0].Contains(name), name + " FindTools signature matches registration");
-            var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "obsoleteCompileOption" : "offlinePolicy"] = "obsolete-schema";
+                var invalid = (JsonObject)sample.DeepClone(); invalid[safe ? "obsoleteCompileOption" : "offlinePolicy"] = "obsolete-schema";
             foreach (var call in new[] {
                 (Name: name, Args: invalid),
                 (Name: "CallTool", Args: new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }),
                 (Name: "PreviewToolBatch", Args: new JsonObject { ["operations"] = new JsonArray(new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }), ["expectedProject"] = "Fixture" }) })
             {
+                if (EngineSurface.IsHostTool(server, call.Name)) continue;
                 var rejected = Body(Invoke(call.Name, call.Args));
                 check((string?)rejected["error"]?["code"] == "INVALID_ARGUMENT" && (string?)rejected["meta"]?["execution"] == "not-started",
                     name + " rejects the other schema through " + call.Name);
@@ -80,6 +78,7 @@ internal static class CompileCandidateChecks
                     (Name: name, Args: (JsonObject)sample.DeepClone()),
                     (Name: "CallTool", Args: new JsonObject { ["name"] = name, ["arguments"] = sample.DeepClone() }) })
                 {
+                    if (EngineSurface.IsHostTool(server, call.Name)) continue;
                     var preview = Body(Invoke(call.Name, call.Args));
                     check((string?)preview["error"]?["code"] == "PROJECT_NOT_BOUND" && (string?)preview["meta"]?["tool"] == name
                         && (string?)preview["meta"]?["behaviorPolicy"] == "safe-v4" && (string?)preview["meta"]?["execution"] == "not-started",

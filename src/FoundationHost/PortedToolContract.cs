@@ -20,6 +20,10 @@ namespace TiaMcp.FoundationHost;
 // by every port. Only the typed service factory is specific to a family.
 internal static class PortedToolContract
 {
+    // V20/V21 B1 declarations belong to the full EngineHost catalog. The
+    // bounded plc-foundation profile retains its existing F19-only roster.
+    internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
+        PortedFamilies.All.Where(family => family.Name == "F19" && family.Available(release));
     internal static McpServerTool Wrap(FoundationTool tool) => McpServer.WrapTools(new[] { tool.ValidatedTool() }).Single();
 
     // The primary module operation comes first; previews and fallback reads are
@@ -39,7 +43,7 @@ internal static class PortedToolContract
         foreach (var method in PortedToolDeclarations.Methods(release))
         {
             string name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
-            if (PortedFamilies.Available(release, name)) yield return new FoundationTool(worker, release, method, name);
+            if (Families(release).Any(family => family.Tools.Contains(name, StringComparer.Ordinal))) yield return new FoundationTool(worker, release, method, name);
         }
     }
 }

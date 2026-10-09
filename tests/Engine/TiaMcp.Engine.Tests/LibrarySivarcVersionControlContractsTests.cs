@@ -233,10 +233,10 @@ namespace TiaMcp.Engine.Tests
         {
             libraryTools = new LibraryTools(library);
             sivarcTools = new SivarcTools(sivarc);
-            catalog = new ToolCatalog(new[] { typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools) });
+            catalog = new ToolCatalog(new[] { typeof(LibraryTools), typeof(HmiOfflineTools), typeof(SivarcTools), typeof(VersionControlTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(libraryTools).AddSingleton(sivarcTools)
-                .AddSingleton(new VersionControlTools(vci)).BuildServiceProvider());
+                .AddSingleton(new HmiOfflineTools()).AddSingleton(new VersionControlTools(vci)).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static JsonObject Body(CallToolResult result)
@@ -256,7 +256,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void OneRegistrationPerV4NameAndConcreteTypedInputs()
         {
-            Assert.Equal(Names.OrderBy(n => n), catalog.Methods.Select(p => p.Key).OrderBy(n => n));
+            Assert.Equal(Names.Concat(new[] { "BuildUnifiedHmiThemeDesign", "BuildUnifiedHmiLayoutDesign", "BuildUnifiedHmiButtonActionScript", "RunHmiActionScriptRecipeSafetySelfTest" }).OrderBy(n => n), catalog.Methods.Select(p => p.Key).OrderBy(n => n));
             foreach (var method in catalog.Methods.Select(p => p.Value))
             {
                 Assert.Equal(typeof(CallToolResult), method.ReturnType);

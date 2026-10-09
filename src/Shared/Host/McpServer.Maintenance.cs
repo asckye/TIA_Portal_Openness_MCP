@@ -1,3 +1,4 @@
+#if !TIA_ENGINE_PORTED
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4.Inputs;
 using ModelContextProtocol.Server;
@@ -18,6 +19,7 @@ namespace TiaMcpServer.ModelContextProtocol
     // The offline suite links this file only to exercise root lookup; session and HTTP operations are not invoked.
     public static partial class McpServer
     {
+#if !TIA_ENGINE_HOST
         static partial void ReadSessionState(ref bool? connected, ref string? project)
         {
             try
@@ -32,6 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+#endif
         private static readonly HttpClient UpdateHttp = CreateUpdateClient();
 
         private static HttpClient CreateUpdateClient()
@@ -167,3 +170,5 @@ namespace TiaMcpServer.ModelContextProtocol
         }
     }
 }
+
+#endif

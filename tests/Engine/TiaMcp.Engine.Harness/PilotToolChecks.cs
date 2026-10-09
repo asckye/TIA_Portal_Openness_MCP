@@ -42,7 +42,7 @@ internal static class PilotToolChecks
         // GetToolUsage refuses tools withdrawn from the product catalog; only ConnectProject is withdrawn (P7-04/P7-04b).
         var withdrawn = source.Select(row => (string)row!["currentName"]!).Where(name => !product.Contains(name)).ToArray();
         check(withdrawn.SequenceEqual(new[] { "ConnectProject" }), "Only ConnectProject is withdrawn from the product catalog");
-        var entries = source.Where(row => product.Contains((string?)row!["currentName"])).ToArray();
+        var entries = source.Where(row => product.Contains((string?)row!["currentName"]) && !EngineSurface.IsHostTool(server, (string)row!["currentName"]!)).ToArray();
         check(entries.Length > 0, "Generated runtime data contains V4 entries");
         var usage = surface.Tool("GetToolUsage");
         var schemaType = Program.FindServerType(server, "TiaMcp.Logic.V4.Inputs.InputSchema");
@@ -104,12 +104,14 @@ internal static class PilotToolChecks
         };
         foreach (var domain in domains)
         {
+            var remaining = domain.Value.Where(name => !EngineSurface.IsHostTool(server, name)).ToArray();
+            if (remaining.Length == 0) continue;
             var type = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Key, true)!;
             check(type.IsSealed && type.GetCustomAttribute<McpServerToolTypeAttribute>() != null
                 && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
                 "Pilot tool type is a non-disposable instance class: " + domain.Key);
             object? singleton = null;
-            foreach (var name in domain.Value)
+            foreach (var name in remaining)
             {
                 var method = surface.Tool(name);
                 var target = surface.Target(method);

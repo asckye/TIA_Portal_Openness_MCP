@@ -19,7 +19,8 @@ namespace TiaMcpServer.Cli
                 formatVersion = 1, release = McpServer.ReleaseKey,
                 workerSha256 = Worker.EngineWorkerHost.Hash(Assembly.GetExecutingAssembly().Location),
                 tools = tools.Select(t => t.ProtocolTool).ToArray(),
-                liteTools = McpServer.GetLiteTools().Select(t => t.ProtocolTool.Name).ToArray(),
+                liteTools = McpServer.RuntimeProfileEntries().Where(row => row!["profiles"]!.AsArray().Any(p => (string?)p == "lite"))
+                    .Select(row => (string)row!["currentName"]!).OrderBy(n => n, StringComparer.Ordinal).ToArray(),
                 behaviorCapabilities = BehaviorCapabilities.Table(typeof(McpServer).Assembly, McpServer.ReleaseKey),
                 serverInstructions = McpGuides.ServerInstructions,
                 descriptors = tools.Select(t => Describe(McpServer.CatalogView.All[t.ProtocolTool.Name])).ToArray(),

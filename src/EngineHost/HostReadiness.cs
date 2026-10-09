@@ -6,15 +6,13 @@ namespace TiaMcpServer.Runtime
     public static class OpennessReadiness
     {
         private static JsonObject Current => TiaMcp.FoundationHost.EngineHostConfiguration.Worker.Snapshot()["readiness"]!.AsObject();
+        public static bool? GroupOk => (bool?)Current["groupOk"];
         public static bool Ready => (bool?)Current["ready"] == true;
         public static string? Cause => (string?)Current["cause"];
         public static string? FixEn => (string?)Current["recommendedFix"];
         public static string? FixZh => (string?)Current["recommendedFixZh"];
     }
-    internal static class EnvironmentDoctor
-    {
-        internal static string DefaultFixZh => OpennessReadiness.FixZh ?? OpennessReadiness.FixEn ?? "Run the worker environment diagnostics.";
-    }
+
 }
 
 namespace TiaMcpServer.Isolation

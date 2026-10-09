@@ -192,9 +192,9 @@ def worker_handles(host_pid, worker_name=None):
     return kernel, handles
 
 
-def engine_worker_exits_cleanly(key, env):
+def engine_worker_exits_cleanly(key, env, fixture_root=None):
     # Without TIA the worker must leave through its normal path; a crash there leaves WER holding its files.
-    worker = ROOT / f'runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe'
+    worker = (fixture_root / key / f'TiaMcp.Engine.V{key}.exe').resolve() if fixture_root else ROOT / f'runtime/v{key}/worker/TiaMcp.Engine.V{key}.exe'
     done = subprocess.run([str(worker), '--engine-worker', '--bundle-root', str(ROOT), '--tia-major-version', key],
                           input=b'', capture_output=True, env=dict(env, TIA_MCP_ENGINE_NONCE='0' * 64), timeout=120)
     assert done.returncode == 0, (key, done.returncode, done.stderr.decode('utf-8', 'replace')[-2000:])
@@ -206,9 +206,13 @@ def engine_transports(args, temp, counts):
         data.mkdir()
         env = dict(os.environ, TIA_MCP_DATA_DIRECTORY=str(data), TiaPortalLocation='')
         env.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
-        engine_worker_exits_cleanly(key, env)
+        engine_worker_exits_cleanly(key, env, args.sdk_fixture_root)
         command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()),
                    '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full']
+        if args.sdk_fixture_root:
+            directory = (args.sdk_fixture_root / key).resolve()
+            command += ['--engine-worker', str(directory / f'TiaMcp.Engine.V{key}.exe'),
+                        '--engine-catalog', str(directory / 'tool-catalog.json')]
         with (args.output / f'stdio-{key}.log').open('w', encoding='utf-8') as stderr:
             client = Stdio(command, env, stderr)
             try:
@@ -291,6 +295,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     parser.add_argument('--host-exe', type=Path, help='Fresh worktree Foundation host used for each exact release')
+    parser.add_argument('--sdk-fixture-root', type=Path, help='Fresh V20/V21 SDK fixture workers and catalogs; avoids stale packaged engines')
     parser.add_argument('--engine-fixture', type=Path, help='LegacyHostTests fixture executable for successful native-shaped engine HTTP calls without TIA; stdio still uses the real no-TIA worker')
     parser.add_argument('--stdio-only', action='store_true', help='Run no HTTP/socket checks when network services are prohibited')
     args = parser.parse_args()

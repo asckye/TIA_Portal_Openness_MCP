@@ -59,7 +59,7 @@ API 可用性取自本地 `sdk/TIA_V*_PublicAPI` XML（不随仓库分发）。�
 
 ### 1.4 编排、审批与审计
 
-- `PreviewToolBatch`/`ApplyToolBatch`（`src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs`）：1..50 个写工具，令牌 10 分钟，执行前复核身份与预览，失败即停、余下标 `NOT_EXECUTED`，无回滚；只在 20/21 宿主。
+- `PreviewToolBatch`/`ApplyToolBatch`（`src/Shared/Host/McpServer.Batch.cs`）：1..50 个写工具，令牌 10 分钟，执行前复核身份与预览，失败即停、余下标 `NOT_EXECUTED`，无回滚；只在 20/21 宿主。
   `ApplyToolBatch` 本身不审批，内部每个写调用各自审批（`McpServer.Approval.cs:152`）。
 - `RunToolTransaction`：原生事务，只接受少数分组/属性编辑白名单。
 - 审批：写调用默认在工作台逐个审批（`docs/getting-started/configuration.md` “V4 结果、审批与审计”）。审批协议 `src/Shared/ApprovalProtocol.cs` 的 `PendingApproval`
@@ -533,7 +533,7 @@ GetGenerationRun（结果） ──► CheckProjectStandard（同一包检查，
 仓库内：`docs/development/roadmap.md`（阶段 8）、`docs/development/refactor-plan.md`（P8-30/31）、`docs/development/gap-review-2026-10.md`、
 `docs/development/phase8-port-plan.md`（第 2、5、7 节）、`docs/guides/project-generation.md`、`templates/`、`manifest/tools-list.json`、
 `manifest/contracts/v4/baseline/19.json`、`reference/siemens-openness/skills/global-library/SKILL.md`、`src/Shared/ApprovalProtocol.cs`、
-`src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs`、`McpServer.Approval.cs`、`ProjectSessionTools.cs`、`src/Engine/Siemens/Services/TypesService.cs`；本地 `sdk/TIA_V*_PublicAPI`（不随仓库分发）。
+`src/Shared/Host/McpServer.Batch.cs`、`McpServer.Approval.cs`、`ProjectSessionTools.cs`、`src/Engine/Siemens/Services/TypesService.cs`；本地 `sdk/TIA_V*_PublicAPI`（不随仓库分发）。
 
 外部：
 

@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Engine/TiaMcp.Engine.V$(EngineRelease).csproj" />
+    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="enginehost" />
   </ItemGroup>
   <!-- Use the same SDK assets as the net48 engine; init-only setters have different
        required modifiers in the net9 assets and cannot be mixed across this boundary. -->

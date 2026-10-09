@@ -182,7 +182,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static JsonObject BuildSafetyResult()
         {
-            var response = EngineServices.Get<DiagnosticsTools>().RunOnlineMonitoringSafetySelfTest();
+            var response = new HostMetaTools().RunOnlineMonitoringSafetySelfTest();
             return new JsonObject
             {
                 ["format"] = "online-monitoring-safety-self-test-summary-v1",

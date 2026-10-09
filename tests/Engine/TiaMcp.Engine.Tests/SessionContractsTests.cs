@@ -271,7 +271,8 @@ namespace TiaMcp.Engine.Tests
             while (directory != null && !File.Exists(Path.Combine(directory.FullName, "AGENTS.md"))) directory = directory.Parent;
             Assert.NotNull(directory);
             var stems = new[] { "SessionTools", "ProjectSessionTools", "DiagnosticsTools", "EngineeringDiagnosticsTools", "McpServer.Doctor", "McpServer.Maintenance", "McpServer.Worker" };
-            var source = string.Join("\n", stems.Select(stem => File.ReadAllText(Path.Combine(directory!.FullName, "src/Engine/ModelContextProtocol/Tools", stem + ".cs"))));
+            var source = string.Join("\n", stems.Select(stem => File.ReadAllText(Path.Combine(directory!.FullName, stem == "EngineeringDiagnosticsTools" || stem.StartsWith("McpServer.") ? "src/Shared/Host" : "src/Engine/ModelContextProtocol/Tools", stem + ".cs"))));
+            source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/HostMetaTools.cs"));
             var names = Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value).ToArray();
             Assert.Equal(31, names.Length);
             Assert.Equal(31, names.Distinct().Count());

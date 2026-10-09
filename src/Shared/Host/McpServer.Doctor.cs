@@ -1,3 +1,4 @@
+#if !TIA_ENGINE_PORTED
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4.Inputs;
 using ModelContextProtocol;
@@ -44,7 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 int? inUse = Engineering.TiaMajorVersion == 0 ? (int?)null : Engineering.TiaMajorVersion;
                 int? detected = Engineering.DetectTiaMajorVersion();
                 string? firstEnvFixZh = null;
-                foreach (var c in Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, inUse ?? detected))
+                foreach (var c in Runtime.EnvironmentDoctor.Run(int.Parse(McpServer.ReleaseKey), inUse ?? detected))
                 {
                     if (!c.Ok && firstEnvFixZh == null) firstEnvFixZh = c.FixZh;
                     checks.Add(new DoctorCheck
@@ -94,13 +95,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     Fix = groupOk ? null : "Run GetEnvironmentDiagnostics with fix=true (prompts UAC to add you), or manually add your Windows user to the 'Siemens TIA Openness' local group and sign out/in. Admin rights required."
                 });
 
+#if !TIA_ENGINE_HOST
                 if (isolatedParent && Runtime.OpennessReadiness.Ready)
                 {
                     var failedPrerequisite = checks.FirstOrDefault(check => !check.Ok && check.Name != "Openness user group"
                         && check.Name != "TIA connection / project");
                     if (failedPrerequisite != null)
                     {
-                        var source = Runtime.EnvironmentDoctor.Run(EngineRouter.CompiledTiaMajorVersion, inUse ?? detected)
+                        var source = Runtime.EnvironmentDoctor.Run(int.Parse(McpServer.ReleaseKey), inUse ?? detected)
                             .FirstOrDefault(check => !check.Ok);
                         var cause = source?.DetailEn ?? failedPrerequisite.Detail ?? "TIA Openness environment is not ready.";
                         var repair = source?.FixEn ?? failedPrerequisite.Fix ?? Runtime.EnvironmentDoctor.DefaultFixEn;
@@ -115,6 +117,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     else Runtime.OpennessReadiness.MarkReady(true);
                 }
+
+#endif
 
                 // 3) Connection + project state
                 bool connected = false; string? projectName = null;
@@ -179,7 +183,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static (bool Connected, string? ProjectName) ReadPortalState()
         {
-            var state = EngineServices.Get<Siemens.Portal>().GetState();
+            var state = System.Text.Json.JsonSerializer.Deserialize<State>(HostToolServices.Observe("session.GetState", new JsonObject())!.ToJsonString());
             return (state?.IsConnected ?? false, state?.Project);
         }
 
@@ -187,7 +191,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Task<bool> ReadOpennessGroup(bool fix)
         {
-            return fix ? Siemens.Openness.IsUserInGroup() : Task.FromResult(Siemens.Openness.IsUserInGroupNoFix());
+            return Task.FromResult((bool)HostToolServices.Observe(fix ? "group.fix" : "group", new JsonObject())!);
         }
     }
 }
+
+#endif

@@ -78,7 +78,7 @@ internal static class StartupNoTiaChecks
                 + " roster; missing safe tools: " + string.Join(", ", expectedSafe.Except(seenSafe).OrderBy(name => name)) + ".");
             if (profile == "full")
             {
-                var missingSafe = explicitSafe.Except(roster, StringComparer.OrdinalIgnoreCase)
+                var missingSafe = explicitSafe.Where(name => !EngineSurface.IsHostTool(server, name)).Except(roster, StringComparer.OrdinalIgnoreCase)
                     .OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray();
                 Check(missingSafe.Length == 0, "The no-TIA allowlist contains unregistered full-profile tools: "
                     + string.Join(", ", missingSafe) + ".");
@@ -148,7 +148,7 @@ internal static class StartupNoTiaChecks
                 pass("V" + major + " " + profile + " no-TIA SessionTools factory resolved and returned bootstrap data");
             }
             var names = ProfileToolNames(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!, profile);
-            int fullExpected = Program.ExpectedFullToolCount(major);
+            int fullExpected = Program.ExpectedEngineToolCount(major);
             Check(profile == "full" ? names.Length == fullExpected : names.Length > 0 && names.Length < fullExpected,
                 "V" + major + " " + transport + (isolate ? " isolation parent" : " host")
                 + " has " + names.Length + " " + profile + " tools.");

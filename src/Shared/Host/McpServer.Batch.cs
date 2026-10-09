@@ -19,6 +19,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly BatchPlanStore BatchPlans = new BatchPlanStore();
 #endif
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "RunReadOnlyToolBatch"), Description("[L2][Meta][READ] Sequentially invoke 1..50 explicit [READ] tools or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot.")]
         public static CallToolResult ReadToolBatch(
             [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
@@ -45,7 +46,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return BatchResult(tool, rows, false);
         }
+#endif
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "PreviewToolBatch"), Description("[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute token bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage.")]
         public static CallToolResult PreviewToolBatch(
             [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
@@ -83,7 +86,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Batch preview requires a stable bound project and available preview capacity.", new PreconditionFailedDetails("batch-preview", expectedProject))); }
         }
+#endif
 
+#if !TIA_ENGINE_PORTED
         [McpServerTool(Name = "ApplyToolBatch"), Description("[L2][Meta][WRITE] Consume a PreviewToolBatch token once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download.")]
         public static CallToolResult ApplyToolBatch([Description("Single-use token from PreviewToolBatch; expires after 10 minutes.")] string token)
         {
@@ -148,6 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return BatchResult(tool, rows, true);
         }
+#endif
 
         internal static Error? ValidateBatch(ToolCall[] operations, bool write, out ToolCall[]? validated)
         {
@@ -189,12 +195,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     for (int i = warnings.Count - 1; i >= 0; i--) if ((string?)warnings[i]?["code"] == "APPROVAL_DISABLED") warnings.RemoveAt(i);
             }
             return BatchPlanStore.Stable(copy);
-        }
-        internal static bool? ResultSucceeded(JsonNode? body)
-        {
-            if (body is not JsonObject obj) return null;
-            if (obj["schemaVersion"]?.GetValue<int?>() == 4) return obj["ok"]?.GetValue<bool?>();
-            return null;
         }
         private static JsonObject BatchRow(int index, string target, CallToolResult result) => new JsonObject
         { ["index"] = index, ["target"] = target, ["result"] = ResultBody(FinishApproval(result, null,

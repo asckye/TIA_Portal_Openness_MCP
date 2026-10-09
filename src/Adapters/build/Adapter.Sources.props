@@ -4,6 +4,7 @@
   <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
   <Import Project="$(MSBuildThisFileDirectory)../../Shared/shared-native/*.props" />
   <ItemGroup>
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/BlockDocumentExport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcServices.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciFallbackAdapter.cs" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />

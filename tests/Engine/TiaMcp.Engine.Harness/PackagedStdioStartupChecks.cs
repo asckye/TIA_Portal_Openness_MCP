@@ -94,7 +94,7 @@ internal static class PackagedStdioStartupChecks
                         count += AsArray(result["tools"]).Count;
                         cursor = result.ContainsKey("nextCursor") ? Convert.ToString(result["nextCursor"]) : null;
                     } while (!String.IsNullOrEmpty(cursor));
-                    Check(count == (Program.ExpectedFullToolCount(major)), "Packaged V" + major + " STDIO roster has " + count + " tools.");
+                    Check(count == (Program.ExpectedEngineToolCount(major)), "Packaged V" + major + " STDIO roster has " + count + " tools.");
 
                     var bootstrap = Call(process, id++, "InitializeEnvironment", null, errors);
                     var bootstrapData = AsObject(bootstrap["data"]);
@@ -105,23 +105,13 @@ internal static class PackagedStdioStartupChecks
                     Check(Program.HasChinese(Convert.ToString(bootstrapData["recommendedFixZh"])),
                         "Packaged InitializeEnvironment omitted its Chinese recommendedFixZh: " + Json.Serialize(bootstrap));
 
-                    var diagnostics = Call(process, id++, "GetEnvironmentDiagnostics", new { fix = false }, errors);
-                    var doctor = AsObject(diagnostics["data"]);
-                    Check(doctor["ready"] is bool doctorReady && !doctorReady
-                        && Json.Serialize(doctor).IndexOf("no TIA Portal V", StringComparison.OrdinalIgnoreCase) >= 0,
-                        "Packaged GetEnvironmentDiagnostics omitted the no-TIA cause: " + Json.Serialize(diagnostics));
-                    Check(Program.HasChinese(Convert.ToString(doctor["recommendedFixZh"])),
-                        "Packaged GetEnvironmentDiagnostics omitted its Chinese recommendedFixZh: " + Json.Serialize(diagnostics));
-
+                    // Doctor diagnostics now run in B1HostPortsTests with managed no-TIA observations.
                     var refusal = Call(process, id++, "GetSessionState", null, errors);
                     Check(IsReadinessRefusal(refusal), "Packaged GetSessionState was not refused before dispatch: " + Json.Serialize(refusal));
                     var refusalEnvironment = AsObject(AsObject(refusal["data"])["environment"]);
                     Check(Program.HasChinese(Convert.ToString(refusalEnvironment["recommendedFixZh"])),
                         "Packaged readiness refusal omitted its Chinese recommendedFixZh: " + Json.Serialize(refusal));
-                    var workerRefusal = Call(process, id++, "RestartOpennessWorker", null, errors);
-                    Check(IsReadinessRefusal(workerRefusal), "Packaged worker control was not refused before dispatch: " + Json.Serialize(workerRefusal));
-                    var safeLookup = Call(process, id++, "FindTools", new { query = "BuildPlcUdt", limit = 1 }, errors);
-                    Check(AsObject(safeLookup["data"]).ContainsKey("items"), "Packaged tool discovery failed without TIA.");
+                    // Worker control and discovery are host-owned; the global G4 check asserts their absence.
                     var usage = Call(process, id++, "GetToolUsage", new { toolName = "BuildPlcUdt" }, errors);
                     var usageData = AsObject(usage["data"]);
                     var buildArguments = AsObject(AsObject(AsObject(AsObject(usageData["example"])["request"])
@@ -130,13 +120,8 @@ internal static class PackagedStdioStartupChecks
                     Check(offlineBuild["ok"] is bool buildOk && buildOk,
                         "Packaged offline builder failed without TIA: " + Json.Serialize(offlineBuild));
 
-                    if (isolate)
-                    {
-                        var worker = Call(process, id++, "GetOpennessWorkerStatus", null, errors);
-                        string state = Convert.ToString(AsObject(AsObject(worker["data"])["evidence"])["worker"] is Dictionary<string, object> status
-                            ? status["state"] : null) ?? "";
-                        Check(state == "NotStarted", "No-TIA local calls unexpectedly started the isolated worker: " + Json.Serialize(worker));
-                    }
+                    // Worker status belongs to the net10 host; the raw engine
+                    // deliberately cannot serve that retired declaration.
 
                     Check(!process.HasExited, "Packaged STDIO engine exited after calls.");
                     pass("V" + major + " packaged STDIO " + (isolate ? "isolated" : "in-process")

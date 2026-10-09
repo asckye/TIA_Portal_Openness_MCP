@@ -1,3 +1,4 @@
+#if !TIA_ENGINE_PORTED
 using TiaMcp.Logic.V4.Domain;
 using ModelContextProtocol.Protocol;
 using System;
@@ -57,3 +58,5 @@ namespace TiaMcpServer.ModelContextProtocol
             });
     }
 }
+
+#endif

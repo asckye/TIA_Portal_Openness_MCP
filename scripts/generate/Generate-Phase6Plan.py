@@ -661,26 +661,30 @@ MIGRATION_GROUPS = {
     "P6-67": "ImportStagingTools",
     "P6-07": "McpServer.ToolBridge McpServer.Batch McpServer.CallDiscipline McpServer.Exports ToolUsageTools",
     "P6-09": "EcosystemTools V21EcosystemTools EngineeringAuditTools GitWorkflowTools ImportOrderTools OfflineAnalysisTools OfflineSuiteTools QualityAuditTools TemplateTools XmlBuilderTools PlcBuildTools PlcDocumentationTools",
-    "P6-10": "PlcBlocksTools PlcSoftwareTools TypesTools PlcTablesTools McpServer.BlockLogic McpServer.BlockImportVerification",
+    "P6-10": "PlcOfflineTools PlcBlocksTools PlcSoftwareTools TypesTools PlcTablesTools McpServer.BlockLogic McpServer.BlockImportVerification",
     "P6-11": "DocumentsTools NativeExchangeTools PlcExternalSourcesTools McpServer.Patch ExportTools",
     "P6-12": "DevicesTools HardwareAmlTools HardwareManagementTools ModulesTools AddressesTools",
     "P6-13": "HardwareNetworkTools HardwareServicesTools",
     "P6-14": "CertificateManagementTools ProjectSecurityTools SafetyManagementTools SafetyValidationTools SecurityDeepTools",
     "P6-15": "AlarmsTools OpcUaTools TechnologyObjectsTools SoftwareUnitDeepTools SoftwareUnitManagementTools",
     "P6-16": "ClassicHmiFoldersTools MotionProDiagClassicHmiTools",
-    "P6-17": "UnifiedHmiTools UnifiedHmiGroupsTools UnifiedScreenItemsTools UnifiedUiModelTools",
+    "P6-17": "HmiOfflineTools UnifiedHmiTools UnifiedHmiGroupsTools UnifiedScreenItemsTools UnifiedUiModelTools",
     "P6-18": "HmiExchangeTools UnifiedExchangeTools HmiTagDeletionTools",
     "P6-19": "HmiDescribeTools HmiInspectionTools GlobalScriptEditTools GraphicSelectionTools UnifiedEngineeringTools UnifiedEventsTools UnifiedObjectServicesTools MigrationReadTools ReflectionTools",
     "P6-20": "CfcTools TestSuiteTools V20OptionsTools OptionalEngineeringTools SpecializedExchangeTools",
     "P6-21": "DccTools StartdriveTools TeamcenterTools",
     "P6-22": "LibraryTools SivarcTools VersionControlTools",
     "P6-23": "RuntimeChannelTools RuntimeTools RuntimeSettingsTools PlcSimAdvancedTools OnlineDownloadTools",
-    "P6-24": "SessionTools ProjectSessionTools DiagnosticsTools EngineeringDiagnosticsTools McpServer.Doctor McpServer.Maintenance McpServer.Worker",
+    "P6-24": "HostMetaTools SessionTools ProjectSessionTools DiagnosticsTools EngineeringDiagnosticsTools McpServer.Doctor McpServer.Maintenance McpServer.Worker",
 }
 owners = {}
 for task, stems in MIGRATION_GROUPS.items():
     for stem in stems.split():
-        path = SH + "HardwareAddressTools.cs" if stem == "AddressesTools" else E + "ModelContextProtocol/Tools/" + stem + ".cs"
+        candidates = [p for p in files if p.endswith("/" + stem + ".cs")]
+        if stem == "AddressesTools": candidates = [SH + "HardwareAddressTools.cs"]
+        if stem == "McpServer.BlockLogic": candidates = [SH + "PlcToolContract.cs"]
+        assert len(candidates) == 1, (stem, candidates)
+        path = candidates[0]
         assert path not in owners
         assert (root / path).is_file(), path
         owners[path] = task
@@ -761,6 +765,14 @@ def validate_inventory(inventory):
         assert paths and len(paths) == len(set(paths)), task
         validate_paths(paths)
 
+def relocated(path):
+    if (root / path).exists(): return path
+    name = pathlib.PurePosixPath(path).name
+    if name == "McpServer.BlockLogic.cs": return SH + "PlcToolContract.cs"
+    matches = [p for p in files if pathlib.PurePosixPath(p).name == name and p.startswith(SH)]
+    assert len(matches) == 1, (path, matches)
+    return matches[0]
+TASK_PATHS = {task: [relocated(path) for path in paths] for task, paths in TASK_PATHS.items()}
 validate_inventory(TASK_PATHS)
 
 out.append("### 当前基线与 V4 提案计数\n")
@@ -914,6 +926,7 @@ layout_policies = [
 ]
 policy_rows = []
 for path, needle, current, target in layout_policies:
+    path = relocated(path)
     lines = read(path).splitlines()
     line = next(i for i,l in enumerate(lines, 1) if needle in l)
     policy_rows.append([link(path)+":"+str(line)+" "+tick(needle), current, target])

@@ -23,6 +23,7 @@ internal sealed class HostOptions
     public bool WithUi { get; init; }
     public string? TiaPortalLocation { get; init; }
     public string Profile { get; init; } = "lite";
+    public string? HostCommand { get; init; }
 
     public static HostOptions Parse(string[] args, string directory)
     {
@@ -30,7 +31,7 @@ internal sealed class HostOptions
         string bundleRoot = TiaOpenness.Shared.BundleLayout.RequireRoot(directory, explicitRoot);
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
         var flags = new HashSet<string>(StringComparer.Ordinal);
-        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile" };
+        var valued = new[] { "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key", "--logging", "--engine-worker", "--engine-catalog", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command" };
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui") { flags.Add(args[i]); continue; }
@@ -89,6 +90,7 @@ internal sealed class HostOptions
         }
         return new HostOptions {
             BundleRoot = bundleRoot, ReleaseKey = release,
+            HostCommand = options.ContainsKey("--host-command") ? Value("--host-command") : null,
             EngineWorkerExe = engine ? Path.GetFullPath(Value("--engine-worker", TiaOpenness.Shared.BundleLayout.EngineWorkerPath(bundleRoot, release, directory))) : null,
             EngineCatalog = engine ? Path.GetFullPath(Value("--engine-catalog", Path.Combine(Path.GetDirectoryName(TiaOpenness.Shared.BundleLayout.EngineWorkerPath(bundleRoot, release, directory))!, "tool-catalog.json"))) : null,
             EngineTimeoutSeconds = timeout, WithUi = flags.Contains("--with-ui"),

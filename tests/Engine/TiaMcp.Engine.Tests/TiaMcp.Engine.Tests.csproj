@@ -17,6 +17,18 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../src/Shared/CapabilitySelfTestLogic.cs" Link="CapabilitySelfTestLogic.cs" />
+    <Compile Include="../../../src/Shared/Host/EngineeringDiagnosticsTools.cs" Link="EngineeringDiagnosticsTools.cs" />
+    <Compile Include="../../../src/Shared/Host/ExportTools.cs" Link="ExportTools.cs" />
+    <Compile Include="../../../src/Shared/PortedToolDeclarations.cs" Link="PortedToolDeclarations.cs" />
+    <Compile Include="../../../src/Shared/HmiDesignBuilder.cs" Link="HmiDesignBuilder.cs" />
+    <Compile Include="../../../src/Shared/HostToolServices.cs" Link="HostToolServices.cs" />
+    <Compile Include="../../../src/Shared/HostMetaTools.cs" Link="HostMetaTools.cs" />
+    <Compile Include="../../../src/Shared/HmiOfflineTools.cs" Link="HmiOfflineTools.cs" />
+    <Compile Include="../../../src/Shared/PlcOfflineTools.cs" Link="PlcOfflineTools.cs" />
+    <Compile Include="../../../src/Shared/OnlineMonitoringPolicy.cs" Link="OnlineMonitoringPolicy.cs" />
+    <Compile Include="../../../src/Shared/UnifiedHmiContract.cs" Link="UnifiedHmiContract.cs" />
+    <Compile Include="../../../src/Shared/LibraryToolContract.cs" Link="LibraryToolContract.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs" Link="CfcTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
@@ -29,7 +41,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs" Link="VersionControlTools.cs" />
 
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs" Link="McpServer.BlockImportVerification.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockLogic.cs" Link="McpServer.BlockLogic.cs" />
+    <Compile Include="../../../src/Shared/PlcToolContract.cs" Link="McpServer.BlockLogic.cs" />
 
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
@@ -45,8 +57,8 @@
     <Compile Include="../../../src/Engine/Cli/CliBoundary.cs" Link="CliBoundary.cs" />
     <Compile Include="../../../src/Engine/Cli/CliReportInput.cs" Link="CliReportInput.cs" />
     <EmbeddedResource Include="Golden/CliV4.json" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
-    <Compile Include="../../../src/Engine/Runtime/EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
+    <Compile Include="../../../src/Shared/Host/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
+    <Compile Include="../../../src/Shared/Host/EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
     <Compile Include="../../../src/Engine/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Builders/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
@@ -89,14 +101,14 @@
     <Compile Include="../../../src/Engine/Siemens/EngineeringExport.cs" Link="EngineeringExport.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
+    <Compile Include="../../../src/Shared/Host/McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Approval.cs" Link="McpServer.Approval.cs" />
     <Compile Include="../../../src/Engine/Isolation/ApprovalWaitBudget.cs" Link="ApprovalWaitBudget.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" Link="McpServer.CallDiscipline.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" Link="McpServer.VersionPolicy.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Profile.cs" Link="McpServer.Profile.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Exports.cs" Link="McpServer.Exports.cs" />
+    <Compile Include="../../../src/Shared/Host/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
+    <Compile Include="../../../src/Shared/Host/McpServer.Exports.cs" Link="McpServer.Exports.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ToolUsageTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CertificateManagementTools.cs" Link="CertificateManagementTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs" Link="ProjectSecurityTools.cs" />
@@ -154,26 +166,26 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs" Link="SoftwareUnitDeepTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs" Link="SoftwareUnitManagementTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs" Link="TechnologyObjectsTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EcosystemTools.cs" Link="EcosystemTools.cs" />
+    <Compile Include="../../../src/Shared/Host/EcosystemTools.cs" Link="EcosystemTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ImportStagingTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineSuiteTools.cs" Link="OfflineSuiteTools.cs" />
+    <Compile Include="../../../src/Shared/Host/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />
+    <Compile Include="../../../src/Shared/Host/OfflineSuiteTools.cs" Link="OfflineSuiteTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs" Link="PlcBuildTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcDocumentationTools.cs" Link="PlcDocumentationTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/QualityAuditTools.cs" Link="QualityAuditTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TemplateTools.cs" Link="TemplateTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V21EcosystemTools.cs" Link="V21EcosystemTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/XmlBuilderTools.cs" Link="XmlBuilderTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OfflineToolExecution.cs" Link="OfflineToolExecution.cs" />
+    <Compile Include="../../../src/Shared/Host/PlcDocumentationTools.cs" Link="PlcDocumentationTools.cs" />
+    <Compile Include="../../../src/Shared/Host/QualityAuditTools.cs" Link="QualityAuditTools.cs" />
+    <Compile Include="../../../src/Shared/Host/TemplateTools.cs" Link="TemplateTools.cs" />
+    <Compile Include="../../../src/Shared/Host/V21EcosystemTools.cs" Link="V21EcosystemTools.cs" />
+    <Compile Include="../../../src/Shared/Host/XmlBuilderTools.cs" Link="XmlBuilderTools.cs" />
+    <Compile Include="../../../src/Shared/Host/OfflineToolExecution.cs" Link="OfflineToolExecution.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/XmlBuildResults.cs" Link="XmlBuildResults.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcProgramImport.cs" Link="PlcProgramImport.cs" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringFileNames.cs" Link="EngineeringFileNames.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
+    <Compile Include="../../../src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs" Link="OnlineDownloadTools.cs" />
@@ -201,7 +213,6 @@
   <ItemGroup>
     <Compile Include="../../../src/Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
     <Compile Include="../../../src/Shared/DeclaredToolMetadata.cs" Link="Shared/DeclaredToolMetadata.cs" />
-    <Compile Include="../../../src/Shared/PortedToolDeclarations.cs" Link="Shared/PortedToolDeclarations.cs" />
     <Compile Include="../../../src/Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/HardwareAddressingService.cs" Link="Shared/HardwareAddressingService.cs" /></ItemGroup>

@@ -51,13 +51,12 @@ internal static class BehaviorCapabilityChecks
             check((string?)row!["state"] == "current" && (string?)row["l5"] == "NOT RUN", "Released family stays current: " + (string)row["family"]!);
             foreach (string name in row["entries"]!.AsArray().Select(e => (string)e!))
             {
+                if (EngineSurface.IsHostTool(server, name) || !methods.ContainsKey(name)) continue;
                 check(!methods[name].GetCustomAttributes().Any(a => a.GetType().Name == "BehaviorCandidateAttribute"), "Default build selects current method: " + name);
                 var tool = advertised.Single(t => t.ProtocolTool.Name == name).ProtocolTool;
                 check(tool.Description!.Contains("behaviorPolicy=current") && tool.Description.Contains("V4 native acceptance is pending"), "Description disclosure: " + name);
                 var invalid = new JsonObject { ["Sentinel"] = 1, ["sentinel"] = 2 };
-                var calls = new[] { Invoke(name, invalid), Invoke("CallTool", new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }),
-                    Invoke("RunReadOnlyToolBatch", new JsonObject { ["operations"] = new JsonArray(new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }) }),
-                    Invoke("CallTool", new JsonObject { ["name"] = name, ["arguments"] = invalid.DeepClone() }, new CancellationToken(true)) };
+                var calls = new[] { Invoke(name, invalid) };
                 foreach (var body in calls)
                     check((string?)body["meta"]!["behaviorPolicy"] == "current" && body["meta"]!["warnings"]!.AsArray().Any(w => (string?)w!["code"] == "UNVERIFIED_BEHAVIOR")
                         && (string?)body["meta"]!["execution"] == "not-started", "D1 admission disclosure: " + name + "; " + body["meta"]!.ToJsonString());
