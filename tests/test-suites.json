@@ -95,12 +95,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 11223,
+        "minimumPassed": 11225,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 11223,
+        "minimumPassed": 11225,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -113,12 +113,12 @@
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 8679,
+        "minimumPassed": 8681,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 8679,
+        "minimumPassed": 8681,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }

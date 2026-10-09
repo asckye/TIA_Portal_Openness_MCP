@@ -167,13 +167,13 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
-        public void LiteMapHasSeventyThreeDistinctCurrentNamesAndObjectExamplesPerRelease()
+        public void LiteMapHasEightyOneDistinctCurrentNamesAndObjectExamplesPerRelease()
         {
             foreach (string release in new[] { "20", "21" })
             {
                 var rows = ToolUsageCatalog.ProfileEntries(release).Where(r => r!["profiles"]!.AsArray().Any(p => (string?)p == "lite")).ToArray();
-                Assert.Equal(73, rows.Length);
-                Assert.Equal(73, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
+                Assert.Equal(81, rows.Length);
+                Assert.Equal(81, rows.Select(r => (string?)r!["currentName"]).Distinct().Count());
                 Assert.All(rows, row => Assert.IsType<JsonObject>(row!["arguments"]));
                 Assert.Contains(rows, r => (string?)r!["currentName"] == "PreviewToolCall");
                 Assert.Contains(rows, r => (string?)r!["name"] == "GetSessionState" && (string?)r!["currentName"] == "GetSessionState");
