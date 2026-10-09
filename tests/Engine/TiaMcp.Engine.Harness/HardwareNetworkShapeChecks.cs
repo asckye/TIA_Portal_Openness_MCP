@@ -141,7 +141,7 @@ internal static class HardwareNetworkShapeChecks
         check(serviceProvider.IsAssignableFrom(T(hw+"DeviceItem")),"DeviceItem is a service provider (NetworkInterface/NetworkPort/MrpInstancesOwner/AddressController/user managements)");
         // Engine surface
         var portal=EngineSurface.For(server);
-        foreach(var tool in new[]{"ReadIoSystems","ManageIoSystem","ReadNetworkDomains","ManageNetworkDomain","ReadTransferAreas","ManageTransferArea","ReadDeviceItemChannels","UpdateDeviceItemChannel","ReadDeviceAddressing","UpdateDeviceAddress","ManageDeviceUserGroup","ManageDeviceUsers","ManagePortInterconnection"})
+        foreach(var tool in new[]{"ReadIoSystems","ManageIoSystem","ReadNetworkDomains","ManageNetworkDomain","ReadTransferAreas","ManageTransferArea","ReadDeviceItemChannels","UpdateDeviceItemChannel","ManageDeviceUserGroup","ManageDeviceUsers","ManagePortInterconnection"})
             check(portal.Method(tool)!=null,"Portal."+tool+" present");
 
         CheckDomain(server, check, "HardwareNetwork", new[] { "ReadIoSystems", "ManageIoSystem", "ReadNetworkDomains",
@@ -153,7 +153,7 @@ internal static class HardwareNetworkShapeChecks
         CheckDomain(server, check, "HardwareServices", new[] { "ReadCommunicationConnections", "ManageCommunicationConnection",
             "ManageWatchForceTableWebAccess", "ExchangeSystemDiagnosticsSettings", "ReadHardwareFeatures", "ManageDeviceServiceObjects",
             "ManagePlcProtection", "CompileDevice", "GetPutGetAccess", "SetPutGetAccess", "ManageHardwareUtilities" });
-        CheckDomain(server, check, "Addresses", new[] { "ReadDeviceAddressing", "UpdateDeviceAddress", "GetDeviceIpAddress" });
+        EngineSurface.CheckPortedHardwareRetirement(server, check);
         CheckDomain(server, check, "Devices", new[] { "DumpDeviceAttributes" });
     }
 
@@ -208,8 +208,7 @@ internal static class HardwareNetworkShapeChecks
         "ReadTransferAreas" => "ListTransferAreas", "ReadDeviceItemChannels" => "ListDeviceItemChannels",
         "UpdateDeviceItemChannel" => "SetDeviceItemChannel", "ReadCommunicationConnections" => "ListCommunicationConnections",
         "ReadHardwareFeatures" => "GetHardwareFeatures", "GetPutGetAccess" => "GetPlcPutGetAccess",
-        "SetPutGetAccess" => "SetPlcPutGetAccess", "ReadDeviceAddressing" => "GetDeviceAddressing",
-        "UpdateDeviceAddress" => "SetDeviceAddress", "DumpDeviceAttributes" => "GetDeviceAttributes", _ => name
+        "SetPutGetAccess" => "SetPlcPutGetAccess", "DumpDeviceAttributes" => "GetDeviceAttributes", _ => name
     };
 
     private static readonly Dictionary<short, OpCode> OpCodesByValue = typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static)

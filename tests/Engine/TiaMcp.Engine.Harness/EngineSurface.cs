@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 // All engine types come from the woven release EXE loaded by the harness, never a project reference.
 internal sealed class EngineSurface
@@ -83,6 +84,34 @@ internal sealed class EngineSurface
     internal Assembly? Adapter { get; private set; }
 
     internal static EngineSurface For(Assembly engine) => surfaces.GetValue(engine, Create);
+
+    internal static void CheckPortedHardwareRetirement(Assembly engine, Action<bool, string> check)
+    {
+        var families = Program.FindReferencedType(engine, "TiaMcp.Adapters.Contracts.PortedFamilies");
+        var family = families.GetMethod("ForTool")!.Invoke(null, new object[] { "GetDeviceAddressing" })!;
+        var tools = (string[])family.GetType().GetProperty("Tools")!.GetValue(family)!;
+        check(tools.Length == 5, "G4 F19 has five shared declarations");
+        check(engine.GetType("TiaMcpServer.Siemens.Services.AddressesService", false) == null,
+            "G4 engine has no native AddressesService implementation");
+        var portal = engine.GetType("TiaMcpServer.Siemens.Portal", true)!;
+        foreach (var name in new[] { "ReadDeviceAddressing", "UpdateDeviceAddress", "GetDeviceIpAddress" })
+            check(!portal.GetMethods(All).Any(method => method.Name == name), "G4 Portal no longer implements " + name);
+        // Shared declarations remain available to nested CLR bridges. Registration
+        // ownership is defined by the exported worker catalog consumed by the host.
+        string path = Path.GetTempFileName();
+        try
+        {
+            engine.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", All)!.Invoke(null, new object[] { path });
+            using var catalog = JsonDocument.Parse(File.ReadAllText(path));
+            foreach (var tool in tools)
+            {
+                check(!catalog.RootElement.GetProperty("tools").EnumerateArray().Any(entry => entry.GetProperty("name").GetString() == tool)
+                    && !catalog.RootElement.GetProperty("descriptors").EnumerateArray().Any(entry => entry.GetProperty("name").GetString() == tool),
+                    "G4 engine worker catalog excludes " + tool);
+            }
+        }
+        finally { File.Delete(path); }
+    }
 
     private static EngineSurface Create(Assembly engine)
     {

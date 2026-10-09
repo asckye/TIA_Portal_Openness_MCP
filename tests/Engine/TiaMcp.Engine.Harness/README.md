@@ -25,7 +25,7 @@ $fileVersion = (Get-Content 'manifest/release-build.json' -Raw | ConvertFrom-Jso
 & $tests 'runtime/v21/TiaMcp.Engine.V21.exe' http-start-no-tia 21
 ```
 
-Use the V20 executable and `hmi-only 20 $fileVersion`, `host-build-no-tia 20`, `packaged-start-no-tia 20`, and `http-start-no-tia 20` to check a V20 build. `host-build-no-tia` builds the real STDIO/HTTP service and protocol registrations, including the isolation parent, without opening a listener. `packaged-start-no-tia` stages the real EXE without `Siemens.Engineering*.dll`, then checks STDIO startup, the full roster, readiness diagnostics/refusal and safe local discovery with isolation off and on. `http-start-no-tia` performs the packaged-layout checks over localhost when the machine has no detected TIA installation and the platform allows a local listener; it reports a skip otherwise. These checks target the V20/V21 full engines; foundation protocol checks are run by `Build-MultiVersion.ps1`.
+Use the V20 executable and `hmi-only 20 $fileVersion`, `host-build-no-tia 20`, `packaged-start-no-tia 20`, and `http-start-no-tia 20` to check a V20 build. `host-build-no-tia` builds the real STDIO/HTTP service and protocol registrations, including the isolation parent, without opening a listener. `packaged-start-no-tia` stages the real EXE without `Siemens.Engineering*.dll`, then checks STDIO startup, the full roster, readiness diagnostics/refusal and safe local discovery with isolation off and on. `http-start-no-tia` performs the packaged-layout checks over localhost when the machine has no detected TIA installation and the platform allows a local listener; it reports a skip otherwise. These checks target the V20/V21 full engines; Foundation protocol checks are run by `dotnet run --project build-tools/release -- build-release`.
 No TIA process is started and no engineering project is modified by these tests.
 Actual project connection and nested HMI screen reads require separate TIA validation.
 
@@ -144,10 +144,42 @@ not standalone finite test suites.
 
 P6-07d covers the registered V4 PLC routes for preview/confirmation,
 singleton ownership, and typed input validation. Native service-member checks keep
-their CLR names; no Siemens signature or call-path assertion is removed. The
+their CLR names. F19 expectations moved to Foundation and adapter tests in P8-02;
+the engine harness retains the Siemens SDK address signature checks. The
 coverage includes `GetPlcBlockInfo`, `ListPlcBlocks`, `GetPlcBlockHierarchy`,
 `ExportPlcBlock`, `ImportPlcBlock`, `ImportPlcBlocksFromDirectory`,
 `CompilePlcDiagnostics`, `RepairAndReimportPlcBlock`, `ExportPlcBlocks`,
 `DescribePlcBlockLogic`, `SetPlcProgram`, `GetPlcBlockFingerprints`,
-`GetPlcBlockEditCapabilities`, `MovePlcBlockToGroup`, `GetDeviceAddressing`,
-`SetDeviceAddress`, and `GetDeviceAttributes`.
+`GetPlcBlockEditCapabilities`, `MovePlcBlockToGroup`, and `GetDeviceAttributes`.
+
+
+P8-02 moves the five F19 hardware-addressing tools to Foundation. Both
+`engineering-api-only` and `hardware-contracts-only` enforce G4: the native
+`AddressesService` and Portal address methods are absent, and the exported engine
+worker catalog contains none of the five tools or their descriptors. Shared,
+Siemens-free CLR declarations remain in the engine for nested bridge compatibility;
+the exported worker catalog defines registration ownership. The remaining P6-12
+engine hardware group has 21 tools.
+
+`HardwareAddressingAdmissionTests` in the Foundation suite covers the five typed
+signatures, schema defaults, invalid scalar-map JSON, omitted maps, path refusals
+(including `LIMIT_EXCEEDED`), and invalid address properties before native lookup,
+for all eight releases. `HardwareAddressingParityTests` covers succeeded, partial,
+unknown and failed envelopes, partial-read paging and sanitized errors. Adapter
+`HardwareAddressingTests` retain typed worker DTO, scalar and native-value checks.
+Run these through the registered suite gates:
+
+```powershell
+dotnet run --project build-tools/release -- test-suites -Suite foundation -Suite foundation-api -Suite adapter-contracts
+```
+
+The release harness modes `engineering-api-only`, `hardware-contracts-only`,
+`descriptor-catalog-only`, `concurrency-only`, `response-golden-only`,
+`offline-contracts-only`, `software-lookup-only`, `worker-supervisor-only`,
+`process-leases-only`, `child-stdin-only`, `router-only`, `native-export-only`,
+`hmi-snapshot-only`, `global-script-only`, `graphic-selection-only`,
+`runtime-settings-only`, `example-library-only`, `native-diagnostics-only`,
+`test-ecosystem-assembly` and `hmi-only` can be verified without a network listener
+or TIA connection. `concurrency-only` uses in-process regression fixtures.
+The default HTTP mode opens a localhost listener; omit it when repository
+instructions forbid connecting to network services.
