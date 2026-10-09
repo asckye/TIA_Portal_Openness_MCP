@@ -18,7 +18,7 @@ public sealed class WorkbenchControlLoadTests(WpfContext wpf)
     public async Task Continuous_control_queue_keeps_existing_dispatcher_latency_budget()
     {
         var (window, _, client) = wpf.Run(() => Window());
-        using var server = new WorkbenchControlServer(window.ControlSurface, window.Dispatcher, _ => Environment.ProcessPath!);
+        using var server = new WorkbenchControlServer(window.ControlSurface, window.Dispatcher, _ => Environment.ProcessPath!, now: () => TestNow);
         var latency = new ConcurrentBag<double>();
         var sampling = Task.Run(async () =>
         {
@@ -33,10 +33,10 @@ public sealed class WorkbenchControlLoadTests(WpfContext wpf)
         {
             for (int i = 0; i < 100; i++)
             {
-                var request = Request(session: i.ToString("x16"));
+                var request = Request(session: i.ToString("x16"), now: TestNow);
                 request.Arguments = new WorkbenchDisplayPageArguments { Page = i % 2 == 0 ? WorkbenchPage.Log : WorkbenchPage.Environment };
                 Assert.Equal(WorkbenchControlStatus.Done, (await server.Execute(request)).Status);
-                Assert.Equal(WorkbenchControlStatus.Done, (await server.Execute(Request(WorkbenchControlOperation.ReadState))).Status);
+                Assert.Equal(WorkbenchControlStatus.Done, (await server.Execute(Request(WorkbenchControlOperation.ReadState, now: TestNow))).Status);
                 await Task.Delay(5);
             }
             await sampling;

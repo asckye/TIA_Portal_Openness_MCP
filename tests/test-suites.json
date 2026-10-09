@@ -281,7 +281,7 @@
   },
   "workbench-control": {
     "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
-    "minimumPassed": 87,
+    "minimumPassed": 96,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",

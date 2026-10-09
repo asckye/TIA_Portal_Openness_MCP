@@ -56,22 +56,22 @@ public sealed class WorkbenchControlPipeTests(WpfContext wpf)
         var (window, _, client) = wpf.Run(() => Window());
         string name = "tia-workbench-test-" + Guid.NewGuid().ToString("N");
         using var server = new WorkbenchControlServer(window.ControlSurface, window.Dispatcher,
-            _ => condition == "image" ? @"D:\wrong-bundle\TiaMcp.FoundationHost.exe" : Environment.ProcessPath!, name, _ => { }, Scratch("refused") + ".jsonl");
+            _ => condition == "image" ? @"D:\wrong-bundle\TiaMcp.FoundationHost.exe" : Environment.ProcessPath!, name, _ => { }, Scratch("refused") + ".jsonl", () => TestNow);
         bool enabled = App.Settings.WorkbenchControlEnabled;
         try
         {
-            server.Start(); var request = Request();
+            server.Start(); var request = Request(now: TestNow);
             switch (condition)
             {
                 case "pid": request.Origin.HostProcessId++; break;
                 case "version": request.Version = 2; break;
-                case "deadline": request.DeadlineUtc = DateTimeOffset.UtcNow.AddSeconds(-1); break;
-                case "future": request.DeadlineUtc = DateTimeOffset.UtcNow.AddMinutes(1); break;
+                case "deadline": request.DeadlineUtc = TestNow.AddSeconds(-1); break;
+                case "future": request.DeadlineUtc = TestNow.AddMinutes(1); break;
                 case "disabled": wpf.Run(() => App.Settings.WorkbenchControlEnabled = false); break;
                 case "modal": wpf.Run(window.OpenSettings); break;
-                case "human": wpf.Run(() => { window.ControlGuard = new(); window.ControlGuard.HumanInput(); }); break;
-                case "identity": request = Request(WorkbenchControlOperation.DisplayBlock); request.Origin.BoundProjectFile = @"D:\Other.ap21"; break;
-                case "throttle": Assert.Equal(WorkbenchControlStatus.Done, (await Send(name, request)).Status); request = Request(); break;
+                case "human": wpf.Run(() => window.ControlGuard = new(() => TestNow, () => true)); break;
+                case "identity": request = Request(WorkbenchControlOperation.DisplayBlock, now: TestNow); request.Origin.BoundProjectFile = @"D:\Other.ap21"; break;
+                case "throttle": Assert.Equal(WorkbenchControlStatus.Done, (await Send(name, request)).Status); request = Request(now: TestNow); break;
             }
             var response = await Send(name, request);
             Assert.Equal(WorkbenchControlStatus.Refused, response.Status);

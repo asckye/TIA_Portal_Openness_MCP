@@ -343,7 +343,7 @@ public partial class MainWindow
     private void OnControlEnabledChanged(object? sender, EventArgs e) => QueueControlSnapshot();
     private void OnControlMouseDown(object sender, MouseButtonEventArgs e) { if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
     private void OnControlMouseUp(object sender, MouseButtonEventArgs e) { if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
-    private void OnControlMouseMove(object sender, MouseEventArgs e) => ControlGuard.HumanInput();
+    private void OnControlMouseMove(object sender, MouseEventArgs e) => ControlGuard.MouseMove();
     private void OnControlMouseWheel(object sender, MouseWheelEventArgs e) => ControlGuard.HumanInput();
     private void OnControlKeyDown(object sender, KeyEventArgs e)
     {

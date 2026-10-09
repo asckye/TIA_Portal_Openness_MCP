@@ -26,10 +26,11 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
 {
     internal const string Project = @"D:\Projects\Line.ap21";
     internal const string CallId = "11111111111111111111111111111111";
+    internal static readonly DateTimeOffset TestNow = new(2026, 10, 9, 12, 0, 0, TimeSpan.Zero);
     internal static WorkbenchControlRequest Request(WorkbenchControlOperation operation = WorkbenchControlOperation.DisplayPage,
-        WorkbenchControlArguments? arguments = null, string session = "2222222222222222") => new()
+        WorkbenchControlArguments? arguments = null, string session = "2222222222222222", DateTimeOffset? now = null) => new()
     {
-        RequestId = Guid.NewGuid().ToString("N"), DeadlineUtc = DateTimeOffset.UtcNow.AddSeconds(
+        RequestId = Guid.NewGuid().ToString("N"), DeadlineUtc = (now ?? DateTimeOffset.UtcNow).AddSeconds(
             operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection ? 2 : 5),
         Origin = new() { Host = "foundation", ReleaseKey = "21", HostProcessId = Environment.ProcessId,
             McpSession = session, ClientName = "fixture", BoundProjectFile = Project },
@@ -47,18 +48,19 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         _ => new WorkbenchPrefillArguments { Form = WorkbenchPrefillForm.BlockFilter, Mode = WorkbenchPrefillMode.Set,
             Fields = new WorkbenchBlockFilterFields { Filter = "Main" } },
     };
-    internal static (MainWindow Window, MainViewModel Model, FakeStudioClient Client) Window(bool connected = true)
+    internal static (MainWindow Window, MainViewModel Model, FakeStudioClient Client) Window(bool connected = true,
+        ControlInputGuard? input = null)
     {
         var client = new FakeStudioClient { AttachedProject = new() { Name = "Line", Path = Project } };
         var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "21" };
         if (connected) model.Session.Connect.Execute(null);
         var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());
+        // Functional/queue tests use an idle source and fixed screen position, independent of desktop input.
+        window.ControlGuard = input ?? new ControlInputGuard(() => TestNow, () => false, () => new Point(0, 0));
         var journal = new FeaturePageFixtures.Journal();
         journal.Replace([journal.Calls[0] with { RequestId = CallId, JournalKey = CallId }]);
         window.ConfigureFeaturePages(journal, new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
         window.Show(); WpfContext.Drain(); client.Calls.Clear();
-        // Showing a real window may generate mouse motion. The test clock models an idle human.
-        window.ControlGuard = new ControlInputGuard(() => DateTimeOffset.MaxValue);
         return (window, model, client);
     }
     internal static string Scratch(string name) => Path.GetFullPath(Path.Combine("bin-build", "refactor", "P8-20b", name + "-" + Guid.NewGuid().ToString("N")));
@@ -311,25 +313,30 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
     public async Task Queue_is_bounded_FIFO_and_per_origin_inflight_is_limited()
     {
         var (window, _, _) = wpf.Run(() => Window());
+        var now = TestNow;
         var seen = new System.Collections.Concurrent.ConcurrentQueue<string>();
         var surface = new WorkbenchControlSurface(request => { seen.Enqueue(request.RequestId); return window.ApplyControl(request); }, window.ControlSurface.Snapshot);
-        using var server = new WorkbenchControlServer(surface, window.Dispatcher, _ => Environment.ProcessPath!);
+        using var server = new WorkbenchControlServer(surface, window.Dispatcher, _ => Environment.ProcessPath!, now: () => now);
         using var entered = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
         window.Dispatcher.BeginInvoke(new Action(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(4)); }));
         Assert.True(entered.Wait(TimeSpan.FromSeconds(1)));
         try
         {
-            var first = Request(); var pending = server.Execute(first);
-            Assert.Equal("workbench-busy", (await server.Execute(Request())).Refusal?.Condition);
+            var first = Request(now: now); var pending = server.Execute(first);
+            Assert.Equal("workbench-busy", (await server.Execute(Request(now: now))).Refusal?.Condition);
             await Task.Delay(50); // The reader is now waiting on the blocked dispatcher.
-            var requests = Enumerable.Range(1, 16).Select(i => Request(session: i.ToString("x16"))).ToArray();
+            var requests = Enumerable.Range(1, 16).Select(i => Request(session: i.ToString("x16"), now: now)).ToArray();
             var queued = requests.Select(server.Execute).ToArray();
-            Assert.Equal("workbench-busy", (await server.Execute(Request(session: "ffffffffffffffff"))).Refusal?.Condition);
+            Assert.Equal("workbench-busy", (await server.Execute(Request(session: "ffffffffffffffff", now: now))).Refusal?.Condition);
             release.Set();
             Assert.Equal(WorkbenchControlStatus.Done, (await pending).Status);
             Assert.All(await Task.WhenAll(queued), response => Assert.Equal(WorkbenchControlStatus.Done, response.Status));
             Assert.Equal(new[] { first.RequestId }.Concat(requests.Select(request => request.RequestId)), seen);
-            Assert.Equal("workbench-busy", (await server.Execute(Request())).Refusal?.Condition);
+            Assert.Equal("workbench-busy", (await server.Execute(Request(now: now))).Refusal?.Condition);
+            now = now.AddMilliseconds(299);
+            Assert.Equal("workbench-busy", (await server.Execute(Request(now: now))).Refusal?.Condition);
+            now = now.AddMilliseconds(1);
+            Assert.Equal(WorkbenchControlStatus.Done, (await server.Execute(Request(now: now))).Status);
         }
         finally { release.Set(); wpf.Run(window.Close); }
     }
@@ -396,6 +403,130 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             }
             finally { window.Close(); }
         });
+    }
+
+    [Fact]
+    public void Stationary_cursor_layout_moves_do_not_mark_human_activity()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                var now = TestNow;
+                window.ControlGuard = new(() => now, mousePosition: () => new Point(320, 240));
+                RaiseMove(window);
+                Assert.False(window.ControlGuard.HumanActive);
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request()).Status);
+                window.UpdateLayout();
+                // WPF can retarget mouse events after layout without any screen cursor movement.
+                RaiseMove((UIElement)window.FindName("PendingBadge"));
+                window.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0) { RoutedEvent = Mouse.MouseEnterEvent });
+                Assert.False(window.ControlGuard.HumanActive);
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.DisplayPage,
+                    new WorkbenchDisplayPageArguments { Page = WorkbenchPage.Environment })).Status);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(1, 0)] [InlineData(0, 1)]
+    public void Changed_screen_position_marks_human_activity_without_stationary_moves_extending_it(int x, int y)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                var now = TestNow; var position = new Point(320, 240);
+                window.ControlGuard = new(() => now, mousePosition: () => position);
+                RaiseMove(window); Assert.False(window.ControlGuard.HumanActive);
+                position.Offset(x, y); RaiseMove(window);
+                Assert.True(window.ControlGuard.HumanActive);
+                Assert.Equal("workbench-user-active", window.ApplyControl(Request()).Refusal?.Condition);
+                now = now.AddMilliseconds(1499); RaiseMove(window);
+                Assert.True(window.ControlGuard.HumanActive);
+                now = now.AddMilliseconds(1); Assert.False(window.ControlGuard.HumanActive);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData("down")] [InlineData("up")] [InlineData("wheel")] [InlineData("key")]
+    public void Discrete_Wpf_input_marks_human_activity_for_1500ms(string input)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                var now = TestNow;
+                window.ControlGuard = new(() => now, mousePosition: () => new Point(320, 240));
+                RaiseHumanInput(window, input);
+                Assert.True(window.ControlGuard.HumanActive);
+                Assert.Equal("workbench-user-active", window.ApplyControl(Request()).Refusal?.Condition);
+                now = now.AddMilliseconds(1500); Assert.False(window.ControlGuard.HumanActive);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Injected_human_source_controls_UI_refusal_independently_of_Wpf_input()
+    {
+        wpf.Run(() =>
+        {
+            var now = TestNow; bool active = false;
+            var guard = new ControlInputGuard(() => now, () => active, () => new Point(320, 240));
+            var (window, _, _) = Window(input: guard);
+            try
+            {
+                foreach (string input in new[] { "down", "up", "wheel", "key" }) RaiseHumanInput(window, input);
+                Assert.False(guard.HumanActive);
+                active = true; Assert.Equal("workbench-user-active", window.ApplyControl(Request()).Refusal?.Condition);
+                active = false; Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request()).Status);
+                Assert.True(guard.ClickGuardActive);
+                now = now.AddMilliseconds(500); Assert.False(guard.ClickGuardActive);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Unavailable_cursor_sample_does_not_invent_human_activity()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                Point? position = new(320, 240);
+                window.ControlGuard = new(() => TestNow, mousePosition: () => position);
+                RaiseMove(window); position = null; RaiseMove(window);
+                position = new Point(320, 240); RaiseMove(window);
+                Assert.False(window.ControlGuard.HumanActive);
+                position = new Point(321, 240); RaiseMove(window);
+                Assert.True(window.ControlGuard.HumanActive);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    private static void RaiseMove(UIElement source) => source.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0)
+        { RoutedEvent = UIElement.PreviewMouseMoveEvent, Source = source });
+    private static void RaiseHumanInput(Window window, string input)
+    {
+        RoutedEventArgs args = input switch
+        {
+            "down" or "up" => new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = input == "down" ? UIElement.PreviewMouseDownEvent : UIElement.PreviewMouseUpEvent },
+            "wheel" => new MouseWheelEventArgs(Mouse.PrimaryDevice, 0, 120) { RoutedEvent = UIElement.PreviewMouseWheelEvent },
+            _ => new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), 0, Key.A)
+                { RoutedEvent = Keyboard.PreviewKeyDownEvent },
+        };
+        window.RaiseEvent(args);
     }
 
     [Fact]

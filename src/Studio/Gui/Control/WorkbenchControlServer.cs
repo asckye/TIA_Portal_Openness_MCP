@@ -20,6 +20,7 @@ internal sealed class WorkbenchControlServer : IDisposable
     private readonly IWorkbenchControlSurface _surface;
     private readonly Dispatcher _dispatcher;
     private readonly Func<string, string> _hostImage;
+    private readonly Func<DateTimeOffset> _now;
     private readonly Action<string> _open;
     private readonly string _name, _sid;
     private readonly WorkbenchControlLog _log;
@@ -35,9 +36,10 @@ internal sealed class WorkbenchControlServer : IDisposable
     internal Task Completion { get; private set; } = Task.CompletedTask;
 
     internal WorkbenchControlServer(IWorkbenchControlSurface surface, Dispatcher dispatcher, Func<string, string> hostImage,
-        string? pipeName = null, Action<string>? open = null, string? logPath = null)
+        string? pipeName = null, Action<string>? open = null, string? logPath = null, Func<DateTimeOffset>? now = null)
     {
         _surface = surface; _dispatcher = dispatcher; _hostImage = hostImage;
+        _now = now ?? (() => DateTimeOffset.UtcNow);
         _name = pipeName ?? WorkbenchControlPipe.CurrentName; _sid = LocalPipeSecurity.CurrentSid;
         _open = open ?? (path => Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }));
         _log = new WorkbenchControlLog(logPath);
@@ -112,14 +114,14 @@ internal sealed class WorkbenchControlServer : IDisposable
     {
         if (IsClosing) return ControlResponse.Refuse(request, "workbench-closing");
         if (request.Version != 1) return ControlResponse.Refuse(request, "workbench-version", WorkbenchControlError.UnsupportedCapability);
-        if (request.CheckDeadline(DateTimeOffset.UtcNow) is { } deadline)
+        if (request.CheckDeadline(_now()) is { } deadline)
             return ControlResponse.Refuse(request, "workbench-deadline", deadline);
         if (request.Operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection)
             return ControlResponse.Done(request, _surface.Snapshot.Read(request.Arguments));
         string key = ControlResponse.OriginKey(request.Origin);
         lock (_gate)
         {
-            var now = DateTimeOffset.UtcNow;
+            var now = _now();
             foreach (var old in new List<string>(_origins.Keys))
                 if (!_origins[old].InFlight && now - _origins[old].LastSeen > TimeSpan.FromMinutes(1)) _origins.Remove(old);
             if (!_origins.TryGetValue(key, out var origin))
@@ -134,7 +136,7 @@ internal sealed class WorkbenchControlServer : IDisposable
         }
         try
         {
-            var remaining = request.DeadlineUtc - DateTimeOffset.UtcNow;
+            var remaining = request.DeadlineUtc - _now();
             using var limit = new CancellationTokenSource(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
             ControlArtifact? artifact = null;
             try
@@ -157,7 +159,7 @@ internal sealed class WorkbenchControlServer : IDisposable
                 var response = await work.Completion.Task.WaitAsync(limit.Token).ConfigureAwait(false);
                 if (response.Status == WorkbenchControlStatus.Done)
                 {
-                    lock (_gate) _origins[key].LastDisplay = DateTimeOffset.UtcNow;
+                    lock (_gate) _origins[key].LastDisplay = _now();
                     if (artifact != null) _open(artifact.Path);
                 }
                 return response;
@@ -179,13 +181,13 @@ internal sealed class WorkbenchControlServer : IDisposable
         {
             if (IsClosing) { work.Completion.TrySetResult(ControlResponse.Refuse(work.Request, "workbench-closing")); continue; }
             using var limit = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token);
-            var remaining = work.Request.DeadlineUtc - DateTimeOffset.UtcNow;
+            var remaining = work.Request.DeadlineUtc - _now();
             limit.CancelAfter(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
             try
             {
                 var response = await _dispatcher.InvokeAsync(() =>
                     IsClosing ? ControlResponse.Refuse(work.Request, "workbench-closing")
-                    : work.Request.CheckDeadline(DateTimeOffset.UtcNow) != null ? ControlResponse.Refuse(work.Request, "workbench-deadline", WorkbenchControlError.Timeout)
+                    : work.Request.CheckDeadline(_now()) != null ? ControlResponse.Refuse(work.Request, "workbench-deadline", WorkbenchControlError.Timeout)
                     : _surface.Apply(work.Request), DispatcherPriority.Normal, limit.Token).Task.ConfigureAwait(false);
                 work.Completion.TrySetResult(response);
             }
