@@ -1182,7 +1182,7 @@ SIMPLE_GUARDS = {'ExportAlarmClasses', 'ImportAlarmClasses', 'ExportAlarmTextLis
 def capture(args, exe, harness, profile, isolated):
     responses = {}
     with resources.server(exe.resolve(), args.public_api.resolve(), args.major, 'stdio', profile,
-            harness.resolve(), args.public_api.resolve(), isolate=isolated) as (rpc, _, _):
+            harness.resolve(), args.public_api.resolve()) as (rpc, _, _):
         rpc('initialize', params={'protocolVersion': '2024-11-05', 'capabilities': {},
             'clientInfo': {'name': 'domain-tools', 'version': '1'}})
         rpc('notifications/initialized', notification=True)
@@ -1508,7 +1508,7 @@ def main():
 
 def compare_domains(args):
     passed = failed = 0
-    for isolated in (False, True):
+    for isolated in (False,):  # P7-08 retired the engine isolation supervisor
         for profile in ('full', 'lite'):
             before_names, before = capture(args, args.baseline_exe, args.baseline_harness, profile, isolated)
             after_names, after = capture(args, args.exe, args.host_harness, profile, isolated)

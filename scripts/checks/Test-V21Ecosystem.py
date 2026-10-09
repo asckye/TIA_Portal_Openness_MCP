@@ -60,42 +60,41 @@ def main():
         for name in ('exe','host_harness','public_api','schema_root'):
             resources.require(getattr(args,name) is not None, '--'+name+' required')
             setattr(args,name,getattr(args,name).resolve())
-        for isolated in (False,True):
-            for transport in (('stdio','http') if args.transport == 'both' else (args.transport,)):
-                for profile in ('full','lite'):
-                    case=folder/f'{transport}-{profile}-{isolated}'; case.mkdir()
-                    cwc=case/'cwc'; (cwc/'control').mkdir(parents=True)
-                    (cwc/'control/index.html').write_text('<html>test</html>',encoding='utf-8')
-                    (cwc/'manifest.json').write_text(json.dumps({'mver':'1.2.0','control':{'identity':{'name':'Demo','displayname':'Demo','version':'1.0','type':'guid://551BF148-2F0D-4293-8E10-C9C3A1A6A073'}}}),encoding='utf-8')
-                    with resources.server(args.exe,args.public_api,args.major,transport,profile,args.host_harness,args.public_api,isolate=isolated,
-                                          env_overrides={'TIA_MCP_BUNDLE_ROOT':str(ROOT),'TIA_MCP_PLC_TOOLS_PYTHON':sys.executable,'TIA_MCP_MAX_RESPONSE_CHARS':'100000'},evidence_directory=case, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc,http,logs):
-                        rpc('initialize','init',{'protocolVersion':'2024-11-05','capabilities':{},'clientInfo':{'name':'ecosystem-check','version':'1'}})
-                        rpc('notifications/initialized',notification=True)
-                        number=0
-                        def call(name,arguments):
-                            nonlocal number
-                            number+=1
-                            if profile=='lite': arguments={'name':name,'arguments':arguments};name='CallTool'
-                            response=rpc('tools/call',str(number),{'name':name,'arguments':arguments})
-                            payload=resources.envelope(response)
-                            (case/f'{number:02}.json').write_text(json.dumps(payload,indent=2),encoding='utf-8')
-                            return payload
-                        cat=call('GetV21EcosystemCatalog',{'query':'CWC','source':'official','limit':1})
-                        check(cat['ok'] and len(cat['data']['rows'])==1 and (cat['meta']['paging']['nextOffset'] is not None),'Catalog query/pagination failed')
-                        result=call('DecodePlcSimaticMl',{'filePath':str(source)})
-                        check(result['ok'] and result['data']['data']['analysisOnly'],'MCP decoder failed: '+str(result))
-                        result=call('ValidatePlcDocumentSchemas',{'filePath':str(source),'schemaDirectory':str(args.schema_root)})
-                        check(result['ok'] and result['data']['data']['fragmentSchemasPassed'] and not result['data']['data']['wholeDocumentValidated'],'Installed Siemens schema validation failed: '+str(result))
-                        preview=call('ManageUnifiedCwcPackage',{'directory':str(cwc)})
-                        check(preview['ok'] and not preview['data']['data']['written'],'CWC inspection failed')
-                        output=case/preview['data']['data']['suggestedFileName']
-                        params={'directory':str(cwc),'action':'build','outputPath':str(output),'dryRun':False,'expectedFingerprint':preview['data']['data']['packageFingerprint']}
-                        check(call('ManageUnifiedCwcPackage',dict(params,expectedFingerprint='stale'))['ok'] is False and not output.exists(),'Stale CWC built')
-                        applied=call('ManageUnifiedCwcPackage',params)
-                        check(applied['ok'] and output.exists(),'CWC build failed')
-                        with zipfile.ZipFile(output) as z: check(set(z.namelist())=={'manifest.json','control/index.html'},'CWC root layout wrong')
-                        check(call('ManageUnifiedCwcPackage',params)['ok'] is False,'Existing ZIP overwritten')
-                    print(f'PASS V{args.major} {transport} {profile} isolated={isolated}',flush=True)
+        for transport in (('stdio','http') if args.transport == 'both' else (args.transport,)):
+            for profile in ('full','lite'):
+                case=folder/f'{transport}-{profile}'; case.mkdir()
+                cwc=case/'cwc'; (cwc/'control').mkdir(parents=True)
+                (cwc/'control/index.html').write_text('<html>test</html>',encoding='utf-8')
+                (cwc/'manifest.json').write_text(json.dumps({'mver':'1.2.0','control':{'identity':{'name':'Demo','displayname':'Demo','version':'1.0','type':'guid://551BF148-2F0D-4293-8E10-C9C3A1A6A073'}}}),encoding='utf-8')
+                with resources.server(args.exe,args.public_api,args.major,transport,profile,args.host_harness,args.public_api,
+                                      env_overrides={'TIA_MCP_BUNDLE_ROOT':str(ROOT),'TIA_MCP_PLC_TOOLS_PYTHON':sys.executable,'TIA_MCP_MAX_RESPONSE_CHARS':'100000'},evidence_directory=case, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc,http,logs):
+                    rpc('initialize','init',{'protocolVersion':'2024-11-05','capabilities':{},'clientInfo':{'name':'ecosystem-check','version':'1'}})
+                    rpc('notifications/initialized',notification=True)
+                    number=0
+                    def call(name,arguments):
+                        nonlocal number
+                        number+=1
+                        if profile=='lite': arguments={'name':name,'arguments':arguments};name='CallTool'
+                        response=rpc('tools/call',str(number),{'name':name,'arguments':arguments})
+                        payload=resources.envelope(response)
+                        (case/f'{number:02}.json').write_text(json.dumps(payload,indent=2),encoding='utf-8')
+                        return payload
+                    cat=call('GetV21EcosystemCatalog',{'query':'CWC','source':'official','limit':1})
+                    check(cat['ok'] and len(cat['data']['rows'])==1 and (cat['meta']['paging']['nextOffset'] is not None),'Catalog query/pagination failed')
+                    result=call('DecodePlcSimaticMl',{'filePath':str(source)})
+                    check(result['ok'] and result['data']['data']['analysisOnly'],'MCP decoder failed: '+str(result))
+                    result=call('ValidatePlcDocumentSchemas',{'filePath':str(source),'schemaDirectory':str(args.schema_root)})
+                    check(result['ok'] and result['data']['data']['fragmentSchemasPassed'] and not result['data']['data']['wholeDocumentValidated'],'Installed Siemens schema validation failed: '+str(result))
+                    preview=call('ManageUnifiedCwcPackage',{'directory':str(cwc)})
+                    check(preview['ok'] and not preview['data']['data']['written'],'CWC inspection failed')
+                    output=case/preview['data']['data']['suggestedFileName']
+                    params={'directory':str(cwc),'action':'build','outputPath':str(output),'dryRun':False,'expectedFingerprint':preview['data']['data']['packageFingerprint']}
+                    check(call('ManageUnifiedCwcPackage',dict(params,expectedFingerprint='stale'))['ok'] is False and not output.exists(),'Stale CWC built')
+                    applied=call('ManageUnifiedCwcPackage',params)
+                    check(applied['ok'] and output.exists(),'CWC build failed')
+                    with zipfile.ZipFile(output) as z: check(set(z.namelist())=={'manifest.json','control/index.html'},'CWC root layout wrong')
+                    check(call('ManageUnifiedCwcPackage',params)['ok'] is False,'Existing ZIP overwritten')
+                print(f'PASS V{args.major} {transport} {profile}',flush=True)
     result={'status':'passed','checks':checks,'major':args.major,'nativeTiaExecuted':False,'selfTestOnly':args.self_test,
             'runtimeSha256':hashlib.sha256(args.exe.read_bytes()).hexdigest() if args.exe else None,
             'scriptSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),

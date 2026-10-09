@@ -45,7 +45,7 @@ internal static class ReleaseCommandTable
         new("http", "TiaMcp.Engine.Harness.exe", "http-v{major}.log", "complete runtime regressions", "httpPassed"),
         new("hmi", "TiaMcp.Engine.Harness.exe hmi-only", "hmi-v{major}.log", "18 assertions", "hmiPassed"),
         new("resource-discovery", "Test-ResourceDiscovery.py", "resources-v{major}.log", "complete result", "resourceDiscoveryPassed"),
-        new("v21-ecosystem", "Test-V21Ecosystem.py", "v21-ecosystem-v{major}.log", "minimum 75; matching runtime hash; no TIA", "v21EcosystemAdapters"),
+        new("v21-ecosystem", "Test-V21Ecosystem.py", "v21-ecosystem-v{major}.log", "minimum 43; matching runtime hash; no TIA", "v21EcosystemAdapters"),
         new("local-stability", "Test-LocalStability.py", "stability-v{major}.log", "four runs; matching host/worker hashes", "localStability"),
         new("isolated-local-stability", "Test-LocalStability.py --concurrency 16", "isolated-stability-v{major}.log", "four session worker runs; matching host/worker hashes", "isolatedLocalStability"),
         new("native-export", "TiaMcp.Engine.Harness.exe native-export-only", "native-export-v{major}.log", "complete result", "nativeExportRemotingPassed"),

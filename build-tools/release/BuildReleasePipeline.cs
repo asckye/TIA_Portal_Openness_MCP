@@ -17,7 +17,7 @@ internal static partial class ReleaseCommands
             ["nativeJournalReader"] = (3, false), ["adapterJournal"] = (8, false), ["processLeases"] = (2, false),
             ["workerFaults"] = (25, false), ["workerProtocol"] = (58, false), ["approvalSafety"] = (7, true),
             ["softwareLookup"] = (45, false), ["engineeringApiV20"] = (2840, false), ["engineeringApiV21"] = (3126, false),
-            ["v21Ecosystem"] = (75, false), ["globalScriptV21"] = (8, true), ["graphicSelection"] = (8, false),
+            ["v21Ecosystem"] = (43, false), ["globalScriptV21"] = (8, true), ["graphicSelection"] = (8, false),
             ["runtimeSettingsV20"] = (8, false), ["runtimeSettingsV21"] = (9, false), ["ecosystem"] = (31, false)
         };
 

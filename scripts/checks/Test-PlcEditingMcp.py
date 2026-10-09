@@ -40,7 +40,7 @@ def main():
         resources.require(condition, message)
         passed += 1
 
-    for isolated in (False, True):
+    for isolated in (False,):  # P7-08 retired the engine isolation supervisor
         for transport in (('stdio', 'http') if args.transport == 'both' else (args.transport,)):
             for profile in ('full', 'lite'):
                 label = f'v{args.major}-{transport}-{profile}-isolated-{isolated}'
@@ -54,7 +54,7 @@ def main():
                 original_bytes = source.read_bytes()
                 start_checks = passed
                 with resources.server(args.exe, args.public_api, args.major, transport, profile,
-                                      args.host_harness, args.public_api, isolate=isolated,
+                                      args.host_harness, args.public_api,
                                       env_overrides={'TIA_MCP_MAX_RESPONSE_CHARS': '100000'},
                                       evidence_directory=case) as (rpc, http, logs):
                     reply = rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {},

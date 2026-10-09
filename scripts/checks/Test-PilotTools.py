@@ -58,18 +58,18 @@ def main():
             'GetToolUsage': {'toolName': 'PlanArtifactImportOrder', 'exampleKind': 'sequence'},
             'BuildClassicHmiTagTable': {'table': {'name': 'Pilot', 'tags': [{'name': 'Ready', 'dataType': 'Bool'}]}},
         }
-        for isolated in (False, True):
+        for isolated in (False,):  # P7-08 retired the engine isolation supervisor
             for profile in ('full', 'lite'):
                 baseline_names = None
                 if args.baseline_exe:
                     with resources.server(args.baseline_exe.resolve(), args.public_api.resolve(), args.major, 'stdio', profile,
-                            args.host_harness.resolve(), args.public_api.resolve(), isolate=isolated) as (rpc, _, _):
+                            args.host_harness.resolve(), args.public_api.resolve()) as (rpc, _, _):
                         rpc('initialize', params={'protocolVersion': '2024-11-05', 'capabilities': {},
                             'clientInfo': {'name': 'pilot-baseline', 'version': '1'}})
                         rpc('notifications/initialized', notification=True)
                         baseline_names = [tool['name'] for tool in rpc('tools/list')['result']['tools']]
                 with resources.server(args.exe.resolve(), args.public_api.resolve(), args.major, 'stdio', profile,
-                        args.host_harness.resolve(), args.public_api.resolve(), isolate=isolated,
+                        args.host_harness.resolve(), args.public_api.resolve(),
                         env_overrides={'TIA_MCP_MAX_RESPONSE_CHARS': '2000000'}) as (rpc, _, logs):
                     rpc('initialize', params={'protocolVersion': '2024-11-05', 'capabilities': {},
                         'clientInfo': {'name': 'pilot-tools', 'version': '1'}})

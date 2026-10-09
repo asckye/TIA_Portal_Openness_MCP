@@ -274,7 +274,7 @@ def direct_engine_server(root: Path, key: str, installation: Path, temp_root: Pa
     saved = {name: os.environ.pop(name, None) for name in removed_names}
     try:
         with resource_discovery.server(product_executable(root, key), installation, int(key), transport, "full",
-                isolate=isolate, env_overrides={
+                env_overrides={
                     "TIA_MCP_BUNDLE_ROOT": str(root), "TEMP": str(temp_root), "TMP": str(temp_root),
                     "LOCALAPPDATA": str(temp_root / "profile" / "local"),
                     "APPDATA": str(temp_root / "profile" / "roaming"),
@@ -453,7 +453,7 @@ def check_packaged_no_tia(root: Path, key: str, expected: int, temp_root: Path,
         "LOCALAPPDATA": str(local), "APPDATA": str(roaming),
     }
     with resource_discovery.server(exe, None, int(key), transport, "full",
-            isolate=isolate, env_overrides=overrides) as (rpc, _http, logs):
+            env_overrides=overrides) as (rpc, _http, logs):
         initialized = rpc("initialize", "initialize", {
             "protocolVersion": PROTOCOL_VERSION, "capabilities": {},
             "clientInfo": {"name": "p6-54b-packaged-no-tia", "version": "1"},
