@@ -278,5 +278,14 @@
         "reason": "Three SID/ACL/image-path tests require Windows; counts are identical with or without Siemens SDKs."
       }
     }
+  },
+  "workbench-control": {
+    "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+    "minimumPassed": 87,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~WorkbenchControl"
+    ]
   }
 }

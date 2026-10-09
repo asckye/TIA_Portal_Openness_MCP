@@ -18,6 +18,13 @@ internal static partial class Strings
 
     private static readonly (string Key, string En, string Zh)[] CommonCatalogue =
     [
+        ("Control.Enabled", "Allow AI to control the Workbench UI", "允许 AI 控制工作台界面"),
+        ("Control.Unavailable", "Workbench control channel unavailable", "工作台控制通道不可用"),
+        ("Control.Activity", "AI updated the UI · {0} · {1} · {2}s ago", "AI 操作了界面 · {0} · {1} · {2} 秒前"),
+        ("Control.Prefilled", "AI prefill · awaiting confirmation", "AI 预填，待确认"),
+        ("Control.Confirm", "Keep values", "确认预填"),
+        ("Control.Clear", "Clear prefill", "清除预填"),
+        ("Control.Record", "Workbench UI · {0} · {1}", "工作台界面 · {0} · {1}"),
         ("Shell.VersionControl", "Version control", "版本控制"),
         ("Shell.Engineering", "Project operations", "工程操作"),
         ("Shell.Brand", "TIA Workbench", "TIA 工作台"),

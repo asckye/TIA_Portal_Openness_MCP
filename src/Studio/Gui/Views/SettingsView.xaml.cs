@@ -17,6 +17,7 @@ public partial class SettingsView : UserControl
 {
     private IApprovalService? _approvals;
     internal event EventHandler? DisableApprovalRequested;
+    internal event EventHandler? ControlEnabledChanged;
 
     public SettingsView()
     {
@@ -29,6 +30,7 @@ public partial class SettingsView : UserControl
         _approvals = approvals;
         approvals.PropertyChanged += OnApprovalChanged;
         UpdateApproval();
+        ControlEnabled.IsChecked = App.Settings.WorkbenchControlEnabled;
     }
 
     internal void LoadPaths()
@@ -91,6 +93,13 @@ public partial class SettingsView : UserControl
         try { await Task.Run(action); }
         catch (Exception ex) { Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
         UpdateApproval();
+    }
+
+    private void OnControlEnabledClick(object sender, RoutedEventArgs e)
+    {
+        App.Settings.WorkbenchControlEnabled = ControlEnabled.IsChecked == true;
+        App.Settings.Save();
+        ControlEnabledChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnOpenPath(object sender, RoutedEventArgs e)

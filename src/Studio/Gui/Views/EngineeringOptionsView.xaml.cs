@@ -18,6 +18,8 @@ public partial class EngineeringOptionsView : UserControl
         OptionsOverlay.Visibility = Visibility.Visible;
     }
     internal void Hide() => OptionsOverlay.Visibility = Visibility.Collapsed;
+    internal void SetControlPrefillMarker(bool pending)
+        => ControlNamePattern.ToolTip = pending ? Localization.Loc.Current["Control.Prefilled"] : null;
     private void OnCloseOptions(object sender, RoutedEventArgs e) => Hide();
     private void OnDeviceSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
     {

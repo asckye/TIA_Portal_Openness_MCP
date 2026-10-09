@@ -79,6 +79,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     public bool HasDevices => Devices.Count > 0;
 
     public bool HasBlocks => Blocks.Count > 0;
+    internal string? LoadedDeviceId { get; private set; }
 
     public string BlockFilter
     {
@@ -157,6 +158,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         if (SelectedDevice is null) return;
 
         var deviceId = SelectedDevice.Id;
+        LoadedDeviceId = null;
         await _activity.Guarded("Status.ReadingBlocks", async () =>
         {
             var blocks = await _client.ListBlocksAsync(deviceId);
@@ -167,6 +169,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
                 row.PropertyChanged += OnRowChanged;
                 Blocks.Add(row);
             }
+            LoadedDeviceId = deviceId;
             RebuildTree();
             _activity.SetStatus("Status.BlocksIn", blocks.Count, deviceId);
         }, deviceId);
@@ -319,6 +322,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
     internal void ClearPresentation()
     {
+        LoadedDeviceId = null;
         SelectedDevice = null;
         Devices.Clear();
         foreach (var row in Blocks) row.PropertyChanged -= OnRowChanged;

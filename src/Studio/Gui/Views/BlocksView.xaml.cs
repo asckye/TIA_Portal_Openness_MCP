@@ -18,6 +18,7 @@ public partial class BlocksView : UserControl, IDisposable
     public BlocksView()
     {
         InitializeComponent();
+        BlocksList.SelectionChanged += (_, _) => ControlSelectionChanged?.Invoke(this, EventArgs.Empty);
         BlocksList.AddHandler(PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnBlockRowClick));
         DataContextChanged += (_, _) =>
         {
@@ -32,6 +33,18 @@ public partial class BlocksView : UserControl, IDisposable
         Atlas = new AtlasPresentation(Model, service);
     }
     internal void HideOptions() => Options.Hide();
+    internal event EventHandler? ControlSelectionChanged;
+    internal BlockRow? ControlFocusedBlock => BlocksList.SelectedItem as BlockRow;
+    internal void LocateControlBlock(BlockRow row)
+    {
+        BlocksList.SelectedItem = row;
+        BlocksList.ScrollIntoView(row);
+    }
+    internal void SetControlPrefillMarker(bool filter, bool selection)
+    {
+        ControlFilter.ToolTip = filter ? Localization.Loc.Current["Control.Prefilled"] : null;
+        BlocksList.ToolTip = selection ? Localization.Loc.Current["Control.Prefilled"] : null;
+    }
     private void OnExportOptions(object sender, RoutedEventArgs e) => Options.Show("Export");
     private void OnExport(object sender, RoutedEventArgs e)
     {

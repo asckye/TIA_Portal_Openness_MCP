@@ -25,6 +25,7 @@ public sealed class UiSettings
 
     public AppTheme Theme { get; set; } = AppTheme.Auto;
     public LowEffectsMode LowEffects { get; set; } = LowEffectsMode.Auto;
+    public bool WorkbenchControlEnabled { get; set; } = true;
 
     public static string FilePath { get; } = TiaOpenness.Shared.DataLocations.Current.UiFilePath;
 
@@ -53,6 +54,7 @@ public sealed class UiSettings
                     settings.Language = language;
                 }
                 else if (key == "lowEffects" && Enum.TryParse<LowEffectsMode>(value, true, out var effects) && Enum.IsDefined(effects)) settings.LowEffects = effects;
+                else if (key == "workbenchControlEnabled" && bool.TryParse(value, out var controlEnabled)) settings.WorkbenchControlEnabled = controlEnabled;
                 else if (key == ThemeKey && Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme))
                 {
                     settings.Theme = theme;
@@ -81,6 +83,7 @@ public sealed class UiSettings
                 $"{LanguageKey}={Language}",
                 $"{ThemeKey}={Theme}",
                 $"lowEffects={LowEffects}",
+                $"workbenchControlEnabled={WorkbenchControlEnabled}",
             });
         }
         catch (Exception) /* swallow(ui): failure to persist language and theme preferences must not prevent the window from closing */

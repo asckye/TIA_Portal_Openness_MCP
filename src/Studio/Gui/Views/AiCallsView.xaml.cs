@@ -17,6 +17,11 @@ public partial class AiCallsView : UserControl
         AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnScrollChanged));
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
+    internal void LocateControlCall(CallRow row)
+    {
+        CallList.SelectedItem = row;
+        CallList.ScrollIntoView(row);
+    }
     private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is FeaturePagesViewModel old) { old.PropertyChanged -= OnChanged; ((INotifyCollectionChanged)old.Calls).CollectionChanged -= OnRowsChanged; }

@@ -7,6 +7,7 @@ namespace TiaOpenness.Gui.Views;
 public partial class CallDetailDrawer : UserControl
 {
     public CallDetailDrawer() { InitializeComponent(); DataContext = null; }
+    internal void SetControlActivity(string text) => ControlActivity.Text = text;
     private void OnCopy(object sender, RoutedEventArgs e)
     {
         var model = (FeaturePagesViewModel)DataContext;

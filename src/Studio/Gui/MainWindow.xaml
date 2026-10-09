@@ -106,6 +106,11 @@
         <Border Grid.Row="4" Style="{StaticResource Primer.StatusBar}">
           <DockPanel LastChildFill="True" Margin="12,0">
             <StackPanel x:Name="StatusActions" Orientation="Horizontal" DockPanel.Dock="Right">
+              <StackPanel x:Name="ControlPrefillHint" Orientation="Horizontal" Visibility="Collapsed">
+                <TextBlock Text="{l:Tr Control.Prefilled}" Style="{StaticResource Primer.Muted}" VerticalAlignment="Center"/>
+                <Button Content="{l:Tr Control.Confirm}" Style="{StaticResource Primer.Quiet}" Click="OnConfirmControlPrefill"/>
+                <Button Content="{l:Tr Control.Clear}" Style="{StaticResource Primer.Quiet}" Click="OnClearControlPrefill"/>
+              </StackPanel>
               <Button x:Name="PendingBadge" Style="{StaticResource Primer.PendingBadge}" Click="OnApprovals" Visibility="Collapsed" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
               <Border x:Name="ApprovalOffPill" Style="{StaticResource Primer.WarningBadge}" Visibility="Collapsed">
                 <TextBlock Text="{l:Tr Shell.ApprovalOff}" Style="{StaticResource Primer.Text.warn}"/>
@@ -124,6 +129,7 @@
               </DockPanel>
               <Border Height="14" Margin="12,0" Style="{StaticResource Primer.VerticalDivider}"/>
               <TextBlock x:Name="SessionStatus" Style="{StaticResource Primer.Mono}"/>
+              <TextBlock x:Name="ControlStatus" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="400"/>
             </StackPanel>
           </DockPanel>
         </Border>

@@ -33,10 +33,12 @@ public partial class MainWindow
         Loc.Current.LanguageChanged += OnShellLanguageChanged;
         UpdateShell();
         Navigate("Engineering");
+        InitializeControl();
     }
 
     private void DisposeShell()
     {
+        DisposeControl();
         DisposeFeaturePages();
         SettingsContent.Dispose();
         SettingsContent.DisableApprovalRequested -= OnDisableApprovalRequested;
@@ -115,6 +117,7 @@ public partial class MainWindow
         else if (page == "Log") _model.IsLogTab = true;
         else if (page is "Engineering" or "Blocks") _model.IsBlocksTab = true;
         SubTabs.Visibility = page is "Engineering" or "Blocks" or "VersionControl" ? Visibility.Visible : Visibility.Collapsed;
+        QueueControlSnapshot();
         ((RadioButton)FindName("Rail" + (page is "Blocks" or "VersionControl" ? "Engineering" : page))).IsChecked = true;
         if (page is "Engineering" or "Blocks" or "VersionControl")
             ((RadioButton)FindName("Rail" + (page == "Engineering" ? "Overview" : page))).IsChecked = true;
@@ -167,6 +170,7 @@ public partial class MainWindow
         _drawer = null;
         Features.SetVisibility(_page == "Calls", _page == "Audit", false);
         DrawerOverlay.Visibility = Visibility.Collapsed;
+        QueueControlSnapshot();
         SettingsButton.SetResourceReference(Control.BackgroundProperty, "Primer.pill");
         SettingsButton.SetResourceReference(Control.ForegroundProperty, "Primer.text");
     }

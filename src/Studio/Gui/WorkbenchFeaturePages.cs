@@ -40,6 +40,7 @@ public partial class MainWindow
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
         Features.SetVisibility(_page == "Calls", _page == "Audit", _drawer == "Approvals", _drawer == "CallDetail");
+        if (ControlSurface != null) { HookControlFeatures(); QueueControlSnapshot(); }
     }
 
     private void OnFeatureReleaseChanged(object? sender, PropertyChangedEventArgs e)

@@ -12,6 +12,8 @@ public partial class ProjectOperationsView : UserControl
     private void OnEnvironment(object sender, RoutedEventArgs e) => EnvironmentRequested?.Invoke(this, EventArgs.Empty);
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void ShowProjectOptions() => Options.Show("Project");
+    internal void ShowControlInspectionRules() => Options.Show("Inspect");
+    internal void SetControlPrefillMarker(bool pending) => Options.SetControlPrefillMarker(pending);
     internal void HideOptions() => Options.Hide();
     private void OnProjectOptions(object sender, RoutedEventArgs e) => ShowProjectOptions();
     private void OnExportOptions(object sender, RoutedEventArgs e) => Options.Show("Export");
