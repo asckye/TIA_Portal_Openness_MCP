@@ -251,7 +251,8 @@ internal static class ConcurrencyPerformanceChecks
         string root = Path.Combine(Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY") ?? Path.GetTempPath(), "audit-concurrency-" + Guid.NewGuid().ToString("N"));
         var type = Program.FindServerType(engine, "TiaOpenness.Shared.AuditLog");
         object New(long limit = 1048576) => Activator.CreateInstance(type, All, null, new object[] { root, limit }, null)!;
-        void Append(object log) => type.GetMethod("Append", All)!.Invoke(log, new object?[] { "start", "fixture", "engine", "21", "SaveProject", null, null, null });
+        // Optional parameters are passed as Type.Missing so later optional fields (P8-21a actor) keep this reflection call valid.
+        void Append(object log) { var append = type.GetMethod("Append", All)!; var values = new object?[] { "start", "fixture", "engine", "21", "SaveProject" }.Concat(Enumerable.Repeat(Type.Missing, append.GetParameters().Length - 5)).ToArray(); append.Invoke(log, values); }
         var logs = new[] { New(1024), New(1024) };
         await Bound(Task.WhenAll(Enumerable.Range(0, 4).Select(i => Task.Run(() => { for (int j = 0; j < 20; j++) Append(logs[i % 2]); }))));
         var verify = type.GetMethod("Verify", All)!.Invoke(logs[0], null)!;
