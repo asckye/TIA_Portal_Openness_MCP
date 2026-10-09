@@ -57,7 +57,7 @@ def resolve_names(baseline, registered, targets, merged=False):
     return result
 
 
-def workbench_tools(root=ROOT):
+def host_only_p8_tools(root=ROOT):
     text = (root / 'src/FoundationHost/WorkbenchControlTools.cs').read_text('utf-8-sig')
     block = text.split('string[] Names = {', 1)[1].split('};', 1)[0]
     names = re.findall(r'"([A-Za-z0-9]+)"', block)
@@ -65,6 +65,12 @@ def workbench_tools(root=ROOT):
     metadata = (root / 'src/Logic/ModelContextProtocol/ToolMetadata.cs').read_text('utf-8-sig')
     rows = dict(re.findall(r'\["([^"\n]+)"\] = new Classification\("L1", "Workbench", "(UI|READ)",', metadata))
     assert set(rows) == set(names), 'Workbench classification coverage differs'
+    packages = {name: entry['operation'] for name, entry in new_v4_tools(root).items() if entry['owner'] == 'P8-31d'}
+    source = (root / 'src/FoundationHost/GenerationTool.cs').read_text('utf-8-sig')
+    assert set(re.findall(r'new GenerationTool\("([^"]+)"', source)) == set(packages), 'Closed package tool roster differs'
+    classifications = dict(re.findall(r'\["([^"\n]+)"\] = new Classification\("L1", "Project", "(READ|FILE|OFFLINE)",', metadata))
+    assert all(classifications.get(name) == operation for name, operation in packages.items()), 'Package classification coverage differs'
+    rows.update(packages)
     return rows
 
 
@@ -76,10 +82,12 @@ def registered_rosters(root=ROOT):
     engine = engine_sources.EngineSources(root)
     targets = appendix_names(root)
     additions = new_v4_tools(root)
+    host_only = host_only_p8_tools(root)
     targets.update({n: n for n in additions})
     baseline = {key: read(root / f'manifest/history/contracts-v3/baseline/{key}.json')['tools']
                 for key in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')}
     for name, entry in additions.items():
+        if name in host_only: continue
         for key in entry['releases']:
             assert name not in {t['name'] for t in baseline[key]}, ('New tool exists in 3.x', name)
             baseline[key].append({'name': name})
@@ -90,6 +98,7 @@ def registered_rosters(root=ROOT):
     full = set()
     for source in engine.sources.values():
         full.update(re.findall(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source))
+    full -= set(host_only)
     mapping = resolve_names([t['name'] for t in baseline['21']], full, targets, merged=True)
     rosters = {key: {mapping[t['name']] for t in baseline[key]} for key in ('20', '21')}
     foundation_sources = {p.name: p.read_text('utf-8-sig') for p in (root / 'src/FoundationHost').glob('*.cs')}
@@ -106,6 +115,7 @@ def registered_rosters(root=ROOT):
         helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"', source))
         helpers.update(re.findall(r'new GenerationTool\("([^"]+)"', source))
     helpers &= targets.keys() | set(targets.values())
+    helpers -= set(host_only)
     wrapped = any('new FoundationV4Tool(' in s for s in foundation_sources.values())
     host_map = dict(re.findall(r'\["([^"]+)"\]\s*=\s*"([^"]+)"',
                               foundation_sources.get('FoundationV4Tool.cs', '').split('internal static string Name')[0])) if wrapped else {}
@@ -126,7 +136,7 @@ def registered_rosters(root=ROOT):
     for key in ('20', '21'):
         rosters[key] = (rosters[key] - removed) | rosters['19'] | extras
     for key in rosters:
-        rosters[key].update(workbench_tools(root))
+        rosters[key].update(host_only)
     return rosters, mapping
 
 
@@ -334,7 +344,7 @@ def generate():
         domain = full.get(name, {}).get('domain', '')
         topics = domains.get(domain, [])
         # HMI/third-party/offline composition contracts must not be presented as PLC native examples.
-        project_defined = domain in ('Meta', 'Guide', 'Bootstrap', 'Reports', 'Exports', 'PLC-Builders', 'Validation', 'Diagnostics', 'Simulation', 'Online-Monitoring') or name == 'GetToolUsage' or name in additions or name in workbench_tools()
+        project_defined = domain in ('Meta', 'Guide', 'Bootstrap', 'Reports', 'Exports', 'PLC-Builders', 'Validation', 'Diagnostics', 'Simulation', 'Online-Monitoring') or name == 'GetToolUsage' or name in additions or name in host_only_p8_tools()
         unsupported = 'Hmi' in name or 'Unified' in name or 'Sivarc' in name or 'SiVArc' in name or domain in ('PLC-OpcUA', 'VersionControl')
         if not project_defined and not unsupported:
             for pattern, matched in rules:
@@ -512,11 +522,29 @@ class RosterTests(unittest.TestCase):
 
     def test_reviewed_additions_are_exact(self):
         additions = new_v4_tools()
-        self.assertEqual(set(additions), {'RenderPlcBlock', 'RenderPlcProgramAtlas', 'StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles'})
+        self.assertEqual(set(additions) - set(host_only_p8_tools()), {'RenderPlcBlock', 'RenderPlcProgramAtlas', 'StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles'})
         targets = {'Old': 'New', **{n: n for n in additions}}
         resolve_names(targets, {'New', *additions}, targets)
         for names in ({'New', 'RenderPlcBlock'}, {'New', *additions, 'RenderPlcOther'}):
             with self.assertRaises(AssertionError): resolve_names(targets, names, targets)
+
+    def test_host_only_p8_tools_are_published_without_engine_source_mappings(self):
+        host_only = set(host_only_p8_tools())
+        self.assertEqual(len(host_only), 13)
+        rosters, mapping = registered_rosters()
+        self.assertFalse(host_only & (mapping.keys() | set(mapping.values())))
+        for key, roster in rosters.items():
+            with self.subTest(release=key):
+                self.assertTrue(host_only <= roster)
+        resource = ET.fromstring(profiles_resource())
+        catalog = json.loads(resource.find(".//data[@name='Catalog']/value").text)
+        for key, rows in catalog['engineSourceReleases'].items():
+            with self.subTest(engine=key):
+                self.assertFalse(host_only & {row['currentName'] for row in rows})
+        packages = {name for name, entry in new_v4_tools().items() if entry['owner'] == 'P8-31d'}
+        for key in ('20', '21'):
+            lite = {row['currentName'] for row in catalog['releases'][key] if 'lite' in row['profiles']}
+            self.assertEqual(packages & lite, {'DescribeStandardPackage'})
 
     def test_migrated_and_unmigrated_names(self):
         targets = {'BuildOld': 'BuildNew', 'ReadOld': 'GetNew', 'Typed': 'Typed'}

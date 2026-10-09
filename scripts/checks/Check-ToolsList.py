@@ -121,8 +121,8 @@ def check(manifest_path):
                          .find("./data[@name='Catalog']/value").text)
     baseline = read(BASELINE)['operations']
     additions = generator['new_v4_tools'](ROOT)
-    workbench = generator['workbench_tools'](ROOT)
-    assert set(baseline) | set(additions) == set(mapping), '3.3.0 plus reviewed V4 coverage differs'
+    host_only = generator['host_only_p8_tools'](ROOT)
+    assert set(baseline) | (set(additions) - set(host_only)) == set(mapping), '3.3.0 plus reviewed engine V4 coverage differs'
     assert set(EXCEPTIONS) <= set(baseline), 'unused exception'
     taxonomy = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8-sig')
     metadata = (ROOT / 'src/Logic/ModelContextProtocol/ToolMetadata.cs').read_text(encoding='utf-8')
@@ -132,12 +132,13 @@ def check(manifest_path):
     descriptions = {}
     for source in EngineSources(ROOT).sources.values():
         for match in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', source):
+            if match[1] in host_only: continue
             # Only the leading tags are needed; do not parse prose or method bodies.
             description = re.match(r'\)\s*,\s*Description\(\s*"([^"\n]*)', source[match.end():])
             assert description, ('Missing adjacent Description', match[1])
             assert match[1] not in descriptions, ('Duplicate source registration', match[1])
             descriptions[match[1]] = description[1]
-    assert set(descriptions) == (expected - set(NEW_FOUNDATION_TOOLS) - set(workbench)) | set(WITHDRAWN), 'engine source descriptions differ from reviewed product roster'
+    assert set(descriptions) == (expected - set(NEW_FOUNDATION_TOOLS) - set(host_only)) | set(WITHDRAWN), 'engine source descriptions differ from reviewed product roster'
     seen = set()
     seen_new = set()
     for key in ('20', '21'):
@@ -148,8 +149,8 @@ def check(manifest_path):
             description = descriptions.get(current)
             source_operation = classify(current, description)
             assert listed[current]['operation'] == source_operation, (current, 'stale manifest operation')
-            if current in workbench:
-                assert old == current == final and source_operation == workbench[current], ('Workbench operation changed', row)
+            if current in host_only:
+                assert old == current == final and source_operation == host_only[current], ('Host-only P8 operation changed', row)
                 continue
             if current in NEW_FOUNDATION_TOOLS:
                 compare_foundation_operation(current, old, source_operation, baseline)
@@ -166,7 +167,7 @@ def check(manifest_path):
     # The two removed guide aliases share GetToolUsage; their READ category is still checked.
     for old in MERGED:
         compare_operation(old, listed[mapping[old]]['operation'], baseline)
-    assert seen | MERGED | set(WITHDRAWN.values()) == set(baseline) | set(additions), ('Uncompared baseline tools', set(baseline) - seen - MERGED - set(WITHDRAWN.values()))
+    assert seen | MERGED | set(WITHDRAWN.values()) == set(baseline) | (set(additions) - set(host_only)), ('Uncompared baseline tools', set(baseline) - seen - MERGED - set(WITHDRAWN.values()))
     assert seen_new == set(NEW_FOUNDATION_TOOLS), 'Reviewed Foundation addition coverage differs'
     for current, old in WITHDRAWN.items():
         assert old in baseline and mapping[old] == current and current not in listed, ('Withdrawn tool exposed', current)
@@ -180,7 +181,7 @@ def check(manifest_path):
     print(f'Tool list: V20={len(rosters["20"])}, V21={len(rosters["21"])}, union={len(expected)}; names match.')
     print(f'Operation comparison: {len(baseline)} released tools, {len(seen)} runtime mappings, '
           f'{len(MERGED)} merged guides, {len(WITHDRAWN)} withdrawn, {len(seen_new)} reviewed Foundation additions, '
-          f'{len(EXCEPTIONS)} justified exceptions; 0 unexplained differences.')
+          f'{len(host_only)} host-only P8 tools, {len(EXCEPTIONS)} justified exceptions; 0 unexplained differences.')
 
 
 class Checks(unittest.TestCase):

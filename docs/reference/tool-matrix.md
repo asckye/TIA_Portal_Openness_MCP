@@ -4,7 +4,7 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（FoundationHost 的 V21 full 产品目录）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-09 12:25:59
+- 生成时间：2026-10-09 12:58:27
 - 产品文件版本：3.3.0.0
 - 工具数量：511
 

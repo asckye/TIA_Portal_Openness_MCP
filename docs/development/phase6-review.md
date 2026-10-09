@@ -389,16 +389,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 发布键 | 当前广告工具 | 当前 lite | string …Json | 涉及工具 | V4 工具 | V4 lite 提案 |
 |---|---|---|---|---|---|---|
-| 14sp1 | 154 | 不设 | 72 | 37 | 154 | 不设 |
-| 15.1 | 155 | 不设 | 72 | 37 | 155 | 不设 |
-| 16 | 157 | 不设 | 72 | 37 | 157 | 不设 |
-| 17 | 157 | 不设 | 72 | 37 | 157 | 不设 |
-| 18 | 157 | 不设 | 72 | 37 | 157 | 不设 |
-| 19 | 167 | 不设 | 74 | 39 | 167 | 不设 |
-| 20 | 487 | 63 | 272 | 156 | 485 | 82 |
-| 21 | 498 | 63 | 289 | 164 | 496 | 82 |
+| 14sp1 | 149 | 不设 | 72 | 37 | 149 | 不设 |
+| 15.1 | 150 | 不设 | 72 | 37 | 150 | 不设 |
+| 16 | 152 | 不设 | 72 | 37 | 152 | 不设 |
+| 17 | 152 | 不设 | 72 | 37 | 152 | 不设 |
+| 18 | 152 | 不设 | 72 | 37 | 152 | 不设 |
+| 19 | 162 | 不设 | 74 | 39 | 162 | 不设 |
+| 20 | 482 | 63 | 272 | 156 | 480 | 82 |
+| 21 | 493 | 63 | 289 | 164 | 491 | 82 |
 
-八版当前名称并集 506；V4 名称并集 504；改名/合并入口 183；不变 323。数字只指目录，不代表原生能力验收。
+八版当前名称并集 501；V4 名称并集 499；改名/合并入口 183；不变 318。数字只指目录，不代表原生能力验收。
 
 <details>
 <summary>A. 全量 current name → 4.0 name（包括不变项）</summary>
@@ -498,7 +498,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `DescribeObject` | `DescribeObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `DescribeObjectProperty` | `DescribeObjectProperty` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `DescribeService` | `DescribeService` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
-| `DescribeStandardPackage` | `DescribeStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 READ；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `DescribeUnifiedHmiButtonEventScript` | `DescribeUnifiedHmiButtonEventScript` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `DescribeUnifiedScreenItemType` | `DescribeUnifiedScreenItemType` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
 | `DiagnosePortalConnectReadiness` | `GetPortalConnectionReadiness` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/FoundationHost/FoundationTools.cs) |
@@ -646,7 +645,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ListObjectChildren` | `ListObjectChildren` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `ListPortalProcessProjects` | `ListPortalProcessProjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | `ListStagedImportFiles` | `ListStagedImportFiles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-67；操作分类 READ；[源码](../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs) |
-| `ListStandardPackages` | `ListStandardPackages` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 READ；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ListToolCategories` | `ListToolCategories` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `ListUnifiedGlobalScripts` | `ListUnifiedGlobalScripts` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
 | `ListUnifiedHmiApiTypes` | `ListUnifiedHmiApiTypes` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
@@ -681,7 +679,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageLibraryMasterCopy` | `ManageLibraryMasterCopy` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryType` | `ManageLibraryType` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryTypeVersion` | `ManageLibraryTypeVersion` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
-| `ManageMachineDescription` | `ManageMachineDescription` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 FILE；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ManageMotionAxis` | `ManageMotionAxis` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageMultiuserSession` | `ManageMultiuserSession` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `ManageNetworkDomain` | `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
@@ -722,7 +719,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageSivarcRuleContainer` | `ManageSivarcRuleContainer` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
 | `ManageSivarcScreenLayout` | `ManageSivarcScreenLayout` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
 | `ManageSivarcTableRule` | `ManageSivarcTableRule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `ManageStandardPackage` | `ManageStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 FILE；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ManageStartdriveParameter` | `ManageStartdriveParameter` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageSyslogServers` | `ManageSyslogServers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
 | `ManageTeamcenterConnection` | `ManageTeamcenterConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TeamcenterTools.cs) |
@@ -904,7 +900,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ValidateClassicHmiMinimalPackageFiles` | `ValidateClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `ValidateClassicHmiMinimalPackagePlcSync` | `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `ValidatePlcXmlSchemas` | `ValidatePlcDocumentSchemas` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
-| `ValidateStandardPackage` | `ValidateStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P8-31d；操作分类 OFFLINE；[源码](../../src/Shared/Host/GenerationTools.cs) |
 | `ValidateUnifiedObject` | `ValidateUnifiedObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `WriteClassicHmiMinimalPackageFiles` | `WriteClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |

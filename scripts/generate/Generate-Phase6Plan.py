@@ -24,6 +24,8 @@ NEW_V4_TOOLS = {
     'RenderPlcBlock': {'owner': 'P6-48', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'RenderPlcProgramAtlas': {'owner': 'P6-48', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
 }
+usage_generator = runpy.run_path(str(root / 'scripts/generate/Generate-ToolUsage.py'))
+host_only_p8 = usage_generator['host_only_p8_tools'](root)
 files = sorted(set(p for p in files if (root / p).exists()) | {RESOURCE, REJECTIONS})
 keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
 snap = {k: json.loads(read(f"manifest/history/contracts-v3/baseline/{k}.json")) for k in keys}
@@ -33,10 +35,11 @@ names = sorted(set().union(*(set(t) for t in tools.values())))
 # catalog is an output and cannot be an input to its own generation.
 for n, entry in NEW_V4_TOOLS.items():
     assert n not in names
+    if n in host_only_p8: continue
     for k in entry['releases']:
         tools[k][n] = {'name': n, 'inputSchema': {'type': 'object', 'additionalProperties': False,
             'required': ['inputPath', 'outputPath'], 'properties': {'inputPath': {'type': 'string'}, 'outputPath': {'type': 'string'}}}}
-names = sorted(set(names) | set(NEW_V4_TOOLS))
+names = sorted(set(names) | (set(NEW_V4_TOOLS) - set(host_only_p8)))
 E = "src/Engine/"
 L = "src/Logic/"
 F = "src/FoundationHost/"
@@ -159,15 +162,14 @@ for key in keys[:6]:
 source_tools = {}
 for p, text in engine.sources.items():
     for m in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', text):
+        if m[1] in host_only_p8: continue
         decl = re.search(r"^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>?,\[\] .]+?\s+(\w+)\s*\(", text[m.end():], re.M)
         assert decl and m[1] not in source_tools
         source_tools[m[1]] = (p.relative_to(root).as_posix(), decl[1])
 registered_tools = dict(source_tools)
-usage_generator = runpy.run_path(str(root / 'scripts/generate/Generate-ToolUsage.py'))
 registered_rosters, _ = usage_generator['registered_rosters'](root)
-workbench = usage_generator['workbench_tools'](root)
 # Historical source mappings exclude host-only P8 tools; publish them below.
-registered_rosters = {key: rows - set(workbench) for key, rows in registered_rosters.items()}
+registered_rosters = {key: rows - set(host_only_p8) for key, rows in registered_rosters.items()}
 renames = {n: rename(n) for n in names}
 current_names = {}
 for n in tools["21"]:
@@ -558,7 +560,7 @@ for k in keys[-2:]:
         target = renames[old]
         current = current_names[old]
         if target in runtime_rows: continue
-        arguments = json.loads(json.dumps(calls['full-engine'][current]['arguments'] if old in NEW_V4_TOOLS and NEW_V4_TOOLS[old]['owner'] == 'P8-31d' else engine_source_examples[current]["arguments"]))
+        arguments = json.loads(json.dumps(engine_source_examples[current]["arguments"]))
         runtime_rows[target] = {"name": target, "currentName": current, "sourceName": old,
             "profiles": ["full", "lite"] if target in lite_names else ["full"], "arguments": arguments,
             "envelopeVersion": envelope_versions[old]}
@@ -580,8 +582,6 @@ for k in keys[-2:]:
         if entry['currentName'] in ported['19']: continue
         row = json.loads(json.dumps(entry))
         row['profiles'] = ['full', 'lite', 'plc-foundation']
-        if row['currentName'] in NEW_V4_TOOLS and NEW_V4_TOOLS[row['currentName']]['owner'] == 'P8-31d' and row['currentName'] != 'DescribeStandardPackage':
-            row['profiles'].remove('lite')
         rows[row['currentName']] = row
     for current in calls['plc-foundation']:
         name = current
@@ -605,11 +605,14 @@ for key in keys:
     profile = 'full-engine' if key in ('20', '21') else 'plc-foundation'
     rows = {row['currentName']: row for row in runtime['releases'][key]}
     rows.update({name: {'name': name, 'currentName': name, 'sourceName': name,
-        'profiles': ['full', 'lite', 'plc-foundation'] if key in ('20', '21') else ['plc-foundation'],
-        'arguments': calls[profile][name]['arguments'], 'envelopeVersion': 4} for name in sorted(workbench)})
-    runtime['releases'][key] = sorted(rows.values(), key=lambda row: row['name']) if key in ('20', '21') else list(rows.values())
-    registered_rosters[key].update(workbench)
-shared_names.update(workbench)
+        'profiles': (['full', 'plc-foundation'] if name in NEW_V4_TOOLS and name != 'DescribeStandardPackage'
+                     else ['full', 'lite', 'plc-foundation']) if key in ('20', '21') else ['plc-foundation'],
+        'arguments': calls[profile][name]['arguments'], 'envelopeVersion': 4} for name in sorted(host_only_p8)})
+    # Preserve the published source order, followed by the Workbench additions.
+    runtime['releases'][key] = sorted(rows.values(), key=lambda row: row['name']) if key in ('20', '21') else sorted(
+        rows.values(), key=lambda row: (row['currentName'] in host_only_p8 and row['currentName'] not in NEW_V4_TOOLS, row['sourceName']))
+    registered_rosters[key].update(host_only_p8)
+shared_names.update(host_only_p8)
 for k in keys[-2:]:
     lite_proposal['releases'][k] = [{'name': r['name'], 'currentName': r['currentName'],
         'reason': 'Shared Foundation contract' if r['name'] in shared_names else 'Engine discovery/bridge/worker supervisor',
@@ -1035,7 +1038,12 @@ end()
 
 def self_test():
     assert usage_generator['new_v4_tools'](root) == NEW_V4_TOOLS
+    for key, rows in runtime['engineSourceReleases'].items():
+        assert not set(host_only_p8) & {row['currentName'] for row in rows}, ('Host-only tool in engine source catalog', key)
+    for key, rows in runtime['releases'].items():
+        assert set(host_only_p8) <= {row['currentName'] for row in rows}, ('Missing host-only release tool', key)
     for n in NEW_V4_TOOLS:
+        if n in host_only_p8: continue
         assert envelope_versions[n] == 4 and renames[n] == n
         assert parameters(signatures[n]) == {'StageImportFiles': {'files': 'StagedTextFile[]', 'dryRun': 'bool'}, 'ListStagedImportFiles': {}, 'CleanupStagedImportFiles': {'batchId': 'string', 'dryRun': 'bool'}}.get(n, {'inputPath': 'string', 'outputPath': 'string'})
     for registered in ({'RenderPlcBlock'}, set(NEW_V4_TOOLS) | {'RenderPlcOther'}):
