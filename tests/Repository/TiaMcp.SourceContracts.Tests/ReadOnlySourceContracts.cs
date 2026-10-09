@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using TiaMcp.BuildCommon;
-using TiaMcp.ReleaseTool;
 using Xunit;
 
 namespace TiaMcp.SourceContracts.Tests;
@@ -144,7 +143,21 @@ public sealed class ReadOnlySourceContracts
     public void SupplementaryReleaseSymbols(string release, bool watch, bool technology)
     {
         var project = Directory.EnumerateFiles(Path.Combine(Root, "src/Adapters", release), "*.csproj").Single();
-        var constants = TiaFeatures.Evaluate(Root, Path.GetRelativePath(Root, project), new Dictionary<string, string>(), "dotnet")["DefineConstants"]!.GetValue<string>().Split(';');
+        var constants = DefineConstants(project).Split(';');
         Assert.Equal(watch, constants.Contains("PLC_WATCH_READ")); Assert.Equal(technology, constants.Contains("PLC_TECH_GROUP_READ"));
+    }
+
+    // The same MSBuild evaluation as the release tool's TiaFeatures.Evaluate, without referencing the release tool project:
+    // building that reference rewrote the running release tool's output during the release pipeline (locked BuildCommon.dll).
+    private static string DefineConstants(string project)
+    {
+        var start = new System.Diagnostics.ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, WorkingDirectory = Root };
+        foreach (var argument in new[] { "msbuild", project, "-nologo", "-getProperty:DefineConstants", "-p:Configuration=Release" }) start.ArgumentList.Add(argument);
+        using var process = System.Diagnostics.Process.Start(start)!;
+        var errors = process.StandardError.ReadToEndAsync();
+        string output = process.StandardOutput.ReadToEnd();
+        if (!process.WaitForExit(120000)) { process.Kill(true); throw new TimeoutException(project + " evaluation timed out"); }
+        Assert.True(process.ExitCode == 0, project + " evaluation failed: " + errors.Result);
+        return output.Trim();
     }
 }
