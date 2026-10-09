@@ -1,0 +1,412 @@
+[
+  {
+    "function": "scan_tokens",
+    "args": [
+      "var x = new JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = false }; x[\"success\"] = true; x[\"ok\"] = false; Use(x[\"timestamp\"], x[\"success\"] == true);"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "B1": 1,
+        "timestamp_indexers": 2,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 3,
+        "success_assignments": 2,
+        "ok_indexers": 1,
+        "ok_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 2
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "namespace TiaMcpServer.ModelContextProtocol { class ResponseMeta { void X() { x[\"success\"] = true; } } }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {}
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "namespace Other { class ResponseMeta { void X() { x[\"success\"] = true; } } }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "// [\"success\"] = true; new JsonObject\n            /* throw new PortalException(); */\n            var a = \"new JsonObject\"; var b = @\"[\"\"success\"\"] = false\";\n            var c = \"\"\"throw new McpException()\"\"\"; var d = '{';"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      {}
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "private static JsonObject RunHmiStepTool() { return new JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = false }; }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "B1": 1,
+        "B4": 1,
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "private static JsonObject RunOfflineAnalysisTool() { return new JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = false }; }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "B1": 1,
+        "B5a": 1,
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "private static JsonObject BatchResult() { return new JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = false }; }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "B1": 1,
+        "B5c": 1,
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "private static JsonObject BuildOfflineXmlBuilderReport() { return new JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = false }; }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "B1": 1,
+        "B5d": 1,
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "private static JsonObject RuntimeMeta() { return new JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = false }; }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "B1": 1,
+        "B6": 1,
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "private Response RunPlcSimTool() { var meta = RuntimeMeta(false); }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "B5b": 1
+      },
+      {}
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "var s = $\"new JsonObject {new JsonObject { [\"success\"] = true }}\";\n            #if V20\n            throw new McpException();\n            #else\n            throw new PortalException();\n            #endif"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 1,
+        "success_indexers": 1,
+        "success_assignments": 1,
+        "throw_mcp_exception": 1,
+        "throw_portal_exception": 1
+      },
+      {
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "x[\"success\"] = false;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "x[\"timestamp\"] = DateTime.Now; x[\"success\"] = true;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 1,
+        "success_assignments": 1
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "x[\"timestamp\"] = DateTime.Now; x[\"success\"] = true;x[\"success\"] = false;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1,
+        "success_indexers": 2,
+        "success_assignments": 2
+      },
+      {
+        "timestamp_now_assignments": 1,
+        "success_assignments": 2
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "x[\"ok\"] = true;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "ok_indexers": 1,
+        "ok_assignments": 1
+      },
+      {}
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "new JsonObject { [\"timestamp\"] = DateTime.Now };\n            new JsonObject { [\"timestamp\"] = DateTime.Now, [\"tool\"] = \"x\", [\"success\"] = false };\n            new JsonObject { [\"ok\"] = true, [\"child\"] = new JsonObject { [\"success\"] = true } };\n            new ResponseMessage { Message = \"failed\" }; new ResponseMessage { Message = \"success\" };\n            new ResponseMessage { Message = \"failed\", Meta = new JsonObject() };"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_json_object": 5,
+        "B2": 1,
+        "timestamp_indexers": 2,
+        "timestamp_assignments": 2,
+        "timestamp_now_assignments": 2,
+        "timestamp_local_datetime": 2,
+        "B3": 1,
+        "success_indexers": 2,
+        "success_assignments": 2,
+        "B7": 1,
+        "ok_indexers": 1,
+        "ok_assignments": 1,
+        "new_response_message": 3,
+        "B8": 1
+      },
+      {
+        "timestamp_now_assignments": 2,
+        "success_assignments": 2
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "new ResponseMessage { Message = $\"Export failed: {ex.Message}\" };\n            new ResponseMessage { Message = \"No project open.\" };"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "new_response_message": 2,
+        "B8": 2
+      },
+      {}
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "x[\"timestamp\"] = DateTime.Now; x[\"timestamp\"] = DateTime.Now.ToString(\"O\");\n            x[\"timestamp\"] = DateTime.UtcNow; var a = DateTimeOffset.UtcNow.ToString(\"o\");\n            var b = DateTimeOffset.Now.ToString(\"o\"); x[\"createdUtc\"] = e.CreatedUtc.ToString(\"yyyy-MM-dd HH:mm:ss\") + \"Z\";"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "timestamp_indexers": 3,
+        "timestamp_assignments": 3,
+        "timestamp_now_assignments": 2,
+        "timestamp_local_datetime": 1,
+        "B9": 1,
+        "datetime_now_roundtrip": 1,
+        "datetime_utcnow": 1,
+        "datetimeoffset_utcnow_roundtrip": 1,
+        "datetimeoffset_now_roundtrip": 1,
+        "created_utc_custom": 1
+      },
+      {
+        "timestamp_now_assignments": 2
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "x [ /*comment*/ \"\\u0073uccess\" ] = true; x[@\"timestamp\"] = DateTime . Now;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "success_indexers": 1,
+        "success_assignments": 1,
+        "timestamp_indexers": 1,
+        "timestamp_assignments": 1,
+        "timestamp_now_assignments": 1,
+        "timestamp_local_datetime": 1
+      },
+      {
+        "success_assignments": 1,
+        "timestamp_now_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "namespace TiaMcp.Adapters { class PlcFoundationEngine {\n            private HardwareAddressingReply RunHardwareAddressStep() { meta[\"success\"] = false; return reply; }\n            private void Other() { meta[\"success\"] = true; }\n        } }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "success_indexers": 2,
+        "success_assignments": 2
+      },
+      {
+        "success_assignments": 1
+      }
+    ]
+  },
+  {
+    "function": "scan_tokens",
+    "args": [
+      "namespace Other { class PlcFoundationEngine {\n            private HardwareAddressingReply RunHardwareAddressStep() { meta[\"success\"] = false; return reply; }\n            private void Other() { meta[\"success\"] = true; }\n        } }"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "success_indexers": 2,
+        "success_assignments": 2
+      },
+      {
+        "success_assignments": 2
+      }
+    ]
+  }
+]

@@ -16,6 +16,7 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
+        "check-ratchet" or "check-envelope-rewrite" or "check-adapter-boundary" or "check-bundle-layout" or "check-repository" or "check-dead-tool-references" or "check-tia-features" or "check-script-tool-calls" => StaticCheck(command, options),
         "preflight" => Preflight(options),
         "prerequisites" => Prerequisites(options),
         "release" => Release(options),
@@ -42,9 +43,9 @@ internal static partial class ReleaseCommands
     {
         var checks = new List<(string Name, string Exe, string[] Args)>
         {
-            ("repository, links, shipped-document links, CHANGELOG version", Py, ["scripts/checks/Check-Repository.py", "--no-binaries"]),
-            ("repository check self-tests", Py, ["scripts/checks/Check-Repository.py", "--self-test"]),
-            ("dead tool references (descriptions and current docs)", Py, ["scripts/checks/Check-DeadToolReferences.py"]),
+            ("repository, links, shipped-document links, CHANGELOG version", "check-repository", ["-NoBinaries"]),
+            ("repository check self-tests", "check-repository", ["-SelfTest"]),
+            ("dead tool references (descriptions and current docs)", "check-dead-tool-references", []),
             ("phase-6 tables generator", Py, ["-B", "scripts/generate/Generate-Phase6Plan.py", "--shared-host", "--check"]),
             ("tool usage catalog generator", Py, ["scripts/generate/Generate-ToolUsage.py", "--check"]),
             ("V4 contract snapshots", Py, ["scripts/checks/Snapshot-ToolContracts.py", "verify"]),
@@ -52,10 +53,10 @@ internal static partial class ReleaseCommands
             ("suite runner self-tests", "test-suites", ["-SelfTest"]),
             ("release approval gate self-tests", Py, ["scripts/checks/Test-ReleaseApprovalGate.py", "--self-test"]),
             ("relocation checker self-tests", Py, ["scripts/checks/Test-RelocatedBundle.py", "--self-test"]),
-            ("strict bundle rules", Dotnet, ["run", "--project", "build-tools/release", "--", "validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes"]),
-            ("release documentation rules", Dotnet, ["run", "--project", "build-tools/release", "--", "release", "-DocumentationOnly"]),
-            ("release tool test suite", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release"]),
-            ("parallel pipeline behavior", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "--filter", "Category=Pipeline"])
+            ("strict bundle rules", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes"]),
+            ("release documentation rules", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "release", "-DocumentationOnly"]),
+            ("release tool test suite", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false"]),
+            ("parallel pipeline behavior", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Pipeline"])
         };
         if (File.Exists(Path.Combine(Root, "scripts/generate/Generate-ReleaseToolMigration.py")))
             checks.Insert(5, ("release migration tables generator", Py, ["scripts/generate/Generate-ReleaseToolMigration.py", "--check"]));
@@ -65,7 +66,8 @@ internal static partial class ReleaseCommands
         foreach (var check in checks)
         {
             var arguments = AddOfflineNuGetConfig(check.Exe, check.Args);
-            var result = check.Exe == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(arguments, new HashSet<string> { "SelfTest" })) : ProcessRunner.Run(check.Exe, arguments, Root);
+            var result = check.Exe == "test-suites" ? DotnetSuites.Run(Root, Options.Parse(arguments, new HashSet<string> { "SelfTest" }))
+                : check.Exe.StartsWith("check-", StringComparison.Ordinal) ? RunStaticCaptured(check.Exe, arguments) : ProcessRunner.Run(check.Exe, arguments, Root);
             if (result.ExitCode == 0)
             {
                 Console.WriteLine($"ok   {check.Name}");
@@ -526,7 +528,7 @@ internal static partial class ReleaseCommands
     private static int ValidateBundle(Options options)
     {
         if (options.Has("SelfTest"))
-            return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "--filter", "Category=BundleParity"], Root, "Bundle validation tests");
+            return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=BundleParity"], Root, "Bundle validation tests");
         var root = Path.GetFullPath(options.Get("BundleRoot", Root));
         if (!Directory.Exists(root)) throw new ReleaseException($"Bundle root does not exist: {root}");
         var package = options.Has("PackageMode") || !File.Exists(Path.Combine(root, "Version.props"));
@@ -598,22 +600,22 @@ internal static partial class ReleaseCommands
         }
         if (rules is not null)
         {
-            var pyArgs = new List<string> { "scripts/checks/Check-Repository.py", "--root", root };
-            if (noBinaries) pyArgs.Add("--no-binaries");
-            if (package) pyArgs.Add("--package-mode");
-            var pyCheck = ProcessRunner.Run(Py, pyArgs, Root);
-            if (pyCheck.ExitCode != 0)
+            var checkArgs = new List<string> { "-Root", root };
+            if (noBinaries) checkArgs.Add("-NoBinaries");
+            if (package) checkArgs.Add("-PackageMode");
+            var repositoryCheck = RunStaticCaptured("check-repository", checkArgs.ToArray());
+            if (repositoryCheck.ExitCode != 0)
             {
-                var details = (pyCheck.StandardOutput + pyCheck.StandardError)
+                var details = (repositoryCheck.StandardOutput + repositoryCheck.StandardError)
                     .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
                     .Where(line => line.Contains("[FAIL]", StringComparison.OrdinalIgnoreCase))
                     .Take(40)
                     .Select(line => "Repository check: " + line);
                 errors.AddRange(details);
                 if (!errors.Any(error => error.StartsWith("Repository check:", StringComparison.Ordinal)))
-                    errors.Add("Repository check exited " + pyCheck.ExitCode);
+                    errors.Add("Repository check exited " + repositoryCheck.ExitCode);
             }
-            else Console.Write(pyCheck.StandardOutput);
+            else Console.Write(repositoryCheck.StandardOutput);
         }
         try { ValidateRequiredJson(root, package); }
         catch (Exception ex) { errors.Add(ex.Message); }

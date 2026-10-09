@@ -27,8 +27,8 @@ Build outputs are not committed. Siemens SDKs come from a licensed local install
 Repository checks include:
 
 ```powershell
-python scripts/checks/Check-Repository.py
-python scripts/checks/Check-DeadToolReferences.py
+dotnet run --project build-tools/release -- check-repository
+dotnet run --project build-tools/release -- check-dead-tool-references
 ```
 
 The full-engine offline suite is a console test program, invoked with `dotnet run`, not `dotnet test`; other projects use their documented test runner. See the validation guide for the correct commands and prerequisites.
@@ -48,13 +48,13 @@ catch (IOException) /* swallow(cleanup): temporary file cleanup must not replace
 }
 ```
 
-`Check-SwallowedExceptions.py` runs through the repository check (validate workflow); offline CI runs its
-self-tests. Its baseline is a
+`check-ratchet -Kind swallowed` runs through the repository check (validate workflow); offline CI runs the
+C# static-check self-tests. Its baseline is a
 multiset of hashes of the try body, catch clause/filter and catch body, independent of file paths and
 line numbers. Comments and code whitespace do not affect hashes; literal content does. Moving a
 file therefore needs no new allowance, while copying or changing an unmarked catch fails. Run
-`python scripts/checks/Check-SwallowedExceptions.py --update-baseline` after resolving catches to
-remove old entries; routine updates must not use `--allow-growth` (reserved for reviewed initialization).
+`dotnet run --project build-tools/release -- check-ratchet -Kind swallowed -UpdateBaseline` after resolving catches to
+remove old entries; routine updates must not use `-AllowGrowth` (reserved for reviewed initialization).
 
 The [P2-03 logging policy](../docs/development/response-and-errors.md#日志与检查) specifies the planned
 `SwallowedExceptions.Note(string site, Exception ex)` helper: record only the site, exception type's

@@ -9,7 +9,7 @@ internal static class Program
         "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
         "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
-        "DraftOnly", "DeleteDraft", "NoBuildCache", "CompileOnly", "NoBuild"
+        "DraftOnly", "DeleteDraft", "NoBuildCache", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix"
     };
 
     public static int Main(string[] args)
@@ -61,7 +61,8 @@ internal static class CommandLine
     internal static readonly string[] Commands =
     [
         "release", "build-release", "build-multi-version", "run-release-build", "branch-gate", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
-        "build-studio", "build-configurator", "build-plc-workers", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity"
+        "build-studio", "build-configurator", "build-plc-workers", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
+        "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls"
     ];
 }
 
@@ -116,7 +117,7 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
-    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null)
+    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null)
     {
         var start = new ProcessStartInfo(executable)
         {
@@ -141,6 +142,12 @@ internal static class ProcessRunner
         {
             process.StandardInput.Write(standardInput);
             process.StandardInput.Close();
+        }
+        if (timeoutMilliseconds is { } timeout && !process.WaitForExit(timeout))
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+            throw new ReleaseException($"{executable} timed out after {timeout} ms.");
         }
         process.WaitForExit();
         var output = stdout.GetAwaiter().GetResult();

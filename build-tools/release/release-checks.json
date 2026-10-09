@@ -194,49 +194,49 @@
       ]
     },
     {
-      "path": "scripts/checks/Check-AdapterBoundary.py",
+      "path": "build-tools/release/AdapterBoundary.cs",
       "checks": [
         "adapterboundary-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-BundleLayout.py",
+      "path": "build-tools/release/BundleLayoutChecks.cs",
       "checks": [
         "bundlelayout-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-CommentHygiene.py",
+      "path": "build-tools/release/CommentHygiene.cs",
       "checks": [
         "commenthygiene-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-EnvelopeRewrite.py",
+      "path": "build-tools/release/EnvelopeRewrite.cs",
       "checks": [
         "enveloperewrite-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-McpText.py",
+      "path": "build-tools/release/McpText.cs",
       "checks": [
         "mcptext-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-Repository.py",
+      "path": "build-tools/release/RepositoryChecks.cs",
       "checks": [
         "repository-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-ScriptToolCalls.py",
+      "path": "build-tools/release/ScriptToolCalls.cs",
       "checks": [
         "scripttoolcalls-self-test"
       ]
     },
     {
-      "path": "scripts/checks/Check-SwallowedExceptions.py",
+      "path": "build-tools/release/SwallowedExceptions.cs",
       "checks": [
         "swallowedexceptions-self-test"
       ]
@@ -260,7 +260,7 @@
       ]
     },
     {
-      "path": "scripts/checks/Inventory-ResponseEnvelopes.py",
+      "path": "build-tools/release/ResponseEnvelopes.cs",
       "checks": [
         "responseenvelopes-self-test"
       ]
@@ -290,7 +290,7 @@
       ]
     },
     {
-      "path": "scripts/checks/Check-DeadToolReferences.py",
+      "path": "build-tools/release/DeadToolReferences.cs",
       "checks": [
         "dead-tool-references-self-test"
       ]
@@ -417,6 +417,51 @@
         "dotnetsuites-self-test",
         "offline-suites"
       ]
+    },
+    {
+      "path": "build-tools/release/SourceCheck.cs",
+      "checks": [
+        "adapterboundary-self-test",
+        "bundlelayout-self-test",
+        "commenthygiene-self-test",
+        "enveloperewrite-self-test",
+        "mcptext-self-test",
+        "repository-self-test",
+        "scripttoolcalls-self-test",
+        "swallowedexceptions-self-test",
+        "responseenvelopes-self-test",
+        "dead-tool-references-self-test"
+      ]
+    },
+    {
+      "path": "build-tools/release/RatchetChecks.cs",
+      "checks": [
+        "commenthygiene-self-test",
+        "mcptext-self-test",
+        "swallowedexceptions-self-test",
+        "responseenvelopes-self-test"
+      ]
+    },
+    {
+      "path": "build-tools/release/StaticChecks.cs",
+      "checks": [
+        "adapterboundary-self-test",
+        "bundlelayout-self-test",
+        "commenthygiene-self-test",
+        "enveloperewrite-self-test",
+        "mcptext-self-test",
+        "repository-self-test",
+        "scripttoolcalls-self-test",
+        "swallowedexceptions-self-test",
+        "responseenvelopes-self-test",
+        "dead-tool-references-self-test"
+      ]
+    },
+    {
+      "path": "build-tools/release/dead-reference-policy.json",
+      "checks": [
+        "dead-tool-references-self-test"
+      ]
     }
   ],
   "selfTests": [
@@ -466,58 +511,72 @@
     },
     {
       "check": "adapterboundary-self-test",
-      "script": "scripts/checks/Check-AdapterBoundary.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/AdapterBoundary.cs",
+      "command": [
+        "check-adapter-boundary",
+        "-SelfTest"
       ]
     },
     {
       "check": "bundlelayout-self-test",
-      "script": "scripts/checks/Check-BundleLayout.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/BundleLayoutChecks.cs",
+      "command": [
+        "check-bundle-layout",
+        "-SelfTest"
       ]
     },
     {
       "check": "commenthygiene-self-test",
-      "script": "scripts/checks/Check-CommentHygiene.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/CommentHygiene.cs",
+      "command": [
+        "check-ratchet",
+        "-Kind",
+        "comments",
+        "-SelfTest"
       ]
     },
     {
       "check": "enveloperewrite-self-test",
-      "script": "scripts/checks/Check-EnvelopeRewrite.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/EnvelopeRewrite.cs",
+      "command": [
+        "check-envelope-rewrite",
+        "-SelfTest"
       ]
     },
     {
       "check": "mcptext-self-test",
-      "script": "scripts/checks/Check-McpText.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/McpText.cs",
+      "command": [
+        "check-ratchet",
+        "-Kind",
+        "mcp-text",
+        "-SelfTest"
       ]
     },
     {
       "check": "repository-self-test",
-      "script": "scripts/checks/Check-Repository.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/RepositoryChecks.cs",
+      "command": [
+        "check-repository",
+        "-SelfTest"
       ]
     },
     {
       "check": "scripttoolcalls-self-test",
-      "script": "scripts/checks/Check-ScriptToolCalls.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/ScriptToolCalls.cs",
+      "command": [
+        "check-script-tool-calls",
+        "-SelfTest"
       ]
     },
     {
       "check": "swallowedexceptions-self-test",
-      "script": "scripts/checks/Check-SwallowedExceptions.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/SwallowedExceptions.cs",
+      "command": [
+        "check-ratchet",
+        "-Kind",
+        "swallowed",
+        "-SelfTest"
       ]
     },
     {
@@ -543,9 +602,12 @@
     },
     {
       "check": "responseenvelopes-self-test",
-      "script": "scripts/checks/Inventory-ResponseEnvelopes.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/ResponseEnvelopes.cs",
+      "command": [
+        "check-ratchet",
+        "-Kind",
+        "envelopes",
+        "-SelfTest"
       ]
     },
     {
@@ -558,10 +620,10 @@
     {
       "check": "dotnetsuites-self-test",
       "script": "build-tools/release/DotnetSuites.cs",
-      "arguments": [
+      "command": [
+        "test-suites",
         "-SelfTest"
-      ],
-      "command": "test-suites"
+      ]
     },
     {
       "check": "nativelifecycle-self-test",
@@ -579,9 +641,10 @@
     },
     {
       "check": "dead-tool-references-self-test",
-      "script": "scripts/checks/Check-DeadToolReferences.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/DeadToolReferences.cs",
+      "command": [
+        "check-dead-tool-references",
+        "-SelfTest"
       ]
     },
     {

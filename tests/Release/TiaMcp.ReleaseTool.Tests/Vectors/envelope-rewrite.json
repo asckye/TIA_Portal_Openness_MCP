@@ -1,0 +1,608 @@
+[
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject() { [\"timestamp\"] = DateTime.Now, [\"success\"] = ok, };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, ok);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject() { [\"timestamp\"] = DateTime.UtcNow, [\"success\"] = ok, };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.UtcNow, ok);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject() { [\"timestamp\"] = ResponseClock.Now, [\"success\"] = ok, };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(ResponseClock.Now, ok);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject() { [\"timestamp\"] = ResponseClock.UtcNow, [\"success\"] = ok, };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(ResponseClock.UtcNow, ok);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\n// envelope: legacy-single-verdict\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nSame();\n;\nsuffix;",
+      "prefix;\n// envelope: legacy-single-verdict\nSame();\n;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nSame();\n;\nsuffix;",
+      "prefix;\n// envelope: legacy-single-verdict\nChanged();\n;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      43,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\n// envelope: legacy-x extra text\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nvar s = \"\"\"\n// envelope: legacy-x\n\"\"\";;\nsuffix;",
+      "prefix;\nvar s = \"\"\"\n\"\"\";;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      20,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, values);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.ToString()));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = /* clock */ DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(/* clock */ DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0L));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? \"0\"));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? (long)0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = true, [\"timestamp\"] = DateTime.Now };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = false, [\"success\"] = true };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "Same();\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 }",
+      "// envelope: legacy-x\nSame();\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0)); Bad();"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      106,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0)); DoNativeWork();\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      85,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nDoNativeWork(); ResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = true, [\"value\"] = $\"{Count()}\" };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(true, (\"value\", $\"{Other()}\"));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Unstamped/fields"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 }; return value;\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0)); return other;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      93,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nvar stamp = DateTime.Now; ResponseMeta.Basic(stamp, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(ResponseClock.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = ok, [\"value\"] = new JsonObject { [\"x\"] = \"a,b}\\\"\" } };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(ok, (\"value\", new JsonObject { [\"x\"] = \"a,b}\\\"\" }));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Unstamped/fields": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = ok, [\"value\"] = $\"value {F(1, 2)}\" };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(ok, (\"value\", $\"value {F(1, 2)}\"));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Unstamped/fields": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = true, [\"child\"] = child, [\"owned\"] = child.Parent != null };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(true, (\"child\", child), (\"owned\", child.Parent != null));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 2
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nSame(); // comment;\nsuffix;",
+      "prefix;\nSame(); // changed;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      20,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nSame();;\nsuffix;",
+      "prefix;\n Same();;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "none (see Basic/explicit-clock, Unstamped/verdict, Unstamped/fields)"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = false };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(false);\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Unstamped/verdict": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = false, [\"usage\"] = usage };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(false, (\"usage\", usage));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Unstamped/fields": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = false, [\"n\"] = 9007199254740993L, [\"nil\"] = null };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(false, (\"n\", 9007199254740993L), (\"nil\", null));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Unstamped/fields": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime . Now,\n  true,\n  (\"count\",\n  res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      null,
+      null
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 }\nSame();;\nsuffix;",
+      "prefix;\nResponseMeta.Basic(DateTime.Now, true, (\"count\", res.Members?.Count() ?? 0))\n Same();;\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "Basic/explicit-clock": 1
+      },
+      85,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"timestamp\"] = DateTime.Now, [\"success\"] = true, [\"count\"] = res.Members?.Count() ?? 0 };\nsuffix;",
+      "prefix;\nResponseMeta.Basic(true, DateTime.Now, (\"count\", res.Members?.Count() ?? 0));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Basic/explicit-clock"
+    ]
+  },
+  {
+    "function": "compare",
+    "args": [
+      "prefix;\nnew JsonObject { [\"success\"] = true, [\"a\"] = 1, [\"b\"] = 2 };\nsuffix;",
+      "prefix;\nResponseMeta.Unstamped(true, (\"b\", 2), (\"a\", 1));\nsuffix;"
+    ],
+    "kwargs": {},
+    "expected": [
+      {},
+      8,
+      "Unstamped/fields"
+    ]
+  }
+]

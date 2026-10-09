@@ -8,9 +8,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="dead-reference-policy.json" />
     <ProjectReference Include="../common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>TiaMcp.ReleaseTool.Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>TiaMcp.SourceContracts.Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 </Project>

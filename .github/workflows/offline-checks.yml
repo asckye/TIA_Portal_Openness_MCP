@@ -10,9 +10,12 @@ on:
   pull_request:
 
 jobs:
-  offline-tests:
-    # 已迁移的 xunit 套件逐项生成 trx；最低数量门禁拒绝零测试、失败和超限跳过。
-    runs-on: ubuntu-latest
+  # Temporary migration oracle; remove after Python batch 8.
+  py-cs-parity:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -21,8 +24,23 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Swallowed-exception checker self-tests
-        run: python scripts/checks/Check-SwallowedExceptions.py --self-test
+      - name: Ratchet fingerprints, baseline bytes, guidance fix and TIA capture
+        run: dotnet run scripts/checks/Test-StaticCheckParity.cs -- -Python python -Output bin-build/py-cs-parity
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: py-cs-parity-${{ matrix.os }}
+          path: bin-build/py-cs-parity
+  offline-tests:
+    # 已迁移的 xunit 套件逐项生成 trx；最低数量门禁拒绝零测试、失败和超限跳过。
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Static checker self-tests
+        run: dotnet run --project build-tools/release -- check-repository -SelfTest
       - name: TRX gate self-checks
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression, generation basic package and MCP SDK version policy
@@ -50,36 +68,20 @@ jobs:
         run: |
           python scripts/checks/Check-ScriptToolCalls.py --self-test
           python scripts/checks/Check-ScriptToolCalls.py
+          dotnet run --project build-tools/release -- check-script-tool-calls
           python scripts/mcp_results.py
           python scripts/checks/Test-ScriptClients.py
       - name: Descriptions must not name unregistered tools
-        run: python3 scripts/checks/Check-DeadToolReferences.py
+        run: dotnet run --project build-tools/release -- check-dead-tool-references
       - name: Repository, layout, exception, comment, MCP text and response-envelope contracts
-        run: python3 scripts/checks/Check-Repository.py --no-binaries
+        run: dotnet run --project build-tools/release -- check-repository -NoBinaries
       - name: Static checker self-tests
-        run: |
-          python3 scripts/checks/Check-BundleLayout.py --self-test
-          python3 scripts/checks/Check-CommentHygiene.py --self-test
-          python3 scripts/checks/Check-McpText.py --self-test
-          python3 scripts/checks/Inventory-ResponseEnvelopes.py --self-test
-          python3 scripts/checks/Check-EnvelopeRewrite.py --self-test
-          python3 scripts/checks/Check-Repository.py --self-test
-      - name: Shared source helpers and Python compatibility vectors
+        run: dotnet run --project build-tools/release -- check-repository -SelfTest
+      - name: Production source contracts and Python compatibility vectors
         run: dotnet run --project build-tools/release -- test-suites -Suite source-contracts
-      - name: Diagnostic membership contracts
-        run: python3 scripts/checks/Test-DiagnosticMembershipSources.py
       - name: Native adapter host and JSON dependency boundary
         run: |
-          python3 scripts/checks/Check-AdapterBoundary.py --self-test
-          python3 scripts/checks/Check-AdapterBoundary.py
-      - name: Document import safety contracts
-        run: python3 scripts/checks/Test-DocumentImportSafetySources.py
-      - name: Import selection contracts
-        run: python3 scripts/checks/Test-ImportSelectionSources.py
-      - name: Prompt registration contracts
-        run: python3 scripts/checks/Test-PromptRegistrationSources.py
-      - name: Version catalog wiring contracts
-        run: python3 scripts/checks/Test-VersionCatalogWiring.py
+          dotnet run --project build-tools/release -- check-adapter-boundary
       - name: Domain fixture source coverage
         run: python3 scripts/checks/Test-DomainTools.py --source-only
       - name: Static V4 contract inventories and response coverage

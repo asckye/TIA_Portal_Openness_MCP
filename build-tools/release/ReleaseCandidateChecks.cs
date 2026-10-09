@@ -53,7 +53,7 @@ internal static partial class ReleaseCommands
             (script, args) => Python(script, args, false), (script, args) => Python(script, args, true), Isolated);
     }
 
-    private static void RunCandidateChecks(ReleaseCheckPlan plan, string api, string logs, string output, string releaseTemp,
+    internal static void RunCandidateChecks(ReleaseCheckPlan plan, string api, string logs, string output, string releaseTemp,
         string dotnet, string python, int maxParallelism, Action<string, Action> runStep,
         Action<string, string[]> runPython, Action<string, string[]> runDefaults,
         Func<string, string, IReadOnlyList<string>, bool, string?, CommandResult> runIsolated)
@@ -210,19 +210,34 @@ internal static partial class ReleaseCommands
             });
             return new PipelineResult("foundation-responses", 0, "Foundation response capture and comparison passed.\n", "");
         }));
+        var staticSelfTests = new List<(string Name, Func<PipelineResult> Run)>();
         foreach (var test in ReleaseCheckPolicy.Load(Root).SelfTests.Where(test => plan.Includes(test.Check)))
         {
-            jobs.Add((test.Check, () =>
+            var job = (Name: test.Check, Run: (Func<PipelineResult>)(() =>
             {
                 runStep(test.Check, () =>
                 {
-                    var arguments = test.Arguments.Select(argument => argument == "{output}" ? Path.Combine(logs, test.Check + "-" + Guid.NewGuid().ToString("N")) : argument).ToArray();
+                    var arguments = (test.Arguments ?? []).Select(argument => argument == "{output}" ? Path.Combine(logs, test.Check + "-" + Guid.NewGuid().ToString("N")) : argument).ToArray();
                     if (test.Command is null) runPython(test.Script, arguments);
-                    else ProcessRunner.RequireSuccess(runIsolated(test.Check, test.Command, arguments, false, Root), test.Check);
+                    else
+                    {
+                        var executable = test.Command[0] == "test-suites" ? "test-suites" : dotnet;
+                        var command = executable == "test-suites" ? test.Command.Skip(1).ToArray()
+                            : new[] { typeof(ReleaseCommands).Assembly.Location }.Concat(test.Command).ToArray();
+                        ProcessRunner.RequireSuccess(runIsolated(test.Check, executable, [.. command, .. arguments], false, Root), test.Check);
+                    }
                 });
                 return new PipelineResult(test.Check, 0, "Check self-test passed.\n", "");
             }));
+            if (test.Command is { Length: > 0 } && test.Command[0].StartsWith("check-", StringComparison.Ordinal)) staticSelfTests.Add(job);
+            else jobs.Add(job);
         }
+        // Converted self-tests share one project; avoid concurrent rebuilds of its outputs.
+        if (staticSelfTests.Count > 0) jobs.Add(("static-check-self-tests", () =>
+        {
+            foreach (var job in staticSelfTests) job.Run();
+            return new PipelineResult("static-check-self-tests", 0, "Static check self-tests passed.\n", "");
+        }));
         ParallelPipeline.Run(jobs, Path.Combine(logs, "post-validation"), maxParallelism);
 
     }

@@ -160,8 +160,8 @@ The console itself needs no Siemens SDK, but its required eight worker/adapter
 PE inputs must first be compiled against the eight exact licensed PublicAPI
 SDKs. Hosted CI has neither those SDKs nor checked-in worker binaries, so it
 cannot run this complete diagnostic check. The Python-only source-contracts job
-instead runs `python scripts/checks/Check-AdapterBoundary.py --self-test` and
-`python scripts/checks/Check-AdapterBoundary.py` to reject adapter references to
+instead runs `dotnet run --project build-tools/release -- check-adapter-boundary -SelfTest` and
+`dotnet run --project build-tools/release -- check-adapter-boundary` to reject adapter references to
 Logic or JSON libraries, including source use and transitive project references.
 Local acceptance still requires the full eight-release diagnostic console.
 

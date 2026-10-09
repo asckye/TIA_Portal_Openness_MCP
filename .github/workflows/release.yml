@@ -79,7 +79,7 @@ jobs:
           set -euo pipefail
           python -c 'import pathlib, sys, zipfile; z=zipfile.ZipFile(sys.argv[1]); root=pathlib.Path("unpacked").resolve(); [(root / n).parent.mkdir(parents=True, exist_ok=True) for n in z.namelist()]; [z.extract(n, root) for n in z.namelist()]' "assets/$package.zip"
           dotnet run --project build-tools/release -- validate-bundle -BundleRoot "unpacked/$package" -Strict -PackageMode
-          python scripts/checks/Check-Repository.py --root "unpacked/$package" --package-mode
+          dotnet run --project build-tools/release -- check-repository -Root "unpacked/$package" -PackageMode
       - name: Summary
         shell: bash
         run: |

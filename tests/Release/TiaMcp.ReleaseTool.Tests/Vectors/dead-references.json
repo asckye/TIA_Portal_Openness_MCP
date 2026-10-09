@@ -1,0 +1,587 @@
+[
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "[Description(\"Use OldTool.\")] void M() { throw new Exception(\"OldTool\"); var m = t.GetMethods().Single(x => x.Name == \"OldTool\"); }",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "[Description(\"Use NewTool.\")] void M() { throw new Exception(\"OldTool\"); var m = t.GetMethods().Single(x => x.Name == \"OldTool\"); }",
+      [
+        [
+          18,
+          "OldTool",
+          "NewTool",
+          true
+        ],
+        [
+          62,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          119,
+          "OldTool",
+          "NewTool",
+          false
+        ]
+      ]
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "[Description(\"Calls Bootstrap natively.\")] void M() {}",
+      {
+        "Bootstrap": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "[Description(\"Calls Bootstrap natively.\")] void M() {}",
+      []
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "engine.cs": "[McpServerTool(Name=\"GetToolUsage\")] void Usage() {}\nreturn \"Use GetToolUsage(language: \\\"lad\\\") or GetService<T>().\";\n// Use GetNonexistentSentinelTool.\n"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        "GetToolUsage"
+      ],
+      {}
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "// Use OldTool here.\n[Description(\"Use OldTool and OldToolSuffix.\")]\nvoid OldTool() { var key = \"OldTool\"; return $\"Try OldTool {OldTool()} {\"Use OldTool\"}\"; }\nconst string Prompt = @\"Call OldTool before continuing.\";\nconst string Hint = \"\"\"See OldTool for details.\"\"\";\n",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "// Use OldTool here.\n[Description(\"Use NewTool and OldToolSuffix.\")]\nvoid OldTool() { var key = \"OldTool\"; return $\"Try NewTool {OldTool()} {\"Use NewTool\"}\"; }\nconst string Prompt = @\"Call NewTool before continuing.\";\nconst string Hint = \"\"\"See NewTool for details.\"\"\";\n",
+      [
+        [
+          7,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          39,
+          "OldTool",
+          "NewTool",
+          true
+        ],
+        [
+          74,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          97,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          120,
+          "OldTool",
+          "NewTool",
+          true
+        ],
+        [
+          129,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          146,
+          "OldTool",
+          "NewTool",
+          true
+        ],
+        [
+          189,
+          "OldTool",
+          "NewTool",
+          true
+        ],
+        [
+          245,
+          "OldTool",
+          "NewTool",
+          true
+        ]
+      ]
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "// Use OldTool here.\n[Description(\"Use NewTool and OldToolSuffix.\")]\nvoid OldTool() { var key = \"OldTool\"; return $\"Try NewTool {OldTool()} {\"Use NewTool\"}\"; }\nconst string Prompt = @\"Call NewTool before continuing.\";\nconst string Hint = \"\"\"See NewTool for details.\"\"\";\n",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "// Use OldTool here.\n[Description(\"Use NewTool and OldToolSuffix.\")]\nvoid OldTool() { var key = \"OldTool\"; return $\"Try NewTool {OldTool()} {\"Use NewTool\"}\"; }\nconst string Prompt = @\"Call NewTool before continuing.\";\nconst string Hint = \"\"\"See NewTool for details.\"\"\";\n",
+      [
+        [
+          7,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          74,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          97,
+          "OldTool",
+          "NewTool",
+          false
+        ],
+        [
+          129,
+          "OldTool",
+          "NewTool",
+          false
+        ]
+      ]
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "return \"Use Old\" + \"Tool first.\";",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "return \"Use Old\" + \"Tool first.\";",
+      [
+        [
+          7,
+          "OldTool",
+          "NewTool",
+          false
+        ]
+      ]
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "return \"Use Old\\u0054ool first.\";",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "return \"Use Old\\u0054ool first.\";",
+      [
+        [
+          7,
+          "OldTool",
+          "NewTool",
+          false
+        ]
+      ]
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "const string schema = \"\"\"{ \"enum\": [\"OldTool\"] }\"\"\";",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "const string schema = \"\"\"{ \"enum\": [\"OldTool\"] }\"\"\";",
+      [
+        [
+          37,
+          "OldTool",
+          "NewTool",
+          false
+        ]
+      ]
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "[Description(\"Use OldTool.\")]",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "NewTool",
+        "OldTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "[Description(\"Use OldTool.\")]",
+      []
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "[Description(\"Use OldTool.\")]",
+      {
+        "OldTool": "NewTool"
+      },
+      [
+        "OldTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "[Description(\"Use OldTool.\")]",
+      []
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "[Description(\"Use OldTool.\")]",
+      {
+        "OldTool": "NewTool"
+      },
+      []
+    ],
+    "kwargs": {},
+    "expected": [
+      "[Description(\"Use OldTool.\")]",
+      []
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "shared.cs": "const string Instructions = \"Use GetNonexistentSentinelTool first.\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      {
+        "GetNonexistentSentinelTool": [
+          "shared.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "shared.cs": "return \"Call Preflight\" + \"ToolCall(name, argumentsJson).\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      {
+        "PreflightToolCall": [
+          "shared.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "shared.cs": "throw new ArgumentException(@\"GetAuthoringGuide(topic: \"\"lad\"\") supplies examples.\");"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      {
+        "GetAuthoringGuide": [
+          "shared.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "shared.cs": "return $\"Try PreviewMissingTool for {value}.\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      {
+        "PreviewMissingTool": [
+          "shared.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "shared.cs": "const string Hint = \"\"\"GetRecipe(topic) returns the sequence.\"\"\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      {
+        "GetRecipe": [
+          "shared.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan_markdown",
+    "args": [
+      "D:\\Code\\TIA_wt\\P8-10b",
+      {
+        "docs/guides/openness.md": "Native member: `GetCrossReferences`."
+      }
+    ],
+    "kwargs": {
+      "include_tree": false
+    },
+    "expected": {}
+  },
+  {
+    "function": "scan_markdown",
+    "args": [
+      "D:\\Code\\TIA_wt\\P8-10b",
+      {
+        "docs/guides/cli.md": "Use `tia doctor`, `tia connect`, or `tia project`."
+      }
+    ],
+    "kwargs": {
+      "include_tree": false
+    },
+    "expected": {}
+  },
+  {
+    "function": "scan_markdown",
+    "args": [
+      "D:\\Code\\TIA_wt\\P8-10b",
+      {
+        "CHANGELOG.md": "Historical call: `GetBlocks`.",
+        "docs/releases/v3.3.0.md": "Historical call: `GetBlocks`.",
+        "bin-build/P6-40b/report.md": "Task report: `GetBlocks`."
+      }
+    ],
+    "kwargs": {
+      "include_tree": false
+    },
+    "expected": {}
+  },
+  {
+    "function": "scan_markdown",
+    "args": [
+      "D:\\Code\\TIA_wt\\P8-10b",
+      {
+        "docs/reference/real-machine-ledger.md": "## 3.3.0 发布前最小验收\n`GetBlocks`\n## 4.0 安全策略验收计划\n`GetBlocks`\n"
+      }
+    ],
+    "kwargs": {
+      "include_tree": false
+    },
+    "expected": {
+      "GetBlocks": [
+        "docs/reference/real-machine-ledger.md:4"
+      ]
+    }
+  },
+  {
+    "function": "scan_markdown",
+    "args": [
+      "D:\\Code\\TIA_wt\\P8-10b",
+      {
+        "docs/guides/test-guide.md": "Call `GetBlocks` with the selected PLC path."
+      }
+    ],
+    "kwargs": {
+      "include_tree": false
+    },
+    "expected": {
+      "GetBlocks": [
+        "docs/guides/test-guide.md:1"
+      ]
+    }
+  },
+  {
+    "function": "scan_markdown",
+    "args": [
+      "D:\\Code\\TIA_wt\\P8-10b",
+      {
+        "src/Studio/README.md": "RPC methods `GetState` and `Doctor` are retained."
+      }
+    ],
+    "kwargs": {
+      "include_tree": false
+    },
+    "expected": {}
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "hint.cs": "[McpServerTool(Name=\"CallTool\")] void Tool() {} return \"Use CallTool(argumentsJson).\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        "CallTool"
+      ],
+      {
+        "CallTool.argumentsJson": [
+          "hint.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "hint.cs": "[McpServerTool(Name=\"PreviewToolCall\")] void Tool() {} return \"Use PreviewToolCall(argumentsJson).\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        "PreviewToolCall"
+      ],
+      {
+        "PreviewToolCall.argumentsJson": [
+          "hint.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "hint.cs": "[McpServerTool(Name=\"PreviewToolBatch\")] void Tool() {} return \"Use PreviewToolBatch(operationsJson).\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        "PreviewToolBatch"
+      ],
+      {
+        "PreviewToolBatch.operationsJson": [
+          "hint.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "hint.cs": "[McpServerTool(Name=\"RunReadOnlyToolBatch\")] void Tool() {} return \"Use RunReadOnlyToolBatch(operationsJson).\";"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        "RunReadOnlyToolBatch"
+      ],
+      {
+        "RunReadOnlyToolBatch.operationsJson": [
+          "hint.cs:1"
+        ]
+      }
+    ]
+  },
+  {
+    "function": "rewrite_guidance",
+    "args": [
+      "var r = InvocationJournal.Native(\"CrossReferenceService.GetCrossReferences\", () => 1); [Description(\"Calls Service.OldTool natively.\")] void M() {}",
+      {
+        "OldTool": "NewTool",
+        "GetCrossReferences": "GetPlcCrossReferences"
+      },
+      [
+        "GetPlcCrossReferences",
+        "NewTool"
+      ]
+    ],
+    "kwargs": {},
+    "expected": [
+      "var r = InvocationJournal.Native(\"CrossReferenceService.GetCrossReferences\", () => 1); [Description(\"Calls Service.OldTool natively.\")] void M() {}",
+      []
+    ]
+  },
+  {
+    "function": "scan",
+    "args": [
+      {
+        "<qualified>": "var r = InvocationJournal.Native(\"CrossReferenceService.GetCrossReferences\", () => 1); [Description(\"Calls Service.OldTool natively.\")] void M() {}"
+      }
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      {}
+    ]
+  }
+]

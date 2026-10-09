@@ -233,7 +233,8 @@ internal static partial class ReleaseCommands
             RunDotnetSuiteForRelease("crash-evidence", "crash-evidence", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             crashEvidencePassed = ReadSuitePassed(suiteResults, "crash-evidence");
             RunBuildSpec("tool-usage", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
-            RunBuildSpec("version-catalog", python, [Path.Combine(Root, "scripts/checks/Test-VersionCatalogWiring.py")], outputDirectory, runTemp, cliHome, apiRoot);
+            RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
+            RunDotnetSuiteForRelease("source-contracts", "version-catalog", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
 
             var offlineProject = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Tests/TiaMcp.Engine.Tests.csproj");
             RestoreBuildProject(dotnet, offlineProject, nuget, outputDirectory, runTemp, cliHome, apiRoot);

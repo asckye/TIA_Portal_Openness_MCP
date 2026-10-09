@@ -1,0 +1,2325 @@
+[
+  {
+    "function": "scan_source",
+    "args": [
+      "try { try { A(); } catch (Inner e) { Use(e); } }\n            catch (global::System.Exception) when (Ready(F(1, (2)))) { }\n            catch (Other ex) when (Ready(ex)) { return; }\n            catch { return false; } finally { Done(); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "e069747a6559acb5ae890b6b8b050a6210d5ca7b5bb1ce93a9707be09c63de7c",
+          "path": "sample.cs",
+          "line": 2,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 61,
+          "opening": 119,
+          "end": 121,
+          "following": 134
+        },
+        {
+          "fingerprint": "bcb7b7019726f9afabc2b0ff6c0c9355c1ccb191d48666fd72c61630c0a836ef",
+          "path": "sample.cs",
+          "line": 3,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 134,
+          "opening": 169,
+          "end": 179,
+          "following": 192
+        },
+        {
+          "fingerprint": "e5ada74390f0b103537001d04120243910186db4de88a0e4a2737cc93639ea47",
+          "path": "sample.cs",
+          "line": 4,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 192,
+          "opening": 199,
+          "end": 215,
+          "following": 216
+        },
+        {
+          "fingerprint": "74a5fef0e989ee3cebfe50010d749b8ee275d0a9df017d686826f879ddfb1d0b",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 19,
+          "opening": 36,
+          "end": 46,
+          "following": 47
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { /* why */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "6e42300a189627db70838f3bf0d5edcb77a8a717a4a5e0951993a8b9f2e077e4",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 47,
+          "following": 47
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return false; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "4f943e5f8ab5232c4bc6bfbb973decdaad139db82c58a7e4228caae226e17ee0",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 51,
+          "following": 51
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { ; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "fa4de47198043d06aaf1ea2d7f5f8470b40564cd7a2a6dd5c6bec4e1affdad82",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 39,
+          "following": 39
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { throw; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "1dc961666d62f41282ed203db7332b4bd232c7e797cb134630ea59f5fde924fb",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 44,
+          "following": 44
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { throw Wrap(); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "82ab5ed3bcab6c2c5d5f4573996d5ac30f2b2d594934f22f74ee1d926caf83d2",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 51,
+          "following": 51
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return ex.Message; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "c4b6b20229d0544f917c69ebf85334d498498df582e8746e436fd498cd590c46",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 56,
+          "following": 56
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { Use(@ex); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "308c60cc8da5c9b9e1267f76b8b578f03bea066aba73fb7d40394e689462ff5c",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 47,
+          "following": 47
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return $\"ex {other}\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "bdd84816e894e57e3529578f71843ac664ad0a7c9213b1c87356deeb05bddc73",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 59,
+          "following": 59
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return $\"{other:ex}\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "bfa1e29e6dcd50e649807000720ba5f96f4e1705b3a65f81864c7db41a8dd122",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 59,
+          "following": 59
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return \"throw ex LogError()\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "39f4aa3a3385f35612827bf38ee4012fa82c6e0a8afbaa18073f91cccebfc8d2",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 67,
+          "following": 67
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return @\"ex\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "48ba6fb070353eed4ff7c9f8fb7735256ce0896417bd1109fb210a66350d98fc",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 51,
+          "following": 51
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return \"\"\"ex\"\"\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ca21b835de1a9a43b116fbf2a4a409c4e9fbb2e64644392be85e2d69c2d0fe0b",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 54,
+          "following": 54
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { return other.ex; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "c82578118b0eddfee5d4fc101135d7cc77e3446a0c806253f67e970fceccb900",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 54,
+          "following": 54
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { LogError(\"failed\"); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "241b9e864fd79eb67345216c7c144188741c412a77bd8c6a3f983ff1632aeafd",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 57,
+          "following": 57
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { Console.Error.WriteLine(\"failed\"); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "281f1582a0d3beb86d24ddf9cfedfc17611a9a6fbb4a66c9d4de047712dc40d2",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 72,
+          "following": 72
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { Debug.WriteLine(\"failed\"); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "0a4fcffa23ec128cf559492518bb5acb937882af1d01c7557a36b0e8c3c6a91b",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 64,
+          "following": 64
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { logger?.LogWarning(\"failed\"); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "f23f1c74464c433ccc7762b52f5a31a462e330c4ac5daf825873350d62413df6",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 67,
+          "following": 67
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { SwallowedExceptions.Note(\"site\", other); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "4a8676afe93db48e6f8d331f068a7458b8a17892a713b4ff799607274f4d2388",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 78,
+          "following": 78
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { var LogError = 1; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "28505ce7eff8ab89146a80729297724e50241e476279cf97749a97848f0d0614",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 55,
+          "following": 55
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { catalog.Find(); }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "a7980a94cb74ff0562498f467d728bbe8daf93ed856d67541bc7731e9e8a480a",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 53,
+          "following": 53
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch (Exception ex) { // ex throw LogError()\n return; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "f20f85ad5a16beb1f01d06cf2b2a18b816e8b432500ae8f5071622b82111b92b",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 35,
+          "end": 69,
+          "following": 69
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// catch { try { }\n            try { var a = \"catch { \\\\\\\" }\"; var b = @\"catch \"\" { }\";\n                var c = '}'; var d = '\\''; /* catch { } */ }\n            catch { /* no statements */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "c55b6e06c913abe5ea860033bf7a08141c24fadd3fe5ed523c33dec1d6473f96",
+          "path": "sample.cs",
+          "line": 4,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 161,
+          "opening": 168,
+          "end": 190,
+          "following": 190
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(\"x y\"); } catch (T ex) when (F(ex)) { return false; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "a31fcfe47866246860c83327de3a82da3a8faf45b9ef4ebd3c528be54b9424ff",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 18,
+          "opening": 45,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try\n{/* why */ A ( \"x y\" ) ; } catch(T ex) when(F( ex ))\n{ return /*why*/ false ; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "a31fcfe47866246860c83327de3a82da3a8faf45b9ef4ebd3c528be54b9424ff",
+          "path": "sample.cs",
+          "line": 2,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 31,
+          "opening": 58,
+          "end": 83,
+          "following": 83
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { B(\"x y\"); } catch (T ex) when (F(ex)) { return false; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "39453a6c37f00891e72d2c1d5d8eb03b688ecd08eb2a775491f5de94dfa1b66e",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 18,
+          "opening": 45,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(\"xy\"); } catch (T ex) when (F(ex)) { return false; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "7199806a2fcc6991a2704fe464d27b543d61267d0e80376a74c6f4027a19b853",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 17,
+          "opening": 44,
+          "end": 60,
+          "following": 60
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(\"x y\"); } catch (U ex) when (F(ex)) { return false; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "141c4569591b124fc2dae3ad1caed13110451d59623e27bbe504fa58fa9e30a5",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 18,
+          "opening": 45,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(\"x y\"); } catch (T ex) when (G(ex)) { return false; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "432606c5da6e21504d9f732663504fcff10fab7b5cbba94f62a8fa01e5b183b2",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 18,
+          "opening": 45,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(\"x y\"); } catch (T ex) when (F(ex)) { return true; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ba08e1f10c7891717badba4d6013aea3f980464603820ece7668edad5a3512dd",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 18,
+          "opening": 45,
+          "end": 60,
+          "following": 60
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { F($\"x {A(1)}\"); } catch { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "3c89a3737d4263e1ac8dd021c2e6f15bf51b092c1a7fd85685c2e5791853a40b",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 24,
+          "opening": 31,
+          "end": 33,
+          "following": 33
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { F($\"x { A( /*why*/ 1 ) }\"); } catch { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "3c89a3737d4263e1ac8dd021c2e6f15bf51b092c1a7fd85685c2e5791853a40b",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 36,
+          "opening": 43,
+          "end": 45,
+          "following": 45
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { F(a++); } catch { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "6f8e376f29ed2cfe4f03cd6f1d895a0e570464ca6dc9ea67006a15f1f84adfd5",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 16,
+          "opening": 23,
+          "end": 25,
+          "following": 25
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { F(a + +b); } catch { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "7bf1e5adc717a8feb59e31b25c446b0a36dc65870dabbcff512db11cf320032e",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 19,
+          "opening": 26,
+          "end": 28,
+          "following": 28
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 22
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(ui): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "ui",
+          "start": 13,
+          "opening": 46,
+          "end": 48,
+          "following": 48
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { var a = $\"catch {{ {F(\"}\", new[] { 1, 2 })} }}\";\n                var b = $@\"catch \"\" {F(@\"\"\"}\")} {{\";\n                var c = @$\"catch { $\"nested {F(\"catch\")}\" }\"; }\n            catch (Exception ex) { return $\"failed: {ex.Message}\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "f78d86b4fce80bdb5066dc37b0f644196e60a14842c3f02e483686838f26770c",
+          "path": "sample.cs",
+          "line": 4,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 184,
+          "opening": 206,
+          "end": 240,
+          "following": 240
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { /* swallow(unknown): reason */ }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 53,
+          "following": 53
+        }
+      ],
+      [
+        "x.cs:1: invalid swallow marker (known category and nonempty reason required)"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { /* swallow(ui):  */ }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 42,
+          "following": 42
+        }
+      ],
+      [
+        "x.cs:1: invalid swallow marker (known category and nonempty reason required)"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { /* swallow(ui) reason */ }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 47,
+          "following": 47
+        }
+      ],
+      [
+        "x.cs:1: invalid swallow marker (known category and nonempty reason required)"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { // swallow(ui): reason\n }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 46,
+          "following": 46
+        }
+      ],
+      [
+        "x.cs:1: invalid swallow marker (known category and nonempty reason required)"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{ return;\n/* swallow(ui): late */ }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "3922bf908ed38b44347d678f45cd78db5139ce43c9f15e6e56e2fbd06ef473ba",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 54,
+          "following": 54
+        }
+      ],
+      [
+        "x.cs:3: swallow marker must be on the catch line or first in its block"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "/* swallow(ui): orphan */ try { A(); } catch { }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "empty",
+          "category": null,
+          "start": 39,
+          "opening": 46,
+          "end": 48,
+          "following": 48
+        }
+      ],
+      [
+        "x.cs:1: swallow marker must be on the catch line or first in its block"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(ui): one */ { /* swallow(ui): two */ }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "x.cs",
+          "line": 1,
+          "project": "x",
+          "kind": "empty",
+          "category": "ui",
+          "start": 13,
+          "opening": 43,
+          "end": 68,
+          "following": 68
+        }
+      ],
+      [
+        "x.cs:1: multiple swallow markers on one catch"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "catch { }",
+      "x.cs",
+      "x"
+    ],
+    "kwargs": {},
+    "expected": [
+      [],
+      [
+        "x.cs:1: catch has no matching try"
+      ]
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(cleanup): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "cleanup",
+          "start": 13,
+          "opening": 51,
+          "end": 53,
+          "following": 53
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(cleanup): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "cleanup",
+          "start": 13,
+          "opening": 20,
+          "end": 54,
+          "following": 54
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(cleanup): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "cleanup",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 53
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(teardown): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "teardown",
+          "start": 13,
+          "opening": 52,
+          "end": 54,
+          "following": 54
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(teardown): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "teardown",
+          "start": 13,
+          "opening": 20,
+          "end": 55,
+          "following": 55
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(teardown): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "teardown",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 54
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(logging-failure): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "logging-failure",
+          "start": 13,
+          "opening": 59,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(logging-failure): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "logging-failure",
+          "start": 13,
+          "opening": 20,
+          "end": 62,
+          "following": 62
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(logging-failure): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "logging-failure",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(probe-optional): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "probe-optional",
+          "start": 13,
+          "opening": 58,
+          "end": 60,
+          "following": 60
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(probe-optional): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "probe-optional",
+          "start": 13,
+          "opening": 20,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(probe-optional): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "probe-optional",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 60
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(enumerate-optional): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "enumerate-optional",
+          "start": 13,
+          "opening": 62,
+          "end": 64,
+          "following": 64
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(enumerate-optional): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "enumerate-optional",
+          "start": 13,
+          "opening": 20,
+          "end": 65,
+          "following": 65
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(enumerate-optional): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "enumerate-optional",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 64
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(native-fallback): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "native-fallback",
+          "start": 13,
+          "opening": 59,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(native-fallback): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "native-fallback",
+          "start": 13,
+          "opening": 20,
+          "end": 62,
+          "following": 62
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(native-fallback): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "native-fallback",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(parse-fallback): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "parse-fallback",
+          "start": 13,
+          "opening": 58,
+          "end": 60,
+          "following": 60
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(parse-fallback): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "parse-fallback",
+          "start": 13,
+          "opening": 20,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(parse-fallback): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "parse-fallback",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 60
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(env-probe): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "env-probe",
+          "start": 13,
+          "opening": 53,
+          "end": 55,
+          "following": 55
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(env-probe): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "env-probe",
+          "start": 13,
+          "opening": 20,
+          "end": 56,
+          "following": 56
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(env-probe): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "env-probe",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 55
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(ui): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "ui",
+          "start": 13,
+          "opening": 20,
+          "end": 49,
+          "following": 49
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(ui): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "ui",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 48
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(fail-open-guard): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "fail-open-guard",
+          "start": 13,
+          "opening": 59,
+          "end": 61,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(fail-open-guard): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "fail-open-guard",
+          "start": 13,
+          "opening": 20,
+          "end": 62,
+          "following": 62
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(fail-open-guard): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "fail-open-guard",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 61
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch /* swallow(privacy): reason */ { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "privacy",
+          "start": 13,
+          "opening": 51,
+          "end": 53,
+          "following": 53
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch\n{\n /* swallow(privacy): reason */ }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "privacy",
+          "start": 13,
+          "opening": 20,
+          "end": 54,
+          "following": 54
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { } /* swallow(privacy): reason */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "privacy",
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 53
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { try { B(); } catch { /* swallow(ui): inner */ } }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "a4cb8e8c916eccb320e12e19e9bc0a6069d5e6eb28298f6828102003a78b08a4",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 70,
+          "following": 70
+        },
+        {
+          "fingerprint": "0b4b64682edb09b0531630c9efd59887068a1e0f2cc7602c35ddbe316e114991",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": "ui",
+          "start": 34,
+          "opening": 41,
+          "end": 68,
+          "following": 69
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch { var s = \"/* swallow(ui): fake */\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "2aaa34ff57452c1df3949364164ac253ab1f414271d3861ba81d72acb6cbefd1",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 57,
+          "following": 57
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { B(); } catch { }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "0b4b64682edb09b0531630c9efd59887068a1e0f2cc7602c35ddbe316e114991",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 22,
+          "following": 22
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "void F() {\n            #if V20\n            if (A()) {\n            #else\n            if (B()) {\n            #endif\n            try { Work(); } catch { }\n            }\n            #if V20\n            try { Old(); } catch { }\n            #elif V21\n            try { New(); } catch { return; }\n            #endif\n            }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "0d01830d94d7f680ccd93e5888c11c4514d1efed73e2af16d012c1b51e94e000",
+          "path": "sample.cs",
+          "line": 7,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 142,
+          "opening": 149,
+          "end": 151,
+          "following": 164
+        },
+        {
+          "fingerprint": "9c56416b0a3b3ec2b8fd65b433e2bfee0cb3e937afbe16c3e360f3e801cde309",
+          "path": "sample.cs",
+          "line": 10,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 213,
+          "opening": 220,
+          "end": 222,
+          "following": 235
+        },
+        {
+          "fingerprint": "8162c99b0eb86fc97063b68eafc59273eda194133199a84f527de56c680d30c3",
+          "path": "sample.cs",
+          "line": 12,
+          "project": "sample",
+          "kind": "discarding",
+          "category": null,
+          "start": 272,
+          "opening": 279,
+          "end": 289,
+          "following": 302
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { A(); } catch {\n#if V20\n#endif\n}",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "2d7714e0250c932971b880bdd938cba17a411cfdae08234a3fb255eea1501956",
+          "path": "sample.cs",
+          "line": 1,
+          "project": "sample",
+          "kind": "empty",
+          "category": null,
+          "start": 13,
+          "opening": 20,
+          "end": 37,
+          "following": 37
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "try { var a = \"\"\"catch { \"quoted\" }\"\"\";\n                var b = \"\"\"\"\n                    catch { \"\"\" }\n                    \"\"\"\";\n                var c = $$\"\"\"literal { catch } {{{F(\"}\")}}} \"\"\"; }\n            catch (Exception ex) { return $$\"\"\"text {ex} {{ex.Message}}\"\"\"; }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "0368ee8aa5de74504f340ed17c8aa7ae4394e1635f6d82f33d9246f79480216f",
+          "path": "sample.cs",
+          "line": 6,
+          "project": "sample",
+          "kind": "handled",
+          "category": null,
+          "start": 208,
+          "opening": 230,
+          "end": 273,
+          "following": 273
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "var s = \"<auto-generated>\"; try { A(); } catch { }",
+      "src/Project/sample.cs",
+      "Project"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "src/Project/sample.cs",
+          "line": 1,
+          "project": "Project",
+          "kind": "empty",
+          "category": null,
+          "start": 41,
+          "opening": 48,
+          "end": 50,
+          "following": 50
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "var s = \"<auto-generated>\"; try { A(); } catch { }",
+      "src/Studio/AnotherProject/moved.cs",
+      "AnotherProject"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "src/Studio/AnotherProject/moved.cs",
+          "line": 1,
+          "project": "AnotherProject",
+          "kind": "empty",
+          "category": null,
+          "start": 41,
+          "opening": 48,
+          "end": 50,
+          "following": 50
+        }
+      ],
+      []
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "var s = \"<auto-generated>\"; try { A(); } catch { }try { B(); } catch { }",
+      "src/Studio/AnotherProject/moved.cs",
+      "AnotherProject"
+    ],
+    "kwargs": {},
+    "expected": [
+      [
+        {
+          "fingerprint": "ac58f54fe573d77a475772468bd172289027ed3ae7285a1ee7d24cd4cddaeb08",
+          "path": "src/Studio/AnotherProject/moved.cs",
+          "line": 1,
+          "project": "AnotherProject",
+          "kind": "empty",
+          "category": null,
+          "start": 41,
+          "opening": 48,
+          "end": 50,
+          "following": 50
+        },
+        {
+          "fingerprint": "0b4b64682edb09b0531630c9efd59887068a1e0f2cc7602c35ddbe316e114991",
+          "path": "src/Studio/AnotherProject/moved.cs",
+          "line": 1,
+          "project": "AnotherProject",
+          "kind": "empty",
+          "category": null,
+          "start": 63,
+          "opening": 70,
+          "end": 72,
+          "following": 72
+        }
+      ],
+      []
+    ]
+  }
+]

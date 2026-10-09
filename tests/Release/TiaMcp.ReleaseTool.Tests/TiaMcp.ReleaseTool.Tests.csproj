@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <None Update="Vectors/*.json" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="../../../build-tools/release/TiaMcp.ReleaseTool.csproj" />
   </ItemGroup>
 </Project>

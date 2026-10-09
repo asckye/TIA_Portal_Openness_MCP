@@ -87,4 +87,15 @@ public sealed class EngineSourcesTests : IDisposable
         Add("Forwarders.cs", "class McpServer { public static string Forward() => Other.Forward(); } class Kernel { public string Forward() => EngineServices.Get().Forward(); } class Other { public string Forward() { return \"body\"; } }");
         Assert.Equal("public string Forward() { return \"body\"; }", Sources().Member("Forward", tool: false));
     }
+    [Fact]
+    public void SharedAndHostSourcesParticipateInMoveIndependentLookup()
+    {
+        foreach (var folder in new[] { "src/Shared", "src/Shared/Host" })
+        {
+            var directory = Directory.CreateDirectory(Path.Combine(scratch.DirectoryPath, folder)).FullName;
+            var name = folder.EndsWith("Host", StringComparison.Ordinal) ? "HostMember" : "SharedMember";
+            File.WriteAllText(Path.Combine(directory, name + ".cs"), "class " + name + " { public void " + name + "Call() { } }");
+            Assert.Contains("public void " + name + "Call()", Sources().Member(name + "Call"));
+        }
+    }
 }

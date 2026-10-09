@@ -27,7 +27,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Documentation links and repository entrypoints
-        run: python scripts/checks/Check-Repository.py --no-binaries
+        run: dotnet run --project build-tools/release -- check-repository -NoBinaries
       - name: Offline bundle validation
         run: dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes
       - name: C# bundle validator self-tests
@@ -53,8 +53,8 @@ jobs:
           dotnet run --project build-tools/release -- test-suites -Suite write-guard
           dotnet run scripts/checks/Test-MatchPlcName.cs -- -SourceOnly
       - name: Release feature defines match the reviewed table
-        run: python scripts/checks/Check-TiaFeatures.py
+        run: dotnet run --project build-tools/release -- check-tia-features
       - name: Supplementary read and worker dispatch source contracts
-        run: python scripts/checks/Test-SupplementaryReadSources.py
+        run: dotnet run --project build-tools/release -- test-suites -Suite source-contracts
       - name: Build launcher and test .NET 10 configuration page
         run: dotnet run --project build-tools/release -- build-configurator -Test

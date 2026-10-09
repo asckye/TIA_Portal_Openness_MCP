@@ -217,12 +217,12 @@ internal static partial class ReleaseCommands
         var outputDirectory = Path.Combine(Root, "bin-build/release-early-gates", Guid.NewGuid().ToString("N"));
         var cliHome = Path.Combine(outputDirectory, "dotnet-home");
         Directory.CreateDirectory(cliHome);
-        RunReleaseSpec("repository, links, bundle layout and delivery set", python, [Path.Combine(Root, "scripts/checks/Check-Repository.py"), "--no-binaries"], outputDirectory, runTemp, cliHome, apiRoot);
-        RunReleaseSpec("dead tool references", python, [Path.Combine(Root, "scripts/checks/Check-DeadToolReferences.py")], outputDirectory, runTemp, cliHome, apiRoot);
+        RunReleaseCommand(["check-repository", "-NoBinaries"], "repository, links, bundle layout and delivery set", outputDirectory, runTemp, apiRoot);
+        RunReleaseCommand(["check-dead-tool-references"], "dead tool references", outputDirectory, runTemp, apiRoot);
         RunReleaseCommand(["validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes", "-PendingRelease", version], "repository bundle validation before build", outputDirectory, runTemp, apiRoot);
-        RunReleaseSpec("bundle layout self-test", python, [Path.Combine(Root, "scripts/checks/Check-BundleLayout.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
+        RunReleaseCommand(["check-bundle-layout", "-SelfTest"], "bundle layout self-test", outputDirectory, runTemp, apiRoot);
         RunReleaseSpec("tool usage catalog", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
-        RunReleaseSpec("version catalog wiring", python, [Path.Combine(Root, "scripts/checks/Test-VersionCatalogWiring.py")], outputDirectory, runTemp, cliHome, apiRoot);
+        RunReleaseCommand(["test-suites", "-Suite", "source-contracts"], "version catalog wiring", outputDirectory, runTemp, apiRoot);
         RunReleaseSpec("native supervisor safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
         RunReleaseSpec("native MCP safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeMcpSession.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
         RunSuiteForReleaseGates("write-guard", python, outputDirectory, runTemp, cliHome, apiRoot, nugetConfig);

@@ -13,7 +13,7 @@
   },
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
-    "minimumPassed": 220,
+    "minimumPassed": 521,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -114,7 +114,7 @@
   },
   "device-add": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/TiaMcp.FoundationHost.DeviceAdd.Tests.csproj",
-    "minimumPassed": 124,
+    "minimumPassed": 125,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -263,7 +263,7 @@
   },
   "source-contracts": {
     "project": "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj",
-    "minimumPassed": 85,
+    "minimumPassed": 124,
     "maximumSkipped": 0,
     "arguments": []
   },

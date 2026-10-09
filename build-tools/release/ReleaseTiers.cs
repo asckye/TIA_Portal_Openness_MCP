@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record ReleaseCheckRule(string Path, string[] Checks);
-internal sealed record ReleaseSelfTest(string Check, string Script, string[] Arguments, string? Command = null);
+internal sealed record ReleaseSelfTest(string Check, string Script, string[]? Arguments = null, string[]? Command = null);
 internal sealed record ReleaseCheckPlan(string Tier, string[] SelectedChecks, string[] SkippedChecks, string[] ChangedPaths)
 {
     internal bool Includes(string check) => SelectedChecks.Contains(check, StringComparer.Ordinal);
@@ -31,7 +31,7 @@ internal sealed record ReleaseCheckPolicy(string[] Checks, string[] Always, Rele
             Always.Except(Checks, StringComparer.Ordinal).Any() || Rules.Any(rule => rule.Path.Length == 0 || rule.Path.Contains("..", StringComparison.Ordinal) ||
                 rule.Checks.Except(Checks, StringComparer.Ordinal).Any()) || SelfTests.Any(test => !Checks.Contains(test.Check, StringComparer.Ordinal) ||
                     !(test.Command is null ? test.Script.StartsWith("scripts/checks/", StringComparison.Ordinal)
-                        : test.Command == "test-suites" && test.Script == "build-tools/release/DotnetSuites.cs") || test.Script.Contains("..", StringComparison.Ordinal)) ||
+                        : test.Command.Length > 0 && (test.Command[0] == "test-suites" || test.Command[0].StartsWith("check-", StringComparison.Ordinal) && CommandLine.Commands.Contains(test.Command[0])) && test.Script.StartsWith("build-tools/release/", StringComparison.Ordinal)) || test.Script.Contains("..", StringComparison.Ordinal)) ||
             SelfTests.Select(test => test.Check).Distinct(StringComparer.Ordinal).Count() != SelfTests.Length)
             throw new ReleaseException("Invalid release check map.");
         if (Checks.Except(Rules.SelectMany(rule => rule.Checks), StringComparer.Ordinal).Any())

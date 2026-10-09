@@ -47,7 +47,7 @@ public sealed class SourceRootsTests
     }
 
     [Fact]
-    public void PythonPackagerAndCSharpHashTheSameSyntheticCompilerInputs()
+    public void CompilerInputsUseTheSharedSourceRootPolicy()
     {
         var root = Scratch();
         try
@@ -60,14 +60,8 @@ public sealed class SourceRootsTests
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 File.WriteAllText(path, "source");
             }
-            var script = "import importlib.util,json,sys; from pathlib import Path; " +
-                "s=importlib.util.spec_from_file_location('layout',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); " +
-                "r=Path(sys.argv[2]); print(json.dumps(sorted(m.compiler_sources(r,[p.relative_to(r).as_posix() for p in r.rglob('*') if p.is_file()]))))";
-            var result = ProcessRunner.Run(Environment.GetEnvironmentVariable("PYTHON") ?? "python",
-                ["-c", script, Path.Combine(Root, "scripts/checks/Check-BundleLayout.py"), root], Root);
-            Assert.Equal(0, result.ExitCode);
-            var python = System.Text.Json.JsonSerializer.Deserialize<string[]>(result.StandardOutput)!;
-            Assert.Equal(ReleaseRecords.GetSources(root, "engine").Select(row => row.Path).Order(StringComparer.Ordinal), python);
+            var expected = names.Where(name => !name.EndsWith(".md", StringComparison.Ordinal) && !name.EndsWith(".xaml", StringComparison.Ordinal)).Order(StringComparer.Ordinal);
+            Assert.Equal(expected, ReleaseRecords.GetSources(root, "engine").Select(row => row.Path).Order(StringComparer.Ordinal));
         }
         finally { Directory.Delete(root, true); }
     }
@@ -79,7 +73,7 @@ public sealed class SourceRootsTests
     [InlineData("src//Engine")]
     [InlineData("src/./Engine")]
     [InlineData("src\\Engine")]
-    public void BothReadersRejectUnsafeRootPaths(string path)
+    public void SourceRootPolicyRejectsUnsafePaths(string path)
     {
         var root = Scratch();
         try
@@ -90,12 +84,7 @@ public sealed class SourceRootsTests
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
             File.WriteAllText(file, policy.ToJsonString());
             Assert.Throws<ReleaseException>(() => SourceRoots.Load(root));
-            var script = "import importlib.util,sys; from pathlib import Path; " +
-                "s=importlib.util.spec_from_file_location('layout',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.source_roots(Path(sys.argv[2]))";
-            var result = ProcessRunner.Run(Environment.GetEnvironmentVariable("PYTHON") ?? "python",
-                ["-c", script, Path.Combine(Root, "scripts/checks/Check-BundleLayout.py"), root], Root);
-            Assert.NotEqual(0, result.ExitCode);
-            Assert.Contains("Invalid source root policy", result.StandardError);
+
         }
         finally { Directory.Delete(root, true); }
     }
@@ -114,13 +103,9 @@ public sealed class SourceRootsTests
             var actual = ReleaseCheckPolicy.Load(root);
             Assert.Single(actual.Rules);
             Assert.Equal(policy.Checks, actual.Select("quick", ["docs/example.md"]).SelectedChecks);
-            var script = "import importlib.util,sys; from pathlib import Path; " +
-                "s=importlib.util.spec_from_file_location('layout',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); " +
-                "p=dict(tier='quick',checkStatus='passed',checksSelected=['review'],checksRan=['review'],checksSkipped=[],changedPaths=['docs/example.md']); " +
-                "assert m.release_checks(Path(sys.argv[2]),p)=={'review'}";
-            var result = ProcessRunner.Run(Environment.GetEnvironmentVariable("PYTHON") ?? "python",
-                ["-c", script, Path.Combine(Root, "scripts/checks/Check-BundleLayout.py"), root], Root);
-            Assert.Equal(0, result.ExitCode);
+            var selected = actual.Select("quick", ["docs/example.md"]);
+            actual.ValidatePlan(selected);
+            Assert.Equal(new[] { "review" }, selected.SelectedChecks);
         }
         finally { Directory.Delete(root, true); }
     }

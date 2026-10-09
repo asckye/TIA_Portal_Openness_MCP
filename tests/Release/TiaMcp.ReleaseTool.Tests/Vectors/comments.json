@@ -1,0 +1,432 @@
+[
+  {
+    "function": "scan_source",
+    "args": [
+      "#if V20 // 2.0: old\n            // Phase 2\n            #else\n            /* Phase 3 */\n            #endif\n            var s = $\"{F(/* 3.1: old */ 1)}\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "621f003817b294ef87537db8be1ebca158a9673a8481f09ec3bc702c9f8cfff6",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "old-phase",
+        "fingerprint": "1729a9c28e4478009f66bff4ffe34bb956cf0ca546c3690551e32b24258ab099",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      },
+      {
+        "kind": "old-phase",
+        "fingerprint": "dde6da44e6a34f761e54472fab406ff4c9694eae40dedb011698467626081d58",
+        "path": "sample.cs",
+        "line": 4,
+        "project": "sample"
+      },
+      {
+        "kind": "product-version",
+        "fingerprint": "f0c646f11d62e90bbe5b389b91b710e746770b6777bb62d16ac927e1ef790d6b",
+        "path": "sample.cs",
+        "line": 6,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "#line 1 \"https://host/2.0/source.cs\"",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": []
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// 2.7.41: fixed\n/* v3.x compatibility */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "1a8eaf6ddf8b8c41810854c4ee16642cf9e76a887bd390990f0befda7a08a2c2",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "product-version",
+        "fingerprint": "4e72c39dac9531f0ad609013e70f5a79f8fd14db92bafcbeb9b7f5684cf846b7",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// Phase 6 sub-batch 2\n// sub batch 3",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "old-phase",
+        "fingerprint": "ff42063f845f4e4b717648b9fd30f10f6bb47aecd55ce6dd03668ac5c1fb8f3b",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "old-phase",
+        "fingerprint": "d4eafbda567103de14aa4713c032e5781aa83d7914916ee0027960be9aaff544",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// The maintainer requested this\n// 维护者原话",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "maintainer",
+        "fingerprint": "60c08fadca2f7044d987380c37b2a600de91b8b195a2da594970fb931d951eb8",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "maintainer",
+        "fingerprint": "787f561a5cef8265e5374c266b69183ac366c98d6356b4cfc240d9f802e35e78",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// moved to Other.cs\n/* 已迁至 Other */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "tombstone",
+        "fingerprint": "953493562521e52e7b9f4f35b0d94998c72db861e3394b9ec4d06e6fbfa1ee52",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "tombstone",
+        "fingerprint": "41d685f890f72fa0bc667317c9929426431e0f864037f81d6157587e94a99c7c",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// group?.Blocks.ForEach(b => F(b));\n/* var x = 1; */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "commented-code",
+        "fingerprint": "5f91c6b6c102ab6d8a8c64eb843d3a6ae129b01e278d3962e3d179a53fef60da",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "commented-code",
+        "fingerprint": "f988aaaa284fb1eedf71388e926edc019480b466998e416e573f69fe57083e53",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// full roster: 212 tools\n// 共488个工具",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "tool-count",
+        "fingerprint": "8fc851e88bd8bae375bd54ab60b5b6b01c74c4db98f8791fa2ea6ba3a3c2e24d",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "tool-count",
+        "fingerprint": "8b58a89f1915ba7aed2b920c54aa3d0d2d241607bb3a6c492a6390adbe4ba618",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "",
+      "NewLeftovers.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "leftovers-file",
+        "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
+        "path": "NewLeftovers.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// 2.0: old",
+      "src/P/A.cs",
+      "P"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "621f003817b294ef87537db8be1ebca158a9673a8481f09ec3bc702c9f8cfff6",
+        "path": "src/P/A.cs",
+        "line": 1,
+        "project": "P"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// 2.0: old",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "621f003817b294ef87537db8be1ebca158a9673a8481f09ec3bc702c9f8cfff6",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "\n// 2.0: old",
+      "other/project.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "621f003817b294ef87537db8be1ebca158a9673a8481f09ec3bc702c9f8cfff6",
+        "path": "other/project.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// 3.0: new",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "4ea100552cfc4f80cf3f5b64b8120d8e977280fbd2546c08cf3ae4c5e3ad4619",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "/* Phase 2 (2.7.0): maintainer\n * moved to X\n */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "b263425181db6b41f58e0f995ebeb0aec6476423f7bf359e77024bccb7d3b9a7",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "old-phase",
+        "fingerprint": "cab96feba984f696ced1a7443452f0ef9d48fd6fae0531febf1d46851bfaab57",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "maintainer",
+        "fingerprint": "0b7449136b4352292dfa119e6b03aa7460634543d3b8dc4e5b490c7b42b19676",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      },
+      {
+        "kind": "tombstone",
+        "fingerprint": "de3f9f5014b2c89e1b6bcd2d5ae495d8a31cb323e8e89c7cfdb5788137420596",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// TIA V20 / PLCSIM V21\n// Windsurf is capped at 100 tools",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": []
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// FW >= 2.9\n// S7TIA V2.0\n// CAEX 2.15\n// manual 3.2.3\n// 2.1 nuget package",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": []
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// 2.7.53: tested FW V2.9",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "247dc017d5ce83145a0048504944ca5fb82a1af7d61eb23ad00f40f69be2036c",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// V3.1.0: old",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "e5fdf39db4711f9d337fb980a32ee96403ac71cb2975c7f0c3b983dc8ce10595",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "/* 2.0 old */ Work();",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "688db358d093186ddd9a8164a45d9699bcffd23885b03c7c6da743095e5d801a",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "/* 2.0 old */ Work(); /* 3.0 new */",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "product-version",
+        "fingerprint": "a2ec856deaf4889157cc9f275ec1c2cd264bedbff6f0ffb49128c7c6c77761b6",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample"
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "var a = \"// 2.1.0: Phase 2 maintainer moved to X;\";\n            var b = @\"/* 3.0: \"\"maintainer\"\" */\";\n            var c = $\"// Phase 4 {F(\"// 2.0\")}\";\n            var d = $$\"\"\"// 2.0 {{F(\"/* 3.0 */\")}}\"\"\"; var e = '/';",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": []
+  }
+]

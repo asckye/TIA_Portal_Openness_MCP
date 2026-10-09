@@ -38,6 +38,10 @@ public sealed class ReleaseTierTests
     [InlineData("src/Engine/Program.cs", "engine-responses")]
     [InlineData("src/Studio/Gui/App.xaml.cs", "gui-tests")]
     [InlineData("scripts/checks/Snapshot-ToolResponses.py", "responses-self-test")]
+    [InlineData("build-tools/release/SwallowedExceptions.cs", "swallowedexceptions-self-test")]
+    [InlineData("build-tools/release/DeadToolReferences.cs", "dead-tool-references-self-test")]
+    [InlineData("build-tools/release/RepositoryChecks.cs", "repository-self-test")]
+    [InlineData("build-tools/release/RatchetChecks.cs", "mcptext-self-test")]
     public void ChangesSelectRelatedChecks(string path, string expected)
     {
         var plan = ReleaseCheckPolicy.Load(Root).Select("quick", [path]);

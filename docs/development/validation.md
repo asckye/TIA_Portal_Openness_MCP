@@ -33,7 +33,7 @@ release/publish 拒绝非 full 记录。跳过的检查保存零计数、null �
 
 ```powershell
 dotnet test tests/Release/TiaMcp.ReleaseTool.Tests -c Release -p:RestoreConfigFile=<offline-nuget.config> -p:NuGetAudit=false
-python scripts/checks/Check-BundleLayout.py --self-test
+dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
 dotnet run --project build-tools/release -- preflight
 dotnet run --project build-tools/release -- branch-gate -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/branch-checks
 dotnet run --project build-tools/release -- run-release-build -Tier package -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -OutputDirectory bin-build/vm-test-package
@@ -49,7 +49,7 @@ HTTP concurrency、release approval gate 和快照 verify；复用完整链的�
 交付内容以 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 为准；规则、打包预览和许可保留见
 [发布流程](release-workflow.md#交付清单与两种校验模式)。仓库模式继续验证源码与开发文件；解包模式无需源码，
 从仓库运行 `dotnet run --project build-tools/release -- validate-bundle -BundleRoot <包根> -PackageMode -Strict` 和
-`Check-Repository.py --root <包根> --package-mode`。缺少 `Version.props` 也会自动选择包模式。
+`dotnet run --project build-tools/release -- check-repository -Root <包根> -PackageMode`。缺少 `Version.props` 也会自动选择包模式。
 包模式检查交付资源、运行文件/版本/哈希、三份构建记录、工具数、用户文档和许可证；相对链接悬空即失败。
 `runtime/verification/` 的 IL 检查留在正式打包前的仓库阶段，发布资产不携带验证器。
 
@@ -57,7 +57,7 @@ HTTP concurrency、release approval gate 和快照 verify；复用完整链的�
 不能把这种结果记作完整二进制验证。运行规则和资产集合自检：
 
 ```powershell
-python scripts/checks/Check-BundleLayout.py --self-test
+dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
 python scripts/checks/Verify-ReleaseAsset.py --self-test
 dotnet test tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj -c Release
 dotnet build src/Updater/TiaMcp.Updater.csproj -c Release -f net48
@@ -137,36 +137,33 @@ V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器
 
 [offline-checks.yml](../../.github/workflows/offline-checks.yml) 的 `source-contracts` job
 执行下列静态检查，使用 .NET 10 和 Python，无需 Siemens SDK、引擎进程、TIA 或网络服务。
-其中 `Check-Repository.py --no-binaries` 同时执行 BundleLayout、SwallowedExceptions、
+其中 `check-repository -NoBinaries` 同时执行 BundleLayout、SwallowedExceptions、
 CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们的独立复跑命令。
 
 | 命令（仓库根目录） | 守护范围 |
 |---|---|
-| `python scripts/checks/Check-Repository.py --no-binaries` | 文档、入口与下列五个静态门禁 |
-| `python scripts/checks/Check-BundleLayout.py` | 资源代码表、Git 文件集、交付校验清单及 Launcher/GUI 路径一致性 |
-| `python scripts/checks/Check-SwallowedExceptions.py` | 吞异常标记及只减不增基线 |
-| `python scripts/checks/Check-CommentHygiene.py` | 注释与 Leftovers 基线 |
-| `python scripts/checks/Check-McpText.py` | MCP 中文字面量基线 |
-| `python scripts/checks/Inventory-ResponseEnvelopes.py` | 手写响应信封基线 |
-| `python scripts/checks/Check-DeadToolReferences.py` | 工具描述死引用与重名注册 |
-| `dotnet run --project build-tools/release -- test-suites -Suite source-contracts` | 成员定位、词法边界、缺失/歧义拒绝，以及 Python JSON/词法器/MCP 结果的兼容向量；干净 checkout 至少 85 项、零跳过 |
-| `python scripts/checks/Test-DiagnosticMembershipSources.py` | 诊断只读组检查、显式修复与默认不连接 |
-| `python scripts/checks/Test-DocumentImportSafetySources.py` | 文档导入前置拒绝、不重试、部分结果与报告证据 |
-| `python scripts/checks/Test-ImportSelectionSources.py` | 导入选择、冲突、覆盖与确定性排序 |
-| `python scripts/checks/Test-PromptRegistrationSources.py` | 两种传输的显式 prompt 清单与注册失败处理 |
-| `python scripts/checks/Test-VersionCatalogWiring.py` | 版本门禁、派发、配置与构建接线 |
+| `dotnet run --project build-tools/release -- check-repository -NoBinaries` | 文档、入口与下列五个静态门禁 |
+| `dotnet run --project build-tools/release -- check-bundle-layout` | 资源代码表、Git 文件集、交付校验清单及 Launcher/GUI 路径一致性 |
+| `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed` | 吞异常标记及只减不增基线 |
+| `dotnet run --project build-tools/release -- check-ratchet -Kind comments` | 注释与 Leftovers 基线 |
+| `dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text` | MCP 中文字面量基线 |
+| `dotnet run --project build-tools/release -- check-ratchet -Kind envelopes` | 手写响应信封基线 |
+| `dotnet run --project build-tools/release -- check-dead-tool-references` | 工具描述死引用与重名注册 |
+| `dotnet run --project build-tools/release -- test-suites -Suite source-contracts` | 成员定位、Python 兼容向量、诊断只读、导入安全/选择、prompt 注册、补充读取与版本目录接线；至少 125 项、零跳过 |
 | `python scripts/checks/Test-DomainTools.py --source-only` | 所有已迁移领域的工具注册与回归夹具清单一致 |
 
-该 job 还执行 `python scripts/generate/Generate-ToolUsage.py --check`，以及 BundleLayout、
-CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞异常自检仍在
-`offline-tests` job。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
-`Check-ScriptToolCalls.py --self-test`、`Check-ScriptToolCalls.py`、`scripts/mcp_results.py` 和 `Test-ScriptClients.py`，
+该 job 还执行 `python scripts/generate/Generate-ToolUsage.py --check`；静态检查自检统一使用
+`dotnet run --project build-tools/release -- check-repository -SelfTest`，也在 `offline-tests` job 运行。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
+`check-script-tool-calls`、`Check-ScriptToolCalls.py --self-test`、`Check-ScriptToolCalls.py`、`scripts/mcp_results.py` 和 `Test-ScriptClients.py`，
 `validate.yml` 不重复执行。
 
-按成员验证的引擎检查使用 [engine_sources.py](../../scripts/checks/engine_sources.py)，
+按成员验证的引擎检查使用 [EngineSources.cs](../../build-tools/common/TiaMcp.BuildCommon/EngineSources.cs)，
 跨 `src/Engine/**/*.cs` 按成员名查找，显式以 UTF-8 读取，
 排除生成和构建文件；重载通过签名、所属类型或 MCP 属性区分，缺失或歧义直接失败。
 词法器保留完整方法体，不依赖相邻成员或迁移前文件路径。它是源码契约检查，不替代 C# 编译或原生验收。
+
+过渡期 `py-cs-parity` job 在 Windows 与 Ubuntu 比较四个棘轮的完整指纹与基线字节、TIA 常量捕获和死引用修复。
+Python 副本为后续批次依赖与对拍保留；批 8 删除临时 job。
 
 ### 手动补充检查
 
@@ -174,7 +171,7 @@ CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞�
 
 | 命令（仓库根目录） | 何时运行 |
 |---|---|
-| `python scripts/checks/Test-FoundationProxyIdentity.py --work-dir bin-build/proxy-identity` | 修改外部源规划、删除、批量导入身份检查后；编译实际生产方法，以新建但值相等的 API 代理验证身份语义，不需要 TIA/SDK |
+| `dotnet run scripts/checks/Test-FoundationProxyIdentity.cs -- -WorkDir bin-build/proxy-identity` | 修改外部源规划、删除、批量导入身份检查后；编译实际生产方法，以新建但值相等的 API 代理验证身份语义，不需要 TIA/SDK |
 | `python -X utf8 scripts/checks/Test-Ecosystem.py` | 更新固定的 siemens-plc-tools 来源或 Python 桥接后；使用已装离线依赖的 Python，运行 plc-code、plc-iol、plc-trace 上游单元测试，不配置 live 端点 |
 | `python scripts/checks/Test-ToolUsage.py --foundation-host <host> --engine-v20 <exe> --engine-v21 <exe> --harness <TiaMcp.Engine.Harness.exe> --public-api-root <SDK-root> --evidence <new-worktree-dir> --coverage-output <json>` | 按 CLAUDE.md，在 `reference/tool-examples` 改动并运行生成器后，使用已构建的八版运行包检查用法检索和功能；完整八版范围必需，不连接 TIA |
 
@@ -184,35 +181,35 @@ OfflineBlockComposition、OfflineXmlBuilder、OfflineComposition、OfflineLadder
 
 ### 需要本地 .NET 或工作目录的源码检查
 
-下列命令不进入 Python-only job。HMI/技术对象与外部源替身需要 .NET 10；
+下列命令使用本地 .NET 10。HMI/技术对象与外部源替身需要 .NET 10；
 依赖须已缓存，替身项目只使用本地还原源。它们编译提取的实际方法体并运行托管替身，不连接 TIA。
 外部源的工作目录保留生成源码与构建证据；HMI/技术对象在 `bin-build` 创建并清理临时目录。
 另外两项仅用本地 MSBuild 求值八版编译常量，无需构建、还原或加载 Siemens，并在 validate-bundle CI 中运行。
 
 ```powershell
-python scripts/checks/Test-HmiImportSafety.py
-python scripts/checks/Test-TechnologyImportSafety.py
-python scripts/checks/Test-ExternalSourceDispatch.py --work-dir bin-build/external-source-dispatch
-python scripts/checks/Test-SupplementaryReadSources.py
-python scripts/checks/Check-TiaFeatures.py
+dotnet run scripts/checks/Test-HmiImportSafety.cs
+dotnet run scripts/checks/Test-TechnologyImportSafety.cs
+dotnet run scripts/checks/Test-ExternalSourceDispatch.cs -- -WorkDir bin-build/external-source-dispatch
+dotnet run --project build-tools/release -- test-suites -Suite source-contracts
+dotnet run --project build-tools/release -- check-tia-features
 ```
 
 ### 构建、离线套件与交付检查
 
 ```powershell
-python scripts/checks/Check-Repository.py
-python scripts/checks/Check-DeadToolReferences.py
-python scripts/checks/Check-SwallowedExceptions.py --self-test
-python scripts/checks/Check-SwallowedExceptions.py
-python scripts/checks/Check-CommentHygiene.py --self-test
-python scripts/checks/Check-CommentHygiene.py
-python scripts/checks/Check-McpText.py --self-test
-python scripts/checks/Check-McpText.py
-python scripts/checks/Inventory-ResponseEnvelopes.py --self-test
-python scripts/checks/Inventory-ResponseEnvelopes.py
-python scripts/checks/Check-TiaFeatures.py
-python scripts/checks/Check-BundleLayout.py --self-test
-python scripts/checks/Check-BundleLayout.py
+dotnet run --project build-tools/release -- check-repository
+dotnet run --project build-tools/release -- check-dead-tool-references
+dotnet run --project build-tools/release -- check-ratchet -Kind swallowed -SelfTest
+dotnet run --project build-tools/release -- check-ratchet -Kind swallowed
+dotnet run --project build-tools/release -- check-ratchet -Kind comments -SelfTest
+dotnet run --project build-tools/release -- check-ratchet -Kind comments
+dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text -SelfTest
+dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text
+dotnet run --project build-tools/release -- check-ratchet -Kind envelopes -SelfTest
+dotnet run --project build-tools/release -- check-ratchet -Kind envelopes
+dotnet run --project build-tools/release -- check-tia-features
+dotnet run --project build-tools/release -- check-bundle-layout -SelfTest
+dotnet run --project build-tools/release -- check-bundle-layout
 dotnet run --project build-tools/release -- validate-bundle -Strict
 dotnet run --project build-tools/release -- test-suites -SelfTest
 dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy
@@ -222,16 +219,16 @@ dotnet run --project build-tools/release -- build-configurator -Test
 ```
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
-`Check-Repository.py` 同时运行纯 Python 的 [BundleLayout 检查](../../scripts/checks/Check-BundleLayout.py)：
+`check-repository` 同时运行 [BundleLayout 检查](../../build-tools/release/BundleLayoutChecks.cs)：
 读取并校验资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `validate-bundle`
 实际执行的资源清单中；还核对 C# 5 Launcher 的唯一相对候选与 Studio 安装锚点、GUI 输出文件名一致。
-不调用 dotnet，也不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
+检查使用 .NET 10，但不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证 Logic/引擎调用方
 （offline/offline-v20）与 Studio Core/GUI，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
 和中文/空格/尾分隔符路径。解析器不借用祖先仓库的缺失资源，调用方仍保留到 4.0 的兼容探测；
 仓库外完整交付包的重定位检查用于排除这种回退掩盖缺文件。实际解析顺序、嵌入生态目录和证据边界见
 [运行时布局](runtime-layout.md)。Markdown 本地链接及入口路径统一由
-`python scripts/checks/Check-Repository.py --no-binaries` 检查。
-`Check-Repository.py` 同时运行纯 Python 的吞异常门禁；offline-checks CI 还运行其自检，不依赖 dotnet。
+`dotnet run --project build-tools/release -- check-repository -NoBinaries` 检查。
+`check-repository` 同时运行 C# 吞异常门禁；offline-checks CI 还运行静态检查自检。
 门禁扫描 `src`、`src/Shared`、`src/Studio`，
 排除 `bin`/`obj`（含 `-v20`）、`Generated` 目录、`.g.cs`/`.g.i.cs`/`.generated.cs`/`.designer.cs`
 及带 `<auto-generated>` 文件头的文件。
@@ -250,12 +247,12 @@ dotnet run --project build-tools/release -- build-configurator -Test
 基线为[swallowed-exceptions-baseline.json](../../scripts/checks/swallowed-exceptions-baseline.json)，
 按规范化 try 体、catch 子句（含过滤器）、catch 体的 SHA-256 多重集合比较；路径和行号仅供定位。
 只忽略代码空白/注释，字符串内容变化仍改变指纹；搬文件不失败，重复新增或修改未标记 catch 会失败。
-消失的条目会报告，运行 `python scripts/checks/Check-SwallowedExceptions.py --update-baseline` 收缩基线；
-该命令拒绝任何新增指纹或重复次数增长，即使总数减少。`--allow-growth` 仅用于经审查的首次建基线。
-可用 `--root <scratch-copy>` 和 `--baseline <json>` 对临时副本验证；自检在 worktree 的 `bin-build` 创建并清理夹具。
+消失的条目会报告，运行 `dotnet run --project build-tools/release -- check-ratchet -Kind swallowed -UpdateBaseline` 收缩基线；
+该命令拒绝任何新增指纹或重复次数增长，即使总数减少。`-AllowGrowth` 仅用于经审查的首次建基线。
+可用 `-Root <scratch-copy>` 和 `-Baseline <json>` 对临时副本验证；自检在 worktree 的 `bin-build` 创建并清理夹具。
 
-`Check-Repository.py` 也运行 [响应信封清点](../../scripts/checks/Inventory-ResponseEnvelopes.py)。
-它扫描 `src` 的全部 C# 条件分支，使用与吞异常检查相同的词法器及生成文件/构建目录排除规则。输出按路径排序的逐文件计数和总数；`--json` 输出同样确定的 JSON。
+`check-repository` 也运行 [响应信封清点](../../build-tools/release/ResponseEnvelopes.cs)。
+它扫描 `src` 的全部 C# 条件分支，使用与吞异常检查相同的词法器及生成文件/构建目录排除规则。输出按路径排序的逐文件计数和总数；`-Output <json>` 保存同样确定的 JSON。
 计数分别列出 `timestamp`/`success`/`ok` 索引器出现次数（含读取）和赋值次数、对象构造、两类异常抛出，以及六种时间编码。
 `timestamp_now_assignments` 包含 `DateTime.Now.ToString("O")`；`timestamp_local_datetime` 只计直接赋入的 Local DateTime。
 `datetime_utcnow` 计所有 `DateTime.UtcNow` 取值；两个 DateTimeOffset round-trip 计数接受 `o` 和 `O`；
@@ -272,7 +269,7 @@ B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`�
 [响应信封基线](../../scripts/checks/response-envelope-baseline.json)按两项全局总数守护手写赋值：
 `timestamp_now_assignments` 245、`success_assignments` 306；路径变化不会改变门禁结果。
 中央 `TiaMcpServer.ModelContextProtocol.ResponseMeta` 类型自身仍出现在清点中，但不计作手写调用点；此识别与路径无关。
-任一总数增长即失败，减少允许且报告；`--update-baseline` 仅收缩上限，首次经审查建立基线才使用 `--allow-growth`。
+任一总数增长即失败，减少允许且报告；`-UpdateBaseline` 仅收缩上限，首次经审查建立基线才使用 `-AllowGrowth`。
 
 `ResponseMetaTests` 在 offline/offline-v20 各增加 249 项 E2 检查。每种构造器与注明文件/行号的原初始化器
 在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 TiaMcp.Engine.Harness/Golden 中
@@ -309,9 +306,9 @@ GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR
 
 ### 注释与 MCP 中文门禁
 
-`Check-Repository.py` 同时运行纯 Python 的 [Check-CommentHygiene.py](../../scripts/checks/Check-CommentHygiene.py)
-和 [Check-McpText.py](../../scripts/checks/Check-McpText.py)，无需构建、TIA 或网络。两者导入吞异常检查器的 C# 词法器，
-扫描全部条件分支，沿用生成文件、构建目录的排除规则；各自的 `--self-test` 覆盖词法边界、
+`check-repository` 同时运行 C# 的 [CommentHygiene.cs](../../build-tools/release/CommentHygiene.cs)
+和 [McpText.cs](../../build-tools/release/McpText.cs)，无需产品构建、TIA 或网络。两者共享 C# 词法器，
+扫描全部条件分支，沿用生成文件、构建目录的排除规则；统一的 `-SelfTest` 覆盖词法边界、
 计数、搬文件、重复新增、替换与只减不增更新。注释检查也收集插值表达式和预处理指令尾部的实际注释。
 
 注释类别可重叠，以“物理注释行 × 类别”为单位；同一行多个注释合并指纹。产品版本覆盖 `2.x`/`3.x` 数字和通配写法，
@@ -361,15 +358,15 @@ P2-05a 为 **526 个文件、316 个受约束字面量、3,909 个 CJK 字符**�
 新增同文副本、新中文或把数据直接放进异常/消息仍会失败。现有中文描述中的示例仍保留在冻结基线中。
 
 两份基线都不把路径/行号纳入指纹；删除允许，内容替换或重复次数增加失败，即使总数减少。
-`--update-baseline` 只收缩当前集合，中文 allowlist 同时去掉消失项；`--allow-growth` 必须配合更新，且只允许创建不存在的初始文件。
+`-UpdateBaseline` 只收缩当前集合，中文 allowlist 同时去掉消失项；`-AllowGrowth` 必须配合更新，且只允许创建不存在的初始文件。
 新增中文数据的豁免需审查具体字面量和理由，不能通过更新命令自动获得。
 
 ```powershell
-python scripts/checks/Check-CommentHygiene.py --update-baseline
-python scripts/checks/Check-McpText.py --update-baseline
+dotnet run --project build-tools/release -- check-ratchet -Kind comments -UpdateBaseline
+dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text -UpdateBaseline
 # 临时源码副本验证；默认基线来自 <scratch-copy>/scripts/checks：
-python scripts/checks/Check-CommentHygiene.py --root <scratch-copy> --baseline scripts/checks/comment-hygiene-baseline.json
-python scripts/checks/Check-McpText.py --root <scratch-copy> --baseline scripts/checks/mcp-text-baseline.json
+dotnet run --project build-tools/release -- check-ratchet -Kind comments -Root <scratch-copy> -Baseline scripts/checks/comment-hygiene-baseline.json
+dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text -Root <scratch-copy> -Baseline scripts/checks/mcp-text-baseline.json
 ```
 
 在临时副本新增 `// 3.9.99: temporary regression` 或 `throw new InvalidOperationException("新增中文错误");`
@@ -471,7 +468,7 @@ PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOO
 ## 工具契约兼容检查
 
 [重构计划](refactor-plan.md)的当前 V4 基线位于 `manifest/contracts/v4/baseline`，守护八版工具名称、输入 schema
-及 V20/V21 lite 名单。3.2.0 的 16 份原始快照已逐字节迁至 [只读归档](../../manifest/history/contracts-v3/README.md)，由 provenance.json 与 Check-Repository.py 校验清单/字节并拒绝旧目录重建；改动 C# 并重新构建运行目录后执行：
+及 V20/V21 lite 名单。3.2.0 的 16 份原始快照已逐字节迁至 [只读归档](../../manifest/history/contracts-v3/README.md)，由 provenance.json 与 check-repository 校验清单/字节并拒绝旧目录重建；改动 C# 并重新构建运行目录后执行：
 
 ```powershell
 python scripts/checks/Snapshot-ToolContracts.py capture --repo-root . --harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --output bin-build/contracts
@@ -540,7 +537,7 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `Check-ScriptToolCalls.py` 检查 Python、PowerShell、CMD/BAT、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `check-script-tool-calls` 检查 C# 与 JSON 计划，并暂时保留 `Check-ScriptToolCalls.py` 检查 Python、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
 python scripts/checks/Check-ScriptToolCalls.py --self-test

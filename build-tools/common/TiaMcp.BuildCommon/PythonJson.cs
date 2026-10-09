@@ -95,8 +95,8 @@ public static class PythonJson
                     else Element(JsonSerializer.SerializeToElement(value), depth);
                     break;
                 case IDictionary mapping:
-                    Mapping(mapping.Cast<DictionaryEntry>().Select(p => new KeyValuePair<string, object?>(
-                        p.Key as string ?? throw new ArgumentException("JSON object keys must be strings"), p.Value)), depth);
+                    Mapping(mapping.Keys.Cast<object>().Select(key => new KeyValuePair<string, object?>(
+                        key as string ?? throw new ArgumentException("JSON object keys must be strings"), mapping[key])), depth);
                     break;
                 case IEnumerable sequence: Sequence(sequence.Cast<object?>(), depth, '[', ']'); break;
                 default: throw new ArgumentException("Unsupported Python JSON type: " + item.GetType().Name);

@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
+    <ProjectReference Include="../../../build-tools/release/TiaMcp.ReleaseTool.csproj" />
     <None Update="Vectors/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

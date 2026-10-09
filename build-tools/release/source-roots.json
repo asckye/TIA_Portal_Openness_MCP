@@ -1083,7 +1083,7 @@
       "repositoryLabel": "build cache tests"
     },
     {
-      "path": "scripts/checks/Check-BundleLayout.py",
+      "path": "build-tools/release/BundleLayoutChecks.cs",
       "consumers": [
         "repository",
         "bundle",

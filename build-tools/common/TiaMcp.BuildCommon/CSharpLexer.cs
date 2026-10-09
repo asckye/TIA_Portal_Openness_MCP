@@ -7,8 +7,8 @@ namespace TiaMcp.BuildCommon;
 public sealed record Token(string Kind, string Value, int Start, int End, IReadOnlyList<Token> Expressions)
 {
     // Public offsets follow Python's Unicode code-point indexing. Source extraction uses UTF-16 offsets.
-    internal int OffsetStart { get; init; }
-    internal int OffsetEnd { get; init; }
+    public int OffsetStart { get; init; }
+    public int OffsetEnd { get; init; }
 }
 
 public sealed class CSharpLexer
@@ -23,6 +23,7 @@ public sealed class CSharpLexer
     private readonly string source;
     private readonly int[] offsets;
     private int pos;
+    public List<Token> AllComments { get; } = [];
 
     public CSharpLexer(string source)
     {
@@ -133,7 +134,9 @@ public sealed class CSharpLexer
             {
                 var end = source.IndexOf('\n', start);
                 pos = end < 0 ? source.Length : end;
-                comments.Add(Make("comment", source[start..pos], start, pos));
+                var comment = Make("comment", source[start..pos], start, pos);
+                comments.Add(comment);
+                AllComments.Add(comment);
                 continue;
             }
             if (Starts("/*", start))
@@ -141,7 +144,9 @@ public sealed class CSharpLexer
                 var end = source.IndexOf("*/", start + 2, StringComparison.Ordinal);
                 if (end < 0) Error("unterminated comment");
                 pos = end + 2;
-                comments.Add(Make("comment", source[start..pos], start, pos));
+                var comment = Make("comment", source[start..pos], start, pos);
+                comments.Add(comment);
+                AllComments.Add(comment);
                 continue;
             }
             var lineStart = start == 0 ? 0 : source.LastIndexOf('\n', start - 1) + 1;

@@ -1,0 +1,573 @@
+[
+  {
+    "function": "scan_source",
+    "args": [
+      "[System.ComponentModel.DescriptionAttribute(\"工具\")]\n            void F([Description(\"参数\")] string x) {\n              throw new System.ArgumentException(\"失败\" + \"原因\", nameof(x));\n              var r = new Reply { Message = $\"消息{x}\", Meta = new JsonObject { [\"note\"] = \"元数据\" } };\n              meta[\"note\"] = \"说明\"; response.Message += \"补充\";\n              var m = ResponseMeta.Create(\"附注\");\n            }",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "description",
+        "fingerprint": "44fa2661a6b9d89e1ef47d660e6415aef31f0f94cf296c02b9b0cf68aca07066",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"工具\""
+      },
+      {
+        "kind": "description",
+        "fingerprint": "c93ae73afe300c19042a7cabf2e7fdc8a887e72e84804048da673d3ead8443a2",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"参数\""
+      },
+      {
+        "kind": "exception",
+        "fingerprint": "845e86f3d3f804fa2b3c8d99ef2e0288b44756145328e68e1185d584a84a2f16",
+        "path": "sample.cs",
+        "line": 3,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"失败\""
+      },
+      {
+        "kind": "exception",
+        "fingerprint": "0ef499a99273fd80f9559e4fabaf9b60d3da65d89788f4e813de0e4480b2def3",
+        "path": "sample.cs",
+        "line": 3,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"原因\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "e2f89c89fd156786c893f650bb62832a863c49f8c5b208dc90013311b2577fb1",
+        "path": "sample.cs",
+        "line": 4,
+        "project": "sample",
+        "cjk": 2,
+        "literal": [
+          "$",
+          1,
+          [
+            "消息",
+            null,
+            ""
+          ]
+        ]
+      },
+      {
+        "kind": "meta",
+        "fingerprint": "ea807080cdeb43a0e3744ca20d99206e3ac669fd34e7ba9bcbf9cd952b0654c0",
+        "path": "sample.cs",
+        "line": 4,
+        "project": "sample",
+        "cjk": 3,
+        "literal": "\"元数据\""
+      },
+      {
+        "kind": "meta",
+        "fingerprint": "03ed588ae7c1c6360794651b26bb54a95f00bef3b0ff4e070ea15e58482ad179",
+        "path": "sample.cs",
+        "line": 5,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"说明\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "6e3efb8899070dfbb3bd36191da8822b6440e8a4fed28572d99c3b801ad7594a",
+        "path": "sample.cs",
+        "line": 5,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"补充\""
+      },
+      {
+        "kind": "meta",
+        "fingerprint": "7f6f58e767be12db4f102f04f32e86d53deda789338d214f0b3afddd44a84039",
+        "path": "sample.cs",
+        "line": 6,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"附注\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "NameZh = \"中文\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "other-literal",
+        "fingerprint": "bd0de28b35ed3e60edeeaed561b8bd6444e5dfce6372a541bcc57669d0832948",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "Message = \"中文\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "message",
+        "fingerprint": "06e61d30925c1ce071dade6c2325a5764def3c86891a568448efd0022dc4ddad",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "#if V20\n            if (Ready()) {\n            #else\n            if (Other()) {\n            #endif\n            throw new(\"中文\"); }\n            #if V20\n            Message = \"旧版\";\n            #else\n            Message = \"新版\";\n            #endif",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "sample.cs",
+        "line": 6,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "429972d91196260f90dbf663370f5380b7edd16cd87f3d233866ddfc6f05d2da",
+        "path": "sample.cs",
+        "line": 8,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"旧版\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "044b4c663b01edcf3bc04a12368283006b0b438a5e8c812315a045414655af6a",
+        "path": "sample.cs",
+        "line": 10,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"新版\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "// throw new Exception(\"中文\");\n            /* [Description(\"中文\")] */ var x = \"// English\"; var c = '中';\n            var s = @\"/* English \"\"quoted\"\" */\"; Message = \"OK\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": []
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "throw new Exception(\"中文\");",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "NameZh = \"新增\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "other-literal",
+        "fingerprint": "650adce30246cdeb5726b97af25faa0fed5bb8587186776e44fff8e902863a26",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"新增\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "\nNameZh = \"中文\";",
+      "moved.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "other-literal",
+        "fingerprint": "bd0de28b35ed3e60edeeaed561b8bd6444e5dfce6372a541bcc57669d0832948",
+        "path": "moved.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "const string Error = \"中文\"; var s = \"失败\"; throw new Exception(s); return Helper(\"拒绝\");",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "message",
+        "fingerprint": "06e61d30925c1ce071dade6c2325a5764def3c86891a568448efd0022dc4ddad",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      },
+      {
+        "kind": "other-literal",
+        "fingerprint": "cea130e799bda88ebcea1c357e7df9604000d82b45a00b90a927cffc0193c349",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"失败\""
+      },
+      {
+        "kind": "other-literal",
+        "fingerprint": "cbf0a58ef5ce018ae29001987aab3d91e8c6f0179d73199ba68aa3fc324972dc",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"拒绝\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "Message = $\"中文 {F(\"内文\", /* 假消息 */ 1)}\";\n            throw new Exception($$\"\"\"失败 {{F(\"原因\")}}\"\"\");\n            Message = @$\"文本 {F(@\"内文\")}\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "message",
+        "fingerprint": "500ed48deb7f2882d211457061f804303e6e4ad0feb733f40fd186ecf4008948",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": [
+          "$",
+          1,
+          [
+            "中文 ",
+            null,
+            ""
+          ]
+        ]
+      },
+      {
+        "kind": "message",
+        "fingerprint": "a611e7cd26e1306975b8f3830c7320c12f545018652c0851088f6f8b45b19baf",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"内文\""
+      },
+      {
+        "kind": "exception",
+        "fingerprint": "4513fc27f8ab00acbc9c10df2620871b31be14255a3441abbbca3bcf4b3dd77d",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 2,
+        "literal": [
+          "$$",
+          3,
+          [
+            "失败 ",
+            null,
+            ""
+          ]
+        ]
+      },
+      {
+        "kind": "exception",
+        "fingerprint": "0ef499a99273fd80f9559e4fabaf9b60d3da65d89788f4e813de0e4480b2def3",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"原因\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "ab1171c33f18ac56cca311b9890a59ecaf724704b55d5e60b3bedda04441859c",
+        "path": "sample.cs",
+        "line": 3,
+        "project": "sample",
+        "cjk": 2,
+        "literal": [
+          "@$",
+          1,
+          [
+            "文本 ",
+            null,
+            ""
+          ]
+        ]
+      },
+      {
+        "kind": "message",
+        "fingerprint": "a6ce44b202b7101a95a711926db1ccaabd3b1eb0888d8821b7889c3879f79d98",
+        "path": "sample.cs",
+        "line": 3,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "@\"内文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "Message = \"\\u4e2d\\x6587\"; Message = @\"\\u4e2d中文\";\n            Message = \"\"\"中文 \\u4e2d\"\"\"; Message = \"\\U00020000\";\n            Message = \"\\uD840\\uDC00\"; Message = \"\\\\u4e2d\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "message",
+        "fingerprint": "be1553e61be0b911a04a3876faf19f1f6d514b8dc0915ad7135ccdf9b432e911",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"\\u4e2d\\x6587\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "f25a314d42d9494bdea107abce36d07e376a5c825a7b892711581b49c38e28d7",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "@\"\\u4e2d中文\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "9f6ed242f49b961dd551e5e81c49ef5a71bf42830aaa2d24fd55b07de3e05bcc",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"\"\"中文 \\u4e2d\"\"\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "e356e1cd74877a05d01bb0be290bc7ea9a55ec4a7688abfc661e4f3fe0084be8",
+        "path": "sample.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 1,
+        "literal": "\"\\U00020000\""
+      },
+      {
+        "kind": "message",
+        "fingerprint": "411e3b6054b324366e1b1124f6a45ca953b3bd8df7075ddf7131aba4b477c57d",
+        "path": "sample.cs",
+        "line": 3,
+        "project": "sample",
+        "cjk": 1,
+        "literal": "\"\\uD840\\uDC00\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "\nthrow new Exception(\"中文\");",
+      "other/project.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "other/project.cs",
+        "line": 2,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "Message = \"新文\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "message",
+        "fingerprint": "694021addea88ecde1cdbdb9da2e8eb9f4f3b7a16a2c9cb7c26853a2a5edf136",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"新文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "NameZh = \"数据\";",
+      "sample.cs",
+      "sample"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "other-literal",
+        "fingerprint": "13660d30fa66147d2b5052d2334bb885669dc231338260401d01cb9decf00f73",
+        "path": "sample.cs",
+        "line": 1,
+        "project": "sample",
+        "cjk": 2,
+        "literal": "\"数据\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "throw new Exception(\"中文\");",
+      "src/TiaMcp.Adapters/A.cs",
+      "TiaMcp.Adapters"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "src/TiaMcp.Adapters/A.cs",
+        "line": 1,
+        "project": "TiaMcp.Adapters",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "throw new Exception(\"中文\");",
+      "src/TiaMcp.FoundationHost/A.cs",
+      "TiaMcp.FoundationHost"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "src/TiaMcp.FoundationHost/A.cs",
+        "line": 1,
+        "project": "TiaMcp.FoundationHost",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "throw new Exception(\"中文\");",
+      "src/TiaMcp.Logic/A.cs",
+      "TiaMcp.Logic"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "src/TiaMcp.Logic/A.cs",
+        "line": 1,
+        "project": "TiaMcp.Logic",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  },
+  {
+    "function": "scan_source",
+    "args": [
+      "throw new Exception(\"中文\");",
+      "src/TiaMcpServer/A.cs",
+      "TiaMcpServer"
+    ],
+    "kwargs": {},
+    "expected": [
+      {
+        "kind": "exception",
+        "fingerprint": "442e36410f78f2d01e078e18d79e1fbfc8dfe983533e0ec05030f1bf223ba5f6",
+        "path": "src/TiaMcpServer/A.cs",
+        "line": 1,
+        "project": "TiaMcpServer",
+        "cjk": 2,
+        "literal": "\"中文\""
+      }
+    ]
+  }
+]
