@@ -21,6 +21,11 @@ Normalization rules (no automatic learning/blanket removal of volatile fields):
   These builders call DateTime.Now.ToString("O"); mask those five paths only.
 * V4 infrastructure envelopes introduce meta.requestId correlation GUIDs. Mask
   only the envelope and batch-child envelope paths, never example data.
+* ListStandardPackages data.repositoryRoot, data.userRoot, data.items[].path
+  and ManageStandardPackage data.targetPath expose bundle/data store locations.
+  Replace only the known capture bundle/data root at these exact paths with
+  <bundle>/<data>, keeping the store-relative suffix. The same rules apply to
+  decoded and raw text; plan hashes and user-supplied paths remain exact.
 * Other environmental fields are NOT masked unless encountered and documented
   here. In particular GUIDs/operation/export IDs, PIDs, paths, machine names,
   durations and binary hashes must first be observed at a specific response path.
@@ -47,9 +52,10 @@ Format 3 additionally hashes every original MCP text block's UTF-8 bytes BEFORE
 decode_reply or canonicalization. The transport JSON string has already been
 read by the RPC client; its inner text is not decoded/re-serialized for this hash.
 RAW_MASK_RULES is the complete reviewed allowlist, including reasons. A lexical
-JSON walk locates literal paths; regex substitutes only reviewed timestamp or
-request-ID contents, preserving quotes, whitespace, key order, escapes and all surrounding text. No
-elapsed-time, PID, arbitrary GUID or temp-path mask is used by the capture set.
+JSON walk locates literal paths; substitutes only reviewed timestamp/request-ID
+contents or known store-root string tokens (portable '/' suffixes), preserving
+whitespace, key order, escapes and all surrounding unmasked text. No
+elapsed-time, PID, arbitrary GUID or blanket temp-path mask is used by the capture set.
 Unknown paths/encodings remain visible and must fail the consecutive-capture gate.
 """
 import argparse
@@ -72,7 +78,7 @@ import unittest
 from contextlib import redirect_stdout
 
 from offline_fixtures import fixture_directory
-from tool_usage_checks import check_usage, unwrap_usage
+from tool_usage_checks import check_usage, unwrap_usage, GENERATION_EXAMPLES, check_generation_example
 from ported_families import additions as ported_additions, families as ported_families
 
 
@@ -180,6 +186,7 @@ FOUNDATION_MARKERS = {
     'RunCapabilitySelfTest': 'INVALID_ARGUMENT',
 }
 FOUNDATION_MARKERS.update({name: 'INVALID_ARGUMENT' for name in ('StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles')})
+FOUNDATION_MARKERS.update({name: 'INVALID_ARGUMENT' for name in GENERATION_EXAMPLES})
 
 # Explicit host-only UI calls: valid arguments only connect to the local control
 # pipe. Capture uses a fresh private data root, so no Workbench shares the scope.
@@ -320,6 +327,15 @@ def identity(call):
     return call['profile'], call['tool'], canonical(call['arguments'])
 
 
+STORE_PATH_RULES = [
+    {'tool': tool, 'kind': 'storePath', 'path': path,
+     'reason': 'Generation store location: replace only the known capture bundle/data root with <bundle>/<data>; retain the relative path. Product paths, user-supplied paths and plan hashes remain exact.'}
+    for tool, path in (
+        ('ListStandardPackages', ['data', 'repositoryRoot']),
+        ('ListStandardPackages', ['data', 'userRoot']),
+        ('ListStandardPackages', ['data', 'items', '*', 'path']),
+        ('ManageStandardPackage', ['data', 'targetPath']))
+]
 RAW_MASK_RULES = [
     {'tool': 'V4 infrastructure only', 'kind': 'requestId', 'path': ['meta', 'requestId'],
      'reason': 'V4 invocation journal correlation ID (32 lowercase hex). Also masks actual batch result envelopes, never examples.'},
@@ -337,15 +353,30 @@ RAW_MASK_RULES = [
     *[{'tool': 'BuildClassicHmiMinimalPackage', 'path': ['data', part, 'timestamp'],
        'reason': 'Embedded Classic HMI builder DateTime.Now.ToString("O").'}
       for part in ('screen', 'tagTable')],
+    *STORE_PATH_RULES,
 ]
 RAW_TOKEN = re.compile(r'"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"'
                        r'|[{}\[\]:,]|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null')
 RAW_TIMESTAMP = re.compile(r'(?<=")\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)(?=")')
 
 
-def mask_raw_text(text, tool):
-    # No JSON decoding: keep source spans and literal property tokens. Escaped
-    # property names deliberately do not match the reviewed literal paths.
+def store_path(value, roots):
+    if isinstance(value, str):
+        for kind, root in sorted((roots or {}).items(), key=lambda item: len(item[1]), reverse=True):
+            if value == root or value.startswith(root + '\\') or value.startswith(root + '/'):
+                return '<' + kind + '>' + value[len(root):].replace('\\', '/')
+    return value
+
+
+def store_rule(tool, path):
+    return any(rule['tool'] == tool and len(rule['path']) == len(path)
+               and all(expected == actual or expected == '*' and isinstance(actual, int)
+                       for expected, actual in zip(rule['path'], path)) for rule in STORE_PATH_RULES)
+
+
+def mask_raw_text(text, tool, path_roots=None):
+    # Keep source spans and literal property tokens. Decode only reviewed store
+    # string values to replace a known root; escaped property names do not match.
     paths = {tuple('"' + key + '"' for key in rule['path']) for rule in RAW_MASK_RULES
              if rule['tool'] in ('*', tool)}
     tokens = list(RAW_TOKEN.finditer(text))
@@ -404,6 +435,11 @@ def mask_raw_text(text, tool):
                    and path[3:5] == ('"result"', '"meta"') and path[5] in ('"requestId"', '"timestamp"'))):
             masked = re.sub(r'(?<=")[0-9a-f]{32}(?=")', '<string:requestId>', raw) if path[-1] == '"requestId"' else RAW_TIMESTAMP.sub('<string:timestamp>', raw)
             if masked != raw: replacements.append((token.start(), token.end(), masked))
+        elif raw.startswith('"') and store_rule(tool, tuple(key[1:-1] if isinstance(key, str) else key for key in path)):
+            original = json.loads(raw)
+            masked = store_path(original, path_roots)
+            if masked != original:
+                replacements.append((token.start(), token.end(), json.dumps(masked, ensure_ascii=False)))
         elif path in paths and raw.startswith('"'):
             masked, count = RAW_TIMESTAMP.subn('<string:timestamp>', raw)
             if count:
@@ -420,15 +456,15 @@ def mask_raw_text(text, tool):
     return text
 
 
-def raw_text_blocks(reply, tool):
+def raw_text_blocks(reply, tool, path_roots=None):
     return [{'contentIndex': index,
-             'sha256': hashlib.sha256(mask_raw_text(block['text'], tool).encode('utf-8')).hexdigest()}
+             'sha256': hashlib.sha256(mask_raw_text(block['text'], tool, path_roots).encode('utf-8')).hexdigest()}
             for index, block in enumerate(reply.get('result', {}).get('content', []))
             if block.get('type') == 'text']
 
 
-def normalize(call):
-    result = json.loads(canonical(call))
+def normalize(call, path_roots=None):
+    result = copy.deepcopy(call)
     paths = [('meta', 'timestamp')]
     if call['tool'] in ('BuildClassicHmiScreen', 'BuildClassicHmiTagTable',
                         'BuildClassicHmiMinimalPackage'):
@@ -470,6 +506,16 @@ def normalize(call):
         protocol = result['response'].get('result', {})
         v4_envelope(protocol.get('structuredContent'))
         for block in protocol.get('content', []): v4_envelope(block.get('text'))
+    def store_fields(value, path=()):
+        if isinstance(value, dict):
+            for key, item in value.items():
+                location = path + (key,)
+                if store_rule(call['tool'], location): value[key] = store_path(item, path_roots)
+                else: store_fields(item, location)
+        elif isinstance(value, list):
+            for index, item in enumerate(value): store_fields(item, path + (index,))
+    store_fields(response.get('structuredContent'))
+    for block in response.get('content', []): store_fields(block.get('text'))
     return result
 
 
@@ -636,22 +682,22 @@ def missing_tia_cause(text, release):
             or f'TIA Portal V{release} or its Openness API files were not found.' in text)
 
 
-def recorder(rpc, entries, profile, release):
+def recorder(rpc, entries, profile, release, path_roots=None):
     inventory = behavior_entries(release)
     def call(name, arguments):
         key = profile, name, canonical(arguments)
         if key not in entries:
             reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
-            raw_blocks = raw_text_blocks(reply, name)
-            raw_evidence = [dict(contentIndex=index, text=mask_raw_text(block['text'], name))
+            raw_blocks = raw_text_blocks(reply, name, path_roots)
+            raw_evidence = [dict(contentIndex=index, text=mask_raw_text(block['text'], name, path_roots))
                             for index, block in enumerate(reply.get('result', {}).get('content', []))
                             if block.get('type') == 'text']
             response = decode_reply(reply)
             target = arguments.get('name') if name == 'CallTool' else name
             if target in inventory:
                 require_behavior_disclosure(response, target)
-            entries[key] = {'profile': profile, 'tool': name, 'arguments': arguments,
-                            'response': response, 'rawTextBlocks': raw_blocks, 'rawTextEvidence': raw_evidence}
+            entries[key] = normalize({'profile': profile, 'tool': name, 'arguments': arguments,
+                            'response': response, 'rawTextBlocks': raw_blocks, 'rawTextEvidence': raw_evidence}, path_roots)
         return entries[key]['response']
     return call
 
@@ -696,7 +742,6 @@ def capture_release(args, release, exe, public_api):
     harness = sdk_only_harness(args, release)
     with scratch_directory(args.temp_root) as scratch:
         data_directory = scratch / 'data'
-        data_directory.mkdir()
         resources.require(not (data_directory / 'config' / 'approval.settings').exists(),
                           'Capture data directory must use product-default approval settings')
         env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory),
@@ -728,7 +773,8 @@ def capture_release(args, release, exe, public_api):
             tools = initialize(rpc)
             registered = {tool['name'] for tool in tools}
             entries = {}
-            call = recorder(rpc, entries, 'full', release)
+            path_roots = {'bundle': str(capture_args.repo_root.resolve()), 'data': str(data_directory)}
+            call = recorder(rpc, entries, 'full', release, path_roots)
 
             def decoded(name, arguments):
                 return body(call(name, arguments))
@@ -866,7 +912,7 @@ def capture_release(args, release, exe, public_api):
         with server as (rpc, _, logs):
             lite = initialize(rpc)
             resources.require('CallTool' in {t['name'] for t in lite}, 'Lite bridge is not advertised')
-            bridge = recorder(rpc, entries, 'lite', release)
+            bridge = recorder(rpc, entries, 'lite', release, path_roots)
             for name in sorted(registered):
                 v4_rejection(bridge('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}), name)
             for name, arguments in ((('SaveProject', {'dryRun': False, 'confirm': False, 'expectedProjectFile': 'C:/P6-49-response-snapshot.ap21'}), ('CloseProject', {'dryRun': False, 'confirm': False, 'expectedProjectFile': 'C:/P6-49-response-snapshot.ap21'})) if args.engine_host else (
@@ -906,17 +952,18 @@ def capture_foundation(args, release, exe):
         # HostOptions.Parse accepts --tia-major-version/--tia-portal-location;
         # no harness, --catalog, worker executable or native-session flag is used.
         data_directory = scratch / 'data'
-        data_directory.mkdir()
         resources.require(not (data_directory / 'config' / 'approval.settings').exists(),
                           'Capture data directory must use product-default approval settings')
-        env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory)}
+        env = {'TEMP': str(scratch), 'TMP': str(scratch), 'TIA_MCP_DATA_DIRECTORY': str(data_directory),
+               'TIA_MCP_BUNDLE_ROOT': str(args.repo_root.resolve())}
         if args.dotnet_root:
             env.update(DOTNET_ROOT=str(args.dotnet_root.resolve()),
                        DOTNET_ROOT_X64=str(args.dotnet_root.resolve()))
         with resources.server(exe, scratch, release, 'stdio', 'full', env_overrides=env) as (rpc, _, _):
             tools = initialize(rpc)
             entries, rejected, skipped = {}, [], {}
-            call = recorder(rpc, entries, 'plc-foundation', release)
+            call = recorder(rpc, entries, 'plc-foundation', release,
+                            {'bundle': str(args.repo_root.resolve()), 'data': str(data_directory)})
             for tool in sorted(tools, key=lambda t: t['name']):
                 name = tool['name']
                 marker = ('INVALID_ARGUMENT'
@@ -940,6 +987,11 @@ def capture_foundation(args, release, exe):
                                   name + ': passive contract changed')
             unavailable_workbench(call, {tool['name'] for tool in tools})
             passive.extend(sorted(WORKBENCH_CALLS))
+            for name in GENERATION_EXAMPLES:
+                def decoded(tool, arguments):
+                    return body(call(tool, arguments))
+                arguments = unwrap_usage(decoded('GetToolUsage', {'toolName': name}))['example']['request']['params']['arguments']
+                check_generation_example(decoded, name, arguments)
             names = sorted(t['name'] for t in tools)
             resources.require('CallTool' in names, 'Foundation is missing its registered-catalog bridge')
             for name in names:
@@ -1385,9 +1437,22 @@ class RawResponseTests(unittest.TestCase):
         changed = json.loads(json.dumps(snapshot))
         changed['calls'][0]['unexpected'] = True
         invalid_cases.append(changed)
+        changed = json.loads(json.dumps(snapshot))
+        changed['rawMaskRules'].append({**STORE_PATH_RULES[0], 'path': ['data', 'outputPath']})
+        invalid_cases.append(changed)
         for invalid in invalid_cases:
             with self.assertRaises(ValueError):
                 validate_response_snapshot(invalid, 'negative.json')
+
+    def test_recorder_preserves_usage_argument_key_order(self):
+        example = {'palette': {'Text': 'black', 'Page': 'white', 'Border': 'gray'}}
+        reply = {'result': {'content': [{'type': 'text', 'text': json.dumps({'example': example})}]}}
+        entries = {}
+        call = recorder(lambda *args, **kwargs: reply, entries, 'full', '21')
+        for _ in range(2):
+            response = call('GetToolUsage', {'toolName': 'BuildUnifiedHmiThemeDesign'})
+            self.assertEqual(list(response['result']['content'][0]['text']['example']['palette']),
+                             ['Text', 'Page', 'Border'])
 
     def test_current_behavior_disclosure_is_required(self):
         response = {'result': {'content': [{'text': {'schemaVersion': 4, 'ok': False, 'meta': {
@@ -1486,7 +1551,7 @@ class RawResponseTests(unittest.TestCase):
 
     def test_every_reviewed_path(self):
         for rule in RAW_MASK_RULES:
-            if rule['tool'] == 'V4 infrastructure only': continue
+            if rule['tool'] == 'V4 infrastructure only' or rule.get('kind') == 'storePath': continue
             with self.subTest(rule=rule):
                 is_request_id = rule.get('kind') == 'requestId' or rule['path'][-1] == 'requestId'
                 original = 'a' * 32 if is_request_id else '2026-10-03T11:12:13.1234567-07:00'
@@ -1521,6 +1586,40 @@ class RawResponseTests(unittest.TestCase):
                 self.assertEqual(mask_raw_text(value, 'GetSessionState'), value)
         # Builder masks cannot reach tool usage examples or source XML strings.
         self.assertEqual(mask_raw_text(samples[0], 'GetToolUsage'), samples[0])
+
+    def test_store_paths_relocate_in_raw_and_decoded_responses_only(self):
+        captures = []
+        for bundle, data in [('D:\\first\\bundle', 'D:\\first\\bundle\\scratch'), ('D:\\second\\bundle', 'D:\\second\\bundle\\scratch')]:
+            roots = {'bundle': bundle, 'data': data}
+            for tool, payload in (
+                ('ListStandardPackages', {'repositoryRoot': bundle + '\\templates\\standards',
+                    'userRoot': data + '\\standards', 'items': [{'path': bundle + '\\templates\\standards\\tiamcp.basic'}]}),
+                ('ManageStandardPackage', {'targetPath': data + '\\standards\\example.basic\\2.0.0', 'planHash': 'exact-hash'})):
+                text = json.dumps({'data': payload}, ensure_ascii=False)
+                entries = {}
+                reply = self.reply(text)
+                reply['result']['structuredContent'] = json.loads(text)
+                recorder(lambda *a, **kw: reply, entries, 'full', '21', roots)(tool, {})
+                captures.append(compact(next(iter(entries.values()))))
+                self.assertEqual(json.loads(mask_raw_text(text, tool, roots)), captures[-1]['response']['result']['structuredContent'])
+        self.assertEqual(captures[0], captures[2])
+        self.assertEqual(captures[1], captures[3])
+        self.assertEqual(captures[1]['response']['result']['structuredContent']['data']['planHash'], 'exact-hash')
+
+    def test_store_masks_keep_user_paths_unknown_fields_and_relative_suffixes(self):
+        roots = {'bundle': 'D:/bundle', 'data': 'D:/scratch'}
+        for tool, payload in (
+                ('ListStandardPackages', {'userRoot': 'D:/scratch/standards', 'sourcePath': 'D:/scratch/input.zip',
+                    'items': [{'path': 'D:/bundle/templates/standards/a', 'otherPath': 'D:/bundle/file'}]}),
+                ('ManageStandardPackage', {'targetPath': 'D:/outside/package', 'outputPath': 'D:/scratch/output.zip'})):
+            text = json.dumps({'data': payload})
+            masked = mask_raw_text(text, tool, roots)
+            self.assertIn(payload.get('sourcePath', payload.get('outputPath')), masked)
+            self.assertEqual(mask_raw_text(text, 'GetToolUsage', roots), text)
+            self.assertEqual(mask_raw_text(text, tool, {'data': 'D:/scrat'}), text)
+        self.assertIn('<bundle>/templates/standards/a', mask_raw_text(json.dumps({'data': {'items': [{'path': 'D:/bundle/templates/standards/a'}]}}), 'ListStandardPackages', roots))
+        escaped = r'{"data":{"user\u0052oot":"D:/scratch/standards"}}'
+        self.assertEqual(mask_raw_text(escaped, 'ListStandardPackages', roots), escaped)
 
     def test_surrounding_bytes(self):
         value = r'{ "meta" : {"timestamp" : "2026-10-03T11:12:13Z", "n":1.00}, "text":"中文\n\"\\", "array":[{},[null,2]] }'
@@ -1797,8 +1896,10 @@ def validate_response_snapshot(snapshot, path):
                 or any(not isinstance(part, str) or not part for part in rule['path'])
                 or not isinstance(rule['reason'], str) or not rule['reason']):
             raise ValueError(f'{path}: invalid raw mask rule')
-        if 'kind' in rule and rule['kind'] != 'requestId':
+        if 'kind' in rule and rule['kind'] not in ('requestId', 'storePath'):
             raise ValueError(f'{path}: unknown raw mask kind')
+        if rule.get('kind') == 'storePath' and rule not in STORE_PATH_RULES:
+            raise ValueError(f'{path}: unreviewed store path mask rule')
     if not isinstance(snapshot['calls'], list) or not snapshot['calls']:
         raise ValueError(f'{path}: calls must be a nonempty array')
     for call in snapshot['calls']:

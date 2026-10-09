@@ -1,5 +1,6 @@
 <Project>
   <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DeclaredToolMetadata.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PortedToolDeclarations.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressingService.cs" />

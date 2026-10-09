@@ -2657,5 +2657,131 @@
         "expect": "data.awaitingConfirmation=true. A human confirms/clears; no project operation follows automatically."
       }
     ]
+  },
+  {
+    "id": "sequence/standard-package-offline-foundation",
+    "topic": "standard-package-offline",
+    "purpose": "Inspect a standard package, fork it and prepare canonical machine input offline.",
+    "preconditions": "Installed bundle with tiamcp.basic 1.0.0 and an existing local output parent. No TIA connection required.",
+    "notes": "Review preview, use returned planHash as expectedPlanHash when executing FILE writes, and approve in Workbench. Repository packages are read-only. S7-1200 uses programAlarm=false; S7-1500 Program_Alarm native acceptance remains NOT RUN. CSV import returns canonical JSON for the planning tools delivered in P8-31e.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline contract/regression checked; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListStandardPackages",
+        "arguments": {},
+        "expect": "Select exact id/version and content hash."
+      },
+      {
+        "tool": "DescribeStandardPackage",
+        "arguments": {
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0"
+        },
+        "expect": "Inspect schemas, signals, release coverage and CPU selection."
+      },
+      {
+        "tool": "ValidateStandardPackage",
+        "arguments": {
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0"
+        },
+        "expect": "valid=true with coverage reviewed."
+      },
+      {
+        "tool": "ManageStandardPackage",
+        "arguments": {
+          "action": "fork",
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0",
+          "newId": "example.basic",
+          "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "expect": "Preview fork; executed=false and planHash."
+      },
+      {
+        "tool": "ManageMachineDescription",
+        "arguments": {
+          "action": "exportTemplate",
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0",
+          "outputPath": "C:/MachineInputs/basic-template",
+          "format": "csv",
+          "dryRun": true
+        },
+        "expect": "Preview package-generated CSV template, then fill and import it."
+      }
+    ]
+  },
+  {
+    "id": "sequence/standard-package-offline-engine",
+    "topic": "standard-package-offline",
+    "purpose": "Inspect a standard package, fork it and prepare canonical machine input offline.",
+    "preconditions": "Installed bundle with tiamcp.basic 1.0.0 and an existing local output parent. No TIA connection required.",
+    "notes": "Review preview, use returned planHash as expectedPlanHash when executing FILE writes, and approve in Workbench. Repository packages are read-only. S7-1200 uses programAlarm=false; S7-1500 Program_Alarm native acceptance remains NOT RUN. CSV import returns canonical JSON for the planning tools delivered in P8-31e.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Offline contract/regression checked; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListStandardPackages",
+        "arguments": {},
+        "expect": "Select exact id/version and content hash."
+      },
+      {
+        "tool": "DescribeStandardPackage",
+        "arguments": {
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0"
+        },
+        "expect": "Inspect schemas, signals, release coverage and CPU selection."
+      },
+      {
+        "tool": "ValidateStandardPackage",
+        "arguments": {
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0"
+        },
+        "expect": "valid=true with coverage reviewed."
+      },
+      {
+        "tool": "ManageStandardPackage",
+        "arguments": {
+          "action": "fork",
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0",
+          "newId": "example.basic",
+          "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "expect": "Preview fork; executed=false and planHash."
+      },
+      {
+        "tool": "ManageMachineDescription",
+        "arguments": {
+          "action": "exportTemplate",
+          "packageId": "tiamcp.basic",
+          "version": "1.0.0",
+          "outputPath": "C:/MachineInputs/basic-template",
+          "format": "csv",
+          "dryRun": true
+        },
+        "expect": "Preview package-generated CSV template, then fill and import it."
+      }
+    ]
   }
 ]

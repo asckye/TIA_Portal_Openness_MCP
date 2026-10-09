@@ -11,6 +11,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public static readonly IReadOnlyDictionary<string, string> Table =
             new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
+                ["ListStandardPackages"] = "foundation",
+                ["ManageStandardPackage"] = "foundation",
+                ["ValidateStandardPackage"] = "foundation",
+                ["DescribeStandardPackage"] = "foundation",
+                ["ManageMachineDescription"] = "foundation",
                 ["AnalyzeGlobalLibraryPackage"] = "host",
                 ["AnalyzeHmiTemplateReference"] = "host",
                 ["AnalyzePlcReferences"] = "host",

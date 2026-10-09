@@ -180,7 +180,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         bool hasDryRun = properties.TryGetProperty("dryRun", out var schema);
         bool defaultPreview = !hasDryRun || !schema.TryGetProperty("default", out var defaultValue)
             || defaultValue.ValueKind != JsonValueKind.False;
-        return HostBehavior.ApprovalWrite(tool.Name, args, Candidate, inner is FoundationTool { IsWrite: true }, hasDryRun, defaultPreview);
+        return HostBehavior.ApprovalWrite(tool.Name, args, Candidate,
+            inner is FoundationTool { IsWrite: true } || inner is GenerationTool generation && generation.ApprovalWrite(args), hasDryRun, defaultPreview);
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
@@ -373,6 +374,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 audit?.Start();
                 if (inner is FoundationTool foundation) return Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
                 var result = await inner.InvokeAsync(request, cancellationToken);
+                if (inner is GenerationTool) return Recorded(result);
                 var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);
                 return Recorded(FoundationV4Result.Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
             }

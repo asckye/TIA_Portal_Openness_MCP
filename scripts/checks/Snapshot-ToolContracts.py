@@ -238,7 +238,7 @@ def capture(args):
             if release == '21':
                 public_api /= 'net48'
             portal_root = (resources.sdk_only_installation(public_api, int(release), fixture_root)
-                           if args.harness is None else public_api)
+                           if args.harness is None or args.engine_host else public_api)
             rosters = {}
             for profile in ('full', 'lite'):
                 server = (engine_host_server(args, release, portal_root, profile, {"TIA_MCP_MAX_RESPONSE_CHARS": "2000000"})
@@ -765,7 +765,7 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
     for path in (root / 'src/FoundationHost').glob('*.cs'):
         text = path.read_text(encoding='utf-8-sig')
         names.update(renames.get(name, name) for name in re.findall(
-            r'new\s+(?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"\n]+)"', text))
+            r'new\s+(?:Offline\w+Tool|PassiveDiagnosticTool|GenerationTool)\("([^"\n]+)"', text))
     for filename in ('ToolUsageTool.cs', 'ImportOrderTool.cs', 'OfflineSymbolManifestTools.cs'):
         text = (root / 'src/FoundationHost' / filename).read_text(encoding='utf-8-sig')
         names.update(renames.get(name, name) for name in re.findall(r'\bName\s*=\s*"([^"\n]+)"', text))

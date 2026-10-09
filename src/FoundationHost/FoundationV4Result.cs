@@ -228,6 +228,8 @@ internal static class FoundationV4Result
     {
         if (raw is JsonArray rows) return new JsonArray(rows.Select(Fields).ToArray());
         if (raw is not JsonObject obj) return raw?.DeepClone();
+        // Machine parameter names belong to the package schema, including their case.
+        if ((string?)obj["schema"] == "tiamcp.machine/1") return obj.DeepClone();
         var data = new JsonObject();
         foreach (var pair in obj)
         {

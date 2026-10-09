@@ -9,6 +9,31 @@ import xml.etree.ElementTree as ET
 
 
 WITHDRAWN_FROM_PRODUCT = {'ConnectProject'}
+GENERATION_EXAMPLES = ('ListStandardPackages', 'ManageStandardPackage', 'ValidateStandardPackage',
+                       'DescribeStandardPackage', 'ManageMachineDescription')
+
+
+def check_generation_example(call, name, arguments):
+    """Literal offline allowlist: package reads, fork preview, machine validation."""
+    if name == 'ManageStandardPackage':
+        assert arguments['action'] == 'fork' and arguments['dryRun'] is True
+    if name == 'ManageMachineDescription':
+        assert arguments['action'] == 'validate' and arguments['dryRun'] is True
+    reply = call(name, arguments)
+    assert reply.get('ok'), (name, reply)
+    result = successful(reply)
+    data = result['data']
+    if name == 'ListStandardPackages':
+        assert any(p['id'] == 'tiamcp.basic' and p['readOnly'] for p in data['items'])
+    elif name == 'ManageStandardPackage':
+        assert data['executed'] is False and data['id'] == arguments['newId'] and data['planHash']
+    elif name == 'ValidateStandardPackage':
+        assert data['valid'] and len(data['selfChecks']) == 8
+        assert all(c['errors'] == 0 and c['deterministic'] and c['nativeAcceptance'] == 'NOT RUN' for c in data['selfChecks'])
+    elif name == 'DescribeStandardPackage':
+        assert data['cpuSelection']['default'] is False and len(data['coverage']) == 8
+    elif name == 'ManageMachineDescription':
+        assert data['valid'] and data['executed'] is False and data['machineHash']
 
 
 def unwrap_usage(reply):
@@ -117,6 +142,9 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
                     operation_records.append({'operation': choice, 'exampleKind': selected_usage['example']['kind'],
                         'releaseProblem': selected_usage['example']['releaseProblem']})
         records.append({'toolName': name, 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
+        if exhaustive and name in GENERATION_EXAMPLES:
+            check_generation_example(call, name, args)
+            offline_calls.append(name)
         # Consume the SAME example returned to AI callers, with exact source args.
         # Nothing outside this literal allowlist can execute during this audit.
         offline_xml = {'BuildPlcUdt', 'BuildPlcTagTable', 'BuildPlcGlobalDb',

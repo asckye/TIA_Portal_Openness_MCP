@@ -13,6 +13,11 @@ RESOURCE = 'src/Logic/ModelContextProtocol/ToolProfiles.resx'
 REJECTIONS = 'tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json'
 # Reviewed additions, independent of the frozen 3.x rename baseline. No implicit new names.
 NEW_V4_TOOLS = {
+    'ListStandardPackages': {'owner': 'P8-31d', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'ManageStandardPackage': {'owner': 'P8-31d', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'ValidateStandardPackage': {'owner': 'P8-31d', 'operation': 'OFFLINE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'DescribeStandardPackage': {'owner': 'P8-31d', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'ManageMachineDescription': {'owner': 'P8-31d', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'StageImportFiles': {'owner': 'P6-67', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'ListStagedImportFiles': {'owner': 'P6-67', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'CleanupStagedImportFiles': {'owner': 'P6-67', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
@@ -193,6 +198,7 @@ for f in files:
         source=read(f)
         helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"',source))
         helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"',source))
+        helpers.update(re.findall(r'new GenerationTool\("([^"]+)"',source))
 helpers &= set(names)
 foundation_current = {k: usage_generator['resolve_names'](tools[k], registered_rosters[k], renames) for k in keys[:6]}
 for k in keys[:6]:
@@ -405,7 +411,15 @@ def validate_parameter_transition(name, current, target, actual, expected, v4, t
 for n, sig in signatures.items():
     actual = parameters(sig)
     if n in NEW_V4_TOOLS:
-        expected_new = {'StageImportFiles': {'files': 'StagedTextFile[]', 'dryRun': 'bool'}, 'ListStagedImportFiles': {}, 'CleanupStagedImportFiles': {'batchId': 'string', 'dryRun': 'bool'}}.get(n, {'inputPath': 'string', 'outputPath': 'string'})
+        expected_new = {
+            'ListStandardPackages': {},
+            'ManageStandardPackage': {**dict.fromkeys(('action', 'packageId', 'version', 'sourcePath', 'outputPath', 'newId', 'newVersion', 'expectedPlanHash'), 'string'), 'dryRun': 'bool'},
+            'ValidateStandardPackage': dict.fromkeys(('packageId', 'version', 'sourcePath'), 'string'),
+            'DescribeStandardPackage': dict.fromkeys(('packageId', 'version'), 'string'),
+            'ManageMachineDescription': {**dict.fromkeys(('action', 'packageId', 'version', 'inputPath', 'outputPath', 'format', 'expectedPlanHash'), 'string'), 'machine': 'ToolArguments?', 'dryRun': 'bool'},
+            'StageImportFiles': {'files': 'StagedTextFile[]', 'dryRun': 'bool'},
+            'ListStagedImportFiles': {}, 'CleanupStagedImportFiles': {'batchId': 'string', 'dryRun': 'bool'}
+        }.get(n, {'inputPath': 'string', 'outputPath': 'string'})
         assert actual == expected_new and envelope_versions[n] == 4, (n, 'new V4 contract differs', actual)
     expected = {p for p in typed.get(n, {}) if '21' in typed[n][p]}
     validate_parameter_transition(n, current_names[n], renames[n], actual, expected,
@@ -544,7 +558,7 @@ for k in keys[-2:]:
         target = renames[old]
         current = current_names[old]
         if target in runtime_rows: continue
-        arguments = json.loads(json.dumps(engine_source_examples[current]["arguments"]))
+        arguments = json.loads(json.dumps(calls['full-engine'][current]['arguments'] if old in NEW_V4_TOOLS and NEW_V4_TOOLS[old]['owner'] == 'P8-31d' else engine_source_examples[current]["arguments"]))
         runtime_rows[target] = {"name": target, "currentName": current, "sourceName": old,
             "profiles": ["full", "lite"] if target in lite_names else ["full"], "arguments": arguments,
             "envelopeVersion": envelope_versions[old]}
@@ -566,6 +580,8 @@ for k in keys[-2:]:
         if entry['currentName'] in ported['19']: continue
         row = json.loads(json.dumps(entry))
         row['profiles'] = ['full', 'lite', 'plc-foundation']
+        if row['currentName'] in NEW_V4_TOOLS and NEW_V4_TOOLS[row['currentName']]['owner'] == 'P8-31d' and row['currentName'] != 'DescribeStandardPackage':
+            row['profiles'].remove('lite')
         rows[row['currentName']] = row
     for current in calls['plc-foundation']:
         name = current
@@ -702,6 +718,7 @@ for task, stems in MIGRATION_GROUPS.items():
         assert path not in owners
         assert (root / path).is_file(), path
         owners[path] = task
+owners[SH + "Host/GenerationTools.cs"] = "P8-31d"
 assert set(p for p,m in source_tools.values()) <= set(owners), sorted(set(p for p,m in source_tools.values()) - set(owners))
 
 # Existing entry points and ownership roots, not permission to edit whole trees.

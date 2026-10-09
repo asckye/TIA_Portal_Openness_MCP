@@ -28,6 +28,9 @@ def new_v4_tools(root=ROOT):
     result = entries[0]
     expected = {'RenderPlcBlock': ('P6-48', 'FILE'), 'RenderPlcProgramAtlas': ('P6-48', 'FILE'),
                 'StageImportFiles': ('P6-67', 'FILE'), 'ListStagedImportFiles': ('P6-67', 'READ'), 'CleanupStagedImportFiles': ('P6-67', 'FILE')}
+    expected.update({name: ('P8-31d', operation) for name, operation in {
+        'ListStandardPackages': 'READ', 'ManageStandardPackage': 'FILE', 'ValidateStandardPackage': 'OFFLINE',
+        'DescribeStandardPackage': 'READ', 'ManageMachineDescription': 'FILE'}.items()})
     assert set(result) == set(expected), 'Reviewed new V4 list differs'
     for name, entry in result.items():
         assert (entry['owner'], entry['operation']) == expected[name], ('Unreviewed owner/category', name)
@@ -101,6 +104,7 @@ def registered_rosters(root=ROOT):
         if name == 'FoundationTools.cs': continue
         helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"', source))
         helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"', source))
+        helpers.update(re.findall(r'new GenerationTool\("([^"]+)"', source))
     helpers &= targets.keys() | set(targets.values())
     wrapped = any('new FoundationV4Tool(' in s for s in foundation_sources.values())
     host_map = dict(re.findall(r'\["([^"]+)"\]\s*=\s*"([^"]+)"',
@@ -145,7 +149,7 @@ def validate_foundation_examples(calls, sequences):
         if name in batch:
             path = arguments.get('softwarePath', '')
             assert path.startswith('devices/') or ('exact softwarePath' in path and 'GetProjectTree' in path), (location, 'batch requires exact software path')
-        if (arguments.get('dryRun') is False or arguments.get('confirm') is True) and name not in ('StageImportFiles', 'CleanupStagedImportFiles'):
+        if (arguments.get('dryRun') is False or arguments.get('confirm') is True) and name not in ('StageImportFiles', 'CleanupStagedImportFiles', 'ManageStandardPackage', 'ManageMachineDescription'):
             assert arguments.get('expectedProjectFile'), (location, 'real call requires expectedProjectFile')
         if name in imports:
             pattern = arguments.get('regexName', '')

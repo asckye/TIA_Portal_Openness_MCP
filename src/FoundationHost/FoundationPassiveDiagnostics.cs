@@ -258,6 +258,7 @@ internal static class LegacyHostToolRegistry
         var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
         tools.Add(new ImportOrderTool());
         tools.AddRange(WorkbenchControlTools.Create(worker, releaseKey));
+        tools.AddRange(GenerationTool.Create(releaseKey));
         Func<JsonObject> readiness = readinessProvider ?? (() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, apiDirectorySource));
         tools.AddRange(FoundationPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools, readiness));
         tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile));
