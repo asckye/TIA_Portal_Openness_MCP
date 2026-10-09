@@ -255,6 +255,14 @@ public sealed class WorkbenchControlHostTests
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void All_releases_and_both_host_catalogs_publish_the_eight_classified_tools(string release)
     {
+        // The V20/V21 host sets the engine release key before it builds its catalog; old-release hosts set their own.
+        string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        if (release is "20" or "21") enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        try { PublishesEightClassifiedTools(release); }
+        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
+    }
+    private static void PublishesEightClassifiedTools(string release)
+    {
         using var worker = new Worker();
         var tools = LegacyHostToolRegistry.Create(worker, release, false);
         foreach (string name in WorkbenchControlTools.Names)
