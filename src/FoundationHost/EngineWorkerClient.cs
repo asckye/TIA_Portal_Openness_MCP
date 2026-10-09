@@ -100,6 +100,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect is ending this session; a new host session is required.", isArgument: false);
             if (Poisoned) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
             if (!options.NativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
+            if (options.BundledWorker && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue
+                && (bool?)status["session"]?["isConnected"] != true)
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             await Start(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
             bool attach = operation == "Attach" || operation == WorkerOperations.SessionCandidate
@@ -118,6 +121,8 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
             foundationOutcome.AcceptResult(operation, arguments, result);
             if (foundationOutcome.Poisoned) priorUnknownRequestId ??= correlation;
             if (operation == "Attach") attachedProcessId = (int?)arguments["processId"];
+            else if (attach && !foundationOutcome.Poisoned && result?["Attempt"]?["Issued"]?.GetValue<bool>() == true
+                && result?["Attempt"]?["Fault"] == null) attachedProcessId = (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
             if (operation == "Disconnect") disconnectAcknowledgement = DisconnectContract.Validate(result, true, attachedProcessId, true);
             if (foundationOutcome.Poisoned) MarkUncertain();
             if (!foundationOutcome.Poisoned) await ReadStatus(CancellationToken.None).ConfigureAwait(false);
@@ -128,22 +133,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
         { error.Data["foundationRequestSent"] = false; error.Data["workerLimitBytes"] = ChannelLimits.RequestBytes; throw; }
         catch (ChannelFailure failure)
         {
-            string outcome = failure.Outcome == ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome == ChannelOutcome.ReadFailed ? "read-failed" : "unknown";
-            var reported = new WorkerOperationException(failure.Message, failure.Code, outcome, failure.EvidenceJson);
-            string? diagnostic = TiaMcp.Logic.V4.HostBehavior.AdmissionDiagnostic(reported, reported.Code, reported.Outcome, reported.ExceptionType);
-            string? evidence = failure.EvidenceJson;
-            // PortalProcessLease predates typed adapter refusals. Only its two authored
-            // messages are admission diagnostics; arbitrary internal exceptions stay private.
-            if (failure.Outcome == ChannelOutcome.RejectedBeforeNative && reported.ExceptionType == nameof(InvalidOperationException)
-                && failure.Message is TiaOpenness.Shared.SessionBehavior.LeaseNotReleased or TiaOpenness.Shared.SessionBehavior.LeaseReserved)
-            {
-                diagnostic = TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(failure.Message);
-                var authored = JsonNode.Parse(evidence!)!.AsObject();
-                authored["exceptionType"] = nameof(TiaMcp.Adapters.Contracts.AdapterPreconditionException);
-                authored["isArgument"] = false;
-                evidence = authored.ToJsonString();
-            }
-            var error = new WorkerOperationException(diagnostic ?? failure.Message, failure.Code, outcome, evidence);
+            var error = WorkerOperationException.FromChannelFailure(failure);
             error.Data["foundationRequestSent"] = sent;
             if (failure.Outcome == ChannelOutcome.Unknown) { RecordFault(failure, operation, true); error.Data["foundationSessionPoisoned"] = true; error.Data["workerOutcomeUnknown"] = true; }
             throw error;
@@ -271,7 +261,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
                 start.Environment["TIA_MCP_ENGINE_NONCE"] = nonce;
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
-                process = Process.Start(start) ?? throw new IOException("Engine worker did not start."); WorkerJob.Bind(process);
+                process = Process.Start(start) ?? throw new IOException("Engine worker did not start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
                 process.BeginErrorReadLine();
                 channel = new ChannelClient(process.StandardOutput.BaseStream, process.StandardInput.BaseStream,
@@ -384,9 +374,9 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
     {
         lock (stateSync)
         {
-            channel?.Dispose(); channel = null;
-            if (process != null) { try { if (!process.HasExited) process.Kill(); } catch (InvalidOperationException) /* swallow(teardown): an already exited process still needs its local resources released */ { } process.Dispose(); process = null; }
+            WorkerShutdown.Unregister(this);
+            WorkerShutdown.Stop(process, channel); channel = null; process = null;
         }
     }
-    public void Dispose() => Stop();
+    public void Dispose() { disconnecting = true; Stop(); }
 }

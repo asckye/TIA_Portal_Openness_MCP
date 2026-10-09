@@ -19,12 +19,14 @@ internal static class EngineSessionFixture
             Environment.ProcessId, foundation ? args[Array.IndexOf(args, "--native-session") + 3] : Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_NONCE")!);
         int? attached = null;
         PortalProcessLease? lease = null;
-        long epoch = 0;
+        long epoch = 0; bool uncertain = false;
+        string? leaseRoot = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         JsonObject Status() => new() { ["releaseKey"] = release, ["readiness"] = new JsonObject { ["ready"] = true },
             ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
             ["binding"] = attached == null ? null : new JsonObject { ["projectPath"] = "C:/fixture.ap" + release },
             ["session"] = new JsonObject { ["isConnected"] = attached != null } };
-        var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new(epoch, attached != null), request => {
+        ChannelResponse Dispatch(ChannelRequest request)
+        {
             if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
             var input = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
             if (request.Method == "engine.observe" && (string?)input["operation"] == "assemblies")
@@ -32,10 +34,10 @@ internal static class EngineSessionFixture
             if (request.Method == "adapter.Attach")
             {
                 int pid = (int)input["processId"]!;
-                if (pid is 901 or 902 or 903)
-                    return ChannelResponse.Error(new ChannelFailure(pid == 901 ? LeaseMessage : pid == 903 ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
+                if (pid is 901 or 902 or 903 or 904)
+                    return ChannelResponse.Error(new ChannelFailure(pid == 901 ? LeaseMessage : pid == 904 ? SessionBehavior.LeaseReserved : pid == 903 ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
                         ChannelOutcome.RejectedBeforeNative, new JsonObject { ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
-                if (!foundation) lease = PortalProcessLease.Acquire(DataLocations.Current.LeasesDirectory, pid, 1);
+                if (!foundation || leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot ?? DataLocations.Current.LeasesDirectory, pid, 1);
                 attached = pid; epoch++;
                 return ChannelResponse.Success(new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
                     ["AttemptedPids"] = new JsonArray(pid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" }.ToJsonString());
@@ -51,7 +53,7 @@ internal static class EngineSessionFixture
                 return ChannelResponse.Success(result.ToJsonString());
             }
             if (request.Method == "adapter.FixtureUnknown") return ChannelResponse.Error(new ChannelFailure("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
-            if (request.Method == "adapter.FixtureHang") { Thread.Sleep(10000); return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.FixtureHang") { if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), ""); Thread.Sleep(10000); return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.ReadPortalProcessProjects")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["Processes"] = new JsonArray(),
                     ["IdentityStrategy"] = "os-pid-and-start-time-observation-only" }.ToJsonString());
@@ -74,8 +76,17 @@ internal static class EngineSessionFixture
             reply["result"] = new JsonObject { ["isError"] = unknown, ["structuredContent"] = node,
                 ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = node.ToJsonString() }) };
             return ChannelResponse.Success(reply.ToJsonString());
+        }
+        var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new(epoch, attached != null), request => {
+            if (request.Method != "engine.status") lease?.BeginRequest();
+            var response = Dispatch(request);
+            uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown
+                || (bool?)JsonNode.Parse(response.ResultJson)?["result"]?["structuredContent"]?["meta"]?["requiresSessionReset"] == true;
+            if (request.Method != "engine.status") lease?.CompleteRequest(uncertain);
+            return response;
         }, foundation ? ChannelProfile.Foundation : ChannelProfile.Engine);
-        server.Run();
+        try { server.Run(); }
+        finally { if (!uncertain) lease?.ReleaseCleanly(); lease?.Dispose(); }
         return 0;
     }
 }

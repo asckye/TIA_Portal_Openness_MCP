@@ -6,12 +6,15 @@ using System.Text;
 namespace TiaMcpServer.Siemens
 {
     // Session-lifetime OS file handle: release may occur on a different MTA thread.
-    // Same Windows user, all MCP ports/profiles/versions. A killed owner leaves ACTIVE,
-    // so a new worker cannot overlap an uncertain native operation after a crash.
+    // Same Windows user, all MCP ports/profiles/versions. Durable request states
+    // distinguish an idle owner exit from an interrupted or uncertain native call.
     internal sealed class PortalProcessLease : IDisposable
     {
         private FileStream? stream;
         internal string Key { get; }
+        internal bool PreviousOwnerEndedIdle { get; private set; }
+        internal bool Uncertain => state == "UNCERTAIN\n";
+        private string state = "";
         private PortalProcessLease(FileStream handle, string key) { stream = handle; Key = key; }
         internal static PortalProcessLease Acquire(string root, int pid, long startUtcTicks)
         {
@@ -26,17 +29,21 @@ namespace TiaMcpServer.Siemens
             {
                 string previous;
                 using (var reader = new StreamReader(handle, Encoding.UTF8, false, 1024, true)) previous = reader.ReadToEnd();
-                if (previous.Length != 0 && previous != "RELEASED\n")
+                if (previous.Length != 0 && previous != "RELEASED\n" && previous != "IDLE\n")
                     throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.LeaseNotReleased);
-                lease.Write("ACTIVE\n");
+                lease.PreviousOwnerEndedIdle = previous == "IDLE\n";
+                lease.Write("BUSY\n");
                 return lease;
             }
             catch { lease.Dispose(); throw; }
         }
+        internal void BeginRequest() { if (state != "UNCERTAIN\n") Write("BUSY\n"); }
+        internal void CompleteRequest(bool uncertain) => Write(uncertain || state == "UNCERTAIN\n" ? "UNCERTAIN\n" : "IDLE\n");
         private void Write(string value)
         {
+            if (stream == null || state == value) return;
             var bytes = Encoding.UTF8.GetBytes(value);
-            stream!.Position = 0; stream.SetLength(0); stream.Write(bytes, 0, bytes.Length); stream.Flush(true);
+            stream!.Position = 0; stream.Write(bytes, 0, bytes.Length); stream.SetLength(bytes.Length); stream.Flush(true); state = value;
         }
         internal void ReleaseCleanly()
         {

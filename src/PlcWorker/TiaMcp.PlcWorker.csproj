@@ -22,6 +22,11 @@
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
     <Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
+    <Compile Include="$(WorkerSourceRoot)/FoundationProcessLease.cs" Link="FoundationProcessLease.cs" />
+    <Compile Include="../Logic/Siemens/PortalProcessLease.cs" Link="Shared/PortalProcessLease.cs" />
+    <Compile Include="../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
+    <Compile Include="../Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <Compile Include="../Logic/Siemens/TiaVersionCatalog.cs" Link="Shared/TiaVersionCatalog.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />

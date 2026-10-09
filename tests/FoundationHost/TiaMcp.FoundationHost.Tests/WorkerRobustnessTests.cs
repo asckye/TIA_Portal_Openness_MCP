@@ -96,7 +96,7 @@ public sealed class WorkerRobustnessTests
             Assert.True(File.Exists(exe), exe);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Client(new Options { ReleaseKey = release, EngineWorkerExe = exe, WorkerExe = exe, ApiDirectory = "", BundleRoot = AppContext.BaseDirectory,
-                NativeEnabled = true, WorkerTimeoutConfig = "{\"default\":0.8,\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe));
+                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":0.8,\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe));
             Engine.EngineHostConfiguration.ReleaseKey = release; Engine.EngineHostConfiguration.Worker = Worker;
             var catalog = new Catalog();
             Host.ConfigureToolBridge(catalog, new Engine.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());

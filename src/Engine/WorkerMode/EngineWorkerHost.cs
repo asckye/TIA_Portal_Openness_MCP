@@ -179,10 +179,12 @@ namespace TiaMcpServer.Worker
             try
             {
                 // An uncertain worker exiting without a recovery acknowledgement
-                // abandons its handles and ACTIVE lease; it never retries disposal.
+                // abandons its handles and UNCERTAIN lease; it never retries disposal.
                 if (nativeFault != null) foundation.InvalidateSharedSession();
-                foundation.Dispose(); if (nativeFault == null) processLease?.ReleaseCleanly();
+                processLease?.BeginRequest();
+                foundation.Dispose(); if (nativeFault == null && processLease?.Uncertain != true) processLease?.ReleaseCleanly();
             }
+            catch { processLease?.CompleteRequest(true); throw; }
             finally { processLease?.Dispose(); portal?.ClearFoundationSession(); }
         }
 
@@ -201,7 +203,8 @@ namespace TiaMcpServer.Worker
                 using var document = JsonDocument.Parse(request.ArgumentsJson);
                 var args = document.RootElement;
                 int? pid = request.Method == "adapter.Attach" && args.TryGetProperty("processId", out var selected) && selected.TryGetInt32(out var id) ? id : (int?)null;
-                if (request.Method == "adapter." + WorkerOperations.SessionCandidate && args.TryGetProperty("candidate", out var candidate)
+                if (request.Method == "adapter." + WorkerOperations.SessionCandidate && args.TryGetProperty("mode", out var mode) && mode.GetString() == "apply"
+                    && args.TryGetProperty("candidate", out var candidate) && candidate.TryGetProperty("Action", out var candidateAction) && candidateAction.GetString() == "execute"
                     && candidate.TryGetProperty("Check", out var check) && check.TryGetProperty("Request", out var planned)
                     && planned.TryGetProperty("Action", out var action) && action.GetString() == "attach"
                     && planned.TryGetProperty("ProcessId", out var candidatePid) && candidatePid.TryGetInt32(out var attachPid)) pid = attachPid;
@@ -213,6 +216,7 @@ namespace TiaMcpServer.Worker
                     processLease = PortalProcessLease.Acquire(DataLocations.Current.LeasesDirectory, pid.Value, processStartTicks);
                     reserved = true;
                 }
+                if (request.Method != "adapter.ReadState") processLease?.BeginRequest();
                 dispatched = true;
                 var response = disconnect ? lifecycle!.Disconnect(() => foundationDispatch.Dispatch(request))
                     : lifecycle!.Foundation(() => foundationDispatch.Dispatch(request));
@@ -234,6 +238,15 @@ namespace TiaMcpServer.Worker
                     RefreshFromFoundation();
                 }
                 else RefreshFromFoundation();
+                if (reserved && processLease != null && !foundationDispatch.State.IsAttached && nativeFault == null)
+                { processLease.ReleaseCleanly(); processLease = null; processStartTicks = 0; }
+                else processLease?.CompleteRequest(nativeFault != null);
+                if (reserved && processLease?.PreviousOwnerEndedIdle == true && response.Failure == null)
+                {
+                    var result = JsonNode.Parse(response.ResultJson)!.AsObject();
+                    result["PreviousOwnerEndedIdle"] = true;
+                    response = ChannelResponse.Success(result.ToJsonString());
+                }
                 Observe();
                 return response;
             }
@@ -243,6 +256,7 @@ namespace TiaMcpServer.Worker
                 if (nativeFault != null || lifecycle!.Fault != null || dispatched && foundationDispatch.State.IsAttached)
                 { lifecycle!.Lock(error.Message); }
                 else if (reserved) { processLease?.ReleaseCleanly(); processLease = null; processStartTicks = 0; RefreshFromFoundation(); }
+                processLease?.CompleteRequest(nativeFault != null);
                 var failure = WorkerFailurePolicy.Classify(error, nativeFault != null, false);
                 return ChannelResponse.Error(new ChannelFailure(WorkerFailurePolicy.DiagnosticCause(error).Message,
                     failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
@@ -268,6 +282,18 @@ namespace TiaMcpServer.Worker
         }
 
         private ChannelResponse Dispatch(ChannelRequest request)
+        {
+            if (request.Method != "engine.invoke") return DispatchCore(request);
+            try
+            {
+                var response = DispatchCore(request);
+                processLease?.CompleteRequest(nativeFault != null || response.Failure?.Outcome == ChannelOutcome.Unknown);
+                return response;
+            }
+            catch { processLease?.CompleteRequest(true); throw; }
+        }
+
+        private ChannelResponse DispatchCore(ChannelRequest request)
         {
             if (request.Method == "engine.status") { Observe(); return ChannelResponse.Success(Status().ToJsonString()); }
             if (request.Method == "engine.observe")
@@ -298,6 +324,10 @@ namespace TiaMcpServer.Worker
             string id = args.GetProperty("requestId").GetString()!;
             string name = args.GetProperty("name").GetString()!;
             bool preview = args.GetProperty("preview").GetBoolean();
+            bool nativeDocument = name == "RenderPlcBlockDocument" && args.GetProperty("arguments").TryGetProperty("blockPath", out var blockPath)
+                && blockPath.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(blockPath.GetString())
+                && (!args.GetProperty("arguments").TryGetProperty("filePath", out var filePath) || filePath.ValueKind == JsonValueKind.Null
+                    || filePath.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(filePath.GetString()));
             using var correlation = InvocationJournal.UseCorrelation(id);
             using var previewScope = preview ? McpServer.BeginReadOnlyApprovalPreview() : null;
             using var auditPreview = preview ? AuditInvocation.ReadOnlyPreview() : null;
@@ -316,8 +346,12 @@ namespace TiaMcpServer.Worker
                 result = McpServer.V4Reject(name, new Error(OpennessReadiness.Cause + " " + OpennessReadiness.FixEn,
                     new ResourceUnavailableDetails("tia-openness-environment")), new JsonObject { ["environment"] = environment });
             }
+            else if ((ToolTaxonomy.RequiresConnectedPortal(name) || nativeDocument) && (bool?)CachedSession()?["isConnected"] != true)
+                result = McpServer.V4Reject(name, new Error(SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)));
             else
             {
+                if (ToolTaxonomy.MayCallOpenness(name) || nativeDocument)
+                    processLease?.BeginRequest();
                 using var progress = new WorkerProgressShim(request, args.TryGetProperty("progress", out var enabled) && enabled.ValueKind == JsonValueKind.True, EngineServices.Provider);
                 progress.Bind(method!, call!);
                 result = McpServer.ToolResult(McpServer.InvokeWorkerToolMethod(method!, call!, id));
@@ -328,6 +362,8 @@ namespace TiaMcpServer.Worker
             {
                 lifecycle?.Lock("Engine native outcome is unknown.");
             }
+            if (nativeCalls.NativeCallIssued && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
+                processLease?.CompleteRequest(true);
             if (nativeFault != null) lifecycle?.Lock(nativeFault);
             Observe();
             var reply = Status();

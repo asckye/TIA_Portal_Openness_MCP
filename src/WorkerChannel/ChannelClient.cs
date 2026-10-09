@@ -22,6 +22,7 @@ namespace TiaMcp.WorkerChannel
         public Exception? LastFault { get { lock (gate) return lastFault; } }
         public bool Poisoned { get { lock (gate) return poisoned || recoveryOnly; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
+        public bool InFlight { get { lock (gate) return pending?.Dispatched == true && !pending.Replied; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
         public long LastRequestId { get { lock (gate) return sequence; } }

@@ -90,6 +90,25 @@ internal static class DisconnectTests
 
 public sealed class FoundationRecoveryTests
 {
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Foundation_channel_preserves_both_lease_refusals_without_poisoning(string release)
+    {
+        string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
+        foreach (var item in new[] { (901, TiaOpenness.Shared.SessionBehavior.LeaseNotReleased), (904, TiaOpenness.Shared.SessionBehavior.LeaseReserved) })
+        {
+            var failure = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = item.Item1 }, CancellationToken.None));
+            Assert.Equal(item.Item2, FoundationV4Result.WorkerRejection(failure).Message);
+            Assert.Equal("rejected-before-operation", failure.Outcome);
+            Assert.False(worker.Poisoned);
+        }
+        var hidden = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = 902 }, CancellationToken.None));
+        Assert.DoesNotContain("Internal secret", FoundationV4Result.WorkerRejection(hidden).Message);
+        await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
+        await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach(string release)
     {

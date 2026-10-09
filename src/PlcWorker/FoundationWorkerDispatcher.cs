@@ -89,6 +89,8 @@ namespace TiaMcp.PlcWorker
                 if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
                 readOnly=readOnly || (WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.True);
                 if (name != "Disconnect") sessionOutcome.RequireUsable(readOnly);
+                if (WorkerOperations.RequiresPortal(name) && !State.IsAttached)
+                    throw new AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
                 var confirm=WorkerJson.Get(values,"confirm");
                 var expected=WorkerJson.Get(values,"expectedProjectFile");
                 if(!method.GetParameters().Any(p=>p.Name=="confirm")) values.Remove("confirm");

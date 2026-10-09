@@ -34,6 +34,22 @@ public sealed class EngineHttpSessionTests
     }
 
     [Theory, InlineData("20"), InlineData("21")]
+    public async Task Http_session_end_without_disconnect_releases_its_attached_worker(string release)
+    {
+        using var host = await Fixture.Start(release); using var session = new Session(host.Url); await session.Initialize();
+        await session.Tool("ConnectPortal", new() { ["processId"] = 325 });
+        await session.End();
+        string lease = Path.Combine(host.DataDirectory, "leases", "325-1.lease");
+        for (int i = 0; i < 100; i++)
+        {
+            try { if (File.ReadAllText(lease) == "RELEASED\n") return; }
+            catch (IOException) { }
+            await Task.Delay(20);
+        }
+        Assert.Equal("RELEASED\n", File.ReadAllText(lease));
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
     public async Task Idle_attached_restart_detaches_before_starting_the_next_generation(string release)
     {
         using var host = await Fixture.Start(release); using var a = new Session(host.Url); await a.Initialize();
@@ -46,7 +62,7 @@ public sealed class EngineHttpSessionTests
     }
 
     [Theory, InlineData("20", true), InlineData("21", true), InlineData("20", false), InlineData("21", false)]
-    public async Task Busy_or_timed_out_disconnect_terminates_the_worker_and_keeps_the_lease_active(string release, bool waitForTimeout)
+    public async Task Busy_or_timed_out_disconnect_terminates_the_worker_and_keeps_the_lease_busy(string release, bool waitForTimeout)
     {
         using var host = await Fixture.Start(release, shortTimeout: waitForTimeout); using var a = new Session(host.Url); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
@@ -69,7 +85,7 @@ public sealed class EngineHttpSessionTests
         Assert.Contains("restart that TIA instance", (string?)detached["data"]?["recoveryMessage"]);
         await running;
         Assert.True(worker.WaitForExit(5000));
-        Assert.Equal("ACTIVE\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "323-1.lease")));
+        Assert.Equal("BUSY\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "323-1.lease")));
         await a.End();
     }
     [Theory, InlineData("20"), InlineData("21")]
@@ -81,7 +97,7 @@ public sealed class EngineHttpSessionTests
         var restarted = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = true });
         Assert.Contains("\"requiresTiaRestart\":true", restarted["data"]!.ToJsonString());
         Assert.Contains("restart that TIA instance", restarted["data"]!.ToJsonString());
-        Assert.Equal("ACTIVE\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "324-1.lease")));
+        Assert.Equal("BUSY\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "324-1.lease")));
         await a.End();
     }
 

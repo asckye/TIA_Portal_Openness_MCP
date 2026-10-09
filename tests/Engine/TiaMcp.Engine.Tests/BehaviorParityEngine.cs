@@ -37,6 +37,8 @@ namespace TiaMcp.Engine.Tests
         private static Exception refusal = new InvalidOperationException();
         public static class PreconditionProbe
         {
+            [McpServerTool(Name = "AttachOpenProject")]
+            public static CallToolResult Attach(string projectName, string expectedProjectFile) => throw refusal;
             [McpServerTool(Name = "OpenProject")]
             public static CallToolResult Open(string path, bool dryRun = true) => throw refusal;
             [McpServerTool(Name = "CloseProject")]

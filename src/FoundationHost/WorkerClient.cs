@@ -104,6 +104,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             // Idle Disconnect above must not launch a worker, even in native-disabled discovery.
             if (!nativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
+            if (Bundled && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue)
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             lock (stateSync)
             {
                 if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
@@ -118,7 +120,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                     start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
                     start.ArgumentList.Add(nonce);
                     start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
-                    process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process);
+                    process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                     attachAttempted = false;
                     process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
                     process.BeginErrorReadLine();
@@ -146,7 +148,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             catch(ChannelFailure failure)
             {
                 sent=true;
-                throw new WorkerOperationException(failure.Message,failure.Code,failure.Outcome==ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome==ChannelOutcome.ReadFailed ? "read-failed" : "unknown",failure.EvidenceJson);
+                throw WorkerOperationException.FromChannelFailure(failure);
             }
             var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
@@ -162,6 +164,10 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 approvalIdentity = identity;
             }
             if(operation=="Attach") attachedProcessId=arguments["processId"]!.GetValue<int>();
+            else if (operation == WorkerOperations.SessionCandidate && !outcome.Poisoned
+                && result?["Attempt"]?["Issued"]?.GetValue<bool>() == true && result?["Attempt"]?["Fault"] == null
+                && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach")
+                attachedProcessId = (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             return result;
@@ -243,9 +249,13 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     public void Dispose()
     {
-        // Close our input only. Never kill a TIA process or replay a timed-out call.
-        if (process != null) { try { if(channel!=null) channel.Dispose(); else process.StandardInput.Close(); } catch (IOException) /* swallow(teardown): a broken worker input pipe must not prevent releasing local process and semaphore resources */ { } process.Dispose(); }
-        serial.Dispose();
+        disconnecting = true;
+        lock (stateSync)
+        {
+            WorkerShutdown.Unregister(this);
+            WorkerShutdown.Stop(process, channel); channel = null; process = null;
+        }
+        // An interrupted async caller still releases its lane in finally.
     }
 
     internal static BindingChange BindingChangeFor(string operation, JsonObject arguments)

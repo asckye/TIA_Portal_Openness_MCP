@@ -53,6 +53,20 @@ MCP 的 `SaveExportContent` 不能写 `approval.settings`、其常规短文件�
 等待发生在专用 Openness 线程之外、动作调用之前；隔离引擎使用内部等待通知扣除有界审批时间，原生执行截止预算不变。
 审批不改变 Siemens 调用序列、参数、线程归属或会话。
 
+### TIA 进程租约
+
+八版 MCP worker 在附着前共用 `PortalProcessLease`：V14 SP1–V19 的 PlcWorker 在负责原生调用的 STA 线程上预留，V20/V21 引擎 worker 保持现有 MTA 路径。
+租约目录使用上表的 `leases` 位置，文件名为 `<PID>-<进程 UTC 启动 ticks>.lease`，独占文件句柄覆盖连接生命周期。
+内容为 UTF-8：附着且空闲为 `IDLE\n`；可能调用原生 API 的请求在分发前写入并持久刷新 `BUSY\n`，已知结果返回后写入 IDLE；未知结果写入 `UNCERTAIN\n`。
+另一 worker 持有句柄时返回 `SessionBehavior.LeaseReserved`。独占打开成功后，RELEASED 或 IDLE 可接管；接管 IDLE 时 `ConnectPortal` 的结果 `data.previousOwnerEndedIdle=true`，不增加 V4 warning code。
+BUSY、UNCERTAIN 和旧版 `ACTIVE\n` 文件仍返回 `LeaseNotReleased`，需要检查原生调用的结果并重启该 TIA 实例；不要删除租约绕过保护。
+
+MCP 会话结束（含未调用 `DisconnectPortal`）、stdio EOF、Ctrl+C、控制台关闭、HTTP host stopping 都关闭 worker 通道，空闲 worker 最多等待 **10 秒**退出。
+worker 在原有 owner 线程上非拥有式分离并写入 `RELEASED\n`；不保存或关闭工程。仅请求仍在进行或等待超时才结束 worker。
+强制结束空闲 worker 时保留 IDLE，下次可接管；中断原生请求时保留 BUSY，未知结果退出时保留 UNCERTAIN。正常替换安装包不需要重启 TIA；只有中断的原生调用、未知结果（含旧 ACTIVE 的不确定性）需要重启。
+这些文件状态不增加 Siemens 调用，持久刷新的逐请求耗时记录在本任务的离线证据中。
+没有连接的 `AttachOpenProject` 及其他需要 portal 的操作，在分发前返回类型化 `PRECONDITION_FAILED`，提示先调用 `ConnectPortal`，不锁住会话。
+
 ### 安装根与开发输出
 
 G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需要 `.git`。交付包由

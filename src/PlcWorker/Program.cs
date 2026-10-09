@@ -61,6 +61,9 @@ internal static class Program
         using (var engine = new PlcFoundationEngine(releaseKey, api))
         {
             var dispatcher = new FoundationWorkerDispatcher(engine, typeof(Program).Assembly);
+            using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
+                dispatcher.Dispatch, () => dispatcher.State.IsAttached, () => dispatcher.Detached,
+                () => dispatcher.SessionOutcome.RequiresReset, engine.Dispose);
             string HashFile(string path)
             {
                 using(var stream=File.OpenRead(path))
@@ -70,7 +73,7 @@ internal static class Program
             var identity=new ChannelIdentity(releaseKey,HashFile(typeof(Program).Assembly.Location),
                 HashFile(typeof(PlcFoundationEngine).Assembly.Location),System.Diagnostics.Process.GetCurrentProcess().Id,nonce);
             var input=Console.OpenStandardInput();
-            var server=new ChannelServer(input,Console.OpenStandardOutput(),identity,dispatcher.Observe,dispatcher.Dispatch);
+            var server=new ChannelServer(input,Console.OpenStandardOutput(),identity,dispatcher.Observe,session.Dispatch);
             try { server.Run(); }
             catch(ChannelFault ex)
             {

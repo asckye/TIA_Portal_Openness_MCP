@@ -58,3 +58,41 @@ internal static class WorkerJob
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool CloseHandle(IntPtr handle);
 }
+
+// Session disposal and host stopping use the same bounded non-owning teardown.
+internal static class WorkerShutdown
+{
+    internal const int GracefulTimeoutMilliseconds = 10000;
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<IDisposable, byte> Owners = new();
+    private static readonly ConsoleHandler ConsoleClosing = signal => {
+        if (signal is 2 or 5 or 6) StopAll();
+        return false;
+    };
+    static WorkerShutdown()
+    {
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => StopAll();
+        if (OperatingSystem.IsWindows()) _ = SetConsoleCtrlHandler(ConsoleClosing, true);
+    }
+    internal static void Register(IDisposable owner) => Owners.TryAdd(owner, 0);
+    internal static void Unregister(IDisposable owner) => Owners.TryRemove(owner, out _);
+    internal static void StopAll()
+    {
+        // Parallel waits keep the host deadline bounded even with many HTTP sessions.
+        Task.WhenAll(Owners.Keys.Select(owner => Task.Run(owner.Dispose))).GetAwaiter().GetResult();
+    }
+    internal static void Stop(Process? process, TiaMcp.WorkerChannel.ChannelClient? channel)
+    {
+        bool busy = channel?.InFlight == true || channel?.OutcomeUnknown == true && channel.CanDisconnect != true;
+        try
+        {
+            try { if (channel != null) channel.Dispose(); else process?.StandardInput.Close(); }
+            catch (IOException) /* swallow(teardown): broken stdin cannot prevent the bounded worker exit/termination */ { }
+            if (process != null && !process.HasExited && (busy || !process.WaitForExit(GracefulTimeoutMilliseconds))) process.Kill();
+        }
+        catch (InvalidOperationException) /* swallow(teardown): the worker may have exited while its handle was being inspected */ { }
+        finally { process?.Dispose(); }
+    }
+    private delegate bool ConsoleHandler(uint signal);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetConsoleCtrlHandler(ConsoleHandler handler, bool add);
+}

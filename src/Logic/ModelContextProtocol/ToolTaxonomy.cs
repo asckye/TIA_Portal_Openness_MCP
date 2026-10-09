@@ -33,6 +33,25 @@ namespace TiaMcpServer.ModelContextProtocol
             { "InitializeEnvironment", "GetEnvironmentDiagnostics", "PreviewToolCall" };
 
         public static bool IsSafeWithoutTia(string name) => WithoutTia.Contains(name);
+        // File analysis, update discovery and SDK type inspection do not borrow a portal.
+        private static readonly HashSet<string> WithoutPortal = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "ComparePlcBlockDocuments", "ExtractPlcBlockMetrics", "GeneratePlcDocumentation", "AuditEngineeringExports",
+            "CheckProductUpdate", "RunPlcCompanionTool", "ListUnifiedHmiApiTypes", "DescribeUnifiedScreenItemType",
+            "RunHmiActionScriptRecipeSafetySelfTest", "RunClassicHmiTemporaryImportPreflight"
+        };
+        public static bool MayCallOpenness(string name)
+        {
+            var row = For(name);
+            return !IsSafeWithoutTia(name) && !WithoutPortal.Contains(name) && row.Operation != "OFFLINE" && CategoryOf(row.Domain) != "runtime";
+        }
+        public static bool RequiresConnectedPortal(string name)
+        {
+            return MayCallOpenness(name) && !DispatchesTargets(name) && name != "ConnectPortal" && name != "ConnectProject"
+                && name != "ConnectIsolatedPortal" && name != "DisconnectPortal" && name != "RestartOpennessWorker"
+                && name != "GetSessionState" && name != "GetPortalInfo" && name != "ListPortalProcessProjects"
+                && name != "DiagnosePortalConnectReadiness" && name != "EnsureOpennessUserGroup";
+        }
         public static bool UsesOpennessLane(string name) => !WithoutTia.Contains(name) || SessionReaders.Contains(name);
         public static bool DispatchesTargets(string name) => string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "RunReadOnlyToolBatch", StringComparison.OrdinalIgnoreCase)

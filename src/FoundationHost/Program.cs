@@ -78,6 +78,7 @@ if (options.Transport == "http")
     app.MapMcp("/mcp");
     app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = "plc-foundation" });
     app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
+    using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
     await app.RunAsync();
 }
 else
@@ -91,6 +92,7 @@ else
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
         .WithStdioServerTransport().WithTools(LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource));
     using var host = builder.Build();
+    using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
     await host.RunAsync();
 }
 return 0;

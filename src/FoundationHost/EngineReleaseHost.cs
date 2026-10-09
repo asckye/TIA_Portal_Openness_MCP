@@ -49,6 +49,7 @@ internal static class EngineReleaseHost
             var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithStdioServerTransport().WithTools(pipeline.Tools);
             pipeline.RegisterHandlers(mcp);
             using var host = builder.Build();
+            using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
             await host.RunAsync();
         }
         return 0;
@@ -123,6 +124,7 @@ internal static class EngineReleaseHost
         app.MapMcp("/mcp");
         app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = "full-engine" });
         app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
+        using var stopping = app.Lifetime.ApplicationStopping.Register(WorkerShutdown.StopAll);
         await app.RunAsync();
     }
 

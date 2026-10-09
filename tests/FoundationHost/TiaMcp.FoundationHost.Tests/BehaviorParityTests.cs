@@ -14,6 +14,23 @@ using Xunit;
 
 public sealed class BehaviorParityTests
 {
+    [Theory, InlineData(SessionBehavior.LeaseReserved), InlineData(SessionBehavior.LeaseNotReleased)]
+    public void Both_worker_clients_use_the_same_authored_lease_refusal_mapping(string message)
+    {
+        var failure = new TiaMcp.WorkerChannel.ChannelFailure(message, -32603, TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,
+            "{\"exceptionType\":\"InvalidOperationException\"}");
+        var error = WorkerOperationException.FromChannelFailure(failure);
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        {
+            var body = FoundationV4Result.Failure(release, "ConnectPortal", "fixture", true, true, null, error).StructuredContent!;
+            Assert.Equal(message, (string?)body["error"]?["message"]);
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        }
+    }
+
     private sealed class PreconditionWorker(Exception cause) : IFoundationWorker
     {
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
@@ -26,6 +43,7 @@ public sealed class BehaviorParityTests
         public void Dispose() { }
     }
     [Theory]
+    [InlineData("AttachOpenProject", SessionBehavior.PortalRequired, "session", false)]
     [InlineData("OpenProject", "Project is already open; bind it explicitly instead.", "path", true)]
     [InlineData("CloseProject", "Borrowed projects cannot be closed by this session.", "project", false)]
     [InlineData("ImportPlcBlocksFromDirectory", "A complete target inventory is required before batch import.", "softwarePath", false)]
@@ -36,7 +54,7 @@ public sealed class BehaviorParityTests
         {
             foreach (bool wrapped in new[] { false, true })
             {
-                var args = tool == "OpenProject" ? new JsonObject { ["path"] = Path.Combine(bundle, "P.ap18"), ["dryRun"] = true }
+                var args = tool == "AttachOpenProject" ? new JsonObject { ["projectName"] = "Project1", ["expectedProjectFile"] = "C:/fixture.ap18" } : tool == "OpenProject" ? new JsonObject { ["path"] = Path.Combine(bundle, "P.ap18"), ["dryRun"] = true }
                     : tool == "CloseProject" ? new JsonObject { ["dryRun"] = true }
                     : new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["dir"] = bundle, ["dryRun"] = true };
                 File.WriteAllText(Path.Combine(bundle, "P.ap18"), "fixture");
@@ -49,7 +67,7 @@ public sealed class BehaviorParityTests
                 {
                     Exception cause = new AdapterPreconditionException(message, parameter, argument);
                     if (wrapped) cause = new InvalidOperationException("Private wrapper diagnostic.", cause);
-                    var source = tool == "ImportPlcBlocksFromDirectory" ? "ImportBlocksFromDirectory" : tool;
+                    var source = tool == "AttachOpenProject" ? "AttachToOpenProject" : tool == "ImportPlcBlocksFromDirectory" ? "ImportBlocksFromDirectory" : tool;
                     var target = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), new PreconditionWorker(cause)), release);
                     var body = (await target.InvokeAsync(Request(tool, args))).StructuredContent!;
                     Assert.Equal((string?)engine["error"]?["message"], (string?)body["error"]?["message"]);
