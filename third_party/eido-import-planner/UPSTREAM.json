@@ -8,7 +8,8 @@
   "changes": [
     "Reused stable topological traversal and cycle reporting with local DTOs.",
     "Use caller-declared dependencies and priority; remove V21-specific domain heuristics.",
-    "Reject duplicate IDs and return no executable order for missing or cyclic dependencies."
+    "Reject duplicate IDs and return no executable order for missing or cyclic dependencies.",
+    "Compile the same traversal in the generation namespace with an internal 10000-item entry point; retain the MCP 256-item limit and validation behavior."
   ],
   "nativeApiUsed": false
 }

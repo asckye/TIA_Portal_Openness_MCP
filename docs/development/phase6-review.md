@@ -1614,7 +1614,13 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):14 | `public const int MaximumDepth = 64;` |
 | [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):23 | `using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = MaximumDepth });` |
 | [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):135 | `if (exponent >= 0 && trimmed.Length + exponent <= 21)` |
+| [Generation/GenerationAllocator.cs](../../src/Logic/Generation/GenerationAllocator.cs):97 | `if (parts.Length != 2 \|\| !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var prefix) \|\| prefix < 1 \|\| prefix > 30)` |
 | [Generation/GenerationDocuments.cs](../../src/Logic/Generation/GenerationDocuments.cs):14 | `MaxDepth = CanonicalJson.MaximumDepth` |
+| [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):41 | `if (result.Length > 4096) throw CanonicalJson.Failure("", "name-length", "Expanded text exceeds 4096 characters.");` |
+| [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):43 | `if (result.Length > 4096) throw CanonicalJson.Failure("", "name-length", "Expanded text exceeds 4096 characters.");` |
+| [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):105 | `if (name.Length < (rule.MinLength ?? 1) \|\| name.Length > (rule.MaxLength ?? 4096) \|\| name.Any(c => char.IsControl(c) \|\| c == '"')) return false;` |
+| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):158 | `if (steps.Count > 10000) throw CanonicalJson.Failure("/steps", "limit", "Plan exceeds 10000 steps.");` |
+| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):671 | `if (entries.Count >= options.MaximumObjects) throw CanonicalJson.Failure("/expected", "limit", "Expanded model exceeds its object budget.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):51 | `if (schemas.Count != 14) throw new InvalidOperationException("Generation schema resources are missing.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):57 | `if (errors.Count >= 100) return;` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):141 | `if (files.Count >= limits.MaximumFiles) throw CanonicalJson.Failure(name, "file-count", "Too many package files.");` |
@@ -1839,7 +1845,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/Host/OfflineAnalysisTools.cs](../../src/Shared/Host/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [src/Shared/Host/PlcDocumentationTools.cs](../../src/Shared/Host/PlcDocumentationTools.cs):145 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
 
-共 310 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 316 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 

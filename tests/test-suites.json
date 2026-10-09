@@ -1,4 +1,10 @@
 {
+  "generation-planning": {
+    "project": "tests/Generation/TiaMcp.Generation.Planning.Tests/TiaMcp.Generation.Planning.Tests.csproj",
+    "minimumPassed": 110,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
   "generation-model": {
     "project": "tests/Generation/TiaMcp.Generation.Tests/TiaMcp.Generation.Tests.csproj",
     "minimumPassed": 80,

@@ -54,6 +54,7 @@
     <Project Path="third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
   </Folder>
   <Folder Name="/Tests/Generation/">
+    <Project Path="tests/Generation/TiaMcp.Generation.Planning.Tests/TiaMcp.Generation.Planning.Tests.csproj" />
     <Project Path="tests/Generation/TiaMcp.Generation.Tests/TiaMcp.Generation.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Repository/">

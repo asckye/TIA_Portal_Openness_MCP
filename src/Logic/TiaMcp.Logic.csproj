@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
   <Import Project="../Shared/AuditSources.props" />
   <Import Project="../Shared/ApprovalSources.props" />
   <Import Project="../Shared/WorkbenchControlSources.props" />
@@ -8,6 +8,7 @@
     <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);TIA_GENERATION_PLANNER</DefineConstants>
     <DefineConstants>$(DefineConstants);TIA_BUNDLE_LAYOUT_PUBLIC</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -30,6 +31,7 @@
     <Compile Include="../Shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" />
     <Compile Include="../Shared/CallJournalPayload.cs" Link="Shared/CallJournalPayload.cs" />
     <Compile Include="../Shared/ToolUsageCatalog.cs" Link="Shared/ToolUsageCatalog.cs" />
+    <Compile Include="../Shared/ImportDependencyPlanner.cs" Link="Generation/Ordering/ImportDependencyPlanner.cs" />
     <EmbeddedResource Include="../Shared/ToolUsageData.json" LogicalName="TiaMcp.ToolUsage.json" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">

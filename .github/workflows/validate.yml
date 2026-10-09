@@ -34,7 +34,7 @@ jobs:
         run: |
           dotnet run --project build-tools/release -- validate-bundle -SelfTest
       - name: Generation model and canonical hash tests
-        run: dotnet run --project build-tools/release -- test-suites -Suite generation-model
+        run: dotnet run --project build-tools/release -- test-suites -Suite generation-model -Suite generation-planning
       - name: Release prerequisites, reuse and documentation assertions
         run: |
           # Stop at the first failing command; otherwise only the last exit code fails the step.

@@ -5,7 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#if TIA_GENERATION_PLANNER
+namespace TiaMcp.Logic.Generation.Ordering
+#else
 namespace TiaOpenness.Shared
+#endif
 {
     public sealed class ImportOrderItem
     {
@@ -31,14 +35,22 @@ namespace TiaOpenness.Shared
     public static class ImportDependencyPlanner
     {
         public static ImportOrderPlan Build(ImportOrderItem[] artifacts)
+            => BuildCore(artifacts, 256, 512);
+
+#if TIA_GENERATION_PLANNER
+        internal static ImportOrderPlan BuildGeneration(ImportOrderItem[] artifacts)
+            => BuildCore(artifacts, 10000, 4096);
+#endif
+
+        private static ImportOrderPlan BuildCore(ImportOrderItem[] artifacts, int maximumArtifacts, int maximumIdLength)
         {
-            if (artifacts == null || artifacts.Length == 0 || artifacts.Length > 256)
-                throw new ArgumentException("Provide 1..256 artifacts.");
+            if (artifacts == null || artifacts.Length == 0 || artifacts.Length > maximumArtifacts)
+                throw new ArgumentException("Provide 1.." + maximumArtifacts + " artifacts.");
             var byKey = new Dictionary<string, ImportOrderItem>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in artifacts)
             {
-                if (item == null || string.IsNullOrWhiteSpace(item.Id) || item.Id.Length > 512)
-                    throw new ArgumentException("Each artifact needs a nonempty Id of at most 512 characters.");
+                if (item == null || string.IsNullOrWhiteSpace(item.Id) || item.Id.Length > maximumIdLength)
+                    throw new ArgumentException("Each artifact needs a nonempty Id of at most " + maximumIdLength + " characters.");
                 if (byKey.ContainsKey(item.Id)) throw new ArgumentException("Duplicate artifact Id: " + item.Id);
                 byKey.Add(item.Id, item);
             }
@@ -47,7 +59,7 @@ namespace TiaOpenness.Shared
             foreach (var item in artifacts)
             {
                 var dependencies = item.Dependencies ?? new string[0];
-                if (dependencies.Length > 256) throw new ArgumentException("At most 256 dependencies per artifact.");
+                if (dependencies.Length > maximumArtifacts) throw new ArgumentException("At most " + maximumArtifacts + " dependencies per artifact.");
                 foreach (var key in dependencies)
                 {
                     if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Dependency Id cannot be blank.");

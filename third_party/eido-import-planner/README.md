@@ -11,6 +11,10 @@ DTO removes the upstream V21-specific artifact model and automatic domain heuris
 callers supply dependencies explicitly. Missing dependencies and cycles return issues
 and an empty order. Duplicate IDs are rejected. Priority orders independent items.
 
+The generation planner compiles this same source into its own namespace and uses
+an internal entry point with a 10000-item bound. The MCP entry point retains its
+256-item bound, validation messages and traversal behavior.
+
 Both MCP profiles expose `PlanArtifactImportOrder`, using the same implementation.
 The full-engine result is under `meta.plan`; the foundation result is the plan itself.
 Studio can consume the shared planner when it gains a multi-artifact import workflow;
