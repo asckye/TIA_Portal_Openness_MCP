@@ -57,6 +57,8 @@ internal static class HostToolCommand
         protected override object? Invoke(MethodInfo? method, object?[]? arguments)
         {
             if (method?.Name == "get_Services") return Services;
+            // A one-shot command has no MCP session; ActorScope then attributes the call to this command's own transport.
+            if (method?.Name == "get_SessionId") return null;
             throw new InvalidOperationException("The one-shot CLI has no protocol peer: " + method?.Name);
         }
         private static readonly IServiceProvider Services = new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider();
