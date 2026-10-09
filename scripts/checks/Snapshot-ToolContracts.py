@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from contextlib import contextmanager
 import os
 import queue
@@ -222,10 +223,11 @@ def capture(args):
         if release in executables:
             raise ValueError('Duplicate executable override for V' + release)
         executables[release] = Path(path).resolve()
-    fixture_root = args.output.parent / ('.' + args.output.name + '-sdk-only-fixtures')
+    # The SDK-only installation copies the whole PublicAPI tree (schemas, parameter PDFs); a short
+    # temporary root keeps it under MAX_PATH when the release candidate's output path is deep.
+    fixture_root = Path(tempfile.mkdtemp(prefix='tc-sdk-')) if args.harness is None else None
     if args.harness is None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        fixture_root.mkdir()
     requested_host = args.engine_host
     for release in args.releases:
         exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcp.FoundationHost.exe')
