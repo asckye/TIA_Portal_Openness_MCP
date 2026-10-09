@@ -389,12 +389,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 发布键 | 当前广告工具 | 当前 lite | string …Json | 涉及工具 | V4 工具 | V4 lite 提案 |
 |---|---|---|---|---|---|---|
-| 14sp1 | 106 | 不设 | 61 | 27 | 106 | 不设 |
-| 15.1 | 107 | 不设 | 61 | 27 | 107 | 不设 |
-| 16 | 109 | 不设 | 61 | 27 | 109 | 不设 |
-| 17 | 109 | 不设 | 61 | 27 | 109 | 不设 |
-| 18 | 109 | 不设 | 61 | 27 | 109 | 不设 |
-| 19 | 111 | 不设 | 61 | 27 | 111 | 不设 |
+| 14sp1 | 149 | 不设 | 72 | 37 | 149 | 不设 |
+| 15.1 | 150 | 不设 | 72 | 37 | 150 | 不设 |
+| 16 | 152 | 不设 | 72 | 37 | 152 | 不设 |
+| 17 | 152 | 不设 | 72 | 37 | 152 | 不设 |
+| 18 | 152 | 不设 | 72 | 37 | 152 | 不设 |
+| 19 | 162 | 不设 | 74 | 39 | 162 | 不设 |
 | 20 | 482 | 63 | 272 | 156 | 480 | 81 |
 | 21 | 493 | 63 | 289 | 164 | 491 | 81 |
 
@@ -409,18 +409,18 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `AddDeviceWithFallback` | `CreateHardwareDevice` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `AddGsdDeviceWithProbe` | `CreateGsdDevice` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `AddHardwareCatalogDeviceWithProbe` | `CreateHardwareCatalogDevice` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
-| `AnalyzeGlobalLibraryPackage` | `AnalyzeGlobalLibraryPackage` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `AnalyzeHmiTemplateReference` | `AnalyzeHmiTemplateReference` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `AnalyzePlcReferences` | `AnalyzePlcReferences` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
-| `AnalyzeUnifiedHmiTemplateLayout` | `AnalyzeUnifiedHmiTemplateLayout` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `ApplyToolBatch` | `ApplyToolBatch` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
+| `AnalyzeGlobalLibraryPackage` | `AnalyzeGlobalLibraryPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `AnalyzeHmiTemplateReference` | `AnalyzeHmiTemplateReference` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `AnalyzePlcReferences` | `AnalyzePlcReferences` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
+| `AnalyzeUnifiedHmiTemplateLayout` | `AnalyzeUnifiedHmiTemplateLayout` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `ApplyToolBatch` | `ApplyToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ApplyUnifiedHmiLayout` | `ApplyUnifiedHmiLayout` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ApplyUnifiedHmiScreenDesignJson` | `ApplyUnifiedHmiScreenDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ApplyUnifiedHmiTheme` | `ApplyUnifiedHmiTheme` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ArchiveSavedProject` | `ArchiveSavedProject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
 | `AttachDeviceNodeToSubnet` | `AttachDeviceNodeToSubnet` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `AttachToOpenProject` | `AttachOpenProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
-| `AuditEngineeringExports` | `AuditEngineeringExports` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/QualityAuditTools.cs) |
+| `AuditEngineeringExports` | `AuditEngineeringExports` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/QualityAuditTools.cs) |
 | `BindUnifiedHmiButtonPressedTag` | `BindUnifiedHmiButtonPressedTag` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `BindUnifiedHmiTagDynamization` | `BindUnifiedHmiTagDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `Bootstrap` | `InitializeEnvironment` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
@@ -433,25 +433,25 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `BuildPlcSymbolManifestFromXmlPath` | `BuildPlcSymbolManifestFromPath` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `BuildPlcTagTableXml` | `BuildPlcTagTable` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildPlcUdtXml` | `BuildPlcUdt` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
-| `BuildReleaseDiagnosticReport` | `BuildReleaseDiagnosticReport` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `BuildReleaseManifest` | `BuildReleaseManifest` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `BuildReleaseRunbook` | `BuildReleaseRunbook` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `BuildReleaseDiagnosticReport` | `BuildReleaseDiagnosticReport` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `BuildReleaseManifest` | `BuildReleaseManifest` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `BuildReleaseRunbook` | `BuildReleaseRunbook` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `BuildStructuredTextXml` | `BuildStructuredText` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
-| `BuildUnifiedHmiButtonActionScript` | `BuildUnifiedHmiButtonActionScript` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `BuildUnifiedHmiLayoutDesignJson` | `BuildUnifiedHmiLayoutDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `BuildUnifiedHmiTemplateApplyDesignJson` | `BuildUnifiedHmiTemplateApplyDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `BuildUnifiedHmiTemplateApplyDesignManifest` | `BuildUnifiedHmiTemplateApplyDesignManifest` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `BuildUnifiedHmiThemeDesignJson` | `BuildUnifiedHmiThemeDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `CallTool` | `CallTool` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
+| `BuildUnifiedHmiButtonActionScript` | `BuildUnifiedHmiButtonActionScript` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `BuildUnifiedHmiLayoutDesignJson` | `BuildUnifiedHmiLayoutDesign` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `BuildUnifiedHmiTemplateApplyDesignJson` | `BuildUnifiedHmiTemplateApplyDesign` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `BuildUnifiedHmiTemplateApplyDesignManifest` | `BuildUnifiedHmiTemplateApplyDesignManifest` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `BuildUnifiedHmiThemeDesignJson` | `BuildUnifiedHmiThemeDesign` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `CallTool` | `CallTool` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `CheckDownloadReadiness` | `CheckDownloadReadiness` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
-| `CheckForUpdate` | `CheckProductUpdate` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Maintenance.cs) |
+| `CheckForUpdate` | `CheckProductUpdate` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Maintenance.cs) |
 | `CheckLibraryUpdates` | `CheckLibraryUpdates` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `CleanupStagedImportFiles` | `CleanupStagedImportFiles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-67；操作分类 FILE；[源码](../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs) |
-| `ClearExports` | `ClearExportHandles` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
+| `ClearExports` | `ClearExportHandles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
 | `CloseProject` | `CloseProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `CompareLibraries` | `CompareLibraries` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `CompareLibraryObjects` | `CompareLibraryObjects` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
-| `ComparePlcBlockDocuments` | `ComparePlcBlockDocuments` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
+| `ComparePlcBlockDocuments` | `ComparePlcBlockDocuments` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
 | `CompareProjects` | `CompareProjects` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `CompareSoftwareToOnline` | `CompareSoftwareToOnline` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `CompareUnifiedGraphicSelections` | `CompareUnifiedGraphicSelections` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
@@ -481,7 +481,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `DecodePlcSimaticMl` | `DecodePlcSimaticMl` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
 | `DeleteEmptyPlcBlockGroup` | `DeleteEmptyPlcBlockGroup` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `DeleteEmptyUnifiedHmiScreenGroup` | `DeleteEmptyUnifiedHmiScreenGroup` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
-| `DeleteExport` | `DeleteExportHandle` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
+| `DeleteExport` | `DeleteExportHandle` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
 | `DeleteHmiTag` | `DeleteHmiTag` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiTagDeletionTools.cs) |
 | `DeletePlcBlock` | `DeletePlcBlock` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `DeletePlcExternalSource` | `DeletePlcExternalSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
@@ -502,7 +502,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `DescribeUnifiedScreenItemType` | `DescribeUnifiedScreenItemType` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
 | `DiagnosePortalConnectReadiness` | `GetPortalConnectionReadiness` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/FoundationHost/FoundationTools.cs) |
 | `Disconnect` | `DisconnectPortal` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
-| `Doctor` | `GetEnvironmentDiagnostics` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Doctor.cs) |
+| `Doctor` | `GetEnvironmentDiagnostics` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Doctor.cs) |
 | `DownloadPlcToFolder` | `DownloadPlcToFolder` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `DownloadToPlc` | `DownloadPlc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `DumpDeviceAttributes` | `GetDeviceAttributes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareDevicesTools.cs) |
@@ -550,13 +550,13 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ExportType` | `ExportPlcType` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
 | `ExportTypes` | `ExportPlcTypes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
 | `ExportUnifiedEngineeringList` | `ExportUnifiedEngineeringList` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
-| `ExtractPlcBlockMetrics` | `ExtractPlcBlockMetrics` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
-| `FindTools` | `FindTools` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
-| `GenerateAcceptanceReport` | `GenerateAcceptanceReport` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HostMetaTools.cs) |
+| `ExtractPlcBlockMetrics` | `ExtractPlcBlockMetrics` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
+| `FindTools` | `FindTools` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
+| `GenerateAcceptanceReport` | `GenerateAcceptanceReport` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HostMetaTools.cs) |
 | `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
-| `GenerateErrorReport` | `GenerateErrorReport` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HostMetaTools.cs) |
+| `GenerateErrorReport` | `GenerateErrorReport` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HostMetaTools.cs) |
 | `GenerateOpcUaModelledInterface` | `GenerateOpcUaModelledInterface` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
-| `GeneratePlcDocumentation` | `GeneratePlcDocumentation` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
+| `GeneratePlcDocumentation` | `GeneratePlcDocumentation` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
 | `GeneratePlcLoadableFile` | `GeneratePlcLoadableFile` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `GeneratePlcSourceFromBlocks` | `GeneratePlcSourceFromBlocks` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `GenerateSiVArc` | `GenerateSivarc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
@@ -573,7 +573,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GetDeviceItemTree` | `GetDeviceItemTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `GetDevicePlugLocations` | `GetDevicePlugLocations` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/ModulesTools.cs) |
 | `GetDevices` | `ListDevices` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareDevicesTools.cs) |
-| `GetExport` | `GetExportContent` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
+| `GetExport` | `GetExportContent` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
 | `GetHmiConnections` | `ListHmiConnections` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
 | `GetHmiProgramInfo` | `GetHmiProgramInfo` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
 | `GetHmiScreens` | `ListHmiScreens` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
@@ -636,16 +636,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ImportUnifiedOpcUaAlarms` | `ImportUnifiedOpcUaAlarms` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
 | `InitializeSimotionScripting` | `InitializeSimotionScripting` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `InspectSimaticSdCompatibility` | `InspectSimaticSdCompatibility` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
-| `InstantiatePlcXmlTemplates` | `InstantiatePlcTemplates` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/TemplateTools.cs) |
+| `InstantiatePlcXmlTemplates` | `InstantiatePlcTemplates` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/TemplateTools.cs) |
 | `InvokeObject` | `InvokeObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `InvokeService` | `InvokeService` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
-| `LintPlcSclSource` | `AnalyzePlcSclSource` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
-| `ListExports` | `ListExportHandles` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
+| `LintPlcSclSource` | `AnalyzePlcSclSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
+| `ListExports` | `ListExportHandles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
 | `ListHmiScreenPaths` | `ListHmiScreenPaths` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
 | `ListObjectChildren` | `ListObjectChildren` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs) |
 | `ListPortalProcessProjects` | `ListPortalProcessProjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | `ListStagedImportFiles` | `ListStagedImportFiles` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-67；操作分类 READ；[源码](../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs) |
-| `ListToolCategories` | `ListToolCategories` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
+| `ListToolCategories` | `ListToolCategories` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `ListUnifiedGlobalScripts` | `ListUnifiedGlobalScripts` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
 | `ListUnifiedHmiApiTypes` | `ListUnifiedHmiApiTypes` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ListUnifiedLibraryFolder` | `ListUnifiedLibraryFolderEntries` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
@@ -729,7 +729,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageTestSuiteCase` | `ManageTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `ManageTransferArea` | `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageUmcUsers` | `ManageUmcUsers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
-| `ManageUnifiedCwcPackage` | `ManageUnifiedCwcPackage` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
+| `ManageUnifiedCwcPackage` | `ManageUnifiedCwcPackage` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
 | `ManageUnifiedDynamization` | `ManageUnifiedDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedEngineeringObject` | `ManageUnifiedEngineeringObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
 | `ManageUnifiedEvent` | `ManageUnifiedEvent` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs) |
@@ -745,17 +745,17 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `MonitorWatchTableLiveS7` | `MonitorPlcWatchTableS7` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `MoveBlockToGroup` | `MovePlcBlockToGroup` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `OpenProject` | `OpenProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
-| `PatchPlcBlockDocument` | `PatchPlcBlockDocument` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
+| `PatchPlcBlockDocument` | `PatchPlcBlockDocument` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
 | `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) |
-| `PlanGlobalLibraryTemplateReuse` | `PlanGlobalLibraryTemplateReuse` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `PlanGlobalLibraryTemplateReuse` | `PlanGlobalLibraryTemplateReuse` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
 | `PlanHardwareNetworkConfiguration` | `PlanHardwareNetworkConfiguration` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `PlanOnlineReadOnlyDataProvider` | `PlanOnlineReadOnlyDataProvider` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanOnlineReadOnlyMonitoring` | `PlanOnlineReadOnlyMonitoring` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | 14sp1, 15.1, 16, 17, 18, 19 | 不变；符合命名规则；[源码](../../src/FoundationHost/FoundationTools.cs) |
 | `PlcBuildAndImport` | `BuildAndImportPlcArtifact` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs) |
 | `PlugDeviceItem` | `PlugDeviceItem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/ModulesTools.cs) |
-| `PreflightToolCall` | `PreviewToolCall` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
-| `PreviewToolBatch` | `PreviewToolBatch` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
+| `PreflightToolCall` | `PreviewToolCall` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
+| `PreviewToolBatch` | `PreviewToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ProbeGlobalLibrary` | `ProbeGlobalLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ProbeHardwareHmiConnectionOwnerCandidates` | `ProbeHardwareHmiConnectionOwnerCandidates` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ProbeHardwareHmiConnectionWhitelistedServices` | `ProbeHardwareHmiConnectionWhitelistedServices` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
@@ -778,14 +778,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadLibraryOverview` | `GetLibraryOverview` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ReadLibraryType` | `GetLibraryType` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ReadMotionAxisConfiguration` | `GetMotionAxisConfiguration` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
-| `ReadNativeInvocationLog` | `GetNativeInvocationLog` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
+| `ReadNativeInvocationLog` | `GetNativeInvocationLog` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
 | `ReadNetworkDomains` | `ListNetworkDomains` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadObjectIdentifier` | `GetObjectIdentifier` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ReadOnlineDriveParameters` | `GetOnlineDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadOpcUaAccessControl` | `GetOpcUaAccessControl` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
-| `ReadOpennessCompatibility` | `GetOpennessCompatibility` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
-| `ReadOpennessGuidance` | `GetOpennessGuidance` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EcosystemTools.cs) |
-| `ReadOpennessWorkerStatus` | `GetOpennessWorkerStatus` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Worker.cs) |
+| `ReadOpennessCompatibility` | `GetOpennessCompatibility` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
+| `ReadOpennessGuidance` | `GetOpennessGuidance` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EcosystemTools.cs) |
+| `ReadOpennessWorkerStatus` | `GetOpennessWorkerStatus` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Worker.cs) |
 | `ReadPlcBlockEditCapabilities` | `GetPlcBlockEditCapabilities` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ReadPlcBlockFingerprints` | `GetPlcBlockFingerprints` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ReadPlcBlockScopes` | `GetPlcBlockScopes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs) |
@@ -815,7 +815,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadSivarcRuleTree` | `GetSivarcRuleTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
 | `ReadTechnologyObjectTree` | `GetTechnologyObjectTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
 | `ReadTestSuiteCases` | `ListTestSuiteCases` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
-| `ReadToolBatch` | `RunReadOnlyToolBatch` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
+| `ReadToolBatch` | `RunReadOnlyToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ReadTransferAreas` | `ListTransferAreas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadTransferRoutes` | `ListTransferRoutes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `ReadUnifiedAlarmCommon` | `GetUnifiedAlarmCommon` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
@@ -836,35 +836,35 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadUnifiedRuntimeTags` | `GetUnifiedRuntimeTags` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
 | `ReadUnifiedScreenBranch` | `GetUnifiedScreenBranch` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
 | `ReadUnifiedTagDefinitions` | `ListUnifiedTagDefinitions` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
-| `ReadV21EcosystemCatalog` | `GetV21EcosystemCatalog` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
-| `RebuildReleaseHandoffArtifacts` | `BuildReleaseHandoffArtifacts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `ReadV21EcosystemCatalog` | `GetV21EcosystemCatalog` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
+| `RebuildReleaseHandoffArtifacts` | `BuildReleaseHandoffArtifacts` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `ReleaseUnifiedReadCursor` | `ReleaseUnifiedReadCursor` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MigrationReadTools.cs) |
 | `RenderPlcBlock` | `RenderPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-48；操作分类 FILE；[源码](../../src/Shared/Host/EcosystemTools.cs) |
-| `RenderPlcBlockDocument` | `RenderPlcBlockDocument` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
+| `RenderPlcBlockDocument` | `RenderPlcBlockDocument` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/PlcDocumentationTools.cs) |
 | `RenderPlcProgramAtlas` | `RenderPlcProgramAtlas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 4.0 新增；P6-48；操作分类 FILE；[源码](../../src/Shared/Host/EcosystemTools.cs) |
-| `RenderPlcVisualDiff` | `RenderPlcVisualDiff` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/EcosystemTools.cs) |
+| `RenderPlcVisualDiff` | `RenderPlcVisualDiff` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/EcosystemTools.cs) |
 | `RepairAndReimportBlock` | `RepairAndReimportPlcBlock` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ResolveSivarcExpression` | `ResolveSivarcExpression` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
-| `RestartOpennessWorker` | `RestartOpennessWorker` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Worker.cs) |
+| `RestartOpennessWorker` | `RestartOpennessWorker` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Worker.cs) |
 | `RetrieveProjectArchive` | `RetrieveProjectArchive` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `RunCapabilitySelfTest` | `RunCapabilitySelfTest` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DiagnosticsTools.cs) |
 | `RunClassicHmiOfflineValidationSuite` | `RunClassicHmiOfflineValidationSuite` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `RunClassicHmiTemporaryImportPreflight` | `RunClassicHmiTemporaryImportPreflight` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `RunHmiActionScriptRecipeSafetySelfTest` | `RunHmiActionScriptRecipeSafetySelfTest` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
+| `RunHmiActionScriptRecipeSafetySelfTest` | `RunHmiActionScriptRecipeSafetySelfTest` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
 | `RunHmiTemplatePlcSyncPrecheckSuite` | `RunHmiTemplatePlcSyncPrecheckSuite` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `RunOfflineReleaseValidationSuite` | `RunOfflineReleaseValidationSuite` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `RunOnlineMonitoringSafetySelfTest` | `RunOnlineMonitoringSafetySelfTest` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HostMetaTools.cs) |
+| `RunOfflineReleaseValidationSuite` | `RunOfflineReleaseValidationSuite` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| `RunOnlineMonitoringSafetySelfTest` | `RunOnlineMonitoringSafetySelfTest` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HostMetaTools.cs) |
 | `RunPlcCompanionTool` | `RunPlcCompanionTool` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/EcosystemTools.cs) |
 | `RunPlcSimAdvancedTestScenario` | `RunPlcSimAdvancedTestScenario` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
 | `RunTestSuiteCase` | `RunTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `RunToolsInTransaction` | `RunToolTransaction` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `SamplePlcLiveValuesS7` | `SamplePlcLiveValuesS7` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
 | `SaveAsProject` | `SaveProjectCopy` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
-| `SaveExport` | `SaveExportContent` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
+| `SaveExport` | `SaveExportContent` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
 | `SaveProject` | `SaveProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ScaffoldProject` | `BuildProjectScaffold` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ScanAccessibleDevices` | `ScanAccessibleDevices` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
-| `ScanPlcSourceAnnotations` | `ScanPlcSourceAnnotations` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
+| `ScanPlcSourceAnnotations` | `ScanPlcSourceAnnotations` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
 | `SearchHardwareCatalog` | `SearchHardwareCatalog` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `SearchInstalledGsdDevices` | `SearchInstalledGsdDevices` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `SeedProjectFromReference` | `SeedProjectFromReference` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
@@ -902,7 +902,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ValidatePlcXmlSchemas` | `ValidatePlcDocumentSchemas` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
 | `ValidateUnifiedObject` | `ValidateUnifiedObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `WriteClassicHmiMinimalPackageFiles` | `WriteClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
+| `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
 | `WritePlcSimAdvancedTags` | `WritePlcSimAdvancedTags` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
 | `WritePlcWebVars` | `WritePlcWebVars` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
 | `WriteUnifiedRuntimeTags` | `WriteUnifiedRuntimeTags` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
@@ -925,7 +925,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ApplyUnifiedHmiLayout` | 20, 21 | `layoutJson` → `layout` | string | H | `UnifiedLayoutSpec` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ApplyUnifiedHmiScreenDesignJson` | 20, 21 | `designJson` → `design` | string | H | `UnifiedScreenSpec` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ApplyUnifiedHmiTheme` | 20, 21 | `themeJson` → `theme` | string | H | `UnifiedThemeSpec` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
-| `AuditEngineeringExports` | 20, 21 | `rulesJson` → `rules` | string | X | `XPathRule[]` | [入口及校验调用](../../src/Shared/Host/QualityAuditTools.cs) |
+| `AuditEngineeringExports` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `rulesJson` → `rules` | string | X | `XPathRule[]` | [入口及校验调用](../../src/Shared/Host/QualityAuditTools.cs) |
 | `BuildClassicHmiMinimalPackage` | 20, 21 | `packageJson` → `package` | string | H | `ClassicPackageSpec` | [入口及校验调用](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `BuildClassicHmiScreenXml` | 20, 21 | `designJson` → `design` | string | H | `ClassicScreenSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildClassicHmiTagTableXml` | 20, 21 | `tableJson` → `table` | string | H | `ClassicTagTableSpec` | [入口及校验调用](../../src/Shared/Host/OfflineSuiteTools.cs) |
@@ -935,9 +935,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `BuildPlcTagTableXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `tagTableJson` → `tagTable` | string | B | `PlcTagTableSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildPlcUdtXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `udtJson` → `udt` | string | B | `UdtSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildStructuredTextXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `structuredTextJson` → `structuredText` | string | B | `StructuredTextSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
-| `BuildUnifiedHmiLayoutDesignJson` | 20, 21 | `layoutJson` → `layout` | string | H | `UnifiedLayoutSpec` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
-| `BuildUnifiedHmiThemeDesignJson` | 20, 21 | `themeJson` → `theme` | string | H | `UnifiedThemeSpec` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
-| `CallTool` | 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../src/Shared/Host/McpServer.ToolBridge.cs) |
+| `BuildUnifiedHmiLayoutDesignJson` | 19, 20, 21 | `layoutJson` → `layout` | string | H | `UnifiedLayoutSpec` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
+| `BuildUnifiedHmiThemeDesignJson` | 19, 20, 21 | `themeJson` → `theme` | string | H | `UnifiedThemeSpec` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
+| `CallTool` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `CompareProjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `CompareProjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `CompareProjects` | 20, 21 | `targetDevicePathJson` → `targetDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
@@ -958,9 +958,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ExchangeSystemDiagnosticsSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ExchangeSystemDiagnosticsSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ExchangeUnifiedTags` | 20, 21 | `expectedTagNamesJson` → `expectedTagNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
-| `ExtractPlcBlockMetrics` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
+| `ExtractPlcBlockMetrics` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
 | `GenerateOpcUaModelledInterface` | 20, 21 | `accessLevelsJson` → `accessLevels` | string | L | `map<string,int32>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
-| `GeneratePlcDocumentation` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/PlcDocumentationTools.cs) |
+| `GeneratePlcDocumentation` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/PlcDocumentationTools.cs) |
 | `GeneratePlcLoadableFile` | 20, 21 | `objectPathsJson` → `objectPaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `GeneratePlcSourceFromBlocks` | 20, 21 | `blockPathsJson` → `blockPaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `GenerateSiVArc` | 20, 21 | `additionalHmiDeviceNamesJson` → `additionalHmiDeviceNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) |
@@ -970,8 +970,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ImportSinumerikAlarmTexts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ImportSinumerikAlarmTexts` | 20, 21 | `filesJson` → `files` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) |
 | `ImportUnifiedEngineeringList` | 20, 21 | `expectedNamesJson` → `expectedNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
-| `InstantiatePlcXmlTemplates` | 20, 21 | `rowsJson` → `rows` | string | D | `TemplateRow[]` | [入口及校验调用](../../src/Shared/Host/TemplateTools.cs) |
-| `LintPlcSclSource` | 20, 21 | `rulesJson` → `rules` | string | X | `LintRules` | [入口及校验调用](../../src/Shared/Host/PlcDocumentationTools.cs) |
+| `InstantiatePlcXmlTemplates` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `rowsJson` → `rows` | string | D | `TemplateRow[]` | [入口及校验调用](../../src/Shared/Host/TemplateTools.cs) |
+| `LintPlcSclSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `rulesJson` → `rules` | string | X | `LintRules` | [入口及校验调用](../../src/Shared/Host/PlcDocumentationTools.cs) |
 | `ManageClassicHmiCycle` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageClassicHmiScript` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageClassicHmiTextGraphicList` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
@@ -1117,16 +1117,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageUnifiedScreenLayout` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageWatchForceTableWebAccess` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
 | `ManageWatchForceTableWebAccess` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `PatchPlcBlockDocument` | 20, 21 | `changesJson` → `changes` | string | D | `BlockEdit[]` | [入口及校验调用](../../src/Shared/PlcOfflineTools.cs) |
+| `PatchPlcBlockDocument` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `changesJson` → `changes` | string | D | `BlockEdit[]` | [入口及校验调用](../../src/Shared/PlcOfflineTools.cs) |
 | `PlanArtifactImportOrder` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `artifactsJson` → `artifacts` | string | D | `Artifact[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) |
-| `PlanGlobalLibraryTemplateReuse` | 20, 21 | `templateIntentJson` → `templateIntent` | string | X | `TemplateIntent` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
+| `PlanGlobalLibraryTemplateReuse` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `templateIntentJson` → `templateIntent` | string | X | `TemplateIntent` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
 | `PlanHardwareNetworkConfiguration` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `planJson` → `plan` | string | D | `NetworkPlan` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `PlanOnlineReadOnlyDataProvider` | 20, 21 | `optionsJson` → `options` | string | X | `MonitoringOptions` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanOnlineReadOnlyDataProvider` | 20, 21 | `tagPathsJson` → `tagPaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanOnlineReadOnlyMonitoring` | 20, 21 | `tagPathsJson` → `tagPaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlcBuildAndImport` | 20, 21 | `json` → `spec` | string | B | `PlcArtifactSpec(kind)` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs) |
-| `PreflightToolCall` | 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../src/Shared/Host/McpServer.ToolBridge.cs) |
-| `PreviewToolBatch` | 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
+| `PreflightToolCall` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../src/Shared/Host/McpServer.ToolBridge.cs) |
+| `PreviewToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ReadCommunicationConnections` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadCommunicationConnections` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadDccCharts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
@@ -1163,7 +1163,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadProjectUserManagement` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `ReadSafetyActivationTests` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
 | `ReadSiVArcRules` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
-| `ReadToolBatch` | 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
+| `ReadToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ReadTransferAreas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadTransferAreas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadUnifiedGraphicSelection` | 20, 21 | `itemNamesJson` → `itemNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
@@ -1181,8 +1181,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `RunTestSuiteCase` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `RunToolsInTransaction` | 20, 21 | `callsJson` → `calls` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `SamplePlcLiveValuesS7` | 20, 21 | `itemsJson` → `items` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
-| `ScanPlcSourceAnnotations` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
-| `ScanPlcSourceAnnotations` | 20, 21 | `markersJson` → `markers` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
+| `ScanPlcSourceAnnotations` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
+| `ScanPlcSourceAnnotations` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `markersJson` → `markers` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
 | `SetCpuCommonSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `settingsJson` → `settings` | string | M | `CpuSettings{exactAttributes:AttributeMap<Scalar>}` | [入口及校验调用](../../src/Shared/HardwareDevicesTools.cs) |
 | `SetUnifiedLogDuration` | 20, 21 | `durationPathJson` → `durationPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `ShowObjectInEditor` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
@@ -1227,7 +1227,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ApplyUnifiedHmiLayout.layoutJson | 20, 21 | layoutJson: JSON accepted by BuildUnifiedHmiLayoutDesignJson. | {} |
 | ApplyUnifiedHmiScreenDesignJson.designJson | 20, 21 | designJson: JSON object with optional screen properties and items array | {} |
 | ApplyUnifiedHmiTheme.themeJson | 20, 21 | themeJson: JSON accepted by BuildUnifiedHmiThemeDesignJson. | {} |
-| AuditEngineeringExports.rulesJson | 20, 21 | JSON array of explicit XPath count/value policies; unmatched rules are unevaluated. | {} |
+| AuditEngineeringExports.rulesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | JSON array of explicit XPath count/value policies; unmatched rules are unevaluated. | {} |
 | BuildClassicHmiMinimalPackage.packageJson | 20, 21 | packageJson: JSON object with Name, ScreenDesign, and TagTable. Screen items may reference HMI tags through Tag/HmiTag/ProcessValueTag or Properties.*Tag. | {} |
 | BuildClassicHmiScreenXml.designJson | 20, 21 | designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus Name/Left/Top/Width/Height/Text/Properties. | {} |
 | BuildClassicHmiTagTableXml.tableJson | 20, 21 | tableJson: JSON object with Name/TableName and Tags[]. Tag fields: Name, DataType, Length, optional Connection and ControllerTag/PlcTag. | {} |
@@ -1242,9 +1242,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | BuildPlcUdtXml.udtJson | 20, 21 | udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, commentZhCn/comment. | {} |
 | BuildStructuredTextXml.structuredTextJson | 14sp1, 15.1, 16, 17, 18, 19 | JSON {firstUid?:1..1000000000,operations:[{op,...}]}; if/elsif/else/endif, assignment (target and exactly one source or value), token, blank, newline, global/local/symbol/literal, line items. 1..1000 rows; strings <=4096; no unknown, duplicate or conflicting fields. Candidate generation, not SCL validation. | {"maxLength": 262144} |
 | BuildStructuredTextXml.structuredTextJson | 20, 21 | structuredTextJson: JSON object with operations[]. assignment uses target + literalValue/value; if uses condition/variable; token uses text. | {} |
-| BuildUnifiedHmiLayoutDesignJson.layoutJson | 20, 21 | layoutJson: JSON {grid?,left?,top?,gap?,columns?,cellWidth?,cellHeight?,items:[{name,type?,row?,col?,rowSpan?,colSpan?,text?,properties?}]}. | {} |
-| BuildUnifiedHmiThemeDesignJson.themeJson | 20, 21 | themeJson: JSON {name?, palette:{Page?,Surface?,Text?,Border?,...}} with TIA ARGB colors like 0xFFF4F6F8. | {} |
-| CallTool.argumentsJson | 20, 21 | argumentsJson: the tool's arguments as a JSON object - either the object itself ({"softwarePath":"PLC_1"}) or that object as a JSON string. Omit for a no-argument tool. Parameters ending in Json (devicePathJson, propertiesJson, ...) may likewise be given as the object/array itself; enum-like values (action, kind, ...) are matched case-insensitively; numbers and booleans are accepted as strings. | {"examples": [{}]} |
+| BuildUnifiedHmiLayoutDesignJson.layoutJson | 19, 20, 21 | layoutJson: JSON {grid?,left?,top?,gap?,columns?,cellWidth?,cellHeight?,items:[{name,type?,row?,col?,rowSpan?,colSpan?,text?,properties?}]}. | {} |
+| BuildUnifiedHmiThemeDesignJson.themeJson | 19, 20, 21 | themeJson: JSON {name?, palette:{Page?,Surface?,Text?,Border?,...}} with TIA ARGB colors like 0xFFF4F6F8. | {} |
+| CallTool.argumentsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | argumentsJson: the tool's arguments as a JSON object - either the object itself ({"softwarePath":"PLC_1"}) or that object as a JSON string. Omit for a no-argument tool. Parameters ending in Json (devicePathJson, propertiesJson, ...) may likewise be given as the object/array itself; enum-like values (action, kind, ...) are matched case-insensitively; numbers and booleans are accepted as strings. | {"examples": [{}]} |
 | CompareProjects.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | CompareProjects.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | CompareProjects.targetDevicePathJson | 20, 21 | targetDevicePathJson: JSON array naming the target station. | {} |
@@ -1268,9 +1268,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ExchangeSystemDiagnosticsSettings.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ExchangeSystemDiagnosticsSettings.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ExchangeUnifiedTags.expectedTagNamesJson | 20, 21 | expectedTagNamesJson: JSON array of tag names expected after the import (verified). | {} |
-| ExtractPlcBlockMetrics.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
+| ExtractPlcBlockMetrics.extensionsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
 | GenerateOpcUaModelledInterface.accessLevelsJson | 20, 21 | JSON area-to-level map; see tool description; safety permits only 0 or 1. | {} |
-| GeneratePlcDocumentation.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
+| GeneratePlcDocumentation.extensionsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
 | GeneratePlcLoadableFile.objectPathsJson | 20, 21 | objectPathsJson: JSON array of object paths. | {} |
 | GeneratePlcSourceFromBlocks.blockPathsJson | 20, 21 | blockPathsJson: JSON array of block paths. | {} |
 | GenerateSiVArc.additionalHmiDeviceNamesJson | 20, 21 | additionalHmiDeviceNamesJson: JSON array of further HMI device names. | {} |
@@ -1280,8 +1280,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ImportSinumerikAlarmTexts.devicePathJson | 20, 21 | JSON array of exact device-group/device names. | {} |
 | ImportSinumerikAlarmTexts.filesJson | 20, 21 | JSON array of 1..200 existing absolute .ts/.csv alarm-text files. | {} |
 | ImportUnifiedEngineeringList.expectedNamesJson | 20, 21 | expectedNamesJson: JSON array of names expected after the import (verified). | {} |
-| InstantiatePlcXmlTemplates.rowsJson | 20, 21 | Structured JSON rows; exact shape is specified in the tool description. | {} |
-| LintPlcSclSource.rulesJson | 20, 21 | rulesJson: JSON object of lint rules to enable / disable ('{}' = defaults). | {} |
+| InstantiatePlcXmlTemplates.rowsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | Structured JSON rows; exact shape is specified in the tool description. | {} |
+| LintPlcSclSource.rulesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | rulesJson: JSON object of lint rules to enable / disable ('{}' = defaults). | {} |
 | ManageClassicHmiCycle.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
 | ManageClassicHmiScript.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
 | ManageClassicHmiTextGraphicList.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
@@ -1427,17 +1427,17 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ManageUnifiedScreenLayout.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageWatchForceTableWebAccess.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ManageWatchForceTableWebAccess.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| PatchPlcBlockDocument.changesJson | 20, 21 | JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"Old title","value":"Example"}]. | {} |
+| PatchPlcBlockDocument.changesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"Old title","value":"Example"}]. | {} |
 | PlanArtifactImportOrder.artifactsJson | 14sp1, 15.1, 16, 17, 18, 19 |  | {"maxLength": 1048576} |
 | PlanArtifactImportOrder.artifactsJson | 20, 21 | JSON array, e.g. [{"Id":"UDT_A"},{"Id":"FB_A","Dependencies":["UDT_A"]}]. IDs are unique ignoring case; dependency IDs must be included. Optional Target and integer Priority order independent artifacts. | {} |
-| PlanGlobalLibraryTemplateReuse.templateIntentJson | 20, 21 | templateIntentJson: optional JSON {"screenType":"overview","targetRuntime":"Unified","preferredComponents":[...]}. | {} |
+| PlanGlobalLibraryTemplateReuse.templateIntentJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | templateIntentJson: optional JSON {"screenType":"overview","targetRuntime":"Unified","preferredComponents":[...]}. | {} |
 | PlanHardwareNetworkConfiguration.planJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | planJson: JSON with operations[]. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetCpuCommonSettings. This is offline-only and performs validation only. | {} |
 | PlanOnlineReadOnlyDataProvider.optionsJson | 20, 21 | optionsJson: optional JSON object such as {"pollMs":1000,"source":"watch-table-export"}. | {} |
 | PlanOnlineReadOnlyDataProvider.tagPathsJson | 20, 21 | tagPathsJson: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected. | {} |
 | PlanOnlineReadOnlyMonitoring.tagPathsJson | 20, 21 | tagPathsJson: JSON array of symbolic PLC tag/member paths, for example ["DB_HMI.MotorRun","DB_HMI.SpeedSet"]. Do not pass guessed M bits. | {} |
 | PlcBuildAndImport.json | 20, 21 | json: structured JSON matching the corresponding BuildPlc* tool. | {"examples": ["{\"blockName\":\"FC_DryRun\",\"blockNumber\":12,\"inputs\":[{\"name\":\"Start\",\"datatype\":\"Bool\"}],\"outputs\":[{\"name\":\"Run\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"if\",\"condition\":\"Start\"},{\"op\":\"assignment\",\"target\":\"Run\",\"value\":\"TRUE\",\"indent\":2},{\"op\":\"endif\"}]}}"]} |
-| PreflightToolCall.argumentsJson | 20, 21 | argumentsJson: the arguments you intend to send - the JSON object itself or that object as a JSON string. Omit to see the signature, example and prerequisites only. | {"examples": [{"softwarePath": "PLC_1"}]} |
-| PreviewToolBatch.operationsJson | 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
+| PreflightToolCall.argumentsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | argumentsJson: the arguments you intend to send - the JSON object itself or that object as a JSON string. Omit to see the signature, example and prerequisites only. | {"examples": [{"softwarePath": "PLC_1"}]} |
+| PreviewToolBatch.operationsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
 | ReadCommunicationConnections.devicePathJson | 21 | devicePathJson: JSON array naming the station, e.g. ["PLC_1"]. | {} |
 | ReadCommunicationConnections.itemPathJson | 21 | itemPathJson: JSON array of device-item names down to the item with the service; [] = the station. | {} |
 | ReadDccCharts.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
@@ -1474,7 +1474,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ReadProjectUserManagement.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ReadSafetyActivationTests.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
 | ReadSiVArcRules.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
-| ReadToolBatch.operationsJson | 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
+| ReadToolBatch.operationsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
 | ReadTransferAreas.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ReadTransferAreas.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ReadUnifiedGraphicSelection.itemNamesJson | 20, 21 | itemNamesJson: JSON array of screen item names. | {} |
@@ -1492,8 +1492,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | RunTestSuiteCase.namesJson | 20, 21 | namesJson: JSON array of exact names (or a comma-separated list where the tool says so). | {} |
 | RunToolsInTransaction.callsJson | 20, 21 | callsJson: JSON array of {name, arguments:{...}} supported tool calls to run inside one transaction. | {} |
 | SamplePlcLiveValuesS7.itemsJson | 20, 21 | itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. ["DB10.DBD0:REAL","M0.0"]. | {} |
-| ScanPlcSourceAnnotations.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
-| ScanPlcSourceAnnotations.markersJson | 20, 21 | markersJson: JSON array of annotation markers to look for, e.g. ['TODO','FIXME']. | {} |
+| ScanPlcSourceAnnotations.extensionsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
+| ScanPlcSourceAnnotations.markersJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | markersJson: JSON array of annotation markers to look for, e.g. ['TODO','FIXME']. | {} |
 | SetCpuCommonSettings.settingsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | settingsJson: JSON object { "exactAttributes": { "ExactAttributeNameFromReadback": "value" } }. No aliases or guessed attribute names are accepted. | {} |
 | SetUnifiedLogDuration.durationPathJson | 20, 21 | durationPathJson: JSON array path of the duration property. | {} |
 | ShowObjectInEditor.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
@@ -1800,7 +1800,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/Domain/DomainValidation.cs](../../src/Logic/V4/Domain/DomainValidation.cs):118 | `InputGuard.Limit(artifacts!.Count, 256);` |
 | [V4/FallbackCandidate.cs](../../src/Logic/V4/FallbackCandidate.cs):53 | `if (plans.Count >= 128 && !plans.ContainsKey(hash)) Refuse(new LimitExceededDetails("plans", 128, plans.Count + 1));` |
 | [V4/Hmi/HmiSchemas.cs](../../src/Logic/V4/Hmi/HmiSchemas.cs):103 | `if (field == "deviceItems") schema["maxItems"] = 5000;` |
-| [V4/Inputs/InputSchema.cs](../../src/Logic/V4/Inputs/InputSchema.cs):148 | `if (!active.Add(name) \|\| active.Count > V4Json.MaximumInputDepth)` |
+| [V4/Inputs/InputSchema.cs](../../src/Logic/V4/Inputs/InputSchema.cs):169 | `if (!active.Add(name) \|\| active.Count > V4Json.MaximumInputDepth)` |
 | [V4/Inputs/NativeValueInputs.cs](../../src/Logic/V4/Inputs/NativeValueInputs.cs):33 | `if (name.Length < 2 \|\| name.Length > 64 \|\| "pPrR".IndexOf(name[0]) < 0) return false;` |
 | [V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs):89 | `if (nameCount < 0 \|\| nameCount > 200) throw new ArgumentOutOfRangeException(nameof(nameCount));` |
 | [V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs):97 | `if (nameCount < 0 \|\| nameCount > 200) throw new ArgumentOutOfRangeException(nameof(nameCount));` |
@@ -2177,7 +2177,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | P6-02：未接线的 V4 信封/错误/分页/批次/计划与单一序列化校验 | [V4/BehaviorCapabilities.cs](../../src/Logic/V4/BehaviorCapabilities.cs)<br>[V4/CallerInputFiles.cs](../../src/Logic/V4/CallerInputFiles.cs)<br>[V4/CandidateHostMapping.cs](../../src/Logic/V4/CandidateHostMapping.cs)<br>[V4/CompileCandidate.cs](../../src/Logic/V4/CompileCandidate.cs)<br>[V4/CompileContract.cs](../../src/Logic/V4/CompileContract.cs)<br>[V4/CompileResultMapping.cs](../../src/Logic/V4/CompileResultMapping.cs)<br>[V4/Construction/Blocks.cs](../../src/Logic/V4/Construction/Blocks.cs)<br>[V4/Construction/ConstructionAdapter.cs](../../src/Logic/V4/Construction/ConstructionAdapter.cs)<br>[V4/Construction/ConstructionInput.cs](../../src/Logic/V4/Construction/ConstructionInput.cs)<br>[V4/Construction/ConstructionJson.cs](../../src/Logic/V4/Construction/ConstructionJson.cs)<br>[V4/Construction/ConstructionSchemas.cs](../../src/Logic/V4/Construction/ConstructionSchemas.cs)<br>[V4/Construction/Declarations.cs](../../src/Logic/V4/Construction/Declarations.cs)<br>[V4/Construction/FoundationConstructionValidation.cs](../../src/Logic/V4/Construction/FoundationConstructionValidation.cs)<br>[V4/Construction/StructuredText.cs](../../src/Logic/V4/Construction/StructuredText.cs)<br>[V4/DeviceCreation.cs](../../src/Logic/V4/DeviceCreation.cs)<br>[V4/DeviceCreationContract.cs](../../src/Logic/V4/DeviceCreationContract.cs)<br>[V4/Domain/BranchStep.cs](../../src/Logic/V4/Domain/BranchStep.cs)<br>[V4/Domain/DomainDto.cs](../../src/Logic/V4/Domain/DomainDto.cs)<br>[V4/Domain/DomainInputs.cs](../../src/Logic/V4/Domain/DomainInputs.cs)<br>[V4/Domain/DomainModels.cs](../../src/Logic/V4/Domain/DomainModels.cs)<br>[V4/Domain/DomainNativeValue.cs](../../src/Logic/V4/Domain/DomainNativeValue.cs)<br>[V4/Domain/DomainSchemas.cs](../../src/Logic/V4/Domain/DomainSchemas.cs)<br>[V4/Domain/DomainShape.cs](../../src/Logic/V4/Domain/DomainShape.cs)<br>[V4/Domain/DomainValidation.cs](../../src/Logic/V4/Domain/DomainValidation.cs)<br>[V4/Domain/DynamizationValidation.cs](../../src/Logic/V4/Domain/DynamizationValidation.cs)<br>[V4/Domain/GraphicSelectionModels.cs](../../src/Logic/V4/Domain/GraphicSelectionModels.cs)<br>[V4/Domain/GraphicSelectionSchemas.cs](../../src/Logic/V4/Domain/GraphicSelectionSchemas.cs)<br>[V4/Domain/GraphicSelectionValidation.cs](../../src/Logic/V4/Domain/GraphicSelectionValidation.cs)<br>[V4/Domain/OpenPipeRequest.cs](../../src/Logic/V4/Domain/OpenPipeRequest.cs)<br>[V4/Domain/SubjectAlternativeName.cs](../../src/Logic/V4/Domain/SubjectAlternativeName.cs)<br>[V4/Envelope.cs](../../src/Logic/V4/Envelope.cs)<br>[V4/Error.cs](../../src/Logic/V4/Error.cs)<br>[V4/FallbackCandidate.cs](../../src/Logic/V4/FallbackCandidate.cs)<br>[V4/FallbackContract.cs](../../src/Logic/V4/FallbackContract.cs)<br>[V4/HardwareCatalogAdmission.cs](../../src/Logic/V4/HardwareCatalogAdmission.cs)<br>[V4/Hmi/ClassicSpecs.cs](../../src/Logic/V4/Hmi/ClassicSpecs.cs)<br>[V4/Hmi/DeviceAmlSpec.cs](../../src/Logic/V4/Hmi/DeviceAmlSpec.cs)<br>[V4/Hmi/HmiBuilderAdapter.cs](../../src/Logic/V4/Hmi/HmiBuilderAdapter.cs)<br>[V4/Hmi/HmiJson.cs](../../src/Logic/V4/Hmi/HmiJson.cs)<br>[V4/Hmi/HmiRules.cs](../../src/Logic/V4/Hmi/HmiRules.cs)<br>[V4/Hmi/HmiSchemas.cs](../../src/Logic/V4/Hmi/HmiSchemas.cs)<br>[V4/Hmi/UnifiedSpecs.cs](../../src/Logic/V4/Hmi/UnifiedSpecs.cs)<br>[V4/HostBehavior.cs](../../src/Logic/V4/HostBehavior.cs)<br>[V4/Inputs/CompositeAttributeMap.cs](../../src/Logic/V4/Inputs/CompositeAttributeMap.cs)<br>[V4/Inputs/DriveFunctionPolicy.cs](../../src/Logic/V4/Inputs/DriveFunctionPolicy.cs)<br>[V4/Inputs/InputSchema.cs](../../src/Logic/V4/Inputs/InputSchema.cs)<br>[V4/Inputs/InputValidation.cs](../../src/Logic/V4/Inputs/InputValidation.cs)<br>[V4/Inputs/InputValues.cs](../../src/Logic/V4/Inputs/InputValues.cs)<br>[V4/Inputs/MapInputs.cs](../../src/Logic/V4/Inputs/MapInputs.cs)<br>[V4/Inputs/NativeValueInputs.cs](../../src/Logic/V4/Inputs/NativeValueInputs.cs)<br>[V4/Inputs/ParameterRef.cs](../../src/Logic/V4/Inputs/ParameterRef.cs)<br>[V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs)<br>[V4/Inputs/ToolCallInputs.cs](../../src/Logic/V4/Inputs/ToolCallInputs.cs)<br>[V4/Inputs/TypedToolInputs.cs](../../src/Logic/V4/Inputs/TypedToolInputs.cs)<br>[V4/NativeResultState.cs](../../src/Logic/V4/NativeResultState.cs)<br>[V4/Paging.cs](../../src/Logic/V4/Paging.cs)<br>[V4/Plan.cs](../../src/Logic/V4/Plan.cs)<br>[V4/PlcBatchImportResultMapping.cs](../../src/Logic/V4/PlcBatchImportResultMapping.cs)<br>[V4/PlcExport.cs](../../src/Logic/V4/PlcExport.cs)<br>[V4/PlcExportContract.cs](../../src/Logic/V4/PlcExportContract.cs)<br>[V4/PlcImport.cs](../../src/Logic/V4/PlcImport.cs)<br>[V4/PlcImportContract.cs](../../src/Logic/V4/PlcImportContract.cs)<br>[V4/PlcImportFiles.cs](../../src/Logic/V4/PlcImportFiles.cs)<br>[V4/ResultMapping.cs](../../src/Logic/V4/ResultMapping.cs)<br>[V4/SaveCloseCandidate.cs](../../src/Logic/V4/SaveCloseCandidate.cs)<br>[V4/SaveCloseContract.cs](../../src/Logic/V4/SaveCloseContract.cs)<br>[V4/SessionCandidate.cs](../../src/Logic/V4/SessionCandidate.cs)<br>[V4/SessionCandidateContract.cs](../../src/Logic/V4/SessionCandidateContract.cs)<br>[V4/SourceCandidate.cs](../../src/Logic/V4/SourceCandidate.cs)<br>[V4/SourceContract.cs](../../src/Logic/V4/SourceContract.cs)<br>[V4/V4Json.cs](../../src/Logic/V4/V4Json.cs)<br>[V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs) |
 | D334：源码目录迁移完成；产品名/运行目录仍待 36–39 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) |
 
-D1 发布政策按台账逐版本生成；只有族行中明确的 `L5[releaseKey]=PASSED` 启用 safe-v4，未记录或失败均保持 current。当前 88/88 条记录为 current。生成器不运行原生调用，测试构建覆盖不改变台账或发布记录。
+D1 发布政策按台账逐版本生成；只有族行中明确的 `L5[releaseKey]=PASSED` 启用 safe-v4，未记录或失败均保持 current。当前 106/106 条记录为 current。生成器不运行原生调用，测试构建覆盖不改变台账或发布记录。
 
 </details>
 

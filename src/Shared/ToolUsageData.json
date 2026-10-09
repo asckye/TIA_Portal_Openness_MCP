@@ -32281,6 +32281,964 @@
           "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
           "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
           "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+        },
+        "ApplyToolBatch": {
+          "arguments": {
+            "token": "<token from PreviewToolBatch>"
+          },
+          "parameters": {
+            "token": {
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildReleaseDiagnosticReport": {
+          "arguments": {
+            "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildReleaseHandoffArtifacts": {
+          "arguments": {
+            "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+            "outputDirectory": "C:\\Examples\\generated"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildReleaseManifest": {
+          "arguments": {
+            "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildReleaseRunbook": {
+          "arguments": {
+            "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "CallTool": {
+          "arguments": {
+            "name": "AnalyzePlcReferences",
+            "arguments": {
+              "directory": "C:/TIA/Exports"
+            }
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "CheckProductUpdate": {
+          "arguments": {},
+          "parameters": {
+            "repository": {
+              "exampleValue": "asckye/TIA_Portal_Openness_MCP"
+            },
+            "timeoutSeconds": {
+              "exampleValue": 15
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ClearExportHandles": {
+          "arguments": {
+            "olderThanHours": 0
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "DeleteExportHandle": {
+          "arguments": {
+            "exportId": "<exportId from response>"
+          },
+          "parameters": {
+            "exportId": {
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "FindTools": {
+          "arguments": {
+            "query": "watch table",
+            "limit": 8,
+            "offset": 0
+          },
+          "parameters": {
+            "category": {
+              "exampleValue": ""
+            },
+            "domain": {
+              "exampleValue": ""
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GenerateAcceptanceReport": {
+          "arguments": {
+            "outputDirectory": "C:\\Temp\\mcp-report",
+            "includeProjectTree": true
+          },
+          "parameters": {
+            "connectIfNeeded": {
+              "exampleValue": false
+            },
+            "inspectPortalProcesses": {
+              "exampleValue": false
+            },
+            "title": {
+              "exampleValue": "TIA MCP Acceptance Report"
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GenerateErrorReport": {
+          "arguments": {
+            "errorCode": "CompileError",
+            "summary": "FB_Pump: 2 errors",
+            "detail": "<compiler output>",
+            "severity": "error"
+          },
+          "parameters": {
+            "detail": {
+              "requiresBinding": true
+            },
+            "recommendedNextActions": {
+              "exampleValue": "<recommendedNextActions from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "outputDirectory": {
+              "exampleValue": "C:\\Examples\\generated"
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetEnvironmentDiagnostics": {
+          "arguments": {
+            "fix": false
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetExportContent": {
+          "arguments": {
+            "exportId": "<exportId from response>",
+            "offset": 0
+          },
+          "parameters": {
+            "exportId": {
+              "requiresBinding": true
+            },
+            "length": {
+              "exampleValue": 0
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetNativeInvocationLog": {
+          "arguments": {
+            "take": 100
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetOpennessCompatibility": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetOpennessGuidance": {
+          "arguments": {},
+          "parameters": {
+            "query": {
+              "exampleValue": "<query from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "document": {
+              "exampleValue": "<document from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetOpennessWorkerStatus": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GetV21EcosystemCatalog": {
+          "arguments": {},
+          "parameters": {
+            "query": {
+              "exampleValue": "<query from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "source": {
+              "exampleValue": "all"
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 50
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ListExportHandles": {
+          "arguments": {
+            "tool": "ListPlcBlocks",
+            "limit": 10
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ListToolCategories": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "PreviewToolBatch": {
+          "arguments": {
+            "expectedProject": "Example",
+            "operations": [
+              {
+                "name": "ManagePlcExternalSources",
+                "arguments": {
+                  "softwarePath": "PLC_1",
+                  "action": "createGroup",
+                  "name": "ExampleSources",
+                  "dryRun": true
+                }
+              }
+            ]
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "PreviewToolCall": {
+          "arguments": {
+            "name": "AnalyzePlcReferences",
+            "arguments": {
+              "directory": "C:/TIA/Exports"
+            }
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RestartOpennessWorker": {
+          "arguments": {
+            "confirmRestart": false
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RunOfflineReleaseValidationSuite": {
+          "arguments": {
+            "workspaceRoot": "C:\\Examples\\work",
+            "reportDirectory": "C:\\Examples\\reports"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RunOnlineMonitoringSafetySelfTest": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RunReadOnlyToolBatch": {
+          "arguments": {
+            "operations": [
+              {
+                "name": "GetOpennessGuidance",
+                "arguments": {
+                  "query": "threading"
+                }
+              }
+            ]
+          },
+          "parameters": {
+            "expectedProject": {
+              "exampleValue": "Example"
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "SaveExportContent": {
+          "arguments": {
+            "exportId": "<exportId from response>",
+            "outputPath": "C:\\Temp\\blocks.json"
+          },
+          "parameters": {
+            "exportId": {
+              "requiresBinding": true
+            },
+            "raw": {
+              "exampleValue": false
+            },
+            "overwrite": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "AnalyzePlcReferences": {
+          "arguments": {
+            "directory": "C:\\Temp\\exports",
+            "action": "callers",
+            "target": "FB_Pump"
+          },
+          "parameters": {
+            "maxDepth": {
+              "exampleValue": 10
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {
+            "summary": {
+              "arguments": {
+                "action": "summary"
+              }
+            },
+            "callers": {
+              "arguments": {}
+            },
+            "callees": {
+              "arguments": {
+                "action": "callees"
+              }
+            },
+            "callPaths": {
+              "arguments": {
+                "action": "callPaths"
+              }
+            },
+            "unreachable": {
+              "arguments": {
+                "action": "unreachable"
+              }
+            },
+            "references": {
+              "arguments": {
+                "action": "references"
+              }
+            }
+          },
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "AnalyzePlcSclSource": {
+          "arguments": {
+            "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+          },
+          "parameters": {
+            "filePath": {
+              "exampleValue": "C:\\Examples\\exports\\Main.xml"
+            },
+            "rulesJson": {
+              "exampleValue": "<rulesJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "limit": {
+              "exampleValue": 500
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "AuditEngineeringExports": {
+          "arguments": {
+            "directoryPath": "C:\\Examples"
+          },
+          "parameters": {
+            "rulesJson": {
+              "exampleValue": "<rulesJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "blockNamePattern": {
+              "exampleValue": "<blockNamePattern from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "maxNetworks": {
+              "exampleValue": 100
+            },
+            "reportPath": {
+              "exampleValue": "<reportPath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ComparePlcBlockDocuments": {
+          "arguments": {
+            "leftFilePath": "C:\\Examples\\before\\Main.xml",
+            "rightFilePath": "C:\\Examples\\after\\Main.xml"
+          },
+          "parameters": {
+            "softwarePath": {
+              "exampleValue": "PLC_1"
+            },
+            "leftBlockPath": {
+              "exampleValue": "<leftBlockPath from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "rightBlockPath": {
+              "exampleValue": "<rightBlockPath from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            },
+            "contextLines": {
+              "exampleValue": 2
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ExtractPlcBlockMetrics": {
+          "arguments": {
+            "path": "C:\\Examples\\exports"
+          },
+          "parameters": {
+            "recursive": {
+              "exampleValue": true
+            },
+            "extensionsJson": {
+              "exampleValue": "<extensionsJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "GeneratePlcDocumentation": {
+          "arguments": {
+            "directory": "C:\\Examples\\exports",
+            "outputPath": "C:\\Examples\\generated\\documentation.md"
+          },
+          "parameters": {
+            "title": {
+              "exampleValue": "<title from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "recursive": {
+              "exampleValue": true
+            },
+            "extensionsJson": {
+              "exampleValue": "<extensionsJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "mermaidDirection": {
+              "exampleValue": "LR"
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "InstantiatePlcTemplates": {
+          "arguments": {
+            "templatePath": "C:\\Examples\\templates\\Block.xml",
+            "outputDirectory": "C:\\Examples\\generated",
+            "dryRun": true,
+            "rows": [
+              {
+                "fileName": "Example.xml",
+                "values": {
+                  "Name": "Example"
+                }
+              }
+            ]
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "PatchPlcBlockDocument": {
+          "arguments": {
+            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+            "dryRun": true,
+            "changes": [
+              {
+                "action": "setBlockText",
+                "field": "Title",
+                "culture": "en-US",
+                "expectedValue": "Old title",
+                "value": "Example"
+              }
+            ]
+          },
+          "parameters": {
+            "expectedFingerprint": {
+              "requiresBinding": true
+            },
+            "outputPath": {
+              "exampleValue": "C:\\Examples\\generated\\result.xml"
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RenderPlcBlockDocument": {
+          "arguments": {},
+          "parameters": {
+            "filePath": {
+              "exampleValue": "C:\\Examples\\exports\\Main.xml"
+            },
+            "softwarePath": {
+              "exampleValue": "PLC_1"
+            },
+            "blockPath": {
+              "exampleValue": "Main"
+            },
+            "mermaidDirection": {
+              "exampleValue": "LR"
+            },
+            "outputPath": {
+              "exampleValue": "C:\\Examples\\generated\\result.xml"
+            },
+            "maxChars": {
+              "exampleValue": 60000
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RenderPlcVisualDiff": {
+          "arguments": {
+            "leftFilePath": "C:\\Examples\\before\\Main.xml",
+            "rightFilePath": "C:\\Examples\\after\\Main.xml",
+            "outputPath": "C:\\Examples\\generated\\result.xml"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ScanPlcSourceAnnotations": {
+          "arguments": {
+            "directory": "C:\\Examples\\exports"
+          },
+          "parameters": {
+            "recursive": {
+              "exampleValue": true
+            },
+            "extensionsJson": {
+              "exampleValue": "<extensionsJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "markersJson": {
+              "exampleValue": "<markersJson from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 200
+            },
+            "csvPath": {
+              "exampleValue": "<csvPath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "WritePlcSclSourceFile": {
+          "arguments": {
+            "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+            "outputPath": "C:\\Temp\\FC_Add.scl"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "inline": true,
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "AnalyzeGlobalLibraryPackage": {
+          "arguments": {
+            "libraryPath": "C:\\Examples\\Library.al{extension}"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "AnalyzeHmiTemplateReference": {
+          "arguments": {
+            "templateDirectory": "C:\\Examples\\templates",
+            "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+            "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "AnalyzeUnifiedHmiTemplateLayout": {
+          "arguments": {
+            "templateDirectory": "C:\\Examples\\templates"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildUnifiedHmiButtonActionScript": {
+          "arguments": {
+            "actionKind": "set-bit",
+            "eventType": "Down",
+            "targetTag": "Ready"
+          },
+          "parameters": {
+            "targetScreen": {
+              "exampleValue": "<targetScreen from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "targetPopup": {
+              "exampleValue": "<targetPopup from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildUnifiedHmiLayoutDesign": {
+          "arguments": {
+            "layout": {
+              "columns": 1,
+              "cellWidth": 160,
+              "cellHeight": 40,
+              "items": [
+                {
+                  "name": "StatusText",
+                  "type": "Text",
+                  "row": 0,
+                  "col": 0,
+                  "text": "Ready"
+                }
+              ]
+            }
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildUnifiedHmiTemplateApplyDesign": {
+          "arguments": {
+            "templateFile": "C:\\Examples\\templates\\Screen.json"
+          },
+          "parameters": {
+            "fallbackWidth": {
+              "exampleValue": 800
+            },
+            "fallbackHeight": {
+              "exampleValue": 480
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildUnifiedHmiTemplateApplyDesignManifest": {
+          "arguments": {
+            "templateDirectory": "C:\\Examples\\templates"
+          },
+          "parameters": {
+            "fallbackWidth": {
+              "exampleValue": 800
+            },
+            "fallbackHeight": {
+              "exampleValue": 480
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "BuildUnifiedHmiThemeDesign": {
+          "arguments": {
+            "theme": {
+              "name": "Example",
+              "palette": {
+                "Page": "0xFFFFFFFF",
+                "Surface": "0xFFF4F6F8",
+                "Text": "0xFF202020",
+                "Border": "0xFF808080"
+              }
+            }
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "ManageUnifiedCwcPackage": {
+          "arguments": {
+            "directory": "C:\\Examples\\exports",
+            "dryRun": true,
+            "action": "inspect"
+          },
+          "parameters": {
+            "outputPath": {
+              "exampleValue": "C:\\Examples\\generated\\result.xml"
+            },
+            "expectedFingerprint": {
+              "exampleValue": "<fingerprint from ReadPlcBlockEditCapabilities>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "inspect": {
+              "arguments": {}
+            },
+            "build": {
+              "arguments": {
+                "action": "build"
+              }
+            }
+          },
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "PlanGlobalLibraryTemplateReuse": {
+          "arguments": {
+            "libraryPath": "C:\\Examples\\Library.al{extension}"
+          },
+          "parameters": {
+            "templateIntent": {
+              "exampleValue": {
+                "screenType": "overview",
+                "targetRuntime": "Unified",
+                "preferredComponents": []
+              },
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
+        },
+        "RunHmiActionScriptRecipeSafetySelfTest": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "resultReading": [
+            "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ]
         }
       },
       "full-engine": {

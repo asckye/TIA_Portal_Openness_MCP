@@ -5,10 +5,16 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 114,
+      "toolCount": 157,
       "tools": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "AuditEngineeringExports",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
@@ -18,9 +24,17 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
         "BuildStructuredText",
+        "CallTool",
+        "CheckProductUpdate",
         "CleanupStagedImportFiles",
+        "ClearExportHandles",
         "CloseProject",
+        "ComparePlcBlockDocuments",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
         "ConnectDeviceNodesToProfinetSubnet",
@@ -32,6 +46,7 @@
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
+        "DeleteExportHandle",
         "DeletePlcExternalSource",
         "DisconnectPortal",
         "EnsureSubnet",
@@ -42,7 +57,12 @@
         "ExportPlcTagTable",
         "ExportPlcType",
         "ExportPlcTypes",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GeneratePlcDocumentation",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -52,7 +72,13 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
         "GetHardwareFeatures",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -64,6 +90,7 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
@@ -74,8 +101,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "InstantiatePlcTemplates",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListExportHandles",
         "ListIoSystems",
         "ListNetworkDomains",
         "ListPlcBlocks",
@@ -88,6 +117,7 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListToolCategories",
         "ListTransferAreas",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
@@ -98,17 +128,29 @@
         "ManagePortInterconnection",
         "ManageTransferArea",
         "OpenProject",
+        "PatchPlcBlockDocument",
         "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
+        "PreviewToolBatch",
+        "PreviewToolCall",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
+        "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
+        "RenderPlcVisualDiff",
+        "RestartOpennessWorker",
         "RunCapabilitySelfTest",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent",
         "SaveProject",
+        "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SetDeviceAddress",
         "SetDeviceItemAttribute",
@@ -120,15 +162,22 @@
         "ShowWorkbenchCall",
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
-        "StageImportFiles"
+        "StageImportFiles",
+        "WritePlcSclSourceFile"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 115,
+      "toolCount": 158,
       "tools": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "AuditEngineeringExports",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
@@ -138,9 +187,17 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
         "BuildStructuredText",
+        "CallTool",
+        "CheckProductUpdate",
         "CleanupStagedImportFiles",
+        "ClearExportHandles",
         "CloseProject",
+        "ComparePlcBlockDocuments",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
         "ConnectDeviceNodesToProfinetSubnet",
@@ -152,6 +209,7 @@
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
+        "DeleteExportHandle",
         "DeletePlcExternalSource",
         "DisconnectPortal",
         "EnsureSubnet",
@@ -162,7 +220,12 @@
         "ExportPlcTagTable",
         "ExportPlcType",
         "ExportPlcTypes",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GeneratePlcDocumentation",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -172,7 +235,13 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
         "GetHardwareFeatures",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -184,6 +253,7 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
@@ -194,8 +264,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "InstantiatePlcTemplates",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListExportHandles",
         "ListIoSystems",
         "ListNetworkDomains",
         "ListPlcBlocks",
@@ -209,6 +281,7 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListToolCategories",
         "ListTransferAreas",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
@@ -219,17 +292,29 @@
         "ManagePortInterconnection",
         "ManageTransferArea",
         "OpenProject",
+        "PatchPlcBlockDocument",
         "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
+        "PreviewToolBatch",
+        "PreviewToolCall",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
+        "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
+        "RenderPlcVisualDiff",
+        "RestartOpennessWorker",
         "RunCapabilitySelfTest",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent",
         "SaveProject",
+        "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SetDeviceAddress",
         "SetDeviceItemAttribute",
@@ -241,15 +326,22 @@
         "ShowWorkbenchCall",
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
-        "StageImportFiles"
+        "StageImportFiles",
+        "WritePlcSclSourceFile"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 117,
+      "toolCount": 160,
       "tools": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "AuditEngineeringExports",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
@@ -259,9 +351,17 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
         "BuildStructuredText",
+        "CallTool",
+        "CheckProductUpdate",
         "CleanupStagedImportFiles",
+        "ClearExportHandles",
         "CloseProject",
+        "ComparePlcBlockDocuments",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
         "ConnectDeviceNodesToProfinetSubnet",
@@ -273,6 +373,7 @@
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
+        "DeleteExportHandle",
         "DeletePlcExternalSource",
         "DisconnectPortal",
         "EnsureSubnet",
@@ -285,7 +386,12 @@
         "ExportPlcTypes",
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GeneratePlcDocumentation",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -295,7 +401,13 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
         "GetHardwareFeatures",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -307,6 +419,7 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
@@ -317,8 +430,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "InstantiatePlcTemplates",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListExportHandles",
         "ListIoSystems",
         "ListNetworkDomains",
         "ListPlcBlocks",
@@ -332,6 +447,7 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListToolCategories",
         "ListTransferAreas",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
@@ -342,17 +458,29 @@
         "ManagePortInterconnection",
         "ManageTransferArea",
         "OpenProject",
+        "PatchPlcBlockDocument",
         "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
+        "PreviewToolBatch",
+        "PreviewToolCall",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
+        "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
+        "RenderPlcVisualDiff",
+        "RestartOpennessWorker",
         "RunCapabilitySelfTest",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent",
         "SaveProject",
+        "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SetDeviceAddress",
         "SetDeviceItemAttribute",
@@ -364,15 +492,22 @@
         "ShowWorkbenchCall",
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
-        "StageImportFiles"
+        "StageImportFiles",
+        "WritePlcSclSourceFile"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 117,
+      "toolCount": 160,
       "tools": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "AuditEngineeringExports",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
@@ -382,9 +517,17 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
         "BuildStructuredText",
+        "CallTool",
+        "CheckProductUpdate",
         "CleanupStagedImportFiles",
+        "ClearExportHandles",
         "CloseProject",
+        "ComparePlcBlockDocuments",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
         "ConnectDeviceNodesToProfinetSubnet",
@@ -396,6 +539,7 @@
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
+        "DeleteExportHandle",
         "DeletePlcExternalSource",
         "DisconnectPortal",
         "EnsureSubnet",
@@ -408,7 +552,12 @@
         "ExportPlcTypes",
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GeneratePlcDocumentation",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -418,7 +567,13 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
         "GetHardwareFeatures",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -430,6 +585,7 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
@@ -440,8 +596,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "InstantiatePlcTemplates",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListExportHandles",
         "ListIoSystems",
         "ListNetworkDomains",
         "ListPlcBlocks",
@@ -455,6 +613,7 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListToolCategories",
         "ListTransferAreas",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
@@ -465,17 +624,29 @@
         "ManagePortInterconnection",
         "ManageTransferArea",
         "OpenProject",
+        "PatchPlcBlockDocument",
         "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
+        "PreviewToolBatch",
+        "PreviewToolCall",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
+        "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
+        "RenderPlcVisualDiff",
+        "RestartOpennessWorker",
         "RunCapabilitySelfTest",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent",
         "SaveProject",
+        "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SetDeviceAddress",
         "SetDeviceItemAttribute",
@@ -487,15 +658,22 @@
         "ShowWorkbenchCall",
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
-        "StageImportFiles"
+        "StageImportFiles",
+        "WritePlcSclSourceFile"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 117,
+      "toolCount": 160,
       "tools": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "AuditEngineeringExports",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
@@ -505,9 +683,17 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
         "BuildStructuredText",
+        "CallTool",
+        "CheckProductUpdate",
         "CleanupStagedImportFiles",
+        "ClearExportHandles",
         "CloseProject",
+        "ComparePlcBlockDocuments",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
         "ConnectDeviceNodesToProfinetSubnet",
@@ -519,6 +705,7 @@
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
+        "DeleteExportHandle",
         "DeletePlcExternalSource",
         "DisconnectPortal",
         "EnsureSubnet",
@@ -531,7 +718,12 @@
         "ExportPlcTypes",
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GeneratePlcDocumentation",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -541,7 +733,13 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
         "GetHardwareFeatures",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -553,6 +751,7 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
@@ -563,8 +762,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "InstantiatePlcTemplates",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListExportHandles",
         "ListIoSystems",
         "ListNetworkDomains",
         "ListPlcBlocks",
@@ -578,6 +779,7 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListToolCategories",
         "ListTransferAreas",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
@@ -588,17 +790,29 @@
         "ManagePortInterconnection",
         "ManageTransferArea",
         "OpenProject",
+        "PatchPlcBlockDocument",
         "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
+        "PreviewToolBatch",
+        "PreviewToolCall",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
+        "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
+        "RenderPlcVisualDiff",
+        "RestartOpennessWorker",
         "RunCapabilitySelfTest",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent",
         "SaveProject",
+        "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SetDeviceAddress",
         "SetDeviceItemAttribute",
@@ -610,15 +824,23 @@
         "ShowWorkbenchCall",
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
-        "StageImportFiles"
+        "StageImportFiles",
+        "WritePlcSclSourceFile"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 119,
+      "toolCount": 170,
       "tools": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "AnalyzeUnifiedHmiTemplateLayout",
+        "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "AuditEngineeringExports",
         "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
@@ -628,9 +850,22 @@
         "BuildPlcSymbolManifestFromPath",
         "BuildPlcTagTable",
         "BuildPlcUdt",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
         "BuildStructuredText",
+        "BuildUnifiedHmiButtonActionScript",
+        "BuildUnifiedHmiLayoutDesign",
+        "BuildUnifiedHmiTemplateApplyDesign",
+        "BuildUnifiedHmiTemplateApplyDesignManifest",
+        "BuildUnifiedHmiThemeDesign",
+        "CallTool",
+        "CheckProductUpdate",
         "CleanupStagedImportFiles",
+        "ClearExportHandles",
         "CloseProject",
+        "ComparePlcBlockDocuments",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
         "ConnectDeviceNodesToProfinetSubnet",
@@ -643,6 +878,7 @@
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
+        "DeleteExportHandle",
         "DeletePlcExternalSource",
         "DisconnectPortal",
         "EnsureSubnet",
@@ -655,7 +891,12 @@
         "ExportPlcTypes",
         "ExportPlcWatchTable",
         "ExportTechnologyObject",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GeneratePlcDocumentation",
         "GetDeviceAddressing",
         "GetDeviceAttributes",
         "GetDeviceInfo",
@@ -665,7 +906,13 @@
         "GetDeviceItemNetworkInfo",
         "GetDeviceItemTree",
         "GetDevicePlugLocations",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
         "GetHardwareFeatures",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
@@ -677,6 +924,7 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
@@ -687,8 +935,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "InstantiatePlcTemplates",
         "ListDeviceItemChannels",
         "ListDevices",
+        "ListExportHandles",
         "ListIoSystems",
         "ListNetworkDomains",
         "ListPlcBlocks",
@@ -702,6 +952,7 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListToolCategories",
         "ListTransferAreas",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
@@ -711,18 +962,32 @@
         "ManageNetworkDomain",
         "ManagePortInterconnection",
         "ManageTransferArea",
+        "ManageUnifiedCwcPackage",
         "OpenProject",
+        "PatchPlcBlockDocument",
         "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
+        "PreviewToolBatch",
+        "PreviewToolCall",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
+        "RenderPlcBlockDocument",
         "RenderPlcProgramAtlas",
+        "RenderPlcVisualDiff",
+        "RestartOpennessWorker",
         "RunCapabilitySelfTest",
+        "RunHmiActionScriptRecipeSafetySelfTest",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent",
         "SaveProject",
+        "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
         "SearchInstalledGsdDevices",
         "SetDeviceAddress",
@@ -735,7 +1000,8 @@
         "ShowWorkbenchCall",
         "ShowWorkbenchLadder",
         "ShowWorkbenchPage",
-        "StageImportFiles"
+        "StageImportFiles",
+        "WritePlcSclSourceFile"
       ]
     },
     "20": {
@@ -1753,50 +2019,75 @@
     }
   },
   "groupCounts": {
-    "shared-subset": 381,
-    "all-releases": 114,
+    "all-releases": 157,
+    "shared-subset": 338,
     "release-only": 11
   },
   "tools": [
     {
       "name": "AnalyzeGlobalLibraryPackage",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "AnalyzeHmiTemplateReference",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "AnalyzePlcReferences",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "AnalyzePlcSclSource",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "AnalyzeUnifiedHmiTemplateLayout",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -1806,10 +2097,16 @@
     {
       "name": "ApplyToolBatch",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -1881,10 +2178,16 @@
     {
       "name": "AuditEngineeringExports",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2097,37 +2400,61 @@
     {
       "name": "BuildReleaseDiagnosticReport",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BuildReleaseHandoffArtifacts",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BuildReleaseManifest",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BuildReleaseRunbook",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2148,6 +2475,7 @@
     {
       "name": "BuildUnifiedHmiButtonActionScript",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2157,6 +2485,7 @@
     {
       "name": "BuildUnifiedHmiLayoutDesign",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2166,6 +2495,7 @@
     {
       "name": "BuildUnifiedHmiTemplateApplyDesign",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2175,6 +2505,7 @@
     {
       "name": "BuildUnifiedHmiTemplateApplyDesignManifest",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2184,6 +2515,7 @@
     {
       "name": "BuildUnifiedHmiThemeDesign",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2193,10 +2525,16 @@
     {
       "name": "CallTool",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2220,10 +2558,16 @@
     {
       "name": "CheckProductUpdate",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2244,10 +2588,16 @@
     {
       "name": "ClearExportHandles",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2286,10 +2636,16 @@
     {
       "name": "ComparePlcBlockDocuments",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2623,10 +2979,16 @@
     {
       "name": "DeleteExportHandle",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3294,28 +3656,46 @@
     {
       "name": "ExtractPlcBlockMetrics",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "FindTools",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GenerateAcceptanceReport",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3336,10 +3716,16 @@
     {
       "name": "GenerateErrorReport",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3354,10 +3740,16 @@
     {
       "name": "GeneratePlcDocumentation",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3561,19 +3953,31 @@
     {
       "name": "GetEnvironmentDiagnostics",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetExportContent",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3639,10 +4043,16 @@
     {
       "name": "GetNativeInvocationLog",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3693,28 +4103,46 @@
     {
       "name": "GetOpennessCompatibility",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetOpennessGuidance",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetOpennessWorkerStatus",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4245,10 +4673,16 @@
     {
       "name": "GetV21EcosystemCatalog",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4629,10 +5063,16 @@
     {
       "name": "InstantiatePlcTemplates",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4739,10 +5179,16 @@
     {
       "name": "ListExportHandles",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5067,10 +5513,16 @@
     {
       "name": "ListToolCategories",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5913,6 +6365,7 @@
     {
       "name": "ManageUnifiedCwcPackage",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6063,10 +6516,16 @@
     {
       "name": "PatchPlcBlockDocument",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6087,10 +6546,16 @@
     {
       "name": "PlanGlobalLibraryTemplateReuse",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6174,19 +6639,31 @@
     {
       "name": "PreviewToolBatch",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "PreviewToolCall",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6273,10 +6750,16 @@
     {
       "name": "RenderPlcBlockDocument",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6297,10 +6780,16 @@
     {
       "name": "RenderPlcVisualDiff",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6324,10 +6813,16 @@
     {
       "name": "RestartOpennessWorker",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6375,6 +6870,7 @@
     {
       "name": "RunHmiActionScriptRecipeSafetySelfTest",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6393,19 +6889,31 @@
     {
       "name": "RunOfflineReleaseValidationSuite",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "RunOnlineMonitoringSafetySelfTest",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6429,10 +6937,16 @@
     {
       "name": "RunReadOnlyToolBatch",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6465,10 +6979,16 @@
     {
       "name": "SaveExportContent",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6507,10 +7027,16 @@
     {
       "name": "ScanPlcSourceAnnotations",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6967,10 +7493,16 @@
     {
       "name": "WritePlcSclSourceFile",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

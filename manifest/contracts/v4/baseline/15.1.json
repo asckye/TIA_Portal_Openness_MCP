@@ -83,6 +83,70 @@
     },
     {
       "entries": [
+        "ApplyToolBatch",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseHandoffArtifacts",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
+        "CallTool",
+        "CheckProductUpdate",
+        "ClearExportHandles",
+        "DeleteExportHandle",
+        "FindTools",
+        "GenerateAcceptanceReport",
+        "GenerateErrorReport",
+        "GetEnvironmentDiagnostics",
+        "GetExportContent",
+        "GetNativeInvocationLog",
+        "GetOpennessCompatibility",
+        "GetOpennessGuidance",
+        "GetOpennessWorkerStatus",
+        "GetV21EcosystemCatalog",
+        "ListExportHandles",
+        "ListToolCategories",
+        "PreviewToolBatch",
+        "PreviewToolCall",
+        "RestartOpennessWorker",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunReadOnlyToolBatch",
+        "SaveExportContent"
+      ],
+      "family": "F01",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "AnalyzePlcReferences",
+        "AnalyzePlcSclSource",
+        "AuditEngineeringExports",
+        "ComparePlcBlockDocuments",
+        "ExtractPlcBlockMetrics",
+        "GeneratePlcDocumentation",
+        "InstantiatePlcTemplates",
+        "PatchPlcBlockDocument",
+        "RenderPlcBlockDocument",
+        "RenderPlcVisualDiff",
+        "ScanPlcSourceAnnotations",
+        "WritePlcSclSourceFile"
+      ],
+      "family": "F02",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "PlanGlobalLibraryTemplateReuse"
+      ],
+      "family": "F03",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -158,6 +222,194 @@
   "profile": "plc-foundation",
   "release": "15.1",
   "tools": [
+    {
+      "descriptionSha256": "d347227469be290216bf8e9f160443c7254d52b7a6046dafeee2c541933ae1d0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "libraryPath": {
+            "description": "libraryPath: global library folder path or .al* file path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "libraryPath"
+        ],
+        "type": "object"
+      },
+      "name": "AnalyzeGlobalLibraryPackage",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "922bb86c9bb9899e767f6089a9ec37a5ddafae3aa6699883817eb853be840b2a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "referenceGlobalLibraryPath": {
+            "description": "referenceGlobalLibraryPath: reference global library folder or .al* file",
+            "type": "string"
+          },
+          "referenceProjectPath": {
+            "description": "referenceProjectPath: reference TIA project folder containing HMI runtime export/currentConfiguration",
+            "type": "string"
+          },
+          "templateDirectory": {
+            "description": "templateDirectory: directory containing Unified HMI JSON templates",
+            "type": "string"
+          }
+        },
+        "required": [
+          "templateDirectory",
+          "referenceProjectPath",
+          "referenceGlobalLibraryPath"
+        ],
+        "type": "object"
+      },
+      "name": "AnalyzeHmiTemplateReference",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ac0b0e5f15318596c23a755ef6897bb171d2d18c8317c037182f77da2d347259",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "summary",
+            "description": "summary | callers | callees | callPaths | unreachable | references. summary, callers, callees, callPaths, unreachable or references.",
+            "enum": [
+              "summary",
+              "callers",
+              "callees",
+              "callPaths",
+              "unreachable",
+              "references"
+            ],
+            "examples": [
+              "callers"
+            ],
+            "type": "string"
+          },
+          "directory": {
+            "description": "Absolute directory of exports from one PLC/scope, scanned recursively.",
+            "examples": [
+              "C:\\Temp\\exports"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "Page size, 1..500.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "maxDepth": {
+            "default": 10,
+            "description": "Maximum call-path edge depth, 1..50.",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based result offset.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "target": {
+            "default": "",
+            "description": "Exact block name or relative file ID; references uses quoted symbol components.",
+            "examples": [
+              "FB_Pump"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "directory"
+        ],
+        "type": "object"
+      },
+      "name": "AnalyzePlcReferences",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "5cd9cebac3d80ab606e998db1149746eac6be432583c3ef761b402646354d356",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "filePath": {
+            "default": "",
+            "description": "filePath: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 500,
+            "description": "limit: See the operation description and its bounds.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "rules": {
+            "additionalProperties": false,
+            "description": "rules: LintRules. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "minProperties": 0,
+            "properties": {
+              "disabled": {
+                "items": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "minItems": 0,
+                "type": "array"
+              },
+              "markers": {
+                "items": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "minItems": 0,
+                "type": "array"
+              },
+              "maxLineLength": {
+                "maximum": 1000,
+                "minimum": 40,
+                "type": "integer"
+              },
+              "maxNesting": {
+                "maximum": 50,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [],
+            "type": "object"
+          },
+          "sourceText": {
+            "default": "",
+            "description": "sourceText: the SCL source text to lint.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "AnalyzePlcSclSource",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ae5deaf2afc32075a31de0e4833e3f240e9ca7cb5db2adc09ef7de3f9989fc8d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "description": "Single-use token from PreviewToolBatch; expires after 10 minutes.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "name": "ApplyToolBatch",
+      "outputSchema": null
+    },
     {
       "descriptionSha256": "f9f5a364b96d0dbea02484c1aa2402990b58cc3d6bba0771cf43de682b53a3ff",
       "inputSchema": {
@@ -327,6 +579,92 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "1d645910ec9af3d46873c559a8b898daa99b71a42567d1eb352e669fa273c14f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockNamePattern": {
+            "default": "",
+            "description": "Optional regex naming policy; empty disables naming-policy findings.",
+            "type": "string"
+          },
+          "directoryPath": {
+            "description": "Existing absolute directory of exported XML/SCL/S7DCL/AML files.",
+            "type": "string"
+          },
+          "maxNetworks": {
+            "default": 100,
+            "description": "Maximum networks per block before a warning, 1..10000.",
+            "type": "integer"
+          },
+          "reportPath": {
+            "default": "",
+            "description": "Optional new absolute .html/.pdf report path; empty returns JSON only.",
+            "type": "string"
+          },
+          "rules": {
+            "description": "rules: XPathRule[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "files": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxCount": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "minCount": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "severity": {
+                  "enum": [
+                    "info",
+                    "warning",
+                    "error"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "valuePattern": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "xpath": {
+                  "maxLength": 1024,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "xpath"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "minItems": 0,
+            "type": "array"
+          }
+        },
+        "required": [
+          "directoryPath"
+        ],
+        "type": "object"
+      },
+      "name": "AuditEngineeringExports",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "1733cd5f6ab120ade67edc3280e2052f2a7ed0f91cccad295cf2ecc26726cef3",
@@ -3612,6 +3950,83 @@
       }
     },
     {
+      "descriptionSha256": "1366e01116a1fe32f7f2daa74e76bd34c028f6cfa34baff6ba30c8cb93fd5d52",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "offlineReleaseSuiteJsonPath": {
+            "description": "offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offlineReleaseSuiteJsonPath"
+        ],
+        "type": "object"
+      },
+      "name": "BuildReleaseDiagnosticReport",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "91bc8050edf9129458c30ee338b63b2e7950868c0521aa04651df904ed438889",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "offlineReleaseSuiteJsonPath": {
+            "description": "offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.",
+            "type": "string"
+          },
+          "outputDirectory": {
+            "description": "outputDirectory: directory where rebuilt handoff artifacts will be written.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offlineReleaseSuiteJsonPath",
+          "outputDirectory"
+        ],
+        "type": "object"
+      },
+      "name": "BuildReleaseHandoffArtifacts",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "e1547226aebfeefd53d34c901df20017b7205aa48bd48218eb43190cf340da33",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "offlineReleaseSuiteJsonPath": {
+            "description": "offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offlineReleaseSuiteJsonPath"
+        ],
+        "type": "object"
+      },
+      "name": "BuildReleaseManifest",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "3e44352692cdf37621ce739ca791582acfe7a5210562176f905e74e48ddb5419",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "offlineReleaseSuiteJsonPath": {
+            "description": "offlineReleaseSuiteJsonPath: path to offline_release_validation_suite_*.json.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offlineReleaseSuiteJsonPath"
+        ],
+        "type": "object"
+      },
+      "name": "BuildReleaseRunbook",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "7a78207538e77cca941010665df6c9a3b394fc803aebe14d64199d5c474c2df9",
       "inputSchema": {
         "additionalProperties": false,
@@ -4128,6 +4543,52 @@
       }
     },
     {
+      "descriptionSha256": "c51fc86c43333378faa3856da5aed51a12bee020ac97e46b9ec4acf7159eabe6",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "arguments": {
+            "description": "Arguments validated against the named tool's inputSchema.",
+            "type": "object"
+          },
+          "name": {
+            "description": "Exact currently registered tool name from FindTools.",
+            "examples": [
+              "GetSessionState"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "CallTool",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "cfc65ec1e33443be6517bd8e8ff3c241d23caa8e1a23c2ff4aba96dd04c43041",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "repository": {
+            "default": "asckye/TIA_Portal_Openness_MCP",
+            "description": "repository: GitHub owner/name to query (default the project's repository).",
+            "type": "string"
+          },
+          "timeoutSeconds": {
+            "default": 15,
+            "description": "timeoutSeconds: HTTP timeout for the GitHub API call (default 15).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "CheckProductUpdate",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "98f2b7562491ec19461f06862666750dcdcc2879252ac171fb0d266f36ca4b45",
       "inputSchema": {
         "additionalProperties": false,
@@ -4263,6 +4724,24 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "67c72307ac87c75a8a91be9feb8d46a2e7ad5fe8d307c094f824db91b7205944",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "olderThanHours": {
+            "default": 24,
+            "examples": [
+              0
+            ],
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ClearExportHandles",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "9729d6fc9085302435d3036caf8d3ad2bafe276f4a913e54195ea793f350fd8e",
@@ -4404,6 +4883,59 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "a2ba78376705ecd73b587c14bb8491ccbac6ba09b69e9fb54b66969cdeba05a1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contextLines": {
+            "default": 2,
+            "description": "contextLines: lines of context around each difference.",
+            "type": "integer"
+          },
+          "leftBlockPath": {
+            "default": "",
+            "description": "leftBlockPath: block path inside the left document ('' = the whole file).",
+            "type": "string"
+          },
+          "leftFilePath": {
+            "default": "",
+            "description": "leftFilePath: full path of the left document on the TIA machine.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: See the operation description and its bounds.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: See the operation description and its bounds.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "rightBlockPath": {
+            "default": "",
+            "description": "rightBlockPath: block path inside the right document ('' = the whole file).",
+            "type": "string"
+          },
+          "rightFilePath": {
+            "default": "",
+            "description": "rightFilePath: full path of the right document on the TIA machine.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: See the operation description and its bounds.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ComparePlcBlockDocuments",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "5d8e1f45eae8d0efc8120e3d0e305e9e8076e87a655cb8a840ad8f8bc95fdb51",
@@ -5613,6 +6145,26 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "9285b824a715954683badb52e48f63c291b31a66119d56c0852af33bc9932781",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportId": {
+            "examples": [
+              "<exportId from response>"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "exportId"
+        ],
+        "type": "object"
+      },
+      "name": "DeleteExportHandle",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "5452edf554f742dd1fb78af2e6a05884d0fcbd238d57ab328d3610a6325007e2",
@@ -6827,6 +7379,137 @@
       }
     },
     {
+      "descriptionSha256": "4129322fb48d6ada68812a6ae315bca58b16db1dafc3ff5f201a5f2c1971ee2c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "extensions": {
+            "description": "extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: See the operation description and its bounds.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: See the operation description and its bounds.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "path": {
+            "description": "path: absolute path of an exported document file or of a directory of exports on the TIA machine.",
+            "type": "string"
+          },
+          "recursive": {
+            "default": true,
+            "description": "recursive: true also scans subfolders.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "ExtractPlcBlockMetrics",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "e697095e4b3559487907d9dca920b8faa26d5fb6411d14e6477f93a30a172f89",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "default": "",
+            "description": "Optional category key from ListToolCategories.",
+            "type": "string"
+          },
+          "domain": {
+            "default": "",
+            "description": "Optional exact domain tag from ListToolCategories.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 12,
+            "description": "Positive page size; default 12.",
+            "examples": [
+              8
+            ],
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based match offset.",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "query": {
+            "default": "",
+            "description": "Space-separated capability words; empty lists all tools.",
+            "examples": [
+              "watch table"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "FindTools",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f6988506a10e99349c2f1e0919786ccd000ba3423e9bc3ed5eb273dbab09fba0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "connectIfNeeded": {
+            "default": false,
+            "description": "When true, call ConnectPortal during self-test if the server is not connected. This may attach to TIA Portal.",
+            "type": "boolean"
+          },
+          "includeProjectTree": {
+            "default": false,
+            "description": "When true, include project tree output if a project is open.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "inspectPortalProcesses": {
+            "default": false,
+            "description": "When true, enumerate TIA process/project details. This may be slow if TIA is contended.",
+            "type": "boolean"
+          },
+          "outputDirectory": {
+            "default": "",
+            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.",
+            "examples": [
+              "C:\\Temp\\mcp-report"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "default": "TIA MCP Acceptance Report",
+            "description": "Optional report title.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GenerateAcceptanceReport",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "012119a28814618d1f6d66df31ea4605cdea111d9f00426d99dce29feff66cb8",
       "inputSchema": {
         "additionalProperties": false,
@@ -6982,6 +7665,106 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "e15db34148ed4c63d586c7a9b08056cc201c61b1029429294a9f27b0c8c5aff0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "default": "",
+            "description": "Detailed error text, stack trace, compile message, or diagnostic context.",
+            "examples": [
+              "<compiler output>"
+            ],
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Machine-readable error code, for example CompileError, HmiBindingError, TiaSessionContention, UnexpectedOpennessError.",
+            "examples": [
+              "CompileError"
+            ],
+            "type": "string"
+          },
+          "outputDirectory": {
+            "default": "",
+            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.",
+            "type": "string"
+          },
+          "recommendedNextActions": {
+            "default": "",
+            "description": "Comma-separated next actions.",
+            "type": "string"
+          },
+          "severity": {
+            "default": "error",
+            "description": "Severity: info, warn, error, critical.",
+            "examples": [
+              "error"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "description": "Short human-readable summary.",
+            "examples": [
+              "FB_Pump: 2 errors"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "name": "GenerateErrorReport",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f46db8764c09172434a22e90ffa6597f4ae9c5a452ecab960e16a88c836e7663",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "directory": {
+            "description": "directory: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "extensions": {
+            "description": "extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mermaidDirection": {
+            "default": "LR",
+            "description": "mermaidDirection: direction of the generated Mermaid diagram - TB or LR.",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "outputPath: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "recursive": {
+            "default": true,
+            "description": "recursive: true also scans subfolders.",
+            "type": "boolean"
+          },
+          "title": {
+            "default": "",
+            "description": "title: document title.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "directory",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "GeneratePlcDocumentation",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "d979eb5a041285af52b99c5a95abd9a252bfcd13e478d0ffe32efea3d34ccfa4",
@@ -7180,6 +7963,60 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "fe72297660a92e5e64cce9a0fb578a9417641b0419faec54c09d93c3b9d7d8a5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fix": {
+            "default": true,
+            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetEnvironmentDiagnostics",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ca32c3a458b46e3e8e77f78a3d24250e56fa1ba5bf2f5a23847248acc94bd20e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportId": {
+            "description": "Opaque export handle from this engine session.",
+            "examples": [
+              "<exportId from response>"
+            ],
+            "type": "string"
+          },
+          "length": {
+            "default": 0,
+            "description": "Requested characters; 0 uses the response limit, capped at 20000.",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based character offset.",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "exportId"
+        ],
+        "type": "object"
+      },
+      "name": "GetExportContent",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "1ad9786e9f5798e7c73c39dd08a58efd2d6b25fe99e85641a4b0243f1990bcc8",
       "inputSchema": {
         "additionalProperties": false,
@@ -7215,6 +8052,78 @@
         "type": "object"
       },
       "name": "GetHardwareFeatures",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ed0d40d029fd6986c6074ce3828e300067c69cc0c173514dc8ee950f855871dc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "take": {
+            "default": 100,
+            "description": "Number of recent entries, 1..500.",
+            "examples": [
+              100
+            ],
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetNativeInvocationLog",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "93ecf28b2ec1a38c0a6f991c28e6b20f26ba75e743c95e62d529fd5eec910c82",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetOpennessCompatibility",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "84a6427137a9746ad0fcfc43e70cb05004d5b8effe38741886710a53dfefd3c5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "default": "",
+            "description": "Exact document ID returned by listing; empty lists documents.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "Maximum returned items; see tool limits.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based item/line offset.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "query": {
+            "default": "",
+            "description": "Case-insensitive text to search; empty lists all guides.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetOpennessGuidance",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "1166ce689aedb97d786ca9ed0262ed83142d5176d5d72ddc3e7c728af5ac3398",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetOpennessWorkerStatus",
       "outputSchema": null
     },
     {
@@ -8578,6 +9487,39 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "cac9139b443493e0a303485c05e59305e9d3e05d7043691e9f085f58ae63aedb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 50,
+            "description": "Page size 1..100.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based entry offset.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "query": {
+            "default": "",
+            "description": "Case-insensitive text across catalog fields.",
+            "type": "string"
+          },
+          "source": {
+            "default": "all",
+            "description": "all, official or thirdParty.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetV21EcosystemCatalog",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "cf9a5974b0a29700f7b4f4ecbbd9aeacd0c96cfef98736ad98f2b6aa32d59ab5",
@@ -10056,6 +10998,64 @@
       }
     },
     {
+      "descriptionSha256": "d842bf69f4efd2a07a3610158b5d0dd67fc8d14b95dd246ae6cf556d8dba1c8f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "true previews without executing the requested write/action; false executes.",
+            "type": "boolean"
+          },
+          "outputDirectory": {
+            "description": "Existing absolute directory where new expanded XML files will be written.",
+            "type": "string"
+          },
+          "rows": {
+            "description": "rows: TemplateRow[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "fileName": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "values": {
+                  "additionalProperties": {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "minProperties": 0,
+                  "type": "object"
+                }
+              },
+              "required": [
+                "fileName",
+                "values"
+              ],
+              "type": "object"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "templatePath": {
+            "description": "Existing absolute XML template path with {{token}} placeholders in values.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "templatePath",
+          "outputDirectory",
+          "rows"
+        ],
+        "type": "object"
+      },
+      "name": "InstantiatePlcTemplates",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "73d337faf901ce62f297b57415362f0707508f9ba8b4c4f47af083a422034f25",
       "inputSchema": {
         "additionalProperties": false,
@@ -10149,6 +11149,32 @@
         "type": "object"
       },
       "name": "ListDevices",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "664ad96d4d4caa01cc1ff7080f068e4189e726837fe1eaefa2d6adf3e4760dd3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 20,
+            "description": "limit: maximum number of items to return (paging).",
+            "examples": [
+              10
+            ],
+            "minimum": 1,
+            "type": "integer"
+          },
+          "tool": {
+            "examples": [
+              "ListPlcBlocks"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ListExportHandles",
       "outputSchema": null
     },
     {
@@ -11685,6 +12711,16 @@
       }
     },
     {
+      "descriptionSha256": "aae2d63fc15dc8b9216c3f5955c349f2d4e45bb1990dbc4e203b4d501c8b313b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ListToolCategories",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "ee75cb356a0303a912bed5332c0bab6ec9c400ae07bec6c9185274b672cb920b",
       "inputSchema": {
         "additionalProperties": false,
@@ -12600,6 +13636,175 @@
       }
     },
     {
+      "descriptionSha256": "df0be9f8da2f8b07d52fd02e0a74e35bfaaf815944c4aa324e5e51fb9b959137",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}].",
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "setBlockText"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "culture": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "expectedValue": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "field": {
+                      "enum": [
+                        "Title",
+                        "Comment"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "value": {
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "field",
+                    "culture",
+                    "expectedValue",
+                    "value"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "setNetworkText"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "culture": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "expectedValue": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "field": {
+                      "enum": [
+                        "Title",
+                        "Comment"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "networkIndex": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "value": {
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "networkIndex",
+                    "field",
+                    "culture",
+                    "expectedValue",
+                    "value"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "action": {
+                      "enum": [
+                        "setMemberStartValue"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "expectedValue": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "memberPath": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "section": {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "value": {
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "section",
+                    "memberPath",
+                    "expectedValue",
+                    "value"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Preview only by default; false writes a new file, never imports into TIA.",
+            "type": "boolean"
+          },
+          "expectedFingerprint": {
+            "description": "documentFingerprint returned by GetPlcBlockEditCapabilities for this input.",
+            "type": "string"
+          },
+          "filePath": {
+            "description": "Absolute existing single-block SimaticML XML file.",
+            "type": "string"
+          },
+          "outputPath": {
+            "default": "",
+            "description": "New absolute output file; existing parent directory required when dryRun=false.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filePath",
+          "expectedFingerprint",
+          "changes"
+        ],
+        "type": "object"
+      },
+      "name": "PatchPlcBlockDocument",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "32ec3feb22dc510ee9911a9ffb68ddfeced06130b97fb5642f4a3e39776dc721",
       "inputSchema": {
         "additionalProperties": false,
@@ -12764,6 +13969,49 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "f328a40c40ff01136969588e663e9042808b5cde7a8a963569192d3721544891",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "libraryPath": {
+            "description": "libraryPath: reference global library folder path or .al* file path.",
+            "type": "string"
+          },
+          "templateIntent": {
+            "additionalProperties": false,
+            "description": "templateIntent: optional JSON {\"screenType\":\"overview\",\"targetRuntime\":\"Unified\",\"preferredComponents\":[...]}.",
+            "minProperties": 0,
+            "properties": {
+              "preferredComponents": {
+                "items": {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "minItems": 0,
+                "type": "array"
+              },
+              "screenType": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "targetRuntime": {
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
+          }
+        },
+        "required": [
+          "libraryPath"
+        ],
+        "type": "object"
+      },
+      "name": "PlanGlobalLibraryTemplateReuse",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "720ff1781eb1ff2665c9ab299fccb57fb05c67dc5995d08f9f1b64c546a6bedb",
@@ -13490,6 +14738,71 @@
       }
     },
     {
+      "descriptionSha256": "c5e5f83e3d922c4a6722d7b24c59827def2630095b254cb1ca4813eb9841bd07",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedProject": {
+            "description": "Exact bound project name.",
+            "type": "string"
+          },
+          "operations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments": {
+                  "type": "object"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "arguments"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "operations",
+          "expectedProject"
+        ],
+        "type": "object"
+      },
+      "name": "PreviewToolBatch",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "fa551aba24c82423522b047cea80c2c99df8841451200c62c6091f1c1b57bb15",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "arguments": {
+            "description": "Arguments validated against the named tool's inputSchema.",
+            "type": "object"
+          },
+          "name": {
+            "description": "Exact currently registered tool name.",
+            "examples": [
+              "ListPlcBlocks"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "PreviewToolCall",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "7de3c6e49583e45bfe40112f79e9db6d2c76bccab7b76c4a9d2ce75b7d1de802",
       "inputSchema": {
         "additionalProperties": false,
@@ -13683,6 +14996,47 @@
       }
     },
     {
+      "descriptionSha256": "1defa12c4f7a85ff10f0d8302b0a266b5de6beac761483fea2f763ad3da38d31",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "default": "",
+            "description": "blockPath: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "maxChars": {
+            "default": 60000,
+            "description": "maxChars: cap on characters rendered.",
+            "type": "integer"
+          },
+          "mermaidDirection": {
+            "default": "LR",
+            "description": "mermaidDirection: direction of the generated Mermaid diagram - TB or LR.",
+            "type": "string"
+          },
+          "outputPath": {
+            "default": "",
+            "description": "outputPath: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: See the operation description and its bounds.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "RenderPlcBlockDocument",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "0b87dd20c3b1ffb0391ba161872c3bba6c3054dfa946a19cfd88cbfc6a01e2ac",
       "inputSchema": {
         "additionalProperties": false,
@@ -13818,6 +15172,50 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "d5d5af82746cac928fa7fedc744699276a36db70dd1345133c19b2e0187915ca",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "leftFilePath": {
+            "description": "Existing absolute before-export SimaticML XML path.",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "New absolute output file; existing files are refused.",
+            "type": "string"
+          },
+          "rightFilePath": {
+            "description": "Existing absolute after-export SimaticML XML path.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "leftFilePath",
+          "rightFilePath",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "RenderPlcVisualDiff",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "e0b645400471444d4a37fc35c2e62b753f119c569de4c177f7bf849b2e41d2ce",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmRestart": {
+            "default": false,
+            "description": "confirmRestart: false previews only; true discards the idle/faulted worker and its bindings without replaying any operation.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "RestartOpennessWorker",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
@@ -13970,6 +15368,115 @@
       }
     },
     {
+      "descriptionSha256": "db73dd67af49be4b0c5b8e6d2e6f29f0bf8da0758eeb066ad45465516611027b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "reportDirectory": {
+            "description": "reportDirectory: directory where suite files and reports will be written.",
+            "type": "string"
+          },
+          "workspaceRoot": {
+            "description": "workspaceRoot: repository/workspace root containing TMP_EXPORT, docs, and tools.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceRoot",
+          "reportDirectory"
+        ],
+        "type": "object"
+      },
+      "name": "RunOfflineReleaseValidationSuite",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "de4165469ed13c21951d05af38ae356850f0381d50f1cddbfe10e93e5a4a9a8e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "RunOnlineMonitoringSafetySelfTest",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "b944be709e28a6ce8343670df96c74311cc9133fb9427faae22f72839a2f85bd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedProject": {
+            "default": "",
+            "description": "Optional exact bound project name.",
+            "type": "string"
+          },
+          "operations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments": {
+                  "type": "object"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "arguments"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "operations"
+        ],
+        "type": "object"
+      },
+      "name": "RunReadOnlyToolBatch",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "46b8e966aa75a89abb80ed15a8a5c1cfde2ff43821d093072aaadf39e4471581",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportId": {
+            "examples": [
+              "<exportId from response>"
+            ],
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "outputPath: full file path on the TIA machine to write.",
+            "examples": [
+              "C:\\Temp\\blocks.json"
+            ],
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "type": "boolean"
+          },
+          "raw": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exportId",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "SaveExportContent",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "9303ff80e27042c2b0020bf1d65f41bf0780b30043bc9cae2e4097c32f0ea110",
       "inputSchema": {
         "additionalProperties": false,
@@ -14109,6 +15616,60 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "cc77a36949e90b175e9d0901ea08036a8d53120fd84ec8b16a4de4c035158666",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "csvPath": {
+            "default": "",
+            "description": "csvPath: full path of the CSV file to write ('' = no CSV).",
+            "type": "string"
+          },
+          "directory": {
+            "description": "directory: See the operation description and its bounds.",
+            "type": "string"
+          },
+          "extensions": {
+            "description": "extensions: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 200,
+            "description": "limit: See the operation description and its bounds.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "markers": {
+            "description": "markers: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: See the operation description and its bounds.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "recursive": {
+            "default": true,
+            "description": "recursive: true also scans subfolders.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "directory"
+        ],
+        "type": "object"
+      },
+      "name": "ScanPlcSourceAnnotations",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "e4f0da412fae589a38691213152d84fa711a56e7b3886ba9c29a9fa140333ff1",
@@ -15286,6 +16847,35 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "4663153a3eeae72fec1f0a1f3a7efde508f5821c8e7d0df19d40850307d18202",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "outputPath": {
+            "default": "",
+            "description": "outputPath: target .scl file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl.",
+            "examples": [
+              "C:\\Temp\\FC_Add.scl"
+            ],
+            "type": "string"
+          },
+          "sclContent": {
+            "description": "sclContent: the full SCL source text (complete FUNCTION_BLOCK / FUNCTION / DATA_BLOCK / TYPE declarations). This is written verbatim.",
+            "examples": [
+              "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "sclContent"
+        ],
+        "type": "object"
+      },
+      "name": "WritePlcSclSourceFile",
+      "outputSchema": null
     }
   ]
 }

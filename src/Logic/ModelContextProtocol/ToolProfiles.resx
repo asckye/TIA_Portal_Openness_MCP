@@ -404,6 +404,24 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F01",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F02",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -428,6 +446,24 @@
     },
     {
       "releaseKey": "15.1",
+      "family": "F01",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F02",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -452,6 +488,24 @@
     },
     {
       "releaseKey": "16",
+      "family": "F01",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F02",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -476,6 +530,24 @@
     },
     {
       "releaseKey": "17",
+      "family": "F01",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F02",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -500,6 +572,24 @@
     },
     {
       "releaseKey": "18",
+      "family": "F01",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F02",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -519,6 +609,24 @@
     {
       "releaseKey": "18",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F01",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F02",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F03",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -4000,6 +4108,399 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ApplyToolBatch",
+      "family": "F01",
+      "example": {
+        "token": "&lt;token from PreviewToolBatch&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "BuildReleaseDiagnosticReport",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "BuildReleaseHandoffArtifacts",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+        "outputDirectory": "C:\\Examples\\generated"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "BuildReleaseManifest",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "BuildReleaseRunbook",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CallTool",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CheckProductUpdate",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ClearExportHandles",
+      "family": "F01",
+      "example": {
+        "olderThanHours": 0
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DeleteExportHandle",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "FindTools",
+      "family": "F01",
+      "example": {
+        "query": "watch table",
+        "limit": 8,
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GenerateAcceptanceReport",
+      "family": "F01",
+      "example": {
+        "outputDirectory": "C:\\Temp\\mcp-report",
+        "includeProjectTree": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GenerateErrorReport",
+      "family": "F01",
+      "example": {
+        "errorCode": "CompileError",
+        "summary": "FB_Pump: 2 errors",
+        "detail": "&lt;compiler output&gt;",
+        "severity": "error"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetEnvironmentDiagnostics",
+      "family": "F01",
+      "example": {
+        "fix": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetNativeInvocationLog",
+      "family": "F01",
+      "example": {
+        "take": 100
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetOpennessCompatibility",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetOpennessGuidance",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetOpennessWorkerStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetV21EcosystemCatalog",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListExportHandles",
+      "family": "F01",
+      "example": {
+        "tool": "ListPlcBlocks",
+        "limit": 10
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListToolCategories",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PreviewToolBatch",
+      "family": "F01",
+      "example": {
+        "expectedProject": "Example",
+        "operations": [
+          {
+            "name": "ManagePlcExternalSources",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "action": "createGroup",
+              "name": "ExampleSources",
+              "dryRun": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PreviewToolCall",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RestartOpennessWorker",
+      "family": "F01",
+      "example": {
+        "confirmRestart": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RunOfflineReleaseValidationSuite",
+      "family": "F01",
+      "example": {
+        "workspaceRoot": "C:\\Examples\\work",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RunOnlineMonitoringSafetySelfTest",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RunReadOnlyToolBatch",
+      "family": "F01",
+      "example": {
+        "operations": [
+          {
+            "name": "GetOpennessGuidance",
+            "arguments": {
+              "query": "threading"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SaveExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "outputPath": "C:\\Temp\\blocks.json"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "AnalyzePlcReferences",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Temp\\exports",
+        "action": "callers",
+        "target": "FB_Pump"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "AnalyzePlcSclSource",
+      "family": "F02",
+      "example": {
+        "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "AuditEngineeringExports",
+      "family": "F02",
+      "example": {
+        "directoryPath": "C:\\Examples"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ComparePlcBlockDocuments",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExtractPlcBlockMetrics",
+      "family": "F02",
+      "example": {
+        "path": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GeneratePlcDocumentation",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "outputPath": "C:\\Examples\\generated\\documentation.md"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "InstantiatePlcTemplates",
+      "family": "F02",
+      "example": {
+        "templatePath": "C:\\Examples\\templates\\Block.xml",
+        "outputDirectory": "C:\\Examples\\generated",
+        "dryRun": true,
+        "rows": [
+          {
+            "fileName": "Example.xml",
+            "values": {
+              "Name": "Example"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PatchPlcBlockDocument",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "dryRun": true,
+        "changes": [
+          {
+            "action": "setBlockText",
+            "field": "Title",
+            "culture": "en-US",
+            "expectedValue": "Old title",
+            "value": "Example"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RenderPlcBlockDocument",
+      "family": "F02",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RenderPlcVisualDiff",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml",
+        "outputPath": "C:\\Examples\\generated\\result.xml"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ScanPlcSourceAnnotations",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "WritePlcSclSourceFile",
+      "family": "F02",
+      "example": {
+        "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+        "outputPath": "C:\\Temp\\FC_Add.scl"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "AnalyzeGlobalLibraryPackage",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "AnalyzeHmiTemplateReference",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+        "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PlanGlobalLibraryTemplateReuse",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -4481,6 +4982,399 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ApplyToolBatch",
+      "family": "F01",
+      "example": {
+        "token": "&lt;token from PreviewToolBatch&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildReleaseDiagnosticReport",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildReleaseHandoffArtifacts",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+        "outputDirectory": "C:\\Examples\\generated"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildReleaseManifest",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildReleaseRunbook",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CallTool",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CheckProductUpdate",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ClearExportHandles",
+      "family": "F01",
+      "example": {
+        "olderThanHours": 0
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DeleteExportHandle",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "FindTools",
+      "family": "F01",
+      "example": {
+        "query": "watch table",
+        "limit": 8,
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GenerateAcceptanceReport",
+      "family": "F01",
+      "example": {
+        "outputDirectory": "C:\\Temp\\mcp-report",
+        "includeProjectTree": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GenerateErrorReport",
+      "family": "F01",
+      "example": {
+        "errorCode": "CompileError",
+        "summary": "FB_Pump: 2 errors",
+        "detail": "&lt;compiler output&gt;",
+        "severity": "error"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetEnvironmentDiagnostics",
+      "family": "F01",
+      "example": {
+        "fix": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetNativeInvocationLog",
+      "family": "F01",
+      "example": {
+        "take": 100
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetOpennessCompatibility",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetOpennessGuidance",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetOpennessWorkerStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetV21EcosystemCatalog",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListExportHandles",
+      "family": "F01",
+      "example": {
+        "tool": "ListPlcBlocks",
+        "limit": 10
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListToolCategories",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PreviewToolBatch",
+      "family": "F01",
+      "example": {
+        "expectedProject": "Example",
+        "operations": [
+          {
+            "name": "ManagePlcExternalSources",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "action": "createGroup",
+              "name": "ExampleSources",
+              "dryRun": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PreviewToolCall",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RestartOpennessWorker",
+      "family": "F01",
+      "example": {
+        "confirmRestart": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunOfflineReleaseValidationSuite",
+      "family": "F01",
+      "example": {
+        "workspaceRoot": "C:\\Examples\\work",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunOnlineMonitoringSafetySelfTest",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunReadOnlyToolBatch",
+      "family": "F01",
+      "example": {
+        "operations": [
+          {
+            "name": "GetOpennessGuidance",
+            "arguments": {
+              "query": "threading"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SaveExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "outputPath": "C:\\Temp\\blocks.json"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AnalyzePlcReferences",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Temp\\exports",
+        "action": "callers",
+        "target": "FB_Pump"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AnalyzePlcSclSource",
+      "family": "F02",
+      "example": {
+        "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AuditEngineeringExports",
+      "family": "F02",
+      "example": {
+        "directoryPath": "C:\\Examples"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ComparePlcBlockDocuments",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExtractPlcBlockMetrics",
+      "family": "F02",
+      "example": {
+        "path": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GeneratePlcDocumentation",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "outputPath": "C:\\Examples\\generated\\documentation.md"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "InstantiatePlcTemplates",
+      "family": "F02",
+      "example": {
+        "templatePath": "C:\\Examples\\templates\\Block.xml",
+        "outputDirectory": "C:\\Examples\\generated",
+        "dryRun": true,
+        "rows": [
+          {
+            "fileName": "Example.xml",
+            "values": {
+              "Name": "Example"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PatchPlcBlockDocument",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "dryRun": true,
+        "changes": [
+          {
+            "action": "setBlockText",
+            "field": "Title",
+            "culture": "en-US",
+            "expectedValue": "Old title",
+            "value": "Example"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RenderPlcBlockDocument",
+      "family": "F02",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RenderPlcVisualDiff",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml",
+        "outputPath": "C:\\Examples\\generated\\result.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ScanPlcSourceAnnotations",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "WritePlcSclSourceFile",
+      "family": "F02",
+      "example": {
+        "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+        "outputPath": "C:\\Temp\\FC_Add.scl"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AnalyzeGlobalLibraryPackage",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AnalyzeHmiTemplateReference",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+        "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PlanGlobalLibraryTemplateReuse",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -4962,6 +5856,399 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ApplyToolBatch",
+      "family": "F01",
+      "example": {
+        "token": "&lt;token from PreviewToolBatch&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildReleaseDiagnosticReport",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildReleaseHandoffArtifacts",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+        "outputDirectory": "C:\\Examples\\generated"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildReleaseManifest",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildReleaseRunbook",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CallTool",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CheckProductUpdate",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ClearExportHandles",
+      "family": "F01",
+      "example": {
+        "olderThanHours": 0
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DeleteExportHandle",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "FindTools",
+      "family": "F01",
+      "example": {
+        "query": "watch table",
+        "limit": 8,
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GenerateAcceptanceReport",
+      "family": "F01",
+      "example": {
+        "outputDirectory": "C:\\Temp\\mcp-report",
+        "includeProjectTree": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GenerateErrorReport",
+      "family": "F01",
+      "example": {
+        "errorCode": "CompileError",
+        "summary": "FB_Pump: 2 errors",
+        "detail": "&lt;compiler output&gt;",
+        "severity": "error"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetEnvironmentDiagnostics",
+      "family": "F01",
+      "example": {
+        "fix": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetNativeInvocationLog",
+      "family": "F01",
+      "example": {
+        "take": 100
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetOpennessCompatibility",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetOpennessGuidance",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetOpennessWorkerStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetV21EcosystemCatalog",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListExportHandles",
+      "family": "F01",
+      "example": {
+        "tool": "ListPlcBlocks",
+        "limit": 10
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListToolCategories",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PreviewToolBatch",
+      "family": "F01",
+      "example": {
+        "expectedProject": "Example",
+        "operations": [
+          {
+            "name": "ManagePlcExternalSources",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "action": "createGroup",
+              "name": "ExampleSources",
+              "dryRun": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PreviewToolCall",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RestartOpennessWorker",
+      "family": "F01",
+      "example": {
+        "confirmRestart": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunOfflineReleaseValidationSuite",
+      "family": "F01",
+      "example": {
+        "workspaceRoot": "C:\\Examples\\work",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunOnlineMonitoringSafetySelfTest",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunReadOnlyToolBatch",
+      "family": "F01",
+      "example": {
+        "operations": [
+          {
+            "name": "GetOpennessGuidance",
+            "arguments": {
+              "query": "threading"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SaveExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "outputPath": "C:\\Temp\\blocks.json"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AnalyzePlcReferences",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Temp\\exports",
+        "action": "callers",
+        "target": "FB_Pump"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AnalyzePlcSclSource",
+      "family": "F02",
+      "example": {
+        "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AuditEngineeringExports",
+      "family": "F02",
+      "example": {
+        "directoryPath": "C:\\Examples"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ComparePlcBlockDocuments",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExtractPlcBlockMetrics",
+      "family": "F02",
+      "example": {
+        "path": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GeneratePlcDocumentation",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "outputPath": "C:\\Examples\\generated\\documentation.md"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "InstantiatePlcTemplates",
+      "family": "F02",
+      "example": {
+        "templatePath": "C:\\Examples\\templates\\Block.xml",
+        "outputDirectory": "C:\\Examples\\generated",
+        "dryRun": true,
+        "rows": [
+          {
+            "fileName": "Example.xml",
+            "values": {
+              "Name": "Example"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PatchPlcBlockDocument",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "dryRun": true,
+        "changes": [
+          {
+            "action": "setBlockText",
+            "field": "Title",
+            "culture": "en-US",
+            "expectedValue": "Old title",
+            "value": "Example"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RenderPlcBlockDocument",
+      "family": "F02",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RenderPlcVisualDiff",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml",
+        "outputPath": "C:\\Examples\\generated\\result.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ScanPlcSourceAnnotations",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "WritePlcSclSourceFile",
+      "family": "F02",
+      "example": {
+        "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+        "outputPath": "C:\\Temp\\FC_Add.scl"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AnalyzeGlobalLibraryPackage",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AnalyzeHmiTemplateReference",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+        "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PlanGlobalLibraryTemplateReuse",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -5443,6 +6730,399 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ApplyToolBatch",
+      "family": "F01",
+      "example": {
+        "token": "&lt;token from PreviewToolBatch&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildReleaseDiagnosticReport",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildReleaseHandoffArtifacts",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+        "outputDirectory": "C:\\Examples\\generated"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildReleaseManifest",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildReleaseRunbook",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CallTool",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CheckProductUpdate",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ClearExportHandles",
+      "family": "F01",
+      "example": {
+        "olderThanHours": 0
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DeleteExportHandle",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "FindTools",
+      "family": "F01",
+      "example": {
+        "query": "watch table",
+        "limit": 8,
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GenerateAcceptanceReport",
+      "family": "F01",
+      "example": {
+        "outputDirectory": "C:\\Temp\\mcp-report",
+        "includeProjectTree": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GenerateErrorReport",
+      "family": "F01",
+      "example": {
+        "errorCode": "CompileError",
+        "summary": "FB_Pump: 2 errors",
+        "detail": "&lt;compiler output&gt;",
+        "severity": "error"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetEnvironmentDiagnostics",
+      "family": "F01",
+      "example": {
+        "fix": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetNativeInvocationLog",
+      "family": "F01",
+      "example": {
+        "take": 100
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetOpennessCompatibility",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetOpennessGuidance",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetOpennessWorkerStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetV21EcosystemCatalog",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListExportHandles",
+      "family": "F01",
+      "example": {
+        "tool": "ListPlcBlocks",
+        "limit": 10
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListToolCategories",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PreviewToolBatch",
+      "family": "F01",
+      "example": {
+        "expectedProject": "Example",
+        "operations": [
+          {
+            "name": "ManagePlcExternalSources",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "action": "createGroup",
+              "name": "ExampleSources",
+              "dryRun": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PreviewToolCall",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RestartOpennessWorker",
+      "family": "F01",
+      "example": {
+        "confirmRestart": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunOfflineReleaseValidationSuite",
+      "family": "F01",
+      "example": {
+        "workspaceRoot": "C:\\Examples\\work",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunOnlineMonitoringSafetySelfTest",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunReadOnlyToolBatch",
+      "family": "F01",
+      "example": {
+        "operations": [
+          {
+            "name": "GetOpennessGuidance",
+            "arguments": {
+              "query": "threading"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SaveExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "outputPath": "C:\\Temp\\blocks.json"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AnalyzePlcReferences",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Temp\\exports",
+        "action": "callers",
+        "target": "FB_Pump"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AnalyzePlcSclSource",
+      "family": "F02",
+      "example": {
+        "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AuditEngineeringExports",
+      "family": "F02",
+      "example": {
+        "directoryPath": "C:\\Examples"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ComparePlcBlockDocuments",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExtractPlcBlockMetrics",
+      "family": "F02",
+      "example": {
+        "path": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GeneratePlcDocumentation",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "outputPath": "C:\\Examples\\generated\\documentation.md"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "InstantiatePlcTemplates",
+      "family": "F02",
+      "example": {
+        "templatePath": "C:\\Examples\\templates\\Block.xml",
+        "outputDirectory": "C:\\Examples\\generated",
+        "dryRun": true,
+        "rows": [
+          {
+            "fileName": "Example.xml",
+            "values": {
+              "Name": "Example"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PatchPlcBlockDocument",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "dryRun": true,
+        "changes": [
+          {
+            "action": "setBlockText",
+            "field": "Title",
+            "culture": "en-US",
+            "expectedValue": "Old title",
+            "value": "Example"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RenderPlcBlockDocument",
+      "family": "F02",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RenderPlcVisualDiff",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml",
+        "outputPath": "C:\\Examples\\generated\\result.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ScanPlcSourceAnnotations",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "WritePlcSclSourceFile",
+      "family": "F02",
+      "example": {
+        "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+        "outputPath": "C:\\Temp\\FC_Add.scl"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AnalyzeGlobalLibraryPackage",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AnalyzeHmiTemplateReference",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+        "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PlanGlobalLibraryTemplateReuse",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -5924,6 +7604,399 @@
     },
     {
       "releaseKey": "18",
+      "entry": "ApplyToolBatch",
+      "family": "F01",
+      "example": {
+        "token": "&lt;token from PreviewToolBatch&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildReleaseDiagnosticReport",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildReleaseHandoffArtifacts",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+        "outputDirectory": "C:\\Examples\\generated"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildReleaseManifest",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildReleaseRunbook",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CallTool",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CheckProductUpdate",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ClearExportHandles",
+      "family": "F01",
+      "example": {
+        "olderThanHours": 0
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DeleteExportHandle",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "FindTools",
+      "family": "F01",
+      "example": {
+        "query": "watch table",
+        "limit": 8,
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GenerateAcceptanceReport",
+      "family": "F01",
+      "example": {
+        "outputDirectory": "C:\\Temp\\mcp-report",
+        "includeProjectTree": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GenerateErrorReport",
+      "family": "F01",
+      "example": {
+        "errorCode": "CompileError",
+        "summary": "FB_Pump: 2 errors",
+        "detail": "&lt;compiler output&gt;",
+        "severity": "error"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetEnvironmentDiagnostics",
+      "family": "F01",
+      "example": {
+        "fix": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetNativeInvocationLog",
+      "family": "F01",
+      "example": {
+        "take": 100
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetOpennessCompatibility",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetOpennessGuidance",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetOpennessWorkerStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetV21EcosystemCatalog",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListExportHandles",
+      "family": "F01",
+      "example": {
+        "tool": "ListPlcBlocks",
+        "limit": 10
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListToolCategories",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PreviewToolBatch",
+      "family": "F01",
+      "example": {
+        "expectedProject": "Example",
+        "operations": [
+          {
+            "name": "ManagePlcExternalSources",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "action": "createGroup",
+              "name": "ExampleSources",
+              "dryRun": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PreviewToolCall",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RestartOpennessWorker",
+      "family": "F01",
+      "example": {
+        "confirmRestart": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunOfflineReleaseValidationSuite",
+      "family": "F01",
+      "example": {
+        "workspaceRoot": "C:\\Examples\\work",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunOnlineMonitoringSafetySelfTest",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunReadOnlyToolBatch",
+      "family": "F01",
+      "example": {
+        "operations": [
+          {
+            "name": "GetOpennessGuidance",
+            "arguments": {
+              "query": "threading"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SaveExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "outputPath": "C:\\Temp\\blocks.json"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AnalyzePlcReferences",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Temp\\exports",
+        "action": "callers",
+        "target": "FB_Pump"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AnalyzePlcSclSource",
+      "family": "F02",
+      "example": {
+        "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AuditEngineeringExports",
+      "family": "F02",
+      "example": {
+        "directoryPath": "C:\\Examples"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ComparePlcBlockDocuments",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExtractPlcBlockMetrics",
+      "family": "F02",
+      "example": {
+        "path": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GeneratePlcDocumentation",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "outputPath": "C:\\Examples\\generated\\documentation.md"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "InstantiatePlcTemplates",
+      "family": "F02",
+      "example": {
+        "templatePath": "C:\\Examples\\templates\\Block.xml",
+        "outputDirectory": "C:\\Examples\\generated",
+        "dryRun": true,
+        "rows": [
+          {
+            "fileName": "Example.xml",
+            "values": {
+              "Name": "Example"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PatchPlcBlockDocument",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "dryRun": true,
+        "changes": [
+          {
+            "action": "setBlockText",
+            "field": "Title",
+            "culture": "en-US",
+            "expectedValue": "Old title",
+            "value": "Example"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RenderPlcBlockDocument",
+      "family": "F02",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RenderPlcVisualDiff",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml",
+        "outputPath": "C:\\Examples\\generated\\result.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ScanPlcSourceAnnotations",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "WritePlcSclSourceFile",
+      "family": "F02",
+      "example": {
+        "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+        "outputPath": "C:\\Temp\\FC_Add.scl"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AnalyzeGlobalLibraryPackage",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AnalyzeHmiTemplateReference",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+        "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PlanGlobalLibraryTemplateReuse",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -6402,6 +8475,486 @@
         "startAddress": 1,
         "dryRun": true
       }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ApplyToolBatch",
+      "family": "F01",
+      "example": {
+        "token": "&lt;token from PreviewToolBatch&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildReleaseDiagnosticReport",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildReleaseHandoffArtifacts",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+        "outputDirectory": "C:\\Examples\\generated"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildReleaseManifest",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildReleaseRunbook",
+      "family": "F01",
+      "example": {
+        "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CallTool",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CheckProductUpdate",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ClearExportHandles",
+      "family": "F01",
+      "example": {
+        "olderThanHours": 0
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeleteExportHandle",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "FindTools",
+      "family": "F01",
+      "example": {
+        "query": "watch table",
+        "limit": 8,
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GenerateAcceptanceReport",
+      "family": "F01",
+      "example": {
+        "outputDirectory": "C:\\Temp\\mcp-report",
+        "includeProjectTree": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GenerateErrorReport",
+      "family": "F01",
+      "example": {
+        "errorCode": "CompileError",
+        "summary": "FB_Pump: 2 errors",
+        "detail": "&lt;compiler output&gt;",
+        "severity": "error"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetEnvironmentDiagnostics",
+      "family": "F01",
+      "example": {
+        "fix": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "offset": 0
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetNativeInvocationLog",
+      "family": "F01",
+      "example": {
+        "take": 100
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetOpennessCompatibility",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetOpennessGuidance",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetOpennessWorkerStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetV21EcosystemCatalog",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListExportHandles",
+      "family": "F01",
+      "example": {
+        "tool": "ListPlcBlocks",
+        "limit": 10
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListToolCategories",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PreviewToolBatch",
+      "family": "F01",
+      "example": {
+        "expectedProject": "Example",
+        "operations": [
+          {
+            "name": "ManagePlcExternalSources",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "action": "createGroup",
+              "name": "ExampleSources",
+              "dryRun": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PreviewToolCall",
+      "family": "F01",
+      "example": {
+        "name": "AnalyzePlcReferences",
+        "arguments": {
+          "directory": "C:/TIA/Exports"
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RestartOpennessWorker",
+      "family": "F01",
+      "example": {
+        "confirmRestart": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunOfflineReleaseValidationSuite",
+      "family": "F01",
+      "example": {
+        "workspaceRoot": "C:\\Examples\\work",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunOnlineMonitoringSafetySelfTest",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunReadOnlyToolBatch",
+      "family": "F01",
+      "example": {
+        "operations": [
+          {
+            "name": "GetOpennessGuidance",
+            "arguments": {
+              "query": "threading"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SaveExportContent",
+      "family": "F01",
+      "example": {
+        "exportId": "&lt;exportId from response&gt;",
+        "outputPath": "C:\\Temp\\blocks.json"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AnalyzePlcReferences",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Temp\\exports",
+        "action": "callers",
+        "target": "FB_Pump"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AnalyzePlcSclSource",
+      "family": "F02",
+      "example": {
+        "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AuditEngineeringExports",
+      "family": "F02",
+      "example": {
+        "directoryPath": "C:\\Examples"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ComparePlcBlockDocuments",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExtractPlcBlockMetrics",
+      "family": "F02",
+      "example": {
+        "path": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GeneratePlcDocumentation",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "outputPath": "C:\\Examples\\generated\\documentation.md"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "InstantiatePlcTemplates",
+      "family": "F02",
+      "example": {
+        "templatePath": "C:\\Examples\\templates\\Block.xml",
+        "outputDirectory": "C:\\Examples\\generated",
+        "dryRun": true,
+        "rows": [
+          {
+            "fileName": "Example.xml",
+            "values": {
+              "Name": "Example"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PatchPlcBlockDocument",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "dryRun": true,
+        "changes": [
+          {
+            "action": "setBlockText",
+            "field": "Title",
+            "culture": "en-US",
+            "expectedValue": "Old title",
+            "value": "Example"
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RenderPlcBlockDocument",
+      "family": "F02",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RenderPlcVisualDiff",
+      "family": "F02",
+      "example": {
+        "leftFilePath": "C:\\Examples\\before\\Main.xml",
+        "rightFilePath": "C:\\Examples\\after\\Main.xml",
+        "outputPath": "C:\\Examples\\generated\\result.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ScanPlcSourceAnnotations",
+      "family": "F02",
+      "example": {
+        "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "WritePlcSclSourceFile",
+      "family": "F02",
+      "example": {
+        "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+        "outputPath": "C:\\Temp\\FC_Add.scl"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AnalyzeGlobalLibraryPackage",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AnalyzeHmiTemplateReference",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+        "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AnalyzeUnifiedHmiTemplateLayout",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildUnifiedHmiButtonActionScript",
+      "family": "F03",
+      "example": {
+        "actionKind": "set-bit",
+        "eventType": "Down",
+        "targetTag": "Ready"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildUnifiedHmiLayoutDesign",
+      "family": "F03",
+      "example": {
+        "layout": {
+          "columns": 1,
+          "cellWidth": 160,
+          "cellHeight": 40,
+          "items": [
+            {
+              "name": "StatusText",
+              "type": "Text",
+              "row": 0,
+              "col": 0,
+              "text": "Ready"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildUnifiedHmiTemplateApplyDesign",
+      "family": "F03",
+      "example": {
+        "templateFile": "C:\\Examples\\templates\\Screen.json"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildUnifiedHmiTemplateApplyDesignManifest",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildUnifiedHmiThemeDesign",
+      "family": "F03",
+      "example": {
+        "theme": {
+          "name": "Example",
+          "palette": {
+            "Page": "0xFFFFFFFF",
+            "Surface": "0xFFF4F6F8",
+            "Text": "0xFF202020",
+            "Border": "0xFF808080"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedCwcPackage",
+      "family": "F03",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "dryRun": true,
+        "action": "inspect"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PlanGlobalLibraryTemplateReuse",
+      "family": "F03",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunHmiActionScriptRecipeSafetySelfTest",
+      "family": "F03",
+      "example": {}
     },
     {
       "releaseKey": "19",
@@ -22817,6 +25370,58 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzeGlobalLibraryPackage",
+        "currentName": "AnalyzeGlobalLibraryPackage",
+        "sourceName": "AnalyzeGlobalLibraryPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeHmiTemplateReference",
+        "currentName": "AnalyzeHmiTemplateReference",
+        "sourceName": "AnalyzeHmiTemplateReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+          "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcReferences",
+        "currentName": "AnalyzePlcReferences",
+        "sourceName": "AnalyzePlcReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Temp\\exports",
+          "action": "callers",
+          "target": "FB_Pump"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyToolBatch",
+        "currentName": "ApplyToolBatch",
+        "sourceName": "ApplyToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachDeviceNodeToSubnet",
         "currentName": "AttachDeviceNodeToSubnet",
         "sourceName": "AttachDeviceNodeToSubnet",
@@ -22840,6 +25445,18 @@
         "arguments": {
           "projectName": "&lt;file name without extension from selected projectPath&gt;",
           "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AuditEngineeringExports",
+        "currentName": "AuditEngineeringExports",
+        "sourceName": "AuditEngineeringExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directoryPath": "C:\\Examples"
         },
         "envelopeVersion": 4
       },
@@ -22985,6 +25602,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildReleaseDiagnosticReport",
+        "currentName": "BuildReleaseDiagnosticReport",
+        "sourceName": "BuildReleaseDiagnosticReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseManifest",
+        "currentName": "BuildReleaseManifest",
+        "sourceName": "BuildReleaseManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseRunbook",
+        "currentName": "BuildReleaseRunbook",
+        "sourceName": "BuildReleaseRunbook",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildStructuredText",
         "currentName": "BuildStructuredText",
         "sourceName": "BuildStructuredTextXml",
@@ -23006,6 +25659,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "sourceName": "CallTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CheckProductUpdate",
+        "currentName": "CheckProductUpdate",
+        "sourceName": "CheckForUpdate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -23019,6 +25697,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExportHandles",
+        "sourceName": "ClearExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "olderThanHours": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -23028,6 +25718,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ComparePlcBlockDocuments",
+        "currentName": "ComparePlcBlockDocuments",
+        "sourceName": "ComparePlcBlockDocuments",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -23251,6 +25954,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExportHandle",
+        "sourceName": "DeleteExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeletePlcExternalSource",
         "currentName": "DeletePlcExternalSource",
         "sourceName": "DeletePlcExternalSource",
@@ -23286,6 +26001,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "GetEnvironmentDiagnostics",
+        "sourceName": "Doctor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "fix": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -23423,6 +26150,45 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExtractPlcBlockMetrics",
+        "currentName": "ExtractPlcBlockMetrics",
+        "sourceName": "ExtractPlcBlockMetrics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "path": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "sourceName": "FindTools",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "query": "watch table",
+          "limit": 8,
+          "offset": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateAcceptanceReport",
+        "currentName": "GenerateAcceptanceReport",
+        "sourceName": "GenerateAcceptanceReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "outputDirectory": "C:\\Temp\\mcp-report",
+          "includeProjectTree": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GenerateBlocksFromExternalSource",
         "currentName": "GenerateBlocksFromExternalSource",
         "sourceName": "GenerateBlocksFromExternalSource",
@@ -23434,6 +26200,34 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "sourceName": "GenerateErrorReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "errorCode": "CompileError",
+          "summary": "FB_Pump: 2 errors",
+          "detail": "&lt;compiler output&gt;",
+          "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GeneratePlcDocumentation",
+        "currentName": "GeneratePlcDocumentation",
+        "sourceName": "GeneratePlcDocumentation",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "outputPath": "C:\\Examples\\generated\\documentation.md"
         },
         "envelopeVersion": 4
       },
@@ -23566,6 +26360,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExportContent",
+        "sourceName": "GetExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "offset": 0
+        },
         "envelopeVersion": 4
       },
       {
@@ -23825,6 +26632,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InstantiatePlcTemplates",
+        "currentName": "InstantiatePlcTemplates",
+        "sourceName": "InstantiatePlcXmlTemplates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcSclSource",
+        "currentName": "AnalyzePlcSclSource",
+        "sourceName": "LintPlcSclSource",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExportHandles",
+        "sourceName": "ListExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tool": "ListPlcBlocks",
+          "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
@@ -23838,6 +26692,16 @@
         "name": "ListStagedImportFiles",
         "currentName": "ListStagedImportFiles",
         "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "sourceName": "ListToolCategories",
         "profiles": [
           "plc-foundation"
         ],
@@ -24004,6 +26868,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PatchPlcBlockDocument",
+        "currentName": "PatchPlcBlockDocument",
+        "sourceName": "PatchPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanArtifactImportOrder",
         "currentName": "PlanArtifactImportOrder",
         "sourceName": "PlanArtifactImportOrder",
@@ -24022,6 +26909,18 @@
               ]
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanGlobalLibraryTemplateReuse",
+        "currentName": "PlanGlobalLibraryTemplateReuse",
+        "sourceName": "PlanGlobalLibraryTemplateReuse",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
         "envelopeVersion": 4
       },
@@ -24076,6 +26975,44 @@
           "version": "V2.2",
           "positionNumber": 2,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreviewToolCall",
+        "sourceName": "PreflightToolCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolBatch",
+        "currentName": "PreviewToolBatch",
+        "sourceName": "PreviewToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -24161,6 +27098,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
+        "sourceName": "ReadNativeInvocationLog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListNetworkDomains",
         "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
@@ -24170,6 +27119,36 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
+        "sourceName": "ReadOpennessCompatibility",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessGuidance",
+        "currentName": "GetOpennessGuidance",
+        "sourceName": "ReadOpennessGuidance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
+        "sourceName": "ReadOpennessWorkerStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -24212,6 +27191,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunReadOnlyToolBatch",
+        "currentName": "RunReadOnlyToolBatch",
+        "sourceName": "ReadToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "operations": [
+            {
+              "name": "GetOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListTransferAreas",
         "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
@@ -24229,6 +27227,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetV21EcosystemCatalog",
+        "currentName": "GetV21EcosystemCatalog",
+        "sourceName": "ReadV21EcosystemCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseHandoffArtifacts",
+        "currentName": "BuildReleaseHandoffArtifacts",
+        "sourceName": "RebuildReleaseHandoffArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcBlock",
         "currentName": "RenderPlcBlock",
         "sourceName": "RenderPlcBlock",
@@ -24242,6 +27263,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RenderPlcBlockDocument",
+        "currentName": "RenderPlcBlockDocument",
+        "sourceName": "RenderPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcProgramAtlas",
         "currentName": "RenderPlcProgramAtlas",
         "sourceName": "RenderPlcProgramAtlas",
@@ -24251,6 +27282,32 @@
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RenderPlcVisualDiff",
+        "currentName": "RenderPlcVisualDiff",
+        "sourceName": "RenderPlcVisualDiff",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml",
+          "outputPath": "C:\\Examples\\generated\\result.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "sourceName": "RestartOpennessWorker",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmRestart": false
         },
         "envelopeVersion": 4
       },
@@ -24269,6 +27326,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunOfflineReleaseValidationSuite",
+        "currentName": "RunOfflineReleaseValidationSuite",
+        "sourceName": "RunOfflineReleaseValidationSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceRoot": "C:\\Examples\\work",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOnlineMonitoringSafetySelfTest",
+        "currentName": "RunOnlineMonitoringSafetySelfTest",
+        "sourceName": "RunOnlineMonitoringSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExportContent",
+        "sourceName": "SaveExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "outputPath": "C:\\Temp\\blocks.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveProject",
         "currentName": "SaveProject",
         "sourceName": "SaveProject",
@@ -24278,6 +27371,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanPlcSourceAnnotations",
+        "currentName": "ScanPlcSourceAnnotations",
+        "sourceName": "ScanPlcSourceAnnotations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -24399,6 +27504,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "sourceName": "WritePlcSclSourceFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+          "outputPath": "C:\\Temp\\FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -24544,6 +27662,58 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzeGlobalLibraryPackage",
+        "currentName": "AnalyzeGlobalLibraryPackage",
+        "sourceName": "AnalyzeGlobalLibraryPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeHmiTemplateReference",
+        "currentName": "AnalyzeHmiTemplateReference",
+        "sourceName": "AnalyzeHmiTemplateReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+          "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcReferences",
+        "currentName": "AnalyzePlcReferences",
+        "sourceName": "AnalyzePlcReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Temp\\exports",
+          "action": "callers",
+          "target": "FB_Pump"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyToolBatch",
+        "currentName": "ApplyToolBatch",
+        "sourceName": "ApplyToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachDeviceNodeToSubnet",
         "currentName": "AttachDeviceNodeToSubnet",
         "sourceName": "AttachDeviceNodeToSubnet",
@@ -24567,6 +27737,18 @@
         "arguments": {
           "projectName": "&lt;file name without extension from selected projectPath&gt;",
           "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AuditEngineeringExports",
+        "currentName": "AuditEngineeringExports",
+        "sourceName": "AuditEngineeringExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directoryPath": "C:\\Examples"
         },
         "envelopeVersion": 4
       },
@@ -24712,6 +27894,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildReleaseDiagnosticReport",
+        "currentName": "BuildReleaseDiagnosticReport",
+        "sourceName": "BuildReleaseDiagnosticReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseManifest",
+        "currentName": "BuildReleaseManifest",
+        "sourceName": "BuildReleaseManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseRunbook",
+        "currentName": "BuildReleaseRunbook",
+        "sourceName": "BuildReleaseRunbook",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildStructuredText",
         "currentName": "BuildStructuredText",
         "sourceName": "BuildStructuredTextXml",
@@ -24733,6 +27951,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "sourceName": "CallTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CheckProductUpdate",
+        "currentName": "CheckProductUpdate",
+        "sourceName": "CheckForUpdate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -24746,6 +27989,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExportHandles",
+        "sourceName": "ClearExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "olderThanHours": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -24755,6 +28010,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ComparePlcBlockDocuments",
+        "currentName": "ComparePlcBlockDocuments",
+        "sourceName": "ComparePlcBlockDocuments",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -24978,6 +28246,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExportHandle",
+        "sourceName": "DeleteExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeletePlcExternalSource",
         "currentName": "DeletePlcExternalSource",
         "sourceName": "DeletePlcExternalSource",
@@ -25013,6 +28293,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "GetEnvironmentDiagnostics",
+        "sourceName": "Doctor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "fix": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -25150,6 +28442,45 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExtractPlcBlockMetrics",
+        "currentName": "ExtractPlcBlockMetrics",
+        "sourceName": "ExtractPlcBlockMetrics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "path": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "sourceName": "FindTools",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "query": "watch table",
+          "limit": 8,
+          "offset": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateAcceptanceReport",
+        "currentName": "GenerateAcceptanceReport",
+        "sourceName": "GenerateAcceptanceReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "outputDirectory": "C:\\Temp\\mcp-report",
+          "includeProjectTree": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GenerateBlocksFromExternalSource",
         "currentName": "GenerateBlocksFromExternalSource",
         "sourceName": "GenerateBlocksFromExternalSource",
@@ -25161,6 +28492,34 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "sourceName": "GenerateErrorReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "errorCode": "CompileError",
+          "summary": "FB_Pump: 2 errors",
+          "detail": "&lt;compiler output&gt;",
+          "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GeneratePlcDocumentation",
+        "currentName": "GeneratePlcDocumentation",
+        "sourceName": "GeneratePlcDocumentation",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "outputPath": "C:\\Examples\\generated\\documentation.md"
         },
         "envelopeVersion": 4
       },
@@ -25293,6 +28652,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExportContent",
+        "sourceName": "GetExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "offset": 0
+        },
         "envelopeVersion": 4
       },
       {
@@ -25564,6 +28936,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InstantiatePlcTemplates",
+        "currentName": "InstantiatePlcTemplates",
+        "sourceName": "InstantiatePlcXmlTemplates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcSclSource",
+        "currentName": "AnalyzePlcSclSource",
+        "sourceName": "LintPlcSclSource",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExportHandles",
+        "sourceName": "ListExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tool": "ListPlcBlocks",
+          "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
@@ -25577,6 +28996,16 @@
         "name": "ListStagedImportFiles",
         "currentName": "ListStagedImportFiles",
         "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "sourceName": "ListToolCategories",
         "profiles": [
           "plc-foundation"
         ],
@@ -25743,6 +29172,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PatchPlcBlockDocument",
+        "currentName": "PatchPlcBlockDocument",
+        "sourceName": "PatchPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanArtifactImportOrder",
         "currentName": "PlanArtifactImportOrder",
         "sourceName": "PlanArtifactImportOrder",
@@ -25761,6 +29213,18 @@
               ]
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanGlobalLibraryTemplateReuse",
+        "currentName": "PlanGlobalLibraryTemplateReuse",
+        "sourceName": "PlanGlobalLibraryTemplateReuse",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
         "envelopeVersion": 4
       },
@@ -25815,6 +29279,44 @@
           "version": "V2.2",
           "positionNumber": 2,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreviewToolCall",
+        "sourceName": "PreflightToolCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolBatch",
+        "currentName": "PreviewToolBatch",
+        "sourceName": "PreviewToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -25900,6 +29402,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
+        "sourceName": "ReadNativeInvocationLog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListNetworkDomains",
         "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
@@ -25909,6 +29423,36 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
+        "sourceName": "ReadOpennessCompatibility",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessGuidance",
+        "currentName": "GetOpennessGuidance",
+        "sourceName": "ReadOpennessGuidance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
+        "sourceName": "ReadOpennessWorkerStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -25951,6 +29495,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunReadOnlyToolBatch",
+        "currentName": "RunReadOnlyToolBatch",
+        "sourceName": "ReadToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "operations": [
+            {
+              "name": "GetOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListTransferAreas",
         "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
@@ -25968,6 +29531,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetV21EcosystemCatalog",
+        "currentName": "GetV21EcosystemCatalog",
+        "sourceName": "ReadV21EcosystemCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseHandoffArtifacts",
+        "currentName": "BuildReleaseHandoffArtifacts",
+        "sourceName": "RebuildReleaseHandoffArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcBlock",
         "currentName": "RenderPlcBlock",
         "sourceName": "RenderPlcBlock",
@@ -25981,6 +29567,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RenderPlcBlockDocument",
+        "currentName": "RenderPlcBlockDocument",
+        "sourceName": "RenderPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcProgramAtlas",
         "currentName": "RenderPlcProgramAtlas",
         "sourceName": "RenderPlcProgramAtlas",
@@ -25990,6 +29586,32 @@
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RenderPlcVisualDiff",
+        "currentName": "RenderPlcVisualDiff",
+        "sourceName": "RenderPlcVisualDiff",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml",
+          "outputPath": "C:\\Examples\\generated\\result.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "sourceName": "RestartOpennessWorker",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmRestart": false
         },
         "envelopeVersion": 4
       },
@@ -26008,6 +29630,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunOfflineReleaseValidationSuite",
+        "currentName": "RunOfflineReleaseValidationSuite",
+        "sourceName": "RunOfflineReleaseValidationSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceRoot": "C:\\Examples\\work",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOnlineMonitoringSafetySelfTest",
+        "currentName": "RunOnlineMonitoringSafetySelfTest",
+        "sourceName": "RunOnlineMonitoringSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExportContent",
+        "sourceName": "SaveExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "outputPath": "C:\\Temp\\blocks.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveProject",
         "currentName": "SaveProject",
         "sourceName": "SaveProject",
@@ -26017,6 +29675,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanPlcSourceAnnotations",
+        "currentName": "ScanPlcSourceAnnotations",
+        "sourceName": "ScanPlcSourceAnnotations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -26138,6 +29808,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "sourceName": "WritePlcSclSourceFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+          "outputPath": "C:\\Temp\\FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -26283,6 +29966,58 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzeGlobalLibraryPackage",
+        "currentName": "AnalyzeGlobalLibraryPackage",
+        "sourceName": "AnalyzeGlobalLibraryPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeHmiTemplateReference",
+        "currentName": "AnalyzeHmiTemplateReference",
+        "sourceName": "AnalyzeHmiTemplateReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+          "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcReferences",
+        "currentName": "AnalyzePlcReferences",
+        "sourceName": "AnalyzePlcReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Temp\\exports",
+          "action": "callers",
+          "target": "FB_Pump"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyToolBatch",
+        "currentName": "ApplyToolBatch",
+        "sourceName": "ApplyToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachDeviceNodeToSubnet",
         "currentName": "AttachDeviceNodeToSubnet",
         "sourceName": "AttachDeviceNodeToSubnet",
@@ -26306,6 +30041,18 @@
         "arguments": {
           "projectName": "&lt;file name without extension from selected projectPath&gt;",
           "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AuditEngineeringExports",
+        "currentName": "AuditEngineeringExports",
+        "sourceName": "AuditEngineeringExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directoryPath": "C:\\Examples"
         },
         "envelopeVersion": 4
       },
@@ -26451,6 +30198,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildReleaseDiagnosticReport",
+        "currentName": "BuildReleaseDiagnosticReport",
+        "sourceName": "BuildReleaseDiagnosticReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseManifest",
+        "currentName": "BuildReleaseManifest",
+        "sourceName": "BuildReleaseManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseRunbook",
+        "currentName": "BuildReleaseRunbook",
+        "sourceName": "BuildReleaseRunbook",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildStructuredText",
         "currentName": "BuildStructuredText",
         "sourceName": "BuildStructuredTextXml",
@@ -26472,6 +30255,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "sourceName": "CallTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CheckProductUpdate",
+        "currentName": "CheckProductUpdate",
+        "sourceName": "CheckForUpdate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -26485,6 +30293,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExportHandles",
+        "sourceName": "ClearExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "olderThanHours": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -26494,6 +30314,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ComparePlcBlockDocuments",
+        "currentName": "ComparePlcBlockDocuments",
+        "sourceName": "ComparePlcBlockDocuments",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -26717,6 +30550,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExportHandle",
+        "sourceName": "DeleteExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeletePlcExternalSource",
         "currentName": "DeletePlcExternalSource",
         "sourceName": "DeletePlcExternalSource",
@@ -26752,6 +30597,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "GetEnvironmentDiagnostics",
+        "sourceName": "Doctor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "fix": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -26921,6 +30778,45 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExtractPlcBlockMetrics",
+        "currentName": "ExtractPlcBlockMetrics",
+        "sourceName": "ExtractPlcBlockMetrics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "path": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "sourceName": "FindTools",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "query": "watch table",
+          "limit": 8,
+          "offset": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateAcceptanceReport",
+        "currentName": "GenerateAcceptanceReport",
+        "sourceName": "GenerateAcceptanceReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "outputDirectory": "C:\\Temp\\mcp-report",
+          "includeProjectTree": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GenerateBlocksFromExternalSource",
         "currentName": "GenerateBlocksFromExternalSource",
         "sourceName": "GenerateBlocksFromExternalSource",
@@ -26932,6 +30828,34 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "sourceName": "GenerateErrorReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "errorCode": "CompileError",
+          "summary": "FB_Pump: 2 errors",
+          "detail": "&lt;compiler output&gt;",
+          "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GeneratePlcDocumentation",
+        "currentName": "GeneratePlcDocumentation",
+        "sourceName": "GeneratePlcDocumentation",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "outputPath": "C:\\Examples\\generated\\documentation.md"
         },
         "envelopeVersion": 4
       },
@@ -27064,6 +30988,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExportContent",
+        "sourceName": "GetExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "offset": 0
+        },
         "envelopeVersion": 4
       },
       {
@@ -27335,6 +31272,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InstantiatePlcTemplates",
+        "currentName": "InstantiatePlcTemplates",
+        "sourceName": "InstantiatePlcXmlTemplates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcSclSource",
+        "currentName": "AnalyzePlcSclSource",
+        "sourceName": "LintPlcSclSource",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExportHandles",
+        "sourceName": "ListExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tool": "ListPlcBlocks",
+          "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
@@ -27348,6 +31332,16 @@
         "name": "ListStagedImportFiles",
         "currentName": "ListStagedImportFiles",
         "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "sourceName": "ListToolCategories",
         "profiles": [
           "plc-foundation"
         ],
@@ -27514,6 +31508,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PatchPlcBlockDocument",
+        "currentName": "PatchPlcBlockDocument",
+        "sourceName": "PatchPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanArtifactImportOrder",
         "currentName": "PlanArtifactImportOrder",
         "sourceName": "PlanArtifactImportOrder",
@@ -27532,6 +31549,18 @@
               ]
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanGlobalLibraryTemplateReuse",
+        "currentName": "PlanGlobalLibraryTemplateReuse",
+        "sourceName": "PlanGlobalLibraryTemplateReuse",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
         "envelopeVersion": 4
       },
@@ -27586,6 +31615,44 @@
           "version": "V2.2",
           "positionNumber": 2,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreviewToolCall",
+        "sourceName": "PreflightToolCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolBatch",
+        "currentName": "PreviewToolBatch",
+        "sourceName": "PreviewToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -27671,6 +31738,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
+        "sourceName": "ReadNativeInvocationLog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListNetworkDomains",
         "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
@@ -27680,6 +31759,36 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
+        "sourceName": "ReadOpennessCompatibility",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessGuidance",
+        "currentName": "GetOpennessGuidance",
+        "sourceName": "ReadOpennessGuidance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
+        "sourceName": "ReadOpennessWorkerStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -27722,6 +31831,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunReadOnlyToolBatch",
+        "currentName": "RunReadOnlyToolBatch",
+        "sourceName": "ReadToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "operations": [
+            {
+              "name": "GetOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListTransferAreas",
         "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
@@ -27739,6 +31867,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetV21EcosystemCatalog",
+        "currentName": "GetV21EcosystemCatalog",
+        "sourceName": "ReadV21EcosystemCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseHandoffArtifacts",
+        "currentName": "BuildReleaseHandoffArtifacts",
+        "sourceName": "RebuildReleaseHandoffArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcBlock",
         "currentName": "RenderPlcBlock",
         "sourceName": "RenderPlcBlock",
@@ -27752,6 +31903,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RenderPlcBlockDocument",
+        "currentName": "RenderPlcBlockDocument",
+        "sourceName": "RenderPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcProgramAtlas",
         "currentName": "RenderPlcProgramAtlas",
         "sourceName": "RenderPlcProgramAtlas",
@@ -27761,6 +31922,32 @@
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RenderPlcVisualDiff",
+        "currentName": "RenderPlcVisualDiff",
+        "sourceName": "RenderPlcVisualDiff",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml",
+          "outputPath": "C:\\Examples\\generated\\result.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "sourceName": "RestartOpennessWorker",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmRestart": false
         },
         "envelopeVersion": 4
       },
@@ -27779,6 +31966,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunOfflineReleaseValidationSuite",
+        "currentName": "RunOfflineReleaseValidationSuite",
+        "sourceName": "RunOfflineReleaseValidationSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceRoot": "C:\\Examples\\work",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOnlineMonitoringSafetySelfTest",
+        "currentName": "RunOnlineMonitoringSafetySelfTest",
+        "sourceName": "RunOnlineMonitoringSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExportContent",
+        "sourceName": "SaveExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "outputPath": "C:\\Temp\\blocks.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveProject",
         "currentName": "SaveProject",
         "sourceName": "SaveProject",
@@ -27788,6 +32011,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanPlcSourceAnnotations",
+        "currentName": "ScanPlcSourceAnnotations",
+        "sourceName": "ScanPlcSourceAnnotations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -27909,6 +32144,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "sourceName": "WritePlcSclSourceFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+          "outputPath": "C:\\Temp\\FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -28054,6 +32302,58 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzeGlobalLibraryPackage",
+        "currentName": "AnalyzeGlobalLibraryPackage",
+        "sourceName": "AnalyzeGlobalLibraryPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeHmiTemplateReference",
+        "currentName": "AnalyzeHmiTemplateReference",
+        "sourceName": "AnalyzeHmiTemplateReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+          "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcReferences",
+        "currentName": "AnalyzePlcReferences",
+        "sourceName": "AnalyzePlcReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Temp\\exports",
+          "action": "callers",
+          "target": "FB_Pump"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyToolBatch",
+        "currentName": "ApplyToolBatch",
+        "sourceName": "ApplyToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachDeviceNodeToSubnet",
         "currentName": "AttachDeviceNodeToSubnet",
         "sourceName": "AttachDeviceNodeToSubnet",
@@ -28077,6 +32377,18 @@
         "arguments": {
           "projectName": "&lt;file name without extension from selected projectPath&gt;",
           "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AuditEngineeringExports",
+        "currentName": "AuditEngineeringExports",
+        "sourceName": "AuditEngineeringExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directoryPath": "C:\\Examples"
         },
         "envelopeVersion": 4
       },
@@ -28222,6 +32534,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildReleaseDiagnosticReport",
+        "currentName": "BuildReleaseDiagnosticReport",
+        "sourceName": "BuildReleaseDiagnosticReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseManifest",
+        "currentName": "BuildReleaseManifest",
+        "sourceName": "BuildReleaseManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseRunbook",
+        "currentName": "BuildReleaseRunbook",
+        "sourceName": "BuildReleaseRunbook",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildStructuredText",
         "currentName": "BuildStructuredText",
         "sourceName": "BuildStructuredTextXml",
@@ -28243,6 +32591,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "sourceName": "CallTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CheckProductUpdate",
+        "currentName": "CheckProductUpdate",
+        "sourceName": "CheckForUpdate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -28256,6 +32629,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExportHandles",
+        "sourceName": "ClearExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "olderThanHours": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -28265,6 +32650,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ComparePlcBlockDocuments",
+        "currentName": "ComparePlcBlockDocuments",
+        "sourceName": "ComparePlcBlockDocuments",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -28488,6 +32886,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExportHandle",
+        "sourceName": "DeleteExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeletePlcExternalSource",
         "currentName": "DeletePlcExternalSource",
         "sourceName": "DeletePlcExternalSource",
@@ -28523,6 +32933,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "GetEnvironmentDiagnostics",
+        "sourceName": "Doctor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "fix": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -28692,6 +33114,45 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExtractPlcBlockMetrics",
+        "currentName": "ExtractPlcBlockMetrics",
+        "sourceName": "ExtractPlcBlockMetrics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "path": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "sourceName": "FindTools",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "query": "watch table",
+          "limit": 8,
+          "offset": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateAcceptanceReport",
+        "currentName": "GenerateAcceptanceReport",
+        "sourceName": "GenerateAcceptanceReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "outputDirectory": "C:\\Temp\\mcp-report",
+          "includeProjectTree": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GenerateBlocksFromExternalSource",
         "currentName": "GenerateBlocksFromExternalSource",
         "sourceName": "GenerateBlocksFromExternalSource",
@@ -28703,6 +33164,34 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "sourceName": "GenerateErrorReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "errorCode": "CompileError",
+          "summary": "FB_Pump: 2 errors",
+          "detail": "&lt;compiler output&gt;",
+          "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GeneratePlcDocumentation",
+        "currentName": "GeneratePlcDocumentation",
+        "sourceName": "GeneratePlcDocumentation",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "outputPath": "C:\\Examples\\generated\\documentation.md"
         },
         "envelopeVersion": 4
       },
@@ -28835,6 +33324,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExportContent",
+        "sourceName": "GetExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "offset": 0
+        },
         "envelopeVersion": 4
       },
       {
@@ -29106,6 +33608,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InstantiatePlcTemplates",
+        "currentName": "InstantiatePlcTemplates",
+        "sourceName": "InstantiatePlcXmlTemplates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcSclSource",
+        "currentName": "AnalyzePlcSclSource",
+        "sourceName": "LintPlcSclSource",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExportHandles",
+        "sourceName": "ListExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tool": "ListPlcBlocks",
+          "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
@@ -29119,6 +33668,16 @@
         "name": "ListStagedImportFiles",
         "currentName": "ListStagedImportFiles",
         "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "sourceName": "ListToolCategories",
         "profiles": [
           "plc-foundation"
         ],
@@ -29285,6 +33844,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PatchPlcBlockDocument",
+        "currentName": "PatchPlcBlockDocument",
+        "sourceName": "PatchPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanArtifactImportOrder",
         "currentName": "PlanArtifactImportOrder",
         "sourceName": "PlanArtifactImportOrder",
@@ -29303,6 +33885,18 @@
               ]
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanGlobalLibraryTemplateReuse",
+        "currentName": "PlanGlobalLibraryTemplateReuse",
+        "sourceName": "PlanGlobalLibraryTemplateReuse",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
         "envelopeVersion": 4
       },
@@ -29357,6 +33951,44 @@
           "version": "V2.2",
           "positionNumber": 2,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreviewToolCall",
+        "sourceName": "PreflightToolCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolBatch",
+        "currentName": "PreviewToolBatch",
+        "sourceName": "PreviewToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -29442,6 +34074,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
+        "sourceName": "ReadNativeInvocationLog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListNetworkDomains",
         "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
@@ -29451,6 +34095,36 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
+        "sourceName": "ReadOpennessCompatibility",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessGuidance",
+        "currentName": "GetOpennessGuidance",
+        "sourceName": "ReadOpennessGuidance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
+        "sourceName": "ReadOpennessWorkerStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -29493,6 +34167,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunReadOnlyToolBatch",
+        "currentName": "RunReadOnlyToolBatch",
+        "sourceName": "ReadToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "operations": [
+            {
+              "name": "GetOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListTransferAreas",
         "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
@@ -29510,6 +34203,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetV21EcosystemCatalog",
+        "currentName": "GetV21EcosystemCatalog",
+        "sourceName": "ReadV21EcosystemCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseHandoffArtifacts",
+        "currentName": "BuildReleaseHandoffArtifacts",
+        "sourceName": "RebuildReleaseHandoffArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcBlock",
         "currentName": "RenderPlcBlock",
         "sourceName": "RenderPlcBlock",
@@ -29523,6 +34239,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RenderPlcBlockDocument",
+        "currentName": "RenderPlcBlockDocument",
+        "sourceName": "RenderPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcProgramAtlas",
         "currentName": "RenderPlcProgramAtlas",
         "sourceName": "RenderPlcProgramAtlas",
@@ -29532,6 +34258,32 @@
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RenderPlcVisualDiff",
+        "currentName": "RenderPlcVisualDiff",
+        "sourceName": "RenderPlcVisualDiff",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml",
+          "outputPath": "C:\\Examples\\generated\\result.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "sourceName": "RestartOpennessWorker",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmRestart": false
         },
         "envelopeVersion": 4
       },
@@ -29550,6 +34302,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunOfflineReleaseValidationSuite",
+        "currentName": "RunOfflineReleaseValidationSuite",
+        "sourceName": "RunOfflineReleaseValidationSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceRoot": "C:\\Examples\\work",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOnlineMonitoringSafetySelfTest",
+        "currentName": "RunOnlineMonitoringSafetySelfTest",
+        "sourceName": "RunOnlineMonitoringSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExportContent",
+        "sourceName": "SaveExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "outputPath": "C:\\Temp\\blocks.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveProject",
         "currentName": "SaveProject",
         "sourceName": "SaveProject",
@@ -29559,6 +34347,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanPlcSourceAnnotations",
+        "currentName": "ScanPlcSourceAnnotations",
+        "sourceName": "ScanPlcSourceAnnotations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -29680,6 +34480,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "sourceName": "WritePlcSclSourceFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+          "outputPath": "C:\\Temp\\FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -29825,6 +34638,58 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzeGlobalLibraryPackage",
+        "currentName": "AnalyzeGlobalLibraryPackage",
+        "sourceName": "AnalyzeGlobalLibraryPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeHmiTemplateReference",
+        "currentName": "AnalyzeHmiTemplateReference",
+        "sourceName": "AnalyzeHmiTemplateReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+          "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcReferences",
+        "currentName": "AnalyzePlcReferences",
+        "sourceName": "AnalyzePlcReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Temp\\exports",
+          "action": "callers",
+          "target": "FB_Pump"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyToolBatch",
+        "currentName": "ApplyToolBatch",
+        "sourceName": "ApplyToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachDeviceNodeToSubnet",
         "currentName": "AttachDeviceNodeToSubnet",
         "sourceName": "AttachDeviceNodeToSubnet",
@@ -29848,6 +34713,18 @@
         "arguments": {
           "projectName": "&lt;file name without extension from selected projectPath&gt;",
           "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AuditEngineeringExports",
+        "currentName": "AuditEngineeringExports",
+        "sourceName": "AuditEngineeringExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directoryPath": "C:\\Examples"
         },
         "envelopeVersion": 4
       },
@@ -29993,6 +34870,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildReleaseDiagnosticReport",
+        "currentName": "BuildReleaseDiagnosticReport",
+        "sourceName": "BuildReleaseDiagnosticReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseManifest",
+        "currentName": "BuildReleaseManifest",
+        "sourceName": "BuildReleaseManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseRunbook",
+        "currentName": "BuildReleaseRunbook",
+        "sourceName": "BuildReleaseRunbook",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildStructuredText",
         "currentName": "BuildStructuredText",
         "sourceName": "BuildStructuredTextXml",
@@ -30014,6 +34927,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "sourceName": "CallTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CheckProductUpdate",
+        "currentName": "CheckProductUpdate",
+        "sourceName": "CheckForUpdate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -30027,6 +34965,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExportHandles",
+        "sourceName": "ClearExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "olderThanHours": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -30036,6 +34986,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ComparePlcBlockDocuments",
+        "currentName": "ComparePlcBlockDocuments",
+        "sourceName": "ComparePlcBlockDocuments",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -30259,6 +35222,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExportHandle",
+        "sourceName": "DeleteExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeletePlcExternalSource",
         "currentName": "DeletePlcExternalSource",
         "sourceName": "DeletePlcExternalSource",
@@ -30294,6 +35269,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "GetEnvironmentDiagnostics",
+        "sourceName": "Doctor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "fix": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -30463,6 +35450,45 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExtractPlcBlockMetrics",
+        "currentName": "ExtractPlcBlockMetrics",
+        "sourceName": "ExtractPlcBlockMetrics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "path": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "sourceName": "FindTools",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "query": "watch table",
+          "limit": 8,
+          "offset": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateAcceptanceReport",
+        "currentName": "GenerateAcceptanceReport",
+        "sourceName": "GenerateAcceptanceReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "outputDirectory": "C:\\Temp\\mcp-report",
+          "includeProjectTree": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GenerateBlocksFromExternalSource",
         "currentName": "GenerateBlocksFromExternalSource",
         "sourceName": "GenerateBlocksFromExternalSource",
@@ -30474,6 +35500,34 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "sourceName": "GenerateErrorReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "errorCode": "CompileError",
+          "summary": "FB_Pump: 2 errors",
+          "detail": "&lt;compiler output&gt;",
+          "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GeneratePlcDocumentation",
+        "currentName": "GeneratePlcDocumentation",
+        "sourceName": "GeneratePlcDocumentation",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "outputPath": "C:\\Examples\\generated\\documentation.md"
         },
         "envelopeVersion": 4
       },
@@ -30606,6 +35660,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExportContent",
+        "sourceName": "GetExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "offset": 0
+        },
         "envelopeVersion": 4
       },
       {
@@ -30877,6 +35944,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InstantiatePlcTemplates",
+        "currentName": "InstantiatePlcTemplates",
+        "sourceName": "InstantiatePlcXmlTemplates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcSclSource",
+        "currentName": "AnalyzePlcSclSource",
+        "sourceName": "LintPlcSclSource",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExportHandles",
+        "sourceName": "ListExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tool": "ListPlcBlocks",
+          "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
@@ -30890,6 +36004,16 @@
         "name": "ListStagedImportFiles",
         "currentName": "ListStagedImportFiles",
         "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "sourceName": "ListToolCategories",
         "profiles": [
           "plc-foundation"
         ],
@@ -31056,6 +36180,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PatchPlcBlockDocument",
+        "currentName": "PatchPlcBlockDocument",
+        "sourceName": "PatchPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanArtifactImportOrder",
         "currentName": "PlanArtifactImportOrder",
         "sourceName": "PlanArtifactImportOrder",
@@ -31074,6 +36221,18 @@
               ]
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanGlobalLibraryTemplateReuse",
+        "currentName": "PlanGlobalLibraryTemplateReuse",
+        "sourceName": "PlanGlobalLibraryTemplateReuse",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
         "envelopeVersion": 4
       },
@@ -31128,6 +36287,44 @@
           "version": "V2.2",
           "positionNumber": 2,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreviewToolCall",
+        "sourceName": "PreflightToolCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolBatch",
+        "currentName": "PreviewToolBatch",
+        "sourceName": "PreviewToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -31213,6 +36410,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
+        "sourceName": "ReadNativeInvocationLog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListNetworkDomains",
         "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
@@ -31222,6 +36431,36 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
+        "sourceName": "ReadOpennessCompatibility",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessGuidance",
+        "currentName": "GetOpennessGuidance",
+        "sourceName": "ReadOpennessGuidance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
+        "sourceName": "ReadOpennessWorkerStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -31264,6 +36503,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunReadOnlyToolBatch",
+        "currentName": "RunReadOnlyToolBatch",
+        "sourceName": "ReadToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "operations": [
+            {
+              "name": "GetOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListTransferAreas",
         "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
@@ -31281,6 +36539,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetV21EcosystemCatalog",
+        "currentName": "GetV21EcosystemCatalog",
+        "sourceName": "ReadV21EcosystemCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseHandoffArtifacts",
+        "currentName": "BuildReleaseHandoffArtifacts",
+        "sourceName": "RebuildReleaseHandoffArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcBlock",
         "currentName": "RenderPlcBlock",
         "sourceName": "RenderPlcBlock",
@@ -31294,6 +36575,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RenderPlcBlockDocument",
+        "currentName": "RenderPlcBlockDocument",
+        "sourceName": "RenderPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcProgramAtlas",
         "currentName": "RenderPlcProgramAtlas",
         "sourceName": "RenderPlcProgramAtlas",
@@ -31303,6 +36594,32 @@
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RenderPlcVisualDiff",
+        "currentName": "RenderPlcVisualDiff",
+        "sourceName": "RenderPlcVisualDiff",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml",
+          "outputPath": "C:\\Examples\\generated\\result.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "sourceName": "RestartOpennessWorker",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmRestart": false
         },
         "envelopeVersion": 4
       },
@@ -31321,6 +36638,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunOfflineReleaseValidationSuite",
+        "currentName": "RunOfflineReleaseValidationSuite",
+        "sourceName": "RunOfflineReleaseValidationSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceRoot": "C:\\Examples\\work",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOnlineMonitoringSafetySelfTest",
+        "currentName": "RunOnlineMonitoringSafetySelfTest",
+        "sourceName": "RunOnlineMonitoringSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExportContent",
+        "sourceName": "SaveExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "outputPath": "C:\\Temp\\blocks.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveProject",
         "currentName": "SaveProject",
         "sourceName": "SaveProject",
@@ -31330,6 +36683,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanPlcSourceAnnotations",
+        "currentName": "ScanPlcSourceAnnotations",
+        "sourceName": "ScanPlcSourceAnnotations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -31451,6 +36816,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "sourceName": "WritePlcSclSourceFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+          "outputPath": "C:\\Temp\\FC_Add.scl"
         },
         "envelopeVersion": 4
       },
@@ -31613,6 +36991,70 @@
         "envelopeVersion": 4
       },
       {
+        "name": "AnalyzeGlobalLibraryPackage",
+        "currentName": "AnalyzeGlobalLibraryPackage",
+        "sourceName": "AnalyzeGlobalLibraryPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeHmiTemplateReference",
+        "currentName": "AnalyzeHmiTemplateReference",
+        "sourceName": "AnalyzeHmiTemplateReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
+          "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcReferences",
+        "currentName": "AnalyzePlcReferences",
+        "sourceName": "AnalyzePlcReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Temp\\exports",
+          "action": "callers",
+          "target": "FB_Pump"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzeUnifiedHmiTemplateLayout",
+        "currentName": "AnalyzeUnifiedHmiTemplateLayout",
+        "sourceName": "AnalyzeUnifiedHmiTemplateLayout",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyToolBatch",
+        "currentName": "ApplyToolBatch",
+        "sourceName": "ApplyToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachDeviceNodeToSubnet",
         "currentName": "AttachDeviceNodeToSubnet",
         "sourceName": "AttachDeviceNodeToSubnet",
@@ -31636,6 +37078,18 @@
         "arguments": {
           "projectName": "&lt;file name without extension from selected projectPath&gt;",
           "expectedProjectFile": "&lt;exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AuditEngineeringExports",
+        "currentName": "AuditEngineeringExports",
+        "sourceName": "AuditEngineeringExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directoryPath": "C:\\Examples"
         },
         "envelopeVersion": 4
       },
@@ -31781,6 +37235,42 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildReleaseDiagnosticReport",
+        "currentName": "BuildReleaseDiagnosticReport",
+        "sourceName": "BuildReleaseDiagnosticReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseManifest",
+        "currentName": "BuildReleaseManifest",
+        "sourceName": "BuildReleaseManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseRunbook",
+        "currentName": "BuildReleaseRunbook",
+        "sourceName": "BuildReleaseRunbook",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildStructuredText",
         "currentName": "BuildStructuredText",
         "sourceName": "BuildStructuredTextXml",
@@ -31802,6 +37292,114 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildUnifiedHmiButtonActionScript",
+        "currentName": "BuildUnifiedHmiButtonActionScript",
+        "sourceName": "BuildUnifiedHmiButtonActionScript",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "actionKind": "set-bit",
+          "eventType": "Down",
+          "targetTag": "Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildUnifiedHmiLayoutDesign",
+        "currentName": "BuildUnifiedHmiLayoutDesign",
+        "sourceName": "BuildUnifiedHmiLayoutDesignJson",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "layout": {
+            "columns": 1,
+            "cellWidth": 160,
+            "cellHeight": 40,
+            "items": [
+              {
+                "name": "StatusText",
+                "type": "Text",
+                "row": 0,
+                "col": 0,
+                "text": "Ready"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildUnifiedHmiTemplateApplyDesign",
+        "currentName": "BuildUnifiedHmiTemplateApplyDesign",
+        "sourceName": "BuildUnifiedHmiTemplateApplyDesignJson",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateFile": "C:\\Examples\\templates\\Screen.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildUnifiedHmiTemplateApplyDesignManifest",
+        "currentName": "BuildUnifiedHmiTemplateApplyDesignManifest",
+        "sourceName": "BuildUnifiedHmiTemplateApplyDesignManifest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildUnifiedHmiThemeDesign",
+        "currentName": "BuildUnifiedHmiThemeDesign",
+        "sourceName": "BuildUnifiedHmiThemeDesignJson",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "theme": {
+            "name": "Example",
+            "palette": {
+              "Page": "0xFFFFFFFF",
+              "Surface": "0xFFF4F6F8",
+              "Text": "0xFF202020",
+              "Border": "0xFF808080"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "sourceName": "CallTool",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CheckProductUpdate",
+        "currentName": "CheckProductUpdate",
+        "sourceName": "CheckForUpdate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -31815,6 +37413,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExportHandles",
+        "sourceName": "ClearExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "olderThanHours": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CloseProject",
         "currentName": "CloseProject",
         "sourceName": "CloseProject",
@@ -31824,6 +37434,19 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ComparePlcBlockDocuments",
+        "currentName": "ComparePlcBlockDocuments",
+        "sourceName": "ComparePlcBlockDocuments",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -32047,6 +37670,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExportHandle",
+        "sourceName": "DeleteExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeletePlcExternalSource",
         "currentName": "DeletePlcExternalSource",
         "sourceName": "DeletePlcExternalSource",
@@ -32082,6 +37717,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "GetEnvironmentDiagnostics",
+        "sourceName": "Doctor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "fix": false
+        },
         "envelopeVersion": 4
       },
       {
@@ -32251,6 +37898,45 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExtractPlcBlockMetrics",
+        "currentName": "ExtractPlcBlockMetrics",
+        "sourceName": "ExtractPlcBlockMetrics",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "path": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "sourceName": "FindTools",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "query": "watch table",
+          "limit": 8,
+          "offset": 0
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateAcceptanceReport",
+        "currentName": "GenerateAcceptanceReport",
+        "sourceName": "GenerateAcceptanceReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "outputDirectory": "C:\\Temp\\mcp-report",
+          "includeProjectTree": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GenerateBlocksFromExternalSource",
         "currentName": "GenerateBlocksFromExternalSource",
         "sourceName": "GenerateBlocksFromExternalSource",
@@ -32262,6 +37948,34 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "sourceName": "GenerateErrorReport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "errorCode": "CompileError",
+          "summary": "FB_Pump: 2 errors",
+          "detail": "&lt;compiler output&gt;",
+          "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GeneratePlcDocumentation",
+        "currentName": "GeneratePlcDocumentation",
+        "sourceName": "GeneratePlcDocumentation",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "outputPath": "C:\\Examples\\generated\\documentation.md"
         },
         "envelopeVersion": 4
       },
@@ -32394,6 +38108,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExportContent",
+        "sourceName": "GetExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "offset": 0
+        },
         "envelopeVersion": 4
       },
       {
@@ -32665,6 +38392,53 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InstantiatePlcTemplates",
+        "currentName": "InstantiatePlcTemplates",
+        "sourceName": "InstantiatePlcXmlTemplates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templatePath": "C:\\Examples\\templates\\Block.xml",
+          "outputDirectory": "C:\\Examples\\generated",
+          "dryRun": true,
+          "rows": [
+            {
+              "fileName": "Example.xml",
+              "values": {
+                "Name": "Example"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AnalyzePlcSclSource",
+        "currentName": "AnalyzePlcSclSource",
+        "sourceName": "LintPlcSclSource",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceText": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExportHandles",
+        "sourceName": "ListExports",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tool": "ListPlcBlocks",
+          "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPortalProcessProjects",
         "currentName": "ListPortalProcessProjects",
         "sourceName": "ListPortalProcessProjects",
@@ -32678,6 +38452,16 @@
         "name": "ListStagedImportFiles",
         "currentName": "ListStagedImportFiles",
         "sourceName": "ListStagedImportFiles",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "sourceName": "ListToolCategories",
         "profiles": [
           "plc-foundation"
         ],
@@ -32830,6 +38614,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageUnifiedCwcPackage",
+        "currentName": "ManageUnifiedCwcPackage",
+        "sourceName": "ManageUnifiedCwcPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "dryRun": true,
+          "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -32840,6 +38638,29 @@
           "path": "&lt;exact caller-selected closed project file for this release&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PatchPlcBlockDocument",
+        "currentName": "PatchPlcBlockDocument",
+        "sourceName": "PatchPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "dryRun": true,
+          "changes": [
+            {
+              "action": "setBlockText",
+              "field": "Title",
+              "culture": "en-US",
+              "expectedValue": "Old title",
+              "value": "Example"
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -32862,6 +38683,18 @@
               ]
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanGlobalLibraryTemplateReuse",
+        "currentName": "PlanGlobalLibraryTemplateReuse",
+        "sourceName": "PlanGlobalLibraryTemplateReuse",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
         },
         "envelopeVersion": 4
       },
@@ -32916,6 +38749,44 @@
           "version": "V2.2",
           "positionNumber": 2,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreviewToolCall",
+        "sourceName": "PreflightToolCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "name": "AnalyzePlcReferences",
+          "arguments": {
+            "directory": "C:/TIA/Exports"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PreviewToolBatch",
+        "currentName": "PreviewToolBatch",
+        "sourceName": "PreviewToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcExternalSources",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "action": "createGroup",
+                "name": "ExampleSources",
+                "dryRun": true
+              }
+            }
+          ]
         },
         "envelopeVersion": 4
       },
@@ -33001,6 +38872,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetNativeInvocationLog",
+        "currentName": "GetNativeInvocationLog",
+        "sourceName": "ReadNativeInvocationLog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "take": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListNetworkDomains",
         "currentName": "ListNetworkDomains",
         "sourceName": "ReadNetworkDomains",
@@ -33010,6 +38893,36 @@
         "arguments": {
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessCompatibility",
+        "currentName": "GetOpennessCompatibility",
+        "sourceName": "ReadOpennessCompatibility",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessGuidance",
+        "currentName": "GetOpennessGuidance",
+        "sourceName": "ReadOpennessGuidance",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "GetOpennessWorkerStatus",
+        "sourceName": "ReadOpennessWorkerStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -33052,6 +38965,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunReadOnlyToolBatch",
+        "currentName": "RunReadOnlyToolBatch",
+        "sourceName": "ReadToolBatch",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "operations": [
+            {
+              "name": "GetOpennessGuidance",
+              "arguments": {
+                "query": "threading"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListTransferAreas",
         "currentName": "ListTransferAreas",
         "sourceName": "ReadTransferAreas",
@@ -33069,6 +39001,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetV21EcosystemCatalog",
+        "currentName": "GetV21EcosystemCatalog",
+        "sourceName": "ReadV21EcosystemCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildReleaseHandoffArtifacts",
+        "currentName": "BuildReleaseHandoffArtifacts",
+        "sourceName": "RebuildReleaseHandoffArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json",
+          "outputDirectory": "C:\\Examples\\generated"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcBlock",
         "currentName": "RenderPlcBlock",
         "sourceName": "RenderPlcBlock",
@@ -33082,6 +39037,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RenderPlcBlockDocument",
+        "currentName": "RenderPlcBlockDocument",
+        "sourceName": "RenderPlcBlockDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "RenderPlcProgramAtlas",
         "currentName": "RenderPlcProgramAtlas",
         "sourceName": "RenderPlcProgramAtlas",
@@ -33091,6 +39056,32 @@
         "arguments": {
           "inputPath": "&lt;data.outputFile from completed ExportPlcBlock&gt;",
           "outputPath": "&lt;new absolute Atlas.html in an existing caller-selected directory&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RenderPlcVisualDiff",
+        "currentName": "RenderPlcVisualDiff",
+        "sourceName": "RenderPlcVisualDiff",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "leftFilePath": "C:\\Examples\\before\\Main.xml",
+          "rightFilePath": "C:\\Examples\\after\\Main.xml",
+          "outputPath": "C:\\Examples\\generated\\result.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "sourceName": "RestartOpennessWorker",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmRestart": false
         },
         "envelopeVersion": 4
       },
@@ -33109,6 +39100,52 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunHmiActionScriptRecipeSafetySelfTest",
+        "currentName": "RunHmiActionScriptRecipeSafetySelfTest",
+        "sourceName": "RunHmiActionScriptRecipeSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOfflineReleaseValidationSuite",
+        "currentName": "RunOfflineReleaseValidationSuite",
+        "sourceName": "RunOfflineReleaseValidationSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceRoot": "C:\\Examples\\work",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "RunOnlineMonitoringSafetySelfTest",
+        "currentName": "RunOnlineMonitoringSafetySelfTest",
+        "sourceName": "RunOnlineMonitoringSafetySelfTest",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExportContent",
+        "sourceName": "SaveExport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "exportId": "&lt;exportId from response&gt;",
+          "outputPath": "C:\\Temp\\blocks.json"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveProject",
         "currentName": "SaveProject",
         "sourceName": "SaveProject",
@@ -33118,6 +39155,18 @@
         "arguments": {
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ScanPlcSourceAnnotations",
+        "currentName": "ScanPlcSourceAnnotations",
+        "sourceName": "ScanPlcSourceAnnotations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -33251,6 +39300,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "sourceName": "WritePlcSclSourceFile",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sclContent": "FUNCTION \"FC_Add\" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION",
+          "outputPath": "C:\\Temp\\FC_Add.scl"
         },
         "envelopeVersion": 4
       },

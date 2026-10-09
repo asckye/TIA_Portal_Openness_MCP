@@ -1,10 +1,10 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "d3f3414b8d41226ca44482cc8bfab96b4b58f627bc460c06c2b1f4c0fdf280eb",
+  "catalogSha256": "78f19c6b570aa7c3b0652aa6bf1d38d343277ff594cb476f2687eef36cbc50fd",
   "uniqueTools": 506,
   "documents": 89,
-  "versionToolPairs": 1700,
-  "offlineCallExecutions": 74,
+  "versionToolPairs": 1966,
+  "offlineCallExecutions": 75,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
   "callSequences": 32,
@@ -48,11 +48,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 114,
-      "checkedToolCount": 114,
+      "registeredToolCount": 157,
+      "checkedToolCount": 157,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 44,
+      "operationExampleCount": 50,
       "programmingExampleCount": 25,
       "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
@@ -69,6 +69,72 @@
       ],
       "exampleCallsExecuted": false,
       "tools": [
+        {
+          "toolName": "AnalyzeGlobalLibraryPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeHmiTemplateReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "summary",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callers",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callees",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callPaths",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unreachable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "references",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
         {
           "toolName": "AttachDeviceNodeToSubnet",
           "exampleKind": "parameterized-call-example",
@@ -91,6 +157,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "AuditEngineeringExports",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -163,7 +236,49 @@
           "operations": []
         },
         {
+          "toolName": "BuildReleaseDiagnosticReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseHandoffArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseRunbook",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CallTool",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CheckProductUpdate",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -177,6 +292,13 @@
           "operations": []
         },
         {
+          "toolName": "ClearExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CloseProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -184,6 +306,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ComparePlcBlockDocuments",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -314,6 +443,13 @@
           "operations": []
         },
         {
+          "toolName": "DeleteExportHandle",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -439,6 +575,27 @@
           "operations": []
         },
         {
+          "toolName": "ExtractPlcBlockMetrics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "FindTools",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateAcceptanceReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GenerateBlocksFromExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -448,6 +605,20 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateErrorReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GeneratePlcDocumentation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -569,6 +740,20 @@
           "operations": []
         },
         {
+          "toolName": "GetEnvironmentDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -579,6 +764,34 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetNativeInvocationLog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessCompatibility",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessGuidance",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessWorkerStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -697,6 +910,13 @@
           "operations": []
         },
         {
+          "toolName": "GetV21EcosystemCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetWorkbenchSelection",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -798,6 +1018,13 @@
           "operations": []
         },
         {
+          "toolName": "InstantiatePlcTemplates",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListDeviceItemChannels",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -821,6 +1048,13 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -949,6 +1183,13 @@
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListToolCategories",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1302,7 +1543,21 @@
           "operations": []
         },
         {
+          "toolName": "PatchPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlanArtifactImportOrder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanGlobalLibraryTemplateReuse",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1350,6 +1605,20 @@
           "operations": []
         },
         {
+          "toolName": "PreviewToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PreviewToolCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -1371,7 +1640,28 @@
           "operations": []
         },
         {
+          "toolName": "RenderPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcProgramAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RenderPlcVisualDiff",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1385,6 +1675,34 @@
           "operations": []
         },
         {
+          "toolName": "RunOfflineReleaseValidationSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOnlineMonitoringSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunReadOnlyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SaveExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SaveProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1392,6 +1710,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanPlcSourceAnnotations",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1512,17 +1837,29 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcSclSourceFile",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         }
       ]
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 115,
-      "checkedToolCount": 115,
+      "registeredToolCount": 158,
+      "checkedToolCount": 158,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 44,
+      "operationExampleCount": 50,
       "programmingExampleCount": 25,
       "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
@@ -1539,6 +1876,72 @@
       ],
       "exampleCallsExecuted": false,
       "tools": [
+        {
+          "toolName": "AnalyzeGlobalLibraryPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeHmiTemplateReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "summary",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callers",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callees",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callPaths",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unreachable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "references",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
         {
           "toolName": "AttachDeviceNodeToSubnet",
           "exampleKind": "parameterized-call-example",
@@ -1561,6 +1964,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "AuditEngineeringExports",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1633,7 +2043,49 @@
           "operations": []
         },
         {
+          "toolName": "BuildReleaseDiagnosticReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseHandoffArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseRunbook",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CallTool",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CheckProductUpdate",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1647,6 +2099,13 @@
           "operations": []
         },
         {
+          "toolName": "ClearExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CloseProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1654,6 +2113,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ComparePlcBlockDocuments",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1784,6 +2250,13 @@
           "operations": []
         },
         {
+          "toolName": "DeleteExportHandle",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1909,6 +2382,27 @@
           "operations": []
         },
         {
+          "toolName": "ExtractPlcBlockMetrics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "FindTools",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateAcceptanceReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GenerateBlocksFromExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1918,6 +2412,20 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateErrorReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GeneratePlcDocumentation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2039,6 +2547,20 @@
           "operations": []
         },
         {
+          "toolName": "GetEnvironmentDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2049,6 +2571,34 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetNativeInvocationLog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessCompatibility",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessGuidance",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessWorkerStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2167,6 +2717,13 @@
           "operations": []
         },
         {
+          "toolName": "GetV21EcosystemCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetWorkbenchSelection",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -2268,6 +2825,13 @@
           "operations": []
         },
         {
+          "toolName": "InstantiatePlcTemplates",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListDeviceItemChannels",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2291,6 +2855,13 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2431,6 +3002,13 @@
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListToolCategories",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2784,7 +3362,21 @@
           "operations": []
         },
         {
+          "toolName": "PatchPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlanArtifactImportOrder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanGlobalLibraryTemplateReuse",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -2832,6 +3424,20 @@
           "operations": []
         },
         {
+          "toolName": "PreviewToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PreviewToolCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -2853,7 +3459,28 @@
           "operations": []
         },
         {
+          "toolName": "RenderPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcProgramAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RenderPlcVisualDiff",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -2867,6 +3494,34 @@
           "operations": []
         },
         {
+          "toolName": "RunOfflineReleaseValidationSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOnlineMonitoringSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunReadOnlyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SaveExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SaveProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2874,6 +3529,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanPlcSourceAnnotations",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2994,17 +3656,29 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcSclSourceFile",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         }
       ]
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 117,
-      "checkedToolCount": 117,
+      "registeredToolCount": 160,
+      "checkedToolCount": 160,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 44,
+      "operationExampleCount": 50,
       "programmingExampleCount": 25,
       "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
@@ -3021,6 +3695,72 @@
       ],
       "exampleCallsExecuted": false,
       "tools": [
+        {
+          "toolName": "AnalyzeGlobalLibraryPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeHmiTemplateReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "summary",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callers",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callees",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callPaths",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unreachable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "references",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
         {
           "toolName": "AttachDeviceNodeToSubnet",
           "exampleKind": "parameterized-call-example",
@@ -3043,6 +3783,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "AuditEngineeringExports",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3115,7 +3862,49 @@
           "operations": []
         },
         {
+          "toolName": "BuildReleaseDiagnosticReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseHandoffArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseRunbook",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CallTool",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CheckProductUpdate",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3129,6 +3918,13 @@
           "operations": []
         },
         {
+          "toolName": "ClearExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CloseProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3136,6 +3932,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ComparePlcBlockDocuments",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3263,6 +4066,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DeleteExportHandle",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3413,6 +4223,27 @@
           "operations": []
         },
         {
+          "toolName": "ExtractPlcBlockMetrics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "FindTools",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateAcceptanceReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GenerateBlocksFromExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3422,6 +4253,20 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateErrorReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GeneratePlcDocumentation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3543,6 +4388,20 @@
           "operations": []
         },
         {
+          "toolName": "GetEnvironmentDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3553,6 +4412,34 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetNativeInvocationLog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessCompatibility",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessGuidance",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessWorkerStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3671,6 +4558,13 @@
           "operations": []
         },
         {
+          "toolName": "GetV21EcosystemCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetWorkbenchSelection",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -3772,6 +4666,13 @@
           "operations": []
         },
         {
+          "toolName": "InstantiatePlcTemplates",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListDeviceItemChannels",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3795,6 +4696,13 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3935,6 +4843,13 @@
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListToolCategories",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4288,7 +5203,21 @@
           "operations": []
         },
         {
+          "toolName": "PatchPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlanArtifactImportOrder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanGlobalLibraryTemplateReuse",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -4336,6 +5265,20 @@
           "operations": []
         },
         {
+          "toolName": "PreviewToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PreviewToolCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -4357,7 +5300,28 @@
           "operations": []
         },
         {
+          "toolName": "RenderPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcProgramAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RenderPlcVisualDiff",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -4371,6 +5335,34 @@
           "operations": []
         },
         {
+          "toolName": "RunOfflineReleaseValidationSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOnlineMonitoringSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunReadOnlyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SaveExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SaveProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4378,6 +5370,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanPlcSourceAnnotations",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4498,17 +5497,29 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcSclSourceFile",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         }
       ]
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 117,
-      "checkedToolCount": 117,
+      "registeredToolCount": 160,
+      "checkedToolCount": 160,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 44,
+      "operationExampleCount": 50,
       "programmingExampleCount": 25,
       "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
@@ -4525,6 +5536,72 @@
       ],
       "exampleCallsExecuted": false,
       "tools": [
+        {
+          "toolName": "AnalyzeGlobalLibraryPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeHmiTemplateReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "summary",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callers",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callees",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callPaths",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unreachable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "references",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
         {
           "toolName": "AttachDeviceNodeToSubnet",
           "exampleKind": "parameterized-call-example",
@@ -4547,6 +5624,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "AuditEngineeringExports",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4619,7 +5703,49 @@
           "operations": []
         },
         {
+          "toolName": "BuildReleaseDiagnosticReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseHandoffArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseRunbook",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CallTool",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CheckProductUpdate",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -4633,6 +5759,13 @@
           "operations": []
         },
         {
+          "toolName": "ClearExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CloseProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4640,6 +5773,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ComparePlcBlockDocuments",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4767,6 +5907,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DeleteExportHandle",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4917,6 +6064,27 @@
           "operations": []
         },
         {
+          "toolName": "ExtractPlcBlockMetrics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "FindTools",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateAcceptanceReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GenerateBlocksFromExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4926,6 +6094,20 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateErrorReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GeneratePlcDocumentation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -5047,6 +6229,20 @@
           "operations": []
         },
         {
+          "toolName": "GetEnvironmentDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5057,6 +6253,34 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetNativeInvocationLog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessCompatibility",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessGuidance",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessWorkerStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -5175,6 +6399,13 @@
           "operations": []
         },
         {
+          "toolName": "GetV21EcosystemCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetWorkbenchSelection",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -5276,6 +6507,13 @@
           "operations": []
         },
         {
+          "toolName": "InstantiatePlcTemplates",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListDeviceItemChannels",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5299,6 +6537,13 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -5439,6 +6684,13 @@
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListToolCategories",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -5792,7 +7044,21 @@
           "operations": []
         },
         {
+          "toolName": "PatchPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlanArtifactImportOrder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanGlobalLibraryTemplateReuse",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -5840,6 +7106,20 @@
           "operations": []
         },
         {
+          "toolName": "PreviewToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PreviewToolCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -5861,7 +7141,28 @@
           "operations": []
         },
         {
+          "toolName": "RenderPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcProgramAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RenderPlcVisualDiff",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -5875,6 +7176,34 @@
           "operations": []
         },
         {
+          "toolName": "RunOfflineReleaseValidationSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOnlineMonitoringSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunReadOnlyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SaveExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SaveProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5882,6 +7211,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanPlcSourceAnnotations",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6002,17 +7338,29 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcSclSourceFile",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         }
       ]
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 117,
-      "checkedToolCount": 117,
+      "registeredToolCount": 160,
+      "checkedToolCount": 160,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 44,
+      "operationExampleCount": 50,
       "programmingExampleCount": 25,
       "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
@@ -6029,6 +7377,72 @@
       ],
       "exampleCallsExecuted": false,
       "tools": [
+        {
+          "toolName": "AnalyzeGlobalLibraryPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeHmiTemplateReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "summary",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callers",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callees",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callPaths",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unreachable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "references",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
         {
           "toolName": "AttachDeviceNodeToSubnet",
           "exampleKind": "parameterized-call-example",
@@ -6051,6 +7465,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "AuditEngineeringExports",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6123,7 +7544,49 @@
           "operations": []
         },
         {
+          "toolName": "BuildReleaseDiagnosticReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseHandoffArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseRunbook",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CallTool",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CheckProductUpdate",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -6137,6 +7600,13 @@
           "operations": []
         },
         {
+          "toolName": "ClearExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CloseProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6144,6 +7614,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ComparePlcBlockDocuments",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6271,6 +7748,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DeleteExportHandle",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6421,6 +7905,27 @@
           "operations": []
         },
         {
+          "toolName": "ExtractPlcBlockMetrics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "FindTools",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateAcceptanceReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GenerateBlocksFromExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6430,6 +7935,20 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateErrorReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GeneratePlcDocumentation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6551,6 +8070,20 @@
           "operations": []
         },
         {
+          "toolName": "GetEnvironmentDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6561,6 +8094,34 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetNativeInvocationLog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessCompatibility",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessGuidance",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessWorkerStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6679,6 +8240,13 @@
           "operations": []
         },
         {
+          "toolName": "GetV21EcosystemCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetWorkbenchSelection",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -6780,6 +8348,13 @@
           "operations": []
         },
         {
+          "toolName": "InstantiatePlcTemplates",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListDeviceItemChannels",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6803,6 +8378,13 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -6943,6 +8525,13 @@
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListToolCategories",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -7296,7 +8885,21 @@
           "operations": []
         },
         {
+          "toolName": "PatchPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlanArtifactImportOrder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanGlobalLibraryTemplateReuse",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -7344,6 +8947,20 @@
           "operations": []
         },
         {
+          "toolName": "PreviewToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PreviewToolCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -7365,7 +8982,28 @@
           "operations": []
         },
         {
+          "toolName": "RenderPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcProgramAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RenderPlcVisualDiff",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -7379,6 +9017,34 @@
           "operations": []
         },
         {
+          "toolName": "RunOfflineReleaseValidationSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOnlineMonitoringSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunReadOnlyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SaveExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SaveProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7386,6 +9052,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanPlcSourceAnnotations",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -7507,16 +9180,28 @@
           "relationship": "no-direct-official-example",
           "documents": [],
           "operations": []
+        },
+        {
+          "toolName": "WritePlcSclSourceFile",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
         }
       ]
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 119,
-      "checkedToolCount": 119,
+      "registeredToolCount": 170,
+      "checkedToolCount": 170,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 44,
+      "operationExampleCount": 52,
       "programmingExampleCount": 25,
       "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
@@ -7529,10 +9214,84 @@
         "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildStructuredText",
+        "BuildUnifiedHmiButtonActionScript",
         "PlanArtifactImportOrder"
       ],
       "exampleCallsExecuted": false,
       "tools": [
+        {
+          "toolName": "AnalyzeGlobalLibraryPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeHmiTemplateReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzePlcReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "summary",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callers",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callees",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "callPaths",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unreachable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "references",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "AnalyzeUnifiedHmiTemplateLayout",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
         {
           "toolName": "AttachDeviceNodeToSubnet",
           "exampleKind": "parameterized-call-example",
@@ -7555,6 +9314,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "AuditEngineeringExports",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -7627,7 +9393,84 @@
           "operations": []
         },
         {
+          "toolName": "BuildReleaseDiagnosticReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseHandoffArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildReleaseRunbook",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildStructuredText",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildUnifiedHmiButtonActionScript",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildUnifiedHmiLayoutDesign",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildUnifiedHmiTemplateApplyDesign",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildUnifiedHmiTemplateApplyDesignManifest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildUnifiedHmiThemeDesign",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CallTool",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "CheckProductUpdate",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -7641,6 +9484,13 @@
           "operations": []
         },
         {
+          "toolName": "ClearExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CloseProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7648,6 +9498,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ComparePlcBlockDocuments",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -7791,6 +9648,13 @@
           "operations": []
         },
         {
+          "toolName": "DeleteExportHandle",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7938,6 +9802,27 @@
           "operations": []
         },
         {
+          "toolName": "ExtractPlcBlockMetrics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "FindTools",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateAcceptanceReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GenerateBlocksFromExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7947,6 +9832,20 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GenerateErrorReport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GeneratePlcDocumentation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8068,6 +9967,20 @@
           "operations": []
         },
         {
+          "toolName": "GetEnvironmentDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8078,6 +9991,34 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetNativeInvocationLog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessCompatibility",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessGuidance",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetOpennessWorkerStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8196,6 +10137,13 @@
           "operations": []
         },
         {
+          "toolName": "GetV21EcosystemCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetWorkbenchSelection",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8297,6 +10245,13 @@
           "operations": []
         },
         {
+          "toolName": "InstantiatePlcTemplates",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ListDeviceItemChannels",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8320,6 +10275,13 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListExportHandles",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8460,6 +10422,13 @@
             "guides/skills/technology-objects/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TechnologyObjectSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListToolCategories",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8803,6 +10772,24 @@
           ]
         },
         {
+          "toolName": "ManageUnifiedCwcPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "inspect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "build",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "OpenProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8813,7 +10800,21 @@
           "operations": []
         },
         {
+          "toolName": "PatchPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlanArtifactImportOrder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanGlobalLibraryTemplateReuse",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -8861,6 +10862,20 @@
           "operations": []
         },
         {
+          "toolName": "PreviewToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PreviewToolCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8882,7 +10897,28 @@
           "operations": []
         },
         {
+          "toolName": "RenderPlcBlockDocument",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcProgramAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RenderPlcVisualDiff",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -8896,6 +10932,41 @@
           "operations": []
         },
         {
+          "toolName": "RunHmiActionScriptRecipeSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOfflineReleaseValidationSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunOnlineMonitoringSafetySelfTest",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "RunReadOnlyToolBatch",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SaveExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "SaveProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8903,6 +10974,13 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ScanPlcSourceAnnotations",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -9036,6 +11114,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "WritePlcSclSourceFile",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         }
       ]
