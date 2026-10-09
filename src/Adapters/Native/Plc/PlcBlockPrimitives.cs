@@ -2,22 +2,24 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security;
 using Siemens.Engineering;
 using Siemens.Engineering.SW;
+using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Compiler;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
+#if PLC_SAFETY || TIA_ENGINE_LOCAL_PRIMITIVES
+using Siemens.Engineering.Safety;
+#endif
 #if STUDIO_VCI_MODERN || TIA_ENGINE_LOCAL_PRIMITIVES
-using System.Security;
 using Siemens.Engineering.Connection;
 using Siemens.Engineering.CrossReference;
 using Siemens.Engineering.FingerprintData;
-using Siemens.Engineering.HW;
-using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Online;
 using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.Safety;
 using Siemens.Engineering.SW.Blocks.Interface;
 using Siemens.Engineering.SW.ExternalSources;
 using Siemens.Engineering.SW.WatchAndForceTables;
@@ -32,6 +34,11 @@ namespace TiaMcp.Adapters.Native.Plc
     // Raw native operations; callers retain selection, options, guards and thread ownership.
     public static class PlcBlockPrimitives
     {
+        public static ICompilable Compiler(IEngineeringServiceProvider value) => value.GetService<ICompilable>();
+        public static PlcBlock Find(PlcBlockComposition value, string name) => value.Find(name);
+        public static Software SoftwareOrNull(SoftwareContainer value) => value?.Software;
+        public static IEngineeringObject ParentOrNull(HardwareFeature value) => value?.Parent;
+        public static IEngineeringObject ParentOrNull(IEngineeringInstance value) => value == null ? null : Parent(value);
         public static IEngineeringObject Parent(IEngineeringInstance value) => value.Parent;
         public static string Name(PlcBlock value) => value.Name;
         public static bool IsConsistent(PlcBlock value) => value.IsConsistent;
@@ -58,22 +65,24 @@ namespace TiaMcp.Adapters.Native.Plc
         public static CompilerResultMessageComposition Messages(CompilerResultMessage value) => value.Messages;
         public static string Path(CompilerResultMessage value) => value.Path;
         public static string Description(CompilerResultMessage value) => value.Description;
+        public static int ErrorCount(CompilerResultMessage value) => value.ErrorCount;
+        public static int WarningCount(CompilerResultMessage value) => value.WarningCount;
+        public static DateTime DateTime(CompilerResultMessage value) => value.DateTime;
+#if PLC_SAFETY || TIA_ENGINE_LOCAL_PRIMITIVES
+        public static SafetyAdministration SafetyOrNull(DeviceItem value) => value?.GetService<SafetyAdministration>();
+        public static bool IsLoggedOn(SafetyAdministration value) => value.IsLoggedOnToSafetyOfflineProgram;
+        public static void Login(SafetyAdministration value, SecureString password) => value.LoginToSafetyOfflineProgram(password);
+#endif
 
 #if STUDIO_VCI_MODERN || TIA_ENGINE_LOCAL_PRIMITIVES
         public static PlcBlockComposition BlocksOrNull(PlcBlockGroup value) => value?.Blocks;
         public static IEngineeringObject Parent(PlcBlock value) => value.Parent;
         public static string Name(PlcTypeGroup value) => value.Name;
-        public static Software SoftwareOrNull(SoftwareContainer value) => value?.Software;
-        public static IEngineeringObject ParentOrNull(HardwareFeature value) => value?.Parent;
-        public static IEngineeringObject ParentOrNull(IEngineeringInstance value) => value == null ? null : Parent(value);
-        public static SafetyAdministration SafetyOrNull(DeviceItem value) => value?.GetService<SafetyAdministration>();
-        public static bool IsLoggedOn(SafetyAdministration value) => value.IsLoggedOnToSafetyOfflineProgram;
-        public static void Login(SafetyAdministration value, SecureString password) => value.LoginToSafetyOfflineProgram(password);
-        public static ICompilable Compiler(IEngineeringServiceProvider value) => value.GetService<ICompilable>();
+
+
+
+
         public static ICompilable Compiler(PlcBlock value) => value.GetService<ICompilable>();
-        public static int ErrorCount(CompilerResultMessage value) => value.ErrorCount;
-        public static int WarningCount(CompilerResultMessage value) => value.WarningCount;
-        public static DateTime DateTime(CompilerResultMessage value) => value.DateTime;
         public static bool AutoNumber(PlcBlock value) => value.AutoNumber;
         public static int Number(PlcBlock value) => value.Number;
         public static void Delete(PlcBlock value) => value.Delete();
@@ -131,7 +140,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public static void Selection(TlsVerificationConfiguration value, TlsVerificationConfigurationSelection selection) => value.CurrentSelection = selection;
         public static string PlcName(TlsVerificationConfiguration value) => value.PlcName;
         public static string VerificationInfo(TlsVerificationConfiguration value) => value.VerificationInfo;
-        public static PlcBlock Find(PlcBlockComposition value, string name) => value.Find(name);
+
 #endif
     }
 }

@@ -38,6 +38,17 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
+        private static T Organisation<T>(Func<T> action)
+        {
+            try { return action(); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error)
+            {
+                var mapped = new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), error.Code), error.Message, error.Candidates, error.InnerException);
+                foreach (System.Collections.DictionaryEntry item in error.Data) mapped.Data[item.Key] = item.Value;
+                throw mapped;
+            }
+        }
+
         #region blocks/types
 
         /// <summary>
@@ -273,50 +284,10 @@ namespace TiaMcpServer.Siemens
             return preservePath ? Path.Combine(exportPath, groupPath.Replace('/', '\\'), name + ".xml") : Path.Combine(exportPath, name + ".xml");
         }
 
+        internal void RecordPlcSoftwareExportPath(string? path) => LastExportedFile = path;
+
         public PlcBlock? ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
-        {
-            _logger?.LogInformation($"Exporting block by path: {blockPath}");
-            LastExportedFile = null;
-
-            try
-            {
-                if (IsProjectNull())
-                {
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
-                }
-
-                var block = Guard.RequireNotNull(GetBlock(softwarePath, blockPath), "Block", blockPath);
-
-                var blockGroupPath = block.Parent is PlcBlockGroup parentGroup ? GetPlcBlockGroupPath(parentGroup) : "";
-                exportPath = ResolveExportFile(exportPath, block.Name, blockGroupPath, preservePath);
-
-                // TIA Portal never exports inconsistent blocks
-                TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
-
-                if (File.Exists(exportPath))
-                {
-                    File.Delete(exportPath);
-                }
-
-                block.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)), ExportOptions.None);
-                LastExportedFile = exportPath;
-
-                return block;
-            }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch (Exception ex)
-            {
-                //If the exception is already a PortalException, use it; otherwise, wrap it in a new PortalException
-                var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ExportFailed, "Export failed", null, ex);
-
-                pex.Data["softwarePath"] = softwarePath;
-                pex.Data["blockPath"] = blockPath;
-                pex.Data["exportPath"] = exportPath;
-
-                _logger?.LogError(pex, "ExportPlcBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
-                throw pex;
-            }
-        }
+        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ExportBlock(softwarePath, blockPath, exportPath, preservePath));
 
         public PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false)
         {
@@ -403,50 +374,7 @@ namespace TiaMcpServer.Siemens
         }
 
         public bool ImportBlock(string softwarePath, string groupPath, string importPath)
-        {
-            _logger?.LogInformation($"Importing block from path: {importPath}");
-
-            try
-            {
-                if (IsProjectNull())
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
-
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is not PlcSoftware plcSoftware)
-                    throw new PortalException(PortalErrorCode.NotFound,
-                        softwareContainer?.Software == null
-                            ? $"Software container not found for path '{softwarePath}'"
-                            : $"Software at '{softwarePath}' is not PlcSoftware (type={softwareContainer.Software.GetType().Name})");
-
-                var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
-                if (group == null)
-                    throw new PortalException(PortalErrorCode.NotFound,
-                        $"PLC block group not found for groupPath='{groupPath}'; use empty string for root program blocks");
-
-                if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
-                    throw new PortalException(PortalErrorCode.InvalidParams, $"Import file not found: {importPath}");
-                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(importPath)));
-
-                var imported = group.Blocks.Import(fileInfo, ImportOptions.Override);
-                if (imported == null || imported.Count == 0)
-                    throw new PortalException(PortalErrorCode.ImportFailed, "Blocks.Import returned an empty collection");
-
-                return true;
-            }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch (Exception ex)
-            {
-                // Surface the real Openness error to callers — without this the message
-                // is just "Import failed" which is useless for diagnosing bad LAD/SCL XML.
-                var inner = UnwrapImportError(ex);
-                var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ImportFailed, $"Import failed: {inner}", null, ex);
-                pex.Data["softwarePath"] = softwarePath;
-                pex.Data["groupPath"] = groupPath;
-                pex.Data["importPath"] = importPath;
-                _logger?.LogError(pex, "ImportPlcBlock failed for {SoftwarePath} group={GroupPath} file={ImportPath}: {Inner}", softwarePath, groupPath, importPath, inner);
-                throw pex;
-            }
-        }
+        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportBlock(softwarePath, groupPath, importPath));
 
         // Walk InnerException chain and concatenate type+message — Openness wraps the
         // useful XML-validation error several layers deep.
@@ -465,135 +393,10 @@ namespace TiaMcpServer.Siemens
         }
 
         public ResponseImportBatch ImportBlocksFromDirectory(string softwarePath, string groupPath, string dir, string regexName = "", bool overwrite = true)
-        {
-            if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
-                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(ResolvePlc(softwarePath, PlcAccess.Read)), true);
-
-            var imported = new List<string>();
-            var failed = new List<ImportFailure>();
-
-            try
-            {
-                if (IsProjectNull())
-                {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
-                }
-
-                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
-                {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
-                }
-
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is not PlcSoftware)
-                {
-                    failed.Add(new ImportFailure { Path = dir, Error = $"PlcSoftware not found at '{softwarePath}'" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
-                }
-
-                var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
-                if (group == null)
-                {
-                    failed.Add(new ImportFailure { Path = dir, Error = $"Block group not found (groupPath='{groupPath}')" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
-                }
-
-                Regex? regex = null;
-                if (!string.IsNullOrWhiteSpace(regexName))
-                {
-                    regex = new Regex(regexName, RegexOptions.IgnoreCase);
-                }
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
-                {
-                    var name = Path.GetFileNameWithoutExtension(file);
-                    if (regex != null && !regex.IsMatch(name))
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(file)).Exists)
-                        {
-                            failed.Add(new ImportFailure { Path = file, Error = "File not found" });
-                            continue;
-                        }
-                        var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(file)));
-
-                        // Let Openness check the XML object's identity atomically. A filename
-                        // lookup cannot enforce overwrite=false (and may miss renamed files).
-                        var list = group.Blocks.Import(fi, overwrite ? ImportOptions.Override : ImportOptions.None);
-                        if (list != null && list.Count > 0)
-                        {
-                            imported.AddRange(list.Select(b => b?.Name).Where(n => !string.IsNullOrWhiteSpace(n))!.Cast<string>());
-                        }
-                        else
-                        {
-                            imported.Add(name);
-                        }
-                    }
-                    catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch (Exception ex)
-                    {
-                        failed.Add(new ImportFailure { Path = file, Error = ex.ToString() });
-                    }
-                }
-
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
-            }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch (Exception ex)
-            {
-                failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
-            }
-        }
+        => System.Text.Json.JsonSerializer.Deserialize<ResponseImportBatch>(System.Text.Json.JsonSerializer.Serialize(new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, overwrite)))!;
 
         public bool ImportType(string softwarePath, string groupPath, string importPath)
-        {
-            _logger?.LogInformation($"Importing type from path: {importPath}");
-
-            try
-            {
-                if (IsProjectNull())
-                    throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
-
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is not PlcSoftware plcSoftware)
-                    throw new PortalException(PortalErrorCode.NotFound,
-                        softwareContainer?.Software == null
-                            ? $"Software container not found for path '{softwarePath}'"
-                            : $"Software at '{softwarePath}' is not PlcSoftware (type={softwareContainer.Software.GetType().Name})");
-
-                var group = GetPlcTypeGroupByPath(softwarePath, groupPath);
-                if (group == null)
-                    throw new PortalException(PortalErrorCode.NotFound,
-                        $"PLC type group not found for groupPath='{groupPath}'; use empty string for root PLC data types");
-
-                if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
-                    throw new PortalException(PortalErrorCode.InvalidParams, $"Import file not found: {importPath}");
-                var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(PrepareXmlForImport(importPath)));
-
-                var imported = group.Types.Import(fileInfo, ImportOptions.Override);
-                if (imported == null || imported.Count == 0)
-                    throw new PortalException(PortalErrorCode.ImportFailed, "Types.Import returned an empty collection");
-
-                return true;
-            }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
-            catch (Exception ex)
-            {
-                var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ImportFailed, "Import failed", null, ex);
-                pex.Data["softwarePath"] = softwarePath;
-                pex.Data["groupPath"] = groupPath;
-                pex.Data["importPath"] = importPath;
-                _logger?.LogError(pex, "ImportPlcType failed for {SoftwarePath} group={GroupPath} file={ImportPath}", softwarePath, groupPath, importPath);
-                throw pex;
-            }
-        }
+        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportType(softwarePath, groupPath, importPath));
 
         public (string TempDir, List<string> Paths)? ExportBlockToTemp(string softwarePath, string blockPath, bool preservePath = false)
         {

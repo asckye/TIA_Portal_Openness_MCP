@@ -223,7 +223,8 @@ internal static class DomainShapeChecks
             "Online/download keeps the existing Portal logger instance and category");
 
         var mcp = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
-        foreach (var domain in new[] { (Name: "HmiExchange", Count: 13), (Name: "HmiDescribe", Count: 7), (Name: "HmiTagDeletion", Count: 1) })
+        check(EngineSurface.PortedTools(server, "21").Contains("CompileHmiDiagnostics"), "HMI compile is owned by the Foundation port");
+        foreach (var domain in new[] { (Name: "HmiExchange", Count: 13), (Name: "HmiDescribe", Count: 6), (Name: "HmiTagDeletion", Count: 1) })
         {
             var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;

@@ -265,10 +265,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<string>? Paths { get; set; }
     }
 
-    public class ResponseCrossReferences : ResponseMessage
-    {
-        public IEnumerable<CrossReferenceEntry>? Items { get; set; }
-    }
+
 
     public class ResponseNetworkInfo : ResponseMessage
     {
@@ -357,13 +354,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ImportFailure>? Failed { get; set; }
     }
 
-    public class ResponseSeed : ResponseMessage
-    {
-        public IEnumerable<string>? Imported { get; set; }
-        public IEnumerable<ImportFailure>? Failed { get; set; }
-        public JsonObject? Placeholders { get; set; }
-        public string? TempDir { get; set; }
-    }
+
 
     public class ResponseDeviceProbe : ResponseMessage
     {
@@ -479,24 +470,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<string>? RecommendedNextActions { get; set; }
     }
 
-    public class ResponseCompileDiagnose : ResponseMessage
-    {
-        public string? State { get; set; }
-        public int? ErrorCount { get; set; }
-        public int? WarningCount { get; set; }
-        public IEnumerable<string>? Errors { get; set; }
-        public IEnumerable<string>? Warnings { get; set; }
-        public IEnumerable<string>? Info { get; set; }
-        public IEnumerable<string>? RawMessages { get; set; }
-    }
 
-    public class ResponseRepairAndCompile : ResponseMessage
-    {
-        public bool? Imported { get; set; }
-        public string? ImportError { get; set; }
-        public ResponseCompileDiagnose? Compile { get; set; }
-        public IEnumerable<string>? Suggestions { get; set; }
-    }
+
+
     
     public class ResponseBlocks : ResponseMessage
     {

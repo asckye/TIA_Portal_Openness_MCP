@@ -289,27 +289,7 @@ namespace TiaMcpServer.Siemens.Services
             _ => "read only."
         };
 
-        public ResponseMessage CompileDevice(string devicePathJson, string itemPathJson = "[]")
-            => _session.RunHmiStepTool("CompileDevice", meta => {
-                var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
-                meta["target"] = owner.Name; meta["targetType"] = owner.GetType().Name;
-                var compilable = _session.ServiceProvider(owner).GetService<ICompilable>()
-                    ?? throw new NotSupportedException("ICompilable is not available on '" + owner.Name + "'.");
-                var watch = System.Diagnostics.Stopwatch.StartNew();
-                meta["mayHaveChanged"] = true;
-                CompilerResult result = compilable.Compile();
-                meta["compileElapsedMs"] = watch.ElapsedMilliseconds;
-                meta["apiCallSuccess"] = true;
-                var collected = CompilerDiagnostics.CollectCompilerMessages(result.Messages);
-                foreach (var kv in collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount)) meta[kv.Key] = kv.Value?.DeepClone();
-                meta["errors"] = new JsonArray(collected.Errors.Select(e => (JsonNode)JsonValue.Create(e)!).ToArray());
-                meta["warnings"] = new JsonArray(collected.Warnings.Select(w => (JsonNode)JsonValue.Create(w)!).ToArray());
-                // envelope: legacy-independent-verdicts
-                meta["nativeCompleted"] = true;
-                meta["success"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
-                meta["operationSuccess"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
-                return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result.WarningCount + "). Project not saved.";
-            });
+
 
         public JsonObject GetPutGetAccess(string devicePath) => _session.GetPutGetAccess(devicePath);
         private static string? LinkName(object connection, string property)

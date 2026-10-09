@@ -72,11 +72,11 @@ public sealed class WorkerRobustnessTests
         public Descriptor? Find(string name, bool includeUnavailable = false) => All.GetValueOrDefault(name);
         internal Catalog()
         {
-            var tool = new Tool { Name = "CompileDevice", Description = "[L1][Hardware][READ] Fixture engine-only operation.",
+            var tool = new Tool { Name = "GetPlcBlockFingerprints", Description = "[L1][Hardware][READ] Fixture engine-only operation.",
                 InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = new JsonObject {
                     ["payload"] = new JsonObject { ["type"] = "string" } }, ["additionalProperties"] = false }) };
             All = new Dictionary<string, Descriptor> { [tool.Name] = new(tool.Name, tool.Description, tool, new("L1", "Hardware", "READ", true, false),
-                "CompileDevice(payload?: string)", new[] { new Parameter("payload", "string", "System.String", false, null, null, "", false, null) }, new(false, true), null, "worker") };
+                "GetPlcBlockFingerprints(payload?: string)", new[] { new Parameter("payload", "string", "System.String", false, null, null, "", false, null) }, new(false, true), null, "worker") };
         }
     }
     private sealed class Scope : IDisposable
@@ -101,7 +101,7 @@ public sealed class WorkerRobustnessTests
             var catalog = new Catalog();
             Host.ConfigureToolBridge(catalog, new Engine.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
             Journal.ConfigureOutput(row => Rows.Add(JsonNode.Parse(row)!.AsObject()));
-            engine = Host.WrapTools(new[] { Host.ToolInvoker.CreateTool(catalog.All["CompileDevice"]) }).Single();
+            engine = Host.WrapTools(new[] { Host.ToolInvoker.CreateTool(catalog.All["GetPlcBlockFingerprints"]) }).Single();
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(Foundation.FoundationTools.Definitions.Single(d => d.Name == "GetBlocks"), Worker),
                 release, null, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
             Worker.SessionLocked = () => Host.SessionPrecheckRefusal("GetSessionState") != null;

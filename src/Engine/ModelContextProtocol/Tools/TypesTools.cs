@@ -244,34 +244,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SeedProjectFromReference"), Description("[L2][PLC-Software]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace) Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult SeedProjectFromReferenceV4(
-            [Description("plcSoftwarePath: path in the project structure to the PLC software")] string plcSoftwarePath,
-            [Description("hmiSoftwarePath: path in the project structure to the HMI software")] string hmiSoftwarePath,
-            [Description("referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)")] string referenceDir,
-            [Description("placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}")] JsonObject? placeholders = null)
-            => PlcToolContract.Run("SeedProjectFromReference", true, true, () => SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders));
 
-        public ResponseSeed SeedProjectFromReference(
-            string plcSoftwarePath,
-            string hmiSoftwarePath,
-            string referenceDir,
-            JsonObject? placeholders = null)
-        {
-            try
-            {
-                var res = _domain.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders);
-                // envelope: legacy-existing-meta
-                res.Meta ??= new JsonObject();
-                res.Meta["timestamp"] = DateTime.Now;
-                res.Meta["success"] = (res.Failed == null || !res.Failed.Any());
-                return res;
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error seeding project from reference: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
+
+
 
         [McpServerTool(Name = "ExportPlcTypes"), Description("[L2][PLC-Software] Export all (or regexName-filtered) PLC types as SimaticML XML into an existing directory; exportPath must already exist. This XML export does not create a new directory. Use the document export tools for a new directory. Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public Task<CallToolResult> ExportTypesV4(

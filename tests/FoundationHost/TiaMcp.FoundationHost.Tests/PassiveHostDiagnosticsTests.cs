@@ -44,7 +44,10 @@ internal static class PassiveHostDiagnosticsTests
                 check(result["host"]!["nativeCallsDisabledByConfiguration"]!.GetValue<bool>() == !native, "configured native gate truthful");
                 check(!result["upstreamResponseCompatible"]!.GetValue<bool>() && !result["nativeCertified"]!.GetValue<bool>(), "bounded candidate is not full/native compatibility");
                 var roster = result["registeredTools"]!.AsArray();
-                check(result["registeredToolCount"]!.GetValue<int>() == registry.Count && roster.Select(t => t!["name"]!.GetValue<string>()).Order().SequenceEqual(registry.Select(t => t.ProtocolTool.Name).Order()), "diagnostics report the complete actual registry");
+                var projectedRegistry = release.Key is "20" or "21"
+                    ? registry.Where(tool => !TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(family => family.Name is "F08" or "F09" or "F11" or "F17").SelectMany(family => family.Tools).Contains(tool.ProtocolTool.Name)).ToArray()
+                    : registry.ToArray();
+                check(result["registeredToolCount"]!.GetValue<int>() == projectedRegistry.Length && roster.Select(t => t!["name"]!.GetValue<string>()).Order().SequenceEqual(projectedRegistry.Select(t => t.ProtocolTool.Name).Order()), "diagnostics retain the release-specific bounded registration projection");
                 foreach (var pair in expectedPortedOperations)
                 {
                     var row = roster.Single(t => (string?)t!["name"] == pair.Key)!;

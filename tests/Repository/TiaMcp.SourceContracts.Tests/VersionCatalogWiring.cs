@@ -86,7 +86,7 @@ public sealed partial class VersionCatalogWiring
     [Fact]
     public void MoveRefusalAndRecoveryPrecedeCleanup()
     {
-        var source = Sources.Member("MoveBlockToGroup", owner: "PlcBlocksService", tool: false);
+        var source = new EngineSources(ROOT, "src/Adapters/Native/Plc").Member("MoveBlockToGroup", owner: "PlcOrganisationAdapter", tool: false);
         Assert.True(Find(source, "if (block is OB)") < Find(source, "EnsurePlcBlockGroup"));
         Assert.True(Find(source, "moveVerified = verifyGroup") < Find(source, "finally"));
         Assert.Contains("if (moveVerified)", Split(source, "finally", 1)[1], StringComparison.Ordinal);

@@ -17,7 +17,7 @@ namespace TiaMcp.Adapters
         public BlockDocumentExportReply ExportBlockDocument(string softwarePath, string blockPath)
         {
             Check();
-            if (ReleaseKey != "20" && ReleaseKey != "21") throw new NotSupportedException("Block-document analysis is enabled for V20/V21 only.");
+            var session = EngineeringPlcOrganisationSession ?? new OrganisationSession(this);
             if (string.IsNullOrWhiteSpace(softwarePath)) throw new ArgumentException("softwarePath is required for block-path mode.");
             if (string.IsNullOrWhiteSpace(blockPath)) throw new ArgumentException("blockPath is required for block-path mode.");
             var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
@@ -25,11 +25,11 @@ namespace TiaMcp.Adapters
             EngineeringRecordExportPath?.Invoke(null);
             try
             {
-                if (EngineeringProjectMissing == null || EngineeringProjectMissing())
+                if (session.IsProjectNull())
                     return new BlockDocumentExportReply { Status = "InvalidState", Message = "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)" };
-                var block = ResolveEngineeringBlock!(softwarePath, blockPath) as PlcBlock;
+                var block = session.GetBlock(softwarePath, blockPath);
                 if (block == null) return new BlockDocumentExportReply { Status = "NotFound", Message = "Block not found: '" + blockPath + "'" };
-                var groupPath = block.Parent is PlcBlockGroup parent ? EngineeringBlockGroupPath!(parent) : "";
+                var groupPath = block.Parent is PlcBlockGroup parent ? session.GetPlcBlockGroupPath(parent) : "";
                 var exportPath = Path.Combine(tempDir, block.Name + ".xml");
                 TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
                 if (File.Exists(exportPath)) File.Delete(exportPath);

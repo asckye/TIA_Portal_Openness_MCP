@@ -17,6 +17,10 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="PlcVerifiedImportBridge.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
+    <Compile Include="../Engine/ModelContextProtocol/Builders/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
+    <Compile Include="../Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
     <ProjectReference Include="../WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />

@@ -19,10 +19,13 @@ namespace TiaMcp.Adapters
             try
             {
                 Check(); var p = Project();
-                if (candidate.Request.Entry != "CompilePlcSoftware" && candidate.Request.Entry != "CompilePlcDiagnostics") CandidatePrimitives.Invalid("unadvertised-compile-entry");
+                if (candidate.Request.Entry != "CompilePlcSoftware" && candidate.Request.Entry != "CompilePlcDiagnostics" && candidate.Request.Entry != "CompileDevice" && candidate.Request.Entry != "CompileHmiDiagnostics") CandidatePrimitives.Invalid("unadvertised-compile-entry");
                 CompileNativeTarget Target()
                 {
-                    Check(); var selected = ReadSelection(candidate.Request.SoftwarePath);
+                    Check();
+                    if (candidate.Request.Entry == "CompileDevice" || candidate.Request.Entry == "CompileHmiDiagnostics")
+                        return new PlcOrganisationAdapter(EngineeringPlcOrganisationSession ?? new OrganisationSession(this)).CompileTarget(candidate.Request);
+                    var selected = ReadSelection(candidate.Request.SoftwarePath);
                     return new CompileNativeTarget { Owner = selected.Value, Software = selected.Value, SafetyItem = (DeviceItem)selected.Context!,
                         OfflineOwner = (DeviceItem)selected.Context!, Name = selected.Value.Name, Kind = "PlcSoftware",
                         Compiler = ((IEngineeringServiceProvider)selected.Value).GetService<ICompilable>() };
@@ -46,7 +49,7 @@ namespace TiaMcp.Adapters
                 if (candidate.Action == "observe" && mode == "preview") reply.Observation = compileCandidateAdapter.Observe();
                 else if (candidate.Action == "execute" && mode == "apply" && candidate.Check != null)
                 {
-                    if (candidate.Request.Entry != candidate.Check.Request.Entry || candidate.Request.SoftwarePath != candidate.Check.Request.SoftwarePath) CandidatePrimitives.Invalid("compile-scope");
+                    if (candidate.Request.Entry != candidate.Check.Request.Entry || candidate.Request.SoftwarePath != candidate.Check.Request.SoftwarePath || !candidate.Request.DevicePath.SequenceEqual(candidate.Check.Request.DevicePath) || !candidate.Request.ItemPath.SequenceEqual(candidate.Check.Request.ItemPath)) CandidatePrimitives.Invalid("compile-scope");
                     reply.Attempt = compileCandidateAdapter.Execute(candidate.Check, candidate.Password); reply.RequiresSessionReset = reply.Attempt.RequiresSessionReset;
                 }
                 else CandidatePrimitives.Invalid("compile-action");

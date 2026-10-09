@@ -31,6 +31,9 @@ namespace TiaMcp.PlcWorker
             this.engine = engine;
             this.failureObserved = failureObserved;
             releaseKey = engine.ReleaseKey;
+            engine.ValidatePlcVerifiedCandidate = PlcVerifiedImportBridge.Validate;
+            engine.ExecutePlcVerifiedWorkflow = PlcVerifiedImportBridge.Execute;
+            engine.CollectPlcCompilerEvidence = PlcVerifiedImportBridge.Compiler;
             // Only this application's typed facade is reflected; no arbitrary Siemens
             // type/member names or object handles are accepted on the wire.
             bool deviceCandidateEnabled = releaseKey == "19" && TiaMcp.Adapters.Contracts.Candidates.CandidatePolicy.Enabled(policyAssembly, releaseKey, "P6-DEVICE");
@@ -51,8 +54,7 @@ namespace TiaMcp.PlcWorker
                 compileCandidateEnabled ? WorkerOperations.CompileCandidate : null
             }.Where(n => n != null).Select(n => n!));
             var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), names) };
-            if (releaseKey == "20" || releaseKey == "21")
-                modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
+            modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
                 modules.Add(new WorkerOperationModule(family.OperationPrefix, typeof(PlcFoundationEngine), WorkerOperations.FamilyNames(family.Name)));
             methods = WorkerOperationModule.Register(modules);

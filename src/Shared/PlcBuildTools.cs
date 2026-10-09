@@ -4,8 +4,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,9 +24,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class PlcBuildTools
     {
-        private readonly IEngineeringSession _session;
+        private readonly PlcArtifactPortSession _session;
 
-        public PlcBuildTools(IEngineeringSession service) => _session = service;
+        public PlcBuildTools(PlcOrganisationPortService service) => _session = new PlcArtifactPortSession(service, "BuildAndImportPlcArtifact");
 
         [McpServerTool(Name = "BuildAndImportPlcArtifact"), Description("[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportPlcBlock sequence. Native behaviorPolicy remains current; V4 native acceptance is pending.")]
         public CallToolResult PlcBuildAndImportV4(
@@ -61,6 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var normalizedKind = NormalizePlcBuildKind(kind);
+                _session.RequireBuildFormat(normalizedKind);
                 var capability = AnalyzePlcBuildCapability(normalizedKind, json);
                 var build = BuildPlcArtifact(normalizedKind, json);
                 var xml = build["xml"]?.ToString() ?? "";
@@ -116,7 +115,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 response.Meta["recommendedNextActions"] = new JsonArray(capability.NextActions.Select(x => (JsonNode)x).ToArray());
                 return response;
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not McpException && ex is not NotSupportedException)
             {
                 throw new McpException($"Unexpected error running BuildAndImportPlcArtifact: {ex.Message}", ex, McpErrorCode.InvalidParams);
             }
@@ -162,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _session.CompileSoftware(softwarePath);
-                return PlcCompilation.BuildCompileResponse(softwarePath, result);
+                return PlcArtifactPortSession.BuildCompileResponse(softwarePath, result);
             }
             catch (PortalException pex)
             {
@@ -193,11 +192,14 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static JsonObject BuildPlcArtifact(string kind, string json)
         {
+            // Preserve the existing V21 candidate format on V20/V21. Newly
+            // enabled releases use their own declaration header and interface schema.
+            string outputRelease = HardwareContract.ReleaseKey is "20" or "21" ? "21" : HardwareContract.ReleaseKey;
             return kind switch
             {
-                "udt" => PlcBuilderToolJson.BuildUdt(json),
-                "tagtable" => PlcBuilderToolJson.BuildTagTable(json),
-                "globaldb" => PlcBuilderToolJson.BuildGlobalDb(json),
+                "udt" => PlcBuilderToolJson.BuildUdt(json, outputRelease),
+                "tagtable" => PlcBuilderToolJson.BuildTagTableForRelease(json, outputRelease),
+                "globaldb" => PlcBuilderToolJson.BuildGlobalDb(json, outputRelease),
                 "fc" => PlcBuilderToolJson.ComposeFcBlock(json),
                 "fb" => PlcBuilderToolJson.ComposeFbBlock(json),
                 _ => throw new ArgumentException("Unsupported PLC build kind: " + kind)

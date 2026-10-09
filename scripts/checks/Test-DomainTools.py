@@ -1134,15 +1134,25 @@ def plc_exchange_reply(reply, name):
 PORTED_DOMAIN_TOOLS = {
     'Devices': {'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
     'HardwareNetwork': {'HardwareSecurityTools': ('ManageDeviceUsers',)},
-    'HardwareServices': {'HardwareServicesPortTools': ('ListCommunicationConnections', 'ManageCommunicationConnection', 'ExchangeSystemDiagnosticsSettings', 'GetHardwareFeatures', 'ManageDeviceServiceObjects', 'ManageHardwareUtilities')},
+    'HmiDescribe': {'PlcCompilePortTools': ('CompileHmiDiagnostics',)},
+    'HardwareServices': {'PlcCompilePortTools': ('CompileDevice',), 'HardwareServicesPortTools': ('ListCommunicationConnections', 'ManageCommunicationConnection', 'ExchangeSystemDiagnosticsSettings', 'GetHardwareFeatures', 'ManageDeviceServiceObjects', 'ManageHardwareUtilities')},
     'Library': {'HmiOfflineTools': (
         'AnalyzeHmiTemplateReference', 'AnalyzeGlobalLibraryPackage',
         'PlanGlobalLibraryTemplateReuse', 'AnalyzeUnifiedHmiTemplateLayout')},
     'UnifiedHmi': {'HmiOfflineTools': (
         'BuildUnifiedHmiButtonActionScript', 'BuildUnifiedHmiLayoutDesign',
         'BuildUnifiedHmiThemeDesign', 'RunHmiActionScriptRecipeSafetySelfTest')},
-    'PlcExternalSources': {'PlcOfflineTools': ('WritePlcSclSourceFile',)},
-    'PlcBlocks': {'PlcOfflineTools': ('AnalyzePlcReferences', 'PatchPlcBlockDocument')},
+    'PlcExternalSources': {'PlcOfflineTools': ('WritePlcSclSourceFile',),
+        'PlcOrganisationTools': ('ListPlcSystemGroups',),
+        'PlcReadModifyTools': ('ManagePlcExternalSources', 'GetPlcCrossReferences')},
+    'PlcBlocks': {'PlcOfflineTools': ('AnalyzePlcReferences', 'PatchPlcBlockDocument'),
+        'PlcOrganisationTools': ('ManagePlcBlockProtection', 'DeletePlcBlock', 'DeletePlcTagTable', 'DeletePlcType',
+            'CreatePlcTypeGroup', 'DeleteEmptyPlcBlockGroup', 'CreatePlcBlockGroup', 'MovePlcBlockToGroup', 'ManagePlcUserGroup'),
+        'PlcReadModifyTools': ('SetPlcProgram', 'GetPlcBlockEditCapabilities', 'ImportPlcBlockVerified',
+            'RepairAndReimportPlcBlock', 'DescribePlcBlockLogic')},
+    'NativeExchange': {'PlcReadModifyTools': ('CreatePlcInstanceDb', 'GeneratePlcSourceFromBlocks', 'ManagePlcTagDefinition')},
+    'PlcTables': {'PlcReadModifyTools': ('GetPlcTagTableConstants', 'ImportPlcTagTablesFromDirectory')},
+    'Types': {'PlcReadModifyTools': ('SeedProjectFromReference',)},
     'Diagnostics': {'HostMetaTools': (
         'GenerateAcceptanceReport', 'GenerateErrorReport', 'RunOnlineMonitoringSafetySelfTest')}
 }

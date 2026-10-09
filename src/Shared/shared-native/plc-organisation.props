@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' != '14sp1'">
+    <DefineConstants>$(DefineConstants);PLC_SOFTWARE_PROTECTION;PLC_SOURCE_RESULTS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">
+    <DefineConstants>$(DefineConstants);PLC_SOFTWARE_CROSS_REFERENCES</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">
+    <DefineConstants>$(DefineConstants);PLC_SOURCE_TARGET</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">
+    <DefineConstants>$(DefineConstants);PLC_HMI_UNIFIED</DefineConstants>
+  </PropertyGroup>
+</Project>

@@ -26,9 +26,17 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
-    internal static McpServerTool Wrap(FoundationTool tool) => tool.CapabilityAdmission(
-        McpServer.WrapTools(new[] { tool.ValidatedTool() }).Single());
+        PortedFamilies.All.Where(family => (family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+    internal static McpServerTool Wrap(FoundationTool tool)
+    {
+        string? candidate = tool.ProtocolTool.Name switch {
+            "CompileDevice" or "CompileHmiDiagnostics" => "P6-COMPILE",
+            "ImportPlcTagTablesFromDirectory" => "P6-IMPORT",
+            "ManagePlcExternalSources" => "P6-SOURCE", _ => null };
+        if (candidate != null && BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, tool.Release, candidate) == BehaviorPolicy.SafeV4)
+            return new FoundationV4Tool(tool, tool.Release, null);
+        return tool.CapabilityAdmission(McpServer.WrapTools(new[] { tool.ValidatedTool() }).Single());
+    }
 
     // The primary module operation comes first; previews and fallback reads are
     // also part of the wiring. Pure builders do not read session state.
@@ -80,6 +88,12 @@ internal static class PortedToolContract
         "GetProjectTopology" => new[] { "hardware-network.HardwareGetProjectTopology", "ReadState" },
         "ListCommunicationConnections" => new[] { "hardware-network.HardwareReadCommunicationConnections", "ReadState" },
         "ManageCommunicationConnection" => new[] { "hardware-network.HardwareManageCommunicationConnection", "ReadState" },
+        "CreatePlcBlockGroup" or "CreatePlcTypeGroup" or "DeleteEmptyPlcBlockGroup" or "DeletePlcBlock" or "DeletePlcTagTable" or "DeletePlcType" or "ManagePlcBlockProtection" or "ManagePlcUserGroup" or "MovePlcBlockToGroup" or "ListPlcSystemGroups" => new[] { "plc-organisation.ExecutePlcOrganisation", "ReadState" },
+        "CreatePlcInstanceDb" or "ManagePlcTagDefinition" or "SetPlcProgram" or "GetPlcTagTableConstants" or "ImportPlcBlockVerified" or "BuildAndImportPlcArtifact" or "DescribePlcBlockLogic" or "RepairAndReimportPlcBlock" or "ImportPlcTagTablesFromDirectory" => new[] { "plc-software.ExecutePlcOrganisation", "ReadState" },
+        "SeedProjectFromReference" => new[] { "plc-software.ExecutePlcOrganisation", "plc-software.SeedReferenceHmi", "ReadState" },
+        "CompileDevice" or "CompileHmiDiagnostics" => new[] { "plc-compile.ExecutePlcOrganisation", "ReadState" },
+        "GetPlcBlockEditCapabilities" => new[] { "plc-analysis.ExportBlockDocument", "ReadState" },
+        "GeneratePlcSourceFromBlocks" or "ManagePlcExternalSources" or "GetPlcCrossReferences" => new[] { "plc-sources.ExecutePlcOrganisation", "ReadState" },
         _ when PortedFamilies.Contains(tool) && PortedFamilies.ForTool(tool).Name is "F01" or "F02" or "F03" => Array.Empty<string>(),
         _ => throw new NotSupportedException("Unregistered ported tool: " + tool)
     };
@@ -101,6 +115,7 @@ internal sealed partial class FoundationTool
     private readonly string? portedRelease;
     private readonly ToolDescriptor? portedDescriptor;
     internal bool Ported => portedMethod != null;
+    internal string Release => portedRelease!;
 
     internal FoundationTool(IFoundationWorker worker, string release, MethodInfo method, string name)
     {
@@ -148,6 +163,13 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("extendedPositionNumber", out var extendedPosition) ? extendedPosition.GetInt32() : -1,
             arguments.TryGetValue("password", out var password) && !string.IsNullOrEmpty(password.GetString())) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        if (PlcSoftwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
+            arguments.TryGetValue("unitName", out var unit) ? unit.GetString() ?? "" : "",
+            arguments.TryGetValue("unitKind", out var unitKind) ? unitKind.GetString() ?? "unit" : "unit",
+            arguments.TryGetValue("targetKind", out var targetKind) ? targetKind.GetString() ?? "" : "",
+            arguments.TryGetValue("copyMode", out var copyMode) ? copyMode.GetString() ?? "" : "",
+            arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         return null;
     }
 
@@ -168,6 +190,10 @@ internal sealed partial class FoundationTool
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
         object target = portedMethod!.DeclaringType!.Name switch
         {
+            "PlcCompilePortTools" => new PlcCompilePortTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcBuildTools" => new PlcBuildTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcReadModifyTools" => new PlcReadModifyTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcOrganisationTools" => new PlcOrganisationTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "HardwareDevicesTools" => new HardwareDevicesTools(new HardwareDevicesService(call, hasProject, identity,
                 DeviceCandidates.GetValue(worker, _ => new DeviceCreationSession()))),
             "ModulesTools" => new ModulesTools(new HardwareModulesService(call, hasProject, identity)),
@@ -179,7 +205,17 @@ internal sealed partial class FoundationTool
         };
         var values = portedMethod!.GetParameters().Select(p => arguments.TryGetValue(p.Name!, out var value)
             ? JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }) : p.DefaultValue).ToArray();
-        try { return (CallToolResult)portedMethod.Invoke(target, values)!; }
+        try
+        {
+            var result = (CallToolResult)portedMethod.Invoke(target, values)!;
+            // Retain the retired engine host's no-native-call admission projection.
+            if (tool.Name == "CompileHmiDiagnostics" && state?["ProcessId"] == null
+                && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
+                return McpServer.V4Result(tool.Name, null,
+                    new Error(TiaOpenness.Shared.SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),
+                    Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: true);
+            return result;
+        }
         catch (TargetInvocationException error) when (error.InnerException != null) { throw error.InnerException; }
     }
 }

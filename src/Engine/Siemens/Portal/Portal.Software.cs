@@ -126,74 +126,7 @@ namespace TiaMcpServer.Siemens
         }
 
         public CompilerResult CompileSoftware(string softwarePath, string password = "")
-        {
-            _logger?.LogInformation($"Compiling software by path: {softwarePath}");
-
-            if (IsProjectNull())
-                throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
-
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (PlcNative.SoftwareOrNull(softwareContainer) == null)
-                throw new PortalException(PortalErrorCode.NotFound, $"SoftwareContainer or Software not found for path '{softwarePath}'");
-
-            if (!string.IsNullOrEmpty(password))
-            {
-                var deviceItem = PlcNative.ParentOrNull(softwareContainer) as DeviceItem;
-
-                var admin = PlcNative.SafetyOrNull(deviceItem);
-                if (admin != null)
-                {
-                    if (!PlcNative.IsLoggedOn(admin))
-                    {
-                        SecureString secString = new NetworkCredential("", password).SecurePassword;
-                        try
-                        {
-                            PlcNative.Login(admin, secString);
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new PortalException(PortalErrorCode.OpennessError, $"Safety login failed: {ex.Message}", null, ex);
-                        }
-                    }
-                }
-            }
-
-            // PlcSoftware and classic WinCC (HmiTarget) are themselves service providers, so the
-            // compiler service comes off the software object. WinCC Unified's HmiSoftware is NOT
-            // an IEngineeringServiceProvider (verified against the V21 PublicAPI) and exposes no
-            // Compile of its own — for Unified the compilable object is the owning device item,
-            // which is what the TIA UI compiles as well.
-            ICompilable compileService = ResolveCompileService(softwareContainer, softwarePath, out var targetKind);
-            // Siemens.Engineering.Compiler.CompileProvider is documented but internal in the PublicAPI; ICompilable is the public entry.
-
-            try
-            {
-                CompilerResult result = PlcNative.Compile(compileService);
-
-                if (result == null)
-                    throw new PortalException(PortalErrorCode.OpennessError, "ICompilable.Compile() returned null");
-                try
-                {
-                    foreach (CompilerResultMessage top in EngineeringGroupOperations.Items(PlcNative.Messages(result)).Cast<CompilerResultMessage>().Take(20))
-                        _logger?.LogInformation("Compile {Path}: {State} {Description} ({Errors} errors / {Warnings} warnings, {Time}, {Nested} nested)", PlcNative.Path(top), PlcNative.State(top), PlcNative.Description(top), PlcNative.ErrorCount(top), PlcNative.WarningCount(top), PlcNative.DateTime(top), EngineeringGroupOperations.Items(PlcNative.Messages(top)).Count());
-                }
-                catch { /* swallow(logging-failure): Optional compiler-message logging must not replace the native compile result. */ }
-
-                return result;
-            }
-            catch (PortalException)
-            {
-                throw;
-            }
-            catch (TargetInvocationException tie) when (tie.InnerException != null)
-            {
-                throw new PortalException(PortalErrorCode.OpennessError, $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}", null, tie.InnerException);
-            }
-            catch (Exception ex)
-            {
-                throw new PortalException(PortalErrorCode.OpennessError, $"{ex.GetType().FullName}: {ex.Message}", null, ex);
-            }
-        }
+        => Organisation(() => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).CompileSoftware(softwarePath, password));
 
         /// <summary>
         /// Find the object that actually carries the ICompilable service for a software path,
@@ -220,57 +153,8 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private ICompilable ResolveCompileService(SoftwareContainer? softwareContainer, string softwarePath, out string targetKind)
         {
-            var software = PlcNative.SoftwareOrNull(softwareContainer);
-            if (software == null)
-                throw new PortalException(PortalErrorCode.NotFound, $"SoftwareContainer or Software not found for path '{softwarePath}'");
-
-            // 走过的每一层都记下来：找不到时把这串报出去，下一个人不用再猜层级。
-            var probed = new List<string>();
-
-            ICompilable? Probe(object? candidate, string kind)
-            {
-                if (candidate is not IEngineeringServiceProvider provider) return null;
-                ICompilable? service;
-                try
-                {
-                    service = PlcNative.Compiler(provider);
-                }
-                catch (Exception ex)
-                {
-                    // 代理对象可能已失效；这一层探不了不代表上一层探不了，记下继续往上。
-                    probed.Add($"{kind}(threw {ex.GetType().Name})");
-                    return null;
-                }
-                probed.Add($"{kind}{(service == null ? "(no ICompilable)" : "(OK)")}");
-                return service;
-            }
-
-            var direct = Probe(software, software.GetType().Name);
-            if (direct != null)
-            {
-                targetKind = software.GetType().Name;
-                return direct;
-            }
-
-            // 从软件容器往上爬。上限 8 层纯属防御：真实层级是 3~4 层，
-            // 加个上限只是不想在代理对象出怪时把自己转死在循环里。
-            object? node = softwareContainer;
-            for (int depth = 0; node != null && depth < 8; depth++)
-            {
-                var kind = $"{software.GetType().Name} via {node.GetType().Name}";
-                var service = Probe(node, kind);
-                if (service != null)
-                {
-                    targetKind = kind;
-                    return service;
-                }
-                node = PlcNative.ParentOrNull(node as IEngineeringObject);
-            }
-
-            throw new PortalException(
-                PortalErrorCode.InvalidState,
-                $"Software at '{softwarePath}' ({software.GetType().FullName}) is not compilable: " +
-                $"neither it nor any owner up to 8 levels provides ICompilable. Probed: {string.Join(" -> ", probed)}");
+            try { return new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ResolveCompileService(softwareContainer, softwarePath, out targetKind); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error) { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), error.Code), error.Message, error.Candidates, error.InnerException); }
         }
 
         #endregion

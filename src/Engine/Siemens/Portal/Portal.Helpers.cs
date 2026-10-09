@@ -893,8 +893,7 @@ namespace TiaMcpServer.Siemens
                 // Callers naturally copy that full path, so skip a leading segment that denotes the root itself.
                 var startIndex = 0;
                 if (groupNames.Length > 0 &&
-                    (groupNames[0].Equals("Program blocks", StringComparison.OrdinalIgnoreCase) ||
-                     groupNames[0].Equals("程序块", StringComparison.OrdinalIgnoreCase)))
+                    TiaMcp.Adapters.Contracts.PlcOrganisationPaths.IsBlockRoot(groupNames[0]))
                 {
                     startIndex = 1;
                 }
@@ -915,7 +914,7 @@ namespace TiaMcpServer.Siemens
             return null;
         }
 
-        private PlcTypeGroup? GetPlcTypeGroupByPath(string softwarePath, string groupPath)
+        internal PlcTypeGroup? GetPlcTypeGroupByPath(string softwarePath, string groupPath)
         {
             if (_project == null)
             {

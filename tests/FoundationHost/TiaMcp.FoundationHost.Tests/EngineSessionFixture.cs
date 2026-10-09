@@ -64,7 +64,9 @@ internal static class EngineSessionFixture
             string name = (string)input["name"]!, id = (string)input["requestId"]!;
             if ((bool?)input["arguments"]?["hang"] == true) Thread.Sleep(10000);
             bool unknown = (bool?)input["arguments"]?["fault"] == true;
-            var body = Envelope.Create(new JsonObject { ["fixturePid"] = Environment.ProcessId }, unknown
+            var data = new JsonObject { ["fixturePid"] = Environment.ProcessId };
+            if (unknown) data["nativeOutcomeUnknown"] = true;
+            var body = Envelope.Create(data, unknown
                 ? new Error("Fixture native outcome unknown.", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())) : null,
                 new Meta(DateTimeOffset.UtcNow, release, name, id, unknown ? Outcome.Unknown : Outcome.Succeeded,
                     unknown ? Execution.Unknown : Execution.ReadOnly, unknown, BehaviorPolicy.Current,

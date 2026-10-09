@@ -91,7 +91,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             && (policyForTest?.Invoke("P6-SOURCE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-SOURCE")) == BehaviorPolicy.SafeV4;
         compileCandidate = CompileContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
             && (policyForTest?.Invoke("P6-COMPILE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-COMPILE")) == BehaviorPolicy.SafeV4;
-        if (inner is FoundationTool { Ported: true })
+        if (inner is FoundationTool { Ported: true } && !importCandidate && !sourceCandidate && !compileCandidate)
         {
             tool = new Tool { Name = source.Name, Title = source.Title,
                 Description = source.Description + " Native behaviorPolicy=current; V4 native acceptance is pending.",

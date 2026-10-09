@@ -9,11 +9,8 @@ namespace TiaMcpServer.Siemens
     {
         internal static string[] Parse(string path)
         {
-            var parts = (path ?? "").Replace('\\','/').Split('/');
-            if (parts.Length > 0 && (string.Equals(parts[0], "Program blocks", StringComparison.OrdinalIgnoreCase) || parts[0] == "程序块")) parts=parts.Skip(1).ToArray();
-            if (parts.Length == 0 || parts.Any(p => string.IsNullOrWhiteSpace(p) || p=="." || p==".."))
-                throw new PortalException(PortalErrorCode.InvalidParams, "Specify an exact non-root user group path; empty and relative segments are refused.");
-            return parts;
+            try { return TiaMcp.Adapters.Contracts.PlcOrganisationPaths.Parse(path, false); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error) { throw new PortalException(PortalErrorCode.InvalidParams, error.Message); }
         }
         internal static JsonObject Execute<T>(string path, bool dryRun, Func<string[],T?> find,
             Func<T,int> blockCount, Func<T,int> childCount, Func<string> state,

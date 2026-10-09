@@ -98,6 +98,8 @@ internal static class PlcBlockServicesShapeChecks
             && ReferenceEquals(serviceType.GetField("_session", all)!.GetValue(serviceInstance), session)
             && ReferenceEquals(toolType.GetField("_blocks", all)!.GetValue(toolInstance), serviceInstance),
             "PLC block tools and service share the kernel session");
+        var ported = EngineSurface.PortedTools(server, "21");
+        var portService = server.GetType("TiaMcpServer.Siemens.Services.PlcOrganisationPortService", true)!;
         foreach (var name in new[] { "GetPlcBlockInfo", "ListPlcBlocks", "GetPlcBlockHierarchy", "ExportPlcBlock", "ImportPlcBlock",
             "ImportPlcBlocksFromDirectory", "ImportPlcProgramFromDirectory", "CompilePlcDiagnostics", "RepairAndReimportPlcBlock", "ExportPlcBlocks",
             "DescribePlcBlockLogic", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "SetPlcProgram", "GetPlcBlockFingerprints",
@@ -106,14 +108,22 @@ internal static class PlcBlockServicesShapeChecks
             "CreatePlcBlockGroup", "MovePlcBlockToGroup", "ManagePlcUserGroup" })
         {
             var method = tools.Tool(name);
+            if (ported.Contains(name)) {
+                check(!method.IsStatic && method.DeclaringType!.GetConstructors().Single().GetParameters().Single().ParameterType == portService,
+                    name + " belongs to the shared Foundation tool and typed RPC service");
+                continue;
+            }
             check(method.DeclaringType == toolType && !method.IsStatic && ReferenceEquals(tools.Target(method), toolInstance),
                 name + " belongs to the PLC block tool singleton");
         }
         foreach (var name in new[] { "ExportBlocks", "ExportBlocksToTemp", "DeleteEmptyPlcBlockGroup", "DeletePlcBlock", "DeletePlcTagTable",
             "DeletePlcType", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "UpdatePlcProgram", "ReadPlcBlockFingerprints",
             "ImportPlcBlockVerified", "CreatePlcTypeGroup", "ManagePlcUserGroup", "EnsurePlcBlockGroup", "MoveBlockToGroup" })
-            check(tools.Method(name).DeclaringType == serviceType && ReferenceEquals(tools.Target(tools.Method(name)), serviceInstance),
-                name + " native operation belongs to the PLC block service");
+        {
+            var owner = new[] { "ExportBlocks", "ExportBlocksToTemp", "ManagePlcDataBlockSnapshot", "ReadPlcBlockFingerprints" }.Contains(name) ? serviceType : portService;
+            check(tools.Method(name).DeclaringType == owner && ReferenceEquals(tools.Target(tools.Method(name)), engineProvider.GetService(owner)),
+                name + " belongs to its registered kernel service or typed Foundation port");
+        }
         var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         foreach (var name in new[] { "GetBlocks", "ExportBlock", "ImportBlocksFromDirectory", "ImportPlcProgramFromDirectory",
             "CompileAndDiagnosePlc", "ExportBlocksToTemp" })
@@ -122,7 +132,7 @@ internal static class PlcBlockServicesShapeChecks
             check(method == null && ReferenceEquals(tools.Target(toolType.GetMethod(name, all)!), toolInstance),
                 name + " uses the PLC block tool singleton without a CLI forwarder");
         }
-        check(tools.Field("_blockGroupDeleteGate", all).DeclaringType == serviceType,
-            "Block group deletion gate belongs to the service");
+        check(tools.Adapter!.GetType("TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter", true)!.GetField("_blockGroupDeleteGate", all) != null,
+            "Block group deletion gate belongs to the native adapter");
     }
 }

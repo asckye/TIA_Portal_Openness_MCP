@@ -9,5 +9,7 @@
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.Base.dll"><ApiName>Siemens.Engineering.Base</ApiName><ExpectedIdentity>Siemens.Engineering.Base, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll"><ApiName>Siemens.Engineering.Step7</ApiName><ExpectedIdentity>Siemens.Engineering.Step7, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.Safety.dll"><ApiName>Siemens.Engineering.Safety</ApiName><ExpectedIdentity>Siemens.Engineering.Safety, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.WinCC.dll"><ApiName>Siemens.Engineering.WinCC</ApiName><ExpectedIdentity>Siemens.Engineering.WinCC, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.WinCCUnified.dll"><ApiName>Siemens.Engineering.WinCCUnified</ApiName><ExpectedIdentity>Siemens.Engineering.WinCCUnified, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
   </ItemGroup>
 </Project>

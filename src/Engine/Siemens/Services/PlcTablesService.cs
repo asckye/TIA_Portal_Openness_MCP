@@ -53,51 +53,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public PlcTablesService(IEngineeringSession session) => _session = session;
 
-        public ResponseImportBatch ImportPlcTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
-        {
-            if (!_session.IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
-                TiaMcpServer.Siemens.SoftwareContainerLookup.PathOf(_session.GetPlcSoftware(softwarePath)), true);
 
-            var imported = new List<string>();
-            var failed = new List<ImportFailure>();
-
-            try
-            {
-                if (_session.IsProjectNull())
-                {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
-                }
-
-                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
-                {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
-                    return new ResponseImportBatch { Imported = imported, Failed = failed };
-                }
-
-                Regex? regex = null;
-                if (!string.IsNullOrWhiteSpace(regexName))
-                {
-                    regex = new Regex(regexName, RegexOptions.IgnoreCase);
-                }
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
-                {
-                    var name = Path.GetFileNameWithoutExtension(file);
-                    if (regex != null && !regex.IsMatch(name)) continue;
-
-                    try { _session.ImportPlcTagTable(softwarePath, folderPath, file); imported.Add(name); }
-                    catch (PortalException pex) { failed.Add(new ImportFailure { Path = file, Error = pex.Message }); }
-                }
-
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
-            }
-            catch (Exception ex)
-            {
-                failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
-                return new ResponseImportBatch { Imported = imported, Failed = failed };
-            }
-        }
 
         public List<string>? GetPlcWatchTables(string softwarePath)
         {
@@ -950,24 +906,8 @@ namespace TiaMcpServer.Siemens.Services
             });
 
         // ---- tag table constants ----------------------------------------------------------------------------------------------------------
-        private static JsonObject ConstantRow(PlcConstant constant, string kind) => new JsonObject { ["name"] = constant.Name, ["dataTypeName"] = constant.DataTypeName, ["value"] = constant.Value, ["kind"] = kind, ["constantClass"] = constant.GetType().Name };
-        public ResponseMessage ReadPlcTagTableConstants(string softwarePath, string tablePath, string kind = "all", string unitName = "", string unitKind = "unit", int offset = 0, int limit = 200)
-            => _session.RunHmiStepTool("GetPlcTagTableConstants", meta => {
-                PlcTableRules.ValidateConstantRequest(tablePath, kind, unitName, unitKind, offset, limit);
-                var plc = _session.ExactPlcForEngineering(softwarePath, false);
-                var unit = _session.OptionalUnit(plc, unitName, unitKind);
-                PlcTagTableSystemGroup root = unit == null ? plc.TagTableGroup : unit.TagTableGroup;
-                var table = (PlcTagTable)_session.ExactObjectUnder(root, tablePath, "TagTables", "PLC tag table");
-                PlcUserConstantComposition userConstants = table.UserConstants; PlcSystemConstantComposition systemConstants = table.SystemConstants;
-                var rows = new List<JsonNode>();
-                if (kind != "system") rows.AddRange(EngineeringGroupOperations.Items(userConstants).Cast<PlcUserConstant>().Select(c => (JsonNode)ConstantRow(c, "user")));
-                if (kind != "user") rows.AddRange(EngineeringGroupOperations.Items(systemConstants).Cast<PlcSystemConstant>().Select(c => (JsonNode)ConstantRow(c, "system")));
-                meta["table"] = new JsonObject { ["name"] = table.Name, ["unit"] = unit?.Name, ["isDefault"] = table.IsDefault, ["userConstantCount"] = userConstants.Count, ["systemConstantCount"] = systemConstants.Count };
-                Page(rows.ToArray(), offset, limit, meta);
-                meta["apiCallSuccess"] = true;
-                meta["scope"] = "PlcConstant Name / DataTypeName / Value of the table's UserConstants and SystemConstants; user constants are edited with ManagePlcTag kind=constant. No modification.";
-                return "Tag table constants read; no modification.";
-            });
+
+
 
 
         // ---- watch / force table entries ------------------------------------------------------------------------------------------------------

@@ -224,8 +224,8 @@ namespace TiaMcp.Generation.Planning.Tests
         }
 
         [Theory]
-        [InlineData("17", false)]
-        [InlineData("19", false)]
+        [InlineData("17", true)]
+        [InlineData("19", true)]
         [InlineData("20", true)]
         [InlineData("21", true)]
         public void AvailabilityUsesExplicitReleaseRoster(string release, bool present)

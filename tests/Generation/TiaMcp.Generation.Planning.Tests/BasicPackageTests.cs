@@ -55,7 +55,7 @@ namespace TiaMcp.Generation.Planning.Tests
             Assert.Equal(21, Assert.Single(result.Expected.Screens).Widgets.Count);
             Assert.Contains(result.Plan.Unavailable, u => u.Phase == "alarms");
             Assert.Contains(result.Plan.Unavailable, u => u.Phase == "hmi");
-            Assert.Equal(release != "20" && release != "21", result.Plan.Unavailable.Any(u => u.Phase == "plcStructure"));
+            Assert.DoesNotContain(result.Plan.Unavailable, u => u.Phase == "plcStructure");
             Assert.Contains(result.Plan.Steps, s => s.Tool == "GenerateBlocksFromExternalSource" && s.Expect.Contains == "FC_U01_Calls");
             Assert.All(result.Plan.Steps, s => Assert.Equal("NOT RUN", s.Availability.Native));
             var call = result.Artifacts.Single(a => a.Content.StartsWith("FUNCTION \"FC_U01_Calls\"", StringComparison.Ordinal)).Content;

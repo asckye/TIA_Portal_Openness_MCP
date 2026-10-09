@@ -35,8 +35,9 @@ internal static class EngineeringAuditRuntimeChecks
         }
         finally { Environment.SetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES", previous); }
 
-        var api = portalType.Method("BuildCrossReferenceEntry", BindingFlags.NonPublic | BindingFlags.Static)!.GetParameters()[0].ParameterType.Assembly;
-        var read = server.GetType("TiaMcpServer.Siemens.CrossReferenceTreeReader", true)!.GetMethod("Read", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(object), typeof(object), typeof(object), typeof(object));
+        var crossReferences = portalType.Adapter.GetType("TiaMcp.Adapters.Native.Plc.PlcCrossReferences", true)!;
+        var api = crossReferences.GetMethod("BuildPlcCrossReference", BindingFlags.NonPublic | BindingFlags.Static)!.GetParameters()[0].ParameterType.Assembly;
+        var read = portalType.Adapter.GetType("TiaMcpServer.Siemens.CrossReferenceTreeReader", true)!.GetMethod("Read", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(object), typeof(object), typeof(object), typeof(object));
         Func<object, System.Collections.Generic.IEnumerable<object>> noRows = _ => Array.Empty<object>();
         Func<object, object, object, object> entry = (s, r, l) => new object();
         var empty = (IList)read.Invoke(null, new object[] { Array.Empty<object>(), noRows, noRows, noRows, entry })!;

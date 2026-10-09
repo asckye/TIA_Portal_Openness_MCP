@@ -172,7 +172,7 @@ internal static class HardwareNetworkShapeChecks
             string registered = V4Name(name);
             var tool = surface.Tool(registered);
             var tools = tool.DeclaringType!;
-            var service = domain == "HardwareNetwork" && name != "ManageDeviceUsers" ? server.GetType("TiaMcpServer.Siemens.Services.HardwareNetworkPortService", true)!
+            var service = name == "CompileDevice" ? server.GetType("TiaMcpServer.Siemens.Services.PlcOrganisationPortService", true)! : domain == "HardwareNetwork" && name != "ManageDeviceUsers" ? server.GetType("TiaMcpServer.Siemens.Services.HardwareNetworkPortService", true)!
                 : domain == "HardwareServices" && new[] { "ReadCommunicationConnections", "ManageCommunicationConnection", "ExchangeSystemDiagnosticsSettings", "ReadHardwareFeatures", "ManageDeviceServiceObjects", "ManageHardwareUtilities" }.Contains(name) ? server.GetType("TiaMcpServer.Siemens.Services.HardwareServicesPortService", true)!
                 : domain == "Devices" ? server.GetType("TiaMcpServer.Siemens.Services.HardwareDevicesService", true)! : originalService;
         foreach (var type in new[] { service, tools })

@@ -248,7 +248,7 @@ namespace TiaMcp.Engine.Tests
                 typeof(AddressesTools), typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools),
                 typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareAmlTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
                 typeof(GitWorkflowTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(OfflineAnalysisTools), typeof(OfflineSuiteTools),
-                typeof(PlcBuildTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(TemplateTools),
+                typeof(PlcBuildTools), typeof(PlcOrganisationTools), typeof(PlcReadModifyTools), typeof(PlcCompilePortTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(TemplateTools),
                 typeof(V21EcosystemTools), typeof(XmlBuilderTools), typeof(AlarmsTools), typeof(OpcUaTools),
                 typeof(SoftwareUnitDeepTools), typeof(SoftwareUnitManagementTools), typeof(TechnologyObjectsTools),
                 typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools),

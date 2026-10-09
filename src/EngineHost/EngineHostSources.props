@@ -1,6 +1,16 @@
 <Project>
   <ItemGroup>
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcOrganisationTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSoftwareResponses.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionContract.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcCompilePortTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/PlcProgramImport.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcBuildTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcArtifactPortSession.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcReadModifyTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSoftwarePortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcOrganisationPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DeclaredToolMetadata.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PortedToolDeclarations.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressingService.cs" />

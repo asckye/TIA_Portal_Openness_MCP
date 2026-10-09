@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../PlcWorker/FoundationWorkerDispatcher.cs" Link="Worker/FoundationWorkerDispatcher.cs" />
+    <Compile Include="../PlcWorker/PlcVerifiedImportBridge.cs" Link="Worker/PlcVerifiedImportBridge.cs" />
     <Compile Include="../PlcWorker/WorkerJson.cs" Link="Worker/WorkerJson.cs" />
     <Compile Include="../PlcWorker/WorkerOperations.cs" Link="Worker/WorkerOperations.cs" />
     <Compile Include="../PlcWorker/WorkerOperationModule.cs" Link="Worker/WorkerOperationModule.cs" />
@@ -74,6 +75,15 @@
   </ItemGroup>
   <Import Project="../EngineHost/EngineHostSources.props" />
   <ItemGroup>
+    <Compile Include="../Shared/PlcOrganisationTools.cs" Link="Shared/PlcOrganisationTools.cs" />
+    <Compile Include="../Shared/PlcSoftwareResponses.cs" Link="Shared/PlcSoftwareResponses.cs" />
+    <Compile Include="../Shared/HmiInspectionContract.cs" Link="Shared/HmiInspectionContract.cs" />
+    <Compile Include="../Shared/PlcCompilePortTools.cs" Link="Shared/PlcCompilePortTools.cs" />
+    <Compile Include="../Shared/PlcBuildTools.cs" Link="Shared/PlcBuildTools.cs" />
+    <Compile Include="../Shared/PlcArtifactPortSession.cs" Link="Shared/PlcArtifactPortSession.cs" />
+    <Compile Include="../Shared/PlcReadModifyTools.cs" Link="Shared/PlcReadModifyTools.cs" />
+    <Compile Include="../Shared/PlcSoftwarePortService.cs" Link="Shared/PlcSoftwarePortService.cs" />
+    <Compile Include="../Shared/PlcOrganisationPortService.cs" Link="Shared/PlcOrganisationPortService.cs" />
     <Compile Include="../Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
     <Compile Include="../Shared/HardwareNetworkTools.cs" Link="Shared/HardwareNetworkTools.cs" />
     <Compile Include="../Shared/HardwareNetworkPortService.cs" Link="Shared/HardwareNetworkPortService.cs" />

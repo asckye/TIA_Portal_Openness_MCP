@@ -205,14 +205,24 @@ internal static class FoundationPassiveDiagnostics
     {
         var release = TiaVersionCatalog.Get(releaseKey);
         if (tools.Count > MaxTools) throw new InvalidOperationException();
-        sourceOperations ??= WorkerOperations.Names.Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
+        sourceOperations ??= WorkerOperations.Names.Concat(new[] { "plc-analysis.ExportBlockDocument" }).Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.SelectMany(
             family => WorkerOperations.FamilyNames(family.Name).Select(operation => family.OperationPrefix + "." + operation)))
             .ToHashSet(StringComparer.Ordinal);
+        var families = PortedToolContract.Families(releaseKey).ToArray();
+        if (releaseKey is "20" or "21")
+        {
+            // Keep the existing bounded passive-diagnostics projection byte-compatible.
+            // The complete public catalog still registers these newly ported tools.
+            var movedNames = families.Where(family => family.Name is "F08" or "F09" or "F11" or "F17")
+                .SelectMany(family => family.Tools).ToHashSet(StringComparer.Ordinal);
+            tools = tools.Where(tool => !movedNames.Contains(tool.ProtocolTool.Name)).ToArray();
+            families = families.Where(family => family.Name is not ("F08" or "F09" or "F11" or "F17")).ToArray();
+        }
         var names = tools.Select(t => t.ProtocolTool.Name).ToArray();
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
         bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
-            && PortedToolContract.Families(releaseKey).SelectMany(family => family.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, name)))
+            && families.SelectMany(family => family.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, name)))
                 .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
         var roster = new JsonArray();
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal))

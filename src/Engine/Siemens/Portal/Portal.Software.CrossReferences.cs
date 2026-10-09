@@ -52,45 +52,21 @@ namespace TiaMcpServer.Siemens
         public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried)
             => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried, "", "unit");
 
-        public List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter,
-            out string? reason, out bool queried, string unitName, string unitKind)
+        public List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind)
         {
-            queried = false;
-            reason = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable));
-            if (reason != null) return null;
-            if (string.IsNullOrWhiteSpace(filter)) filter = "AllObjects";
-            if (!Enum.TryParse<global::Siemens.Engineering.CrossReference.CrossReferenceFilter>(filter, true, out var filterValue)
-                || !Enum.IsDefined(typeof(global::Siemens.Engineering.CrossReference.CrossReferenceFilter), filterValue))
-            { reason = "Invalid CrossReferenceFilter name: " + filter; return null; }
-            if (IsProjectNull()) { reason = "No project is open."; return null; }
-            try
-            {
-                reason = CrossReferenceRefusal(softwarePath);
-                if (reason != null) return null;
-                var target = ExactCrossReferenceTarget(softwarePath, objectPath, objectKind, unitName, unitKind);
-                var service = InvocationJournal.Native("CrossReference.GetService", () => target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>());
-                if (service == null) { reason = "CrossReferenceService unavailable on this exact " + objectKind + ". No query was made."; return null; }
-                queried = true;
-                var result = InvocationJournal.Native("CrossReference.GetCrossReferences", () => service.GetCrossReferences(filterValue));
-                return InvocationJournal.Native("CrossReference.readCompleteResult", () => TryFlattenCrossReferenceResult(result, objectPath));
-            }
-            catch (Exception ex) when (RecoverableAuditError(ex))
-            { reason = (queried ? "failed: result is incomplete; partial rows discarded. " : "notQueried: ") + ex.GetBaseException().Message; return null; }
+            var rows = new TiaMcp.Adapters.Native.Plc.PlcCrossReferences(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this))
+                .GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried, unitName, unitKind);
+            return rows == null ? null : System.Text.Json.JsonSerializer.Deserialize<List<CrossReferenceEntry>>(System.Text.Json.JsonSerializer.Serialize(rows));
         }
 
+
+
+
         public string? CrossReferenceRefusal(string softwarePath)
-        {
-            var policy = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable));
-            if (policy != null) return policy;
-            try
-            {
-                var rows = ReadPlcConsistency(softwarePath);
-                if (rows.Count == 0) return "refused: no block/type consistency evidence; no native cross-reference query was made.";
-                return CrossReferenceGuardLogic.Refusal(rows, softwarePath);
-            }
-            catch (Exception ex) when (RecoverableAuditError(ex))
-            { return "refused: root/unit consistency read incomplete: " + ex.GetBaseException().Message; }
-        }
+            => new TiaMcp.Adapters.Native.Plc.PlcCrossReferences(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).CrossReferenceRefusal(softwarePath);
+
+        private static List<CrossReferenceEntry> TryFlattenCrossReferenceResult(object result, string path)
+            => System.Text.Json.JsonSerializer.Deserialize<List<CrossReferenceEntry>>(System.Text.Json.JsonSerializer.Serialize(TiaMcp.Adapters.Native.Plc.PlcCrossReferences.TryFlattenCrossReferenceResult(result, path)))!;
 
         private static object? TryGetServiceByTypeSuffix(object target, string serviceTypeNameSuffix)
         {
@@ -119,29 +95,9 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        private static List<CrossReferenceEntry> TryFlattenCrossReferenceResult(object crossReferenceResult, string sourcePathFallback)
-        {
-            if (!(crossReferenceResult is global::Siemens.Engineering.CrossReference.CrossReferenceResult result))
-                throw new InvalidOperationException("Native query returned no supported result; completeness unknown.");
-            return CrossReferenceTreeReader.Read<global::Siemens.Engineering.CrossReference.SourceObject,
-                global::Siemens.Engineering.CrossReference.ReferenceObject, global::Siemens.Engineering.CrossReference.Location, CrossReferenceEntry>(
-                EngineeringGroupOperations.Items(result.Sources).Cast<global::Siemens.Engineering.CrossReference.SourceObject>(),
-                source => EngineeringGroupOperations.Items(source.References).Cast<global::Siemens.Engineering.CrossReference.ReferenceObject>(),
-                reference => EngineeringGroupOperations.Items(reference.Locations).Cast<global::Siemens.Engineering.CrossReference.Location>(),
-                source => EngineeringGroupOperations.Items(source.Children).Cast<global::Siemens.Engineering.CrossReference.SourceObject>(),
-                (source, reference, location) => BuildCrossReferenceEntry(source, reference, location, sourcePathFallback));
-        }
 
-        private static CrossReferenceEntry BuildCrossReferenceEntry(global::Siemens.Engineering.CrossReference.SourceObject source,
-            global::Siemens.Engineering.CrossReference.ReferenceObject reference, global::Siemens.Engineering.CrossReference.Location? location, string fallback)
-            => new CrossReferenceEntry {
-                SourceName = source.Name, SourcePath = source.Path ?? fallback, SourceTypeName = source.TypeName,
-                SourceAddress = source.Address, SourceDevice = source.Device,
-                ReferenceName = reference.Name, ReferencePath = reference.Path, ReferenceTypeName = reference.TypeName,
-                ReferenceAddress = reference.Address, ReferenceDevice = reference.Device,
-                LocationName = location?.Name, ReferenceLocation = location?.ReferenceLocation,
-                ReferenceType = location?.ReferenceType.ToString(), Access = location?.Access.ToString()
-            }; // UnderlyingObject is deliberately not dereferenced just to obtain a display label.
+
+ // UnderlyingObject is deliberately not dereferenced just to obtain a display label.
 
         #endregion
     }

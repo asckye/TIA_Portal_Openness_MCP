@@ -25,8 +25,8 @@ public sealed class FoundationV4ContractsTests
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
 
     [Theory]
-    [InlineData("14sp1", 162)] [InlineData("15.1", 163)] [InlineData("16", 165)]
-    [InlineData("17", 165)] [InlineData("18", 165)] [InlineData("19", 175)]
+    [InlineData("14sp1", 188)] [InlineData("15.1", 189)] [InlineData("16", 191)]
+    [InlineData("17", 191)] [InlineData("18", 191)] [InlineData("19", 201)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
@@ -124,7 +124,9 @@ public sealed class FoundationV4ContractsTests
             var args = JsonSerializer.SerializeToElement(usage["data"]!["example"]!["request"]!["params"]!["arguments"]);
             var validation = new InputContract<JsonElement>(new InputSchema(tool.ProtocolTool.InputSchema), new InputBudget()).Read(args, "arguments");
             Assert.True(validation.IsValid, tool.ProtocolTool.Name + ": " + V4Json.Serialize(validation.Error));
-            if (new[] { "BuildPlcUdt", "BuildPlcGlobalDb", "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock" }.Contains(tool.ProtocolTool.Name))
+            if (tool.ProtocolTool.Name == "BuildAndImportPlcArtifact")
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["error"]?["code"]);
+            else if (new[] { "BuildPlcUdt", "BuildPlcGlobalDb", "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock" }.Contains(tool.ProtocolTool.Name))
                 Assert.True((bool)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["ok"]!, tool.ProtocolTool.Name);
         }
     }

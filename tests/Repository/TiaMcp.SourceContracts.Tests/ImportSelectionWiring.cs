@@ -20,13 +20,13 @@ public sealed class ImportSelectionWiring
     }
     private static readonly string MCP = Sources.TypeText("PlcBlocksTools");
     private static readonly string SHARED = Sources.Member("BuildPlcProgramImportResponse", owner: "PlcProgramImport");
-    private static readonly string BATCH = Sources.Member("ImportBlocksFromDirectory", signature: "public ResponseImportBatch", owner: "Portal", tool: false);
+    private static readonly string BATCH = new EngineSources(ROOT, nativeDirectory: "src/Adapters/Native/Plc").Member("ImportBlocksFromDirectory", owner: "PlcOrganisationAdapter", tool: false);
     private static readonly string PROGRAM = Sources.Member("ImportPlcProgramFromDirectory", owner: "PlcBlocksTools", tool: false);
 
     [Fact]
     public void NativeOverwriteFlag()
     {
-        Assert.Contains("group.Blocks.Import(fi, overwrite ? ImportOptions.Override : ImportOptions.None)", BATCH, StringComparison.Ordinal);
+        Assert.Contains("PlcBlockPrimitives.Import(group.Blocks, fi, overwrite ? ImportOptions.Override : ImportOptions.None)", BATCH, StringComparison.Ordinal);
         Assert.DoesNotContain("group.Blocks.Find", BATCH, StringComparison.Ordinal);
         Assert.DoesNotContain("false=Rename", MCP, StringComparison.Ordinal);
         Assert.Contains("bool overwrite = true", BATCH, StringComparison.Ordinal);

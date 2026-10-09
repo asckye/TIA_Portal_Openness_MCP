@@ -32,7 +32,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }, outputReleaseKey);
         }
 
-        public static JsonObject BuildTagTable(string json)
+        public static JsonObject BuildTagTable(string json) => BuildTagTableForRelease(json, "21");
+
+        public static JsonObject BuildTagTableForRelease(string json, string outputReleaseKey)
         {
             var root = ParseObject(json, "$");
             var tableName = ReadString(root, "$.tableName", "tableName", "name");
@@ -47,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 })
                 .ToArray();
 
-            var xml = PlcTagTableXmlBuilder.BuildXml(tableName, tags);
+            var xml = PlcTagTableXmlBuilder.BuildXmlForRelease(tableName, tags, outputReleaseKey);
             return BuildResult("plc-build-tag-table-xml", xml, new JsonObject
             {
                 ["tableName"] = tableName,

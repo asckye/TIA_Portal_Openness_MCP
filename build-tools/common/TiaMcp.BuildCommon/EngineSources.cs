@@ -12,7 +12,7 @@ public sealed class EngineSources
     private readonly Dictionary<string, Parsed> parsed = [];
     public IReadOnlyDictionary<string, string> Sources => sources;
 
-    public EngineSources(string? root = null)
+    public EngineSources(string? root = null, string? nativeDirectory = null)
     {
         directory = Path.Combine(root ?? Repository.FindRoot(), "src", "Engine");
         foreach (var path in Directory.Exists(directory) ? Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories).Order(Comparer<string>.Create(ComparePaths)) : Enumerable.Empty<string>())
@@ -29,6 +29,11 @@ public sealed class EngineSources
             var shared = Path.Combine(root ?? Repository.FindRoot(), folder);
             if (Directory.Exists(shared))
                 foreach (var path in Directory.EnumerateFiles(shared, "*.cs").Order(Comparer<string>.Create(ComparePaths))) sources[path] = Repository.ReadSource(path);
+        }
+        if (nativeDirectory != null)
+        {
+            var native = Path.Combine(root ?? Repository.FindRoot(), nativeDirectory);
+            foreach (var path in Directory.EnumerateFiles(native, "*.cs", SearchOption.AllDirectories)) sources[path] = Repository.ReadSource(path);
         }
         if (sources.Count == 0) throw new ArgumentException("No engine sources in " + directory);
     }

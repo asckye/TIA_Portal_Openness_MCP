@@ -61,22 +61,7 @@ namespace TiaMcpServer.Siemens
                 return rows;
             });
         }
-        private IEngineeringServiceProvider ExactCrossReferenceTarget(string softwarePath, string objectPath, string kind, string unitName, string unitKind)
-        {
-            ValidateUnitKind(unitKind);
-            var plc = GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "PLC not found: " + softwarePath + AvailablePlcPathsSuffix());
-            var unit = OptionalUnit(plc, unitName, unitKind);
-            if (kind.Equals("Block", StringComparison.OrdinalIgnoreCase)) return (PlcBlock)ExactObjectUnder(BlockRootOf(plc, unit), objectPath, "Blocks", "block");
-            if (kind.Equals("Type", StringComparison.OrdinalIgnoreCase)) return (PlcType)ExactObjectUnder(TypeRootOf(plc, unit), objectPath, "Types", "type");
-            if (!kind.Equals("Tag", StringComparison.OrdinalIgnoreCase) && !kind.Equals("SystemConstant", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("objectKind must be Block, Type, Tag or SystemConstant.");
-            var parts = EngineeringGroupOperations.Parts(objectPath);
-            if (parts.Length < 2) throw new ArgumentException("Tag/SystemConstant path must include the table: [group/]table/name.");
-            object root = unit == null ? plc.TagTableGroup : unit.TagTableGroup;
-            var table = (PlcTagTable)ExactObjectUnder(root, string.Join("/", parts.Take(parts.Length - 1)), "TagTables", "tag table");
-            object collection = kind.Equals("Tag", StringComparison.OrdinalIgnoreCase) ? table.Tags : (object)table.SystemConstants;
-            return (IEngineeringServiceProvider)(EngineeringGroupOperations.Find(collection, parts.Last()) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact tag/constant not found: " + objectPath));
-        }
+
 
     }
 }

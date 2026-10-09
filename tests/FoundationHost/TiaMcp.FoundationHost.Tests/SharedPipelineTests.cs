@@ -24,11 +24,11 @@ public sealed class SharedPipelineTests
         public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var tool) ? tool : null;
         internal Catalog()
         {
-            var tool = new Tool { Name = "CompileDevice", Description = "[L1][Hardware][WRITE] Fixture engine-only operation.",
+            var tool = new Tool { Name = "GetPlcBlockFingerprints", Description = "[L1][Hardware][WRITE] Fixture engine-only operation.",
                 InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = new JsonObject(), ["additionalProperties"] = false }),
                 OutputSchema = FoundationV4Result.Schema };
             All = new Dictionary<string, Descriptor> { [tool.Name] = new(tool.Name, tool.Description, tool,
-                new("L1", "Hardware", "WRITE", false, true), "CompileDevice()",
+                new("L1", "Hardware", "WRITE", false, true), "GetPlcBlockFingerprints()",
                 Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "worker") };
         }
     }
@@ -102,7 +102,7 @@ public sealed class SharedPipelineTests
     public async Task Engine_unknown_is_the_shared_Foundation_lock()
     {
         using var scope = new Scope(); scope.Worker.EngineUnknown = true;
-        Host.ToolInvoker.Invoke("CompileDevice", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
+        Host.ToolInvoker.Invoke("GetPlcBlockFingerprints", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
         var result = await scope.Foundation("GetSessionState").InvokeAsync(Scope.Request("GetSessionState", new()));
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal(0, scope.Worker.FoundationCalls); Assert.Equal(1, scope.Worker.EngineCalls);
@@ -116,7 +116,7 @@ public sealed class SharedPipelineTests
             ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = "C:/fixture.ap21" };
         var shared = await scope.Foundation("CreatePlcTag").InvokeAsync(Scope.Request("CreatePlcTag", arguments));
         Assert.Equal("unknown", (string?)shared.StructuredContent?["meta"]?["outcome"]);
-        var engine = Host.CallTool("CompileDevice", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
+        var engine = Host.CallTool("GetPlcBlockFingerprints", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
         Assert.Equal("SESSION_RESET_REQUIRED", (string?)engine.StructuredContent?["error"]?["code"]);
         Assert.Equal(0, scope.Worker.EngineCalls);
     }
@@ -127,7 +127,7 @@ public sealed class SharedPipelineTests
         using var scope = new Scope(); const string id = "0123456789abcdef0123456789abcdef";
         using var root = AuditInvocation.Begin(true, "fixture", "21", "root", id);
         var shared = await scope.Foundation("GetSessionState").InvokeAsync(Scope.Request("GetSessionState", new()));
-        Host.ToolInvoker.Invoke("CompileDevice", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
+        Host.ToolInvoker.Invoke("GetPlcBlockFingerprints", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
         Assert.Equal(id, (string?)shared.StructuredContent?["meta"]?["requestId"]);
         Assert.Equal(id, scope.Worker.FoundationId); Assert.Equal(id, scope.Worker.EngineId);
     }
@@ -139,7 +139,7 @@ public sealed class SharedPipelineTests
         using var foundationJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
         using var engineJournal = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
         var shared = await scope.Foundation("GetSessionState").InvokeAsync(Scope.Request("GetSessionState", new()));
-        Host.ToolInvoker.Invoke("CompileDevice", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
+        Host.ToolInvoker.Invoke("GetPlcBlockFingerprints", new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
         Assert.Equal(id, (string?)shared.StructuredContent?["meta"]?["requestId"]);
         Assert.Equal(id, scope.Worker.FoundationId); Assert.Equal(id, scope.Worker.EngineId);
     }

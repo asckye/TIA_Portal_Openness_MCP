@@ -43,9 +43,11 @@ internal static class AdapterSourceClosureTests
         foreach(var type in typeof(TiaMcp.Adapters.PlcObjectInfo).Assembly.GetExportedTypes().Where(t=>t.Namespace=="TiaMcp.Adapters"))
             check(!code.Values.Any(text=>Regex.IsMatch(text,@"\b(?:class|enum)\s+"+Regex.Escape(type.Name)+@"\b")),"Moved DTO is not recompiled in adapters: "+type.Name);
         HashSet<string> Methods(IEnumerable<string> texts)=>Regex.Matches(string.Join("\n",texts),@"public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(").Select(m=>m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+        // Native helper methods with the same names are not worker dispatch entries.
         // Facade forwarding must not hide an omitted engine implementation.
         var engineCode=code.Where(x=>!x.Key.EndsWith("/OpennessAdapter.cs",StringComparison.Ordinal)
-            && !x.Key.Contains("/Native/Studio/",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
+            && !x.Key.Contains("/Native/Studio/",StringComparison.Ordinal)
+            && x.Value.Contains("class PlcFoundationEngine",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
         var all=Methods(engineCode.Values);
         foreach(var op in WorkerOperations.Names) check(all.Contains(op),"Worker operation exists in actual adapter source inventory: "+op);
         // Simulated source omissions must be caught for every operation-bearing module.

@@ -47,7 +47,8 @@ def unwrap_usage(reply):
     return body
 
 
-def check_usage(call, tools, release, exhaustive=True, verify_documents=False, registered_only=False):
+def check_usage(call, tools, release, exhaustive=True, verify_documents=False, registered_only=False,
+                unready_engine_refusal=None):
     """call returns the decoded MCP text envelope. Never call the sampled tool."""
     assert any(t['name'] == 'GetToolUsage' for t in tools), 'Usage tool is absent from this catalog'
     first = unwrap_usage(call('GetToolUsage', {'limit': 1}))
@@ -190,6 +191,11 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
             offline_calls.append(name)
         if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
             built = call(name, args)
+            if unready_engine_refusal is not None and built.get('ok') is False:
+                # This engine-owned pure builder remains behind the production
+                # readiness gate. Preserve and validate its actual no-TIA reply.
+                unready_engine_refusal(built, name)
+                continue
             recipe = built['data']['evidence']
             assert built['schemaVersion'] == 4 and built['ok'] and built['error'] is None, built
             assert recipe['ok'] and recipe['event'] == 'Down' and 'SetBitInTag' in recipe['script'] and 'Ready' in recipe['script'], built

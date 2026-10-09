@@ -2,6 +2,7 @@
 #if TIA_ENGINE_LOCAL_PRIMITIVES
 #define PLC_DOCUMENT_EXPORT
 #define PLC_SOURCE_RESULTS
+#define PLC_SOURCE_TARGET
 namespace TiaMcpServer.Siemens.LocalDocuments
 #else
 namespace TiaMcp.Adapters.Native.Plc
@@ -16,8 +17,8 @@ namespace TiaMcp.Adapters.Native.Plc
     using global::Siemens.Engineering.SW.Blocks;
     using global::Siemens.Engineering.SW.ExternalSources;
     using global::Siemens.Engineering.SW.Types;
-#if PLC_DOCUMENT_EXPORT
     using global::Siemens.Engineering.Library.MasterCopies;
+#if PLC_DOCUMENT_EXPORT
     using global::Siemens.Engineering.SW.Units;
 #endif
 
@@ -37,8 +38,8 @@ namespace TiaMcp.Adapters.Native.Plc
         public static Software Software(SoftwareContainer container) => container?.Software;
         public static PlcBlockUserGroupComposition BlockGroups(PlcBlockGroup group) => group.Groups;
         public static PlcBlock FindBlock(this PlcBlockComposition blocks, string name) => blocks.Find(name);
-        public static string Name(PlcBlockUserGroup group) => group?.Name;
-        public static string Name(PlcTypeUserGroup group) => group?.Name;
+
+
         public static int Number(PlcBlock block) => block.Number;
         public static void SetNumber(PlcBlock block, int number) => block.Number = number;
         public static bool AutoNumber(PlcBlock block) => block.AutoNumber;
@@ -46,9 +47,28 @@ namespace TiaMcp.Adapters.Native.Plc
         public static IEngineeringObject Parent(PlcBlock block) => block.Parent;
         public static int Count(PlcBlockComposition blocks) => blocks.Count;
         public static int Count(PlcTypeComposition types) => types.Count;
-        public static object Attribute(IEngineeringObject value, string name) => value.GetAttribute(name);
+
 #endif
 
+        public static PlcExternalSourceUserGroupComposition SourceGroups(PlcExternalSourceGroup group) => group.Groups;
+        public static string Name(PlcExternalSourceGroup group) => group.Name;
+        public static string Name(PlcExternalSourceUserGroup group) => group.Name;
+        public static PlcExternalSourceUserGroup Find(PlcExternalSourceUserGroupComposition groups, string name) => groups.Find(name);
+        public static PlcExternalSourceUserGroup Create(PlcExternalSourceUserGroupComposition groups, string name) => groups.Create(name);
+        public static void Delete(PlcExternalSourceUserGroup group) => group.Delete();
+#if PLC_EXTERNAL_SOURCE_GROUP_RENAME
+        public static void SetName(PlcExternalSourceUserGroup group, string name) => group.Name = name;
+#endif
+
+        public static PlcExternalSource CreateFrom(PlcExternalSourceComposition sources, MasterCopy copy) => sources.CreateFrom(copy);
+#if PLC_SOURCE_TARGET
+        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcBlockUserGroup target, GenerateBlockOption option) => source.GenerateBlocksFromSource(target, option);
+        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcTypeUserGroup target, GenerateBlockOption option) => source.GenerateBlocksFromSource(target, option);
+#endif
+
+        public static object Attribute(IEngineeringObject value, string name) => value.GetAttribute(name);
+        public static string Name(PlcBlockUserGroup group) => group?.Name;
+        public static string Name(PlcTypeUserGroup group) => group?.Name;
         public static PlcExternalSourceSystemGroup ExternalSourceGroup(PlcSoftware software) => software.ExternalSourceGroup;
         public static PlcExternalSourceComposition Sources(PlcExternalSourceGroup group) => group.ExternalSources;
         public static string Name(PlcExternalSource source) => source.Name;
@@ -74,21 +94,22 @@ namespace TiaMcp.Adapters.Native.Plc
         public static DocumentResultMessageComposition Messages(DocumentImportResult result) => result?.Messages;
         public static PlcBlockSystemGroup BlockGroup(PlcUnitBase unit) => unit.BlockGroup;
         public static PlcTypeSystemGroup TypeGroup(PlcUnitBase unit) => unit.TypeGroup;
+        public static global::Siemens.Engineering.SW.Tags.PlcTagTableSystemGroup TagTableGroup(PlcUnitBase unit) => unit.TagTableGroup;
         public static string Name(PlcUnitBase unit) => unit?.Name;
         public static PlcExternalSourceSystemGroup ExternalSourceGroup(PlcUnitBase unit) => unit.ExternalSourceGroup;
-        public static PlcExternalSourceUserGroupComposition SourceGroups(PlcExternalSourceGroup group) => group.Groups;
-        public static string Name(PlcExternalSourceGroup group) => group.Name;
-        public static string Name(PlcExternalSourceUserGroup group) => group.Name;
-        public static PlcExternalSourceUserGroup Find(PlcExternalSourceUserGroupComposition groups, string name) => groups.Find(name);
-        public static PlcExternalSourceUserGroup Create(PlcExternalSourceUserGroupComposition groups, string name) => groups.Create(name);
-        public static void Delete(PlcExternalSourceUserGroup group) => group.Delete();
+
+
+
+
+
+
 #if PLC_EXTERNAL_SOURCE_GROUP_RENAME
-        public static void SetName(PlcExternalSourceUserGroup group, string name) => group.Name = name;
+
 #endif
-        public static PlcExternalSource CreateFrom(PlcExternalSourceComposition sources, MasterCopy copy) => sources.CreateFrom(copy);
+
         public static PlcExternalSource CreateFrom(PlcExternalSourceComposition sources, MasterCopy copy, MasterCopyMode mode) => sources.CreateFrom(copy, mode);
-        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcBlockUserGroup target, GenerateBlockOption option) => source.GenerateBlocksFromSource(target, option);
-        public static IList<IEngineeringObject> Generate(PlcExternalSource source, PlcTypeUserGroup target, GenerateBlockOption option) => source.GenerateBlocksFromSource(target, option);
+
+
         public static PlcBlockComposition Blocks(PlcSystemBlockGroup group) => group.Blocks;
         public static PlcSystemBlockGroupComposition SystemBlockGroups(PlcBlockSystemGroup group) => group.SystemBlockGroups;
         public static PlcSystemBlockGroupComposition SystemBlockGroups(PlcSystemBlockGroup group) => group.Groups;

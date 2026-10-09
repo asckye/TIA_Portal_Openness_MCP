@@ -54,12 +54,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current)
         {
-            if (BehaviorCapabilities.Select(typeof(PlcToolContract).Assembly, McpServer.ReleaseKey, "P6-FALLBACK") == BehaviorPolicy.SafeV4
+            if (BehaviorCapabilities.Select(typeof(PlcToolContract).Assembly, HardwareContract.ReleaseKey, "P6-FALLBACK") == BehaviorPolicy.SafeV4
                 && (tool == "CompilePlcSoftware" || tool == "ExportPlcBlockDocuments" || tool == "ImportPlcBlockDocuments"))
                 for (Exception? error = exception; error != null; error = error.InnerException)
                     if (error is TiaMcp.Adapters.Contracts.Candidates.CandidateObservationException observed)
                     {
-                        var envelope = FallbackSession.Result(McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), null,
+                        var envelope = FallbackSession.Result(HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), null,
                             FallbackSession.Map(observed.Fault, ""), Outcome.RejectedBeforeOperation, Execution.NotStarted);
                         var wire = McpResult.From(envelope);
                         return new CallToolResult { IsError = wire.IsError, StructuredContent = JsonNode.Parse(wire.StructuredContent.GetRawText()),
@@ -209,7 +209,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 int? next = (long)offset.Value + limit.Value < total.Value ? offset.Value + limit.Value : (int?)null;
                 paging = new Paging(PagingMode.Offset, offset.Value, limit.Value, next, null, null, total.Value, next == null);
             }
-            var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId),
+            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId),
                 outcome, execution, outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                 completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));

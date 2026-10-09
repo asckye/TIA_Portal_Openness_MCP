@@ -6,6 +6,28 @@
   <ItemGroup>
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/BlockDocumentExport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcServices.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSystemGroups.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareEditing.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDeviceCompile.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationCompileTarget.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcLegacyCompile.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcArtifactExchange.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcVerifiedImportBoundary.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSources.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceRules.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcTagDefinitions.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceFileOutput.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationPrimitives.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationWorker.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/IPlcOrganisationSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareValues.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCrossReferencePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCrossReferences.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Engine/Siemens/CrossReferenceTreeReader.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcGroupCreation.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcGroupOperations.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/EmptyPlcGroupPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciFallbackAdapter.cs" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDelete.cs" />
@@ -113,6 +135,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/DataLocations.cs" Link="Diagnostics/DataLocations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/BundleLayout.cs" Link="Diagnostics/BundleLayout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.cs" />
+    <Compile Include="$(AdapterSourceRoot)/Logic/ModelContextProtocol/ResponseClock.cs" Link="Diagnostics/ResponseClock.cs" />
     <Compile Include="$(AdapterSourceRoot)/Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="Diagnostics/PortalFailureClassifier.cs" />
     <Reference Include="@(AdapterApi)">
       <HintPath>%(Reference.Identity)</HintPath><Private>false</Private><SpecificVersion>true</SpecificVersion>

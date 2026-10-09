@@ -188,14 +188,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "CompileHmiDiagnostics"), Description("[L1][HMI] Compile an HMI and return structured errors/warnings, the HMI counterpart of CompilePlcDiagnostics. Use it after generating screens/tags so you can read the diagnostics and fix them yourself instead of asking the engineer to compile in the TIA UI. WinCC Unified: HmiSoftware is not compilable on its own, so the owning device is compiled (same as the TIA UI does) and hardware diagnostics may appear alongside screen ones. Classic (Comfort/KTP): the HMI software itself is compiled. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree, e.g. 'HMI_RT_1'. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult CompileAndDiagnoseHmiV4(
-            [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath)
-            => HmiInspectionContract.Run("CompileHmiDiagnostics", true, true, () => CompileAndDiagnoseHmi(softwarePath));
 
-        public ResponseCompileDiagnose CompileAndDiagnoseHmi(
-            [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath)
-        => PlcCompilation.CompileAndDiagnoseCore(softwarePath, "");
+
+
 
         [McpServerTool(Name = "DescribeHmiScreenItem"), Description("[L2][HMI]Describe one HMI screen item (widget) by name under an HMI screen.")]
         public CallToolResult DescribeHmiScreenItemV4(

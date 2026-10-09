@@ -272,9 +272,9 @@ namespace TiaMcp.Engine.Tests
             securityTools = new HardwareSecurityTools(network);
             serviceTools = new HardwareServicesTools(services);
             var portTools = new HardwareServicesPortTools(new HardwareServicesPortService((_, __) => JsonSerializer.SerializeToNode(services.Next()), () => true, () => "fixture"));
-            catalog = new ToolCatalog(new[] { typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools) });
+            catalog = new ToolCatalog(new[] { typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools), typeof(PlcCompilePortTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
-            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(networkTools).AddSingleton(securityTools).AddSingleton(serviceTools).AddSingleton(portTools).BuildServiceProvider());
+            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(networkTools).AddSingleton(securityTools).AddSingleton(serviceTools).AddSingleton(portTools).AddSingleton(new PlcCompilePortTools(new PlcOrganisationPortService((_, __) => { var response = services.Next(); return new JsonObject { ["Message"] = response.Message, ["Meta"] = response.Meta?.DeepClone() }; }, () => true, () => "fixture"))).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static JsonObject Body(CallToolResult result)
@@ -296,7 +296,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void RegistrationsContainOnlyTheReviewedNamesAndTypedParameters()
         {
-            var expected = Names.AsEnumerable();
+            var expected = Names.Append("CompileHmiDiagnostics");
             Assert.Equal(expected.OrderBy(x => x), catalog.Methods.Select(p => p.Key).OrderBy(x => x));
             foreach (var entry in catalog.Methods)
             {
@@ -316,7 +316,7 @@ namespace TiaMcp.Engine.Tests
         {
             Rejected(networkTools.ListTransferAreas(new[] { " " }, Array.Empty<string>()));
             Rejected(networkTools.ListTransferAreas(Enumerable.Repeat("x", 65).ToArray(), Array.Empty<string>()));
-            Rejected(serviceTools.CompileDevice(null!));
+            Rejected(new PlcCompilePortTools(new TiaMcpServer.Siemens.Services.PlcOrganisationPortService()).CompileDevice(null!));
             Rejected(networkTools.ListDeviceItemChannels(new[] { "PLC" }, Array.Empty<string>(), attributeNames: new[] { "Name", "Name" }));
             Rejected(securityTools.ManageDeviceUsers(new[] { "PLC" }, Array.Empty<string>(), "webserver", permissions: Enumerable.Range(0, 33).Select(i => "p" + i).ToArray()));
             var properties = V4Json.Deserialize<AttributeMap<Scalar>>("{\"Name\":\"" + new string('x', 32768) + "\"}");

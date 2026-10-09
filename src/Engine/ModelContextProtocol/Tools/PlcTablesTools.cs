@@ -157,38 +157,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcTagTablesFromDirectory"), Description("[L2][PLC-Software]Batch import PLC tag table .xml files from a directory (best-effort) Current native policy; V4 safety behavior is not yet accepted. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ImportPlcTagTablesFromDirectoryV4(
-            [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
-            [Description("folderPath: optional tag table group path (use empty for root)")] string folderPath,
-            [Description("dir: directory containing PLC tag table XML files")] string dir,
-            [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true)
-            => PlcToolContract.Run("ImportPlcTagTablesFromDirectory", true, true, () => ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite));
 
-        public ResponseImportBatch ImportPlcTagTablesFromDirectory(
-            string softwarePath,
-            string folderPath,
-            string dir,
-            string regexName = "",
-            bool overwrite = true)
-        {
-            try
-            {
-                var result = _tables.ImportPlcTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
-                return new ResponseImportBatch
-                {
-                    Message = $"Imported {result.Imported?.Count() ?? 0} PLC tag tables from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
-                    Imported = result.Imported,
-                    Failed = result.Failed,
-                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error importing PLC tag tables from '{dir}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
+
+
 
         [McpServerTool(Name = "ListPlcWatchTables"), Description("[L2][PLC-Software]List PLC watch/monitor table names (PlcWatchTable). Read-only. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult GetPlcWatchTablesV4(
@@ -757,26 +728,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseMessage ImportPlcWatchTableOffline(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
             => _tables.ImportPlcWatchTableOffline(softwarePath,filePath,groupPath,dryRun);
 
-        [McpServerTool(Name = "GetPlcTagTableConstants"), Description("[L2][PLC-Software][READ] Constants of one exact PLC tag table (tablePath under TagTableGroup, or a unit's TagTableGroup via unitName + unitKind): PlcTagTable.UserConstants and SystemConstants as typed PlcConstant rows (Name, DataTypeName, Value, kind user/system); kind filters. Paginated. User constants are edited with ManagePlcTag kind=constant. No modification. Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult ReadPlcTagTableConstantsV4(
-            string softwarePath,
-            string tablePath,
-            [Description("kind: all | user | system.")] string kind="all",
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            int offset=0,
-            int limit=200)
-            => PlcToolContract.Run("GetPlcTagTableConstants", false, true, () => ReadPlcTagTableConstants(softwarePath, tablePath, kind, unitName, unitKind, offset, limit));
 
-        public ResponseMessage ReadPlcTagTableConstants(
-            string softwarePath,
-            string tablePath,
-            string kind="all",
-            string unitName="",
-            string unitKind="unit",
-            int offset=0,
-            int limit=200)
-            => _tables.ReadPlcTagTableConstants(softwarePath,tablePath,kind,unitName,unitKind,offset,limit);
+
+
 
         [McpServerTool(Name = "ManagePlcTableEntries"), Description("[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManagePlcTableEntriesV4(

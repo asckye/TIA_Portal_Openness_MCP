@@ -17,7 +17,11 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcTagTableXmlBuilder
     {
         public static XDocument BuildDocument(string tableName, IEnumerable<PlcTagDefinition> tags)
+            => BuildDocumentForRelease(tableName, tags, "21");
+
+        public static XDocument BuildDocumentForRelease(string tableName, IEnumerable<PlcTagDefinition> tags, string outputReleaseKey)
         {
+            var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentException("The tag table name must not be empty.", nameof(tableName));
 
@@ -30,7 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
+                    new XElement("Engineering", new XAttribute("version", format.EngineeringVersion)),
                     new XElement("DocumentInfo",
                         new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
                         new XElement("ExportSetting", "None"),
@@ -51,9 +55,12 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         public static string BuildXml(string tableName, IEnumerable<PlcTagDefinition> tags)
+            => BuildXmlForRelease(tableName, tags, "21");
+
+        public static string BuildXmlForRelease(string tableName, IEnumerable<PlcTagDefinition> tags, string outputReleaseKey)
         {
             using var writer = new Utf8StringWriter();
-            BuildDocument(tableName, tags).Save(writer, SaveOptions.None);
+            BuildDocumentForRelease(tableName, tags, outputReleaseKey).Save(writer, SaveOptions.None);
             return writer.ToString();
         }
 

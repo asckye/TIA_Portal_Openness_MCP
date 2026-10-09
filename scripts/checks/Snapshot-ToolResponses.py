@@ -592,8 +592,11 @@ def v4_rejection(response, name):
 
 def session_readiness_refusal(reply, name):
     resources.require(reply.get('schemaVersion') == 4 and reply['ok'] is False
-                      and reply['error']['code'] == 'RESOURCE_UNAVAILABLE'
-                      and reply['error']['details']['resource'] == 'tia-openness-environment'
+                      and ((reply['error']['code'] == 'RESOURCE_UNAVAILABLE'
+                            and reply['error']['details'].get('resource') == 'tia-openness-environment')
+                           or (reply['error']['code'] == 'PRECONDITION_FAILED'
+                               and reply['error']['details'].get('condition') == 'native-admission'
+                               and reply.get('data') is None))
                       and reply['meta']['outcome'] == 'rejected-before-operation'
                       and reply['meta']['execution'] == 'not-started'
                       and reply['meta']['requiresSessionReset'] is False,
@@ -763,6 +766,17 @@ def capture_release(args, release, exe, public_api):
                            if release in FULL_RELEASES else public_api)
         capture_args = copy.copy(args)
         if args.packaged_no_tia and args.engine_host:
+            # FoundationHost selects an explicit bundle root before reading its
+            # catalog. Preserve the package's resource closure at that root.
+            for resource in ('manifest', 'reference/siemens-openness', 'reference/v21-ecosystem.json',
+                             'reference/tool-examples', 'templates', 'scripts/ecosystem'):
+                source = args.repo_root / resource
+                target = scratch / resource
+                if source.is_dir():
+                    shutil.copytree(source, target)
+                elif source.is_file():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(source, target)
             capture_args.engine_host = capture_exe
             capture_args.repo_root = scratch
         server = (contracts.engine_host_server(capture_args, release, portal_root, 'full', env) if args.engine_host
@@ -790,8 +804,9 @@ def capture_release(args, release, exe, public_api):
                                   'Packaged no-TIA diagnostics omitted their readiness cause')
                 state = decoded('GetSessionState', {})
                 session_readiness_refusal(state, 'GetSessionState')
-                resources.require(missing_tia_cause(state['data']['environment']['cause'], release),
-                                  'GetSessionState readiness refusal omitted the no-TIA cause')
+                if not args.engine_host:
+                    resources.require(missing_tia_cause(state['data']['environment']['cause'], release),
+                                      'GetSessionState readiness refusal omitted the no-TIA cause')
             else:
                 state = decoded('GetSessionState', {})
                 resources.require(state['data'].get('isAttached', state['data'].get('isConnected')) is False, 'Capture requires a disconnected host')
@@ -805,7 +820,7 @@ def capture_release(args, release, exe, public_api):
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
                     ('CloseProject', {}))):
                 result = decoded(name, arguments)
-                if args.engine_host:
+                if args.engine_host and not args.packaged_no_tia:
                     foundation_apply_refusal(result, name)
                 else: session_write_refusal(result, name, args.packaged_no_tia)
             decoded('GetPortalInfo', {'includeProcesses': False, 'includeSessions': False,
@@ -836,7 +851,8 @@ def capture_release(args, release, exe, public_api):
             # The existing audit performs schema/operation checks and executes its
             # literal in-memory allowlist, using the same public examples as users.
             usage = check_usage(decoded, tools, release, exhaustive=True, verify_documents=False,
-                                registered_only=False)
+                                registered_only=False,
+                                unready_engine_refusal=session_readiness_refusal if args.packaged_no_tia else None)
 
             def example(name):
                 return unwrap_usage(decoded('GetToolUsage', {'toolName': name}))['example']['request']['params']['arguments']
@@ -919,7 +935,7 @@ def capture_release(args, release, exe, public_api):
                     ('SaveProject', {}),
                     ('SaveProjectCopy', {'newProjectPath': 'C:/P6-49-response-snapshot.ap21'}),
                     ('CloseProject', {}))):
-                if args.engine_host:
+                if args.engine_host and not args.packaged_no_tia:
                     foundation_apply_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})), 'CallTool -> ' + name)
                 else: session_write_refusal(body(bridge('CallTool', {'name': name, 'arguments': arguments})), 'CallTool -> ' + name, args.packaged_no_tia)
             snapshot['coverage'].update(bridgeRejectedTools=sorted(registered - {'CallTool'}),
@@ -1358,6 +1374,30 @@ class RawResponseTests(unittest.TestCase):
         self.assertTrue(missing_tia_cause('There is no TIA Portal V20 installation.', '20'))
         self.assertTrue(missing_tia_cause('TIA Portal V21 or its Openness API files were not found.', '21'))
         self.assertFalse(missing_tia_cause('Current user is not in the required Siemens TIA Openness group.', '21'))
+
+    def test_no_tia_refusals_require_the_explicit_legacy_or_foundation_contract(self):
+        foundation = {'schemaVersion': 4, 'ok': False, 'data': None,
+                      'error': {'code': 'PRECONDITION_FAILED', 'details': {'condition': 'native-admission'}},
+                      'meta': {'outcome': 'rejected-before-operation', 'execution': 'not-started',
+                               'requiresSessionReset': False}}
+        session_readiness_refusal(foundation, 'GetSessionState')
+        legacy = copy.deepcopy(foundation)
+        legacy['error'] = {'code': 'RESOURCE_UNAVAILABLE', 'details': {'resource': 'tia-openness-environment'}}
+        legacy['data'] = {'environment': {'cause': 'no TIA Portal V20'}}
+        session_readiness_refusal(legacy, 'SaveProject')
+        for path, value in [(('error', 'details', 'condition'), 'confirmation'),
+                            (('data',), {}), (('meta', 'outcome'), 'succeeded'),
+                            (('meta', 'execution'), 'completed'), (('meta', 'requiresSessionReset'), True)]:
+            with self.subTest(path=path):
+                invalid = copy.deepcopy(foundation)
+                target = invalid
+                for key in path[:-1]:
+                    target = target[key]
+                target[path[-1]] = value
+                with self.assertRaises(AssertionError):
+                    session_readiness_refusal(invalid, 'GetSessionState')
+
+
     def test_lifecycle_description_group_is_release_scoped(self):
         import phase6_groups
         members = {'RetrieveProjectArchive', 'ManageMultiuserSession'}
@@ -1801,18 +1841,17 @@ def verify_coverage(release, baseline, snapshot, lite):
             bootstrap = stored_v4_body('full', 'InitializeEnvironment', {})
             doctor = stored_v4_body('full', 'GetEnvironmentDiagnostics', {'fix': False})
             state = stored_v4_body('full', 'GetSessionState', {})
+            foundation = state.get('error', {}).get('details', {}).get('condition') == 'native-admission'
             if (bootstrap.get('data', {}).get('ready') is not False
                     or not missing_tia_cause(bootstrap.get('data', {}).get('recommendedReason', ''), release)):
                 raise ValueError(f'V{release}: packaged snapshot does not prove no-TIA bootstrap readiness')
             if (doctor.get('data', {}).get('ready') is not False
                     or not missing_tia_cause(canonical(doctor.get('data', {})), release)):
                 raise ValueError(f'V{release}: packaged snapshot does not prove no-TIA diagnostics readiness')
-            if (state.get('error', {}).get('code') != 'RESOURCE_UNAVAILABLE'
-                    or state.get('error', {}).get('details', {}).get('resource') != 'tia-openness-environment'
-                    or state.get('meta', {}).get('outcome') != 'rejected-before-operation'
-                    or state.get('meta', {}).get('execution') != 'not-started'
-                    or not missing_tia_cause(state.get('data', {}).get('environment', {}).get('cause', ''), release)):
+            session_readiness_refusal(state, 'GetSessionState')
+            if not foundation and not missing_tia_cause(state.get('data', {}).get('environment', {}).get('cause', ''), release):
                 raise ValueError(f'V{release}: packaged snapshot does not prove GetSessionState readiness refusal')
+
     else:
         if snapshot['profiles'] != ['plc-foundation'] or 'liteAdvertisedTools' in coverage:
             raise ValueError(f'V{release}: Foundation must not advertise a lite roster')

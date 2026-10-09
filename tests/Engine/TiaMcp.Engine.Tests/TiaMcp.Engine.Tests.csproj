@@ -21,6 +21,14 @@
     <Compile Include="../../../src/Shared/Host/EngineeringDiagnosticsTools.cs" Link="EngineeringDiagnosticsTools.cs" />
     <Compile Include="../../../src/Shared/Host/ExportTools.cs" Link="ExportTools.cs" />
     <Compile Include="../../../src/Shared/PortedToolDeclarations.cs" Link="PortedToolDeclarations.cs" />
+    <Compile Include="../../../src/Shared/HmiInspectionContract.cs" Link="HmiInspectionContract.cs" />
+    <Compile Include="../../../src/Shared/PlcCompilePortTools.cs" Link="PlcCompilePortTools.cs" />
+    <Compile Include="../../../src/Shared/PlcArtifactPortSession.cs" Link="PlcArtifactPortSession.cs" />
+    <Compile Include="../../../src/Shared/PlcSoftwarePortService.cs" Link="PlcSoftwarePortService.cs" />
+    <Compile Include="../../../src/Shared/PlcReadModifyTools.cs" Link="PlcReadModifyTools.cs" />
+    <Compile Include="../../../src/Shared/PlcOrganisationPortService.cs" Link="PlcOrganisationPortService.cs" />
+    <Compile Include="../../../src/Shared/PlcOrganisationTools.cs" Link="PlcOrganisationTools.cs" />
+    <Compile Include="../../../src/Shared/PlcSoftwareResponses.cs" Link="PlcSoftwareResponses.cs" />
     <Compile Include="../../../src/Shared/HmiDesignBuilder.cs" Link="HmiDesignBuilder.cs" />
     <Compile Include="../../../src/Shared/HostToolServices.cs" Link="HostToolServices.cs" />
     <Compile Include="../../../src/Shared/HostMetaTools.cs" Link="HostMetaTools.cs" />
@@ -172,7 +180,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
     <Compile Include="../../../src/Shared/Host/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />
     <Compile Include="../../../src/Shared/Host/OfflineSuiteTools.cs" Link="OfflineSuiteTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs" Link="PlcBuildTools.cs" />
+    <Compile Include="../../../src/Shared/PlcBuildTools.cs" Link="PlcBuildTools.cs" />
     <Compile Include="../../../src/Shared/Host/PlcDocumentationTools.cs" Link="PlcDocumentationTools.cs" />
     <Compile Include="../../../src/Shared/Host/QualityAuditTools.cs" Link="QualityAuditTools.cs" />
     <Compile Include="../../../src/Shared/Host/TemplateTools.cs" Link="TemplateTools.cs" />

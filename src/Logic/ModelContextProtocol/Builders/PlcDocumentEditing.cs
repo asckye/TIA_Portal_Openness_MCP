@@ -13,7 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcDocumentEditing
     {
         public const int MaxBytes = 16 * 1024 * 1024;
-        public static string Hash(byte[] bytes) => Siemens.ArgumentRules.Hash(bytes);
+        public static string Hash(byte[] bytes) { using var sha = System.Security.Cryptography.SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
         public static string HashText(string text) => Hash(Encoding.UTF8.GetBytes(text));
         public static string Read(string path)
         {

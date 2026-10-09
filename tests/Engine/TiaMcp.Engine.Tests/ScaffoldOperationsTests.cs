@@ -26,7 +26,15 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void CheckScaffoldOperations(Action<bool, string> check)
         {
             var previous = EngineServices.Provider;
-            using var provider = new ServiceCollection().AddSingleton<TiaMcpServer.Siemens.IEngineeringSession, ScaffoldSession>().AddSingleton<PlcBuildTools>()
+            using var provider = new ServiceCollection().AddSingleton<TiaMcpServer.Siemens.IEngineeringSession, ScaffoldSession>().AddSingleton<PlcBuildTools>().AddSingleton(new TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, args) => {
+                    var session = new ScaffoldSession(); string action = (string)args["request"]!["Action"]!;
+                    string path = (string)args["request"]!["FilePath"]!;
+                    if (action == "importType") session.ImportType("PLC_1", "", path);
+                    else if (action == "importBlock") session.ImportBlock("PLC_1", "", path);
+                    else if (action == "importTagTable") session.ImportPlcTagTable("PLC_1", "", path);
+                    else throw new InvalidOperationException("Unexpected scaffold worker action: " + action);
+                    return new JsonObject { ["Found"] = true };
+                }, () => true, () => "fixture.ap21"))
                 .AddSingleton<PlcExternalSourcesTools>().AddSingleton<PlcBlocksTools>()
                 .AddSingleton<HmiDescribeTools>().AddSingleton<UnifiedHmiTools>().BuildServiceProvider();
             EngineServices.SetServiceProvider(provider);

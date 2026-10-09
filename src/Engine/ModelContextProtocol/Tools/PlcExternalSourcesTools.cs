@@ -35,36 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
             _session = session;
         }
 
-        public ResponseCrossReferences GetCrossReferences(
-            [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
-            [Description("objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope")] string objectPath,
-            [Description("objectKind: Block | Type | Tag | SystemConstant")] string objectKind = "Block",
-            [Description("filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)")] string filter = "AllObjects",
-            [Description("unitName: exact software/safety unit; empty selects PLC root.")] string unitName = "",
-            [Description("unitKind: unit | safety. Empty unitName selects PLC root.")] string unitKind = "unit")
-        {
-            try
-            {
-                var items = _session.GetCrossReferences(softwarePath, objectPath, objectKind, filter, out var reason, out var queried, unitName, unitKind);
-                if (items != null)
-                {
-                    return new ResponseCrossReferences
-                    {
-                        Message = $"Cross references retrieved for {objectKind} '{objectPath}'",
-                        Items = items,
-                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("queried", queried), ("complete", true), ("status", "complete"))
-                    };
-                }
 
-                // envelope: legacy-multiple-dynamic-fields
-                return new ResponseCrossReferences { Message = reason ?? "Cross-reference read failed.", Items = null,
-                    Meta = new JsonObject { ["success"] = false, ["queried"] = queried, ["complete"] = false, ["status"] = queried ? "failed" : "notQueried" } };
-            }
-            catch (Exception ex) when (ex is not McpException && ex.GetBaseException() is not global::Siemens.Engineering.NonRecoverableException)
-            {
-                throw new McpException($"Unexpected error retrieving cross references: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
 
         public ResponseStringList GetPlcExternalSources(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
@@ -162,44 +133,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        public ResponseMessage ManagePlcExternalSources(
-            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
-            [Description("action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.")] string action,
-            [Description("name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / deleteGroup).")] string name="",
-            [Description("unitName: software unit holding the sources ('' = the PLC program).")] string unitName="",
-            [Description("unitKind: unit | safety - which unit collection unitName refers to.")] string unitKind="unit",
-            [Description("groupPath: 'Folder/Subfolder' inside the external sources ('' = root).")] string groupPath="",
-            [Description("filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.")] string filePath="",
-            [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",
-            [Description("masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.")] string masterCopyPath="",
-            [Description("copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.")] string copyMode="",
-            [Description("generateOption: for generateBlocks - None | KeepOnError.")] string generateOption="None",
-            [Description("targetKind: for generateBlocks - block | type ('' = the source decides).")] string targetKind="",
-            [Description("targetGroupPath: for generateBlocks - block / type group that receives the result ('' = root).")] string targetGroupPath="",
-            [Description("newName: for renameGroup.")] string newName="",
-            [Description("confirmDelete: must be true together with dryRun=false for delete / deleteGroup.")] bool confirmDelete=false,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
-        => _domain.ManagePlcExternalSources(softwarePath,action,name,unitName,unitKind,groupPath,filePath,libraryName,masterCopyPath,copyMode,generateOption,targetKind,targetGroupPath,newName,confirmDelete,dryRun);
 
-        public ResponseMessage ReadPlcSystemGroups(
-            string softwarePath,
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            [Description("includeBlocks: true also returns the blocks of each chart / group.")] bool includeBlocks=true,
-            int maxDepth=4)
-        => _domain.ReadPlcSystemGroups(softwarePath,unitName,unitKind,includeBlocks,maxDepth);
 
-        [McpServerTool(Name = "GetPlcCrossReferences"), Description("[L2][PLC-Software] Native Step7 block/type/tag/system-constant cross references, including software and safety units. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21, even after returning a result. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1; do not enable it automatically. Even with opt-in, any uncompiled block or unreadable IsConsistent refuses the query. Compilation does not guarantee crash safety. Prefer exported PLC documents for partial offline call/reference analysis (GeneratePlcDocumentation); that is not a complete replacement for native references. Delete tools share this policy even with crossReferences=true." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
-        public CallToolResult GetCrossReferencesV4(
-            [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
-            [Description("objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope")] string objectPath,
-            [Description("objectKind: Block | Type | Tag | SystemConstant")] string objectKind = "Block",
-            [Description("filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)")] string filter = "AllObjects",
-            [Description("unitName: exact software/safety unit; empty selects PLC root.")] string unitName = "",
-            [Description("unitKind: unit | safety. Empty unitName selects PLC root.")] string unitKind = "unit")
-        {
-            return PlcExchangeContract.Run("GetPlcCrossReferences", () => GetCrossReferences(softwarePath, objectPath, objectKind, filter, unitName, unitKind), write: false, current: true);
-        }
+
+
+
 
         [McpServerTool(Name = "ListPlcExternalSources"), Description("[L2][PLC-Software]List PLC external source names (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GetPlcExternalSourcesV4(
@@ -235,38 +173,9 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("GenerateBlocksFromExternalSource", () => GenerateBlocksFromExternalSource(softwarePath, externalSourceName), write: true, current: true);
         }
 
-        [McpServerTool(Name = "ManagePlcExternalSources"), Description("[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ManagePlcExternalSourcesV4(
-            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
-            [Description("action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.")] string action,
-            [Description("name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / deleteGroup).")] string name="",
-            [Description("unitName: software unit holding the sources ('' = the PLC program).")] string unitName="",
-            [Description("unitKind: unit | safety - which unit collection unitName refers to.")] string unitKind="unit",
-            [Description("groupPath: 'Folder/Subfolder' inside the external sources ('' = root).")] string groupPath="",
-            [Description("filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.")] string filePath="",
-            [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",
-            [Description("masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.")] string masterCopyPath="",
-            [Description("copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.")] string copyMode="",
-            [Description("generateOption: for generateBlocks - None | KeepOnError.")] string generateOption="None",
-            [Description("targetKind: for generateBlocks - block | type ('' = the source decides).")] string targetKind="",
-            [Description("targetGroupPath: for generateBlocks - block / type group that receives the result ('' = root).")] string targetGroupPath="",
-            [Description("newName: for renameGroup.")] string newName="",
-            [Description("confirmDelete: must be true together with dryRun=false for delete / deleteGroup.")] bool confirmDelete=false,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
-        {
-            return PlcExchangeContract.Run("ManagePlcExternalSources", () => ManagePlcExternalSources(softwarePath, action, name, unitName, unitKind, groupPath, filePath, libraryName, masterCopyPath, copyMode, generateOption, targetKind, targetGroupPath, newName, confirmDelete, dryRun), write: !dryRun && action != "read" && action != "list", current: true);
-        }
 
-        [McpServerTool(Name = "ListPlcSystemGroups"), Description("[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). First 200 objects per group. No modification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
-        public CallToolResult ReadPlcSystemGroupsV4(
-            string softwarePath,
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            [Description("includeBlocks: true also returns the blocks of each chart / group.")] bool includeBlocks=true,
-            int maxDepth=4)
-        {
-            return PlcExchangeContract.Run("ListPlcSystemGroups", () => ReadPlcSystemGroups(softwarePath, unitName, unitKind, includeBlocks, maxDepth), write: false, current: true);
-        }
+
+
 
     }
 }

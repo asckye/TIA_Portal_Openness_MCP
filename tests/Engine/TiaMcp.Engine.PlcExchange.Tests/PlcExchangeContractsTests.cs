@@ -70,7 +70,11 @@ namespace PlcExchangeTests
         private static readonly Assembly Engine = typeof(McpServer).Assembly;
         private static Type Type(string name) => Engine.GetType("TiaMcpServer.ModelContextProtocol." + name, true)!;
         private static readonly string[] Owners = { "DocumentsTools", "NativeExchangeTools", "PlcExternalSourcesTools" };
+        private static readonly string[] PortedNames = { "CreatePlcInstanceDb", "GeneratePlcSourceFromBlocks", "ManagePlcTagDefinition",
+            "ListPlcSystemGroups", "ManagePlcExternalSources", "GetPlcCrossReferences" };
         private static Dictionary<string, MethodInfo> Entries() => Owners.SelectMany(n => Type(n).GetMethods())
+            .Concat(new[] { "PlcReadModifyTools", "PlcOrganisationTools" }.SelectMany(n => HostType("TiaMcpServer.ModelContextProtocol." + n).GetMethods())
+                .Where(m => PortedNames.Contains(m.GetCustomAttribute<McpServerToolAttribute>()?.Name, StringComparer.Ordinal)))
             .Concat(HostType("TiaMcpServer.ModelContextProtocol.ExportTools").GetMethods())
             .Concat(HostType("TiaMcpServer.ModelContextProtocol.PlcOfflineTools").GetMethods()
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == "WritePlcSclSourceFile"))

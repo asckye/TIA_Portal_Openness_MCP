@@ -123,6 +123,8 @@ namespace TiaMcpServer.Worker
                     try { return action(values); }
                     catch (TiaMcp.Adapters.Contracts.HardwareAddressingException failure)
                     { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), failure.Status), failure.Message); }
+                    catch (TiaMcp.Adapters.Contracts.PlcSoftwareException failure)
+                    { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), failure.Code), failure.Message, failure.Candidates, failure.InnerException); }
                     finally { foreach (var pair in values) meta[pair.Key] = pair.Value is JsonNode node ? node.DeepClone() : JsonSerializer.SerializeToNode(pair.Value); }
                 });
                 return new TiaMcp.Adapters.Contracts.HardwareAddressingReply {
@@ -131,6 +133,14 @@ namespace TiaMcpServer.Worker
                     RequiresSessionReset = (bool?)step.Meta["connectionUnavailable"] == true
                         || (bool?)step.Meta["mayHaveChanged"] == true && ((bool?)step.Meta["operationSuccess"] == false || (bool?)step.Meta["writeOutcomeUnknown"] == true)
                 };
+            };
+            foundation.EngineeringPlcOrganisationSession = new EnginePlcOrganisationSession(engineering, foundation);
+            foundation.SeedReferenceHmiImport = request => {
+                var exchange = EngineServices.Get<TiaMcpServer.Siemens.Services.HmiExchangeService>();
+                var reply = request.Kind == "tagTables" ? exchange.ImportHmiTagTablesFromDirectory(request.SoftwarePath, request.FolderPath, request.Directory)
+                    : request.Kind == "screens" ? exchange.ImportHmiScreensFromDirectory(request.SoftwarePath, request.FolderPath, request.Directory)
+                    : throw new ArgumentException("Unknown seed HMI import kind.");
+                return JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.PlcSeedHmiReply>(JsonSerializer.Serialize(reply))!;
             };
             lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {
                 nativeFault = reason;

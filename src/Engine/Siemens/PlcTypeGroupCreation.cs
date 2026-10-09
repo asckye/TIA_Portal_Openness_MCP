@@ -9,12 +9,8 @@ namespace TiaMcpServer.Siemens
     {
         internal static string[] Parse(string path)
         {
-            var parts = (path ?? "").Replace('\\', '/').Split('/');
-            if (parts.Length > 0 && (string.Equals(parts[0], "PLC data types", StringComparison.OrdinalIgnoreCase) || parts[0] == "PLC 数据类型"))
-                parts = parts.Skip(1).ToArray();
-            if (parts.Length == 0 || parts.Length > 64 || parts.Any(p => string.IsNullOrWhiteSpace(p) || p == "." || p == ".."))
-                throw new PortalException(PortalErrorCode.InvalidParams, "Specify a non-root type group path without empty, '.' or '..' segments.");
-            return parts;
+            try { return TiaMcp.Adapters.Contracts.PlcOrganisationPaths.Parse(path, true); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error) { throw new PortalException(PortalErrorCode.InvalidParams, error.Message); }
         }
 
         internal static JsonObject Execute<T>(T root, string path, bool dryRun,

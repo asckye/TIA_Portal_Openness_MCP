@@ -84,16 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return _hardware.ManagePlcProtection(devicePathJson,itemPathJson,action,accessLevel,password,newPassword,confirmChange,dryRun);
             });
 
-        [McpServerTool(Name="CompileDevice"), Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult CompileDevice(
-            [Description("devicePath: array naming the station to compile, e.g. [\"PLC_1\"].")] string[] devicePath,
-            [Description("itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.")] string[] itemPath = null!)
-            => HardwareToolContract.Invoke("CompileDevice", false, true, () =>
-            {
-                string devicePathJson = HardwareToolContract.Path(devicePath, "devicePath", rootAllowed: false, optional: false);
-                string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: true);
-                return _hardware.CompileDevice(devicePathJson,itemPathJson);
-            });
+
 
         [McpServerTool(Name = "GetPlcPutGetAccess"), Description(
             "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +

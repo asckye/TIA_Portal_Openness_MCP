@@ -13,7 +13,9 @@ internal sealed partial class FoundationTool
     {
         string Text(string key, string fallback = "") => args.TryGetValue(key, out var value) ? value.GetString()! : fallback;
         string password = Text("password");
-        var request = new CompileRequest { Entry = tool, SoftwarePath = Text("softwarePath"), OfflinePolicy = Text("offlinePolicy", "require"), PasswordProvided = password.Length > 0 };
+        var request = new CompileRequest { Entry = tool, SoftwarePath = Text("softwarePath"), OfflinePolicy = Text("offlinePolicy", "require"), PasswordProvided = password.Length > 0,
+            DevicePath = args.TryGetValue("devicePath", out var devices) ? JsonSerializer.Deserialize<string[]>(devices.GetRawText())! : Array.Empty<string>(),
+            ItemPath = args.TryGetValue("itemPath", out var items) ? JsonSerializer.Deserialize<string[]>(items.GetRawText())! : Array.Empty<string>() };
         var result = await Task.Run(() => FoundationCandidateSession.For(worker).Compile(release, tool, id, request, password,
             Text("mode", "preview"), args.TryGetValue("confirm", out var confirm) && confirm.GetBoolean(), Text("expectedPlanHash"), Text("expectedProjectFile"), token));
         return FoundationV4Result.ImportCandidate(result);
