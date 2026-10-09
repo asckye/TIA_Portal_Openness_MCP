@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)LocalPipeSecurity.cs" Link="Shared/LocalPipeSecurity.cs" />
+  </ItemGroup>
+  <PropertyGroup><TiaLocalPipeSecuritySourcesIncluded>true</TiaLocalPipeSecuritySourcesIncluded></PropertyGroup>
+</Project>

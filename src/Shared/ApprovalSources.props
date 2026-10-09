@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="LocalPipeSecuritySources.props" Condition="'$(TiaLocalPipeSecuritySourcesIncluded)' != 'true'" />
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)SessionBehavior.cs" Link="Shared/SessionBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApprovalSettings.cs" Link="Shared/ApprovalSettings.cs" />

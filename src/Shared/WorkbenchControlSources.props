@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="LocalPipeSecuritySources.props" Condition="'$(TiaLocalPipeSecuritySourcesIncluded)' != 'true'" />
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)WorkbenchControlProtocol.cs" Link="Shared/WorkbenchControlProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WorkbenchControlFrames.cs" Link="Shared/WorkbenchControlFrames.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WorkbenchControlPipe.cs" Link="Shared/WorkbenchControlPipe.cs" />
+  </ItemGroup>
+</Project>

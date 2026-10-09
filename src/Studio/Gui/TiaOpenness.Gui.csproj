@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Shared/AuditSources.props" />
   <Import Project="../../Shared/ApprovalSources.props" />
+  <Import Project="../../Shared/WorkbenchControlSources.props" />
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>

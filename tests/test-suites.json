@@ -254,5 +254,23 @@
     "minimumPassed": 85,
     "maximumSkipped": 0,
     "arguments": []
+  },
+  "workbench-control-protocol": {
+    "project": "tests/Shared/TiaMcp.WorkbenchControl.Tests/TiaMcp.WorkbenchControl.Tests.csproj",
+    "minimumPassed": 74,
+    "maximumSkipped": 0,
+    "arguments": [],
+    "platforms": {
+      "linux": {
+        "minimumPassed": 71,
+        "maximumSkipped": 3,
+        "reason": "Three SID/ACL/image-path tests require Windows; counts are identical with or without Siemens SDKs."
+      },
+      "macos": {
+        "minimumPassed": 71,
+        "maximumSkipped": 3,
+        "reason": "Three SID/ACL/image-path tests require Windows; counts are identical with or without Siemens SDKs."
+      }
+    }
   }
 }

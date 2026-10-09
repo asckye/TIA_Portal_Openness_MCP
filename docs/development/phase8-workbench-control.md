@@ -1,7 +1,7 @@
 # P8-20 / P8-21 设计：工作台控制通道与共享会话操作面板
 
 - 日期：2026-10-08；基线：master `f02b4cdd`（P7-11a 改名已在 `9588be3e` 合并，重构计划表中 P7-11a 仍标 todo，需顺手更新）。
-- 范围：研究与方案，不含代码。任务来源：[重构计划](refactor-plan.md) P8-20、P8-21；
+- 范围：设计与分步实施记录。任务来源：[重构计划](refactor-plan.md) P8-20、P8-21；
   [路线图](roadmap.md)“阶段 8”第 88–94 行。
 - 文中 `文件:行` 均以基线源码为准；标识符保持英文。
 
@@ -461,6 +461,19 @@ lane `{tool, actor, requestId, sinceUtc}`、绑定 `{processId, projectFile, bin
 | P8-21f | 删除第 5.6 节清单，清理发布链与清单生成 | 第 5.6 节所列路径、`build-tools/release/**`、`scripts/operations/**` | `branch-gate`；L3 八版构建；仓库检查；L5：VM 上 AI 与人在同一会话接力（AI 编译 → 人保存 → AI 继续导出），审计中人/AI 区分正确 |
 
 验收层次小结：
+
+P8-20a 已实现（待审查）：`LocalPipeSecurity` 保留审批的 SID-only 检查、DACL、标志与 255 实例，
+控制通道可使用 SID + 对端完整映像路径检查，最多 8 实例。`WorkbenchControlSources.props` 在 Logic
+（net48/net10，Foundation 宿主通过既有项目引用使用）与 Gui 中导入，共享安全源码只编译一次。
+协议独立使用 camelCase UTF-8 JSON、4 字节小端长度与 256 KiB 上限；递归拒绝重复字段、未知字段、
+缺必需字段及数值/未知枚举。8 个操作、7 个页面及当前 3 个预填表单封闭；每个操作与表单有独立参数 DTO。
+响应包含封闭状态、错误码、最多 16 个候选及支持版本列表；不支持的请求版本返回 v1 类型化拒绝，不降级。
+读取与 UI 截止上限分别为 2/5 秒，截止判断由后续服务器在接收/派发时调用。
+渲染参数可附带宿主解析的 `artifact {requestId,path,sha256,kind}`，工作台仍须核对文件、哈希与会话归属。
+通知 DTO 仅为 `stateChanged` 快照模型；v1 一请求一响应，不订阅、不推送通知，不引入新操作。
+`workbench-control-protocol` 套件在无 SDK 与有 SDK 的 Windows checkout 均为最低 74 通过、0 跳过；
+Linux/macOS 为最低 71 通过、最多 3 跳过（Windows 管道安全测试）。现有审批测试与审批协议源码未修改。
+P8-20b/c 负责监听与调用顺序、映像路径的 BundleLayout 解析、UI 队列/守卫、产物检查及 V4 映射。
 
 - 单元：协议与帧、管道安全、工作台控制面、宿主映射与分类、审计兼容、租约。
 - 假工作台端到端：P8-20c 用测试内控制管道服务端驱动宿主工具；P8-20b 用真实窗口 + 真实管道驱动工作台；P8-20e 串起真实宿主与真实工作台。

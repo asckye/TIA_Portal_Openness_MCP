@@ -101,4 +101,7 @@
   <Folder Name="/Tests/Updater/">
     <Project Path="tests/Updater/TiaMcp.Updater.Tests/TiaMcp.Updater.Tests.csproj" />
   </Folder>
+  <Folder Name="/Tests/Shared/">
+    <Project Path="tests/Shared/TiaMcp.WorkbenchControl.Tests/TiaMcp.WorkbenchControl.Tests.csproj" />
+  </Folder>
 </Solution>
