@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-09T06:24:25.0281369+00:00",
+  "generatedAt": "2026-10-09T07:01:54.4745188+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "ae7467dfd50ea6f06c6138f898c97137ce547be88bfcdb5b2272506b741dc12a",
+  "workerSha256": "5aef9f24c77991f60a67aea4682e00901c77b74fd29f86667a9e06cbbf4c380d",
   "toolCount": 498,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -791,7 +791,7 @@
         "modelVersion",
         "skipChartPreflight"
       ],
-      "description": "[L2][PLC-Software][WRITE] CFC chart password of one chart (ChartProviderS7 on the PLC software): read (GetChartProtection -> password hash, empty = unprotected), add (AddChartProtection(chartName, newHashedPassword - the hash as TIA displays it)), change (ChangeChartProtection(chartName, currentPassword as SecureString, newHashedPassword)), remove (RemoveChartProtection(chartName, currentPassword)). Official: the password only protects against unintentional editing (no know-how protection); native bool reported and the hash read back. Passwords are never logged. Every action first verifies the chart through a CompleteExport preflight (modelVersion, default V2.0) and is refused when the PLC has no charts or the name is unknown - GetChartProtection of an unknown chart took TIA Portal V21 down on the 2.7.42 real project (skipChartPreflight=true bypasses the check at that risk). Default preview; no automatic save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageCfcChartProtection\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE] CFC chart password of one chart (ChartProviderS7 on the PLC software): read (GetChartProtection -> password hash, empty = unprotected), add (AddChartProtection(chartName, newHashedPassword - the hash as TIA displays it)), change (ChangeChartProtection(chartName, currentPassword as SecureString, newHashedPassword)), remove (RemoveChartProtection(chartName, currentPassword)). Official: the password only protects against unintentional editing (no know-how protection); native bool reported and the hash read back. Passwords are never logged. V20/V21 refuse every protection action with UNSUPPORTED_CAPABILITY before provider access: the SDK exposes no independent chart inventory, CompleteExport preflight preceded a V20 crash on a chartless PLC, and unknown-chart GetChartProtection crashed V21. skipChartPreflight cannot bypass the crash guard. Default preview; no automatic save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageCfcChartProtection\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"chartName\":\"Chart_1\",\"dryRun\":true,\"action\":\"read\"}"
     },
     {
@@ -2312,7 +2312,7 @@
         "blockPath",
         "includeBlockParameters"
       ],
-      "description": "[L2][PLC-Software][READ] SiVArc data of one code block (blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\"}"
     },
     {
@@ -3010,14 +3010,14 @@
       "layer": "L2",
       "category": "project",
       "domain": "Project",
-      "operation": "FILE",
+      "operation": "SESSION",
       "operationInferred": true,
       "method": "SaveProjectCopyV4",
       "returnType": "CallToolResult",
       "parameters": [
         "newProjectPath"
       ],
-      "description": "[L2][Project]Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SaveProjectCopy\"), optionally operation or language.",
+      "description": "[L2][Project][SESSION] TIA Save As via Project.SaveAs: the open project and MCP binding switch to the new location. Unsaved changes are saved into the new copy; the original project file keeps its last saved state. Requires Workbench approval before dispatch, like SaveProject and CloseProject. Ordinary projects only; local sessions are refused. The result reports previousProjectFile and newProjectFile from the cached binding; confirm the new location with GetSessionState. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SaveProjectCopy\"), optionally operation or language.",
       "example": "{\"newProjectPath\":\"C:\\\\Examples\\\\Copy\"}"
     },
     {
@@ -5867,7 +5867,7 @@
         "chartNames",
         "skipChartPreflight"
       ],
-      "description": "[L2][PLC-Software][WRITE] Typed CFC chart exchange of one PLC software (ChartProviderS7): export (ChartProvider.CompleteExport(path, modelVersion e.g. V2.0, filter, unattended) - every chart with block types, task assignment and run sequence, written as XML packed in a ZIP such as Chart1.xml.zip), selectiveExport (SelectiveExport(path, chartNames [..], modelVersion, filter, unattended) - the named charts only), import (Import(path, modelVersion, filter, unattended, deleteAtTarget) - the ZIP from a complete or selective export; deleteAtTarget removes charts missing from the file), exportInstructionData (ChartProviderS7.ExportInstructionData(path)). Official requirements: PLC offline (import requires the confirmed Offline state), password-protected charts are skipped by the exports, the imported block types must exist and be compiled. Output files are new and verified by size / SHA-256; export additionally reports the chart inventory parsed from the ZIP. selectiveExport and exportInstructionData first run a CompleteExport preflight into a temporary ZIP and are refused when the PLC has no charts or a named chart is missing (2.7.42 real project, CPU 1510SP F with CFC installed but no chart folder: ExportInstructionData took TIA Portal V21 down; skipChartPreflight=true bypasses the check at that risk). Default preview; no save / compile / download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExchangeCfcCharts\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE] Typed CFC chart exchange of one PLC software (ChartProviderS7): export (ChartProvider.CompleteExport(path, modelVersion e.g. V2.0, filter, unattended) - every chart with block types, task assignment and run sequence, written as XML packed in a ZIP such as Chart1.xml.zip), selectiveExport (SelectiveExport(path, chartNames [..], modelVersion, filter, unattended) - the named charts only), import (Import(path, modelVersion, filter, unattended, deleteAtTarget) - the ZIP from a complete or selective export; deleteAtTarget removes charts missing from the file), exportInstructionData (ChartProviderS7.ExportInstructionData(path)). Official requirements: PLC offline (import requires the confirmed Offline state), password-protected charts are skipped by the exports, the imported block types must exist and be compiled. Output files are new and verified by size / SHA-256; export additionally reports the chart inventory parsed from the ZIP. V20/V21 export, selectiveExport and exportInstructionData are refused with UNSUPPORTED_CAPABILITY before provider access: the SDK exposes no independent chart inventory, CompleteExport preflight preceded a V20 crash on a chartless PLC, and ExportInstructionData crashed V21. skipChartPreflight cannot bypass the crash guard. Default preview; no save / compile / download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExchangeCfcCharts\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"action\":\"export\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Charts.xml.zip\",\"dryRun\":true,\"modelVersion\":\"V2.0\"}"
     },
     {
