@@ -654,7 +654,17 @@ internal static partial class ReleaseCommands
         WriteJson(manifestPath, manifest);
     }
 
+    // The V20 and V21 pipelines run in parallel and share each test project's output directory:
+    // build and run one registered suite at a time so a running testhost never locks the other build.
+    private static readonly object SuiteGate = new();
+
     private static void RunDotnetSuiteForRelease(string name, string tableName, string dotnet, string resultDirectory,
+        string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget)
+    {
+        lock (SuiteGate) RunDotnetSuite(name, tableName, dotnet, resultDirectory, outputDirectory, runTemp, cliHome, apiRoot, nuget);
+    }
+
+    private static void RunDotnetSuite(string name, string tableName, string dotnet, string resultDirectory,
         string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget)
     {
         var spec = ReleaseCommandTable.Get(tableName);
