@@ -80,6 +80,7 @@ internal static class PortedToolContract
         "GetProjectTopology" => new[] { "hardware-network.HardwareGetProjectTopology", "ReadState" },
         "ListCommunicationConnections" => new[] { "hardware-network.HardwareReadCommunicationConnections", "ReadState" },
         "ManageCommunicationConnection" => new[] { "hardware-network.HardwareManageCommunicationConnection", "ReadState" },
+        _ when PortedFamilies.Contains(tool) && PortedFamilies.ForTool(tool).Name is "F01" or "F02" or "F03" => Array.Empty<string>(),
         _ => throw new NotSupportedException("Unregistered ported tool: " + tool)
     };
 

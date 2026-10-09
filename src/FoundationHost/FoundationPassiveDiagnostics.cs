@@ -252,7 +252,7 @@ internal static class LegacyHostToolRegistry
 {
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string releaseKey, bool nativeSessionConfigured,
         string? apiDirectory = null, string? apiDirectorySource = null, Func<JsonObject>? readinessProvider = null,
-        Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null)
+        Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null, bool hostPorts = true)
     {
         TiaVersionCatalog.Get(releaseKey);
         var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
@@ -275,6 +275,11 @@ internal static class LegacyHostToolRegistry
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
         tools.Clear(); tools.AddRange(wrapped);
+        if (hostPorts && !TiaVersionCatalog.Get(releaseKey).IsFullEngine)
+        {
+            var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);
+            tools.Clear(); tools.AddRange(all);
+        }
         return tools.AsReadOnly();
     }
 }

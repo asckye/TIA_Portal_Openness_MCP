@@ -2,9 +2,8 @@
 
 This is an offline process check. It never attaches to or connects to TIA.
 Each host process receives a private TIA_MCP_DATA_DIRECTORY and an explicit
-approval.settings file. Foundation releases do not advertise CallTool, so that
-bridge case is run for the two combined Foundation hosts and recorded as unavailable for
-Foundation rather than changing its public tool catalog.
+approval.settings file. All eight releases check both direct writes and their
+registered-catalog CallTool route before dispatch.
 """
 from __future__ import annotations
 
@@ -301,11 +300,15 @@ def run_foundation(args) -> dict:
                 require(names_reply is not None and "result" in names_reply, f"{key}: tools/list failed")
                 names = {row["name"] for row in names_reply["result"]["tools"]}
                 require(FOUNDATION_WRITE[0] in names and "GetToolUsage" in names, f"{key}: expected tools missing")
-                require("CallTool" not in names, f"{key}: CallTool unexpectedly appeared in the frozen Foundation V4 roster")
+                require("CallTool" in names, f"{key}: registered-catalog bridge is missing")
                 count += 1
                 refused = host.rpc("tools/call", {"name": FOUNDATION_WRITE[0], "arguments": FOUNDATION_WRITE[1]})
                 require(refused is not None, f"{key}: direct write received no response")
                 stopped_by = assert_foundation_write_stopped(refused, f"Foundation {key} direct {FOUNDATION_WRITE[0]}")
+                count += 1
+                bridged = host.rpc("tools/call", {"name": "CallTool", "arguments": {"name": FOUNDATION_WRITE[0], "arguments": FOUNDATION_WRITE[1]}})
+                require(bridged is not None, f"{key}: bridged write received no response")
+                assert_foundation_write_stopped(bridged, f"Foundation {key} bridged {FOUNDATION_WRITE[0]}")
                 count += 1
                 staged = host.rpc("tools/call", {"name": STAGING_WRITE[0], "arguments": STAGING_WRITE[1]})
                 require(staged is not None, f"{key}: staging write received no response")
@@ -315,10 +318,9 @@ def run_foundation(args) -> dict:
                 require(read is not None, f"{key}: Foundation read received no response")
                 assert_engine_read(read, f"Foundation {key} GetToolUsage")
                 count += 1
-        per_release[key] = {"checksPassed": 4, "stagingWrite": "approval-refused-before-filesystem-write", "directWrite": "refused-before-dispatch", "stoppedBy": stopped_by,
-                            "read": "succeeded", "CallTool": "not-advertised-by-Foundation-V4"}
-    return {"product": "foundation", "checksPassed": count, "checksExpected": len(KEYS) * 4,
-            "callToolUnsupportedReleases": list(KEYS), "releases": per_release}
+        per_release[key] = {"checksPassed": 5, "stagingWrite": "approval-refused-before-filesystem-write", "directWrite": "refused-before-dispatch", "stoppedBy": stopped_by,
+                            "read": "succeeded", "CallTool": "refused-before-dispatch"}
+    return {"product": "foundation", "checksPassed": count, "checksExpected": len(KEYS) * 5, "releases": per_release}
 
 
 def self_test() -> int:
@@ -399,7 +401,7 @@ def main() -> int:
         proof = "FoundationHost with an SDK-only engine worker"
         print(f"COMPLETE: {report['checksPassed']} approval/readiness checks passed for V{args.major}; {proof} proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted")
     else:
-        print(f"COMPLETE: {report['checksPassed']} default-approval checks passed across six Foundation releases; CallTool is not advertised by the Foundation V4 contract; no TIA connection attempted")
+        print(f"COMPLETE: {report['checksPassed']} default-approval checks passed across six Foundation releases including CallTool; no TIA connection attempted")
     return 0
 
 

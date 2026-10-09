@@ -45,7 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 int? inUse = Engineering.TiaMajorVersion == 0 ? (int?)null : Engineering.TiaMajorVersion;
                 int? detected = Engineering.DetectTiaMajorVersion();
                 string? firstEnvFixZh = null;
-                foreach (var c in Runtime.EnvironmentDoctor.Run(int.Parse(McpServer.ReleaseKey), inUse ?? detected))
+                foreach (var c in Runtime.EnvironmentDoctor.Run(TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion, inUse ?? detected))
                 {
                     if (!c.Ok && firstEnvFixZh == null) firstEnvFixZh = c.FixZh;
                     checks.Add(new DoctorCheck

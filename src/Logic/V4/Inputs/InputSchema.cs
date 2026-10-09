@@ -75,6 +75,27 @@ namespace TiaMcp.Logic.V4.Inputs
             return Build(schema);
         }
 
+        public IReadOnlyList<Error> ValidateFields(JsonElement value)
+        {
+            if (value.ValueKind != JsonValueKind.Object) return new[] { InputGuard.Invalid("arguments") };
+            var errors = new List<Error>();
+            Json.TryGetProperty("properties", out var declared);
+            if (Json.TryGetProperty("required", out var required))
+                foreach (var key in required.EnumerateArray())
+                    if (!value.TryGetProperty(key.GetString()!, out _)) errors.Add(InputGuard.Invalid(key.GetString()!));
+            foreach (var property in value.EnumerateObject())
+            {
+                try
+                {
+                    new InputBudget().Check(property.Value);
+                    if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member)) Check(member, property.Value, Json);
+                    else if (Json.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value, Json);
+                }
+                catch (InputRejection rejection) { errors.Add(rejection.ToError(property.Name)); }
+            }
+            return errors;
+        }
+
         public Error? Validate(JsonElement value, string parameter)
         {
             try { new InputBudget().Check(value); Check(value); return null; }

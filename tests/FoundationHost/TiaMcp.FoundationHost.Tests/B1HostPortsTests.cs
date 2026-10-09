@@ -30,7 +30,7 @@ public sealed class B1HostPortsTests
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(((global::ModelContextProtocol.Protocol.TextContentBlock)Assert.Single(result.Content)).Text), result.StructuredContent));
         foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19" })
-            Assert.False(PortedFamilies.Available(release, name));
+            Assert.Equal(!PortedFamilies.ToolReleases.TryGetValue(name, out var enabled) || enabled.Contains(release), PortedFamilies.Available(release, name));
     }
 
     [Fact]

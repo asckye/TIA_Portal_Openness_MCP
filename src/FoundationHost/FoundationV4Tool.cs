@@ -335,6 +335,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { IsNative: true, SessionRequiresReset: true })
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.SessionReset(), true));
+            if (FoundationHostPorts.BeforeDispatch() is { } batchRefusal) return Recorded(batchRefusal);
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {

@@ -631,6 +631,11 @@ def require_behavior_disclosure(response, label):
                       label + ': missing current D1 behavior disclosure')
 
 
+def missing_tia_cause(text, release):
+    return ('no TIA Portal V' in text
+            or f'TIA Portal V{release} or its Openness API files were not found.' in text)
+
+
 def recorder(rpc, entries, profile, release):
     inventory = behavior_entries(release)
     def call(name, arguments):
@@ -666,7 +671,7 @@ def scratch_directory(parent):
         shutil.rmtree(scratch)
 
 
-def stage_packaged_engine_without_siemens(exe, release, scratch):
+def stage_packaged_engine_without_siemens(exe, release, scratch, repo_root=None):
     runtime = scratch / 'runtime' / ('v' + release)
 
     def omit_siemens(_directory, names):
@@ -674,6 +679,10 @@ def stage_packaged_engine_without_siemens(exe, release, scratch):
                 if name.lower().startswith('siemens.engineering') and name.lower().endswith('.dll')}
 
     shutil.copytree(exe.parent, runtime, ignore=omit_siemens)
+    if repo_root is not None:
+        manifest = scratch / 'manifest' / 'package-manifest.json'
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo_root / 'manifest' / 'package-manifest.json', manifest)
     remaining = [path for path in runtime.rglob('*.dll')
                  if path.name.lower().startswith('siemens.engineering')]
     resources.require(not remaining,
@@ -696,7 +705,7 @@ def capture_release(args, release, exe, public_api):
         capture_mode = 'packaged-no-tia' if args.packaged_no_tia else 'sdk-only-fixture'
         if args.packaged_no_tia:
             resources.require(args.harness is None, 'Packaged no-TIA capture must launch the real EXE')
-            capture_exe = stage_packaged_engine_without_siemens(exe, release, scratch)
+            capture_exe = stage_packaged_engine_without_siemens(exe, release, scratch, args.repo_root)
             portal_root = None
             env['TiaPortalLocation'] = ''
             env['TIA_MCP_BUNDLE_ROOT'] = str(scratch)
@@ -727,15 +736,15 @@ def capture_release(args, release, exe, public_api):
             if args.packaged_no_tia:
                 bootstrap = decoded('InitializeEnvironment', {})
                 resources.require(bootstrap['data']['ready'] is False
-                                  and 'no TIA Portal V' in bootstrap['data']['recommendedReason'],
+                                  and missing_tia_cause(bootstrap['data']['recommendedReason'], release),
                                   'Packaged no-TIA bootstrap omitted its readiness cause')
                 doctor = decoded('GetEnvironmentDiagnostics', {'fix': False})
                 resources.require(doctor['data']['ready'] is False
-                                  and 'no TIA Portal V' in canonical(doctor['data']),
+                                  and missing_tia_cause(canonical(doctor['data']), release),
                                   'Packaged no-TIA diagnostics omitted their readiness cause')
                 state = decoded('GetSessionState', {})
                 session_readiness_refusal(state, 'GetSessionState')
-                resources.require('no TIA Portal V' in state['data']['environment']['cause'],
+                resources.require(missing_tia_cause(state['data']['environment']['cause'], release),
                                   'GetSessionState readiness refusal omitted the no-TIA cause')
             else:
                 state = decoded('GetSessionState', {})
@@ -932,14 +941,15 @@ def capture_foundation(args, release, exe):
             unavailable_workbench(call, {tool['name'] for tool in tools})
             passive.extend(sorted(WORKBENCH_CALLS))
             names = sorted(t['name'] for t in tools)
-            resources.require('CallTool' not in names, 'Foundation added a bridge; review its rejection path first')
+            resources.require('CallTool' in names, 'Foundation is missing its registered-catalog bridge')
+            for name in names:
+                v4_rejection(call('CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS}), 'CallTool -> ' + name)
             return {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
                 'release': release, 'profiles': ['plc-foundation'], 'transport': 'stdio',
                 'coverage': {'registeredTools': len(tools), 'calledTools': sorted(set(rejected) | set(passive)),
                     'directRejectedTools': rejected, 'directSkipped': skipped, 'passiveTools': passive,
                     'passiveSkipped': {'GetSessionState': 'Requires worker ReadState; no worker is started by this capture.'},
-                    'bridgeRejectedTools': [],
-                    'bridgeSkipped': {name: 'Foundation does not advertise CallTool or a lite bridge.' for name in names}},
+                    'bridgeRejectedTools': names, 'bridgeSkipped': {}},
                 'calls': [compact(entries[key], args.include_text_evidence) for key in sorted(entries)]}
 
 
@@ -1292,6 +1302,10 @@ def compare_migration(args):
 
 
 class RawResponseTests(unittest.TestCase):
+    def test_no_tia_cause_accepts_both_host_wordings_but_not_a_group_failure(self):
+        self.assertTrue(missing_tia_cause('There is no TIA Portal V20 installation.', '20'))
+        self.assertTrue(missing_tia_cause('TIA Portal V21 or its Openness API files were not found.', '21'))
+        self.assertFalse(missing_tia_cause('Current user is not in the required Siemens TIA Openness group.', '21'))
     def test_lifecycle_description_group_is_release_scoped(self):
         import phase6_groups
         members = {'RetrieveProjectArchive', 'ManageMultiuserSession'}
@@ -1689,16 +1703,16 @@ def verify_coverage(release, baseline, snapshot, lite):
             doctor = stored_v4_body('full', 'GetEnvironmentDiagnostics', {'fix': False})
             state = stored_v4_body('full', 'GetSessionState', {})
             if (bootstrap.get('data', {}).get('ready') is not False
-                    or 'no TIA Portal V' not in bootstrap.get('data', {}).get('recommendedReason', '')):
+                    or not missing_tia_cause(bootstrap.get('data', {}).get('recommendedReason', ''), release)):
                 raise ValueError(f'V{release}: packaged snapshot does not prove no-TIA bootstrap readiness')
             if (doctor.get('data', {}).get('ready') is not False
-                    or 'no TIA Portal V' not in canonical(doctor.get('data', {}))):
+                    or not missing_tia_cause(canonical(doctor.get('data', {})), release)):
                 raise ValueError(f'V{release}: packaged snapshot does not prove no-TIA diagnostics readiness')
             if (state.get('error', {}).get('code') != 'RESOURCE_UNAVAILABLE'
                     or state.get('error', {}).get('details', {}).get('resource') != 'tia-openness-environment'
                     or state.get('meta', {}).get('outcome') != 'rejected-before-operation'
                     or state.get('meta', {}).get('execution') != 'not-started'
-                    or 'no TIA Portal V' not in state.get('data', {}).get('environment', {}).get('cause', '')):
+                    or not missing_tia_cause(state.get('data', {}).get('environment', {}).get('cause', ''), release)):
                 raise ValueError(f'V{release}: packaged snapshot does not prove GetSessionState readiness refusal')
     else:
         if snapshot['profiles'] != ['plc-foundation'] or 'liteAdvertisedTools' in coverage:
@@ -1711,9 +1725,11 @@ def verify_coverage(release, baseline, snapshot, lite):
                                 for key in tool['inputSchema'].get('properties', {}))}
         passive, profile = {'InitializeEnvironment', 'RunCapabilitySelfTest'} | set(WORKBENCH_CALLS), 'plc-foundation'
         skipped('directSkipped', names - rejected)
-        skipped('bridgeSkipped', names)
+        skipped('bridgeSkipped', set())
         skipped('passiveSkipped', {'GetSessionState'})
-        roster('bridgeRejectedTools', set())
+        roster('bridgeRejectedTools', names)
+        for name in names:
+            required_call(profile, 'CallTool', {'name': name, 'arguments': REJECT_ARGUMENTS})
         roster('passiveTools', passive)
         for name in passive:
             required_call(profile, name, WORKBENCH_CALLS.get(name, {}))
@@ -1737,8 +1753,9 @@ def verify(args):
         verify_coverage(release, baseline[release], snapshot, rosters[release][1])
         inventory = {name for row in baseline[release]['behaviorCapabilities'] if row['state'] == 'current' for name in row['entries']}
         for call in snapshot['calls']:
-            if call['tool'] in inventory and 'response' in call:
-                require_behavior_disclosure(call['response'], call['tool'])
+            target = call['arguments'].get('name') if call['tool'] == 'CallTool' else call['tool']
+            if target in inventory and 'response' in call:
+                require_behavior_disclosure(call['response'], target)
         # Digest-only bridge replies are asserted by recorder before hashing; the
         # actual built-product inventory tests also exercise every bridge target.
     print(f'V4 responses verified: {len(snapshots)} releases, '

@@ -8,19 +8,31 @@ does not translate or upgrade a project.
 
 | Version | Advertised catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 114 | Foundation host and V14 SP1 worker |
-| V15.1 | 115 | Foundation host and V15.1 worker |
-| V16 | 117 | Foundation host and V16 worker |
-| V17 | 117 | Foundation host and V17 worker |
-| V18 | 117 | Foundation host and V18 worker |
-| V19 | 119 | Foundation host and V19 worker |
+| V14 SP1 | 157 | Foundation host and V14 SP1 worker |
+| V15.1 | 158 | Foundation host and V15.1 worker |
+| V16 | 160 | Foundation host and V16 worker |
+| V17 | 160 | Foundation host and V17 worker |
+| V18 | 160 | Foundation host and V18 worker |
+| V19 | 170 | Foundation host and V19 worker |
 | V20 | 495 | Foundation host and V20 engine worker |
 | V21 | 506 | Foundation host and V21 engine worker |
 
-V14 SP1–V19 advertise their implemented Foundation subset. They do not offer the
-full engine's lite profile or dispatch bridge. V20/V21 use the 81-tool lite profile;
-`FindTools` and `CallTool` can reach the full registered catalog. The eight release
-catalogs contain 1,700 version/tool combinations and 506 distinct V4 names.
+V14 SP1–V19 advertise their full registered Foundation catalog, including all 28 F01
+discovery, bridge, preview and batch tools (maintainer decision, 2026-10-08).
+`FindTools` and `CallTool` reach exactly the selected release's registered catalog;
+version gates, target approvals and batch project identity checks remain enforced.
+Old releases have no lite profile; the bounded registry requires a lite design or
+a reviewed bound change before reaching 257 tools. V20/V21 use the 81-tool lite profile.
+The eight release catalogs contain 1,966 version/tool combinations and 507 distinct V4 names.
+
+Newly enabled F01/F02/F03 behavior is `current / NOT RUN` until VM acceptance.
+F02 offers 12 tools on old releases: V20/V21 schema validation, SIMATIC ML decoding,
+SIMATIC SD inspection and the V21 alias/alarm LAD builder remain off. Render/Compare
+accept exported files; native block-path mode returns `UNSUPPORTED_CAPABILITY` before work.
+F03 offers three generic library/template tools on V14 SP1–V18 and adds eight Unified
+offline design tools on V19. Nine Classic package/preflight tools remain off below V20.
+Offline output remains a candidate; registration does not establish native import compatibility.
+
 
 The 4.0 contract uses typed argument objects matching the selected tool's
 `inputSchema`. Migrated calls return the V4 `schemaVersion` / `ok` / `data` / `error` / `meta`

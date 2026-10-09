@@ -298,7 +298,10 @@ namespace TiaMcp.Engine.Tests
                 Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
                 Assert.Equal("rejected-before-operation", (string?)result["meta"]!["outcome"]);
                 Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
-                Assert.True(JsonNode.DeepEquals(direct["error"], result["error"]));
+                if (ReferenceEquals(result, bridged) && (string?)direct["error"]!["details"]!["parameter"] == "arguments")
+                    Assert.Equal(json == "{}" ? "input" : json.Contains("\"Input\"") ? "input, Input" : "extra",
+                        (string?)result["error"]!["details"]!["parameter"]);
+                else Assert.True(JsonNode.DeepEquals(direct["error"], result["error"]));
             }
             Assert.Equal(0, calls);
         }

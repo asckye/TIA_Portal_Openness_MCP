@@ -87,7 +87,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 11233,
+    "minimumPassed": 12373,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -108,7 +108,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 8689,
+    "minimumPassed": 12373,
     "maximumSkipped": 1,
     "arguments": [],
     "platforms": {

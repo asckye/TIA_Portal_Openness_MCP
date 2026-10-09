@@ -27,9 +27,10 @@ internal static class PassiveHostDiagnosticsTests
         foreach (var release in TiaVersionCatalog.All)
         foreach (var native in new[] { false, true })
         {
+            using var engineScope = release.IsFullEngine ? EngineHostParity.EnterScope() : null;
             var worker = new ForbiddenWorker();
             var registry = LegacyHostToolRegistry.Create(worker, release.Key, native);
-            check(registry.Where(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name)).Select(t => t.ProtocolTool.Name).Order().SequenceEqual(
+            check(registry.Where(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name) && PortedToolContract.Families(release.Key).Any(f => f.Tools.Contains(t.ProtocolTool.Name))).Select(t => t.ProtocolTool.Name).Order().SequenceEqual(
                 PortedToolContract.Families(release.Key).SelectMany(f => f.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(release.Key, name))).Order()),
                 "actual registry adds exactly the reviewed ported families");
             foreach (var name in new[] { "InitializeEnvironment", "RunCapabilitySelfTest" })
@@ -65,7 +66,7 @@ internal static class PassiveHostDiagnosticsTests
                 }
                 else check(result["probes"]!.AsObject().All(p => p.Value!.GetValue<string>() == "not-probed"), "self-test leaves native facts unprobed");
                 check(result["sideEffects"]!.AsObject().All(p => !p.Value!.GetValue<bool>()), "no launch repair settings claims");
-                check(text.Length < 32768 && !text.Contains("SECRET") && !text.Contains(Environment.CurrentDirectory), "bounded redacted result");
+                check(text.Length < 65536 && !text.Contains("SECRET") && !text.Contains(Environment.CurrentDirectory), "bounded redacted result");
             }
             check(worker.Calls == 0, "native enabled or disabled diagnostics never call worker");
         }

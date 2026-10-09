@@ -3353,6 +3353,70 @@
         "entries": []
       },
       {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "PlanGlobalLibraryTemplateReuse"
+        ]
+      },
+      {
         "family": "F18",
         "state": "current",
         "l5": "NOT RUN",
@@ -3506,6 +3570,70 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "PlanGlobalLibraryTemplateReuse"
+        ]
       },
       {
         "family": "F18",
@@ -3663,6 +3791,70 @@
         "entries": []
       },
       {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "PlanGlobalLibraryTemplateReuse"
+        ]
+      },
+      {
         "family": "F18",
         "state": "current",
         "l5": "NOT RUN",
@@ -3816,6 +4008,70 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "PlanGlobalLibraryTemplateReuse"
+        ]
       },
       {
         "family": "F18",
@@ -3973,6 +4229,70 @@
         "entries": []
       },
       {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "PlanGlobalLibraryTemplateReuse"
+        ]
+      },
+      {
         "family": "F18",
         "state": "current",
         "l5": "NOT RUN",
@@ -4127,6 +4447,78 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "AnalyzeUnifiedHmiTemplateLayout",
+          "BuildUnifiedHmiButtonActionScript",
+          "BuildUnifiedHmiLayoutDesign",
+          "BuildUnifiedHmiTemplateApplyDesign",
+          "BuildUnifiedHmiTemplateApplyDesignManifest",
+          "BuildUnifiedHmiThemeDesign",
+          "ManageUnifiedCwcPackage",
+          "PlanGlobalLibraryTemplateReuse",
+          "RunHmiActionScriptRecipeSafetySelfTest"
+        ]
       },
       {
         "family": "F18",

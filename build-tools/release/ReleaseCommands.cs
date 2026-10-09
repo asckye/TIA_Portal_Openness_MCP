@@ -1411,24 +1411,22 @@ internal static partial class ReleaseCommands
                 });
                 using var approval = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOutput, "result.json")));
                 var approvalRoot = approval.RootElement;
-                var unsupported = approvalRoot.GetProperty("callToolUnsupportedReleases").EnumerateArray().Select(item => item.GetString() ?? "").Order(StringComparer.Ordinal).ToArray();
-                if (GetJsonString(approvalRoot, "status") != "passed" || GetJsonInt(approvalRoot, "checksPassed") != 24 || GetJsonInt(approvalRoot, "checksExpected") != 24 ||
+                if (GetJsonString(approvalRoot, "status") != "passed" || GetJsonInt(approvalRoot, "checksPassed") != 30 || GetJsonInt(approvalRoot, "checksExpected") != 30 ||
                     GetJsonBool(approvalRoot, "workbenchConnected") || GetJsonBool(approvalRoot, "tiaConnected") || GetJsonString(approvalRoot, "approvalSettings") != "explicit enabled=true; timeoutSeconds=120" ||
-                    !unsupported.SequenceEqual(new[] { "14sp1", "15.1", "16", "17", "18", "19" }, StringComparer.Ordinal))
+                    !approvalRoot.GetProperty("releases").EnumerateObject().Select(item => item.Name).Order(StringComparer.Ordinal).SequenceEqual(new[] { "14sp1", "15.1", "16", "17", "18", "19" }, StringComparer.Ordinal))
                     throw new ReleaseException("Foundation default-approval check count, state, or roster evidence is invalid");
                 foreach (var row in releaseRows)
                 {
                     var key = (string)row.GetType().GetProperty("releaseKey")!.GetValue(row)!;
                     if (key is "20" or "21") continue;
                     var releaseApproval = approvalRoot.GetProperty("releases").GetProperty(key);
-                    if (GetJsonInt(releaseApproval, "checksPassed") != 4 || GetJsonString(releaseApproval, "directWrite") != "refused-before-dispatch" ||
+                    if (GetJsonInt(releaseApproval, "checksPassed") != 5 || GetJsonString(releaseApproval, "directWrite") != "refused-before-dispatch" ||
                         GetJsonString(releaseApproval, "stagingWrite") != "approval-refused-before-filesystem-write" ||
-                        GetJsonString(releaseApproval, "read") != "succeeded" || GetJsonString(releaseApproval, "CallTool") != "not-advertised-by-Foundation-V4")
+                        GetJsonString(releaseApproval, "read") != "succeeded" || GetJsonString(releaseApproval, "CallTool") != "refused-before-dispatch")
                         throw new ReleaseException("Foundation default-approval result is incomplete: " + key);
                 }
                 validationNode["approvalSafetyExecuted"] = true;
-                validationNode["foundationApprovalSafetyChecksPassed"] = 24;
-                validationNode["foundationCallToolUnsupportedReleases"] = JsonSerializer.SerializeToNode(unsupported);
+                validationNode["foundationApprovalSafetyChecksPassed"] = 30;
                 validationNode["foundationApprovalResultPath"] = Path.GetRelativePath(Root, approvalOutput).Replace('\\', '/') + "/result.json";
                 validationNode["approvalSafetyScriptSha256"] = ReleaseRecords.HashFile(Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"));
                 foreach (var index in Enumerable.Range(0, releaseRows.Count))
@@ -1439,8 +1437,8 @@ internal static partial class ReleaseCommands
                     releaseRows[index] = new
                     {
                         releaseKey = key, profile = "plc-foundation", toolCount = (int)row.GetType().GetProperty("toolCount")!.GetValue(row)!, nativeAcceptance = "NOT RUN",
-                        approvalSafetyChecksPassed = 4, approvalDefaultEnabled = true,
-                        approvalSafety = new { status = "passed", checksPassed = 4, defaultEnabled = true, directWriteRefusedBeforeDispatch = true, readSucceeded = true, callTool = "not-advertised-by-Foundation-V4" }
+                        approvalSafetyChecksPassed = 5, approvalDefaultEnabled = true,
+                        approvalSafety = new { status = "passed", checksPassed = 5, defaultEnabled = true, directWriteRefusedBeforeDispatch = true, readSucceeded = true, callTool = "refused-before-dispatch" }
                     };
                 }
                 evidencePaths.Add(Path.Combine(approvalOutput, "result.json"));

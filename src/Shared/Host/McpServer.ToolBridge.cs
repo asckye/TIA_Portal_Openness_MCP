@@ -43,10 +43,23 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         internal static string VersionToolProblem(string name)
-            => Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name);
+            => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine
+                ? Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name)
+                : CatalogView.Find(name) == null ? "Tool is not registered in this release." : "";
 
         internal static string VersionCallProblem(string name, Func<string, string?> argument)
-            => Siemens.ToolVersionPolicy.CallProblem(ReleaseKey, name, argument);
+        {
+            if (TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine)
+                return Siemens.ToolVersionPolicy.CallProblem(ReleaseKey, name, argument);
+            if (VersionToolProblem(name) is { Length: > 0 } problem) return problem;
+            if (name is "RenderPlcBlockDocument" or "ComparePlcBlockDocuments"
+                && new[] { "blockPath", "leftBlockPath", "rightBlockPath" }.Any(p => !string.IsNullOrWhiteSpace(argument(p))))
+                return "Native block-document analysis is not enabled on this release; provide exported file paths.";
+            if (ReleaseKey is "14sp1" or "15.1" or "16" && name is "CompilePlcSoftware" or "CompilePlcDiagnostics"
+                && !string.IsNullOrEmpty(argument("password")))
+                return "Safety compilation with a password requires V17 or later.";
+            return "";
+        }
 
         private static string DuplicateArgumentProblem(JsonObject arguments)
         {
@@ -243,10 +256,22 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {
 #if TIA_ENGINE_HOST
-            if (CatalogView.Find(name)?.Execution == "foundation" && !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name))
+            if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                || !TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine))
             {
-                var refusal = beforeDispatch?.Invoke();
-                return refusal ?? ToolInvoker.Invoke(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0).Result;
+                var input = arguments ?? EmptyArguments();
+                var rejected = ToolInvoker.Bind(name, input, out _);
+                if (rejected != null)
+                {
+                    var fields = TargetInputError(name, input, rejected);
+                    if (!ReferenceEquals(fields, rejected))
+                        return FinishApproval(V4TargetReject(name, fields, CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name }))), null);
+                    return ToolInvoker.Invoke(name, input, ApprovalPreviewDepth.Value > 0).Result;
+                }
+                var previous = FoundationBeforeDispatch;
+                FoundationBeforeDispatch = beforeDispatch;
+                try { return ToolInvoker.Invoke(name, arguments ?? EmptyArguments(), ApprovalPreviewDepth.Value > 0).Result; }
+                finally { FoundationBeforeDispatch = previous; }
             }
 #endif
             bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _) && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
@@ -256,7 +281,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var error = ToolInvoker.Bind(name, arguments ?? EmptyArguments(), out var call);
             if (error != null)
             {
-                var rejected = V4TargetReject("CallTool", error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
+                error = TargetInputError(name, arguments ?? EmptyArguments(), error);
+                string target = error.Details is InvalidArgumentDetails { Parameter: not "arguments" } && CatalogView.Find(name) != null ? name : "CallTool";
+                var rejected = V4TargetReject(target, error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
                 return AuditBridgeResult(audit, rejected, disabled);
             }
@@ -304,6 +331,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind), current: issued);
         }
 
+#if TIA_ENGINE_HOST
+        private static readonly System.Threading.AsyncLocal<Func<CallToolResult?>?> FoundationChecks = new();
+        internal static Func<CallToolResult?>? FoundationBeforeDispatch { get => FoundationChecks.Value; set => FoundationChecks.Value = value; }
+#endif
+
         internal static void ValidateCallerInputFiles(string tool, string arguments)
             => CallerInputFiles.Validate(tool, JsonNode.Parse(arguments)!.AsObject());
 
@@ -318,6 +350,17 @@ namespace TiaMcpServer.ModelContextProtocol
             => V4Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None);
         internal static CallToolResult V4TargetReject(string tool, Error error, bool current)
             => V4Result(tool, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current);
+        internal static Error TargetInputError(string name, ToolArguments arguments, Error error)
+        {
+            var target = CatalogView.Find(name);
+            if (target == null || error.Details is not InvalidArgumentDetails { Parameter: "arguments" }) return error;
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (arguments.Json.EnumerateObject().Any(p => !names.Add(p.Name))) return error;
+            var fields = new InputSchema(target.Tool.InputSchema).ValidateFields(arguments.Json);
+            if (fields.Count == 0 || fields.Any(e => e.Details is not InvalidArgumentDetails)) return error;
+            string parameters = string.Join(", ", fields.Select(e => ((InvalidArgumentDetails)e.Details).Parameter));
+            return new Error("Missing or invalid target field(s): " + parameters + ".", new InvalidArgumentDetails(parameters, Array.Empty<string>()));
+        }
         internal static bool CurrentBehaviorTargets(string tool, JsonElement arguments)
         {
             var targets = new List<string>();
@@ -351,6 +394,9 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult V4Result(string tool, JsonObject? data, Error? error,
             Outcome outcome, Execution execution, Completeness completeness, Paging? paging = null, bool current = false)
         {
+#if TIA_ENGINE_HOST
+            if (!TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
+#endif
             var warnings = current ? new[] { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array.Empty<Warning>();
             var policy = current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable;
@@ -365,13 +411,13 @@ namespace TiaMcpServer.ModelContextProtocol
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
         }
-        internal static CallToolResult InfrastructureResult(string tool, ResponseMessage response, Paging? paging = null)
+        internal static CallToolResult InfrastructureResult(string tool, ResponseMessage response, Paging? paging = null, bool reportOnly = false)
         {
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             data.Remove("success"); data.Remove("timestamp");
             data["summary"] = response.Message;
             if (response is ResponseStringList list) data["items"] = new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
-            return response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
+            return reportOnly || response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
                 : V4Reject(tool, InvalidInput("arguments"), data);
         }
         internal static CallToolResult ToolResult(object? result)
@@ -415,8 +461,18 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var args = arguments ?? EmptyArguments();
             var error = ToolInvoker.Bind(name, args, out _);
-            if (error != null) return V4Reject("PreviewToolCall", error);
+            if (error != null) error = TargetInputError(name, args, error);
+            if (error != null && (error.Code != ErrorCode.InvalidArgument || CatalogView.Find(name) == null)) return V4Reject("PreviewToolCall", error);
             var report = PreflightToolCall(name, args.Json.GetRawText());
+            if (error != null)
+            {
+                report.Meta!["validationError"] = JsonSerializer.SerializeToNode(error, V4BindingJson);
+                var fields = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema).ValidateFields(args.Json);
+                report.Meta["validationErrors"] = JsonSerializer.SerializeToNode(fields.Count == 0 ? new[] { error } : fields, V4BindingJson);
+                report.Meta["ok"] = false;
+                report.Message = "NOT READY: " + error.Message;
+                return InfrastructureResult("PreviewToolCall", report, reportOnly: true);
+            }
             if (report.Meta?["prerequisites"]?["satisfied"]?.GetValue<bool?>() == false)
                 return V4Reject("PreviewToolCall", new Error("No project is bound.", new ProjectNotBoundDetails()));
             report.Meta!["success"] = true;

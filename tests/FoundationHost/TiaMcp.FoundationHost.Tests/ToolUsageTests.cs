@@ -11,6 +11,7 @@ internal static class ToolUsageTests
     {
         foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         {
+            using var engineScope = release is "20" or "21" ? EngineHostParity.EnterScope() : null;
             var worker = new FakeWorker();
             var roster = LegacyHostToolRegistry.Create(worker, release, true);
             var guide = roster.Single(t => t.ProtocolTool.Name == "GetToolUsage");

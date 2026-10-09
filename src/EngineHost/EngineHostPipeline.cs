@@ -67,7 +67,7 @@ namespace TiaMcp.FoundationHost
         internal ISet<string> LiteToolNames = new HashSet<string>(StringComparer.Ordinal);
         private readonly ConditionalWeakTable<object, BatchPlanStore> batchPlans = new();
         internal BatchPlanStore BatchPlans => batchPlans.GetValue(Worker.SessionKey, _ => new BatchPlanStore());
-        internal SessionExports Exports { get; } = new();
+        internal SessionExports Exports { get; set; } = new();
         internal string? HttpSessionId;
         internal volatile bool Ended;
     }
@@ -108,10 +108,59 @@ namespace TiaMcp.FoundationHost
                 .Select(t => (McpServerTool)new SessionTool(this, t)).ToArray();
         }
 
+        internal EngineHostPipeline(string releaseKey, IEngineWorker worker, IReadOnlyList<McpServerTool> sharedTools)
+        {
+            EngineHostConfiguration.ReleaseKey = releaseKey;
+            context = new EngineSessionContext(worker);
+            using var session = EnterSession();
+            context.StagingOwner = () => stagingLifetime.Session;
+            var catalog = new FoundationCatalog(releaseKey, sharedTools);
+            Instructions = TiaOpenness.Shared.ToolUsageCatalog.Instructions;
+            BehaviorCapabilities = catalog.BehaviorCapabilities;
+            McpServer.ConfigureToolBridge(catalog, new WorkerToolInvoker(catalog, worker, stagingLifetime, sharedTools),
+                () => false, new HashSet<string>(StringComparer.Ordinal));
+            InvocationJournal.BindingSnapshot = () => EngineHostConfiguration.Worker.Binding as JsonObject;
+            Tools = catalog.All.Values.SelectMany(t => t.Execution == "foundation"
+                ? new[] { sharedTools.Single(s => s.ProtocolTool.Name == t.Name) }
+                : McpServer.WrapTools(new[] { McpServer.ToolInvoker.CreateTool(t) }))
+                .Select(t => (McpServerTool)new SessionTool(this, t)).ToList();
+            AllTools = Tools.ToArray();
+        }
+
+        private sealed class FoundationCatalog : IToolCatalogView
+        {
+            public IReadOnlyDictionary<string, ToolDescriptor> All { get; }
+            public IReadOnlyDictionary<string, ToolDescriptor> IncludingUnavailable => All;
+            public IReadOnlyList<ToolDescriptor> Lite => Array.Empty<ToolDescriptor>();
+            public JsonArray BehaviorCapabilities { get; }
+            public ToolDescriptor? Find(string name, bool includeUnavailable = false)
+                => All.TryGetValue(name, out var tool) ? tool : null;
+            internal FoundationCatalog(string release, IReadOnlyList<McpServerTool> shared)
+            {
+                BehaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(EngineHostPipeline).Assembly, release);
+                All = new Dictionary<string, ToolDescriptor>(StringComparer.OrdinalIgnoreCase);
+                var merged = new SharedToolCatalog(this, shared, new HashSet<string>()).All.ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                foreach (var method in PortedToolDeclarations.Methods(release).Where(m =>
+                    TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).Name is "F01" or "F02" or "F03"))
+                {
+                    string name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                    DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
+                    descriptor.Tool.Description += " Native behaviorPolicy=current; V4 native acceptance is pending.";
+                    merged.Add(name, descriptor);
+                }
+                All = merged;
+            }
+        }
+
         internal IDisposable EnterSession()
         {
             if (context.Ended) throw new InvalidOperationException("The MCP engine session has ended; initialize a new session.");
             return EngineHostConfiguration.Enter(context);
+        }
+        internal void ResetExports()
+        {
+            context.Exports.Dispose();
+            context.Exports = new SessionExports();
         }
         internal bool SessionLocked
         {

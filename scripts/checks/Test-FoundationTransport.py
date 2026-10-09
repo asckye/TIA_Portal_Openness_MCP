@@ -106,7 +106,7 @@ def exercise(client, key, logfile, expected_before):
     names = {t['name'] for t in tools}
     # check_usage reads the V4 envelope (Foundation plan fields are camelCase since P6-59).
     USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key))
-    assert 'CallTool' not in names and 'Bootstrap' not in names and 'Connect' not in names
+    assert 'CallTool' in names and 'Bootstrap' not in names and 'Connect' not in names
     for name in names:
         refused = client.call('tools/call', {'name': name, 'arguments': {'__invalid': True}})
         body = json.loads(refused['content'][0]['text'])

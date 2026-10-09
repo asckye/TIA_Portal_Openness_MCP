@@ -19,9 +19,25 @@ namespace TiaMcpServer.Dispatch
         internal static IList<McpServerTool> Wrap(IList<McpServerTool> tools)
             => tools.Select(tool => (McpServerTool)new GuardedTool(tool)).ToList();
 
-        internal static bool IsSafeWithoutTia(string name) => ToolTaxonomy.IsSafeWithoutTia(name);
+        internal static bool IsSafeWithoutTia(string name)
+        {
+#if TIA_ENGINE_HOST
+            if (!TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).IsFullEngine
+                && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03") return true;
+#endif
+            return ToolTaxonomy.IsSafeWithoutTia(name);
+        }
 
-        private static bool RequiresOpenness(string name) => !IsSafeWithoutTia(name);
+        private static bool RequiresOpenness(string name)
+        {
+#if TIA_ENGINE_HOST
+            // Foundation targets retain their own release readiness and approval boundary.
+            if (!TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).IsFullEngine
+                && McpServer.CatalogView.Find(name)?.Execution == "foundation") return false;
+#endif
+            return !IsSafeWithoutTia(name);
+        }
 
         private static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments)
         {
@@ -56,8 +72,14 @@ namespace TiaMcpServer.Dispatch
                     ?? new Dictionary<string, JsonElement>());
                 var admission = McpServer.ValidateInfrastructureExample(ProtocolTool.Name,
                     JsonNode.Parse(arguments.GetRawText())!.AsObject());
+                if (admission != null && ProtocolTool.Name == "CallTool" && arguments.TryGetProperty("name", out var targetName)
+                    && targetName.ValueKind == JsonValueKind.String && (!arguments.TryGetProperty("arguments", out var supplied) || supplied.ValueKind == JsonValueKind.Object))
+                    admission = McpServer.TargetInputError(targetName.GetString()!, new TiaMcp.Logic.V4.Inputs.ToolArguments(
+                        arguments.TryGetProperty("arguments", out var targetArguments) ? targetArguments : JsonSerializer.SerializeToElement(new { })), admission);
                 if (admission != null)
-                    return new ValueTask<CallToolResult>(McpServer.V4TargetReject(ProtocolTool.Name, admission,
+                    return new ValueTask<CallToolResult>(McpServer.V4TargetReject(
+                        ProtocolTool.Name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "arguments" }
+                            ? target : ProtocolTool.Name, admission,
                         McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments)));
                 var cause = OpennessReadiness.Cause ?? "TIA Openness initialization has not completed.";
                 var fix = OpennessReadiness.FixEn ?? "Run `tia doctor` to inspect the TIA Openness installation.";

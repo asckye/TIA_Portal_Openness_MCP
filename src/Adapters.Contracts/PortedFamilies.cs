@@ -26,13 +26,13 @@ namespace TiaMcp.Adapters.Contracts
 
         public static readonly IReadOnlyList<Family> All = new[] {
             new Family("F01", "host-meta",
-                new[] { "20", "21" },
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "ApplyToolBatch", "BuildReleaseDiagnosticReport", "BuildReleaseHandoffArtifacts", "BuildReleaseManifest", "BuildReleaseRunbook", "CallTool", "CheckProductUpdate", "ClearExportHandles", "DeleteExportHandle", "FindTools", "GenerateAcceptanceReport", "GenerateErrorReport", "GetEnvironmentDiagnostics", "GetExportContent", "GetNativeInvocationLog", "GetOpennessCompatibility", "GetOpennessGuidance", "GetOpennessWorkerStatus", "GetV21EcosystemCatalog", "ListExportHandles", "ListToolCategories", "PreviewToolBatch", "PreviewToolCall", "RestartOpennessWorker", "RunOfflineReleaseValidationSuite", "RunOnlineMonitoringSafetySelfTest", "RunReadOnlyToolBatch", "SaveExportContent" }),
             new Family("F02", "plc-offline",
-                new[] { "20", "21" },
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "AnalyzePlcReferences", "AnalyzePlcSclSource", "AuditEngineeringExports", "BuildPlcAliasAlarmLad", "ComparePlcBlockDocuments", "DecodePlcSimaticMl", "ExtractPlcBlockMetrics", "GeneratePlcDocumentation", "InspectSimaticSdCompatibility", "InstantiatePlcTemplates", "PatchPlcBlockDocument", "RenderPlcBlockDocument", "RenderPlcVisualDiff", "ScanPlcSourceAnnotations", "ValidatePlcDocumentSchemas", "WritePlcSclSourceFile" }),
             new Family("F03", "hmi-offline",
-                new[] { "20", "21" },
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "AnalyzeGlobalLibraryPackage", "AnalyzeHmiTemplateReference", "AnalyzeUnifiedHmiTemplateLayout", "BuildClassicHmiMinimalPackage", "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildUnifiedHmiButtonActionScript", "BuildUnifiedHmiLayoutDesign", "BuildUnifiedHmiTemplateApplyDesign", "BuildUnifiedHmiTemplateApplyDesignManifest", "BuildUnifiedHmiThemeDesign", "ManageUnifiedCwcPackage", "PlanGlobalLibraryTemplateReuse", "RunClassicHmiOfflineValidationSuite", "RunClassicHmiTemporaryImportPreflight", "RunHmiActionScriptRecipeSafetySelfTest", "RunHmiTemplatePlcSyncPrecheckSuite", "ValidateClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackagePlcSync", "WriteClassicHmiMinimalPackageFiles" }),
             new Family("F18", "hardware-devices",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
@@ -49,6 +49,28 @@ namespace TiaMcp.Adapters.Contracts
         };
 
         public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
+            // Format evidence is deliberately separate from managed-code availability.
+            ["BuildPlcAliasAlarmLad"] = new[] { "20", "21" },
+            ["DecodePlcSimaticMl"] = new[] { "20", "21" },
+            ["ValidatePlcDocumentSchemas"] = new[] { "20", "21" },
+            ["InspectSimaticSdCompatibility"] = new[] { "20", "21" },
+            ["BuildClassicHmiMinimalPackage"] = new[] { "20", "21" },
+            ["BuildClassicHmiScreen"] = new[] { "20", "21" },
+            ["BuildClassicHmiTagTable"] = new[] { "20", "21" },
+            ["RunClassicHmiOfflineValidationSuite"] = new[] { "20", "21" },
+            ["RunClassicHmiTemporaryImportPreflight"] = new[] { "20", "21" },
+            ["RunHmiTemplatePlcSyncPrecheckSuite"] = new[] { "20", "21" },
+            ["ValidateClassicHmiMinimalPackageFiles"] = new[] { "20", "21" },
+            ["ValidateClassicHmiMinimalPackagePlcSync"] = new[] { "20", "21" },
+            ["WriteClassicHmiMinimalPackageFiles"] = new[] { "20", "21" },
+            ["AnalyzeUnifiedHmiTemplateLayout"] = new[] { "19", "20", "21" },
+            ["BuildUnifiedHmiButtonActionScript"] = new[] { "19", "20", "21" },
+            ["BuildUnifiedHmiLayoutDesign"] = new[] { "19", "20", "21" },
+            ["BuildUnifiedHmiTemplateApplyDesign"] = new[] { "19", "20", "21" },
+            ["BuildUnifiedHmiTemplateApplyDesignManifest"] = new[] { "19", "20", "21" },
+            ["BuildUnifiedHmiThemeDesign"] = new[] { "19", "20", "21" },
+            ["ManageUnifiedCwcPackage"] = new[] { "19", "20", "21" },
+            ["RunHmiActionScriptRecipeSafetySelfTest"] = new[] { "19", "20", "21" },
             ["ListCommunicationConnections"] = new[] { "21" },
             ["ManageCommunicationConnection"] = new[] { "21" }
         };

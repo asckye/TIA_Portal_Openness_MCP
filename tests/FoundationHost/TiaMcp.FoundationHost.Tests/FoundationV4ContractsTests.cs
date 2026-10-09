@@ -25,8 +25,8 @@ public sealed class FoundationV4ContractsTests
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
 
     [Theory]
-    [InlineData("14sp1", 114)] [InlineData("15.1", 115)] [InlineData("16", 117)]
-    [InlineData("17", 117)] [InlineData("18", 117)] [InlineData("19", 119)]
+    [InlineData("14sp1", 157)] [InlineData("15.1", 158)] [InlineData("16", 160)]
+    [InlineData("17", 160)] [InlineData("18", 160)] [InlineData("19", 170)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
@@ -34,7 +34,7 @@ public sealed class FoundationV4ContractsTests
         Assert.Equal(count, roster.Count);
         Assert.Equal(count, roster.Select(t => t.ProtocolTool.Name).Distinct().Count());
         Assert.DoesNotContain(roster, t => FoundationV4Tool.Names.ContainsKey(t.ProtocolTool.Name));
-        Assert.DoesNotContain(roster, t => t.ProtocolTool.Name == "CallTool");
+        Assert.Contains(roster, t => t.ProtocolTool.Name == "CallTool");
         foreach (var tool in roster)
         {
             if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.ProtocolTool.Name)) Assert.Null(tool.ProtocolTool.OutputSchema);
@@ -124,7 +124,7 @@ public sealed class FoundationV4ContractsTests
             var args = JsonSerializer.SerializeToElement(usage["data"]!["example"]!["request"]!["params"]!["arguments"]);
             var validation = new InputContract<JsonElement>(new InputSchema(tool.ProtocolTool.InputSchema), new InputBudget()).Read(args, "arguments");
             Assert.True(validation.IsValid, tool.ProtocolTool.Name + ": " + V4Json.Serialize(validation.Error));
-            if (tool.ProtocolTool.Name.StartsWith("Build") && tool.ProtocolTool.Name != "BuildPlcSymbolManifestFromPath" && tool.ProtocolTool.Name != "BuildDeviceAmlDocument")
+            if (new[] { "BuildPlcUdt", "BuildPlcGlobalDb", "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildPlcLadFcBlock" }.Contains(tool.ProtocolTool.Name))
                 Assert.True((bool)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["ok"]!, tool.ProtocolTool.Name);
         }
     }

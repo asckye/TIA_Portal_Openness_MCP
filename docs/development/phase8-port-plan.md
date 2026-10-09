@@ -27,17 +27,20 @@
 - **矩阵口径**：以 V20 的 API 面为参照（V21 独有 API/工具不算旧版缺口）。`yes` 族内各工具所需关键成员齐全；`partial` 族可迁但部分工具或动作缺 API（应在原生调用前按动作拒绝）；`no` 族核心入口缺失；`unknown` 无法用元数据证明。
   **API 存在不等于许可证、可选组件已安装或行为正确**；所有在旧版启用的族保持 `current / NOT RUN`，直到该版真机验收。不按工具名、相邻版本或 API 名称推断。
 
-## B1 迁移状态（P8-03a）
+## B1 迁移状态（P8-03a / P8-03b）
 
 F01、F02、F03 的 64 个声明与工具实现已迁出 Engine 源码，全部由 net10 宿主执行；
-`PortedFamilies` 显式限定这三族只在 20、21 发布。TiaGitAddIn.Core 提供 netstandard2.0 资产，
+`PortedFamilies` 按逐工具、逐版表发布这三族；F01 全八版开放，F02/F03 按产物格式分段。TiaGitAddIn.Core 提供 netstandard2.0 资产，
 本批没有因 net48 依赖留在 worker 的工具。Engine 保留其他族仍使用的公共辅助方法与原生会话查询。
 `RenderPlcBlockDocument` 与 `ComparePlcBlockDocuments` 的块路径导出走 `plc-analysis.ExportBlockDocument` 适配器。
 `GenerateAcceptanceReport` 的可选连接、树查询使用会话事实通道；这些额外原生依赖是实现核对发现的计划差异。
 
-B1b 仍开放：F01 旧版产品决策 U8 尚未决定，F02 的 V20/V21 文档格式与 F03 的 Classic V21 / Unified V19+
-产物格式仍需逐版审查。不得仅因纯托管代码可运行就开放 V14 SP1–V19。验证结果和待审事项见
-`bin-build/refactor/P8-03a.result.md`（本地工作记录；G9 由审查者执行）。
+维护者于 2026-10-08 决定 U8：F01 的 28 个工具（含发现、桥接、预览和批处理）在全部八版发布。
+P8-03b 给旧版接入注册目录、原有 Foundation 调用边界、导出句柄和批次上下文；桥接只到达本版已注册工具。
+旧版保留完整目录，不启用 lite。V14 SP1–V18 新增 F01 28、F02 12、F03 3；V19 新增 F01 28、F02 12、F03 11。
+全部新增行为为 `current / NOT RUN`，真机验收由 G10 审查者完成。V20/V21 专用 PLC 格式、Classic 包保持旧版关闭；
+Unified 八个离线工具仅 V19+；Render/Compare 的旧版原生块路径模式在任何工作前返回 `UNSUPPORTED_CAPABILITY`，文件模式可用。
+详细选择、基线增量及逐版 VM 步骤见 `bin-build/refactor/P8-03b.result.md`（本地工作记录）。
 
 ## 1. 能力族清单
 
@@ -170,7 +173,7 @@ B1b 仍开放：F01 旧版产品决策 U8 尚未决定，F02 的 V20/V21 文档�
 
 | 族 | 14sp1 | 15.1 | 16 | 17 | 18 | 19 | 关键分界 |
 |---|---|---|---|---|---|---|---|
-| F01 宿主元工具与诊断 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 无 Openness；旧版 Foundation 目录刻意不含桥接/lite（`docs/reference/version-tools.md`），在旧版发布 `CallTool/FindTools/ApplyToolBatch` 等属产品决定 |
+| F01 宿主元工具与诊断 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 维护者 2026-10-08 决定全八版提供 28 个 F01 工具；桥接/批处理限本版目录，旧版无 lite；可选会话查询仍经原有 worker边界 |
 | F02 PLC 离线分析 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 无 Openness；`RenderPlcBlockDocument` 在线导出模式用 `M:SW.Blocks.PlcBlock.Export`（全版本）；`ValidatePlcDocumentSchemas`/`DecodePlcSimaticMl` 以 V20/V21 格式为准 |
 | F03 HMI 离线设计 | partial⁰ | partial⁰ | partial⁰ | partial⁰ | partial⁰ | partial⁰ | 离线可运行；Unified 产物落点需 `T:HmiUnified.HmiSoftware`（19+）；Classic 包与 `RunClassicHmiTemporaryImportPreflight` 以 V21 格式/环境为准 |
 | F04 运行时通道 | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | yes⁰ | 非 Openness（`src/OnlineChannels` net48）；Put/Get 预检的属性名逐版 unknown |
@@ -287,7 +290,7 @@ P6-FALLBACK 已有适配器侧先例：`src/Adapters/Native/Vci/VciFallbackAdapt
 
 | 批次 | 族 | 工具 V20/V21 | 旧版可启用范围（按第 2 节） | 理由 | 前置 |
 |---|---|---:|---|---|---|
-| B1（可与 P8-02 并行） | F01、F02、F03 | 64/64 | 无 API 障碍；F01 是否在 14sp1–19 发布桥接/批处理须维护者决定；F03 产物格式标注 V21 | 已有 29 个在主机执行；其余不调用 Openness（仅 `RenderPlcBlockDocument` 可选导出），迁出 `src/Engine` 目录是引擎退役的必要条件 | P7-11 改名 |
+| B1（可与 P8-02 并行） | F01、F02、F03 | 64/64 | P8-03b：F01 全八版；F02 旧版 12/16；F03 14sp1–18 为 3/20、19 为 11/20；专用格式关闭 | 已有 29 个在主机执行；其余不调用 Openness（仅 `RenderPlcBlockDocument` 可选导出），迁出 `src/Engine` 目录是引擎退役的必要条件 | P7-11 改名 |
 | P8-02 样板 | F19 | 5/5 | 14sp1–19 全部 | 见第 5 节 | P8-01、P7-11 |
 | B2 | F18、F20、F21 | 39/41 | F21 全部；F18/F20 全部为 partial（动作级排除） | 复用样板的硬件定位与读回；差距第 2 项（硬件与网络）；离线写、默认 dryRun | 样板 |
 | B3 | F08、F09、F11、F17 | 26/26 | F08/F09 19 为 yes，其余 partial；F11 18+ yes；F17 19 yes | PLC 软件离线扩展，API 多为全版本；差距第 5 项（删除/分组/保护）；复用 Foundation 导出/导入/编译 | 样板 |
@@ -402,14 +405,14 @@ F19 原生比较：核心加被内联的三个共享调用点为 V20 32、V21 34
 | R4 | 14sp1–19 PlcWorker 为 STA，20/21 worker 为 MTA 共用线程 | 线程相关的原生行为差异 | 适配器代码不假定套间；沿用 `StudioThreadGuard` 一类所有权检查 |
 | R5 | 引擎大量反射访问（HMI 交换按字符串成员、Unified 服务无 Siemens using、`GetHardwareFeatures` 按 V21 目录探测） | 第 2 节只证明命名空间/关键类型存在，具体成员在 19 等版本可能不同 | 迁移时改为编译期类型绑定或逐版成员清单；19 上以 VM 验证 |
 | R6 | 可选产品（SiVArc、Startdrive、DCC、CFC、Safety、Test Suite、Teamcenter、SINUMERIK、SIMOTION、SCADA Export、WinCC Classic/Unified）未必安装或无许可 | API 存在但运行时服务为空 | 服务缺失给类型化前置条件拒绝；台账记录安装状态 |
-| R7 | 格式版本：离线构建器输出 V21 候选 XML；Classic HMI 包、AML、S7DCL 格式逐版不同 | F03、F05（脚手架）、F09（`BuildAndImportPlcArtifact`）在旧版只能部分可用 | 旧版只开放原生导出/导入；构建器按 `plc-xml-builders` 现有逐版格式工作推进 |
+| R7 | 格式版本：V20/V21 PLC 文档、Classic V21 包、Unified 19+ | P8-03b 逐工具分段，不把托管可运行视为原生产物兼容 | 旧版关闭 ValidatePlcDocumentSchemas、DecodePlcSimaticMl、InspectSimaticSdCompatibility、BuildPlcAliasAlarmLad 和九个 Classic 包工具；Unified 八工具仅 19+；Render/Compare 块路径模式类型化拒绝 |
 | R8 | 已知原生崩溃（V21 交叉引用、Unified SyntaxCheck/脚本改名、Classic 画面尺寸、CFC 未知图表保护查询、Startdrive `p2051[0]`） | 迁移若丢失守卫会导致 TIA 退出 | 守卫作为 Policy 单元测试固定下来（I9） |
 | R9 | V20 注册但依赖 V21 独有 API 的动作（如 `UploadDeviceParameters` 需 `Upload.ParameterUploadProvider`，`GetClassicHmiGlobalization` 在 V20 NotSupported） | 迁移中可能误把 V20 拒绝改成执行或反之 | 以 1.3 表为准，逐动作保留现有 V20 行为，G2 校验 |
 | R10 | V21 拆分程序集；`Adapter.21` 现只引用 Base/Step7/Safety | HMI 与可选族在 V21 编译失败或强名称校验失败 | 每批在 `src/Adapters/V21/Release.props` 增加精确 `AdapterApi`，`Test-AdapterInputs` 同步 |
 | R11 | worker 分发写法不可扩展（单一外观、逐类型判断会话重置） | 约 400 个操作时易错 | P8-02 一次改为按族注册与统一回复接口 |
 | R12 | 宿主/离线工具改变执行位置（B1） | 文件路径解析与日志位置可能变化 | 仅在 G2 证明零差异后改所有者 |
-| R13 | 旧版目录增加工具改变产品形态（14sp1–19 现为 62–67 个工具、无桥接） | 客户端工具缓存与文档需刷新 | 维护者决定 F01 桥接是否下放；发布说明列出新增 |
-| R14 | `docs/reference/version-tools.md` 计数陈旧（写 59–64/477/488，基线为 62–67/487/498） | 迁移后对照易混乱 | 后续文档任务刷新（本任务不改） |
+| R13 | 旧版目录增加工具改变产品形态 | 客户端工具缓存与文档需刷新 | 2026-10-08 U8 已决定全八版提供 F01；P8-03b 旧版完整目录，桥接只到达本版注册工具，不发布 lite |
+| R14 | 文档计数与生成目录同步 | 避免迁移后对照混乱 | P8-03b 刷新 version-tools.md，以八版捕获基线为准 |
 | R15 | P7-11 改名未合并 | P8-02 起的路径与命名空间会变 | 按计划在 P7-11 合并后开工 |
 
 未知（需真机或维护者决定）：
@@ -423,7 +426,7 @@ F19 原生比较：核心加被内联的三个共享调用点为 V20 32、V21 34
 | U5 | Unified 反射代码在 V19 上的成员差异 | 逐成员清单 + V19 VM |
 | U6 | 各 VM 的可选产品安装与许可 | 台账记录 |
 | U7 | 成功路径响应在 DTO 重构后的逐字节一致性 | R2 的 golden 对照 |
-| U8 | F01 桥接/批处理与 lite 是否在 14sp1–19 发布 | 维护者决定 |
+| U8 | F01 桥接/批处理与 lite 是否在 14sp1–19 发布 | 已决定（2026-10-08）：F01 全八版；旧版暂用完整目录、不启用 lite；超过 256 个工具时须先调整有界注册检查或引入 lite |
 | U9 | F34 SIMOTION 在 V16 SDK 中缺失（`T:Simotion.SimotionProvider` 14sp1/15.1/17–20 有、16 无；`sdk/TIA_V16_PublicAPI/V16` 也是唯一没有 `Siemens.MC.Simotion.Scripting.dll` 的目录）是否为 SDK 拷贝不全 | 对照安装版 V16 Openness |
 
 ## 附录 A：工具 → 族（全部 431 个）

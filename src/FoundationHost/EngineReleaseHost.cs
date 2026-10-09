@@ -68,7 +68,7 @@ internal static class EngineReleaseHost
         var foundationNames = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, false).Select(t => t.ProtocolTool.Name).Where(n => !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(n)).ToHashSet(StringComparer.Ordinal);
         var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
             options.ApiDirectorySource, worker.FoundationReadiness, () => roster!, name => foundationNames.Contains(name) ? "plc-foundation" : "full-engine");
-        var essentials = LegacyHostToolRegistry.Create(worker, "19", false).Select(t => t.ProtocolTool.Name).Where(n => !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(n)).ToHashSet(StringComparer.Ordinal);
+        var essentials = LegacyHostToolRegistry.Create(worker, "19", false, hostPorts: false).Select(t => t.ProtocolTool.Name).Where(n => !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(n)).ToHashSet(StringComparer.Ordinal);
         var pipeline = new EngineHostPipeline(options.EngineCatalog!, options.EngineWorkerExe!, options.ReleaseKey, worker, options.Profile, shared, essentials);
         roster = pipeline.AllTools;
         worker.SessionLocked = () => pipeline.SessionLocked;

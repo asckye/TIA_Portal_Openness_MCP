@@ -55,11 +55,67 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private JsonObject? disconnectAcknowledgement;
     private volatile bool disconnecting;
     private string? priorUnknownRequestId, activeRequestId;
-    private readonly WorkerOutcomeState outcome=new();
+    private WorkerOutcomeState outcome=new();
     private readonly Queue<string> diagnostics = new();
     private JsonObject approvalIdentity = new();
     internal string ApprovalIdentity => approvalIdentity.ToJsonString();
     internal bool Poisoned => outcome.Poisoned;
+    internal IDisposable? HostPipeline { get; set; }
+    internal object HostSessionKey { get; private set; } = new();
+    private string? hostProcessStartUtc;
+    private JsonObject? hostState;
+    private static string? ProcessStartUtc(int processId)
+    {
+        try
+        {
+            using var observed = Process.GetProcessById(processId);
+            var start = observed.StartTime.ToUniversalTime();
+            return !observed.HasExited && observed.StartTime.ToUniversalTime() == start
+                ? start.ToString("O", System.Globalization.CultureInfo.InvariantCulture) : null;
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException)
+        { /* swallow(env-probe): unavailable OS identity must keep the batch binding incomplete. */ return null; }
+    }
+    private void ClearHostBinding()
+    { hostProcessStartUtc = null; hostState = null; HostSessionKey = new object(); }
+    internal JsonObject HostSnapshot()
+    {
+        var identity = (JsonObject)(hostState ?? approvalIdentity).DeepClone();
+        string? file = (string?)identity["ProjectFile"] ?? (string?)identity["ProjectPath"];
+        string? project = file == null ? null : Path.GetFileNameWithoutExtension(file);
+        int? pid = (int?)identity["ProcessId"] ?? attachedProcessId;
+        string? start = !Poisoned && !disconnecting && pid.HasValue && hostProcessStartUtc == ProcessStartUtc(pid.Value) ? hostProcessStartUtc : null;
+        return new JsonObject { ["enabled"] = true, ["state"] = process == null ? "Stopped" : Poisoned ? "Faulted" : "Running",
+            ["sessionLocked"] = Poisoned, ["session"] = new JsonObject { ["isConnected"] = (bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue, ["project"] = project },
+            ["binding"] = new JsonObject { ["identity"] = new JsonObject {
+                ["tiaMajorVersion"] = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion, ["processId"] = pid,
+                ["processStartUtc"] = start, ["projectPath"] = file, ["projectName"] = project,
+                ["generation"] = approvalIdentity["BindingEpoch"]?.DeepClone() } } };
+    }
+    internal async Task RefreshHostState(CancellationToken token)
+    {
+        // ReadState is the worker's cached lifecycle state, not a native lookup.
+        // Do not launch a worker just to preview an unbound call.
+        if (process != null && !Poisoned && !disconnecting) await Call("ReadState", new JsonObject(), token);
+    }
+    internal async Task<JsonObject> RestartHostWorker(bool confirmed, CancellationToken token)
+    {
+        if (!confirmed) return TiaMcpServer.ModelContextProtocol.ResponseMeta.Unstamped(true, ("dryRun", JsonValue.Create(true)), ("worker", HostSnapshot()));
+        if (!serial.Wait(0)) return TiaMcpServer.ModelContextProtocol.ResponseMeta.Unstamped(false, ("worker", HostSnapshot()));
+        using var lane = new Lane(this); lane.Activate();
+        var detached = await Disconnect(token);
+        bool restartTia = (bool?)detached?["RequiresTiaRestart"] == true;
+        lock (stateSync)
+        {
+            WorkerShutdown.Unregister(this); WorkerShutdown.Stop(process, channel); process = null; channel = null;
+            approvalIdentity = new JsonObject(); attachedProcessId = null; attachAttempted = false;
+            disconnectAcknowledgement = null; disconnecting = false; priorUnknownRequestId = null;
+            outcome = new WorkerOutcomeState(); ClearHostBinding(); FoundationCandidateSession.Reset(this);
+        }
+        return TiaMcpServer.ModelContextProtocol.ResponseMeta.Unstamped(true, ("restarted", JsonValue.Create(true)), ("requiresExplicitRebind", JsonValue.Create(true)),
+            ("requiresTiaRestart", JsonValue.Create(restartTia)), ("worker", HostSnapshot()));
+
+    }
     // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
     internal bool Bundled { get; init; } = true;
     string IFoundationSessionWorker.ApprovalIdentity => ApprovalIdentity;
@@ -81,6 +137,8 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         }
         bool acquired = !ReferenceEquals(Held.Value, this);
         if (acquired) await serial.WaitAsync(token);
+        string? startBeforeAttach = null;
+        int? hostAttachPid = null;
         bool sent = false;
         bool usableAtEntry = !outcome.Poisoned;
         try
@@ -106,6 +164,11 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (!nativeEnabled) throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (Bundled && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue)
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
+            hostAttachPid = operation == "Attach" ? (int?)arguments["processId"]
+                : operation == WorkerOperations.SessionCandidate && !WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"])
+                    && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach"
+                    ? (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"] : null;
+            if (hostAttachPid.HasValue) startBeforeAttach = ProcessStartUtc(hostAttachPid.Value);
             lock (stateSync)
             {
                 if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
@@ -163,11 +226,21 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 if (operation == "Attach") identity["ProcessId"] = arguments["processId"]!.GetValue<int>();
                 approvalIdentity = identity;
             }
-            if(operation=="Attach") attachedProcessId=arguments["processId"]!.GetValue<int>();
+            if(operation=="Attach")
+            {
+                attachedProcessId=arguments["processId"]!.GetValue<int>();
+                ClearHostBinding();
+                if (!Poisoned && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc = startBeforeAttach;
+            }
+            if (operation == "ReadState" && result is JsonObject cachedState) hostState = (JsonObject)cachedState.DeepClone();
             else if (operation == WorkerOperations.SessionCandidate && !outcome.Poisoned
                 && result?["Attempt"]?["Issued"]?.GetValue<bool>() == true && result?["Attempt"]?["Fault"] == null
                 && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach")
+            {
                 attachedProcessId = (int?)arguments["candidate"]?["Check"]?["Request"]?["ProcessId"];
+                ClearHostBinding();
+                if (hostAttachPid.HasValue && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(hostAttachPid.Value)) hostProcessStartUtc = startBeforeAttach;
+            }
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             return result;
@@ -223,7 +296,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                 }
                 catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome and requires TIA restart */ { return TerminateForDisconnect(); }
             }
-            approvalIdentity = new JsonObject(); attachedProcessId = null;
+            approvalIdentity = new JsonObject(); attachedProcessId = null; ClearHostBinding();
             if (outcome.Poisoned) DisconnectContract.Recovery(disconnectAcknowledgement, false, priorUnknownRequestId);
             return disconnectAcknowledgement.DeepClone();
         }
@@ -236,7 +309,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         {
             priorUnknownRequestId ??= activeRequestId;
             disconnectAcknowledgement = DisconnectContract.Recovery(DisconnectContract.Idle(), true, priorUnknownRequestId);
-            approvalIdentity = new JsonObject(); attachedProcessId = null;
+            approvalIdentity = new JsonObject(); attachedProcessId = null; ClearHostBinding();
             channel?.Dispose();
             if (process != null)
             {
@@ -249,6 +322,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 
     public void Dispose()
     {
+        HostPipeline?.Dispose(); HostPipeline = null;
         disconnecting = true;
         lock (stateSync)
         {

@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage InspectSimaticSdCompatibility([Description("Absolute input/output path on the MCP server, with the documented extension.")] string filePath, [Description("20 or 21; 0 selects the current engine.")] int tiaMajor = 0, [Description("Caller-known installed Update number; -1 means unknown.")] int installedUpdate = -1)
         {
-            if (tiaMajor == 0) tiaMajor = int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
+            if (tiaMajor == 0) tiaMajor = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion;
             if (tiaMajor != 20 && tiaMajor != 21 || installedUpdate < -1) throw new ArgumentException("tiaMajor must be 20/21; installedUpdate >= -1.");
             var file = new FileInfo(filePath);
             if (!Path.IsPathRooted(filePath) || !file.Exists || !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) || file.Length > 20 * 1024 * 1024)
@@ -49,9 +49,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             // envelope: legacy-multiple-dynamic-fields
             return new ResponseMessage { Message = "Local API metadata read. Actual installed patch and device option support need installation/project evidence.", Meta = new JsonObject {
-                ["success"] = true, ["engineMajor"] = int.Parse(McpServer.ReleaseKey), ["installedPatch"] = null, ["assemblies"] = assemblies,
+                ["success"] = true, ["engineMajor"] = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion, ["installedPatch"] = null, ["assemblies"] = assemblies,
                 ["nativeCrossReferencesEnabled"] = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable)) == null,
-                ["reflectionCrossReferencesAllowed"] = false, ["v20OptionWrappersCompiled"] = int.Parse(McpServer.ReleaseKey) == 20,
+                ["reflectionCrossReferencesAllowed"] = false, ["v20OptionWrappersCompiled"] = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion == 20,
                 ["faceplateTypeInternalAuthoring"] = "No verified public API in the supplied V20/V21 SDK for creating a type from zero or editing its internal controls/scripts.",
                 ["knownIssues"] = new JsonArray(
                     "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4",

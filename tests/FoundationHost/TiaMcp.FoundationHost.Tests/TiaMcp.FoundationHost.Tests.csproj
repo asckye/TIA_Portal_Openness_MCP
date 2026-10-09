@@ -40,6 +40,7 @@
     <Compile Include="../../../src/FoundationHost/OfflineLadderTools.cs" Link="OfflineLadderTools.cs" />
 
     <Compile Include="../../../src/FoundationHost/FoundationPassiveDiagnostics.cs" Link="FoundationPassiveDiagnostics.cs" />
+    <Compile Include="../../../src/FoundationHost/FoundationHostPorts.cs" Link="FoundationHostPorts.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationPassiveDiagnosticTools.cs" Link="FoundationPassiveDiagnosticTools.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineSymbolManifest.cs" Link="OfflineSymbolManifest.cs" />
     <Compile Include="../../../src/FoundationHost/OfflineSymbolManifestTools.cs" Link="OfflineSymbolManifestTools.cs" />

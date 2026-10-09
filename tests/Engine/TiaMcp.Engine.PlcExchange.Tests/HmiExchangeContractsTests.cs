@@ -96,11 +96,12 @@ namespace PlcExchangeTests
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new CallToolRequestParams { Name = "ExchangeUnifiedTags", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) }
             };
-            foreach (var result in new[] { await direct.InvokeAsync(request), (CallToolResult)Boundary("DispatchNestedTool", "ExchangeUnifiedTags", Args(json))! })
+            var directResult = await direct.InvokeAsync(request);
+            foreach (var result in new[] { directResult, (CallToolResult)Boundary("DispatchNestedTool", "ExchangeUnifiedTags", Args(json))! })
             {
                 var body = Body(result);
                 Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
-                Assert.Equal("arguments", (string?)body["error"]!["details"]!["parameter"]);
+                Assert.Equal(ReferenceEquals(result, directResult) ? "arguments" : "expectedTagNames", (string?)body["error"]!["details"]!["parameter"]);
                 Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
                 Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
             }
