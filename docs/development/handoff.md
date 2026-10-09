@@ -6,10 +6,14 @@ The latest published release is [v3.3.0](../releases/v3.3.0.md). The 4.0 source 
 unreleased. Phase 6 is merged apart from P6-42 release-candidate validation and P6-43
 release documentation; the P6-69/P6-70 fixes are merged and wait for their V18/V19
 real-machine retest. In phase 7 (V20/V21 on the Foundation host, see the
-[refactor plan](refactor-plan.md)) P7-01 to P7-06, P7-07a (V20 findings 37–42) and P7-10 are
-merged; next are P7-11a (renames), the rest of the P7-07 V20/V21 real-machine acceptance, then P7-08 and P7-11b.
-Phase 8 (the former post-4.0 work) runs in parallel: the [port plan](phase8-port-plan.md) and the
-[Python plan](phase8-python-plan.md) are done; code tasks start after P7-11a.
+[refactor plan](refactor-plan.md)) P7-01 to P7-06, P7-07a (V20 findings 37–42), P7-07b (V20/V21 round 2
+findings 43–48), P7-10 and P7-11a are merged; next are the P7-07 V20/V21 retest of findings 43–48, then P7-08 and P7-11b.
+Phase 8 (the former post-4.0 work) runs in parallel; merged work ships with 4.0. Done: the
+[port plan](phase8-port-plan.md), the port framework with family F19 (hardware addressing, enabled on all eight
+releases, `current / NOT RUN` on V14 SP1–V19), Python batch 1 of the [Python plan](phase8-python-plan.md), and the
+Workbench control and project generation designs. In progress: B1 step 1 (F01–F03 out of the engine), the Workbench
+control protocol, the TIA process lease on V14 SP1–V19 and the generation model. The discovery bridge and batch tools
+ship on all eight releases (maintainer decision U8, B1 step 2).
 Current 4.0 real-machine acceptance is pending. Offline tests, SDK builds, schemas,
 and static call evidence do not establish native TIA behavior.
 
