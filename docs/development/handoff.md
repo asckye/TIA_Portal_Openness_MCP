@@ -3,17 +3,16 @@
 ## Current state
 
 The latest published release is [v3.3.0](../releases/v3.3.0.md). The 4.0 source is
-unreleased. Phase 6 is merged apart from P6-42 release-candidate validation and P6-43
-release documentation; the P6-69/P6-70 fixes are merged and wait for their V18/V19
-real-machine retest. In phase 7 (V20/V21 on the Foundation host, see the
-[refactor plan](refactor-plan.md)) P7-01 to P7-06, P7-07a (V20 findings 37–42), P7-07b (V20/V21 round 2
-findings 43–48), P7-10 and P7-11a are merged; next are the P7-07 V20/V21 retest of findings 43–48, then P7-08 and P7-11b.
-Phase 8 (the former post-4.0 work) runs in parallel; merged work ships with 4.0. Done: the
-[port plan](phase8-port-plan.md), the port framework with family F19 (hardware addressing, enabled on all eight
-releases, `current / NOT RUN` on V14 SP1–V19), Python batch 1 of the [Python plan](phase8-python-plan.md), and the
-Workbench control and project generation designs. In progress: B1 step 1 (F01–F03 out of the engine), the Workbench
-control protocol, the TIA process lease on V14 SP1–V19 and the generation model. The discovery bridge and batch tools
-ship on all eight releases (maintainer decision U8, B1 step 2).
+unreleased. **Maintainer decision 2026-10-09: 4.0 is not released until phases 7 and 8 are complete;** real-machine
+acceptance happens once at the end on all eight releases (including the retest of findings 39-52, the old-release
+enablement of ported families and each batch's V20/V21 recheck). Every merge still runs all registered suites in a clean
+checkout, the CI checks and a full release candidate. Phase 6 is merged apart from P6-42/P6-43. In phase 7 (see the
+[refactor plan](refactor-plan.md)) P7-01 to P7-06, P7-07a/b/c (V20/V21 findings 37-48 and 52), P7-10 and P7-11a are
+merged; P7-08 and P7-11b no longer wait for VM acceptance. Phase 8: the [port plan](phase8-port-plan.md), the port
+framework with family F19, Python batch 1 of the [Python plan](phase8-python-plan.md), the Workbench control protocol and the
+generation model are merged; B1 step 1 (F01-F03 out of the engine), the TIA process lease on V14 SP1-V19 with findings 49-51,
+the Workbench control server, human/AI attribution and generation planning are in review. The discovery bridge and batch
+tools ship on all eight releases (maintainer decision U8, B1 step 2).
 Current 4.0 real-machine acceptance is pending. Offline tests, SDK builds, schemas,
 and static call evidence do not establish native TIA behavior.
 
