@@ -81,7 +81,7 @@ internal static class EngineSessionFixture
             if (request.Method != "engine.status") lease?.BeginRequest();
             var response = Dispatch(request);
             uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown
-                || (bool?)JsonNode.Parse(response.ResultJson)?["result"]?["structuredContent"]?["meta"]?["requiresSessionReset"] == true;
+                || (bool?)(JsonNode.Parse(response.ResultJson ?? "null") as JsonObject)?["result"]?["structuredContent"]?["meta"]?["requiresSessionReset"] == true;
             if (request.Method != "engine.status") lease?.CompleteRequest(uncertain);
             return response;
         }, foundation ? ChannelProfile.Foundation : ChannelProfile.Engine);
