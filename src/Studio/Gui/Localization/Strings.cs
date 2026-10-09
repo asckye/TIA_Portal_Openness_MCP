@@ -456,6 +456,16 @@ internal static partial class Strings
         ("Log.PullHint",               "The project now holds the workspace's version — compile and save it.",
                                        "项目现在是工作区中的版本 — 请编译并保存。"),
 
+        ("Actor.Title", "Human / AI", "人 / AI"),
+        ("Actor.AI", "AI", "AI"),
+        ("Actor.Human", "Human", "人"),
+        ("Actor.Unrecorded", "Unrecorded", "未记录"),
+        ("Actor.Workbench", "Workbench (human)", "工作台（人）"),
+        ("Actor.McpClient", "MCP client (AI)", "MCP 客户端（AI）"),
+        ("Calls.HumanOnly", "Human only", "只看人"),
+        ("Calls.AiOnly", "AI only", "只看 AI"),
+        ("Calls.McpSession", "MCP session hash", "MCP 会话哈希"),
+
         // ---- dialogs ---------------------------------------------------------------
         ("Dialog.OpenProject.Title",   "Open a TIA Portal project", "打开 TIA Portal 项目"),
         ("Dialog.OpenProject.Filter",  "TIA Portal projects|*.ap21;*.ap20;*.ap19;*.ap18;*.ap17;*.ap16;*.ap15_1|All files|*.*",

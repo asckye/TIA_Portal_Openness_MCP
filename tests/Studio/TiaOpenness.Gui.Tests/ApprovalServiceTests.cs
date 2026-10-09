@@ -12,6 +12,27 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class ApprovalServiceTests
 {
     private static string Scratch() => Path.GetFullPath(Path.Combine("bin-build", "P6-44", "gui-approval", Guid.NewGuid().ToString("N")));
+    [Fact]
+    public async Task Workbench_v2_write_stays_pending_until_the_same_approval_card_is_decided()
+    {
+        string root = Scratch(), pipe = "tia-gui-approval-" + Guid.NewGuid().ToString("N"), operatorId = Guid.NewGuid().ToString("N");
+        var audit = new AuditLog(Path.Combine(root, "audit"));
+        using var service = new ApprovalService(Path.Combine(root, "approval.settings"), pipe, audit);
+        var arrived = new TaskCompletionSource<ApprovalRequest>(TaskCreationOptions.RunContinuationsAsynchronously);
+        service.NewRequest += (_, row) => arrived.TrySetResult(row);
+        PendingApproval request;
+        using (ActorScope.EnterWorkbench("attached-session", operatorId))
+            request = PendingApproval.Create("foundation", "19", "WriteFixture", "{}", null, 5);
+        var call = ApprovalClient.Wait(request, new ApprovalSettings(true, 5), CancellationToken.None, pipe, audit);
+        var row = await arrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal("workbench", row.Actor); Assert.Equal(operatorId, row.OperatorCallId);
+        Assert.Equal(ApprovalState.Pending, row.State); Assert.False(call.IsCompleted);
+        Assert.True(service.Approve(row.Id));
+        var result = await call.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Null(result.Reason);
+        await ApprovalClient.Complete(result, "succeeded", pipe);
+        await Eventually(() => service.Requests.Single().State == ApprovalState.Completed);
+        Assert.Equal("workbench", Assert.Single(audit.Read()).Actor); Assert.True(audit.Verify().Passed);
+    }
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

@@ -120,7 +120,7 @@ public class StringsTests(WpfContext wpf)
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
             "Lang.English", "Lang.Chinese", "Status.Working", "Settings.English", "Settings.Chinese", "Settings.EngineVersion", "Settings.Releases", "Config.Local",
             // Product names, protocol identifiers and units stay the same in both languages.
-            "Shell.McpStatus", "Shell.SessionStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50",
+            "Shell.McpStatus", "Shell.SessionStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50", "Actor.AI",
         ];
 
         var untranslated = Strings.Catalogue

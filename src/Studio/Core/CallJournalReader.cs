@@ -29,6 +29,8 @@ namespace TiaOpenness.Core
         public string Arguments { get; internal set; }
         public string Result { get; internal set; }
         public string ErrorCode { get; internal set; }
+        public string Actor { get; internal set; }
+        public string McpSession { get; internal set; }
         public bool ArgumentsTruncated { get; internal set; }
         public bool ResultTruncated { get; internal set; }
         internal DateTimeOffset Updated;
@@ -152,7 +154,8 @@ namespace TiaOpenness.Core
                     IsWrite = Flag("isWrite"), Outcome = outcome, Execution = execution, Completeness = completeness, DisplayOutcome = display,
                     DurationMs = value.TryGetProperty("durationMs", out var duration) && duration.ValueKind == JsonValueKind.Number && duration.TryGetInt32(out int milliseconds) ? milliseconds : (int?)null,
                     Target = CallJournalPayload.Bound(Text("target")), Arguments = Preview(arguments, argumentsCut), Result = Preview(result, resultCut),
-                    ArgumentsTruncated = argumentsCut, ResultTruncated = resultCut, ErrorCode = Text("errorCode")
+                    ArgumentsTruncated = argumentsCut, ResultTruncated = resultCut, ErrorCode = Text("errorCode"),
+                    Actor = Text("actor"), McpSession = Text("mcpSession")
                 };
                 return row.RequestId.Length > 0 && row.Tool.Length > 0;
             }

@@ -30,6 +30,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             private readonly string id, tool, host;
             private readonly string? release;
+            private readonly string actor;
+            private readonly string? mcpSession;
             private readonly bool write;
             private readonly long started = Stopwatch.GetTimestamp();
             private readonly DateTime time = DateTime.UtcNow;
@@ -39,6 +41,7 @@ namespace TiaMcpServer.ModelContextProtocol
             internal CallSpan(string id, string tool, string host, string? release, bool write, Func<string> arguments)
             {
                 this.id = id; this.tool = tool; this.host = host; this.release = release; this.write = write;
+                actor = ActorScope.Actor; mcpSession = ActorScope.McpSession;
                 try { this.arguments = arguments(); }
                 catch (Exception) /* swallow(logging-failure): serialization cannot change invocation behavior or echo unsupported objects */ { this.arguments = "null"; }
                 Emit(() => Row(null, "BEFORE"));
@@ -75,6 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     target = string.Join(" · ", args.Where(p => new[] { "target", "softwarePath", "devicePath", "blockPath", "typePath", "projectPath", "projectFile", "name", "action" }.Contains(p.Key))
                         .Select(p => p.Key + "=" + p.Value?.ToJsonString()));
                 var details = new JsonLineObject().Number("callProjection", 1).String("host", host).String("releaseKey", release)
+                    .String("actor", actor).String("mcpSession", mcpSession)
                     .String("requestId", (string?)meta?["requestId"] ?? id).Raw("isWrite", write ? "true" : "false")
                     .String("startedUtc", time.ToString("O")).Number("durationMs", phase == "BEFORE" ? (long?)null :
                         (long)((Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency))

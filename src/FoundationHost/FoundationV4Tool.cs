@@ -183,6 +183,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request.Server?.SessionId, request.Server);
         using var sharedStagingSession = (inner as FoundationTool)?.EnterSharedRequest(request);
         using var stagingSession = (inner as FoundationTool)?.EnterStagingRequest();
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();

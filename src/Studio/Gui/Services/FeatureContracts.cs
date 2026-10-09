@@ -14,13 +14,19 @@ public enum DiagnosticState { Idle, Running, Done }
 public sealed record ApprovalOperation(LocalizedText Action, string Object, string Tool);
 public sealed record ApprovalRequest(string Id, string Client, string Transport, string Host, string Release,
     string Project, string Plc, IReadOnlyList<ApprovalOperation> Operations, IReadOnlyList<LocalizedText> Risks,
-    string PlanHash, int TimeoutSeconds, DateTimeOffset Deadline, ApprovalState State, string ParametersJson);
+    string PlanHash, int TimeoutSeconds, DateTimeOffset Deadline, ApprovalState State, string ParametersJson)
+{
+    public string Actor { get; init; } = "mcp";
+    public string? OperatorCallId { get; init; }
+}
 
 public sealed record CallRecord(string RequestId, DateTimeOffset Time, string Host, string Release, string Tool,
     bool IsWrite, CallResult Result, int? DurationMs, string Target, string ParametersJson,
     LocalizedText Summary, string ErrorCode, LocalizedText ErrorMessage, LocalizedText ApprovalRecord)
 {
     public string JournalKey { get; init; } = RequestId;
+    public string? Actor { get; init; }
+    public string? McpSession { get; init; }
     public string ResultJson { get; init; } = "null";
     public string Outcome { get; init; } = "";
     public string Execution { get; init; } = "";
@@ -39,7 +45,10 @@ public interface ICallJournalService : INotifyPropertyChanged
 }
 
 public sealed record AuditEvent(long Index, DateTimeOffset Time, AuditEventType Type, string ToolObject,
-    string Result, string Hash);
+    string Result, string Hash)
+{
+    public string? Actor { get; init; }
+}
 public sealed record AuditChainVerification(string Chain, bool Passed, int Count, long? BreakIndex, string? File);
 public sealed record AuditVerification(bool? Passed, int Count = 0, long? BreakIndex = null)
 {

@@ -95,6 +95,7 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
             c.ErrorCode, LocalizedText.Empty, LocalizedText.Key("Calls.ApprovalUnavailable"))
         {
             JournalKey = c.Identity, ResultJson = c.Result, Outcome = c.Outcome, Execution = c.Execution, Completeness = c.Completeness,
+            Actor = c.Actor, McpSession = c.McpSession,
             ParametersTruncated = c.ArgumentsTruncated, ResultTruncated = c.ResultTruncated
         };
             _rows[c.Identity] = (c, row); return row;

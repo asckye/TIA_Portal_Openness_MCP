@@ -13,6 +13,8 @@
           <RowDefinition Height="24"/>
           <RowDefinition Height="24"/>
           <RowDefinition Height="24"/>
+          <RowDefinition Height="24"/>
+          <RowDefinition Height="24"/>
         </Grid.RowDefinitions>
         <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.Muted}"/>
         <TextBlock Grid.Column="1" Text="{Binding Record.Time, StringFormat=yyyy-MM-dd HH:mm:ss zzz}" Style="{StaticResource Primer.Mono}"/>
@@ -24,6 +26,10 @@
         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}"/>
         <TextBlock Grid.Row="4" Text="{l:Tr Calls.RequestId}" Style="{StaticResource Primer.Muted}"/>
         <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Record.RequestId}" Style="{StaticResource Primer.Mono}"/>
+        <TextBlock Grid.Row="5" Text="{l:Tr Actor.Title}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Actor}" Style="{StaticResource Primer.Text}"/>
+        <TextBlock Grid.Row="6" Text="{l:Tr Calls.McpSession}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Record.McpSession}" ToolTip="{Binding Record.McpSession}" Style="{StaticResource Primer.Mono}"/>
       </Grid>
       <DockPanel Margin="0,0,0,8">
         <Button DockPanel.Dock="Right" Content="{l:Tr Feature.Copy}" Style="{StaticResource Primer.Quiet}" Click="OnCopy"/>

@@ -107,7 +107,8 @@ internal sealed class AuditTailReader(string directory)
                 "request" => AuditEventType.Request, "start" => AuditEventType.Start, "end" => AuditEventType.End,
                 "approval-granted" => AuditEventType.Approve, "approval-denied" => AuditEventType.Reject,
                 "approval-timeout" => AuditEventType.Timeout, _ => AuditEventType.Toggle,
-            }, row.Tool, row.Outcome ?? (row.ApprovalEnabled.HasValue ? (row.ApprovalEnabled.Value ? "enabled" : "disabled") : ""), AuditLog.Hash(row)[..8]);
+            }, row.Tool, row.Outcome ?? (row.ApprovalEnabled.HasValue ? (row.ApprovalEnabled.Value ? "enabled" : "disabled") : ""), AuditLog.Hash(row)[..8])
+            { Actor = row.Actor };
         }
         catch (Exception ex) when (ex is JsonException or FormatException or InvalidDataException or OverflowException)
         { return new AuditEvent(index, DateTimeOffset.MinValue, AuditEventType.End, "", "invalid-record", ""); }

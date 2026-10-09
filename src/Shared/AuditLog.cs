@@ -27,6 +27,7 @@ namespace TiaOpenness.Shared
         internal bool? ApprovalEnabled { get; set; }
         internal int ProcessId { get; set; }
         internal string PreviousHash { get; set; } = "";
+        internal string? Actor { get; set; }
     }
 
     internal sealed class AuditVerificationReport
@@ -62,9 +63,10 @@ namespace TiaOpenness.Shared
         }
 
         internal AuditRecord Append(string kind, string requestId, string host, string release, string tool,
-            string? outcome = null, string? planHash = null, bool? approvalEnabled = null)
+            string? outcome = null, string? planHash = null, bool? approvalEnabled = null, string? actor = null)
         {
             if (!Events.Contains(kind)) throw new ArgumentException("Unknown audit event.", nameof(kind));
+            if (actor != null && !ActorScope.IsValid(actor)) throw new ArgumentException("Invalid audit actor.", nameof(actor));
             using (JournalFileLock.Acquire(Path.Combine(directory, ".audit.lock")))
             {
                 var files = Files();
@@ -94,7 +96,7 @@ namespace TiaOpenness.Shared
                     Utc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture), Event = kind,
                     RequestId = requestId, Host = host, Release = release, Tool = tool, Outcome = outcome,
                     PlanHash = planHash, ApprovalEnabled = approvalEnabled, ProcessId = Process.GetCurrentProcess().Id,
-                    PreviousHash = previousHash };
+                    PreviousHash = previousHash, Actor = actor };
                 byte[] bytes = Encoding.UTF8.GetBytes(Canonical(row) + "\n");
                 if (path == null || new FileInfo(path).Length + bytes.Length > maxBytes)
                     path = Path.Combine(directory, "audit-" + row.Index.ToString("D20", CultureInfo.InvariantCulture) + ".jsonl");
@@ -128,12 +130,12 @@ namespace TiaOpenness.Shared
         private static extern bool GetFileInformationByHandle(SafeFileHandle file, out FileInformation information);
 
         // Public-to-the-host API for P6-44; no approval decision or channel is implemented here.
-        internal void Approval(string requestId, string host, string release, string tool, string decision, string? planHash = null)
+        internal void Approval(string requestId, string host, string release, string tool, string decision, string? planHash = null, string? actor = null)
         {
             if (decision != "granted" && decision != "denied" && decision != "timeout") throw new ArgumentException("Invalid approval decision.", nameof(decision));
-            Append("approval-" + decision, requestId, host, release, tool, planHash: planHash);
+            Append("approval-" + decision, requestId, host, release, tool, planHash: planHash, actor: actor ?? ActorScope.Actor);
         }
-        internal void ApprovalSwitch(string host, bool enabled) => Append("approval-switch", "", host, "", "", approvalEnabled: enabled);
+        internal void ApprovalSwitch(string host, bool enabled) => Append("approval-switch", "", host, "", "", approvalEnabled: enabled, actor: ActorScope.Workbench);
 
         internal AuditVerificationReport Verify()
         {
@@ -205,6 +207,11 @@ namespace TiaOpenness.Shared
                 using (var writer = new Utf8JsonWriter(stream))
                 {
                     writer.WriteStartObject();
+                    if (row.Actor != null)
+                    {
+                        if (!ActorScope.IsValid(row.Actor)) throw new InvalidDataException("Invalid audit actor.");
+                        writer.WriteString("actor", row.Actor);
+                    }
                     if (row.ApprovalEnabled.HasValue) writer.WriteBoolean("approvalEnabled", row.ApprovalEnabled.Value); else writer.WriteNull("approvalEnabled");
                     writer.WriteString("event", row.Event); writer.WriteString("host", row.Host); writer.WriteNumber("index", row.Index);
                     writer.WriteString("outcome", row.Outcome); writer.WriteString("planHash", row.PlanHash); writer.WriteString("previousHash", row.PreviousHash);
@@ -220,12 +227,16 @@ namespace TiaOpenness.Shared
             using (var document = JsonDocument.Parse(line))
             {
                 var root = document.RootElement;
-                if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != 12 ||
-                    root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != 12)
+                if (root.ValueKind != JsonValueKind.Object) throw new InvalidDataException("Invalid audit record fields.");
+                int count = root.EnumerateObject().Count();
+                if ((count != 12 && count != 13) || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count
+                    || (count == 13 && !root.TryGetProperty("actor", out _)))
                     throw new InvalidDataException("Invalid audit record fields.");
                 string Required(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String
                     ? value.GetString()! : throw new InvalidDataException("Invalid audit string.");
                 string? Optional(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.Null ? null : Required(key);
+                string? actor = root.TryGetProperty("actor", out _) ? Required("actor") : null;
+                if (actor != null && !ActorScope.IsValid(actor)) throw new InvalidDataException("Invalid audit actor.");
                 if (!root.TryGetProperty("index", out var index) || index.ValueKind != JsonValueKind.Number || !index.TryGetInt64(out long number) || number < 1 ||
                     !root.TryGetProperty("processId", out var process) || process.ValueKind != JsonValueKind.Number || !process.TryGetInt32(out int pid) || pid < 1 ||
                     !root.TryGetProperty("approvalEnabled", out var enabled) || !(enabled.ValueKind == JsonValueKind.Null || enabled.ValueKind == JsonValueKind.True || enabled.ValueKind == JsonValueKind.False))
@@ -236,7 +247,7 @@ namespace TiaOpenness.Shared
                     throw new InvalidDataException("Invalid audit metadata.");
                 return new AuditRecord { Index = number, Utc = utc, Event = kind, RequestId = Required("requestId"), Host = Required("host"),
                     Release = Required("release"), Tool = Required("tool"), Outcome = Optional("outcome"), PlanHash = Optional("planHash"),
-                    ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash };
+                    ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash, Actor = actor };
             }
         }
     }

@@ -115,7 +115,8 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                     {
                         var original = requests.FirstOrDefault(r => r.Id == item.RequestId);
                         if (original == null || original.PlanHash != item.PlanHash || !seen.TryGetValue(item.RequestId, out var digest)
-                            || digest != item.ArgumentDigest || original.State != ApprovalState.Approved) return;
+                            || digest != item.ArgumentDigest || original.State != ApprovalState.Approved
+                            || original.Actor != item.EffectiveActor || original.OperatorCallId != item.OperatorCallId) return;
                         SetState(original.Id, item.Outcome switch { "succeeded" => ApprovalState.Completed, "rejected-before-operation" => ApprovalState.Rejected,
                             "failed" or "read-failed" => ApprovalState.Failed, "partial" => ApprovalState.Partial, _ => ApprovalState.Unknown });
                     }
@@ -129,9 +130,10 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                 {
                     if (disposed || seen.ContainsKey(id) || pending.Count >= 50) throw new InvalidDataException("Duplicate or excess approval request.");
                     seen.Add(id, item.ArgumentDigest);
-                    row = new ApprovalRequest(id, "MCP", "MCP", item.Host, item.ReleaseKey, item.ProjectIdentity, "",
+                    row = new ApprovalRequest(id, item.EffectiveActor == ActorScope.Workbench ? "Workbench" : "MCP", "MCP", item.Host, item.ReleaseKey, item.ProjectIdentity, "",
                         item.Operations.Select(op => new ApprovalOperation(LocalizedText.Literal(op.Action), op.Target, op.Tool)).ToArray(), [],
-                        item.PlanHash, item.TimeoutSeconds, item.Deadline, ApprovalState.Pending, item.ParametersJson);
+                        item.PlanHash, item.TimeoutSeconds, item.Deadline, ApprovalState.Pending, item.ParametersJson)
+                    { Actor = item.EffectiveActor, OperatorCallId = item.OperatorCallId };
                     pending.Add(id, new Pending(item, decision)); requests.Add(row);
                     while (requests.Count > 1024 && requests[0].State != ApprovalState.Pending) requests.RemoveAt(0);
                 }

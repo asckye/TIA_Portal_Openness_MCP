@@ -28,6 +28,10 @@
               <ToggleButton x:Name="ReleaseFilter" Style="{StaticResource Primer.Filter}" Content="{Binding ReleaseFilter}" IsChecked="{Binding ReleaseOnly}"/>
             </StackPanel>
           </DockPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <ToggleButton x:Name="HumanFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.HumanOnly}" IsChecked="{Binding HumanOnly}" Margin="0,0,6,0"/>
+            <ToggleButton x:Name="AiFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.AiOnly}" IsChecked="{Binding AiOnly}"/>
+          </StackPanel>
         </StackPanel>
       </Border>
       <Border Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
@@ -53,6 +57,8 @@
                   <ColumnDefinition Width="54"/>
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="1.4*"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="70"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
                 <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
@@ -61,6 +67,7 @@
                 <TextBlock Grid.Column="8" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Result}"/>
                 <TextBlock Grid.Column="10" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Duration}"/>
                 <TextBlock Grid.Column="12" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Target}"/>
+                <TextBlock Grid.Column="14" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Actor.Title}"/>
               </Grid>
             </Grid>
           </Border>
@@ -83,6 +90,8 @@
                       <ColumnDefinition Width="54"/>
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="1.4*"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="70"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
                     <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
@@ -91,6 +100,7 @@
                     <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="10.5" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
                     <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="10.5"/>
                     <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Target}"/>
+                    <TextBlock Grid.Column="14" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
                   </Grid>
                 </Button>
               </DataTemplate>

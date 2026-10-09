@@ -54,7 +54,7 @@ namespace TiaOpenness.Shared
         internal static ApprovalOutcome RejectAdministrativeWrite(PendingApproval request)
         {
             var log = AuditLog.Current;
-            try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash); }
+            try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash, request.EffectiveActor); }
             catch (Exception ex) { Trace.TraceWarning("Approval decision audit unavailable: " + ex.GetType().Name); }
             return new ApprovalOutcome(request, false, "denied");
         }
@@ -91,7 +91,7 @@ namespace TiaOpenness.Shared
                 {
                     if (!Used.TryAdd(request.RequestId, request.PlanHash + request.ArgumentDigest))
                     {
-                        try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash); }
+                        try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash, request.EffectiveActor); }
                         catch (Exception ex) { Trace.TraceWarning("Replay refusal audit unavailable: " + ex.GetType().Name); }
                         return new ApprovalOutcome(request, false, "denied");
                     }
@@ -114,7 +114,7 @@ namespace TiaOpenness.Shared
                 { Trace.TraceInformation("Approval channel unavailable: " + ex.GetType().Name + ": " + ex.Message); reason = DateTimeOffset.UtcNow >= request.Deadline ? "timeout" : "workbench-unavailable"; }
             }
             try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool,
-                reason == null ? "granted" : reason == "timeout" ? "timeout" : "denied", request.PlanHash); }
+                reason == null ? "granted" : reason == "timeout" ? "timeout" : "denied", request.PlanHash, request.EffectiveActor); }
             catch (Exception ex) { Trace.TraceWarning("Approval decision audit unavailable: " + ex.GetType().Name); }
             return new ApprovalOutcome(request, false, reason);
         }

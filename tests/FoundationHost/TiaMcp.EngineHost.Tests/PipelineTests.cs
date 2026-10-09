@@ -14,6 +14,31 @@ using Xunit.Abstractions;
 
 public sealed class PipelineTests(ITestOutputHelper output)
 {
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public async Task Engine_host_carries_transport_actor_through_approval_journal_and_audit(bool human)
+    {
+        using var fixture = new Fixture();
+        string root = Path.Combine(AppContext.BaseDirectory, "actor-audit", Guid.NewGuid().ToString("N"));
+        var log = new AuditLog(root); using var audit = AuditInvocation.UseLog(log);
+        using var actor = human ? ActorScope.EnterWorkbench("attached-session", new string('c', 32)) : ActorScope.EnterCall("attached-session");
+        var rows = new List<string>(); InvocationJournal.ConfigureOutput(rows.Add);
+        PendingApproval? approval = null;
+        fixture.Wait = (pending, _, _) => { approval = pending; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
+        try
+        {
+            var result = await fixture.Call("SaveProject", "{}");
+            Assert.NotNull(approval); Assert.Equal(human ? 2 : 1, approval.Version);
+            Assert.Equal(human ? "workbench" : "mcp", approval.EffectiveActor);
+            Assert.NotEmpty(fixture.Worker.Calls); Assert.True(log.Verify().Passed);
+            Assert.NotEmpty(log.Read()); Assert.All(log.Read(), row => Assert.Equal(human ? "workbench" : "mcp", row.Actor));
+            var projected = rows.Select(row => JsonNode.Parse(row)!).Where(row => (int?)row["callProjection"] == 1).ToArray();
+            Assert.Equal(2, projected.Length);
+            Assert.All(projected, row => { Assert.Equal(human ? "workbench" : "mcp", (string?)row["actor"]); Assert.Equal(ActorScope.McpSession, (string?)row["mcpSession"]); });
+            Assert.Null(result.StructuredContent?["meta"]?["actor"]);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
     [Fact]
     public async Task Session_context_flows_across_await_and_nested_calls_restore_the_caller()
     {

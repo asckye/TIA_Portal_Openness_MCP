@@ -11,6 +11,32 @@ using Xunit;
 public sealed class ApprovalHostTests
 {
     [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public async Task Foundation_call_carries_transport_actor_through_approval_journal_and_audit(bool human)
+    {
+        string root = Path.Combine(AppContext.BaseDirectory, "actor-audit", Guid.NewGuid().ToString("N"));
+        var log = new AuditLog(root); using var audit = AuditInvocation.UseLog(log);
+        using var actor = human ? ActorScope.EnterWorkbench("attached-session", new string('c', 32)) : ActorScope.EnterCall("attached-session");
+        var rows = new List<string>(); TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
+        try
+        {
+            var worker = new Worker(); PendingApproval? approval = null;
+            var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "SaveProject"), worker), "19", _ => BehaviorPolicy.SafeV4,
+                () => new ApprovalSettings(true, 2), (pending, _, _) =>
+                { approval = pending; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
+            var result = await tool.InvokeAsync(Request("SaveProject", "{\"mode\":\"apply\",\"confirm\":true,\"expectedPlanHash\":\"" + new string('a', 64) + "\",\"expectedProjectFile\":\"C:\\\\fixture.ap19\"}"));
+            Assert.NotNull(approval); Assert.Equal(human ? 2 : 1, approval.Version);
+            Assert.Equal(human ? "workbench" : "mcp", approval.EffectiveActor);
+            Assert.True(worker.Calls > 0); Assert.True(log.Verify().Passed);
+            Assert.NotEmpty(log.Read()); Assert.All(log.Read(), row => Assert.Equal(human ? "workbench" : "mcp", row.Actor));
+            var projected = rows.Select(row => JsonNode.Parse(row)!).Where(row => (int?)row["callProjection"] == 1).ToArray();
+            Assert.Equal(2, projected.Length);
+            Assert.All(projected, row => { Assert.Equal(human ? "workbench" : "mcp", (string?)row["actor"]); Assert.Equal(ActorScope.McpSession, (string?)row["mcpSession"]); });
+            Assert.Null(result.StructuredContent?["meta"]?["actor"]);
+        }
+        finally { TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null); if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+    [Theory]
     [InlineData("SaveProject", "{}")]
     [InlineData("CloseProject", "{}")]
     [InlineData("CompileSoftware", "{\"softwarePath\":\"PLC\"}")]

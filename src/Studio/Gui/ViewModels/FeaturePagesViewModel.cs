@@ -21,7 +21,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _timer;
     private readonly Func<DateTimeOffset> _now;
     private IReadOnlyList<CallRecord>? _pausedCalls;
-    private bool _writeOnly, _failOnly, _releaseOnly, _disposed;
+    private bool _writeOnly, _failOnly, _releaseOnly, _humanOnly, _aiOnly, _disposed;
     private string _search = "", _release = "21";
     private string? _selectedCall;
     private AuditVerification? _verification;
@@ -64,6 +64,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool WriteOnly { get => _writeOnly; set { if (Set(ref _writeOnly, value)) RefreshCalls(); } }
     public bool FailOnly { get => _failOnly; set { if (Set(ref _failOnly, value)) RefreshCalls(); } }
     public bool ReleaseOnly { get => _releaseOnly; set { if (Set(ref _releaseOnly, value)) RefreshCalls(); } }
+    public bool HumanOnly { get => _humanOnly; set { if (Set(ref _humanOnly, value)) { if (value) AiOnly = false; RefreshCalls(); } } }
+    public bool AiOnly { get => _aiOnly; set { if (Set(ref _aiOnly, value)) { if (value) HumanOnly = false; RefreshCalls(); } } }
     public string Search { get => _search; set { if (Set(ref _search, value)) RefreshCalls(); } }
     public string Release { get => _release; set { if (Set(ref _release, value)) { RefreshCalls(); Raise(nameof(ReleaseFilter)); } } }
     public string ReleaseFilter => Loc.Current.T("Calls.ReleaseOnly", TiaMcp.Versioning.TiaVersionCatalog.Get(Release).DisplayName);
@@ -82,7 +84,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool RequestsEmpty => Requests.Count == 0;
     public string PendingCount => Loc.Current.T("Feature.Count", Approvals.PendingCount);
     public string PendingSummary => Approvals.Requests.FirstOrDefault(r => r.State == ApprovalState.Pending) is { } request
-        ? Loc.Current.T("Calls.PendingSummary", request.Client, request.Operations.Count, Remaining(request)) : Loc.Current["Shell.NoPending"];
+        ? Loc.Current.T("Calls.PendingSummary", ActorDisplay.Client(request.Actor), request.Operations.Count, Remaining(request)) : Loc.Current["Shell.NoPending"];
     public int Remaining(ApprovalRequest request) => Math.Clamp((int)Math.Ceiling((request.Deadline - _now()).TotalSeconds), 0, request.TimeoutSeconds);
     public void ToggleFollow() { _pausedCalls = FollowLatest ? Journal.Calls.ToArray() : null; RefreshCalls(); Notify(nameof(FollowLatest), nameof(FollowLabel)); }
     public void OpenApprovals() => DrawerRequested?.Invoke(this, "Approvals");
@@ -244,7 +246,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         foreach (var row in _callCache.Values) row.RefreshLanguage();
         foreach (var row in _requests) row.RefreshLanguage();
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
-        RefreshCalls(); RefreshAudit();
+        RefreshCalls(); RefreshAudit(languageChanged: true);
         Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(PendingSummary), nameof(ApprovalSetting),
             nameof(PendingCount), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
@@ -263,7 +265,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             r.Deadline.AddSeconds(-r.TimeoutSeconds), r.Host, r.Release,
             r.Operations.Count == 1 ? r.Operations[0].Tool : Loc.Current.T("Calls.PendingOperations", r.Operations.Count),
             true, CallResult.Pending, null, r.Project + " · " + r.Plc, r.ParametersJson,
-            LocalizedText.Key("Calls.Pending"), "", LocalizedText.Empty, LocalizedText.Key("Approval.Pending")))).ToArray();
+            LocalizedText.Key("Calls.Pending"), "", LocalizedText.Empty, LocalizedText.Key("Approval.Pending"))
+            { Actor = r.Actor })).ToArray();
         int previousSnapshotCount = _snapshotCount, previousCount = _calls.Count;
         var previousSelected = SelectedCall;
         _snapshotCount = records.Length;
@@ -277,7 +280,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         foreach (string key in _callCache.Keys.Where(k => !keep.Contains(k)).ToArray()) _callCache.Remove(key);
         string search = Search.Trim();
         var next = records.Where(c => (!WriteOnly || c.IsWrite) && (!FailOnly || c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown)
-                && (!ReleaseOnly || c.Release == Release) && c.Tool.Contains(search, StringComparison.OrdinalIgnoreCase))
+                && (!ReleaseOnly || c.Release == Release) && (!HumanOnly || c.Actor == "workbench")
+                && (!AiOnly || c.Actor == "mcp") && c.Tool.Contains(search, StringComparison.OrdinalIgnoreCase))
             .OrderBy(c => c.Result == CallResult.Pending ? 0 : 1).ThenByDescending(c => c.Time).Select(c => _callCache[c.JournalKey]).ToArray();
         Sync(_calls, next);
         if ((previousCount == 0) != (_calls.Count == 0)) Raise(nameof(CallsEmpty));
@@ -294,8 +298,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         }).ToArray();
         Sync(_requests, next); Notify(nameof(RequestsEmpty));
     }
-    private void RefreshAudit()
+    private void RefreshAudit(bool languageChanged = false)
     {
+        if (languageChanged) _auditRows.Clear();
         var old = _auditRows.ToDictionary(r => r.Record.Index);
         Sync(_auditRows, Audit.Events.TakeLast(AuditLogService.PageSize).Select(e => old.TryGetValue(e.Index, out var row)
             && row.Record == e && row.Selected == (e.Index == _auditSelection) ? row : new AuditRow(e, e.Index == _auditSelection)).ToArray());
@@ -350,13 +355,14 @@ public sealed class CallRow(CallRecord record) : ObservableObject
         if (parameters) { _parameters = null; Raise(nameof(Parameters)); }
         if (result) { _resultJson = null; Raise(nameof(ResultJson)); }
         foreach (string name in new[] { nameof(Record), nameof(Time), nameof(Host), nameof(Tool), nameof(Duration), nameof(Target), nameof(Pending),
-            nameof(ReadWrite), nameof(WriteTone), nameof(Tone), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(HasError), nameof(Approval) }) Raise(name);
+            nameof(Actor), nameof(ReadWrite), nameof(WriteTone), nameof(Tone), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(HasError), nameof(Approval) }) Raise(name);
     }
     internal void RefreshLanguage()
     {
-        foreach (string name in new[] { nameof(Host), nameof(ReadWrite), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(Approval) }) Raise(name);
+        foreach (string name in new[] { nameof(Actor), nameof(Host), nameof(ReadWrite), nameof(Result), nameof(PreviewNote), nameof(Summary), nameof(Error), nameof(Approval) }) Raise(name);
     }
     public string Time => Record.Time.ToLocalTime().ToString("HH:mm:ss");
+    public string Actor => ActorDisplay.Name(Record.Actor);
     public string Host => (Record.Host == "engine-worker" ? Loc.Current["Calls.WorkerDispatched"] : Record.Host)
         + (Record.Release.Length == 0 ? "" : " · " + Record.Release);
     public string Tool => Record.Tool;
@@ -399,6 +405,8 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     private bool _jsonOpen;
     private string? _parameters;
     public ApprovalRequest Request { get; private set; } = request;
+    public string Actor => ActorDisplay.Name(Request.Actor);
+    public string Client => ActorDisplay.Client(Request.Actor);
     public bool Pending => Request.State == ApprovalState.Pending;
     public bool CanDecide => Pending && owner.Approvals.CanDecide(Request.Id);
     public int Remaining => owner.Remaining(Request);
@@ -436,7 +444,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     }
     internal void RefreshLanguage()
     {
-        foreach (string name in new[] { nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote) }) Raise(name);
+        foreach (string name in new[] { nameof(Actor), nameof(Client), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote) }) Raise(name);
     }
     public void RefreshCountdown()
     {
@@ -446,6 +454,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
 
 public sealed record AuditRow(AuditEvent Record, bool Selected)
 {
+    public string Actor => ActorDisplay.Name(Record.Actor);
     public string Result => Record.Result switch
     {
         "succeeded" => Loc.Current["Calls.Success"], "rejected-before-operation" => Loc.Current["Calls.Rejected"],
@@ -464,6 +473,13 @@ public sealed record AuditRow(AuditEvent Record, bool Selected)
         AuditEventType.Request => FeatureTone.Warning, AuditEventType.Approve => FeatureTone.Success,
         AuditEventType.Reject or AuditEventType.Timeout => FeatureTone.Muted, _ => FeatureTone.Normal,
     };
+}
+
+internal static class ActorDisplay
+{
+    internal static string Name(string? actor) => actor switch
+    { "mcp" => Loc.Current["Actor.AI"], "workbench" => Loc.Current["Actor.Human"], _ => Loc.Current["Actor.Unrecorded"] };
+    internal static string Client(string? actor) => actor == "workbench" ? Loc.Current["Actor.Workbench"] : Loc.Current["Actor.McpClient"];
 }
 
 public sealed record EnvironmentGroupRow(EnvironmentGroup Group)

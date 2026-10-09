@@ -1,5 +1,6 @@
 <Project>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ActorScope.cs" Link="Shared/ActorScope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AuditLog.cs" Link="Shared/AuditLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AuditInvocation.cs" Link="Shared/AuditInvocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AuditCli.cs" Link="Shared/AuditCli.cs" />

@@ -16,7 +16,7 @@
                   <TextBlock Text="{Binding State}" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                  <TextBlock Text="{Binding Request.Client}" FontSize="13" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding Client}" FontSize="13" FontWeight="SemiBold"/>
                   <Border Padding="6,2" Margin="8,0" Style="{StaticResource Primer.Chip}">
                     <TextBlock Text="{Binding Request.Transport}" Style="{StaticResource Primer.Mono}" FontSize="9"/>
                   </Border>

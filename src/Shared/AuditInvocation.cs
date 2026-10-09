@@ -9,7 +9,7 @@ namespace TiaOpenness.Shared
     internal sealed class AuditInvocation : IDisposable
     {
         private readonly AuditLog log;
-        private readonly string requestId, host, release, tool;
+        private readonly string requestId, host, release, tool, actor;
         private readonly AuditInvocation? previous;
         private bool completed, requestWritten, started;
         private static readonly AsyncLocal<AuditInvocation?> Current = new AsyncLocal<AuditInvocation?>();
@@ -23,15 +23,15 @@ namespace TiaOpenness.Shared
             internal PreviewScope() { PreviewDepth.Value = previous + 1; }
             public void Dispose() => PreviewDepth.Value = previous;
         }
-        private AuditInvocation(AuditLog log, string requestId, string host, string release, string tool)
-        { this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; previous = Current.Value; Current.Value = this; }
+        private AuditInvocation(AuditLog log, string requestId, string host, string release, string tool, string actor)
+        { this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; this.actor = actor; previous = Current.Value; Current.Value = this; }
         internal string RequestId => requestId;
         internal static string? CurrentRequestId => Current.Value?.requestId;
         internal static AuditLog? CurrentLog => Current.Value?.log ?? LogOverride.Value;
-        internal static AuditInvocation? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null)
+        internal static AuditInvocation? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null, string? actor = null)
         {
             if (!write || PreviewDepth.Value > 0) return null;
-            try { return new AuditInvocation(log ?? CurrentLog ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool); }
+            try { return new AuditInvocation(log ?? CurrentLog ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool, actor ?? ActorScope.Actor); }
             catch (Exception ex) { ReportFailure(ex); return null; }
         }
         internal static IDisposable UseLog(AuditLog log)
@@ -82,7 +82,7 @@ namespace TiaOpenness.Shared
         internal void End(string outcome) { if (completed) return; RecordRequest(); completed = true; Emit("end", outcome); }
         private void Emit(string kind, string? outcome = null, string? planHash = null)
         {
-            try { log.Append(kind, requestId, host, release, tool, outcome, planHash); }
+            try { log.Append(kind, requestId, host, release, tool, outcome, planHash, actor: actor); }
             catch (Exception ex) { ReportFailure(ex); }
         }
         private static void ReportFailure(Exception ex)

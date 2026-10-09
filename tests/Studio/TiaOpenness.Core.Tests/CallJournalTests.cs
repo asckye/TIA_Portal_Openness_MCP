@@ -22,6 +22,46 @@ public sealed class CallJournalTests : IDisposable
                 ["completeness"] = completeness } }.ToJsonString();
 
     public CallJournalTests() => Directory.CreateDirectory(root);
+    [Fact]
+    public void Terminal_projection_retains_the_initiating_actor_after_the_ambient_scope_changes()
+    {
+        var rows = new List<string>(); InvocationJournal.ConfigureOutput(rows.Add);
+        try
+        {
+            InvocationJournal.CallSpan call; string? session;
+            using (ActorScope.EnterWorkbench("initiating-session"))
+            {
+                session = ActorScope.McpSession;
+                call = InvocationJournal.Observe("actor-capture", "GetPlcBlockInfo", "engine", "21", false, () => "{}");
+            }
+            using (call)
+            using (ActorScope.EnterCall("another-session")) call.Complete(() => Envelope());
+            Assert.Equal(2, rows.Count);
+            Assert.All(rows, line => { var row = JsonNode.Parse(line)!; Assert.Equal("workbench", (string?)row["actor"]); Assert.Equal(session, (string?)row["mcpSession"]); });
+        }
+        finally { InvocationJournal.ConfigureOutput(null); }
+    }
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void Projection_captures_actor_and_hashed_session_at_start_and_reader_preserves_them(bool human)
+    {
+        using var actor = human ? ActorScope.EnterWorkbench("session-fixture") : ActorScope.EnterCall("session-fixture");
+        string[] rows = Rows("actor", result: Envelope());
+        foreach (string line in rows)
+        {
+            var row = JsonNode.Parse(line)!;
+            Assert.Equal(human ? "workbench" : "mcp", (string?)row["actor"]);
+            Assert.Equal(ActorScope.McpSession, (string?)row["mcpSession"]);
+            Assert.DoesNotContain("session-fixture", line);
+        }
+        File.WriteAllLines(Path.Combine(root, "calls-actor.jsonl"), rows);
+        using var reader = new CallJournalReader(root, false);
+        var call = Assert.Single(reader.Calls);
+        Assert.Equal(human ? "workbench" : "mcp", call.Actor); Assert.Equal(ActorScope.McpSession, call.McpSession);
+        var legacy = rows.Select(line => { var row = JsonNode.Parse(line)!.AsObject(); row.Remove("actor"); row.Remove("mcpSession"); return row.ToJsonString(); });
+        File.WriteAllLines(Path.Combine(root, "calls-actor.jsonl"), legacy);
+        reader.Poll(); call = Assert.Single(reader.Calls); Assert.Empty(call.Actor); Assert.Empty(call.McpSession);
+    }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

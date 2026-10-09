@@ -54,12 +54,15 @@
                   <ColumnDefinition Width=".8*"/>
                   <ColumnDefinition Width="10"/>
                   <ColumnDefinition Width="70"/>
+                  <ColumnDefinition Width="10"/>
+                  <ColumnDefinition Width="70"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
                 <TextBlock Grid.Column="2" Text="{l:Tr Audit.Event}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
                 <TextBlock Grid.Column="4" Text="{l:Tr Audit.Object}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
                 <TextBlock Grid.Column="6" Text="{l:Tr Calls.Result}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
                 <TextBlock Grid.Column="8" Text="{l:Tr Audit.Hash}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
+                <TextBlock Grid.Column="10" Text="{l:Tr Actor.Title}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
               </Grid>
             </Grid>
           </Border>
@@ -78,12 +81,15 @@
                       <ColumnDefinition Width=".8*"/>
                       <ColumnDefinition Width="10"/>
                       <ColumnDefinition Width="70"/>
+                      <ColumnDefinition Width="10"/>
+                      <ColumnDefinition Width="70"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
                     <TextBlock Grid.Column="2" Text="{Binding Type}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="11.5" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="4" Text="{Binding Record.ToolObject}" Style="{StaticResource Primer.Mono}" ToolTip="{Binding Record.ToolObject}"/>
                     <TextBlock Grid.Column="6" Text="{Binding Result}" Style="{StaticResource Primer.Muted}"/>
                     <TextBlock Grid.Column="8" Text="{Binding Record.Hash}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock Grid.Column="10" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
                   </Grid>
                 </Border>
               </DataTemplate>

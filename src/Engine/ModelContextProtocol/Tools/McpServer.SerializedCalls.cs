@@ -170,6 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public override Tool ProtocolTool => inner.ProtocolTool;
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
+            using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request.Server?.SessionId, request.Server);
             using var stagingSession = ImportStagingTools.UseSession(request);
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
             {
@@ -223,6 +224,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public override Tool ProtocolTool => _inner.ProtocolTool;
         public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
+            using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request.Server?.SessionId, request.Server);
             using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
             string? correlation = null;
             if (Isolation.IsolatedWorkerHost.IsChild)

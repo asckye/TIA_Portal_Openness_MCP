@@ -33,6 +33,11 @@ namespace TiaOpenness.Shared
         public ApprovalAction[] Operations { get; set; } = Array.Empty<ApprovalAction>();
         public int TimeoutSeconds { get; set; } = 120;
         public DateTimeOffset Deadline { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? Actor { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? OperatorCallId { get; set; }
+        internal string EffectiveActor => Version == 1 ? ActorScope.Mcp : Actor!;
 
         internal static PendingApproval Create(string host, string release, string tool, string arguments,
             string? identity, int seconds, string? requestId = null)
@@ -50,6 +55,9 @@ namespace TiaOpenness.Shared
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
                 Tool = tool, PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity = Display(target, "identity").ToJsonString(),
                 ParametersJson = display.ToJsonString(), TimeoutSeconds = seconds,
+                Version = ActorScope.Actor == ActorScope.Workbench ? 2 : 1,
+                Actor = ActorScope.Actor == ActorScope.Workbench ? ActorScope.Workbench : null,
+                OperatorCallId = ActorScope.Actor == ActorScope.Workbench ? ActorScope.OperatorCallId : null,
                 Deadline = DateTimeOffset.UtcNow.AddSeconds(seconds),
                 Operations = new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
                     Target = string.Join(" · ", objects) } } };
@@ -101,7 +109,8 @@ namespace TiaOpenness.Shared
         }
         internal void Validate()
         {
-            if (Version != 1 || string.IsNullOrWhiteSpace(RequestId) || string.IsNullOrWhiteSpace(Host)
+            ValidateAttribution();
+            if (string.IsNullOrWhiteSpace(RequestId) || string.IsNullOrWhiteSpace(Host)
                 || string.IsNullOrWhiteSpace(ReleaseKey) || string.IsNullOrWhiteSpace(Tool) || !IsHash(PlanHash) || !IsHash(ArgumentDigest)
                 || TimeoutSeconds < 1 || TimeoutSeconds > 3600 || Deadline <= DateTimeOffset.UtcNow
                 || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations.Length > 50)
@@ -110,6 +119,13 @@ namespace TiaOpenness.Shared
             using (var args = JsonDocument.Parse(ParametersJson))
                 if (project.RootElement.ValueKind != JsonValueKind.Object || args.RootElement.ValueKind != JsonValueKind.Object)
                     throw new InvalidDataException("Approval identity and arguments must be objects.");
+        }
+        internal void ValidateAttribution()
+        {
+            if (Version == 1 ? Actor != null || OperatorCallId != null
+                : Version != 2 || !ActorScope.IsValid(Actor)
+                    || OperatorCallId != null && !Guid.TryParseExact(OperatorCallId, "N", out _))
+                throw new InvalidDataException("Invalid approval attribution.");
         }
         internal static bool IsHash(string? hash) => hash != null && hash.Length == 64 && hash.All(c => "0123456789abcdef".Contains(c));
         internal static string Hash(string value)
@@ -168,8 +184,17 @@ namespace TiaOpenness.Shared
                     ? new[] { "Version", "RequestId", "PlanHash", "ArgumentDigest", "Decision" }
                     : new[] { "Version", "Kind", "RequestId", "Host", "ReleaseKey", "Tool", "PlanHash", "ArgumentDigest", "ProjectIdentity", "ParametersJson", "Operations", "TimeoutSeconds", "Deadline" };
                 if (required.Any(field => !fields.Contains(field))) throw new InvalidDataException("Missing approval field.");
+                if (typeof(T) == typeof(PendingApproval))
+                {
+                    int version = doc.RootElement.GetProperty("Version").GetInt32();
+                    if (version == 1 && (fields.Contains("Actor") || fields.Contains("OperatorCallId"))
+                        || version == 2 && !fields.Contains("Actor"))
+                        throw new InvalidDataException("Invalid approval attribution fields.");
+                }
             }
-            return JsonSerializer.Deserialize<T>(data) ?? throw new InvalidDataException("Missing approval frame.");
+            var frame = JsonSerializer.Deserialize<T>(data) ?? throw new InvalidDataException("Missing approval frame.");
+            if (frame is PendingApproval pending) pending.ValidateAttribution();
+            return frame;
         }
         private static async Task Exact(Stream stream, byte[] data, CancellationToken token)
         {
