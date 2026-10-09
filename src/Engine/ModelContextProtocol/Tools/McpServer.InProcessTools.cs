@@ -131,9 +131,17 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Write and online-write tools by their typed classification; descriptions never decide.</summary>
         internal static bool IsWriteTool(MethodInfo method) => IsWrite(ClassificationOf(method));
+        private static readonly System.Threading.AsyncLocal<string?> WorkerCallId = new System.Threading.AsyncLocal<string?>();
+        internal static object? InvokeWorkerToolMethod(MethodInfo method, object?[] call, string requestId)
+        {
+            string? previous = WorkerCallId.Value;
+            WorkerCallId.Value = requestId;
+            try { return InvokeToolMethod(method, call); }
+            finally { WorkerCallId.Value = previous; }
+        }
         internal static object? InvokeToolMethod(MethodInfo method, object?[] call)
         {
-            string id = Guid.NewGuid().ToString("N");
+            string id = WorkerCallId.Value ?? Guid.NewGuid().ToString("N");
             RecordBridgeEvent(id, method.Name, "BEFORE");
             IDisposable? observation = null;
             StartCallProjection(id, method, call, ref observation);

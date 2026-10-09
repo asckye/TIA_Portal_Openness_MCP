@@ -53,6 +53,8 @@ assert 'EngineServices.' not in doctor_source and 'Siemens.Portal' not in doctor
 assert re.search(r'\[MethodImpl\(MethodImplOptions\.NoInlining\)\]\s+private static Task<bool> ReadOpennessGroup', doctor_source)
 # The host forwards managed observations. Reflection in the worker keeps the
 # Openness wrapper's Siemens dependencies out of the no-install JIT path.
+assert 'channel!.CallAsync("engine.observe"' in (ROOT / 'src/FoundationHost/EngineWorkerClient.cs').read_text(encoding='utf-8')
+assert 'request.Method == "engine.observe"' in (ROOT / 'src/Engine/WorkerMode/EngineWorkerHost.cs').read_text(encoding='utf-8')
 observations = sources.member('Read', tool=False, owner='HostObservations')
 group = block_after(observations, 'if (operation == "group" || operation == "group.fix")')
 assert 'Assembly.GetType("TiaMcpServer.Siemens.Openness")' in group

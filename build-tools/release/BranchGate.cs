@@ -90,8 +90,9 @@ internal static partial class ReleaseCommands
                 var worker = RunBuildSpec("worker-supervisor", harness, [exe, "worker-supervisor-only"], majorLogs, temp, cli, apiRoot, major);
                 RequireCount("worker supervisor", worker, "COMPLETE: (\\d+) worker supervisor checks passed; no TIA connection attempted", "workerFaults");
                 VerifyHttpConcurrency(harness, exe, api, majorLogs, temp, cli, apiRoot, major);
-                VerifyEngineApproval(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major);
-                foreach (var isolated in new[] { false, true }) VerifyStability(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, rounds.ToString(), isolated);
+                var protocolWorker = PrepareReleaseSdkWorker(dotnet, api, major, majorLogs, temp, cli, apiRoot, nuget);
+                VerifyEngineApproval(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, protocolWorker);
+                foreach (var isolated in new[] { false, true }) VerifyStability(python, exe, harness, api, majorLogs, temp, cli, apiRoot, major, rounds.ToString(), isolated, protocolWorker);
                 RunBuildSpec("worker-protocol", python, [Path.Combine(Root, "scripts/checks/Test-FoundationTransport.py"),
                     "--releases", major.ToString(), "--output", Path.Combine(majorLogs, "foundation-transport")], majorLogs, temp, cli, apiRoot, major);
                 return new PipelineResult("branch-v" + major, 0, "Branch engine checks passed.\n", "");

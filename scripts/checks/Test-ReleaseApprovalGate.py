@@ -232,7 +232,7 @@ def run_engine(args) -> dict:
     direct_root, direct_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-direct")
     with retained_on_failure(direct_root):
         with resources.server(exe, portal, args.major, "stdio", "full", harness, api,
-                              env_overrides=direct_env) as (rpc, _, _):
+                              env_overrides=direct_env, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc, _, _):
             initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
                                                        "clientInfo": {"name": "release-approval-gate", "version": "1"}})
             require("result" in initialized, f"V{args.major}: direct host initialize failed")
@@ -250,7 +250,7 @@ def run_engine(args) -> dict:
     bridge_root, bridge_env = fresh_data_root(args.temp_root, f"engine-v{args.major}-calltool")
     with retained_on_failure(bridge_root):
         with resources.server(exe, portal, args.major, "stdio", "lite", harness, api,
-                              env_overrides=bridge_env) as (rpc, _, _):
+                              env_overrides=bridge_env, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog) as (rpc, _, _):
             initialized = rpc("initialize", "init", {"protocolVersion": "2024-11-05", "capabilities": {},
                                                        "clientInfo": {"name": "release-approval-gate", "version": "1"}})
             require("result" in initialized, f"V{args.major}: CallTool host initialize failed")
@@ -370,6 +370,8 @@ def main() -> int:
     parser.add_argument("--exe", type=Path)
     parser.add_argument("--portal-root", type=Path)
     parser.add_argument("--host-harness", type=Path)
+    parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
+    parser.add_argument('--engine-catalog', type=Path)
     parser.add_argument("--public-api", type=Path)
     parser.add_argument("--runtime-root", type=Path)
     parser.add_argument("--temp-root", type=Path)
@@ -389,15 +391,17 @@ def main() -> int:
     report = run_engine(args) if args.product == "engine" else run_foundation(args)
     if report["checksPassed"] != report["checksExpected"]:
         raise CheckFailure(f"Check count mismatch: {report}")
+    report.update(resources.engine_fixture_evidence(args.engine_worker))
     report["status"] = "passed"
-    report["approvalSettings"] = ("explicit enabled=true; timeoutSeconds=120 for harness approval proof; absent for real-EXE readiness proof"
+    report["approvalSettings"] = ("explicit enabled=true; timeoutSeconds=120 for approval proof; absent for real-EXE readiness proof"
                                    if args.product == "engine" else "explicit enabled=true; timeoutSeconds=120")
     report["workbenchConnected"] = False
     report["tiaConnected"] = False
     report["resultPath"] = str(args.output / "result.json")
     (args.output / "result.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if args.product == "engine":
-        print(f"COMPLETE: {report['checksPassed']} approval/readiness checks passed for V{args.major}; harness proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted")
+        proof = "combined host" if args.engine_worker is not None else "harness"
+        print(f"COMPLETE: {report['checksPassed']} approval/readiness checks passed for V{args.major}; {proof} proves default-on approval and real EXE proves readiness precedence; no TIA connection attempted")
     else:
         print(f"COMPLETE: {report['checksPassed']} default-approval checks passed across six Foundation releases; CallTool is not advertised by the Foundation V4 contract; no TIA connection attempted")
     return 0

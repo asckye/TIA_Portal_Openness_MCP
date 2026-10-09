@@ -270,7 +270,7 @@ namespace TiaMcpServer.Worker
         private ChannelResponse Dispatch(ChannelRequest request)
         {
             if (request.Method == "engine.status") { Observe(); return ChannelResponse.Success(Status().ToJsonString()); }
-            if (request.Method == "host.observe")
+            if (request.Method == "engine.observe")
             {
                 try
                 {
@@ -320,7 +320,7 @@ namespace TiaMcpServer.Worker
             {
                 using var progress = new WorkerProgressShim(request, args.TryGetProperty("progress", out var enabled) && enabled.ValueKind == JsonValueKind.True, EngineServices.Provider);
                 progress.Bind(method!, call!);
-                result = McpServer.ToolResult(McpServer.InvokeToolMethod(method!, call!));
+                result = McpServer.ToolResult(McpServer.InvokeWorkerToolMethod(method!, call!, id));
             }
             if (TiaOpenness.Shared.SessionBehavior.LocksSession(nativeCalls.NativeCallIssued,
                 (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown", McpServer.IsWriteTool(name)

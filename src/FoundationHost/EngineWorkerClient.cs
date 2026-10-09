@@ -17,7 +17,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
         if (Poisoned) throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.Recovery);
         await Start(token).ConfigureAwait(false);
         bool connects = operation == "session.ConnectPortal";
-        var wire = await channel!.CallAsync("host.observe", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }.ToJsonString(),
+        var wire = await channel!.CallAsync("engine.observe", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }.ToJsonString(),
             connects ? BindingChange.MayAdvance : BindingChange.None, !connects, timeouts.For("status"), token).ConfigureAwait(false);
         if (connects) await ReadStatus(CancellationToken.None).ConfigureAwait(false);
         return JsonNode.Parse(wire);

@@ -382,6 +382,9 @@ internal static partial class ReleaseCommands
         {
             VerifyHttpConcurrency(harness, exe, api, outputDirectory, runTemp, cliHome, apiRoot, major);
         }
+        (string Worker, string Catalog)? protocolWorker = null;
+        (string Worker, string Catalog) ProtocolWorker() => protocolWorker ??= PrepareReleaseSdkWorker(dotnet, api, major,
+            outputDirectory, runTemp, cliHome, apiRoot, nuget);
         var processLeases = 0;
         if (plan.Includes("engine-functional"))
         {
@@ -404,7 +407,7 @@ internal static partial class ReleaseCommands
         JsonElement approval = default;
         if (plan.Includes("engine-approval"))
         {
-            approval = VerifyEngineApproval(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major);
+            approval = VerifyEngineApproval(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, ProtocolWorker());
         }
 
         int software = 0, engineering = 0, http = 0, hmi = 0;
@@ -426,15 +429,9 @@ internal static partial class ReleaseCommands
         var resources = 0;
         if (plan.Includes("resource-discovery"))
         {
-        var fixtureDirectory = Path.Combine(outputDirectory, "resource-sdk-worker");
-        RunBuildRaw(dotnet, ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{major}.csproj"), "-c", "Release", "-v:q",
-            "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false", "-p:NuGetAudit=false", "-p:TiaMcpEngineWorkerSdkFixture=true",
-            "-p:AppendTargetFrameworkToOutputPath=false", $"-p:OutputPath={fixtureDirectory}", $"-p:SiemensEngineeringDirectory={api}"],
-            Path.Combine(outputDirectory, "resource-sdk-worker-build.log"), runTemp, cliHome, apiRoot, null, "Resource SDK worker build");
-        var fixtureWorker = Path.Combine(fixtureDirectory, $"TiaMcp.Engine.V{major}.exe");
-        var fixtureCatalog = Path.Combine(fixtureDirectory, "tool-catalog.json");
-        RunBuildRaw(fixtureWorker, ["--bundle-root", Root, "--write-tool-catalog", fixtureCatalog],
-            Path.Combine(outputDirectory, "resource-sdk-worker-catalog.log"), runTemp, cliHome, apiRoot, null, "Resource SDK worker catalog");
+        var resourceWorker = ProtocolWorker();
+        var fixtureWorker = resourceWorker.Worker;
+        var fixtureCatalog = resourceWorker.Catalog;
         var usagePath = Path.Combine(outputDirectory, $"tool-usage-v{major}.json");
         var resourcesText = RunBuildSpec("resource-discovery", python, [Path.Combine(Root, "scripts/checks/Test-ResourceDiscovery.py"), "--exe", Path.Combine(Root, $"runtime/v{major}/TiaMcp.FoundationHost.exe"),
             "--portal-root", api, "--major", major.ToString(), "--engine-worker", fixtureWorker, "--engine-catalog", fixtureCatalog,
@@ -448,7 +445,8 @@ internal static partial class ReleaseCommands
             var ecosystemOut = Path.Combine(outputDirectory, "v21-ecosystem-v" + major + "-" + Guid.NewGuid().ToString("N"));
             var ecosystemPython = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON") ?? python;
             RunBuildSpec("v21-ecosystem", ecosystemPython, [Path.Combine(Root, "scripts/checks/Test-V21Ecosystem.py"), "--exe", exe,
-                "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--schema-root", schemas, "--output", ecosystemOut], outputDirectory, runTemp, cliHome, apiRoot, major);
+                "--major", major.ToString(), "--host-harness", harness, "--public-api", api, "--schema-root", schemas, "--output", ecosystemOut,
+                "--engine-worker", ProtocolWorker().Worker, "--engine-catalog", ProtocolWorker().Catalog], outputDirectory, runTemp, cliHome, apiRoot, major);
             var ecosystemFiles = Directory.Exists(ecosystemOut) ? Directory.GetFiles(ecosystemOut, "result.json", SearchOption.AllDirectories) : [];
             if (ecosystemFiles.Length != 1) throw new ReleaseException("V21 ecosystem evidence missing or ambiguous");
             using var v21EcosystemDoc = JsonDocument.Parse(File.ReadAllText(ecosystemFiles[0]));
@@ -461,8 +459,8 @@ internal static partial class ReleaseCommands
 
         var stabilityRounds = options.Get("LocalStabilityRounds", "50");
         JsonElement stability = default, isolatedStability = default;
-        if (plan.Includes("engine-stability")) stability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, false);
-        if (plan.Includes("engine-isolated-stability")) isolatedStability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, true);
+        if (plan.Includes("engine-stability")) stability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, false, ProtocolWorker());
+        if (plan.Includes("engine-isolated-stability")) isolatedStability = VerifyStability(python, exe, harness, api, outputDirectory, runTemp, cliHome, apiRoot, major, stabilityRounds, true, ProtocolWorker());
 
         int nativeExport = 0, snapshot = 0, globalScripts = 0, graphic = 0, settings = 0, ecosystemCount = 0;
         if (plan.Includes("engine-functional"))
@@ -515,6 +513,21 @@ internal static partial class ReleaseCommands
         };
     }
 
+    private static (string Worker, string Catalog) PrepareReleaseSdkWorker(string dotnet, string api, int major,
+        string outputDirectory, string runTemp, string cliHome, string apiRoot, string? nuget)
+    {
+        var fixtureDirectory = Path.Combine(outputDirectory, "resource-sdk-worker");
+        RunBuildRaw(dotnet, ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{major}.csproj"), "-c", "Release", "-v:q",
+            "-p:TiaMcpEngineWorkerSdkFixture=true", "-p:AppendTargetFrameworkToOutputPath=false",
+            $"-p:OutputPath={fixtureDirectory}", $"-p:SiemensEngineeringDirectory={api}"],
+            Path.Combine(outputDirectory, "resource-sdk-worker-build.log"), runTemp, cliHome, apiRoot, nuget, "Protocol SDK worker build");
+        var worker = Path.Combine(fixtureDirectory, $"TiaMcp.Engine.V{major}.exe");
+        var catalog = Path.Combine(fixtureDirectory, "tool-catalog.json");
+        RunBuildRaw(worker, ["--bundle-root", Root, "--write-tool-catalog", catalog],
+            Path.Combine(outputDirectory, "resource-sdk-worker-catalog.log"), runTemp, cliHome, apiRoot, nuget, "Protocol SDK worker catalog");
+        return (worker, catalog);
+    }
+
     private static JsonElement VerifyDiagnosticFixture(string python, string diagnosticFixture, string weaver, string outputDirectory, string runTemp, string cliHome, string apiRoot)
     {
         var diagnosticOut = Path.Combine(outputDirectory, "native-diagnostics-" + Guid.NewGuid().ToString("N"));
@@ -535,13 +548,14 @@ internal static partial class ReleaseCommands
             throw new ReleaseException("HTTP concurrency regression did not complete");
     }
 
-    private static JsonElement VerifyEngineApproval(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major)
+    private static JsonElement VerifyEngineApproval(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, (string Worker, string Catalog) protocolWorker)
     {
         var approvalOut = Path.Combine(outputDirectory, "approval-default-v" + major + "-" + Guid.NewGuid().ToString("N"));
         var approvalTemp = Path.Combine(runTemp, "approval-v" + major);
         Directory.CreateDirectory(approvalTemp);
         var approvalText = RunBuildSpec("approval-safety", python, [Path.Combine(Root, "scripts/checks/Test-ReleaseApprovalGate.py"), "--product", "engine", "--major", major.ToString(),
-            "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
+            "--exe", exe, "--portal-root", api, "--host-harness", harness, "--public-api", api, "--temp-root", approvalTemp, "--output", approvalOut,
+            "--engine-worker", protocolWorker.Worker, "--engine-catalog", protocolWorker.Catalog], outputDirectory, runTemp, cliHome, apiRoot, major, approval: true);
         using var approvalDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(approvalOut, "result.json")));
         var approval = approvalDoc.RootElement.Clone();
         CheckReleaseCount("approvalSafety", GetJsonInt(approval, "checksPassed"), "Default approval checks incomplete");
@@ -552,12 +566,13 @@ internal static partial class ReleaseCommands
         return approval;
     }
 
-    private static JsonElement VerifyStability(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, string rounds, bool isolated)
+    private static JsonElement VerifyStability(string python, string exe, string harness, string api, string outputDirectory, string runTemp, string cliHome, string apiRoot, int major, string rounds, bool isolated, (string Worker, string Catalog) protocolWorker)
     {
         var output = Path.Combine(outputDirectory, (isolated ? "isolated-stability-v" : "stability-v") + major + "-" + Guid.NewGuid().ToString("N"));
         RunBuildSpec(isolated ? "isolated-local-stability" : "local-stability", python,
             [Path.Combine(Root, "scripts/checks/Test-LocalStability.py"), "--exe", exe, "--major", major.ToString(), "--host-harness", harness,
-             "--public-api", api, "--rounds", rounds, "--output", output, .. isolated ? new[] { "--isolate-openness" } : Array.Empty<string>()], outputDirectory, runTemp, cliHome, apiRoot, major);
+             "--public-api", api, "--rounds", rounds, "--output", output,
+             "--engine-worker", protocolWorker.Worker, "--engine-catalog", protocolWorker.Catalog, .. isolated ? new[] { "--isolate-openness" } : Array.Empty<string>()], outputDirectory, runTemp, cliHome, apiRoot, major);
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "result.json")));
         var result = doc.RootElement.Clone();
         if (GetJsonString(result, "status") != "passed" || GetArrayLength(result, "runs") != 4 ||

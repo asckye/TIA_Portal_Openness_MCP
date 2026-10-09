@@ -49,6 +49,7 @@ namespace TiaMcp.FoundationHost
                     string? fallback = p.Value.TryGetProperty("default", out var d) ? d.GetRawText() : null;
                     return new ToolParameterDescriptor(p.Name, type, type switch {
                         "string" => typeof(string).FullName!, "integer" => typeof(int).FullName!, "boolean" => typeof(bool).FullName!,
+                        "array" => typeof(JsonElement).FullName!,
                         _ => typeof(TiaMcp.Logic.V4.Inputs.ToolArguments).FullName! }, required.Contains(p.Name), fallback,
                         fallback == null ? null : d.ToString(), p.Value.TryGetProperty("description", out var description) ? description.GetString()! : "", false,
                         p.Value.TryGetProperty("enum", out var values) ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : Array.Empty<string>());

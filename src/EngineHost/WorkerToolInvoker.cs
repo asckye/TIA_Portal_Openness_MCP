@@ -121,11 +121,18 @@ namespace TiaMcp.FoundationHost
                 var token = McpServer.WorkerDispatchCancellation;
                 using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
                 using var lane = TiaMcpServer.Isolation.ToolDispatchLanes.Enter(tool.Name, token);
-                var reply = worker.Invoke(TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId,
-                    tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token).GetAwaiter().GetResult();
-                if (reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
-                McpServer.ObserveWorkerReply(tool.Name, reply);
-                return new ToolInvocationResult(reply.Result, reply.NativeCallIssued);
+                string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId;
+                string phase = "THREW";
+                InvocationJournal.Write(id, "worker:" + tool.Name, "BEFORE");
+                try
+                {
+                    var reply = worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token).GetAwaiter().GetResult();
+                    if (reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
+                    McpServer.ObserveWorkerReply(tool.Name, reply);
+                    phase = "RETURNED";
+                    return new ToolInvocationResult(reply.Result, reply.NativeCallIssued);
+                }
+                finally { InvocationJournal.Write(id, "worker:" + tool.Name, phase); }
             }
             var method = local[tool.Name];
             var values = method.GetParameters().Select(p => arguments.Json.TryGetProperty(p.Name!, out var value)

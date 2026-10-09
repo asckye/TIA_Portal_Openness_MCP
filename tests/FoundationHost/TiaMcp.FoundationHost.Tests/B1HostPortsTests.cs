@@ -88,6 +88,25 @@ public sealed class B1HostPortsTests
     }
 
     [Fact]
+    public void SharedArrayArgumentsBindThroughTheBridgeAndStillRejectWrongShapes()
+    {
+        using var scope = EngineHostParity.EnterScope();
+        var tool = global::ModelContextProtocol.Server.McpServerTool.Create(
+            (string[] files) => string.Join(",", files), new() { Name = "SharedArrayFixture" });
+        var catalog = new enginehost::TiaMcp.FoundationHost.SharedToolCatalog(Host.McpServer.CatalogView,
+            new[] { tool }, new HashSet<string>());
+        var invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog,
+            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, new Host.ImportStagingHostLifetime(), new[] { tool });
+        Assert.Null(invoker.Bind("SharedArrayFixture", new ToolArguments(JsonSerializer.SerializeToElement(
+            new { files = new[] { "one.scl", "two.scl" } })), out var call));
+        Assert.NotNull(call);
+        Assert.NotNull(invoker.Bind("SharedArrayFixture", new ToolArguments(JsonSerializer.SerializeToElement(
+            new { files = "one.scl" })), out _));
+        Assert.NotNull(invoker.Bind("SharedArrayFixture", new ToolArguments(JsonSerializer.SerializeToElement(
+            new { files = new[] { 1 } })), out _));
+    }
+
+    [Fact]
     public void NativeJournalReaderRetainsRotatedPairsAndCountsTrailingRecords()
     {
         using var scope = EngineHostParity.EnterScope();

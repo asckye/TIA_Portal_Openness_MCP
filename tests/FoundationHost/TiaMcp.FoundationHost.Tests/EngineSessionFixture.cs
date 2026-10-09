@@ -27,6 +27,8 @@ internal static class EngineSessionFixture
         var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new(epoch, attached != null), request => {
             if (request.Method == "engine.status") return ChannelResponse.Success(Status().ToJsonString());
             var input = JsonNode.Parse(request.ArgumentsJson)!.AsObject();
+            if (request.Method == "engine.observe" && (string?)input["operation"] == "assemblies")
+                return ChannelResponse.Success("[]");
             if (request.Method == "adapter.Attach")
             {
                 int pid = (int)input["processId"]!;

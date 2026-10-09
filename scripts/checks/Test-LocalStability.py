@@ -104,6 +104,57 @@ def document(reply, unwrap=False):
     return value
 
 
+def unattached_state(value, combined, logs):
+    data = value['data']
+    if combined:
+        require(data['isAttached'] is False and data['processId'] is None and data['projectFile'] is None
+                and data['ownsProject'] is False and data['isLocalSession'] is False, 'Test attached unexpectedly')
+        require(not any('DIAGNOSTIC_WRITE_FAILED' in line for line in logs), 'Invocation journal write failed')
+    else:
+        require(data['isConnected'] is False and data['project'] == '-', 'Test attached unexpectedly')
+        require(data['evidence']['journalHealth']['failedWrites'] == 0, 'Invocation journal write failed')
+    require(not any(w['code'] == 'DIAGNOSTIC_WRITE_FAILED' for w in value['meta'].get('warnings', [])),
+            'Invocation journal write failed')
+
+
+def owned_worker_pid(parent_pid, executable):
+    """Find only this test host's child and verify its executable before sampling it."""
+    from ctypes import wintypes
+    class Entry(ctypes.Structure):
+        _fields_ = [('size', wintypes.DWORD), ('usage', wintypes.DWORD), ('pid', wintypes.DWORD),
+                    ('heap', ctypes.c_size_t), ('module', wintypes.DWORD), ('threads', wintypes.DWORD),
+                    ('parent', wintypes.DWORD), ('priority', wintypes.LONG), ('flags', wintypes.DWORD),
+                    ('exe', wintypes.WCHAR * 260)]
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+    kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    kernel.Process32FirstW.argtypes = kernel.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(Entry)]
+    kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    snapshot = kernel.CreateToolhelp32Snapshot(2, 0)
+    if snapshot == wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    found = []
+    try:
+        entry = Entry(); entry.size = ctypes.sizeof(entry)
+        available = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+        while available:
+            if entry.parent == parent_pid:
+                handle = kernel.OpenProcess(0x1000, False, entry.pid)
+                if handle:
+                    try:
+                        buffer = ctypes.create_unicode_buffer(32768); size = wintypes.DWORD(len(buffer))
+                        if kernel.QueryFullProcessImageNameW(handle, 0, buffer, ctypes.byref(size)):
+                            if Path(buffer.value).resolve() == executable.resolve(): found.append(entry.pid)
+                    finally: kernel.CloseHandle(handle)
+            available = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+    finally: kernel.CloseHandle(snapshot)
+    require(len(found) == 1, 'Expected one owned SDK worker, found ' + str(found))
+    return found[0]
+
+
 def cases(major, source):
     target = {'objectKind': 'Block', 'objectPath': '__soak_missing__', 'softwarePath': '__soak_no_plc__'}
     xref = {'softwarePath': '__soak_no_plc__', 'objectPath': '__soak_missing__'}
@@ -145,7 +196,7 @@ def run_profile(args, transport, profile, run_dir):
     started = time.monotonic()
     with resources.server(args.exe, args.public_api, args.major, transport, profile,
             args.host_harness, args.public_api, process_observer=owned.append, isolate=args.isolate_openness,
-            evidence_directory=run_dir,
+            evidence_directory=run_dir, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog,
             env_overrides={'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
                            'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics)}) as (rpc, http, logs):
         hello = rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {},
@@ -190,10 +241,9 @@ def run_profile(args, transport, profile, run_dir):
                         and value['data']['queried'] is False and value['data']['complete'] is False,
                         label + ': refusal reported as completed/empty')
             else:
-                require(value.get('ok') is True and meta['outcome'] == 'succeeded', label + ': expected success')
+                require(value.get('ok') is True and meta['outcome'] == 'succeeded', label + ': expected success: ' + json.dumps(value))
                 if expectation == 'state':
-                    require(value['data']['isConnected'] is False and value['data']['project'] == '-', 'Test attached unexpectedly')
-                    require(value['data']['evidence']['journalHealth']['failedWrites'] == 0, 'Invocation journal write failed')
+                    unattached_state(value, args.engine_worker is not None, logs)
                 if expectation in ('compatibility', 'bridge_success'):
                     evidence = value['data']['evidence']
                     require(evidence['engineMajor'] == args.major and evidence['nativeCrossReferencesEnabled'] is False
@@ -207,10 +257,11 @@ def run_profile(args, transport, profile, run_dir):
         for index, case in enumerate(scenario):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))
-        if args.isolate_openness:
+        if args.isolate_openness or args.engine_worker is not None:
             state = document(rpc('tools/call', 'worker-state', {'name': 'GetOpennessWorkerStatus', 'arguments': {}}))['data']['evidence']['worker']
-            require(state['state'] == 'Ready' and state['workerPid'] != owned[0].pid, 'Worker isolation not active')
-            worker_process = SimpleNamespace(pid=state['workerPid'])
+            worker_pid = owned_worker_pid(owned[0].pid, args.engine_worker) if args.engine_worker is not None else state['workerPid']
+            require(state['state'] == 'Ready' and worker_pid != owned[0].pid, 'Worker isolation not active')
+            worker_process = SimpleNamespace(pid=worker_pid)
             worker_samples.append(process_sample(worker_process))
         concurrency = args.concurrency if transport == 'http' else 1
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
@@ -226,7 +277,8 @@ def run_profile(args, transport, profile, run_dir):
                 # A success after each error batch checks gate release / host recovery.
                 require(rpc('ping', f'ping-{batch}').get('result') == {}, 'Ping failed after input errors')
                 recovered = document(rpc('tools/call', f'recovery-{batch}', {'name': 'GetSessionState', 'arguments': {}}))
-                require(recovered['ok'] is True and recovered['data']['isConnected'] is False and recovered['data']['evidence']['journalHealth']['failedWrites'] == 0, 'State failed after error batch')
+                require(recovered['ok'] is True, 'State failed after error batch')
+                unattached_state(recovered, args.engine_worker is not None, logs)
                 unknown = rpc('__soak_unknown_method__', f'unknown-{batch}')
                 require(unknown.get('error', {}).get('code') == -32601, 'Unknown method not rejected')
                 empty = rpc('resources/list', f'resources-{batch}')
@@ -308,7 +360,13 @@ def run_profile(args, transport, profile, run_dir):
             lanes[lane][key] -= 1
             outstanding[key] -= 1
     require(not any(outstanding.values()), 'Incomplete invocation after all responses returned')
-    if args.isolate_openness:
+    if args.engine_worker is not None:
+        # Typed workers journal implementation names separately from canonical tool projections.
+        # Match only this owned child's paired projections, including lite CallTool targets.
+        child_calls = {(row['id'], row['tool']) for _, row in projections
+                       if row['mcpProcessId'] == worker_process.pid}
+        require(forwarded and forwarded <= child_calls, 'Host/child invocation correlation lost')
+    elif args.isolate_openness:
         require(forwarded and forwarded <= executed, 'Host/child invocation correlation lost')
     log_text = ''.join(logs)
     (run_dir / 'host-stderr.log').write_text(log_text, encoding='utf-8')
@@ -329,6 +387,8 @@ def main():
     parser.add_argument('--exe', type=Path, required=True)
     parser.add_argument('--public-api', type=Path, required=True)
     parser.add_argument('--host-harness', type=Path, required=True)
+    parser.add_argument('--engine-worker', type=Path, help='Explicit SDK-only worker for the combined net10 host')
+    parser.add_argument('--engine-catalog', type=Path)
     parser.add_argument('--major', type=int, choices=(20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--transports', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
@@ -349,7 +409,9 @@ def main():
         'runtimeSha256': sha(args.exe), 'harnessSha256': sha(args.host_harness), 'scriptSha256': sha(Path(__file__)),
         'resourceHelperSha256': sha(Path(resources.__file__)),
         'scope': 'Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.',
-        'rounds': args.rounds, 'isolatedWorker': args.isolate_openness, 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
+        'rounds': args.rounds, 'isolatedWorker': args.isolate_openness or args.engine_worker is not None,
+        'workerModel': 'combined-host-supervised-worker' if args.engine_worker is not None else 'engine-protocol-harness', 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
+    report.update(resources.engine_fixture_evidence(args.engine_worker))
     try:
         for transport in args.transports:
             for profile in ('full', 'lite'):

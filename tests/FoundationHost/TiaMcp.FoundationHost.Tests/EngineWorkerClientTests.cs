@@ -9,6 +9,18 @@ public sealed class EngineWorkerClientTests
         WorkerExe = "unused", ApiDirectory = "unused", EngineWorkerExe = Path.Combine(AppContext.BaseDirectory, "missing-fixture-worker.exe") }, "unused");
 
     [Fact]
+    public async Task ManagedObservationsUseTheEngineChannelProfile()
+    {
+        string executable = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
+        using var worker = new Client(new Options { ReleaseKey = "20", BundleRoot = AppContext.BaseDirectory,
+            WorkerExe = "unused", ApiDirectory = "unused", EngineWorkerExe = executable },
+            Client.Hash(executable));
+        var result = await worker.Observe("assemblies", new System.Text.Json.Nodes.JsonObject(), CancellationToken.None);
+        Assert.Empty(result!.AsArray());
+        Assert.Equal("Ready", (string?)worker.Snapshot()["state"]);
+    }
+
+    [Fact]
     public async Task RestartPreviewAndBusyRefusalNeverAdvanceGeneration()
     {
         using var worker = Create();
