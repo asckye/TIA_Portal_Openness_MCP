@@ -1128,12 +1128,41 @@ def plc_exchange_reply(reply, name):
     return raw
 
 
+# Keep the response fixtures in their original domains; their declarations now
+# live in the Siemens-free host types. Explicit rosters keep a missing fixture
+# or a declaration moved to the wrong type from silently disappearing.
+PORTED_DOMAIN_TOOLS = {
+    'Library': {'HmiOfflineTools': (
+        'AnalyzeHmiTemplateReference', 'AnalyzeGlobalLibraryPackage',
+        'PlanGlobalLibraryTemplateReuse', 'AnalyzeUnifiedHmiTemplateLayout')},
+    'UnifiedHmi': {'HmiOfflineTools': (
+        'BuildUnifiedHmiButtonActionScript', 'BuildUnifiedHmiLayoutDesign',
+        'BuildUnifiedHmiThemeDesign', 'RunHmiActionScriptRecipeSafetySelfTest')},
+    'PlcExternalSources': {'PlcOfflineTools': ('WritePlcSclSourceFile',)},
+    'PlcBlocks': {'PlcOfflineTools': ('AnalyzePlcReferences', 'PatchPlcBlockDocument')},
+    'Diagnostics': {'HostMetaTools': (
+        'GenerateAcceptanceReport', 'GenerateErrorReport', 'RunOnlineMonitoringSafetySelfTest')}
+}
+
+
 def check_coverage(domains):
     from engine_sources import EngineSources
     sources = EngineSources()
+    def declarations(type_name):
+        return set(re.findall(r'\[McpServerTool\(Name\s*=\s*"(\w+)"', sources.type_text(type_name)))
+
+    ported = {}
+    for types in PORTED_DOMAIN_TOOLS.values():
+        for type_name, names in types.items():
+            ported.setdefault(type_name, set()).update(names)
+    for type_name, names in ported.items():
+        actual = declarations(type_name)
+        resources.require(actual == names,
+            f'{type_name} ported fixture coverage differs: actual={actual}, covered={names}')
     for domain in domains:
-        source = sources.type_text(domain + 'Tools')
-        actual = set(re.findall(r'\[McpServerTool\(Name\s*=\s*"(\w+)"', source))
+        actual = declarations(domain + 'Tools')
+        for names in PORTED_DOMAIN_TOOLS.get(domain, {}).values():
+            actual.update(names)
         covered = {name for name, _, _ in CASES[domain]}
         resources.require(actual == covered, f'{domain} fixture coverage differs: actual={actual}, covered={covered}')
 
