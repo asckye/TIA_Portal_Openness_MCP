@@ -54,6 +54,17 @@ def resolve_names(baseline, registered, targets, merged=False):
     return result
 
 
+def workbench_tools(root=ROOT):
+    text = (root / 'src/FoundationHost/WorkbenchControlTools.cs').read_text('utf-8-sig')
+    block = text.split('string[] Names = {', 1)[1].split('};', 1)[0]
+    names = re.findall(r'"([A-Za-z0-9]+)"', block)
+    assert len(names) == len(set(names)) == 8, 'Closed Workbench tool roster differs'
+    metadata = (root / 'src/Logic/ModelContextProtocol/ToolMetadata.cs').read_text('utf-8-sig')
+    rows = dict(re.findall(r'\["([^"\n]+)"\] = new Classification\("L1", "Workbench", "(UI|READ)",', metadata))
+    assert set(rows) == set(names), 'Workbench classification coverage differs'
+    return rows
+
+
 def registered_rosters(root=ROOT):
     """Source registrations, never stale build outputs or generated profile data."""
     sys.path.insert(0, str(root / 'scripts/checks'))
@@ -110,6 +121,8 @@ def registered_rosters(root=ROOT):
     extras = {host_map.get(n, n) for n, response in definitions.items() if response in ('DocumentExport', 'BatchDocumentExport', 'DocumentImport', 'BatchDocumentImport')}
     for key in ('20', '21'):
         rosters[key] = (rosters[key] - removed) | rosters['19'] | extras
+    for key in rosters:
+        rosters[key].update(workbench_tools(root))
     return rosters, mapping
 
 
@@ -317,7 +330,7 @@ def generate():
         domain = full.get(name, {}).get('domain', '')
         topics = domains.get(domain, [])
         # HMI/third-party/offline composition contracts must not be presented as PLC native examples.
-        project_defined = domain in ('Meta', 'Guide', 'Bootstrap', 'Reports', 'Exports', 'PLC-Builders', 'Validation', 'Diagnostics', 'Simulation', 'Online-Monitoring') or name == 'GetToolUsage' or name in additions
+        project_defined = domain in ('Meta', 'Guide', 'Bootstrap', 'Reports', 'Exports', 'PLC-Builders', 'Validation', 'Diagnostics', 'Simulation', 'Online-Monitoring') or name == 'GetToolUsage' or name in additions or name in workbench_tools()
         unsupported = 'Hmi' in name or 'Unified' in name or 'Sivarc' in name or 'SiVArc' in name or domain in ('PLC-OpcUA', 'VersionControl')
         if not project_defined and not unsupported:
             for pattern, matched in rules:

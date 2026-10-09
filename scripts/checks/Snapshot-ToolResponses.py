@@ -181,6 +181,32 @@ FOUNDATION_MARKERS = {
 }
 FOUNDATION_MARKERS.update({name: 'INVALID_ARGUMENT' for name in ('StageImportFiles', 'ListStagedImportFiles', 'CleanupStagedImportFiles')})
 
+# Explicit host-only UI calls: valid arguments only connect to the local control
+# pipe. Capture uses a fresh private data root, so no Workbench shares the scope.
+WORKBENCH_CALLS = {
+    'ShowWorkbenchPage': {'page': 'overview'},
+    'ShowWorkbenchBlock': {'softwarePath': 'PLC_1', 'blockPath': 'Motion/FB_Axis'},
+    'ShowWorkbenchCall': {'requestId': 'a' * 32},
+    'ShowWorkbenchLadder': {'softwarePath': 'PLC_1', 'blockPath': 'Motion/FB_Axis'},
+    'ShowWorkbenchAtlas': {}, 'GetWorkbenchState': {},
+    'GetWorkbenchSelection': {'offset': 0, 'limit': 100},
+    'PrefillWorkbenchForm': {'form': 'inspectionRules', 'mode': 'set', 'fields': {'namePattern': '^FB_'}},
+}
+FOUNDATION_MARKERS.update({name: 'INVALID_ARGUMENT' for name in WORKBENCH_CALLS})
+
+
+def unavailable_workbench(call, registered):
+    for name, arguments in WORKBENCH_CALLS.items():
+        if name not in registered: continue
+        result = body(call(name, arguments))
+        resources.require(result['error']['code'] == 'RESOURCE_UNAVAILABLE'
+                          and result['meta']['outcome'] == 'rejected-before-operation'
+                          and result['meta']['execution'] == 'not-started'
+                          and result['meta']['requiresSessionReset'] is False
+                          and result['meta']['behaviorPolicy'] == 'not-applicable',
+                          name + ': absent Workbench must not enter approval/native work')
+
+
 # Pure in-memory tools beyond check_usage's ten builders/planners. Exact inputs
 # come from GetToolUsage, not another independently maintained example catalog.
 PURE_EXAMPLES = (
@@ -211,6 +237,7 @@ PASSIVE_RESOURCE_CALLS = (
 # Portal/Exports have no connection prerequisite: disconnected Disconnect and
 # missing export content are their passive/negative representatives instead.
 DOMAIN_CALLS = {
+    'Workbench': 'GetWorkbenchState',
     'Diagnostics': 'ValidateAutomationContext',
     'Exports': 'GetExport',
     'HMI': 'CompileHmiDiagnostics',
@@ -734,6 +761,7 @@ def capture_release(args, release, exe, public_api):
             decoded('PreviewToolCall', {'name': 'ListDevices', 'arguments': {}})
             decoded('PreviewToolCall', {'name': 'ListPlcBlocks', 'arguments': {}})
 
+            unavailable_workbench(call, registered)
             for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
                 result = decoded(name, arguments)
                 meta = result['meta']
@@ -901,6 +929,8 @@ def capture_foundation(args, release, exe):
                                   and reply['sideEffects']['tiaLaunchedOrAttached'] is False
                                   and reply['checks']['passed'] is True,
                                   name + ': passive contract changed')
+            unavailable_workbench(call, {tool['name'] for tool in tools})
+            passive.extend(sorted(WORKBENCH_CALLS))
             names = sorted(t['name'] for t in tools)
             resources.require('CallTool' not in names, 'Foundation added a bridge; review its rejection path first')
             return {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
@@ -1679,14 +1709,16 @@ def verify_coverage(release, baseline, snapshot, lite):
                     if (tool['name'] in worker_tools or tool['name'] in FOUNDATION_MARKERS)
                     and not any(key.lower() == 'snapshotreject'
                                 for key in tool['inputSchema'].get('properties', {}))}
-        passive, profile = {'InitializeEnvironment', 'RunCapabilitySelfTest'}, 'plc-foundation'
+        passive, profile = {'InitializeEnvironment', 'RunCapabilitySelfTest'} | set(WORKBENCH_CALLS), 'plc-foundation'
         skipped('directSkipped', names - rejected)
         skipped('bridgeSkipped', names)
         skipped('passiveSkipped', {'GetSessionState'})
         roster('bridgeRejectedTools', set())
         roster('passiveTools', passive)
         for name in passive:
-            required_call(profile, name, {})
+            required_call(profile, name, WORKBENCH_CALLS.get(name, {}))
+    for name, arguments in WORKBENCH_CALLS.items():
+        required_call(profile, name, arguments)
     roster('directRejectedTools', rejected)
     roster('calledTools', rejected | passive)
     for name in rejected:

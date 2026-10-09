@@ -10,7 +10,7 @@ P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 V20/V21 MCP host startup no longer exits solely because TIA is absent, the detected major version differs, or Openness initialization/user-group checks fail. It records a shared readiness state for Bootstrap, the environment doctor, and tool admission. `RESOURCE_UNAVAILABLE` with resource `tia-openness-environment` is returned before a TIA-dependent native call; the V4 outcome is `rejected-before-operation` and execution is `not-started`. Diagnostic and offline-classified tools remain available. Explicit CLI verbs, `doctor`, and syntax/runtime exit codes keep their command behavior.
 
-八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，默认 lite 为 73 个工具，full 分别为 487/498 个工具。引擎的 stdio/HTTP 宿主与隔离 supervisor 已退役；引擎只接受 `--engine-worker`、`--write-tool-catalog <path>` 和 CLI 动词。无参数启动打印新用法并以 64 退出。
+八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，默认 lite 为 81 个工具，full 分别为 495/506 个工具。引擎的 stdio/HTTP 宿主与隔离 supervisor 已退役；引擎只接受 `--engine-worker`、`--write-tool-catalog <path>` 和 CLI 动词。无参数启动打印新用法并以 64 退出。
 
 V20/V21 每个 MCP 会话拥有一个独立 engine worker：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion 和 full-engine profile；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
 
@@ -52,6 +52,37 @@ MCP 的 `SaveExportContent` 不能写 `approval.settings`、其常规短文件�
 审批请求、决定、超时和开关变化写入现有审计链。批次逐项批准写项；只读项不入队。
 等待发生在专用 Openness 线程之外、动作调用之前；Foundation 主机在派发给 worker 前等待审批，原生执行截止预算不变。
 审批不改变 Siemens 调用序列、参数、线程归属或会话。
+
+### 工作台控制通道（P8-20）
+
+八版 Foundation 主机共用八个工作台工具，归 `Workbench` 域。显示与预填为 `UI`，状态与选择为 `READ`；
+全部登记 `WithoutTia`。V20/V21 的 full 与 lite 都包含这些工具。UI 工具在读取、预演与执行批次中返回
+`UNSUPPORTED_CAPABILITY`；`CallTool` 可转调。控制调用写普通调用日志，不进入 worker、TIA lane、审批或审计链。
+
+管道 `TiaMcp.Workbench.v1.<sha256>` 与审批管道分开，以同一用户 SID、`approval.settings` 的绝对路径及
+`workbench-control` 域标记确定作用域。工作台创建同用户受保护 DACL 的首实例并拒绝远程连接。
+宿主以 Identification 级别连接，250 ms 连接超时；在写任何请求字节前核对服务端 SID 和
+`BundleLayout.WorkbenchControlImagePath` 解析的同包 GUI 映像。发布布局为 `runtime/studio/TiaOpenness.exe`；
+开发布局为同 worktree、同配置的 `src/Studio/Gui/bin/<configuration>/net10.0-windows/TiaOpenness.exe`，不是根目录启动器。
+工具从不启动工作台，也不降级或重试身份失败。
+
+每次连接一请求一响应，使用共享封闭 DTO、4 字节小端长度与 256 KiB 帧上限。请求携带实际宿主 PID、
+精确发布键、稳定的 16 位会话摘要、仅供显示的 MCP 客户端名和缓存的绑定工程；请求 ID 与宿主调用日志、工作台控制日志一致。
+READ 截止为 2 秒，UI 为 5 秒。`done/refused/failed` 映射为 V4 信封，`behaviorPolicy=not-applicable`，永不锁会话。
+无工作台返回 `RESOURCE_UNAVAILABLE`；身份失败为 `ACCESS_DENIED`/`pipe-owner`；超时保留
+`workbench-read`/`workbench-ui` 阶段；断连、坏帧和不匹配响应返回 `INTERNAL_ERROR` 与宿主诊断 ID，不回显异常文本。
+
+渲染工具成功后按 MCP 会话登记 requestId、HTML 路径、哈希与种类。可打开的产物还须由同会话的成功块导出提供
+工程、软件及精确块身份来源；渲染源文件的哈希须与导出登记一致。显示工具只接受 `renderRequestId`，不接受任意文件路径。
+跨会话、跨工程/块/种类、缺失或已改变的产物均类型化拒绝；工作台再次核对本机普通 HTML、哈希与目标。
+没有已登记产物时只返回定位及人的下一步，不触发导出或渲染。
+
+工作台只开放 overview、blocks、versionControl、calls、audit、environment、log；预填只开放
+inspectionRules、blockFilter、blockSelection。预填由来源会话持有，`clear` 使用空 `fields`；成功仍等待人保留或清除。
+人活动、模态、忙、关闭控制与另一来源待确认预填均拒绝 UI 操作，读取快照仍可用。
+“允许 AI 控制界面”只能由人通过设置更改，工具只回显状态。P8-21 前 `session.source=workbench-bridge`，
+不表示与 MCP 共享原生会话；精确树路径与转义差异参见[设计](phase8-workbench-control.md)。
+真实宿主与真实工作台的端到端验收留到 P8-20e。
 
 ### TIA 进程租约
 

@@ -35,6 +35,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private static readonly Dictionary<string, Classification> Classifications = new Dictionary<string, Classification>(StringComparer.OrdinalIgnoreCase)
         {
+            ["ShowWorkbenchPage"] = new Classification("L1", "Workbench", "UI", false, false, false),
+            ["ShowWorkbenchBlock"] = new Classification("L1", "Workbench", "UI", false, false, false),
+            ["ShowWorkbenchCall"] = new Classification("L1", "Workbench", "UI", false, false, false),
+            ["ShowWorkbenchLadder"] = new Classification("L1", "Workbench", "UI", false, false, false),
+            ["ShowWorkbenchAtlas"] = new Classification("L1", "Workbench", "UI", false, false, false),
+            ["GetWorkbenchState"] = new Classification("L1", "Workbench", "READ", false, true, false),
+            ["GetWorkbenchSelection"] = new Classification("L1", "Workbench", "READ", false, true, false),
+            ["PrefillWorkbenchForm"] = new Classification("L1", "Workbench", "UI", false, false, false),
             ["AnalyzeGlobalLibraryPackage"] = new Classification("L2", "HMI-Library", "OFFLINE", true, false, false),
             ["AnalyzeHmiTemplateReference"] = new Classification("L2", "HMI-Library", "OFFLINE", true, false, false),
             ["AnalyzePlcReferences"] = new Classification("L2", "Validation", "OFFLINE", false, false, false),

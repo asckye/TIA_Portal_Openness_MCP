@@ -768,6 +768,8 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
     for filename in ('ToolUsageTool.cs', 'ImportOrderTool.cs', 'OfflineSymbolManifestTools.cs'):
         text = (root / 'src/FoundationHost' / filename).read_text(encoding='utf-8-sig')
         names.update(renames.get(name, name) for name in re.findall(r'\bName\s*=\s*"([^"\n]+)"', text))
+    control = (root / 'src/FoundationHost/WorkbenchControlTools.cs').read_text('utf-8-sig')
+    names.update(re.findall(r'"([A-Za-z0-9]+)"', control.split('string[] Names = {', 1)[1].split('};', 1)[0]))
     return names
 
 

@@ -10656,6 +10656,33 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportAlarmClasses",
         "currentName": "ImportAlarmClasses",
         "sourceName": "ImportAlarmClasses",
@@ -13426,6 +13453,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PreviewToolBatch",
         "currentName": "PreviewToolBatch",
         "sourceName": "PreviewToolBatch",
@@ -14320,6 +14365,76 @@
         ],
         "arguments": {
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
         },
         "envelopeVersion": 4
       },
@@ -18383,6 +18498,33 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportAlarmClasses",
         "currentName": "ImportAlarmClasses",
         "sourceName": "ImportAlarmClasses",
@@ -21324,6 +21466,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PreviewToolBatch",
         "currentName": "PreviewToolBatch",
         "sourceName": "PreviewToolBatch",
@@ -22218,6 +22378,76 @@
         ],
         "arguments": {
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
         },
         "envelopeVersion": 4
       },
@@ -24171,6 +24401,105 @@
           "dryRun": true
         },
         "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
+        },
+        "envelopeVersion": 4
       }
     ],
     "15.1": [
@@ -25809,6 +26138,105 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
         },
         "envelopeVersion": 4
       }
@@ -27483,6 +27911,105 @@
           "dryRun": true
         },
         "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
+        },
+        "envelopeVersion": 4
       }
     ],
     "17": [
@@ -29155,6 +29682,105 @@
           "dryRun": true
         },
         "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
+        },
+        "envelopeVersion": 4
       }
     ],
     "18": [
@@ -30825,6 +31451,105 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
         },
         "envelopeVersion": 4
       }
@@ -32526,6 +33251,105 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchSelection",
+        "currentName": "GetWorkbenchSelection",
+        "sourceName": "GetWorkbenchSelection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetWorkbenchState",
+        "currentName": "GetWorkbenchState",
+        "sourceName": "GetWorkbenchState",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PrefillWorkbenchForm",
+        "currentName": "PrefillWorkbenchForm",
+        "sourceName": "PrefillWorkbenchForm",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchAtlas",
+        "currentName": "ShowWorkbenchAtlas",
+        "sourceName": "ShowWorkbenchAtlas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchBlock",
+        "currentName": "ShowWorkbenchBlock",
+        "sourceName": "ShowWorkbenchBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchCall",
+        "currentName": "ShowWorkbenchCall",
+        "sourceName": "ShowWorkbenchCall",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchLadder",
+        "currentName": "ShowWorkbenchLadder",
+        "sourceName": "ShowWorkbenchLadder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ShowWorkbenchPage",
+        "currentName": "ShowWorkbenchPage",
+        "sourceName": "ShowWorkbenchPage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "page": "overview"
         },
         "envelopeVersion": 4
       }

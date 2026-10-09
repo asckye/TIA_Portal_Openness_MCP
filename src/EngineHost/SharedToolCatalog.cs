@@ -56,7 +56,7 @@ namespace TiaMcp.FoundationHost
                 }).ToArray();
                 var operation = ToolTaxonomy.OperationOf(tool.Name, tool.Description).Operation;
                 var descriptor = new ToolDescriptor(tool.Name, tool.Description ?? "", tool,
-                    new ToolDescriptorClassification("L1", "PLC", operation, operation is "READ" or "OFFLINE", operation is "WRITE" or "FILE"),
+                    new ToolDescriptorClassification("L1", ToolTaxonomy.For(tool.Name).Domain == "Workbench" ? "Workbench" : "PLC", operation, operation is "READ" or "OFFLINE", operation is "WRITE" or "FILE"),
                     tool.Name + "(" + string.Join(", ", parameters.Select(p => p.Name + ": " + p.FriendlyType)) + ")", parameters,
                     new ToolDryRunDescriptor(parameters.Any(p => p.Name == "dryRun"), true), null, "foundation");
                 all[tool.Name] = descriptor; unavailable[tool.Name] = descriptor;

@@ -4491,6 +4491,157 @@
           "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
         ],
         "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ShowWorkbenchPage": {
+        "arguments": {
+          "page": "overview"
+        },
+        "parameters": {
+          "page": {
+            "meaning": "Use the closed input schema. Only overview, blocks, versionControl, calls, audit, environment and log are allowed. blocks/versionControl need a Workbench project.",
+            "requiresBinding": false
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Only overview, blocks, versionControl, calls, audit, environment and log are allowed. blocks/versionControl need a Workbench project. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchBlock": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "parameters": {
+          "softwarePath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          },
+          "blockPath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Copy exact software and block identities; preserve spelling and escaping. Workbench matches a unique loaded tree target and the MCP bound project, and never loads or refreshes a tree. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchCall": {
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "parameters": {
+          "requestId": {
+            "meaning": "Use the closed input schema. Copy the target call meta.requestId exactly, not the ShowWorkbenchCall invocation ID. Pending approval rows are refused.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Copy the target call meta.requestId exactly, not the ShowWorkbenchCall invocation ID. Pending approval rows are refused. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchLadder": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "parameters": {
+          "softwarePath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          },
+          "blockPath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          },
+          "renderRequestId": {
+            "meaning": "Copy meta.requestId from this session RenderPlcBlock or RenderPlcProgramAtlas after a successful export/render of the same project and target; never pass an HTML path.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Omitting renderRequestId only locates the block and returns nextStep=user-click-view-ladder. To open HTML, first export this exact block and RenderPlcBlock in the same MCP session; reference its meta.requestId. The session registry validates export provenance, project, software, block, kind and file hash. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchAtlas": {
+        "arguments": {},
+        "parameters": {
+          "renderRequestId": {
+            "meaning": "Copy meta.requestId from this session RenderPlcBlock or RenderPlcProgramAtlas after a successful export/render of the same project and target; never pass an HTML path.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Omitting renderRequestId returns nextStep=user-click-generate-atlas. To open HTML, export blocks from the bound project and render an atlas in the same MCP session; reference RenderPlcProgramAtlas meta.requestId. Every source must have matching export provenance. No export or rendering is initiated by ShowWorkbenchAtlas. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "GetWorkbenchState": {
+        "arguments": {},
+        "parameters": {},
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "session.source=workbench-bridge describes the Workbench own bridge, until P8-21. It does not prove a shared MCP/native session. workbench.controlEnabled is read-only; only a person changes the switch in Settings. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "GetWorkbenchSelection": {
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "parameters": {
+          "offset": {
+            "meaning": "Use the closed input schema. Read checkedBlocks separately from focusedBlock. Continue from meta.paging.nextOffset until complete=true; a frozen UI snapshot is not a native project inventory.",
+            "requiresBinding": false
+          },
+          "limit": {
+            "meaning": "Use the closed input schema. Read checkedBlocks separately from focusedBlock. Continue from meta.paging.nextOffset until complete=true; a frozen UI snapshot is not a native project inventory.",
+            "requiresBinding": false
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Read checkedBlocks separately from focusedBlock. Continue from meta.paging.nextOffset until complete=true; a frozen UI snapshot is not a native project inventory. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "PrefillWorkbenchForm": {
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "parameters": {
+          "form": {
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "requiresBinding": false
+          },
+          "mode": {
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "requiresBinding": false
+          },
+          "fields": {
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "requiresBinding": false
+          }
+        },
+        "operations": {
+          "clear": {
+            "arguments": {
+              "form": "inspectionRules",
+              "mode": "clear",
+              "fields": {}
+            },
+            "note": "Clear only this session pending prefill; no form execution."
+          }
+        },
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
       }
     },
     "full-engine": {
@@ -20539,6 +20690,157 @@
           "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
           "Read data.items; returned object/table paths are encoded even when the request uses raw 默认变量表. Empty data.items is valid, not proof that another PLC or table was intended."
         ]
+      },
+      "ShowWorkbenchPage": {
+        "arguments": {
+          "page": "overview"
+        },
+        "parameters": {
+          "page": {
+            "meaning": "Use the closed input schema. Only overview, blocks, versionControl, calls, audit, environment and log are allowed. blocks/versionControl need a Workbench project.",
+            "requiresBinding": false
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Only overview, blocks, versionControl, calls, audit, environment and log are allowed. blocks/versionControl need a Workbench project. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchBlock": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "parameters": {
+          "softwarePath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          },
+          "blockPath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Copy exact software and block identities; preserve spelling and escaping. Workbench matches a unique loaded tree target and the MCP bound project, and never loads or refreshes a tree. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchCall": {
+        "arguments": {
+          "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "parameters": {
+          "requestId": {
+            "meaning": "Use the closed input schema. Copy the target call meta.requestId exactly, not the ShowWorkbenchCall invocation ID. Pending approval rows are refused.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Copy the target call meta.requestId exactly, not the ShowWorkbenchCall invocation ID. Pending approval rows are refused. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchLadder": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "parameters": {
+          "softwarePath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          },
+          "blockPath": {
+            "meaning": "Copy from ListPlcBlocks/GetPlcBlockHierarchy and the already loaded Workbench tree; keep exact identity and escaping.",
+            "requiresBinding": true
+          },
+          "renderRequestId": {
+            "meaning": "Copy meta.requestId from this session RenderPlcBlock or RenderPlcProgramAtlas after a successful export/render of the same project and target; never pass an HTML path.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Omitting renderRequestId only locates the block and returns nextStep=user-click-view-ladder. To open HTML, first export this exact block and RenderPlcBlock in the same MCP session; reference its meta.requestId. The session registry validates export provenance, project, software, block, kind and file hash. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "ShowWorkbenchAtlas": {
+        "arguments": {},
+        "parameters": {
+          "renderRequestId": {
+            "meaning": "Copy meta.requestId from this session RenderPlcBlock or RenderPlcProgramAtlas after a successful export/render of the same project and target; never pass an HTML path.",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Omitting renderRequestId returns nextStep=user-click-generate-atlas. To open HTML, export blocks from the bound project and render an atlas in the same MCP session; reference RenderPlcProgramAtlas meta.requestId. Every source must have matching export provenance. No export or rendering is initiated by ShowWorkbenchAtlas. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "GetWorkbenchState": {
+        "arguments": {},
+        "parameters": {},
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "session.source=workbench-bridge describes the Workbench own bridge, until P8-21. It does not prove a shared MCP/native session. workbench.controlEnabled is read-only; only a person changes the switch in Settings. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "GetWorkbenchSelection": {
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
+        "parameters": {
+          "offset": {
+            "meaning": "Use the closed input schema. Read checkedBlocks separately from focusedBlock. Continue from meta.paging.nextOffset until complete=true; a frozen UI snapshot is not a native project inventory.",
+            "requiresBinding": false
+          },
+          "limit": {
+            "meaning": "Use the closed input schema. Read checkedBlocks separately from focusedBlock. Continue from meta.paging.nextOffset until complete=true; a frozen UI snapshot is not a native project inventory.",
+            "requiresBinding": false
+          }
+        },
+        "operations": {},
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Read checkedBlocks separately from focusedBlock. Continue from meta.paging.nextOffset until complete=true; a frozen UI snapshot is not a native project inventory. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+      },
+      "PrefillWorkbenchForm": {
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "parameters": {
+          "form": {
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "requiresBinding": false
+          },
+          "mode": {
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "requiresBinding": false
+          },
+          "fields": {
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "requiresBinding": false
+          }
+        },
+        "operations": {
+          "clear": {
+            "arguments": {
+              "form": "inspectionRules",
+              "mode": "clear",
+              "fields": {}
+            },
+            "note": "Clear only this session pending prefill; no form execution."
+          }
+        },
+        "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
+        "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
       }
     }
   }

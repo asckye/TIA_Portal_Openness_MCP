@@ -395,8 +395,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 17 | 109 | 不设 | 61 | 27 | 109 | 不设 |
 | 18 | 109 | 不设 | 61 | 27 | 109 | 不设 |
 | 19 | 111 | 不设 | 61 | 27 | 111 | 不设 |
-| 20 | 482 | 63 | 272 | 156 | 480 | 73 |
-| 21 | 493 | 63 | 289 | 164 | 491 | 73 |
+| 20 | 482 | 63 | 272 | 156 | 480 | 81 |
+| 21 | 493 | 63 | 289 | 164 | 491 | 81 |
 
 八版当前名称并集 501；V4 名称并集 499；改名/合并入口 183；不变 318。数字只指目录，不代表原生能力验收。
 
@@ -1838,7 +1838,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs):274 | `[McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
 | [src/Shared/Host/EcosystemTools.cs](../../src/Shared/Host/EcosystemTools.cs):91 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
 | [src/Shared/Host/EngineeringDiagnosticsTools.cs](../../src/Shared/Host/EngineeringDiagnosticsTools.cs):29 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
-| [src/Shared/Host/McpServer.Batch.cs](../../src/Shared/Host/McpServer.Batch.cs):162 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
+| [src/Shared/Host/McpServer.Batch.cs](../../src/Shared/Host/McpServer.Batch.cs):166 | `if (operations.Length > 50) return new Error("Batch count exceeds its limit.", new LimitExceededDetails("operations", 50, operations.Length));` |
 | [src/Shared/Host/OfflineAnalysisTools.cs](../../src/Shared/Host/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [src/Shared/Host/PlcDocumentationTools.cs](../../src/Shared/Host/PlcDocumentationTools.cs):145 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
 
@@ -1944,7 +1944,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 文件 | 类别:全部命中行 | 实施方式 |
 |---|---|---|
 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 退役根变量:56 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
-| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:114 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
+| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 退役根变量:145 | BundleLayout 迁移证据只读保留；现行定位规则在同页明确 |
 | [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 退役产品名:48 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
 | [docs/releases/v3.3.0.md](../../docs/releases/v3.3.0.md) | 退役产品名:24,76 | 历史发布/验收证据只读保留，不作为 V4 改写目标 |
 | [manifest/history/contracts-v3/responses/20.json](../../manifest/history/contracts-v3/responses/20.json) | 退役产品名:66 | 历史契约只读归档；不编辑内容、不重算哈希 |
@@ -2004,6 +2004,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GetSoftwareInfo` | `GetSoftwareInfo` | Shared Foundation contract | 20, 21 |
 | `GetSoftwareTree` | `GetSoftwareTree` | Shared Foundation contract | 20, 21 |
 | `GetToolUsage` | `GetToolUsage` | Shared Foundation contract | 20, 21 |
+| `GetWorkbenchSelection` | `GetWorkbenchSelection` | Shared Foundation contract | 20, 21 |
+| `GetWorkbenchState` | `GetWorkbenchState` | Shared Foundation contract | 20, 21 |
 | `ImportPlcBlock` | `ImportPlcBlock` | Shared Foundation contract | 20, 21 |
 | `ImportPlcBlocksFromDirectory` | `ImportPlcBlocksFromDirectory` | Shared Foundation contract | 20, 21 |
 | `ImportPlcExternalSource` | `ImportPlcExternalSource` | Shared Foundation contract | 20, 21 |
@@ -2026,6 +2028,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `OpenProject` | `OpenProject` | Shared Foundation contract | 20, 21 |
 | `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | Shared Foundation contract | 20, 21 |
 | `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | Shared Foundation contract | 20, 21 |
+| `PrefillWorkbenchForm` | `PrefillWorkbenchForm` | Shared Foundation contract | 20, 21 |
 | `PreviewToolCall` | `PreviewToolCall` | Engine discovery/bridge/worker supervisor | 20, 21 |
 | `RenderPlcBlock` | `RenderPlcBlock` | Shared Foundation contract | 20, 21 |
 | `RenderPlcProgramAtlas` | `RenderPlcProgramAtlas` | Shared Foundation contract | 20, 21 |
@@ -2033,6 +2036,11 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `RunCapabilitySelfTest` | `RunCapabilitySelfTest` | Shared Foundation contract | 20, 21 |
 | `SaveProject` | `SaveProject` | Shared Foundation contract | 20, 21 |
 | `SearchHardwareCatalog` | `SearchHardwareCatalog` | Shared Foundation contract | 20, 21 |
+| `ShowWorkbenchAtlas` | `ShowWorkbenchAtlas` | Shared Foundation contract | 20, 21 |
+| `ShowWorkbenchBlock` | `ShowWorkbenchBlock` | Shared Foundation contract | 20, 21 |
+| `ShowWorkbenchCall` | `ShowWorkbenchCall` | Shared Foundation contract | 20, 21 |
+| `ShowWorkbenchLadder` | `ShowWorkbenchLadder` | Shared Foundation contract | 20, 21 |
+| `ShowWorkbenchPage` | `ShowWorkbenchPage` | Shared Foundation contract | 20, 21 |
 | `StageImportFiles` | `StageImportFiles` | Shared Foundation contract | 20, 21 |
 
 数据文件：[ToolProfiles.resx](../../src/Logic/ModelContextProtocol/ToolProfiles.resx)。Catalog JSON 按 contractVersion、releaseKey 记录 V4/current/source 名称、profiles 和 arguments；参数示例取自 reference/tool-examples/calls.json，按当前契约转换并逐版验证。Foundation 继续不设 lite。

@@ -76,6 +76,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         this.readinessForTest = readinessForTest;
         this.sharedSession = sharedSession || inner is FoundationTool { SharedWorker: true };
         var source = inner.ProtocolTool;
+        if (inner is WorkbenchControlTool) { tool = source; return; }
         deviceCandidate = source.Name == "AddDeviceWithFallback" && release == "19"
             && (policyForTest?.Invoke("P6-DEVICE") ?? BehaviorCapabilities.Select(typeof(FoundationV4Tool).Assembly, release, "P6-DEVICE")) == BehaviorPolicy.SafeV4;
         importCandidate = PlcImportContract.Entries.Contains(Name(source.Name), StringComparer.Ordinal)
@@ -184,6 +185,15 @@ internal sealed class FoundationV4Tool : McpServerTool
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request.Server?.SessionId, request.Server);
+        if (inner is WorkbenchControlTool control)
+        {
+            string controlId = Meta.Correlate(sharedSession ? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId : null);
+            using var controlJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal.Observe(controlId, tool.Name, "foundation", release,
+                false, () => JsonSerializer.Serialize(request.Params?.Arguments));
+            var controlResult = await control.InvokeV4Async(request, controlId, cancellationToken);
+            controlJournal.Complete(() => JsonSerializer.Serialize(controlResult, McpJsonUtilities.DefaultOptions));
+            return controlResult;
+        }
         using var sharedStagingSession = (inner as FoundationTool)?.EnterSharedRequest(request);
         using var stagingSession = (inner as FoundationTool)?.EnterStagingRequest();
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
@@ -225,6 +235,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
         CallToolResult Recorded(CallToolResult result)
         {
+            if (inner is FoundationTool artifactProducer)
+                artifactProducer.ControlSession.Observe(tool.Name, request.Params?.Arguments ?? new Dictionary<string, JsonElement>(), result.StructuredContent);
             journal?.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }

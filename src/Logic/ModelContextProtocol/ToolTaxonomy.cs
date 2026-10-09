@@ -17,6 +17,8 @@ namespace TiaMcpServer.ModelContextProtocol
         // new tool local; unknown tools always use the exclusive Openness lane.
         private static readonly HashSet<string> WithoutTia = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
+            "ShowWorkbenchPage", "ShowWorkbenchBlock", "ShowWorkbenchCall", "ShowWorkbenchLadder", "ShowWorkbenchAtlas",
+            "GetWorkbenchState", "GetWorkbenchSelection", "PrefillWorkbenchForm",
             "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetOpennessWorkerStatus",
             "GetNativeInvocationLog", "GetOpennessCompatibility", "InspectSimaticSdCompatibility", "FindTools",
             "ListToolCategories", "GetToolUsage", "PreviewToolCall",
@@ -78,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             new Category("session", "会话与基础设施", "Session & infrastructure",
                 "连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。",
-                "Bootstrap", "Guide", "Meta", "Portal", "Diagnostics", "Reflection", "Exports", "Reports"),
+                "Bootstrap", "Guide", "Meta", "Portal", "Diagnostics", "Reflection", "Exports", "Reports", "Workbench"),
             new Category("project", "工程与协作", "Project & collaboration",
                 "工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。",
                 "Project", "Library", "VersionControl", "Security", "Validation"),
@@ -130,6 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>规范操作类型。描述里第三个方括号使用这些值；其它写法映射到这些规范值。</summary>
         public static readonly IReadOnlyDictionary<string, string> OperationMeaning = new Dictionary<string, string>
         {
+            ["UI"] = "Change Workbench pages, selection or prefill without changing a project or requiring TIA.",
             ["SESSION"] = "会话与发现：连接/断开/状态/引导/工具查找，不改工程",
             ["READ"] = "读取已打开工程的数据，不改动",
             ["WRITE"] = "修改已打开工程（离线工程数据），默认预览，不自动保存/编译/下载",

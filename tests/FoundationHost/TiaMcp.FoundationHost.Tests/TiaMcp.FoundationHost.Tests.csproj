@@ -58,6 +58,9 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <Compile Include="../../../src/FoundationHost/WorkbenchControlClient.cs" Link="WorkbenchControlClient.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkbenchControlSession.cs" Link="WorkbenchControlSession.cs" />
+    <Compile Include="../../../src/FoundationHost/WorkbenchControlTools.cs" Link="WorkbenchControlTools.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationV4Tool.cs" Link="FoundationV4Tool.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationV4Result.cs" Link="FoundationV4Result.cs" />
     <Compile Include="../../../src/FoundationHost/FoundationSessionCandidate.cs" Link="FoundationSessionCandidate.cs" />

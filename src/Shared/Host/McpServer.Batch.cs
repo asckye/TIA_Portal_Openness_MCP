@@ -96,6 +96,10 @@ namespace TiaMcpServer.ModelContextProtocol
             BatchPlanStore.Plan plan;
             try { plan = BatchPlans.Take(token, DateTime.UtcNow); }
             catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Preview token is missing, expired or already consumed.", new NotFoundDetails(token))); }
+            foreach (var operation in plan.Operations.OfType<JsonObject>())
+                if (CatalogView.Find((string)operation["name"]!, includeUnavailable: true)?.Classification.Operation == "UI")
+                    return V4Reject(tool, new Error("UI operations cannot run in a batch.",
+                        new UnsupportedCapabilityDetails(ReleaseKey, "workbench-ui-batch", (string)operation["name"]!)));
             try
             {
                 using var approvalPreview = BeginReadOnlyApprovalPreview();
@@ -164,6 +168,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var call in operations)
             {
                 if (call == null) return InvalidInput("operations");
+                if (CatalogView.Find(call.Name, includeUnavailable: true)?.Classification.Operation == "UI")
+                    return new Error("UI operations cannot run in a batch.", new UnsupportedCapabilityDetails(ReleaseKey, "workbench-ui-batch", call.Name));
                 var args = JsonNode.Parse(call.Arguments.Json.GetRawText())!.AsObject();
                 if (write) args["dryRun"] = true;
                 var error = ToolInvoker.Bind(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out _);

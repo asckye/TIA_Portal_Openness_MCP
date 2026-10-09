@@ -8,19 +8,19 @@ does not translate or upgrade a project.
 
 | Version | Advertised catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 59 | Foundation host and V14 SP1 worker |
-| V15.1 | 60 | Foundation host and V15.1 worker |
-| V16 | 62 | Foundation host and V16 worker |
-| V17 | 62 | Foundation host and V17 worker |
-| V18 | 62 | Foundation host and V18 worker |
-| V19 | 64 | Foundation host and V19 worker |
-| V20 | 477 | Full engine |
-| V21 | 488 | Full engine |
+| V14 SP1 | 114 | Foundation host and V14 SP1 worker |
+| V15.1 | 115 | Foundation host and V15.1 worker |
+| V16 | 117 | Foundation host and V16 worker |
+| V17 | 117 | Foundation host and V17 worker |
+| V18 | 117 | Foundation host and V18 worker |
+| V19 | 119 | Foundation host and V19 worker |
+| V20 | 495 | Foundation host and V20 engine worker |
+| V21 | 506 | Foundation host and V21 engine worker |
 
 V14 SP1–V19 advertise their implemented Foundation subset. They do not offer the
-full engine's lite profile or dispatch bridge. V20/V21 use the 60-tool lite profile;
+full engine's lite profile or dispatch bridge. V20/V21 use the 81-tool lite profile;
 `FindTools` and `CallTool` can reach the full registered catalog. The eight release
-catalogs contain 1,334 version/tool combinations and 496 distinct V4 names.
+catalogs contain 1,700 version/tool combinations and 506 distinct V4 names.
 
 The 4.0 contract uses typed argument objects matching the selected tool's
 `inputSchema`. Migrated calls return the V4 `schemaVersion` / `ok` / `data` / `error` / `meta`
@@ -47,10 +47,26 @@ corresponding `language`, `query`, or `exampleId` record.
   drive safety acceptance tests, SiVArc screen layout, and Classic HMI graphics.
   Shared tools can also have action-level version exclusions.
 
-The 496-name catalog includes 49 names available in all eight releases, 436 shared
+The 506-name catalog includes 114 names available in all eight releases, 381 shared
 by a subset, and 11 exclusive to V21. Those counts describe registration, not native
 acceptance or independent implementations. See the [generated release catalog](version-tool-catalog.md)
 for the most recently built package's exact names.
+
+## Workbench control
+
+All eight releases expose `ShowWorkbenchPage`, `ShowWorkbenchBlock`,
+`ShowWorkbenchCall`, `ShowWorkbenchLadder`, `ShowWorkbenchAtlas`,
+`GetWorkbenchState`, `GetWorkbenchSelection`, and `PrefillWorkbenchForm`.
+The six display/prefill tools use operation `UI`; state and selection use `READ`.
+They belong to the `Workbench` domain and are available without TIA, including
+V20/V21 full and lite profiles. UI tools cannot run in batches. A running local
+Workbench is required; the host never launches it. Prefill awaits a person's
+confirmation, and only Settings can change the UI control switch.
+
+Until P8-21, `session.source = workbench-bridge` identifies the Workbench's own
+session. Preserve exact project/software/block identities when locating targets.
+See the [control channel](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/runtime-layout.md#工作台控制通道p8-20)
+and [examples](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/official-tool-usage.md).
 
 ## Studio
 

@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（FoundationHost 的 V21 full 产品目录）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-09 10:39:59
+- 生成时间：2026-10-09 11:21:56
 - 产品文件版本：3.3.0.0
-- 工具数量：498
+- 工具数量：506
 
 ## 读法
 
@@ -14,8 +14,9 @@
 
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
+| `UI` | 改变工作台界面状态：切页、定位或预填，不改工程，不需要 TIA 会话 | 6 |
 | `SESSION` | 会话与发现，包含工程保存、另存与关闭；写操作须审批 | 16 |
-| `READ` | 读取已打开工程，不改动 | 152 |
+| `READ` | 读取已打开工程，不改动 | 154 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 197 |
 | `FILE` | 导出/导入文件或生成离线产物 | 51 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 34 |
@@ -29,7 +30,7 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 48 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `session` | 会话与基础设施 / Session & infrastructure | 56 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6)、`Workbench` (8) |
 | `project` | 工程与协作 / Project & collaboration | 69 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
 | `plc` | PLC 软件 / PLC software | 138 | `PLC-Software` (92)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
@@ -37,7 +38,7 @@
 | `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 26 | `Online-Monitoring` (20)、`Simulation` (6) |
 
-## session — 会话与基础设施 / Session & infrastructure（48）
+## session — 会话与基础设施 / Session & infrastructure（56）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -86,7 +87,7 @@
 |---|---|---|---|
 | `CheckProductUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact updater command. The engine never replaces its own files: run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback restores the previous install. The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. Example: {} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "CheckProductUpdate"), optionally operation or language. |
 | `GetEnvironmentDiagnostics` | L0 | SESSION* | One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready. Example: {"fix":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "GetEnvironmentDiagnostics"), optionally operation or language. |
-| `GetOpennessWorkerStatus` | L0 | READ | Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one engine worker per MCP session; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: "GetOpennessWorkerStatus"), optionally operation or language. |
+| `GetOpennessWorkerStatus` | L0 | READ | Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. Use --isolate-openness or --no-isolate-openness to override the build default; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: "GetOpennessWorkerStatus"), optionally operation or language. |
 | `RestartOpennessWorker` | L0 | WRITE | Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or replays a write. After confirmation, explicitly connect to the intended project again. An idle responsive attachment is detached and its process lease released before reset. A hung or lost worker is terminated with the lease ACTIVE; requiresTiaRestart reports whether TIA must restart before reconnecting. Does not kill TIA; an interrupted native operation can have an unknown outcome. Examples: GetToolUsage(toolName: "RestartOpennessWorker"), optionally operation or language. |
 | `RunCapabilitySelfTest` | L0 | EXECUTE* | [passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported. Examples: GetToolUsage(toolName: "RunCapabilitySelfTest"), optionally operation or language. |
 | `RunOnlineMonitoringSafetySelfTest` | L0 | EXECUTE* | Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations. Examples: GetToolUsage(toolName: "RunOnlineMonitoringSafetySelfTest"), optionally operation or language. |
@@ -128,6 +129,19 @@
 | `BuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. Examples: GetToolUsage(toolName: "BuildReleaseHandoffArtifacts"), optionally operation or language. |
 | `BuildReleaseManifest` | L2 | OFFLINE* | Build an offline machine-readable release manifest from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: "BuildReleaseManifest"), optionally operation or language. |
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: "BuildReleaseRunbook"), optionally operation or language. |
+
+### [Workbench]（8）
+
+| 工具 | 层 | 操作 | 说明 |
+|---|---|---|---|
+| `GetWorkbenchSelection` | L1 | READ | Read frozen Workbench selection with offset paging, up to 256 checked blocks. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "GetWorkbenchSelection"), optionally operation or language. |
+| `GetWorkbenchState` | L1 | READ | Read the frozen Workbench state, including the read-only UI control switch. session.source identifies the Workbench bridge session. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "GetWorkbenchState"), optionally operation or language. |
+| `PrefillWorkbenchForm` | L1 | UI | Set or clear an allowed UI form prefill owned by this MCP session. A human keeps or clears it; success awaits confirmation. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "PrefillWorkbenchForm"), optionally operation or language. |
+| `ShowWorkbenchAtlas` | L1 | UI | Show the atlas locator and optionally open an atlas render registered in this MCP session. Without a render, return the human next step. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchAtlas"), optionally operation or language. |
+| `ShowWorkbenchBlock` | L1 | UI | Locate an exact software and block path in the already loaded Workbench tree for the bound project. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchBlock"), optionally operation or language. |
+| `ShowWorkbenchCall` | L1 | UI | Show an ordinary call by its V4 requestId. Pending approval rows are refused. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchCall"), optionally operation or language. |
+| `ShowWorkbenchLadder` | L1 | UI | Locate a block and optionally open a ladder render registered in this MCP session. Without a render, return the human next step. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchLadder"), optionally operation or language. |
+| `ShowWorkbenchPage` | L1 | UI | Show an allowed Workbench page. Human activity, modal dialogs and the UI control switch can refuse the request. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: "ShowWorkbenchPage"), optionally operation or language. |
 
 ## project — 工程与协作 / Project & collaboration（69）
 

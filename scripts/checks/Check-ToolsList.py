@@ -121,6 +121,7 @@ def check(manifest_path):
                          .find("./data[@name='Catalog']/value").text)
     baseline = read(BASELINE)['operations']
     additions = generator['new_v4_tools'](ROOT)
+    workbench = generator['workbench_tools'](ROOT)
     assert set(baseline) | set(additions) == set(mapping), '3.3.0 plus reviewed V4 coverage differs'
     assert set(EXCEPTIONS) <= set(baseline), 'unused exception'
     taxonomy = (ROOT / 'src/Logic/ModelContextProtocol/ToolTaxonomy.cs').read_text(encoding='utf-8-sig')
@@ -136,7 +137,7 @@ def check(manifest_path):
             assert description, ('Missing adjacent Description', match[1])
             assert match[1] not in descriptions, ('Duplicate source registration', match[1])
             descriptions[match[1]] = description[1]
-    assert set(descriptions) == (expected - set(NEW_FOUNDATION_TOOLS)) | set(WITHDRAWN), 'engine source descriptions differ from reviewed product roster'
+    assert set(descriptions) == (expected - set(NEW_FOUNDATION_TOOLS) - set(workbench)) | set(WITHDRAWN), 'engine source descriptions differ from reviewed product roster'
     seen = set()
     seen_new = set()
     for key in ('20', '21'):
@@ -147,6 +148,9 @@ def check(manifest_path):
             description = descriptions.get(current)
             source_operation = classify(current, description)
             assert listed[current]['operation'] == source_operation, (current, 'stale manifest operation')
+            if current in workbench:
+                assert old == current == final and source_operation == workbench[current], ('Workbench operation changed', row)
+                continue
             if current in NEW_FOUNDATION_TOOLS:
                 compare_foundation_operation(current, old, source_operation, baseline)
                 compare_foundation_operation(current, old, classify(final, description), baseline)

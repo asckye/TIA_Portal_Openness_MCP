@@ -1,13 +1,13 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "16b153d32f8ab21921be0932385f9abb8fbfff936aee586c45ea27a1face36a0",
-  "uniqueTools": 498,
+  "catalogSha256": "d3f3414b8d41226ca44482cc8bfab96b4b58f627bc460c06c2b1f4c0fdf280eb",
+  "uniqueTools": 506,
   "documents": 89,
-  "versionToolPairs": 1636,
+  "versionToolPairs": 1700,
   "offlineCallExecutions": 74,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 30,
+  "callSequences": 32,
   "languages": [
     "scl",
     "scl-sd",
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 258,
-  "noDirectVendoredExampleMappings": 240,
+  "noDirectVendoredExampleMappings": 248,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -48,13 +48,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 106,
-      "checkedToolCount": 106,
+      "registeredToolCount": 114,
+      "checkedToolCount": 114,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 44,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -697,6 +697,20 @@
           "operations": []
         },
         {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ImportDeviceAml",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1329,6 +1343,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -1449,6 +1470,41 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -1462,13 +1518,13 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 107,
-      "checkedToolCount": 107,
+      "registeredToolCount": 115,
+      "checkedToolCount": 115,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 44,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -2105,6 +2161,20 @@
         },
         {
           "toolName": "GetToolUsage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -2755,6 +2825,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -2875,6 +2952,41 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -2888,13 +3000,13 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 109,
-      "checkedToolCount": 109,
+      "registeredToolCount": 117,
+      "checkedToolCount": 117,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 44,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -3559,6 +3671,20 @@
           "operations": []
         },
         {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ImportDeviceAml",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4203,6 +4329,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -4323,6 +4456,41 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -4336,13 +4504,13 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 109,
-      "checkedToolCount": 109,
+      "registeredToolCount": 117,
+      "checkedToolCount": 117,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 44,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -5007,6 +5175,20 @@
           "operations": []
         },
         {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ImportDeviceAml",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5651,6 +5833,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -5771,6 +5960,41 @@
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -5784,13 +6008,13 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 109,
-      "checkedToolCount": 109,
+      "registeredToolCount": 117,
+      "checkedToolCount": 117,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 44,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -6455,6 +6679,20 @@
           "operations": []
         },
         {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ImportDeviceAml",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7099,6 +7337,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -7222,6 +7467,41 @@
           "operations": []
         },
         {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "StageImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -7232,13 +7512,13 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 111,
-      "checkedToolCount": 111,
+      "registeredToolCount": 119,
+      "checkedToolCount": 119,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 44,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -7916,6 +8196,20 @@
           "operations": []
         },
         {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ImportDeviceAml",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8560,6 +8854,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ProbeHardwareHmiConnectionOwnerCandidates",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8696,6 +8997,41 @@
           "operations": []
         },
         {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "StageImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8706,13 +9042,13 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 487,
-      "checkedToolCount": 487,
+      "registeredToolCount": 495,
+      "checkedToolCount": 495,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 493,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -11077,6 +11413,20 @@
         },
         {
           "toolName": "GetVersionControlStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -15116,6 +15466,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PreviewToolBatch",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -15605,6 +15962,41 @@
           "operations": []
         },
         {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "StageImportFiles",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -15773,13 +16165,13 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 498,
-      "checkedToolCount": 498,
+      "registeredToolCount": 506,
+      "checkedToolCount": 506,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 545,
       "programmingExampleCount": 25,
-      "callSequenceCount": 30,
+      "callSequenceCount": 32,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -18144,6 +18536,20 @@
         },
         {
           "toolName": "GetVersionControlStatus",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchSelection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetWorkbenchState",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -22558,6 +22964,13 @@
           "operations": []
         },
         {
+          "toolName": "PrefillWorkbenchForm",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PreviewToolBatch",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -23044,6 +23457,41 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchAtlas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchCall",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchLadder",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ShowWorkbenchPage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {

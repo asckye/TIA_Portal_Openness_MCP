@@ -24,6 +24,7 @@ var categories = data["categories"]?.AsArray() ?? throw new InvalidDataException
 
 var operationMeaning = new Dictionary<string, string>(StringComparer.Ordinal)
 {
+    ["UI"] = "改变工作台界面状态：切页、定位或预填，不改工程，不需要 TIA 会话",
     ["SESSION"] = "会话与发现，包含工程保存、另存与关闭；写操作须审批",
     ["READ"] = "读取已打开工程，不改动",
     ["WRITE"] = "修改离线工程数据，默认预览，不自动保存/编译/下载",

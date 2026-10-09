@@ -92,6 +92,7 @@ internal static class FoundationTools
 
 internal sealed partial class FoundationTool : McpServerTool
 {
+    internal WorkbenchControlSession ControlSession => WorkbenchControlSession.For(worker);
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IFoundationWorker, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore> StagingStores = new();
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IFoundationWorker, TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingSessions = new();
     internal static TiaMcp.Logic.ModelContextProtocol.ImportStagingSession RegisterStagingSession(IFoundationWorker worker, string mcpSessionId)

@@ -160,6 +160,9 @@ for p, text in engine.sources.items():
 registered_tools = dict(source_tools)
 usage_generator = runpy.run_path(str(root / 'scripts/generate/Generate-ToolUsage.py'))
 registered_rosters, _ = usage_generator['registered_rosters'](root)
+workbench = usage_generator['workbench_tools'](root)
+# Historical source mappings exclude host-only P8 tools; publish them below.
+registered_rosters = {key: rows - set(workbench) for key, rows in registered_rosters.items()}
 renames = {n: rename(n) for n in names}
 current_names = {}
 for n in tools["21"]:
@@ -582,6 +585,15 @@ behavior_capabilities = {k: [{**{key: r[key] for key in ('family', 'state', 'l5'
     'entries': sorted({e['entry'] for e in behavior_entries if e['releaseKey'] == k and e['family'] == r['family']})}
     for r in behavior_policies if r['releaseKey'] == k] for k in keys}
 lite_proposal['foundationLite'] = True
+for key in keys:
+    profile = 'full-engine' if key in ('20', '21') else 'plc-foundation'
+    rows = {row['currentName']: row for row in runtime['releases'][key]}
+    rows.update({name: {'name': name, 'currentName': name, 'sourceName': name,
+        'profiles': ['full', 'lite', 'plc-foundation'] if key in ('20', '21') else ['plc-foundation'],
+        'arguments': calls[profile][name]['arguments'], 'envelopeVersion': 4} for name in sorted(workbench)})
+    runtime['releases'][key] = sorted(rows.values(), key=lambda row: row['name']) if key in ('20', '21') else list(rows.values())
+    registered_rosters[key].update(workbench)
+shared_names.update(workbench)
 for k in keys[-2:]:
     lite_proposal['releases'][k] = [{'name': r['name'], 'currentName': r['currentName'],
         'reason': 'Shared Foundation contract' if r['name'] in shared_names else 'Engine discovery/bridge/worker supervisor',

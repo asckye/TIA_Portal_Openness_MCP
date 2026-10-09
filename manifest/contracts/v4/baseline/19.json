@@ -9072,6 +9072,271 @@
       }
     },
     {
+      "descriptionSha256": "cf9a5974b0a29700f7b4f4ecbbd9aeacd0c96cfef98736ad98f2b6aa32d59ab5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "Maximum checked blocks in this page, from 1 to 256; default 100.",
+            "maximum": 256,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based offset in the frozen Workbench checked-block selection.",
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetWorkbenchSelection",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "d1aaac3d56e275115a812f2c312c7834724a18f8dbc2f1616983984d2f878252",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetWorkbenchState",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "7158c6029b9e40c5de65427c30e1040eace10b49ba9145e2bd5fcf32cff5302f",
       "inputSchema": {
         "additionalProperties": false,
@@ -13403,6 +13668,320 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "409342866a4131e3e734868464beadafd8a67316c0e00d59db873da807d96753",
+      "inputSchema": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {
+                  "namePattern": {
+                    "description": "Inspection name pattern, awaiting human confirmation.",
+                    "maxLength": 256,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "namePattern"
+                ],
+                "type": "object"
+              },
+              "form": {
+                "const": "inspectionRules"
+              },
+              "mode": {
+                "const": "set"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "form": {
+                "const": "inspectionRules"
+              },
+              "mode": {
+                "const": "clear"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {
+                  "filter": {
+                    "description": "Block tree filter text, awaiting human confirmation.",
+                    "maxLength": 256,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "filter"
+                ],
+                "type": "object"
+              },
+              "form": {
+                "const": "blockFilter"
+              },
+              "mode": {
+                "const": "set"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "form": {
+                "const": "blockFilter"
+              },
+              "mode": {
+                "const": "clear"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {
+                  "blockPaths": {
+                    "description": "Exact escaped block paths to prefill, awaiting human confirmation.",
+                    "items": {
+                      "maxLength": 4096,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 256,
+                    "type": "array"
+                  },
+                  "softwarePath": {
+                    "description": "Exact software path owning the selected blocks.",
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "softwarePath",
+                  "blockPaths"
+                ],
+                "type": "object"
+              },
+              "form": {
+                "const": "blockSelection"
+              },
+              "mode": {
+                "const": "set"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "form": {
+                "const": "blockSelection"
+              },
+              "mode": {
+                "const": "clear"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "fields": {
+            "additionalProperties": false,
+            "description": "Closed fields for the selected form; clear requires an empty object.",
+            "properties": {
+              "blockPaths": {
+                "description": "Exact escaped block paths to prefill, awaiting human confirmation.",
+                "items": {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 256,
+                "type": "array"
+              },
+              "filter": {
+                "description": "Block tree filter text, awaiting human confirmation.",
+                "maxLength": 256,
+                "type": "string"
+              },
+              "namePattern": {
+                "description": "Inspection name pattern, awaiting human confirmation.",
+                "maxLength": 256,
+                "type": "string"
+              },
+              "softwarePath": {
+                "description": "Exact software path owning the selected blocks.",
+                "maxLength": 4096,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "form": {
+            "description": "Allowed form receiving the prefill; execution and approval forms are excluded.",
+            "enum": [
+              "inspectionRules",
+              "blockFilter",
+              "blockSelection"
+            ],
+            "type": "string"
+          },
+          "mode": {
+            "description": "Set an awaiting-human-confirmation prefill or clear this MCP session's prefill.",
+            "enum": [
+              "set",
+              "clear"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "form",
+          "mode",
+          "fields"
+        ],
+        "type": "object"
+      },
+      "name": "PrefillWorkbenchForm",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "7de3c6e49583e45bfe40112f79e9db6d2c76bccab7b76c4a9d2ce75b7d1de802",
       "inputSchema": {
         "additionalProperties": false,
@@ -14474,6 +15053,698 @@
       },
       "name": "SetPlcCpuSettings",
       "outputSchema": null
+    },
+    {
+      "descriptionSha256": "1f6db5c3f60d3a19cf2073bf3c25f3411ef1cad591fdb23fffe4365242302c03",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "renderRequestId": {
+            "description": "Request ID of a successful render registered in this MCP session; no arbitrary file path.",
+            "pattern": "^[0-9a-f]{32}$",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "ShowWorkbenchAtlas",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "1589cf7f024ac23fd69626b067f115cb78c81285c66612a5762232688db78543",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact escaped block path in the already loaded Workbench tree.",
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact software path in the already loaded Workbench tree for the bound project.",
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "ShowWorkbenchBlock",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "ab3b7f02443374b4243e84ad501660257b06fabbb3dc7b947c614d48a4cf0c04",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "requestId": {
+            "description": "32 lowercase hexadecimal characters identifying an ordinary V4 call row.",
+            "pattern": "^[0-9a-f]{32}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "name": "ShowWorkbenchCall",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "e9159297c7fb47041f31fd65ccb3a2c7f29ab1ee76ed0fce7f939b896f4d7819",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact escaped block path in the already loaded Workbench tree.",
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "renderRequestId": {
+            "description": "Request ID of a successful render registered in this MCP session; no arbitrary file path.",
+            "pattern": "^[0-9a-f]{32}$",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact software path in the already loaded Workbench tree for the bound project.",
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "ShowWorkbenchLadder",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "e82fedc281b71b65f31bc6e0aaaec02d3a668440dca2f9cf85de624fa7d90bb0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "description": "Allowed Workbench page; protected approval and permission pages are excluded.",
+            "enum": [
+              "overview",
+              "blocks",
+              "versionControl",
+              "calls",
+              "audit",
+              "environment",
+              "log"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "page"
+        ],
+        "type": "object"
+      },
+      "name": "ShowWorkbenchPage",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "1fdfe61bd9052aa3e3324efed1ed6e59d31faa79275f81131e47739c343b52e3",

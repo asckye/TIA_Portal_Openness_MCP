@@ -2582,5 +2582,80 @@
         "expect": "Verify the device; creation has not saved the project."
       }
     ]
+  },
+  {
+    "id": "sequence/workbench-show-block",
+    "topic": "workbench-show-block",
+    "purpose": "Read an exact block identity then locate it in the Workbench loaded tree.",
+    "preconditions": "MCP is bound to the intended project. A person has opened that same project/software tree in the running Workbench.",
+    "notes": "Copy exact paths and escaping. Workbench-tree-not-loaded, IDENTITY_MISMATCH and TARGET_AMBIGUOUS are refusals; do not load another tree, broaden identity or retry over human input. No approval/audit/worker work is performed by ShowWorkbenchBlock.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline schemas checked; real end-to-end P8-20e NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListPlcBlocks",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "Select the intended block exact returned path; this native read follows its normal host policy."
+      },
+      {
+        "tool": "ShowWorkbenchBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Motion/FB_Axis"
+        },
+        "expect": "UI locate only: data.focused=true, page=blocks. Preserve exact identities from the prior result; no checkbox selection changes."
+      }
+    ]
+  },
+  {
+    "id": "sequence/workbench-prefill-inspection",
+    "topic": "workbench-prefill-inspection",
+    "purpose": "Prefill an inspection name rule for a person to review.",
+    "preconditions": "The Workbench is running and the person is idle; inspection rules may be prefilled before any project connection.",
+    "notes": "A person keeps or clears pending values. This sequence does not execute inspection. Other origins receive prefill-pending; clear uses fields={} and only clears this session ownership. Do not retry over workbench-user-active, modal-open, busy or control-disabled.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline schemas checked; real end-to-end P8-20e NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetWorkbenchState",
+        "arguments": {},
+        "expect": "Inspect bridge session source and read-only controlEnabled; do not assume it shares the MCP project."
+      },
+      {
+        "tool": "PrefillWorkbenchForm",
+        "arguments": {
+          "form": "inspectionRules",
+          "mode": "set",
+          "fields": {
+            "namePattern": "^FB_"
+          }
+        },
+        "expect": "data.awaitingConfirmation=true. A human confirms/clears; no project operation follows automatically."
+      }
+    ]
   }
 ]

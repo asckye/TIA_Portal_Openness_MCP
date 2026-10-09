@@ -453,8 +453,8 @@ lane `{tool, actor, requestId, sinceUtc}`、绑定 `{processId, projectFile, bin
 |---|---|---|---|
 | P8-20a | 抽出 `LocalPipeSecurity`（审批行为与字节不变）；新增控制协议 DTO、帧读写、管道名、版本协商；`WorkbenchControlSources.props` | `src/Shared/**`、引用它的 csproj、`tests/Shared` 或宿主测试 | 现有审批测试原样通过；协议单元测试：未知/重复字段、封闭枚举、超限帧、版本拒绝、两管道名不同、交叉投递被拒 |
 | P8-20b | 工作台端：`WorkbenchControlServer`（监听、身份、队列、截止、限流）、`IWorkbenchControlSurface` 与 `MainWindow` 适配、快照发布、预填注册表 v1、输入守卫、状态栏提示、控制日志、设置开关与本地化 | `src/Studio/Gui/Control/**`（新）、`WorkbenchShell.cs`、`MainWindow.xaml(.cs)`、相关视图与 `Localization`、`Settings/UiSettings.cs`、`tests/Studio/TiaOpenness.Gui.Tests` | 在 `WpfContext` 中起真实窗口与真实管道（随机管道名）：每个操作的成功与拒绝路径；第 4 节全部架构测试；`ResponsivenessTests` 不退化；`tests/test-suites.json` 新增 `workbench-control` 套件 |
-| P8-20c | 宿主端 8 个工具、分类（`UI`、`Workbench` 域、`WithoutTia`）、V4 映射、渲染产物登记、批处理拒绝 UI | `src/FoundationHost/**`、`src/Logic/ModelContextProtocol/{ToolTaxonomy,ToolMetadata,PreflightLogic}.cs`、`src/EngineHost/SharedToolCatalog.cs`、宿主测试 | 以测试内假工作台管道服务端驱动：每个错误码映射、无工作台时 `RESOURCE_UNAVAILABLE`、不审批不写审计、不占 lane；V20/V21 完整与 lite 目录都包含 8 个工具（`engine-host`、`shared-pipeline` 套件） |
-| P8-20d | 目录与文档：重建八版 `manifest/contracts/v4` 基线与响应快照；`reference/tool-examples` 示例与序列并重新生成嵌入目录；`runtime-layout.md` 增“工作台控制通道”一节；版本工具矩阵；计划表状态 | `manifest/contracts/v4/**`（工具生成）、`reference/tool-examples/**`、`docs/**` | 契约差异仅为新增 8 个工具；八版 `GetToolUsage` 检索与功能检查；`Check-Repository.py --no-binaries` |
+| P8-20c（review） | 宿主端 8 个工具、分类（`UI`、`Workbench` 域、`WithoutTia`）、V4 映射、渲染产物登记、批处理拒绝 UI | `src/FoundationHost/**`、`src/Logic/ModelContextProtocol/{ToolTaxonomy,ToolMetadata,PreflightLogic}.cs`、`src/EngineHost/SharedToolCatalog.cs`、宿主测试 | 以测试内假工作台管道服务端驱动：每个错误码映射、无工作台时 `RESOURCE_UNAVAILABLE`、不审批不写审计、不占 lane；V20/V21 完整与 lite 目录都包含 8 个工具（`engine-host`、`shared-pipeline` 套件） |
+| P8-20d（review） | 目录与文档：重建八版 `manifest/contracts/v4` 基线与响应快照；`reference/tool-examples` 示例与序列并重新生成嵌入目录；`runtime-layout.md` 增“工作台控制通道”一节；版本工具矩阵；计划表状态 | `manifest/contracts/v4/**`（工具生成）、`reference/tool-examples/**`、`docs/**` | 契约差异仅为新增 8 个工具；八版 `GetToolUsage` 检索与功能检查；`Check-Repository.py --no-binaries` |
 | P8-20e | 端到端：真实宿主（`--offline`，V19 与 V21 各一）+ 真实工作台（测试数据根）经真实管道；C# 编写（仓库禁止新增 PowerShell） | `build-tools/release` 或测试工程 | 显示、读取、预填全流程；关闭工作台后的类型化错误；工作台与宿主数据根不同时互不可见；然后 L5：VM（V19、V21）上 Claude Code stdio 与宿主机经 HTTP 远程两种接法 |
 | P8-21a | 归属：`ActorScope`；审计可选 `actor`（向后兼容规范化）；调用日志 `actor`/`mcpSession`；`PendingApproval` v2（MCP 路径仍发 v1）；审批、调用、审计页显示人/AI；CLI 校验 | `src/Shared/**`、`src/FoundationHost/FoundationV4Tool.cs`、`src/Engine/ModelContextProtocol/Tools/McpServer.Approval.cs`、Gui 服务与视图、测试 | 旧审计链逐字节校验通过；新旧混合链通过；篡改仍被发现；MCP 路径审批帧与基线逐字节相同 |
 | P8-21b（review；L5 NOT RUN） | V14 SP1–V19 Attach 获取 `PortalProcessLease`（与 V20/V21 同文件、同拒绝文本），DisconnectPortal 干净释放 | `src/PlcWorker/**`、`src/Adapters/Native/Session/**`（仅附着前后）、测试 | 两个 worker 附着同一 PID 时第二个得到 `LeaseReserved`；未干净释放得到 `LeaseNotReleased`；原生调用清单不变；L5 复验（需维护者批准，决定 2） |
@@ -462,6 +462,12 @@ lane `{tool, actor, requestId, sinceUtc}`、绑定 `{processId, projectFile, bin
 | P8-21d | 工作台面板：`IMcpSessionClient`（管道 + MCP 客户端）、会话选择与附着、实时状态区、概览/程序块/图集/检查改走 MCP；预填表单 `connectProject`、`exportBlocks`、`importBlocks` 开放 | `src/Studio/Gui/**`、`tests/Studio/**` | 假宿主（测试内操作端服务端）驱动全部按钮的 preview → apply → 审批流程；结果按 V4 信封呈现；`FakeStudioClient` 不再被页面使用 |
 | P8-21e | 版本控制页：V20/V21 改用引擎 VCI 工具；V16–V19 按决定 4 处理 | `src/Studio/Gui/**`、测试 | 按决定 |
 | P8-21f | 删除第 5.6 节清单，清理发布链与清单生成 | 第 5.6 节所列路径、`build-tools/release/**`、`scripts/operations/**` | `branch-gate`；L3 八版构建；仓库检查；L5：VM 上 AI 与人在同一会话接力（AI 编译 → 人保存 → AI 继续导出），审计中人/AI 区分正确 |
+
+P8-20c/d 已实现，待审查：八个宿主工具、250 ms 管道客户端、发送前 SID/同包 GUI 映像检查、
+会话渲染登记与导出来源核对、V4 类型化映射及 UI 批次拒绝；八版示例、目录与离线快照由生成/捕获工具更新。
+新增 `workbench-control-host` 注册套件（Windows 最低 96、最多 0 跳过；Linux/macOS 最低 88、仅允许 8 个 Windows SID/ACL 用例跳过）；
+Windows 管道权限受限时保留失败，不放宽身份规则或门禁。2 秒 READ/5 秒 UI 超时不锁会话，UI 开关只有人可写。
+真实主机与工作台验证仍由 P8-20e 完成。
 
 验收层次小结：
 

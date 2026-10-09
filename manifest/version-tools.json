@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 106,
+      "toolCount": 114,
       "tools": [
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -64,6 +64,8 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
@@ -100,6 +102,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
@@ -112,12 +115,17 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 107,
+      "toolCount": 115,
       "tools": [
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -176,6 +184,8 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
@@ -213,6 +223,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
@@ -225,12 +236,17 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 109,
+      "toolCount": 117,
       "tools": [
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -291,6 +307,8 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
@@ -328,6 +346,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
@@ -340,12 +359,17 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 109,
+      "toolCount": 117,
       "tools": [
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -406,6 +430,8 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
@@ -443,6 +469,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
@@ -455,12 +482,17 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 109,
+      "toolCount": 117,
       "tools": [
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -521,6 +553,8 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
@@ -558,6 +592,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
@@ -570,12 +605,17 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 111,
+      "toolCount": 119,
       "tools": [
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -637,6 +677,8 @@
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
@@ -674,6 +716,7 @@
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
@@ -687,12 +730,17 @@
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
         "SetPlcCpuSettings",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles"
       ]
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 487,
+      "toolCount": 495,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -933,6 +981,8 @@
         "GetUnifiedScreenBranch",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportAlarmClasses",
         "ImportAlarmTextLists",
         "ImportDeviceAml",
@@ -1106,6 +1156,7 @@
         "PlanOnlineReadOnlyMonitoring",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "PreviewToolBatch",
         "PreviewToolCall",
         "ProbeGlobalLibrary",
@@ -1163,6 +1214,11 @@
         "SetUnifiedPlantObject",
         "SetUnifiedRuntimeSettings",
         "ShowObjectInEditor",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles",
         "SynchronizeLibrary",
         "SynchronizeVersionControlWorkspace",
@@ -1185,7 +1241,7 @@
     },
     "21": {
       "profile": "full-engine",
-      "toolCount": 498,
+      "toolCount": 506,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1426,6 +1482,8 @@
         "GetUnifiedScreenBranch",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
+        "GetWorkbenchSelection",
+        "GetWorkbenchState",
         "ImportAlarmClasses",
         "ImportAlarmTextLists",
         "ImportDeviceAml",
@@ -1610,6 +1668,7 @@
         "PlanOnlineReadOnlyMonitoring",
         "PlanPlcExternalSourceImport",
         "PlugDeviceItem",
+        "PrefillWorkbenchForm",
         "PreviewToolBatch",
         "PreviewToolCall",
         "ProbeGlobalLibrary",
@@ -1667,6 +1726,11 @@
         "SetUnifiedPlantObject",
         "SetUnifiedRuntimeSettings",
         "ShowObjectInEditor",
+        "ShowWorkbenchAtlas",
+        "ShowWorkbenchBlock",
+        "ShowWorkbenchCall",
+        "ShowWorkbenchLadder",
+        "ShowWorkbenchPage",
         "StageImportFiles",
         "SynchronizeLibrary",
         "SynchronizeVersionControlWorkspace",
@@ -1690,7 +1754,7 @@
   },
   "groupCounts": {
     "shared-subset": 381,
-    "all-releases": 106,
+    "all-releases": 114,
     "release-only": 11
   },
   "tools": [
@@ -4197,6 +4261,36 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "GetWorkbenchSelection",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetWorkbenchState",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "ImportAlarmClasses",
       "releases": [
         "20",
@@ -6063,6 +6157,21 @@
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
+      "name": "PrefillWorkbenchForm",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
       "name": "PreviewToolBatch",
       "releases": [
         "20",
@@ -6646,6 +6755,81 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ShowWorkbenchAtlas",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ShowWorkbenchBlock",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ShowWorkbenchCall",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ShowWorkbenchLadder",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ShowWorkbenchPage",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

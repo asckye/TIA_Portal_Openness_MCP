@@ -190,6 +190,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var list = new List<string>();
             switch ((operation ?? "").ToUpperInvariant())
             {
+                case "UI":
+                    list.Add("Changes only Workbench UI state. Human activity, modal dialogs and the control switch can refuse it; prefill awaits human confirmation.");
+                    break;
                 case "WRITE":
                     list.Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompilePlcSoftware then SaveProject afterwards.");
                     if (dryRunSupported) list.Add("dryRun=true (default) previews; run the preview first, then repeat with dryRun=false once it is clean.");
@@ -226,7 +229,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static bool NeedsProject(string operation, string toolName)
         {
             var op = (operation ?? "").ToUpperInvariant();
-            if (op == "SESSION" || op == "OFFLINE") return false;
+            if (op == "SESSION" || op == "OFFLINE" || op == "UI" || ToolTaxonomy.For(toolName).Domain == "Workbench") return false;
             // Tools that read the environment rather than a project.
             var exempt = new[] { "GetOpennessWorkerStatus", "RestartOpennessWorker", "GetOpennessCompatibility", "GetNativeInvocationLog", "InspectSimaticSdCompatibility", "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetSessionState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage", "PreviewToolCall", "CheckProductUpdate", "GetPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
             return !exempt.Contains(toolName, StringComparer.OrdinalIgnoreCase);
