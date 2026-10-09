@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/hmi.schema.json",
+  "title": "hmi",
+  "type": "object",
+  "properties": {
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "width",
+          "height"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "object",
+          "array",
+          "boolean",
+          "null"
+        ]
+      },
+      "maxProperties": 10000
+    },
+    "screens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "template": {
+            "$ref": "common.schema.json#/$defs/path"
+          },
+          "parent": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "profile": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "template"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "deviceType": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "kind": {
+            "enum": [
+              "elementGroup",
+              "faceplate"
+            ]
+          },
+          "template": {
+            "$ref": "common.schema.json#/$defs/path"
+          },
+          "interfaceMap": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "maxProperties": 10000
+          }
+        },
+        "required": [
+          "id",
+          "deviceType",
+          "kind",
+          "template"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "tagGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    }
+  },
+  "required": [
+    "profiles",
+    "screens",
+    "widgets",
+    "tagGroups"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,41 @@
+{
+  "profiles": [
+    {
+      "id": "panel",
+      "kind": "WinCCUnified",
+      "width": 1280,
+      "height": 800
+    }
+  ],
+  "theme": {
+    "colors": {
+      "background": "#FFFFFF"
+    }
+  },
+  "screens": [
+    {
+      "id": "unit",
+      "name": "{{unit.id}}",
+      "template": "sources/screen.json",
+      "profile": "panel"
+    }
+  ],
+  "widgets": [
+    {
+      "id": "motor",
+      "deviceType": "motor.dol",
+      "kind": "elementGroup",
+      "template": "sources/widget.json",
+      "interfaceMap": {
+        "Run": "{{device.id}}.Run"
+      }
+    }
+  ],
+  "tagGroups": [
+    {
+      "id": "unit",
+      "name": "{{unit.id}}",
+      "path": "Units"
+    }
+  ]
+}

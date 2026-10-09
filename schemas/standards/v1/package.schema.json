@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/package.schema.json",
+  "title": "package",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "title": {
+      "$ref": "common.schema.json#/$defs/localized"
+    },
+    "publisher": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "extends": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "common.schema.json#/$defs/packageReference"
+        }
+      ]
+    },
+    "dependsOn": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/packageReference"
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "targets": {
+      "type": "object",
+      "properties": {
+        "releases": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/release"
+          },
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true
+        },
+        "plcFamilies": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "S7-1200",
+              "S7-1500"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true
+        },
+        "hmi": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 0,
+          "maxItems": 10000,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "releases",
+        "plcFamilies",
+        "hmi"
+      ],
+      "additionalProperties": false
+    },
+    "requires": {
+      "type": "object",
+      "properties": {
+        "framework": {
+          "$ref": "common.schema.json#/$defs/versionRange"
+        },
+        "optionalProducts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 0,
+          "maxItems": 10000,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "framework",
+        "optionalProducts"
+      ],
+      "additionalProperties": false
+    },
+    "languages": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+          },
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true
+        },
+        "default": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "required",
+        "default"
+      ],
+      "additionalProperties": false
+    },
+    "parts": {
+      "type": "object",
+      "properties": {
+        "naming": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "structure": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "hardware": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "library": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "modes": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "alarms": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "hmi": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "checks": {
+          "$ref": "common.schema.json#/$defs/path"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/path"
+          },
+          "minItems": 0,
+          "maxItems": 10000,
+          "uniqueItems": true
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/file"
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "description": {
+      "$ref": "common.schema.json#/$defs/localized"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "title",
+    "license",
+    "targets",
+    "requires",
+    "languages",
+    "parts",
+    "files"
+  ],
+  "additionalProperties": false
+}

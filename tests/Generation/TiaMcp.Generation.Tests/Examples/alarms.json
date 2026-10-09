@@ -1,0 +1,42 @@
+{
+  "classes": [
+    {
+      "id": "fault",
+      "priority": 1,
+      "acknowledgement": "single",
+      "color": "#FF0000"
+    }
+  ],
+  "templates": [
+    {
+      "id": "motor.overload",
+      "deviceType": "motor.dol",
+      "class": "fault",
+      "textKey": "motor.overload",
+      "backend": "Program_Alarm",
+      "cause": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      },
+      "consequence": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      },
+      "remedy": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      }
+    }
+  ],
+  "texts": {
+    "motor.overload": {
+      "zh-CN": "测试",
+      "en-US": "Test"
+    }
+  },
+  "numbering": {
+    "start": 1,
+    "end": 1000,
+    "template": "{{seq(\"alarms\")}}"
+  }
+}

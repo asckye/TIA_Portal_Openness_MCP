@@ -1,4 +1,10 @@
 {
+  "generation-model": {
+    "project": "tests/Generation/TiaMcp.Generation.Tests/TiaMcp.Generation.Tests.csproj",
+    "minimumPassed": 80,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
     "minimumPassed": 220,

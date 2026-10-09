@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/checks.schema.json",
+  "title": "checks",
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "kind": {
+            "enum": [
+              "xpath",
+              "naming",
+              "comment",
+              "complexity",
+              "libraryVersion",
+              "sclLint",
+              "structure",
+              "hmi",
+              "alarm"
+            ]
+          },
+          "severity": {
+            "$ref": "common.schema.json#/$defs/severity"
+          },
+          "description": {
+            "$ref": "common.schema.json#/$defs/localized"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "minItems": 0,
+            "maxItems": 10000
+          },
+          "xpath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "maxCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "valuePattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "objectKind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "namingRule": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "libraryType": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "versionRange": {
+            "$ref": "common.schema.json#/$defs/versionRange"
+          },
+          "testSuite": {
+            "type": "object",
+            "properties": {
+              "ruleId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": {},
+                "maxProperties": 10000
+              }
+            },
+            "required": [
+              "ruleId"
+            ],
+            "additionalProperties": false
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "fixHint": {
+            "$ref": "common.schema.json#/$defs/localized"
+          },
+          "autoFixable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "severity",
+          "description"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "xpath"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "files",
+                "xpath"
+              ]
+            }
+          }
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    }
+  },
+  "required": [
+    "rules"
+  ],
+  "additionalProperties": false
+}

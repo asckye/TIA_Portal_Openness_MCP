@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/plan.schema.json",
+  "title": "plan",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "tiamcp.plan/1"
+    },
+    "planId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "planHash": {
+      "$ref": "common.schema.json#/$defs/hash"
+    },
+    "package": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "hash": {
+          "$ref": "common.schema.json#/$defs/hash"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "machineHash": {
+      "$ref": "common.schema.json#/$defs/hash"
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "release": {
+          "$ref": "common.schema.json#/$defs/release"
+        },
+        "projectIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "mode": {
+          "enum": [
+            "new",
+            "existing"
+          ]
+        },
+        "softwarePath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "release",
+        "projectIdentity",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/phase"
+      },
+      "minItems": 0,
+      "maxItems": 10000,
+      "uniqueItems": true
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "phase": {
+            "$ref": "common.schema.json#/$defs/phase"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "op": {
+            "enum": [
+              "create",
+              "update",
+              "execute"
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+          },
+          "arguments": {
+            "type": "object",
+            "additionalProperties": {},
+            "maxProperties": 10000
+          },
+          "dependsOn": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            },
+            "minItems": 0,
+            "maxItems": 10000,
+            "uniqueItems": true
+          },
+          "argumentDigest": {
+            "$ref": "common.schema.json#/$defs/hash"
+          },
+          "availability": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "enum": [
+                  "present",
+                  "absent"
+                ]
+              },
+              "behaviorPolicy": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "native": {
+                "enum": [
+                  "NOT RUN",
+                  "accepted"
+                ]
+              }
+            },
+            "required": [
+              "tool",
+              "behaviorPolicy",
+              "native"
+            ],
+            "additionalProperties": false
+          },
+          "expect": {
+            "type": "object",
+            "properties": {
+              "readback": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "contains": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "fingerprint": {
+                "$ref": "common.schema.json#/$defs/hash"
+              }
+            },
+            "required": [
+              "readback"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "phase",
+          "key",
+          "op",
+          "tool",
+          "arguments",
+          "dependsOn",
+          "argumentDigest",
+          "availability",
+          "expect"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "skipped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "key",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "key",
+          "reason",
+          "detail"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "unavailable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "$ref": "common.schema.json#/$defs/phase"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "phase",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/file"
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "selfCheck": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "errors",
+        "warnings"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "planId",
+    "planHash",
+    "package",
+    "machineHash",
+    "target",
+    "phases",
+    "steps",
+    "skipped",
+    "conflicts",
+    "unavailable",
+    "artifacts",
+    "selfCheck"
+  ],
+  "additionalProperties": false
+}

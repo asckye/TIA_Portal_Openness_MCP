@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/library.schema.json",
+  "title": "library",
+  "type": "object",
+  "properties": {
+    "types": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "kind": {
+            "enum": [
+              "FB",
+              "FC",
+              "UDT",
+              "DB",
+              "tagTable",
+              "device",
+              "deviceItem"
+            ]
+          },
+          "version": {
+            "$ref": "common.schema.json#/$defs/semver"
+          },
+          "interface": {
+            "type": "object",
+            "properties": {
+              "in": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/member"
+                },
+                "minItems": 0,
+                "maxItems": 10000
+              },
+              "out": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/member"
+                },
+                "minItems": 0,
+                "maxItems": 10000
+              },
+              "inOut": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/member"
+                },
+                "minItems": 0,
+                "maxItems": 10000
+              },
+              "static": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/member"
+                },
+                "minItems": 0,
+                "maxItems": 10000
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "implementations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "releases": {
+                  "anyOf": [
+                    {
+                      "$ref": "common.schema.json#/$defs/versionRange"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "common.schema.json#/$defs/release"
+                      },
+                      "minItems": 1,
+                      "maxItems": 10000,
+                      "uniqueItems": true
+                    }
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "sclSource",
+                    "globalLibrary",
+                    "masterCopy"
+                  ]
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/path"
+                  },
+                  "minItems": 1,
+                  "maxItems": 10000,
+                  "uniqueItems": true
+                },
+                "library": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "typePath": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "versionRange": {
+                  "$ref": "common.schema.json#/$defs/versionRange"
+                },
+                "masterCopyPath": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "interfaceMap": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "maxProperties": 10000
+                }
+              },
+              "required": [
+                "releases",
+                "kind"
+              ],
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "const": "sclSource"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "files"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "const": "globalLibrary"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "library",
+                      "typePath",
+                      "versionRange"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "const": "masterCopy"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "library",
+                      "masterCopyPath"
+                    ]
+                  }
+                }
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "version",
+          "interface",
+          "implementations"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "libraries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "provision": {
+            "enum": [
+              "external",
+              "bundled"
+            ]
+          },
+          "fileNames": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "14sp1",
+                "15.1",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
+            },
+            "additionalProperties": {
+              "$ref": "common.schema.json#/$defs/path"
+            },
+            "minProperties": 1
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "license": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "id",
+          "provision",
+          "fileNames"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    }
+  },
+  "required": [
+    "types",
+    "libraries"
+  ],
+  "additionalProperties": false
+}

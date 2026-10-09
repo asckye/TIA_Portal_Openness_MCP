@@ -13,6 +13,9 @@
 
 实际订货号、PLC/HMI 名称、分辨率和工程路径需按工程确认，模板本身不构成现场验收。
 
+标准包格式 1 的 [JSON Schema 与加载/哈希约定](../schemas/standards/v1/README.md) 已实现；
+内置标准包预留 `templates/standards/<id>/`，包内容由后续任务提供。
+
 ## 可选外部参考
 
 西门子 HMI Template Suite、官方示例和图片不包含在仓库或交付包内，项目自己的统一调用示例位于 `reference/tool-examples`，随包提供；它与外部 HMI 素材不是同一内容。请自行从官方渠道取得匹配版本及许可的素材，在 TIA 中查看后将适用的颜色、间距和结构转换为 designJson；不要将受限安装媒体、客户工程或私有素材放入发布包。

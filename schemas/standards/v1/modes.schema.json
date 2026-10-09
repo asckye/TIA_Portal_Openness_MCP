@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/modes.schema.json",
+  "title": "modes",
+  "type": "object",
+  "properties": {
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "implementationType": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "dataType": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "modes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "number": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "title": {
+                  "$ref": "common.schema.json#/$defs/localized"
+                }
+              },
+              "required": [
+                "id",
+                "number",
+                "title"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          },
+          "states": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "number": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "title": {
+                  "$ref": "common.schema.json#/$defs/localized"
+                }
+              },
+              "required": [
+                "id",
+                "number",
+                "title"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "number": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "title": {
+                  "$ref": "common.schema.json#/$defs/localized"
+                }
+              },
+              "required": [
+                "id",
+                "number",
+                "title"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 10000
+          },
+          "transitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "to": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "command": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "completed": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 10000
+          },
+          "availability": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "states": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/id"
+                  },
+                  "minItems": 1,
+                  "maxItems": 10000,
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "mode",
+                "states"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 10000
+          },
+          "mappings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "kind": {
+                  "enum": [
+                    "opcUa",
+                    "hmi"
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "members": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "maxProperties": 10000
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "type",
+                "members"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 10000
+          }
+        },
+        "required": [
+          "id",
+          "implementationType",
+          "dataType",
+          "modes",
+          "states",
+          "commands",
+          "transitions",
+          "availability"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    }
+  },
+  "required": [
+    "models"
+  ],
+  "additionalProperties": false
+}

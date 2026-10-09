@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture.basic",
+  "version": "1.0.0",
+  "title": {
+    "zh-CN": "测试",
+    "en-US": "Test"
+  },
+  "license": "MIT",
+  "extends": null,
+  "targets": {
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "plcFamilies": [
+      "S7-1200",
+      "S7-1500"
+    ],
+    "hmi": [
+      "WinCCUnified"
+    ]
+  },
+  "requires": {
+    "framework": ">=1.0.0",
+    "optionalProducts": []
+  },
+  "languages": {
+    "required": [
+      "zh-CN",
+      "en-US"
+    ],
+    "default": "zh-CN"
+  },
+  "parts": {},
+  "files": []
+}

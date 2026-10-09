@@ -1,0 +1,28 @@
+{
+  "schema": "tiamcp.check/1",
+  "package": {
+    "id": "fixture.basic",
+    "version": "1.0.0",
+    "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "target": {
+    "release": "21",
+    "projectIdentity": "fixture-project"
+  },
+  "findings": [
+    {
+      "ruleId": "no.memory",
+      "severity": "error",
+      "objectPath": "PLC1/block/Main",
+      "message": "Memory address found",
+      "fixHint": "Use symbolic tags",
+      "autoFixable": false
+    }
+  ],
+  "unavailable": [
+    {
+      "ruleId": "library.version",
+      "reason": "No native evidence"
+    }
+  ]
+}

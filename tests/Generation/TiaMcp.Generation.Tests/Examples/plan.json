@@ -1,0 +1,72 @@
+{
+  "schema": "tiamcp.plan/1",
+  "planId": "fixture-plan",
+  "planHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "package": {
+    "id": "fixture.basic",
+    "version": "1.0.0",
+    "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "machineHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "target": {
+    "release": "21",
+    "projectIdentity": "fixture-project",
+    "mode": "existing",
+    "softwarePath": "PLC1"
+  },
+  "phases": [
+    "plcProgram"
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "plcProgram",
+      "key": "PLC1/block/IDB_M101",
+      "op": "create",
+      "tool": "ImportPlcExternalSource",
+      "arguments": {
+        "source": "staging/motor.scl"
+      },
+      "dependsOn": [],
+      "argumentDigest": "sha256:76e6fd430dd9d29ce84db6e8eb8376d6c7b492bf97bf6fc1cb9c96608750272b",
+      "availability": {
+        "tool": "present",
+        "behaviorPolicy": "current",
+        "native": "NOT RUN"
+      },
+      "expect": {
+        "readback": "ListPlcBlocks",
+        "contains": "IDB_M101"
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "key": "PLC1/block/FB_Motor",
+      "reason": "exists-identical"
+    }
+  ],
+  "conflicts": [
+    {
+      "key": "PLC1/tag/Run",
+      "reason": "exists-different",
+      "detail": "Type differs"
+    }
+  ],
+  "unavailable": [
+    {
+      "phase": "hmi",
+      "reason": "Fixture"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "staging/motor.scl",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "selfCheck": {
+    "errors": 0,
+    "warnings": 0
+  }
+}

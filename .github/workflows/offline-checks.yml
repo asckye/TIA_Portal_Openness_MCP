@@ -26,7 +26,7 @@ jobs:
       - name: TRX gate self-checks
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression and MCP SDK version policy
-        run: dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy
+        run: dotnet run --project build-tools/release -- test-suites -Suite offline -Suite offline-v20 -Suite version-policy -Suite generation-model
 
   source-contracts:
     # Source contracts: .NET 10 and Python, without Siemens SDKs or TIA.

@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/rule.schema.json",
+  "title": "rule",
+  "type": "object",
+  "properties": {
+    "deviceType": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "title": {
+      "$ref": "common.schema.json#/$defs/localized"
+    },
+    "params": {
+      "$ref": "common.schema.json#/$defs/parameterSchema"
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "dir": {
+            "enum": [
+              "DI",
+              "DO",
+              "AI",
+              "AO"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "optional": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "role",
+          "dir"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "emit": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "hardware.device",
+              "hardware.module",
+              "network",
+              "plc.group",
+              "plc.type",
+              "plc.tag",
+              "plc.instance",
+              "plc.call",
+              "alarm",
+              "hmi.screen",
+              "hmi.widget"
+            ]
+          },
+          "forEach": {
+            "enum": [
+              "signals",
+              "children",
+              "devices",
+              "stations",
+              "topology"
+            ]
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/expressionPath"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "exists": {
+                    "$ref": "common.schema.json#/$defs/expressionPath"
+                  }
+                },
+                "required": [
+                  "exists"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "equals": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "$ref": "common.schema.json#/$defs/expressionPath"
+                      },
+                      "value": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "equals"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "in": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "$ref": "common.schema.json#/$defs/expressionPath"
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                          ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 10000,
+                        "uniqueItems": true
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "values"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "in"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "table": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "callIn": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "bind": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "maxProperties": 10000
+          },
+          "class": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "textKey": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "template": {
+            "$ref": "common.schema.json#/$defs/path"
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "slot": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2147483647
+              },
+              {
+                "const": "auto"
+              }
+            ]
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "group": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "arguments": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "maxProperties": 10000
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 10000
+    }
+  },
+  "required": [
+    "deviceType",
+    "title",
+    "params",
+    "signals",
+    "emit"
+  ],
+  "additionalProperties": false
+}

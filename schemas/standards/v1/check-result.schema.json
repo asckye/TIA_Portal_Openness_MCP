@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/check-result.schema.json",
+  "title": "check-result",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "tiamcp.check/1"
+    },
+    "package": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "hash": {
+          "$ref": "common.schema.json#/$defs/hash"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "release": {
+          "$ref": "common.schema.json#/$defs/release"
+        },
+        "projectIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "release",
+        "projectIdentity"
+      ],
+      "additionalProperties": false
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "severity": {
+            "$ref": "common.schema.json#/$defs/severity"
+          },
+          "objectPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "fixHint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "autoFixable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ruleId",
+          "severity",
+          "objectPath",
+          "message",
+          "fixHint",
+          "autoFixable"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "unavailable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "ruleId",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    }
+  },
+  "required": [
+    "schema",
+    "package",
+    "target",
+    "findings",
+    "unavailable"
+  ],
+  "additionalProperties": false
+}

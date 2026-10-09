@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/hardware.schema.json",
+  "title": "hardware",
+  "type": "object",
+  "properties": {
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "releases": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/release"
+                  },
+                  "minItems": 1,
+                  "maxItems": 10000,
+                  "uniqueItems": true
+                },
+                "article": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "firmware": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "kind": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "modules": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "$ref": "common.schema.json#/$defs/id"
+                      },
+                      "article": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "slot": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "article",
+                      "slot"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 10000
+                }
+              },
+              "required": [
+                "releases",
+                "article"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 10000
+          }
+        },
+        "required": [
+          "id",
+          "variants"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "allocation": {
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "object",
+          "properties": {
+            "subnet": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "start": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "end": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "subnet",
+            "start",
+            "end"
+          ],
+          "additionalProperties": false
+        },
+        "io": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "common.schema.json#/$defs/id"
+              },
+              "direction": {
+                "enum": [
+                  "DI",
+                  "DO",
+                  "AI",
+                  "AO"
+                ]
+              },
+              "start": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "end": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "required": [
+              "id",
+              "direction",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 10000
+        },
+        "profinetName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "ioSystemName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "roles"
+  ],
+  "additionalProperties": false
+}

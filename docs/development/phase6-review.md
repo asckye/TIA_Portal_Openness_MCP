@@ -1616,6 +1616,18 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [OfflineXmlBuilders.cs](../../src/FoundationHost/OfflineXmlBuilders.cs):63 | `DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters` |
 | [OfflineXmlBuilders.cs](../../src/FoundationHost/OfflineXmlBuilders.cs):120 | `if ((required && string.IsNullOrWhiteSpace(text)) \|\| text.Length > MaxStringCharacters)` |
 | [CliOptions.cs](../../src/Logic/CliOptions.cs):192 | `if (++i >= args.Length \|\| !int.TryParse(args[i], out int workerTimeout) \|\| workerTimeout < 10 \|\| workerTimeout > 180)` |
+| [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):14 | `public const int MaximumDepth = 64;` |
+| [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):23 | `using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = MaximumDepth });` |
+| [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):135 | `if (exponent >= 0 && trimmed.Length + exponent <= 21)` |
+| [Generation/GenerationDocuments.cs](../../src/Logic/Generation/GenerationDocuments.cs):14 | `MaxDepth = CanonicalJson.MaximumDepth` |
+| [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):51 | `if (schemas.Count != 14) throw new InvalidOperationException("Generation schema resources are missing.");` |
+| [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):57 | `if (errors.Count >= 100) return;` |
+| [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):141 | `if (files.Count >= limits.MaximumFiles) throw CanonicalJson.Failure(name, "file-count", "Too many package files.");` |
+| [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):169 | `if (source.Length > limits.MaximumArchiveBytes) throw CanonicalJson.Failure("", "archive-size", "Archive exceeds the compressed size limit.");` |
+| [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):171 | `if (archive.Entries.Count > limits.MaximumEntries) throw CanonicalJson.Failure("", "entry-count", "Too many archive entries.");` |
+| [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):190 | `if (files.Count >= limits.MaximumFiles) throw CanonicalJson.Failure(name, "file-count", "Too many package files.");` |
+| [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):202 | `if (name.Length == 0 \|\| name.Length > 240 \|\| name.Split('/').Length > 16 \|\| name != name.Normalize(NormalizationForm.FormC)` |
+| [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):245 | `if (output.Length + read > limits.MaximumFileBytes) throw CanonicalJson.Failure(name, "file-size", "Decompressed file exceeds the size limit.");` |
 | [ModelContextProtocol/BatchPlanStore.cs](../../src/Logic/ModelContextProtocol/BatchPlanStore.cs):24 | `if (_plans.Count >= 32) throw new InvalidOperationException("Too many pending previews; use or wait for expiry.");` |
 | [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../src/Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):24 | `if (rules.Count > 50) throw new ArgumentException("At most 50 XML rules.");` |
 | [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../src/Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):33 | `if (xpath.Length == 0 \|\| xpath.Length > 1024) throw new ArgumentException("Each rule needs an XPath selecting elements (max 1024 chars).");` |
@@ -1827,7 +1839,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs):57 | `internal static void Hash(string value) => Require(value != null && value.Length == 64` |
 | [src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs):274 | `[McpServerTool(Name="SetDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: properties StartAddress/Length and attributes ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
 
-共 298 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 310 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1935,7 +1947,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [manifest/history/contracts-v3/responses/20.json](../../manifest/history/contracts-v3/responses/20.json) | 退役产品名:66 | 历史契约只读归档；不编辑内容、不重算哈希 |
 | [manifest/history/contracts-v3/responses/21.json](../../manifest/history/contracts-v3/responses/21.json) | 退役产品名:55 | 历史契约只读归档；不编辑内容、不重算哈希 |
 | [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 退役产品名:31,37 | 生成记录只由所属生成器重建；不手工改写扫描命中 |
-| [scripts/operations/delivery-files.json](../../scripts/operations/delivery-files.json) | 退役产品名:90,91,96,97,136,137,142,143 | 更新器的排除与旧文件清理名单：按名删除退役文件，不是现行引用 |
+| [scripts/operations/delivery-files.json](../../scripts/operations/delivery-files.json) | 退役产品名:91,92,97,98,137,138,143,144 | 更新器的排除与旧文件清理名单：按名删除退役文件，不是现行引用 |
 
 共 8 个候选文件。扫描只匹配退役的产品文件名、TIA_MCP_REPOSITORY_ROOT 和私人默认路径标记；E1 表逐项核对仍在使用的严格 BundleLayout 入口。发布/验收/迁移证据和生成清单按其只读或再生成规则标注。扫描不命中已批准的新产品名、BundleLayout 包装器、显式 workspaceRoot 或当前日志文件名。
 

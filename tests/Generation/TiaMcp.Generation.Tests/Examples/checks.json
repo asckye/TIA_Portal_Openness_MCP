@@ -1,0 +1,26 @@
+{
+  "rules": [
+    {
+      "id": "no.memory",
+      "kind": "xpath",
+      "severity": "error",
+      "description": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      },
+      "files": [
+        "*.xml"
+      ],
+      "xpath": "//*[local-name()='Address'][@Area='Memory']",
+      "maxCount": 0,
+      "reference": "Self-authored fixture",
+      "autoFixable": false,
+      "testSuite": {
+        "ruleId": "fixture",
+        "properties": {
+          "enabled": true
+        }
+      }
+    }
+  ]
+}

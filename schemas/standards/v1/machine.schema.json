@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/machine.schema.json",
+  "title": "machine",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "tiamcp.machine/1"
+    },
+    "machine": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/localized"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "standard": {
+      "$ref": "common.schema.json#/$defs/packageReference"
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "release": {
+          "$ref": "common.schema.json#/$defs/release"
+        },
+        "project": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "new",
+                "existing"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "directory": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "projectIdentity": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "softwarePath": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "new"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "name",
+                  "directory"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "existing"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "projectIdentity",
+                  "softwarePath"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "release",
+        "project"
+      ],
+      "additionalProperties": false
+    },
+    "stations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "article": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "firmware": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "ip": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "profinetName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "id",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 10000
+    },
+    "topology": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/topology"
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "type": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "parent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "station": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "name": {
+            "$ref": "common.schema.json#/$defs/localized"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {},
+            "maxProperties": 10000
+          },
+          "io": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "maxProperties": 10000
+          },
+          "alarms": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "maxProperties": 10000
+          },
+          "hmi": {
+            "type": "object",
+            "properties": {
+              "screen": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "parent",
+          "station",
+          "name",
+          "params",
+          "io"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "languages"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "machine",
+    "standard",
+    "target",
+    "stations",
+    "topology",
+    "devices",
+    "options"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "topology": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "kind": {
+          "enum": [
+            "unit",
+            "equipmentModule",
+            "controlModule"
+          ]
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/localized"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topology"
+          },
+          "minItems": 0,
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

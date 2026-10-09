@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/naming.schema.json",
+  "title": "naming",
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "template": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minLength": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "maxLength": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "case": {
+            "enum": [
+              "preserve",
+              "upper",
+              "lower",
+              "pascal",
+              "camel"
+            ]
+          },
+          "commentLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "minItems": 0,
+            "maxItems": 10000,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "template",
+          "pattern"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "rules"
+  ],
+  "additionalProperties": false
+}

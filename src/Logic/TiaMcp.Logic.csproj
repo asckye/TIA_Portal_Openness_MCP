@@ -36,6 +36,9 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../schemas/standards/v1/*.schema.json" LogicalName="TiaMcp.Generation.Schemas.%(Filename)%(Extension)" />
+  </ItemGroup>
   <!-- Check resolved references as well as declarations, including transitive dependencies. -->
   <Target Name="RejectEngineDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
     <ItemGroup>

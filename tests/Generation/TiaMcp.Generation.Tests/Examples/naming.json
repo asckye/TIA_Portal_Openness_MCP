@@ -1,0 +1,11 @@
+{
+  "rules": [
+    {
+      "id": "idb",
+      "kind": "instanceDb",
+      "template": "IDB_{{upper(device.id)}}",
+      "pattern": "^IDB_[A-Z0-9_]+$",
+      "maxLength": 64
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "models": [
+    {
+      "id": "unit.state",
+      "implementationType": "fb.motor",
+      "dataType": "udt.state",
+      "modes": [
+        {
+          "id": "production",
+          "number": 1,
+          "title": {
+            "zh-CN": "测试",
+            "en-US": "Test"
+          }
+        },
+        {
+          "id": "manual",
+          "number": 2,
+          "title": {
+            "zh-CN": "测试",
+            "en-US": "Test"
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "idle",
+          "number": 4,
+          "title": {
+            "zh-CN": "测试",
+            "en-US": "Test"
+          }
+        },
+        {
+          "id": "execute",
+          "number": 6,
+          "title": {
+            "zh-CN": "测试",
+            "en-US": "Test"
+          }
+        }
+      ],
+      "commands": [
+        {
+          "id": "start",
+          "number": 1,
+          "title": {
+            "zh-CN": "测试",
+            "en-US": "Test"
+          }
+        }
+      ],
+      "transitions": [
+        {
+          "from": "idle",
+          "to": "execute",
+          "command": "start",
+          "completed": true
+        }
+      ],
+      "availability": [
+        {
+          "mode": "production",
+          "states": [
+            "idle",
+            "execute"
+          ]
+        },
+        {
+          "mode": "manual",
+          "states": [
+            "idle"
+          ]
+        }
+      ],
+      "mappings": [
+        {
+          "id": "packml",
+          "kind": "opcUa",
+          "type": "PackMLBaseObjectType",
+          "members": {
+            "CurrentState": "state"
+          }
+        }
+      ]
+    }
+  ]
+}

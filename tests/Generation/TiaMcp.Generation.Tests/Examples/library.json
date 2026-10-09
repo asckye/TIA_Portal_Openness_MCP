@@ -1,0 +1,64 @@
+{
+  "types": [
+    {
+      "id": "fb.motor",
+      "kind": "FB",
+      "version": "1.0.0",
+      "interface": {
+        "in": [
+          {
+            "name": "Feedback",
+            "type": "Bool",
+            "role": "signal.feedback"
+          }
+        ],
+        "out": [],
+        "inOut": []
+      },
+      "implementations": [
+        {
+          "releases": "*",
+          "kind": "sclSource",
+          "files": [
+            "sources/motor.scl"
+          ]
+        },
+        {
+          "releases": ">=17",
+          "kind": "globalLibrary",
+          "library": "external.motion",
+          "typePath": "Motors/FB_Motor",
+          "versionRange": "^1.2",
+          "interfaceMap": {
+            "signal.feedback": "Feedback"
+          }
+        }
+      ]
+    },
+    {
+      "id": "udt.state",
+      "kind": "UDT",
+      "version": "1.0.0",
+      "interface": {},
+      "implementations": [
+        {
+          "releases": "*",
+          "kind": "sclSource",
+          "files": [
+            "sources/state.scl"
+          ]
+        }
+      ]
+    }
+  ],
+  "libraries": [
+    {
+      "id": "external.motion",
+      "provision": "external",
+      "fileNames": {
+        "21": "Motion.al21"
+      },
+      "note": "User supplied"
+    }
+  ]
+}

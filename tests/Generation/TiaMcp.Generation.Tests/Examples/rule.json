@@ -1,0 +1,68 @@
+{
+  "deviceType": "motor.dol",
+  "title": {
+    "zh-CN": "测试",
+    "en-US": "Test"
+  },
+  "params": {
+    "type": "object",
+    "properties": {
+      "powerKw": {
+        "type": "number",
+        "minimum": 0,
+        "default": 0.75
+      }
+    },
+    "required": [
+      "powerKw"
+    ],
+    "additionalProperties": false
+  },
+  "signals": [
+    {
+      "role": "run",
+      "dir": "DO"
+    },
+    {
+      "role": "feedback",
+      "dir": "DI"
+    },
+    {
+      "role": "overload",
+      "dir": "DI",
+      "optional": true
+    }
+  ],
+  "emit": [
+    {
+      "kind": "plc.tag",
+      "forEach": "signals",
+      "table": "Basic",
+      "name": "{{device.id}}_{{upper(signal.role)}}",
+      "address": "{{alloc.io(signal)}}"
+    },
+    {
+      "kind": "plc.instance",
+      "type": "lib:fixture.basic/fb.motor@^1",
+      "name": "{{naming.idb(device)}}",
+      "callIn": "{{unit.id}}_Calls",
+      "bind": {
+        "signal.feedback": "{{tag(signal.feedback)}}"
+      }
+    },
+    {
+      "kind": "alarm",
+      "when": {
+        "exists": "signals.overload"
+      },
+      "class": "fault",
+      "textKey": "motor.overload"
+    },
+    {
+      "kind": "hmi.widget",
+      "template": "sources/widget.json",
+      "screen": "{{device.hmi.screen}}",
+      "slot": "auto"
+    }
+  ]
+}

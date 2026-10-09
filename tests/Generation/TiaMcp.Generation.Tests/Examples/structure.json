@@ -1,0 +1,26 @@
+{
+  "groups": [
+    {
+      "id": "units",
+      "kind": "blocks",
+      "path": "20_Units/{{unit.id}}",
+      "required": true
+    }
+  ],
+  "organizationBlocks": [
+    {
+      "id": "cycle",
+      "name": "Main",
+      "number": 1,
+      "event": "cyclic"
+    }
+  ],
+  "numberRanges": [
+    {
+      "id": "instance",
+      "kind": "DB",
+      "start": 100,
+      "end": 999
+    }
+  ]
+}

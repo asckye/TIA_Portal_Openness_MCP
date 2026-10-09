@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tiamcp.org/standards/v1/alarms.schema.json",
+  "title": "alarms",
+  "type": "object",
+  "properties": {
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "acknowledgement": {
+            "enum": [
+              "none",
+              "single",
+              "double"
+            ]
+          },
+          "color": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          }
+        },
+        "required": [
+          "id",
+          "priority",
+          "acknowledgement"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "deviceType": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "class": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "textKey": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "backend": {
+            "enum": [
+              "Program_Alarm",
+              "ProDiag",
+              "hmiDiscrete",
+              "textList"
+            ]
+          },
+          "cause": {
+            "$ref": "common.schema.json#/$defs/localized"
+          },
+          "consequence": {
+            "$ref": "common.schema.json#/$defs/localized"
+          },
+          "remedy": {
+            "$ref": "common.schema.json#/$defs/localized"
+          },
+          "suppression": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "id",
+          "deviceType",
+          "class",
+          "textKey",
+          "backend"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 10000
+    },
+    "texts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "common.schema.json#/$defs/localized"
+      },
+      "maxProperties": 10000
+    },
+    "numbering": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "classes",
+    "templates",
+    "texts"
+  ],
+  "additionalProperties": false
+}

@@ -227,6 +227,34 @@ tiamcp.basic/
 }
 ```
 
+### 3.3.1 P8-31a 已实现的格式 1
+
+模型位于 `src/Logic/Generation/`（命名空间 `TiaMcp.Logic.Generation`，net48/net10.0），
+schema 固定在 [schemas/standards/v1](../../schemas/standards/v1/README.md)，作为资源嵌入 Logic，
+并由交付文件规则随包分发；不新增 JSON/schema 依赖。包、八个分部、设备规则、机器描述、计划、检查结果
+及共享定义共 14 份 schema。包内容仍由 P8-31c/i 提供。
+
+`GenerationDocuments` 提供类型化加载、规范 JSON、机器/计划哈希；`StandardPackageLoader` 支持目录与 zip，
+zip 只在内存中读取，不解压，不执行任何资源。`StandardPackage` 提供只读 JSON、资源副本、规范 zip 输出，
+并能按本包设备类型验证机器参数和信号角色。校验错误为 path/rule/message，包含 schema 与静态交叉引用。
+
+格式细化：`extends`/`dependsOn` 使用包 id 与版本范围对象；`parts.rules` 使用精确文件路径列表，不展开 glob；
+实现的 `releases` 可用范围或八版发布键数组。`when` 为路径存在、equals 或 in 的声明式结构，占位符只收字段路径
+和白名单函数，具体语法见 schema 说明。允许 SCL/库文件作为资源，包清单与分部仅 JSON，不运行包内生成脚本。
+
+默认限制为 1,024 文件、2,048 条目（含目录）、单文件 16 MiB、总量 64 MiB、压缩 zip 32 MiB；
+路径最多 240 个 UTF-16 单元/16 段、NFC、正斜杠，拒绝越界、链接、Windows 保留名、大小写重复和文件/目录冲突。
+JSON 为无 BOM 的严格 UTF-8，拒绝重复键与非法 Unicode，深度最多 64。
+
+哈希采用上述说明定义的精确十进制规范 JSON（有意不采用浮点 RFC 8785）：键按 ordinal UTF-16 排序，
+数组与字符串内容不变。JSON 文件库存哈希使用规范字节，其他资源用原字节；包哈希包含清单及全部文件的排序摘要。
+机器哈希覆盖全文；计划哈希只排除根 `planHash`，保留 planId、目标身份和全部步骤/产物；参数摘要覆盖 arguments。
+布局换行不影响哈希，字符串或 SCL 中的换行仍属内容。Apply 必须重算并核对计划哈希。
+
+注册套件 `generation-model` 在 Windows 与 Ubuntu 执行；干净 checkout 和 SDK 环境最低通过数相同（见
+`tests/test-suites.json`），最大跳过 0。派生包按条目 id 替换的合并、依赖版本解析、名称展开后自检、库覆盖优先级、
+有效包跨引用复验仍交给 P8-31b/d；本步骤不增加 MCP 工具、目录或基线，也不接触 Openness 调用。
+
 ### 3.4 规则表达能力
 
 - 只允许：`forEach`（遍历信号、子设备或清单集合）、`when`（存在、相等、属于集合）、命名模板、`{{ }}` 占位符和框架内置函数（`naming.*`、`tag()`、`alloc.io()`、`alloc.ip()`、`seq()`、`pad()`、`upper()`、`lower()`、`text()`）。

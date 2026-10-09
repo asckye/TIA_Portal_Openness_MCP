@@ -1,0 +1,83 @@
+{
+  "schema": "tiamcp.machine/1",
+  "machine": {
+    "id": "L1",
+    "name": {
+      "zh-CN": "测试",
+      "en-US": "Test"
+    }
+  },
+  "standard": {
+    "package": "fixture.basic",
+    "version": "^1.0"
+  },
+  "target": {
+    "release": "21",
+    "project": {
+      "mode": "new",
+      "name": "Line1",
+      "directory": "D:\\Projects"
+    }
+  },
+  "stations": [
+    {
+      "id": "PLC1",
+      "role": "plc.main",
+      "article": "fixture-cpu",
+      "firmware": "V3.1",
+      "ip": "auto"
+    }
+  ],
+  "topology": [
+    {
+      "id": "U01",
+      "kind": "unit",
+      "name": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      },
+      "children": [
+        {
+          "id": "EM01",
+          "kind": "equipmentModule",
+          "name": {
+            "zh-CN": "测试",
+            "en-US": "Test"
+          }
+        }
+      ]
+    }
+  ],
+  "devices": [
+    {
+      "id": "M101",
+      "type": "motor.dol",
+      "parent": "EM01",
+      "station": "PLC1",
+      "name": {
+        "zh-CN": "测试",
+        "en-US": "Test"
+      },
+      "params": {
+        "powerKw": 0.75
+      },
+      "io": {
+        "run": "auto",
+        "feedback": "auto",
+        "overload": "%I4.2"
+      },
+      "alarms": {
+        "overload": true
+      },
+      "hmi": {
+        "screen": "U01"
+      }
+    }
+  ],
+  "options": {
+    "languages": [
+      "zh-CN",
+      "en-US"
+    ]
+  }
+}

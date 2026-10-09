@@ -1,0 +1,40 @@
+{
+  "roles": [
+    {
+      "id": "plc.main",
+      "variants": [
+        {
+          "releases": [
+            "21"
+          ],
+          "article": "fixture-cpu",
+          "firmware": "V3.1",
+          "modules": [
+            {
+              "id": "di",
+              "article": "fixture-di",
+              "slot": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "allocation": {
+    "ip": {
+      "subnet": "192.168.0.0/24",
+      "start": "192.168.0.10",
+      "end": "192.168.0.100"
+    },
+    "io": [
+      {
+        "id": "di",
+        "direction": "DI",
+        "start": "%I0.0",
+        "end": "%I10.7"
+      }
+    ],
+    "profinetName": "{{lower(station.id)}}",
+    "ioSystemName": "{{station.id}}_IO"
+  }
+}
