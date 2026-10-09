@@ -204,7 +204,9 @@ public sealed class EngineHttpSessionTests
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             var tools = new JsonArray(); var descriptors = new JsonArray();
-            foreach (string name in new[] { "CompileDevice", "CallTool", "GetOpennessWorkerStatus", "RestartOpennessWorker" })
+            // CallTool, GetOpennessWorkerStatus and RestartOpennessWorker are ported F01 declarations the host adds itself (P8-03a);
+            // an engine catalog that still exports them is refused.
+            foreach (string name in new[] { "CompileDevice" })
             {
                 var properties = name == "CompileDevice" ? new JsonObject { ["fault"] = new JsonObject { ["type"] = "boolean" }, ["hang"] = new JsonObject { ["type"] = "boolean" } }
                     : name == "RestartOpennessWorker" ? new JsonObject { ["confirmRestart"] = new JsonObject { ["type"] = "boolean" } }
