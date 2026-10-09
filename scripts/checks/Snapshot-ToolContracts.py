@@ -225,7 +225,7 @@ def capture(args):
         executables[release] = Path(path).resolve()
     # The SDK-only installation copies the whole PublicAPI tree (schemas, parameter PDFs); a short
     # temporary root keeps it under MAX_PATH when the release candidate's output path is deep.
-    fixture_root = Path(tempfile.mkdtemp(prefix='tc-sdk-')) if args.harness is None else None
+    fixture_root = Path(tempfile.mkdtemp(prefix='tc-sdk-'))
     if args.harness is None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
     requested_host = args.engine_host
@@ -299,18 +299,17 @@ def capture(args):
                         raise ValueError('Missing Foundation D1 disclosure: ' + entry)
         snapshots[release] = snapshot
         print(f'Captured V{release}: {len(snapshot["tools"])} tools', flush=True)
-    if args.harness is None:
-        # An HTTP host is terminated; its engine worker exits when its channel closes and can hold
-        # the fixture SDK files for a moment longer.
-        deadline = time.monotonic() + 30
-        while True:
-            try:
-                shutil.rmtree(fixture_root)
-                break
-            except PermissionError:
-                if time.monotonic() >= deadline:
-                    raise
-                time.sleep(.5)
+    # An HTTP host is terminated; its engine worker exits when its channel closes and can hold
+    # the fixture SDK files for a moment longer.
+    deadline = time.monotonic() + 30
+    while True:
+        try:
+            shutil.rmtree(fixture_root)
+            break
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(.5)
     # Do not leave a partially captured baseline when a host fails.
     args.output.mkdir(parents=True, exist_ok=True)
     for release, snapshot in snapshots.items():
