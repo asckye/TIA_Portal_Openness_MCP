@@ -455,7 +455,7 @@ for k in keys[-2:]:
 # One embedded record per release, contract version and V4 target. The registration
 # map is generated from the same transition decisions as the source checks.
 candidate_entries = sorted(set(re.findall(r'\[BehaviorCandidate\("([^"\n]+)",\s*"([^"\n]+)"',
-    '\n'.join(read(p) for p in files if p.startswith(E) and p.endswith('.cs')))))
+    '\n'.join(read(p) for p in files if (p.startswith(E) or p.startswith(SH)) and p.endswith('.cs')))))
 def candidate_example(entry, family, release):
     if family == 'P6-FALLBACK':
         example = {"route": "", "retryPolicy": "never", "refreshReadHandle": False, "mode": "preview", "confirm": False}
@@ -522,7 +522,7 @@ for key in keys[:6]:
         if key not in record['releases']: continue
         behavior_policies.append({'releaseKey': key, 'family': port_family, 'state': 'current', 'l5': 'NOT RUN'})
         behavior_entries.extend({'releaseKey': key, 'entry': name, 'family': port_family,
-            'example': calls['plc-foundation'][name]['arguments']} for name in record['tools'])
+            'example': calls['plc-foundation'][name]['arguments']} for name in record['tools'] if name in ported[key])
 behavior_capabilities = {k: [{"family": r["family"], "state": r["state"], "l5": r["l5"],
     "entries": sorted({e["entry"] for e in behavior_entries if e["releaseKey"] == k and e["family"] == r["family"]})}
     for r in behavior_policies if r["releaseKey"] == k] for k in keys}
@@ -663,8 +663,8 @@ MIGRATION_GROUPS = {
     "P6-09": "EcosystemTools V21EcosystemTools EngineeringAuditTools GitWorkflowTools ImportOrderTools OfflineAnalysisTools OfflineSuiteTools QualityAuditTools TemplateTools XmlBuilderTools PlcBuildTools PlcDocumentationTools",
     "P6-10": "PlcOfflineTools PlcBlocksTools PlcSoftwareTools TypesTools PlcTablesTools McpServer.BlockLogic McpServer.BlockImportVerification",
     "P6-11": "DocumentsTools NativeExchangeTools PlcExternalSourcesTools McpServer.Patch ExportTools",
-    "P6-12": "DevicesTools HardwareAmlTools HardwareManagementTools ModulesTools AddressesTools",
-    "P6-13": "HardwareNetworkTools HardwareServicesTools",
+    "P6-12": "DevicesTools HardwareDevicesTools HardwareAmlTools HardwareManagementTools ModulesTools AddressesTools",
+    "P6-13": "HardwareNetworkTools HardwareSecurityTools HardwareServicesTools HardwareServicesPortTools",
     "P6-14": "CertificateManagementTools ProjectSecurityTools SafetyManagementTools SafetyValidationTools SecurityDeepTools",
     "P6-15": "AlarmsTools OpcUaTools TechnologyObjectsTools SoftwareUnitDeepTools SoftwareUnitManagementTools",
     "P6-16": "ClassicHmiFoldersTools MotionProDiagClassicHmiTools",
@@ -681,7 +681,9 @@ owners = {}
 for task, stems in MIGRATION_GROUPS.items():
     for stem in stems.split():
         candidates = [p for p in files if p.endswith("/" + stem + ".cs")]
+        if stem == "HardwareNetworkTools": candidates = [SH + "HardwareNetworkTools.cs"]
         if stem == "AddressesTools": candidates = [SH + "HardwareAddressTools.cs"]
+        if stem == "HardwareSecurityTools": candidates = [E + "ModelContextProtocol/Tools/HardwareNetworkTools.cs"]
         if stem == "McpServer.BlockLogic": candidates = [SH + "PlcToolContract.cs"]
         assert len(candidates) == 1, (stem, candidates)
         path = candidates[0]
@@ -752,7 +754,7 @@ for task in MIGRATION_GROUPS:
         continue
     paths = sorted(p for p in owners if owners[p] == task)
     services = [E + "Siemens/Services/" + pathlib.PurePosixPath(p).stem.removesuffix("Tools") + "Service.cs" for p in paths]
-    TASK_PATHS[task] = paths + sorted(p for p in services if p in files)
+    TASK_PATHS[task] = paths + sorted({p for p in services if p in files})
 TASK_PATHS["P6-07"] += [E+"ModelContextProtocol/Tools/McpServer.Profile.cs", SH+"ToolUsageCatalog.cs", L+"ModelContextProtocol/ToolRecipes.cs"]
 TASK_PATHS["P6-23"] += ["src/OnlineChannels", E+"Runtime"]
 TASK_PATHS["P6-24"] += [E+"Siemens/Portal", E+"EngineServices.cs", E+"EngineRegistration.cs", E+"Program.cs", E+"ModelContextProtocol/Tools/ToolCatalog.cs", E+"TiaMcp.Engine.V20.csproj", E+"TiaMcp.Engine.V21.csproj", "tests/Engine/TiaMcp.Engine.Harness"]

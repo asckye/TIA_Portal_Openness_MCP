@@ -171,6 +171,14 @@ namespace TiaMcp.Adapters
             return group.Blocks.Find(segments.Last());
         }
 
+        internal static Dictionary<string, object?> HardwareStepMeta(DateTime? timestamp, bool success)
+        {
+            var meta = new Dictionary<string, object?>();
+            if (timestamp.HasValue) meta["timestamp"] = timestamp.Value;
+            meta["success"] = success;
+            return meta;
+        }
+
         private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> action)
         {
             if (EngineeringStep != null) return EngineeringStep(tool, action);

@@ -757,8 +757,8 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
     names = {name for (profile, name) in parameters if profile == 'plc-foundation'}
     import ported_families
     for family in ported_families.families(root).values():
-        if not set(releases) & set(family['releases']):
-            names.difference_update(family['tools'])
+        enabled = set().union(*(ported_families.additions(root, key) for key in releases))
+        names.difference_update(set(family['tools']) - enabled)
     names.difference_update(FOUNDATION_UNAVAILABLE_BELOW_20)
     wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
     renames = dict(re.findall(r'\["([^"\n]+)"\]\s*=\s*"([^"\n]+)"', wrapper))
@@ -802,6 +802,10 @@ def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().par
 def self_test(args):
     import copy
     root = ROOT
+    import ported_families
+    availability = (root / 'src/Adapters.Contracts/PortedFamilies.cs').read_text(encoding='utf-8-sig')
+    parsed = ported_families.parse(availability)
+    assert parsed['F20']['tool_releases']['ListCommunicationConnections'] == ['21']
     snapshot = load_snapshots(root / 'manifest/contracts/v4/baseline')['21']
     snapshot['formatVersion'] = FORMAT_VERSION
     contracts = current_parameters(root)
@@ -889,6 +893,14 @@ def self_test(args):
         try: _p7_04b_description_checks(before, invalid)
         except ValueError: count += 1
         else: raise AssertionError('Unreviewed description migration accepted: ' + change)
+    for invalid in (
+            availability.replace('ToolReleases = new Dictionary<string, string[]>', 'ToolReleases = UnknownFactory'),
+            availability.replace('["ListCommunicationConnections"]', '["UnknownPortedTool"]'),
+            availability.replace('["ListCommunicationConnections"] = new[] { "21" }', '["ListCommunicationConnections"] = new[] { "21", "21" }'),
+            availability.replace('["ListCommunicationConnections"] = new[] { "21" }', '["ListCommunicationConnections"] = new[] { "22" }')):
+        try: ported_families.parse(invalid)
+        except AssertionError: count += 1
+        else: raise AssertionError('Unreviewed per-tool release override accepted')
     print(f'Contract negative self-tests: {count} passed, 0 failed.')
     return 0
 

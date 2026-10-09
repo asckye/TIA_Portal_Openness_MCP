@@ -25,8 +25,8 @@ public sealed class FoundationV4ContractsTests
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
 
     [Theory]
-    [InlineData("14sp1", 67)] [InlineData("15.1", 68)] [InlineData("16", 70)]
-    [InlineData("17", 70)] [InlineData("18", 70)] [InlineData("19", 72)]
+    [InlineData("14sp1", 106)] [InlineData("15.1", 107)] [InlineData("16", 109)]
+    [InlineData("17", 109)] [InlineData("18", 109)] [InlineData("19", 111)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
@@ -124,7 +124,7 @@ public sealed class FoundationV4ContractsTests
             var args = JsonSerializer.SerializeToElement(usage["data"]!["example"]!["request"]!["params"]!["arguments"]);
             var validation = new InputContract<JsonElement>(new InputSchema(tool.ProtocolTool.InputSchema), new InputBudget()).Read(args, "arguments");
             Assert.True(validation.IsValid, tool.ProtocolTool.Name + ": " + V4Json.Serialize(validation.Error));
-            if (tool.ProtocolTool.Name.StartsWith("Build") && tool.ProtocolTool.Name != "BuildPlcSymbolManifestFromPath")
+            if (tool.ProtocolTool.Name.StartsWith("Build") && tool.ProtocolTool.Name != "BuildPlcSymbolManifestFromPath" && tool.ProtocolTool.Name != "BuildDeviceAmlDocument")
                 Assert.True((bool)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["ok"]!, tool.ProtocolTool.Name);
         }
     }

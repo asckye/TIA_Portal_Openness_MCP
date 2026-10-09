@@ -128,7 +128,6 @@ namespace TiaMcpServer.Siemens
         void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames);
         bool TrySetProperty(object target, string propName, object? value);
         string GetProjectTree();
-        List<Device> GetDevices(string regexName = "");
         Device? GetDevice(string devicePath);
         DeviceItem? GetDeviceItem(string deviceItemPath);
         string GetDeviceItemTree(string deviceItemPath, int maxDepth = 4);
@@ -136,16 +135,12 @@ namespace TiaMcpServer.Siemens
         IEnumerable<object> FindHardwareCatalogEntries(object catalog, string filter);
         bool? IsAttributeWritable(object attributeInfo);
         object CoerceAttributeValue(string value, object? oldValue, object attributeInfo);
-        JsonArray BuildDeviceItemNetworkReadbackJson(string deviceItemPath);
         IEnumerable<Device> EnumerateAllDevices();
 
         string[] GetPlcSoftwareNamesForDesktop();
         ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath);
         JsonArray ToJsonArray(IEnumerable<string> values);
-        DeviceItem RequireDeviceItem(HardwareObject owner, string parameter);
-        void ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write);
         IEngineeringServiceProvider ServiceProvider(HardwareObject owner);
-        JsonNode? LinkedTagRows(Channel channel, JsonObject row);
         System.Collections.Generic.List<PlcSoftware> GetAllPlcSoftware();
         System.Collections.Generic.List<(string Path, bool? Consistent)> ReadPlcConsistency(string softwarePath);
         bool RecoverableAuditError(Exception ex);
@@ -215,7 +210,6 @@ namespace TiaMcpServer.Siemens
         IEnumerable<(string Path, object Value)> ScopedObjects(object group, string collection, string prefix = "", int depth = 0);
         List<ModelContextProtocol.NetworkAttribute>? GetDeviceItemNetworkInfo(string deviceItemPath);
         string ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName);
-        JsonArray BuildDeviceNodesJson(Device device);
         string NormalizeAttrName(string? n);
         IEnumerable<(DeviceItem Item, string Path)> TraverseDeviceItems(DeviceItem root, string path);
         IEnumerable<Portal.NetworkNodeInfo> FindNetworkNodes(DeviceItem root);

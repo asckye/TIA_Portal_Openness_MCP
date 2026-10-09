@@ -76,6 +76,20 @@
   <Import Project="../EngineHost/EngineHostSources.props" />
   <ItemGroup>
     <Compile Include="../Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
+    <Compile Include="../Shared/HardwareNetworkTools.cs" Link="Shared/HardwareNetworkTools.cs" />
+    <Compile Include="../Shared/HardwareNetworkPortService.cs" Link="Shared/HardwareNetworkPortService.cs" />
+    <Compile Include="../Shared/HardwareDevicesService.cs" Link="Shared/HardwareDevicesService.cs" />
+    <Compile Include="../Shared/HardwareDevicesTools.cs" Link="Shared/HardwareDevicesTools.cs" />
+    <Compile Include="../Shared/DeviceServiceObjectRules.cs" Link="Shared/DeviceServiceObjectRules.cs" />
+    <Compile Include="../Shared/HardwareUtilityRules.cs" Link="Shared/HardwareUtilityRules.cs" />
+    <Compile Include="../Shared/HardwareServicesPortService.cs" Link="Shared/HardwareServicesPortService.cs" />
+    <Compile Include="../Shared/HardwareServicesPortTools.cs" Link="Shared/HardwareServicesPortTools.cs" />
+    <Compile Include="../Shared/HardwareManagementService.cs" Link="Shared/HardwareManagementService.cs" />
+    <Compile Include="../Shared/HardwareManagementTools.cs" Link="Shared/HardwareManagementTools.cs" />
+    <Compile Include="../Shared/HardwareModulesService.cs" Link="Shared/HardwareModulesService.cs" />
+    <Compile Include="../Shared/ModulesTools.cs" Link="Shared/ModulesTools.cs" />
+    <Compile Include="../Shared/HardwareAmlTools.cs" Link="Shared/HardwareAmlTools.cs" />
+    <Compile Include="../Shared/HardwareAmlService.cs" Link="Shared/HardwareAmlService.cs" />
     <Compile Include="../Shared/UnifiedHmiContract.cs" Link="Shared/UnifiedHmiContract.cs" />
     <Compile Include="../Shared/OnlineMonitoringPolicy.cs" Link="Shared/OnlineMonitoringPolicy.cs" />
     <Compile Include="../Shared/Host/EnvironmentDoctor.cs" Link="Shared/Host/EnvironmentDoctor.cs" />

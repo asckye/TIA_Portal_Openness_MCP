@@ -5,9 +5,11 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 67,
+      "toolCount": 106,
       "tools": [
+        "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
         "BuildPlcFcBlock",
@@ -21,13 +23,20 @@
         "CloseProject",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
+        "ConnectDeviceNodesToProfinetSubnet",
         "ConnectPortal",
+        "CreateDevice",
+        "CreateGsdDevice",
+        "CreateHardwareCatalogDevice",
         "CreatePlcTag",
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
         "DeletePlcExternalSource",
         "DisconnectPortal",
+        "EnsureSubnet",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExportDeviceAml",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -35,18 +44,27 @@
         "ExportPlcTypes",
         "GenerateBlocksFromExternalSource",
         "GetDeviceAddressing",
+        "GetDeviceAttributes",
+        "GetDeviceInfo",
         "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
         "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetHardwareFeatures",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
         "GetProjectInfo",
+        "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
         "ImportPlcExternalSource",
@@ -54,6 +72,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "ListDeviceItemChannels",
+        "ListDevices",
+        "ListIoSystems",
+        "ListNetworkDomains",
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
@@ -64,23 +86,42 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListTransferAreas",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageNetworkDomain",
+        "ManagePortInterconnection",
+        "ManageTransferArea",
         "OpenProject",
         "PlanArtifactImportOrder",
+        "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlugDeviceItem",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SearchInstalledGsdDevices",
         "SetDeviceAddress",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetPlcCpuSettings",
         "StageImportFiles"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 68,
+      "toolCount": 107,
       "tools": [
+        "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
         "BuildPlcFcBlock",
@@ -94,13 +135,20 @@
         "CloseProject",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
+        "ConnectDeviceNodesToProfinetSubnet",
         "ConnectPortal",
+        "CreateDevice",
+        "CreateGsdDevice",
+        "CreateHardwareCatalogDevice",
         "CreatePlcTag",
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
         "DeletePlcExternalSource",
         "DisconnectPortal",
+        "EnsureSubnet",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExportDeviceAml",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -108,18 +156,27 @@
         "ExportPlcTypes",
         "GenerateBlocksFromExternalSource",
         "GetDeviceAddressing",
+        "GetDeviceAttributes",
+        "GetDeviceInfo",
         "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
         "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetHardwareFeatures",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
         "GetProjectInfo",
+        "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
         "ImportPlcExternalSource",
@@ -127,6 +184,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "ListDeviceItemChannels",
+        "ListDevices",
+        "ListIoSystems",
+        "ListNetworkDomains",
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
@@ -138,23 +199,42 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListTransferAreas",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageNetworkDomain",
+        "ManagePortInterconnection",
+        "ManageTransferArea",
         "OpenProject",
         "PlanArtifactImportOrder",
+        "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlugDeviceItem",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SearchInstalledGsdDevices",
         "SetDeviceAddress",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetPlcCpuSettings",
         "StageImportFiles"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 70,
+      "toolCount": 109,
       "tools": [
+        "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
         "BuildPlcFcBlock",
@@ -168,13 +248,20 @@
         "CloseProject",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
+        "ConnectDeviceNodesToProfinetSubnet",
         "ConnectPortal",
+        "CreateDevice",
+        "CreateGsdDevice",
+        "CreateHardwareCatalogDevice",
         "CreatePlcTag",
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
         "DeletePlcExternalSource",
         "DisconnectPortal",
+        "EnsureSubnet",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExportDeviceAml",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -184,18 +271,27 @@
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
         "GetDeviceAddressing",
+        "GetDeviceAttributes",
+        "GetDeviceInfo",
         "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
         "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetHardwareFeatures",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
         "GetProjectInfo",
+        "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
         "ImportPlcExternalSource",
@@ -203,6 +299,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "ListDeviceItemChannels",
+        "ListDevices",
+        "ListIoSystems",
+        "ListNetworkDomains",
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
@@ -214,23 +314,42 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListTransferAreas",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageNetworkDomain",
+        "ManagePortInterconnection",
+        "ManageTransferArea",
         "OpenProject",
         "PlanArtifactImportOrder",
+        "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlugDeviceItem",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SearchInstalledGsdDevices",
         "SetDeviceAddress",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetPlcCpuSettings",
         "StageImportFiles"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 70,
+      "toolCount": 109,
       "tools": [
+        "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
         "BuildPlcFcBlock",
@@ -244,13 +363,20 @@
         "CloseProject",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
+        "ConnectDeviceNodesToProfinetSubnet",
         "ConnectPortal",
+        "CreateDevice",
+        "CreateGsdDevice",
+        "CreateHardwareCatalogDevice",
         "CreatePlcTag",
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
         "DeletePlcExternalSource",
         "DisconnectPortal",
+        "EnsureSubnet",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExportDeviceAml",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -260,18 +386,27 @@
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
         "GetDeviceAddressing",
+        "GetDeviceAttributes",
+        "GetDeviceInfo",
         "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
         "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetHardwareFeatures",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
         "GetProjectInfo",
+        "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
         "ImportPlcExternalSource",
@@ -279,6 +414,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "ListDeviceItemChannels",
+        "ListDevices",
+        "ListIoSystems",
+        "ListNetworkDomains",
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
@@ -290,23 +429,42 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListTransferAreas",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageNetworkDomain",
+        "ManagePortInterconnection",
+        "ManageTransferArea",
         "OpenProject",
         "PlanArtifactImportOrder",
+        "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlugDeviceItem",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SearchInstalledGsdDevices",
         "SetDeviceAddress",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetPlcCpuSettings",
         "StageImportFiles"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 70,
+      "toolCount": 109,
       "tools": [
+        "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
         "BuildPlcFcBlock",
@@ -320,13 +478,20 @@
         "CloseProject",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
+        "ConnectDeviceNodesToProfinetSubnet",
         "ConnectPortal",
+        "CreateDevice",
+        "CreateGsdDevice",
+        "CreateHardwareCatalogDevice",
         "CreatePlcTag",
         "CreatePlcTagTable",
         "CreatePlcUserConstant",
         "CreateProject",
         "DeletePlcExternalSource",
         "DisconnectPortal",
+        "EnsureSubnet",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExportDeviceAml",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -336,18 +501,27 @@
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
         "GetDeviceAddressing",
+        "GetDeviceAttributes",
+        "GetDeviceInfo",
         "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
         "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetHardwareFeatures",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
         "GetProjectInfo",
+        "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
         "ImportPlcExternalSource",
@@ -355,6 +529,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "ListDeviceItemChannels",
+        "ListDevices",
+        "ListIoSystems",
+        "ListNetworkDomains",
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
@@ -366,23 +544,42 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListTransferAreas",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageNetworkDomain",
+        "ManagePortInterconnection",
+        "ManageTransferArea",
         "OpenProject",
         "PlanArtifactImportOrder",
+        "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlugDeviceItem",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
+        "SearchInstalledGsdDevices",
         "SetDeviceAddress",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetPlcCpuSettings",
         "StageImportFiles"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 72,
+      "toolCount": 111,
       "tools": [
+        "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
+        "BuildDeviceAmlDocument",
         "BuildFlgNetCall",
         "BuildPlcFbBlock",
         "BuildPlcFcBlock",
@@ -396,7 +593,11 @@
         "CloseProject",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware",
+        "ConnectDeviceNodesToProfinetSubnet",
         "ConnectPortal",
+        "CreateDevice",
+        "CreateGsdDevice",
+        "CreateHardwareCatalogDevice",
         "CreateHardwareDevice",
         "CreatePlcTag",
         "CreatePlcTagTable",
@@ -404,6 +605,9 @@
         "CreateProject",
         "DeletePlcExternalSource",
         "DisconnectPortal",
+        "EnsureSubnet",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExportDeviceAml",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -413,18 +617,27 @@
         "ExportTechnologyObject",
         "GenerateBlocksFromExternalSource",
         "GetDeviceAddressing",
+        "GetDeviceAttributes",
+        "GetDeviceInfo",
         "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
         "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetHardwareFeatures",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
         "GetProjectInfo",
+        "GetProjectTopology",
         "GetProjectTree",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetToolUsage",
+        "ImportDeviceAml",
         "ImportPlcBlock",
         "ImportPlcBlocksFromDirectory",
         "ImportPlcExternalSource",
@@ -432,6 +645,10 @@
         "ImportPlcTagTable",
         "ImportPlcType",
         "InitializeEnvironment",
+        "ListDeviceItemChannels",
+        "ListDevices",
+        "ListIoSystems",
+        "ListNetworkDomains",
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
@@ -443,16 +660,33 @@
         "ListPortalProcessProjects",
         "ListStagedImportFiles",
         "ListTechnologyObjects",
+        "ListTransferAreas",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageNetworkDomain",
+        "ManagePortInterconnection",
+        "ManageTransferArea",
         "OpenProject",
         "PlanArtifactImportOrder",
+        "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlugDeviceItem",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
         "RenderPlcBlock",
         "RenderPlcProgramAtlas",
         "RunCapabilitySelfTest",
         "SaveProject",
         "SearchHardwareCatalog",
+        "SearchInstalledGsdDevices",
         "SetDeviceAddress",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetPlcCpuSettings",
         "StageImportFiles"
       ]
     },
@@ -1455,8 +1689,8 @@
     }
   },
   "groupCounts": {
-    "shared-subset": 420,
-    "all-releases": 67,
+    "shared-subset": 381,
+    "all-releases": 106,
     "release-only": 11
   },
   "tools": [
@@ -1553,10 +1787,16 @@
     {
       "name": "AttachDeviceNodeToSubnet",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -1640,10 +1880,16 @@
     {
       "name": "BuildDeviceAmlDocument",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2069,10 +2315,16 @@
     {
       "name": "ConnectDeviceNodesToProfinetSubnet",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2120,28 +2372,46 @@
     {
       "name": "CreateDevice",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "CreateGsdDevice",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "CreateHardwareCatalogDevice",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2526,10 +2796,16 @@
     {
       "name": "EnsureSubnet",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2643,10 +2919,16 @@
     {
       "name": "ExchangeSystemDiagnosticsSettings",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -2706,10 +2988,16 @@
     {
       "name": "ExportDeviceAml",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3080,19 +3368,31 @@
     {
       "name": "GetDeviceAttributes",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetDeviceInfo",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3113,10 +3413,16 @@
     {
       "name": "GetDeviceItemInfo",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3137,28 +3443,46 @@
     {
       "name": "GetDeviceItemNetworkInfo",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetDeviceItemTree",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "GetDevicePlugLocations",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3191,10 +3515,16 @@
     {
       "name": "GetHardwareFeatures",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3572,10 +3902,16 @@
     {
       "name": "GetProjectTopology",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3881,10 +4217,16 @@
     {
       "name": "ImportDeviceAml",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4264,19 +4606,31 @@
     {
       "name": "ListDeviceItemChannels",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ListDevices",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4345,19 +4699,31 @@
     {
       "name": "ListIoSystems",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ListNetworkDomains",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4616,10 +4982,16 @@
     {
       "name": "ListTransferAreas",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4812,19 +5184,31 @@
     {
       "name": "ManageDeviceServiceObjects",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ManageDeviceUserGroup",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4892,28 +5276,46 @@
     {
       "name": "ManageHardwareObject",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ManageHardwareUtilities",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ManageIoSystem",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4973,10 +5375,16 @@
     {
       "name": "ManageNetworkDomain",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5170,10 +5578,16 @@
     {
       "name": "ManagePortInterconnection",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5381,10 +5795,16 @@
     {
       "name": "ManageTransferArea",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5582,10 +6002,16 @@
     {
       "name": "PlanHardwareNetworkConfiguration",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5624,10 +6050,16 @@
     {
       "name": "PlugDeviceItem",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5660,19 +6092,31 @@
     {
       "name": "ProbeHardwareHmiConnectionOwnerCandidates",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ProbeHardwareHmiConnectionWhitelistedServices",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5973,10 +6417,16 @@
     {
       "name": "SearchInstalledGsdDevices",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6006,19 +6456,31 @@
     {
       "name": "SetDeviceItemAttribute",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "SetDeviceItemChannel",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -6048,10 +6510,16 @@
     {
       "name": "SetPlcCpuSettings",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

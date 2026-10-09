@@ -42,8 +42,12 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var result = _service.ExportDeviceConfigurationAml(devicePath, exportPath);
                 var evidence = ResponseMeta.Basic(DateTime.Now, result.Success);
-                evidence["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Cax;
-                NativeResultState.Record(evidence, result.State, false, targetPath: result.FilePath, messages: new System.Text.Json.Nodes.JsonArray(result.Messages?.Select(m => (JsonNode)m).ToArray() ?? Array.Empty<JsonNode>()));
+                if (result.NativeBooleanResult.HasValue) evidence["nativeBooleanResult"] = result.NativeBooleanResult.Value;
+                else
+                {
+                    evidence["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Cax;
+                    NativeResultState.Record(evidence, result.State, false, targetPath: result.FilePath, messages: new System.Text.Json.Nodes.JsonArray(result.Messages?.Select(m => (JsonNode)m).ToArray() ?? Array.Empty<JsonNode>()));
+                }
                 return new ResponseExportDeviceAml
                 {
                     Message = $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' (state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",

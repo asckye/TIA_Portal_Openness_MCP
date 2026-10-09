@@ -60,6 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? FilePath { get; set; }
         public bool Success { get; set; }
         public string? State { get; set; }
+        public bool? NativeBooleanResult { get; set; }
         public int ErrorCount { get; set; }
         public int WarningCount { get; set; }
         public List<string>? Messages { get; set; }

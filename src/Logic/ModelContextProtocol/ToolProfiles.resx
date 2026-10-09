@@ -404,7 +404,43 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F21",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -416,7 +452,43 @@
     },
     {
       "releaseKey": "16",
+      "family": "F18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F21",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -428,7 +500,43 @@
     },
     {
       "releaseKey": "18",
+      "family": "F18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F21",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F18",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F20",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F21",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -507,6 +615,42 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -832,6 +976,42 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -1157,6 +1337,42 @@
     },
     {
       "releaseKey": "16",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -1482,6 +1698,42 @@
     },
     {
       "releaseKey": "17",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -1807,6 +2059,42 @@
     },
     {
       "releaseKey": "18",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -2132,6 +2420,42 @@
     },
     {
       "releaseKey": "19",
+      "entry": "CreateDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateGsdDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "GSD",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "CreateHardwareDevice",
       "family": "P6-DEVICE",
       "example": {
@@ -3676,6 +4000,434 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "CreateDevice",
+      "family": "F18",
+      "example": {
+        "orderNumber": "6ES7 515-2AM02-0AB0",
+        "version": "V2.9",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreateGsdDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListDevices",
+      "family": "F18",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceInfo",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceItemInfo",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceItemTree",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SearchInstalledGsdDevices",
+      "family": "F18",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceAttributes",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetDeviceItemAttribute",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "attributeName": "Name",
+        "value": "TRUE"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetPlcCpuSettings",
+      "family": "F18",
+      "example": {
+        "cpuPath": "PLC_1/CPU_1",
+        "settings": {
+          "exactAttributes": {
+            "Name": "PLC_1"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDevicePlugLocations",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PlugDeviceItem",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/导轨_0",
+        "orderNumber": "6ES7 521-1BH00-0AB0",
+        "version": "V2.2",
+        "positionNumber": 2,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageHardwareObject",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "PLC_2"
+        ],
+        "action": "deleteDevice",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageDeviceUserGroup",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetHardwareFeatures",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageDeviceServiceObjects",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webApplications",
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageHardwareUtilities",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExchangeSystemDiagnosticsSettings",
+      "family": "F18",
+      "example": {
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListIoSystems",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageIoSystem",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "name": "ExampleIO",
+        "subnetName": "PN_IE_1",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListNetworkDomains",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageNetworkDomain",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1",
+        "kind": "sync",
+        "action": "create",
+        "name": "ExampleSyncDomain",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListTransferAreas",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageTransferArea",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "kind": "standard",
+        "name": "ExampleTransfer",
+        "type": "IN",
+        "positionNumber": 0,
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListDeviceItemChannels",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetDeviceItemChannel",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "channelType": "None",
+        "channelIoType": "None",
+        "channelNumber": 1,
+        "attributes": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePortInterconnection",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetDeviceItemNetworkInfo",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ConnectDeviceNodesToProfinetSubnet",
+      "family": "F20",
+      "example": {
+        "firstRootPath": "PLC_1",
+        "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PlanHardwareNetworkConfiguration",
+      "family": "F20",
+      "example": {
+        "plan": {
+          "operations": [
+            {
+              "type": "EnsureSubnet",
+              "subnetName": "PN_IE_1",
+              "subnetType": "PROFINET",
+              "anchorDeviceItemPath": "PLC_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "EnsureSubnet",
+      "family": "F20",
+      "example": {
+        "anchorDeviceItemPath": "PLC_1/CPU_1",
+        "subnetType": "System:Subnet.Ethernet",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "AttachDeviceNodeToSubnet",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "interfaceIndex": 1,
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetProjectTopology",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "BuildDeviceAmlDocument",
+      "family": "F21",
+      "example": {
+        "spec": {
+          "projectName": "Example",
+          "devices": [
+            {
+              "name": "PLC_1",
+              "typeIdentifier": "System:Device.S71500",
+              "deviceItems": []
+            }
+          ]
+        },
+        "outputPath": "C:\\Examples\\generated\\Example.aml"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportDeviceAml",
+      "family": "F21",
+      "example": {
+        "devicePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\Device.aml"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportDeviceAml",
+      "family": "F21",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Device.aml",
+        "logFilePath": "C:\\Examples\\import.log",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "GetDeviceAddressing",
       "family": "F19",
       "example": {
@@ -3729,6 +4481,434 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "CreateDevice",
+      "family": "F18",
+      "example": {
+        "orderNumber": "6ES7 515-2AM02-0AB0",
+        "version": "V2.9",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreateGsdDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListDevices",
+      "family": "F18",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceInfo",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceItemInfo",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceItemTree",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SearchInstalledGsdDevices",
+      "family": "F18",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceAttributes",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetDeviceItemAttribute",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "attributeName": "Name",
+        "value": "TRUE"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetPlcCpuSettings",
+      "family": "F18",
+      "example": {
+        "cpuPath": "PLC_1/CPU_1",
+        "settings": {
+          "exactAttributes": {
+            "Name": "PLC_1"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDevicePlugLocations",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PlugDeviceItem",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/导轨_0",
+        "orderNumber": "6ES7 521-1BH00-0AB0",
+        "version": "V2.2",
+        "positionNumber": 2,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageHardwareObject",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "PLC_2"
+        ],
+        "action": "deleteDevice",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageDeviceUserGroup",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetHardwareFeatures",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageDeviceServiceObjects",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webApplications",
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageHardwareUtilities",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExchangeSystemDiagnosticsSettings",
+      "family": "F18",
+      "example": {
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListIoSystems",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageIoSystem",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "name": "ExampleIO",
+        "subnetName": "PN_IE_1",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListNetworkDomains",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageNetworkDomain",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1",
+        "kind": "sync",
+        "action": "create",
+        "name": "ExampleSyncDomain",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListTransferAreas",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageTransferArea",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "kind": "standard",
+        "name": "ExampleTransfer",
+        "type": "IN",
+        "positionNumber": 0,
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListDeviceItemChannels",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetDeviceItemChannel",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "channelType": "None",
+        "channelIoType": "None",
+        "channelNumber": 1,
+        "attributes": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePortInterconnection",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetDeviceItemNetworkInfo",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ConnectDeviceNodesToProfinetSubnet",
+      "family": "F20",
+      "example": {
+        "firstRootPath": "PLC_1",
+        "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PlanHardwareNetworkConfiguration",
+      "family": "F20",
+      "example": {
+        "plan": {
+          "operations": [
+            {
+              "type": "EnsureSubnet",
+              "subnetName": "PN_IE_1",
+              "subnetType": "PROFINET",
+              "anchorDeviceItemPath": "PLC_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "EnsureSubnet",
+      "family": "F20",
+      "example": {
+        "anchorDeviceItemPath": "PLC_1/CPU_1",
+        "subnetType": "System:Subnet.Ethernet",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "AttachDeviceNodeToSubnet",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "interfaceIndex": 1,
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetProjectTopology",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildDeviceAmlDocument",
+      "family": "F21",
+      "example": {
+        "spec": {
+          "projectName": "Example",
+          "devices": [
+            {
+              "name": "PLC_1",
+              "typeIdentifier": "System:Device.S71500",
+              "deviceItems": []
+            }
+          ]
+        },
+        "outputPath": "C:\\Examples\\generated\\Example.aml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportDeviceAml",
+      "family": "F21",
+      "example": {
+        "devicePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\Device.aml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportDeviceAml",
+      "family": "F21",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Device.aml",
+        "logFilePath": "C:\\Examples\\import.log",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "GetDeviceAddressing",
       "family": "F19",
       "example": {
@@ -3782,6 +4962,434 @@
     },
     {
       "releaseKey": "16",
+      "entry": "CreateDevice",
+      "family": "F18",
+      "example": {
+        "orderNumber": "6ES7 515-2AM02-0AB0",
+        "version": "V2.9",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreateGsdDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListDevices",
+      "family": "F18",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceInfo",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceItemInfo",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceItemTree",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SearchInstalledGsdDevices",
+      "family": "F18",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceAttributes",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetDeviceItemAttribute",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "attributeName": "Name",
+        "value": "TRUE"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetPlcCpuSettings",
+      "family": "F18",
+      "example": {
+        "cpuPath": "PLC_1/CPU_1",
+        "settings": {
+          "exactAttributes": {
+            "Name": "PLC_1"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDevicePlugLocations",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PlugDeviceItem",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/导轨_0",
+        "orderNumber": "6ES7 521-1BH00-0AB0",
+        "version": "V2.2",
+        "positionNumber": 2,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageHardwareObject",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "PLC_2"
+        ],
+        "action": "deleteDevice",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageDeviceUserGroup",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetHardwareFeatures",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageDeviceServiceObjects",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webApplications",
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageHardwareUtilities",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExchangeSystemDiagnosticsSettings",
+      "family": "F18",
+      "example": {
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListIoSystems",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageIoSystem",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "name": "ExampleIO",
+        "subnetName": "PN_IE_1",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListNetworkDomains",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageNetworkDomain",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1",
+        "kind": "sync",
+        "action": "create",
+        "name": "ExampleSyncDomain",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListTransferAreas",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageTransferArea",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "kind": "standard",
+        "name": "ExampleTransfer",
+        "type": "IN",
+        "positionNumber": 0,
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListDeviceItemChannels",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetDeviceItemChannel",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "channelType": "None",
+        "channelIoType": "None",
+        "channelNumber": 1,
+        "attributes": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePortInterconnection",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetDeviceItemNetworkInfo",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConnectDeviceNodesToProfinetSubnet",
+      "family": "F20",
+      "example": {
+        "firstRootPath": "PLC_1",
+        "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PlanHardwareNetworkConfiguration",
+      "family": "F20",
+      "example": {
+        "plan": {
+          "operations": [
+            {
+              "type": "EnsureSubnet",
+              "subnetName": "PN_IE_1",
+              "subnetType": "PROFINET",
+              "anchorDeviceItemPath": "PLC_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "EnsureSubnet",
+      "family": "F20",
+      "example": {
+        "anchorDeviceItemPath": "PLC_1/CPU_1",
+        "subnetType": "System:Subnet.Ethernet",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "AttachDeviceNodeToSubnet",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "interfaceIndex": 1,
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetProjectTopology",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildDeviceAmlDocument",
+      "family": "F21",
+      "example": {
+        "spec": {
+          "projectName": "Example",
+          "devices": [
+            {
+              "name": "PLC_1",
+              "typeIdentifier": "System:Device.S71500",
+              "deviceItems": []
+            }
+          ]
+        },
+        "outputPath": "C:\\Examples\\generated\\Example.aml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportDeviceAml",
+      "family": "F21",
+      "example": {
+        "devicePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\Device.aml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportDeviceAml",
+      "family": "F21",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Device.aml",
+        "logFilePath": "C:\\Examples\\import.log",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "GetDeviceAddressing",
       "family": "F19",
       "example": {
@@ -3835,6 +5443,434 @@
     },
     {
       "releaseKey": "17",
+      "entry": "CreateDevice",
+      "family": "F18",
+      "example": {
+        "orderNumber": "6ES7 515-2AM02-0AB0",
+        "version": "V2.9",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreateGsdDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListDevices",
+      "family": "F18",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceInfo",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceItemInfo",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceItemTree",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SearchInstalledGsdDevices",
+      "family": "F18",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceAttributes",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetDeviceItemAttribute",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "attributeName": "Name",
+        "value": "TRUE"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetPlcCpuSettings",
+      "family": "F18",
+      "example": {
+        "cpuPath": "PLC_1/CPU_1",
+        "settings": {
+          "exactAttributes": {
+            "Name": "PLC_1"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDevicePlugLocations",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PlugDeviceItem",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/导轨_0",
+        "orderNumber": "6ES7 521-1BH00-0AB0",
+        "version": "V2.2",
+        "positionNumber": 2,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageHardwareObject",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "PLC_2"
+        ],
+        "action": "deleteDevice",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageDeviceUserGroup",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetHardwareFeatures",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageDeviceServiceObjects",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webApplications",
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageHardwareUtilities",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExchangeSystemDiagnosticsSettings",
+      "family": "F18",
+      "example": {
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListIoSystems",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageIoSystem",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "name": "ExampleIO",
+        "subnetName": "PN_IE_1",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListNetworkDomains",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageNetworkDomain",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1",
+        "kind": "sync",
+        "action": "create",
+        "name": "ExampleSyncDomain",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListTransferAreas",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageTransferArea",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "kind": "standard",
+        "name": "ExampleTransfer",
+        "type": "IN",
+        "positionNumber": 0,
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListDeviceItemChannels",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetDeviceItemChannel",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "channelType": "None",
+        "channelIoType": "None",
+        "channelNumber": 1,
+        "attributes": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePortInterconnection",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetDeviceItemNetworkInfo",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConnectDeviceNodesToProfinetSubnet",
+      "family": "F20",
+      "example": {
+        "firstRootPath": "PLC_1",
+        "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PlanHardwareNetworkConfiguration",
+      "family": "F20",
+      "example": {
+        "plan": {
+          "operations": [
+            {
+              "type": "EnsureSubnet",
+              "subnetName": "PN_IE_1",
+              "subnetType": "PROFINET",
+              "anchorDeviceItemPath": "PLC_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "EnsureSubnet",
+      "family": "F20",
+      "example": {
+        "anchorDeviceItemPath": "PLC_1/CPU_1",
+        "subnetType": "System:Subnet.Ethernet",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "AttachDeviceNodeToSubnet",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "interfaceIndex": 1,
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetProjectTopology",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildDeviceAmlDocument",
+      "family": "F21",
+      "example": {
+        "spec": {
+          "projectName": "Example",
+          "devices": [
+            {
+              "name": "PLC_1",
+              "typeIdentifier": "System:Device.S71500",
+              "deviceItems": []
+            }
+          ]
+        },
+        "outputPath": "C:\\Examples\\generated\\Example.aml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportDeviceAml",
+      "family": "F21",
+      "example": {
+        "devicePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\Device.aml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportDeviceAml",
+      "family": "F21",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Device.aml",
+        "logFilePath": "C:\\Examples\\import.log",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "GetDeviceAddressing",
       "family": "F19",
       "example": {
@@ -3888,6 +5924,434 @@
     },
     {
       "releaseKey": "18",
+      "entry": "CreateDevice",
+      "family": "F18",
+      "example": {
+        "orderNumber": "6ES7 515-2AM02-0AB0",
+        "version": "V2.9",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreateGsdDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListDevices",
+      "family": "F18",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceInfo",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceItemInfo",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceItemTree",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SearchInstalledGsdDevices",
+      "family": "F18",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceAttributes",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetDeviceItemAttribute",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "attributeName": "Name",
+        "value": "TRUE"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetPlcCpuSettings",
+      "family": "F18",
+      "example": {
+        "cpuPath": "PLC_1/CPU_1",
+        "settings": {
+          "exactAttributes": {
+            "Name": "PLC_1"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDevicePlugLocations",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PlugDeviceItem",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/导轨_0",
+        "orderNumber": "6ES7 521-1BH00-0AB0",
+        "version": "V2.2",
+        "positionNumber": 2,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageHardwareObject",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "PLC_2"
+        ],
+        "action": "deleteDevice",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDeviceUserGroup",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetHardwareFeatures",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDeviceServiceObjects",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webApplications",
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageHardwareUtilities",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExchangeSystemDiagnosticsSettings",
+      "family": "F18",
+      "example": {
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListIoSystems",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageIoSystem",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "name": "ExampleIO",
+        "subnetName": "PN_IE_1",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListNetworkDomains",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageNetworkDomain",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1",
+        "kind": "sync",
+        "action": "create",
+        "name": "ExampleSyncDomain",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListTransferAreas",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTransferArea",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "kind": "standard",
+        "name": "ExampleTransfer",
+        "type": "IN",
+        "positionNumber": 0,
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListDeviceItemChannels",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetDeviceItemChannel",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "channelType": "None",
+        "channelIoType": "None",
+        "channelNumber": 1,
+        "attributes": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePortInterconnection",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetDeviceItemNetworkInfo",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConnectDeviceNodesToProfinetSubnet",
+      "family": "F20",
+      "example": {
+        "firstRootPath": "PLC_1",
+        "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PlanHardwareNetworkConfiguration",
+      "family": "F20",
+      "example": {
+        "plan": {
+          "operations": [
+            {
+              "type": "EnsureSubnet",
+              "subnetName": "PN_IE_1",
+              "subnetType": "PROFINET",
+              "anchorDeviceItemPath": "PLC_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "EnsureSubnet",
+      "family": "F20",
+      "example": {
+        "anchorDeviceItemPath": "PLC_1/CPU_1",
+        "subnetType": "System:Subnet.Ethernet",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "AttachDeviceNodeToSubnet",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "interfaceIndex": 1,
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetProjectTopology",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildDeviceAmlDocument",
+      "family": "F21",
+      "example": {
+        "spec": {
+          "projectName": "Example",
+          "devices": [
+            {
+              "name": "PLC_1",
+              "typeIdentifier": "System:Device.S71500",
+              "deviceItems": []
+            }
+          ]
+        },
+        "outputPath": "C:\\Examples\\generated\\Example.aml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportDeviceAml",
+      "family": "F21",
+      "example": {
+        "devicePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\Device.aml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportDeviceAml",
+      "family": "F21",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Device.aml",
+        "logFilePath": "C:\\Examples\\import.log",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "GetDeviceAddressing",
       "family": "F19",
       "example": {
@@ -3936,6 +6400,434 @@
         "deviceItemPath": "PLC_1/CPU_1",
         "ioType": "Input",
         "startAddress": 1,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateDevice",
+      "family": "F18",
+      "example": {
+        "orderNumber": "6ES7 515-2AM02-0AB0",
+        "version": "V2.9",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateGsdDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateHardwareCatalogDevice",
+      "family": "F18",
+      "example": {
+        "keyword": "1513",
+        "deviceName": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListDevices",
+      "family": "F18",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceInfo",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceItemInfo",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceItemTree",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SearchInstalledGsdDevices",
+      "family": "F18",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceAttributes",
+      "family": "F18",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetDeviceItemAttribute",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "attributeName": "Name",
+        "value": "TRUE"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetPlcCpuSettings",
+      "family": "F18",
+      "example": {
+        "cpuPath": "PLC_1/CPU_1",
+        "settings": {
+          "exactAttributes": {
+            "Name": "PLC_1"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDevicePlugLocations",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PlugDeviceItem",
+      "family": "F18",
+      "example": {
+        "deviceItemPath": "PLC_1/导轨_0",
+        "orderNumber": "6ES7 521-1BH00-0AB0",
+        "version": "V2.2",
+        "positionNumber": 2,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageHardwareObject",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "PLC_2"
+        ],
+        "action": "deleteDevice",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDeviceUserGroup",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetHardwareFeatures",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDeviceServiceObjects",
+      "family": "F18",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webApplications",
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageHardwareUtilities",
+      "family": "F18",
+      "example": {
+        "dryRun": true,
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangeSystemDiagnosticsSettings",
+      "family": "F18",
+      "example": {
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListIoSystems",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageIoSystem",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "name": "ExampleIO",
+        "subnetName": "PN_IE_1",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListNetworkDomains",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageNetworkDomain",
+      "family": "F20",
+      "example": {
+        "subnetName": "PN_IE_1",
+        "kind": "sync",
+        "action": "create",
+        "name": "ExampleSyncDomain",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListTransferAreas",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTransferArea",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "action": "create",
+        "kind": "standard",
+        "name": "ExampleTransfer",
+        "type": "IN",
+        "positionNumber": 0,
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListDeviceItemChannels",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetDeviceItemChannel",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "channelType": "None",
+        "channelIoType": "None",
+        "channelNumber": 1,
+        "attributes": {
+          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+        },
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePortInterconnection",
+      "family": "F20",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetDeviceItemNetworkInfo",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConnectDeviceNodesToProfinetSubnet",
+      "family": "F20",
+      "example": {
+        "firstRootPath": "PLC_1",
+        "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PlanHardwareNetworkConfiguration",
+      "family": "F20",
+      "example": {
+        "plan": {
+          "operations": [
+            {
+              "type": "EnsureSubnet",
+              "subnetName": "PN_IE_1",
+              "subnetType": "PROFINET",
+              "anchorDeviceItemPath": "PLC_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureSubnet",
+      "family": "F20",
+      "example": {
+        "anchorDeviceItemPath": "PLC_1/CPU_1",
+        "subnetType": "System:Subnet.Ethernet",
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "AttachDeviceNodeToSubnet",
+      "family": "F20",
+      "example": {
+        "deviceItemPath": "PLC_1/CPU_1",
+        "interfaceIndex": 1,
+        "subnetName": "PN_IE_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "family": "F20",
+      "example": {
+        "plcRootPath": "PLC_1",
+        "hmiRootPath": "HMI_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetProjectTopology",
+      "family": "F20",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildDeviceAmlDocument",
+      "family": "F21",
+      "example": {
+        "spec": {
+          "projectName": "Example",
+          "devices": [
+            {
+              "name": "PLC_1",
+              "typeIdentifier": "System:Device.S71500",
+              "deviceItems": []
+            }
+          ]
+        },
+        "outputPath": "C:\\Examples\\generated\\Example.aml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportDeviceAml",
+      "family": "F21",
+      "example": {
+        "devicePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\Device.aml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportDeviceAml",
+      "family": "F21",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Device.aml",
+        "logFilePath": "C:\\Examples\\import.log",
+        "confirmImport": false,
         "dryRun": true
       }
     },
@@ -19655,6 +22547,60 @@
     ],
     "14sp1": [
       {
+        "name": "CreateDevice",
+        "currentName": "CreateDevice",
+        "sourceName": "AddDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateGsdDevice",
+        "currentName": "CreateGsdDevice",
+        "sourceName": "AddGsdDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareCatalogDevice",
+        "currentName": "CreateHardwareCatalogDevice",
+        "sourceName": "AddHardwareCatalogDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AttachDeviceNodeToSubnet",
+        "currentName": "AttachDeviceNodeToSubnet",
+        "sourceName": "AttachDeviceNodeToSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachOpenProject",
         "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
@@ -19675,6 +22621,28 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildDeviceAmlDocument",
+        "currentName": "BuildDeviceAmlDocument",
+        "sourceName": "BuildDeviceAmlDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
         "envelopeVersion": 4
       },
       {
@@ -19972,6 +22940,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectDeviceNodesToProfinetSubnet",
+        "currentName": "ConnectDeviceNodesToProfinetSubnet",
+        "sourceName": "ConnectDeviceNodesToProfinetSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -20077,6 +23059,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
+        "sourceName": "DumpDeviceAttributes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureSubnet",
+        "currentName": "EnsureSubnet",
+        "sourceName": "EnsureSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeSystemDiagnosticsSettings",
+        "currentName": "ExchangeSystemDiagnosticsSettings",
+        "sourceName": "ExchangeSystemDiagnosticsSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -20105,6 +23128,19 @@
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportDeviceAml",
+        "currentName": "ExportDeviceAml",
+        "sourceName": "ExportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
       },
@@ -20209,6 +23245,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceInfo",
+        "currentName": "GetDeviceInfo",
+        "sourceName": "GetDeviceInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceIpAddress",
         "currentName": "GetDeviceIpAddress",
         "sourceName": "GetDeviceIpAddress",
@@ -20217,6 +23265,18 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemInfo",
+        "currentName": "GetDeviceItemInfo",
+        "sourceName": "GetDeviceItemInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
         },
         "envelopeVersion": 4
       },
@@ -20230,6 +23290,52 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemNetworkInfo",
+        "currentName": "GetDeviceItemNetworkInfo",
+        "sourceName": "GetDeviceItemNetworkInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemTree",
+        "currentName": "GetDeviceItemTree",
+        "sourceName": "GetDeviceItemTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDevicePlugLocations",
+        "currentName": "GetDevicePlugLocations",
+        "sourceName": "GetDevicePlugLocations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "ListDevices",
+        "sourceName": "GetDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -20260,6 +23366,16 @@
         "name": "GetProjectInfo",
         "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectTopology",
+        "currentName": "GetProjectTopology",
+        "sourceName": "GetProjectTopology",
         "profiles": [
           "plc-foundation"
         ],
@@ -20395,6 +23511,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportDeviceAml",
+        "currentName": "ImportDeviceAml",
+        "sourceName": "ImportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -20484,6 +23615,151 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceServiceObjects",
+        "currentName": "ManageDeviceServiceObjects",
+        "sourceName": "ManageDeviceServiceObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUserGroup",
+        "currentName": "ManageDeviceUserGroup",
+        "sourceName": "ManageDeviceUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareObject",
+        "currentName": "ManageHardwareObject",
+        "sourceName": "ManageHardwareObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareUtilities",
+        "currentName": "ManageHardwareUtilities",
+        "sourceName": "ManageHardwareUtilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageIoSystem",
+        "currentName": "ManageIoSystem",
+        "sourceName": "ManageIoSystem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageNetworkDomain",
+        "currentName": "ManageNetworkDomain",
+        "sourceName": "ManageNetworkDomain",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePortInterconnection",
+        "currentName": "ManagePortInterconnection",
+        "sourceName": "ManagePortInterconnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTransferArea",
+        "currentName": "ManageTransferArea",
+        "sourceName": "ManageTransferArea",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -20520,6 +23796,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlanHardwareNetworkConfiguration",
+        "currentName": "PlanHardwareNetworkConfiguration",
+        "sourceName": "PlanHardwareNetworkConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanPlcExternalSourceImport",
         "currentName": "PlanPlcExternalSourceImport",
         "sourceName": "PlanPlcExternalSourceImport",
@@ -20537,6 +23834,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlugDeviceItem",
+        "currentName": "PlugDeviceItem",
+        "sourceName": "PlugDeviceItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "currentName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "sourceName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -20547,6 +23886,59 @@
           "devicePath": [
             "&lt;exact device name from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
+        "sourceName": "ReadDeviceItemChannels",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
+        "sourceName": "ReadHardwareFeatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListIoSystems",
+        "currentName": "ListIoSystems",
+        "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListNetworkDomains",
+        "currentName": "ListNetworkDomains",
+        "sourceName": "ReadNetworkDomains",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -20586,6 +23978,23 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferAreas",
+        "currentName": "ListTransferAreas",
+        "sourceName": "ReadTransferAreas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -20643,6 +24052,49 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchInstalledGsdDevices",
+        "currentName": "SearchInstalledGsdDevices",
+        "sourceName": "SearchInstalledGsdDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcCpuSettings",
+        "currentName": "SetPlcCpuSettings",
+        "sourceName": "SetCpuCommonSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemAttribute",
+        "currentName": "SetDeviceItemAttribute",
+        "sourceName": "SetDeviceItemAttribute",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceItemIoAddress",
         "currentName": "SetDeviceItemIoAddress",
         "sourceName": "SetDeviceItemIoAddress",
@@ -20692,6 +24144,30 @@
           ],
           "ioType": "None",
           "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
+        "sourceName": "UpdateDeviceItemChannel",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -20699,6 +24175,60 @@
     ],
     "15.1": [
       {
+        "name": "CreateDevice",
+        "currentName": "CreateDevice",
+        "sourceName": "AddDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateGsdDevice",
+        "currentName": "CreateGsdDevice",
+        "sourceName": "AddGsdDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareCatalogDevice",
+        "currentName": "CreateHardwareCatalogDevice",
+        "sourceName": "AddHardwareCatalogDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AttachDeviceNodeToSubnet",
+        "currentName": "AttachDeviceNodeToSubnet",
+        "sourceName": "AttachDeviceNodeToSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachOpenProject",
         "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
@@ -20719,6 +24249,28 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildDeviceAmlDocument",
+        "currentName": "BuildDeviceAmlDocument",
+        "sourceName": "BuildDeviceAmlDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
         "envelopeVersion": 4
       },
       {
@@ -21016,6 +24568,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectDeviceNodesToProfinetSubnet",
+        "currentName": "ConnectDeviceNodesToProfinetSubnet",
+        "sourceName": "ConnectDeviceNodesToProfinetSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -21121,6 +24687,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
+        "sourceName": "DumpDeviceAttributes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureSubnet",
+        "currentName": "EnsureSubnet",
+        "sourceName": "EnsureSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeSystemDiagnosticsSettings",
+        "currentName": "ExchangeSystemDiagnosticsSettings",
+        "sourceName": "ExchangeSystemDiagnosticsSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -21149,6 +24756,19 @@
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportDeviceAml",
+        "currentName": "ExportDeviceAml",
+        "sourceName": "ExportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
       },
@@ -21253,6 +24873,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceInfo",
+        "currentName": "GetDeviceInfo",
+        "sourceName": "GetDeviceInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceIpAddress",
         "currentName": "GetDeviceIpAddress",
         "sourceName": "GetDeviceIpAddress",
@@ -21261,6 +24893,18 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemInfo",
+        "currentName": "GetDeviceItemInfo",
+        "sourceName": "GetDeviceItemInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
         },
         "envelopeVersion": 4
       },
@@ -21274,6 +24918,52 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemNetworkInfo",
+        "currentName": "GetDeviceItemNetworkInfo",
+        "sourceName": "GetDeviceItemNetworkInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemTree",
+        "currentName": "GetDeviceItemTree",
+        "sourceName": "GetDeviceItemTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDevicePlugLocations",
+        "currentName": "GetDevicePlugLocations",
+        "sourceName": "GetDevicePlugLocations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "ListDevices",
+        "sourceName": "GetDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -21316,6 +25006,16 @@
         "name": "GetProjectInfo",
         "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectTopology",
+        "currentName": "GetProjectTopology",
+        "sourceName": "GetProjectTopology",
         "profiles": [
           "plc-foundation"
         ],
@@ -21451,6 +25151,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportDeviceAml",
+        "currentName": "ImportDeviceAml",
+        "sourceName": "ImportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -21540,6 +25255,151 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceServiceObjects",
+        "currentName": "ManageDeviceServiceObjects",
+        "sourceName": "ManageDeviceServiceObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUserGroup",
+        "currentName": "ManageDeviceUserGroup",
+        "sourceName": "ManageDeviceUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareObject",
+        "currentName": "ManageHardwareObject",
+        "sourceName": "ManageHardwareObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareUtilities",
+        "currentName": "ManageHardwareUtilities",
+        "sourceName": "ManageHardwareUtilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageIoSystem",
+        "currentName": "ManageIoSystem",
+        "sourceName": "ManageIoSystem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageNetworkDomain",
+        "currentName": "ManageNetworkDomain",
+        "sourceName": "ManageNetworkDomain",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePortInterconnection",
+        "currentName": "ManagePortInterconnection",
+        "sourceName": "ManagePortInterconnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTransferArea",
+        "currentName": "ManageTransferArea",
+        "sourceName": "ManageTransferArea",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -21576,6 +25436,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlanHardwareNetworkConfiguration",
+        "currentName": "PlanHardwareNetworkConfiguration",
+        "sourceName": "PlanHardwareNetworkConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanPlcExternalSourceImport",
         "currentName": "PlanPlcExternalSourceImport",
         "sourceName": "PlanPlcExternalSourceImport",
@@ -21593,6 +25474,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlugDeviceItem",
+        "currentName": "PlugDeviceItem",
+        "sourceName": "PlugDeviceItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "currentName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "sourceName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -21603,6 +25526,59 @@
           "devicePath": [
             "&lt;exact device name from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
+        "sourceName": "ReadDeviceItemChannels",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
+        "sourceName": "ReadHardwareFeatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListIoSystems",
+        "currentName": "ListIoSystems",
+        "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListNetworkDomains",
+        "currentName": "ListNetworkDomains",
+        "sourceName": "ReadNetworkDomains",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -21642,6 +25618,23 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferAreas",
+        "currentName": "ListTransferAreas",
+        "sourceName": "ReadTransferAreas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -21699,6 +25692,49 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchInstalledGsdDevices",
+        "currentName": "SearchInstalledGsdDevices",
+        "sourceName": "SearchInstalledGsdDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcCpuSettings",
+        "currentName": "SetPlcCpuSettings",
+        "sourceName": "SetCpuCommonSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemAttribute",
+        "currentName": "SetDeviceItemAttribute",
+        "sourceName": "SetDeviceItemAttribute",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceItemIoAddress",
         "currentName": "SetDeviceItemIoAddress",
         "sourceName": "SetDeviceItemIoAddress",
@@ -21748,6 +25784,30 @@
           ],
           "ioType": "None",
           "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
+        "sourceName": "UpdateDeviceItemChannel",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -21755,6 +25815,60 @@
     ],
     "16": [
       {
+        "name": "CreateDevice",
+        "currentName": "CreateDevice",
+        "sourceName": "AddDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateGsdDevice",
+        "currentName": "CreateGsdDevice",
+        "sourceName": "AddGsdDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareCatalogDevice",
+        "currentName": "CreateHardwareCatalogDevice",
+        "sourceName": "AddHardwareCatalogDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AttachDeviceNodeToSubnet",
+        "currentName": "AttachDeviceNodeToSubnet",
+        "sourceName": "AttachDeviceNodeToSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachOpenProject",
         "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
@@ -21775,6 +25889,28 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildDeviceAmlDocument",
+        "currentName": "BuildDeviceAmlDocument",
+        "sourceName": "BuildDeviceAmlDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
         "envelopeVersion": 4
       },
       {
@@ -22072,6 +26208,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectDeviceNodesToProfinetSubnet",
+        "currentName": "ConnectDeviceNodesToProfinetSubnet",
+        "sourceName": "ConnectDeviceNodesToProfinetSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -22177,6 +26327,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
+        "sourceName": "DumpDeviceAttributes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureSubnet",
+        "currentName": "EnsureSubnet",
+        "sourceName": "EnsureSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeSystemDiagnosticsSettings",
+        "currentName": "ExchangeSystemDiagnosticsSettings",
+        "sourceName": "ExchangeSystemDiagnosticsSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -22205,6 +26396,19 @@
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportDeviceAml",
+        "currentName": "ExportDeviceAml",
+        "sourceName": "ExportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
       },
@@ -22341,6 +26545,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceInfo",
+        "currentName": "GetDeviceInfo",
+        "sourceName": "GetDeviceInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceIpAddress",
         "currentName": "GetDeviceIpAddress",
         "sourceName": "GetDeviceIpAddress",
@@ -22349,6 +26565,18 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemInfo",
+        "currentName": "GetDeviceItemInfo",
+        "sourceName": "GetDeviceItemInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
         },
         "envelopeVersion": 4
       },
@@ -22362,6 +26590,52 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemNetworkInfo",
+        "currentName": "GetDeviceItemNetworkInfo",
+        "sourceName": "GetDeviceItemNetworkInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemTree",
+        "currentName": "GetDeviceItemTree",
+        "sourceName": "GetDeviceItemTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDevicePlugLocations",
+        "currentName": "GetDevicePlugLocations",
+        "sourceName": "GetDevicePlugLocations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "ListDevices",
+        "sourceName": "GetDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -22404,6 +26678,16 @@
         "name": "GetProjectInfo",
         "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectTopology",
+        "currentName": "GetProjectTopology",
+        "sourceName": "GetProjectTopology",
         "profiles": [
           "plc-foundation"
         ],
@@ -22539,6 +26823,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportDeviceAml",
+        "currentName": "ImportDeviceAml",
+        "sourceName": "ImportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -22628,6 +26927,151 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceServiceObjects",
+        "currentName": "ManageDeviceServiceObjects",
+        "sourceName": "ManageDeviceServiceObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUserGroup",
+        "currentName": "ManageDeviceUserGroup",
+        "sourceName": "ManageDeviceUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareObject",
+        "currentName": "ManageHardwareObject",
+        "sourceName": "ManageHardwareObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareUtilities",
+        "currentName": "ManageHardwareUtilities",
+        "sourceName": "ManageHardwareUtilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageIoSystem",
+        "currentName": "ManageIoSystem",
+        "sourceName": "ManageIoSystem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageNetworkDomain",
+        "currentName": "ManageNetworkDomain",
+        "sourceName": "ManageNetworkDomain",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePortInterconnection",
+        "currentName": "ManagePortInterconnection",
+        "sourceName": "ManagePortInterconnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTransferArea",
+        "currentName": "ManageTransferArea",
+        "sourceName": "ManageTransferArea",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -22664,6 +27108,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlanHardwareNetworkConfiguration",
+        "currentName": "PlanHardwareNetworkConfiguration",
+        "sourceName": "PlanHardwareNetworkConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanPlcExternalSourceImport",
         "currentName": "PlanPlcExternalSourceImport",
         "sourceName": "PlanPlcExternalSourceImport",
@@ -22681,6 +27146,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlugDeviceItem",
+        "currentName": "PlugDeviceItem",
+        "sourceName": "PlugDeviceItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "currentName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "sourceName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -22691,6 +27198,59 @@
           "devicePath": [
             "&lt;exact device name from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
+        "sourceName": "ReadDeviceItemChannels",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
+        "sourceName": "ReadHardwareFeatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListIoSystems",
+        "currentName": "ListIoSystems",
+        "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListNetworkDomains",
+        "currentName": "ListNetworkDomains",
+        "sourceName": "ReadNetworkDomains",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -22730,6 +27290,23 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferAreas",
+        "currentName": "ListTransferAreas",
+        "sourceName": "ReadTransferAreas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -22787,6 +27364,49 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchInstalledGsdDevices",
+        "currentName": "SearchInstalledGsdDevices",
+        "sourceName": "SearchInstalledGsdDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcCpuSettings",
+        "currentName": "SetPlcCpuSettings",
+        "sourceName": "SetCpuCommonSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemAttribute",
+        "currentName": "SetDeviceItemAttribute",
+        "sourceName": "SetDeviceItemAttribute",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceItemIoAddress",
         "currentName": "SetDeviceItemIoAddress",
         "sourceName": "SetDeviceItemIoAddress",
@@ -22836,6 +27456,30 @@
           ],
           "ioType": "None",
           "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
+        "sourceName": "UpdateDeviceItemChannel",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -22843,6 +27487,60 @@
     ],
     "17": [
       {
+        "name": "CreateDevice",
+        "currentName": "CreateDevice",
+        "sourceName": "AddDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateGsdDevice",
+        "currentName": "CreateGsdDevice",
+        "sourceName": "AddGsdDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareCatalogDevice",
+        "currentName": "CreateHardwareCatalogDevice",
+        "sourceName": "AddHardwareCatalogDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AttachDeviceNodeToSubnet",
+        "currentName": "AttachDeviceNodeToSubnet",
+        "sourceName": "AttachDeviceNodeToSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachOpenProject",
         "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
@@ -22863,6 +27561,28 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildDeviceAmlDocument",
+        "currentName": "BuildDeviceAmlDocument",
+        "sourceName": "BuildDeviceAmlDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
         "envelopeVersion": 4
       },
       {
@@ -23160,6 +27880,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectDeviceNodesToProfinetSubnet",
+        "currentName": "ConnectDeviceNodesToProfinetSubnet",
+        "sourceName": "ConnectDeviceNodesToProfinetSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -23265,6 +27999,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
+        "sourceName": "DumpDeviceAttributes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureSubnet",
+        "currentName": "EnsureSubnet",
+        "sourceName": "EnsureSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeSystemDiagnosticsSettings",
+        "currentName": "ExchangeSystemDiagnosticsSettings",
+        "sourceName": "ExchangeSystemDiagnosticsSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -23293,6 +28068,19 @@
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportDeviceAml",
+        "currentName": "ExportDeviceAml",
+        "sourceName": "ExportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
       },
@@ -23429,6 +28217,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceInfo",
+        "currentName": "GetDeviceInfo",
+        "sourceName": "GetDeviceInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceIpAddress",
         "currentName": "GetDeviceIpAddress",
         "sourceName": "GetDeviceIpAddress",
@@ -23437,6 +28237,18 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemInfo",
+        "currentName": "GetDeviceItemInfo",
+        "sourceName": "GetDeviceItemInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
         },
         "envelopeVersion": 4
       },
@@ -23450,6 +28262,52 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemNetworkInfo",
+        "currentName": "GetDeviceItemNetworkInfo",
+        "sourceName": "GetDeviceItemNetworkInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemTree",
+        "currentName": "GetDeviceItemTree",
+        "sourceName": "GetDeviceItemTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDevicePlugLocations",
+        "currentName": "GetDevicePlugLocations",
+        "sourceName": "GetDevicePlugLocations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "ListDevices",
+        "sourceName": "GetDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -23492,6 +28350,16 @@
         "name": "GetProjectInfo",
         "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectTopology",
+        "currentName": "GetProjectTopology",
+        "sourceName": "GetProjectTopology",
         "profiles": [
           "plc-foundation"
         ],
@@ -23627,6 +28495,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportDeviceAml",
+        "currentName": "ImportDeviceAml",
+        "sourceName": "ImportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -23716,6 +28599,151 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceServiceObjects",
+        "currentName": "ManageDeviceServiceObjects",
+        "sourceName": "ManageDeviceServiceObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUserGroup",
+        "currentName": "ManageDeviceUserGroup",
+        "sourceName": "ManageDeviceUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareObject",
+        "currentName": "ManageHardwareObject",
+        "sourceName": "ManageHardwareObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareUtilities",
+        "currentName": "ManageHardwareUtilities",
+        "sourceName": "ManageHardwareUtilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageIoSystem",
+        "currentName": "ManageIoSystem",
+        "sourceName": "ManageIoSystem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageNetworkDomain",
+        "currentName": "ManageNetworkDomain",
+        "sourceName": "ManageNetworkDomain",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePortInterconnection",
+        "currentName": "ManagePortInterconnection",
+        "sourceName": "ManagePortInterconnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTransferArea",
+        "currentName": "ManageTransferArea",
+        "sourceName": "ManageTransferArea",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -23752,6 +28780,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlanHardwareNetworkConfiguration",
+        "currentName": "PlanHardwareNetworkConfiguration",
+        "sourceName": "PlanHardwareNetworkConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanPlcExternalSourceImport",
         "currentName": "PlanPlcExternalSourceImport",
         "sourceName": "PlanPlcExternalSourceImport",
@@ -23769,6 +28818,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlugDeviceItem",
+        "currentName": "PlugDeviceItem",
+        "sourceName": "PlugDeviceItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "currentName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "sourceName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -23779,6 +28870,59 @@
           "devicePath": [
             "&lt;exact device name from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
+        "sourceName": "ReadDeviceItemChannels",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
+        "sourceName": "ReadHardwareFeatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListIoSystems",
+        "currentName": "ListIoSystems",
+        "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListNetworkDomains",
+        "currentName": "ListNetworkDomains",
+        "sourceName": "ReadNetworkDomains",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -23818,6 +28962,23 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferAreas",
+        "currentName": "ListTransferAreas",
+        "sourceName": "ReadTransferAreas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -23875,6 +29036,49 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchInstalledGsdDevices",
+        "currentName": "SearchInstalledGsdDevices",
+        "sourceName": "SearchInstalledGsdDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcCpuSettings",
+        "currentName": "SetPlcCpuSettings",
+        "sourceName": "SetCpuCommonSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemAttribute",
+        "currentName": "SetDeviceItemAttribute",
+        "sourceName": "SetDeviceItemAttribute",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceItemIoAddress",
         "currentName": "SetDeviceItemIoAddress",
         "sourceName": "SetDeviceItemIoAddress",
@@ -23924,6 +29128,30 @@
           ],
           "ioType": "None",
           "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
+        "sourceName": "UpdateDeviceItemChannel",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -23931,6 +29159,60 @@
     ],
     "18": [
       {
+        "name": "CreateDevice",
+        "currentName": "CreateDevice",
+        "sourceName": "AddDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateGsdDevice",
+        "currentName": "CreateGsdDevice",
+        "sourceName": "AddGsdDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareCatalogDevice",
+        "currentName": "CreateHardwareCatalogDevice",
+        "sourceName": "AddHardwareCatalogDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AttachDeviceNodeToSubnet",
+        "currentName": "AttachDeviceNodeToSubnet",
+        "sourceName": "AttachDeviceNodeToSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachOpenProject",
         "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
@@ -23951,6 +29233,28 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildDeviceAmlDocument",
+        "currentName": "BuildDeviceAmlDocument",
+        "sourceName": "BuildDeviceAmlDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
         "envelopeVersion": 4
       },
       {
@@ -24248,6 +29552,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectDeviceNodesToProfinetSubnet",
+        "currentName": "ConnectDeviceNodesToProfinetSubnet",
+        "sourceName": "ConnectDeviceNodesToProfinetSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -24353,6 +29671,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
+        "sourceName": "DumpDeviceAttributes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureSubnet",
+        "currentName": "EnsureSubnet",
+        "sourceName": "EnsureSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeSystemDiagnosticsSettings",
+        "currentName": "ExchangeSystemDiagnosticsSettings",
+        "sourceName": "ExchangeSystemDiagnosticsSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -24381,6 +29740,19 @@
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportDeviceAml",
+        "currentName": "ExportDeviceAml",
+        "sourceName": "ExportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
       },
@@ -24517,6 +29889,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceInfo",
+        "currentName": "GetDeviceInfo",
+        "sourceName": "GetDeviceInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceIpAddress",
         "currentName": "GetDeviceIpAddress",
         "sourceName": "GetDeviceIpAddress",
@@ -24525,6 +29909,18 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemInfo",
+        "currentName": "GetDeviceItemInfo",
+        "sourceName": "GetDeviceItemInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
         },
         "envelopeVersion": 4
       },
@@ -24538,6 +29934,52 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemNetworkInfo",
+        "currentName": "GetDeviceItemNetworkInfo",
+        "sourceName": "GetDeviceItemNetworkInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemTree",
+        "currentName": "GetDeviceItemTree",
+        "sourceName": "GetDeviceItemTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDevicePlugLocations",
+        "currentName": "GetDevicePlugLocations",
+        "sourceName": "GetDevicePlugLocations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "ListDevices",
+        "sourceName": "GetDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -24580,6 +30022,16 @@
         "name": "GetProjectInfo",
         "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectTopology",
+        "currentName": "GetProjectTopology",
+        "sourceName": "GetProjectTopology",
         "profiles": [
           "plc-foundation"
         ],
@@ -24715,6 +30167,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportDeviceAml",
+        "currentName": "ImportDeviceAml",
+        "sourceName": "ImportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -24804,6 +30271,151 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceServiceObjects",
+        "currentName": "ManageDeviceServiceObjects",
+        "sourceName": "ManageDeviceServiceObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUserGroup",
+        "currentName": "ManageDeviceUserGroup",
+        "sourceName": "ManageDeviceUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareObject",
+        "currentName": "ManageHardwareObject",
+        "sourceName": "ManageHardwareObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareUtilities",
+        "currentName": "ManageHardwareUtilities",
+        "sourceName": "ManageHardwareUtilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageIoSystem",
+        "currentName": "ManageIoSystem",
+        "sourceName": "ManageIoSystem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageNetworkDomain",
+        "currentName": "ManageNetworkDomain",
+        "sourceName": "ManageNetworkDomain",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePortInterconnection",
+        "currentName": "ManagePortInterconnection",
+        "sourceName": "ManagePortInterconnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTransferArea",
+        "currentName": "ManageTransferArea",
+        "sourceName": "ManageTransferArea",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -24840,6 +30452,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlanHardwareNetworkConfiguration",
+        "currentName": "PlanHardwareNetworkConfiguration",
+        "sourceName": "PlanHardwareNetworkConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanPlcExternalSourceImport",
         "currentName": "PlanPlcExternalSourceImport",
         "sourceName": "PlanPlcExternalSourceImport",
@@ -24857,6 +30490,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlugDeviceItem",
+        "currentName": "PlugDeviceItem",
+        "sourceName": "PlugDeviceItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "currentName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "sourceName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -24867,6 +30542,59 @@
           "devicePath": [
             "&lt;exact device name from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
+        "sourceName": "ReadDeviceItemChannels",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
+        "sourceName": "ReadHardwareFeatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListIoSystems",
+        "currentName": "ListIoSystems",
+        "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListNetworkDomains",
+        "currentName": "ListNetworkDomains",
+        "sourceName": "ReadNetworkDomains",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -24906,6 +30634,23 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferAreas",
+        "currentName": "ListTransferAreas",
+        "sourceName": "ReadTransferAreas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -24963,6 +30708,49 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchInstalledGsdDevices",
+        "currentName": "SearchInstalledGsdDevices",
+        "sourceName": "SearchInstalledGsdDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcCpuSettings",
+        "currentName": "SetPlcCpuSettings",
+        "sourceName": "SetCpuCommonSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemAttribute",
+        "currentName": "SetDeviceItemAttribute",
+        "sourceName": "SetDeviceItemAttribute",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceItemIoAddress",
         "currentName": "SetDeviceItemIoAddress",
         "sourceName": "SetDeviceItemIoAddress",
@@ -25015,9 +30803,47 @@
           "dryRun": true
         },
         "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
+        "sourceName": "UpdateDeviceItemChannel",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
       }
     ],
     "19": [
+      {
+        "name": "CreateDevice",
+        "currentName": "CreateDevice",
+        "sourceName": "AddDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
       {
         "name": "CreateHardwareDevice",
         "currentName": "CreateHardwareDevice",
@@ -25036,6 +30862,46 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreateGsdDevice",
+        "currentName": "CreateGsdDevice",
+        "sourceName": "AddGsdDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareCatalogDevice",
+        "currentName": "CreateHardwareCatalogDevice",
+        "sourceName": "AddHardwareCatalogDeviceWithProbe",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "AttachDeviceNodeToSubnet",
+        "currentName": "AttachDeviceNodeToSubnet",
+        "sourceName": "AttachDeviceNodeToSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AttachOpenProject",
         "currentName": "AttachOpenProject",
         "sourceName": "AttachToOpenProject",
@@ -25056,6 +30922,28 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildDeviceAmlDocument",
+        "currentName": "BuildDeviceAmlDocument",
+        "sourceName": "BuildDeviceAmlDocument",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
         "envelopeVersion": 4
       },
       {
@@ -25353,6 +31241,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectDeviceNodesToProfinetSubnet",
+        "currentName": "ConnectDeviceNodesToProfinetSubnet",
+        "sourceName": "ConnectDeviceNodesToProfinetSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -25458,6 +31360,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceAttributes",
+        "currentName": "GetDeviceAttributes",
+        "sourceName": "DumpDeviceAttributes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureSubnet",
+        "currentName": "EnsureSubnet",
+        "sourceName": "EnsureSubnet",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangeSystemDiagnosticsSettings",
+        "currentName": "ExchangeSystemDiagnosticsSettings",
+        "sourceName": "ExchangeSystemDiagnosticsSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -25486,6 +31429,19 @@
           "exportPath": "&lt;existing caller-selected batch export directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportDeviceAml",
+        "currentName": "ExportDeviceAml",
+        "sourceName": "ExportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
         },
         "envelopeVersion": 4
       },
@@ -25622,6 +31578,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetDeviceInfo",
+        "currentName": "GetDeviceInfo",
+        "sourceName": "GetDeviceInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceIpAddress",
         "currentName": "GetDeviceIpAddress",
         "sourceName": "GetDeviceIpAddress",
@@ -25630,6 +31598,18 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemInfo",
+        "currentName": "GetDeviceItemInfo",
+        "sourceName": "GetDeviceItemInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
         },
         "envelopeVersion": 4
       },
@@ -25643,6 +31623,52 @@
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemNetworkInfo",
+        "currentName": "GetDeviceItemNetworkInfo",
+        "sourceName": "GetDeviceItemNetworkInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDeviceItemTree",
+        "currentName": "GetDeviceItemTree",
+        "sourceName": "GetDeviceItemTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetDevicePlugLocations",
+        "currentName": "GetDevicePlugLocations",
+        "sourceName": "GetDevicePlugLocations",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "ListDevices",
+        "sourceName": "GetDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -25685,6 +31711,16 @@
         "name": "GetProjectInfo",
         "currentName": "GetProjectInfo",
         "sourceName": "GetProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectTopology",
+        "currentName": "GetProjectTopology",
+        "sourceName": "GetProjectTopology",
         "profiles": [
           "plc-foundation"
         ],
@@ -25820,6 +31856,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportDeviceAml",
+        "currentName": "ImportDeviceAml",
+        "sourceName": "ImportDeviceAml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -25909,6 +31960,151 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceServiceObjects",
+        "currentName": "ManageDeviceServiceObjects",
+        "sourceName": "ManageDeviceServiceObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUserGroup",
+        "currentName": "ManageDeviceUserGroup",
+        "sourceName": "ManageDeviceUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareObject",
+        "currentName": "ManageHardwareObject",
+        "sourceName": "ManageHardwareObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageHardwareUtilities",
+        "currentName": "ManageHardwareUtilities",
+        "sourceName": "ManageHardwareUtilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageIoSystem",
+        "currentName": "ManageIoSystem",
+        "sourceName": "ManageIoSystem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageNetworkDomain",
+        "currentName": "ManageNetworkDomain",
+        "sourceName": "ManageNetworkDomain",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePortInterconnection",
+        "currentName": "ManagePortInterconnection",
+        "sourceName": "ManagePortInterconnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTransferArea",
+        "currentName": "ManageTransferArea",
+        "sourceName": "ManageTransferArea",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "OpenProject",
         "currentName": "OpenProject",
         "sourceName": "OpenProject",
@@ -25945,6 +32141,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlanHardwareNetworkConfiguration",
+        "currentName": "PlanHardwareNetworkConfiguration",
+        "sourceName": "PlanHardwareNetworkConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "PlanPlcExternalSourceImport",
         "currentName": "PlanPlcExternalSourceImport",
         "sourceName": "PlanPlcExternalSourceImport",
@@ -25962,6 +32179,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "PlugDeviceItem",
+        "currentName": "PlugDeviceItem",
+        "sourceName": "PlugDeviceItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "currentName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "sourceName": "ProbeHardwareHmiConnectionWhitelistedServices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -25972,6 +32231,59 @@
           "devicePath": [
             "&lt;exact device name from GetProjectTree&gt;"
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListDeviceItemChannels",
+        "currentName": "ListDeviceItemChannels",
+        "sourceName": "ReadDeviceItemChannels",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetHardwareFeatures",
+        "currentName": "GetHardwareFeatures",
+        "sourceName": "ReadHardwareFeatures",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListIoSystems",
+        "currentName": "ListIoSystems",
+        "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListNetworkDomains",
+        "currentName": "ListNetworkDomains",
+        "sourceName": "ReadNetworkDomains",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -26011,6 +32323,23 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListTransferAreas",
+        "currentName": "ListTransferAreas",
+        "sourceName": "ReadTransferAreas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -26080,6 +32409,49 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchInstalledGsdDevices",
+        "currentName": "SearchInstalledGsdDevices",
+        "sourceName": "SearchInstalledGsdDevices",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcCpuSettings",
+        "currentName": "SetPlcCpuSettings",
+        "sourceName": "SetCpuCommonSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemAttribute",
+        "currentName": "SetDeviceItemAttribute",
+        "sourceName": "SetDeviceItemAttribute",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetDeviceItemIoAddress",
         "currentName": "SetDeviceItemIoAddress",
         "sourceName": "SetDeviceItemIoAddress",
@@ -26129,6 +32501,30 @@
           ],
           "ioType": "None",
           "startAddress": 1,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetDeviceItemChannel",
+        "currentName": "SetDeviceItemChannel",
+        "sourceName": "UpdateDeviceItemChannel",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          },
           "dryRun": true
         },
         "envelopeVersion": 4

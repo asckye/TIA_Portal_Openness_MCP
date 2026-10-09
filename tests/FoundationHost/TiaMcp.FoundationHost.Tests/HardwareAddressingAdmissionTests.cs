@@ -115,7 +115,7 @@ public sealed class HardwareAddressingAdmissionTests
         Assert.Equal(0, service.Calls);
     }
 
-    private sealed class SessionFixture : IDisposable
+    internal sealed class SessionFixture : IDisposable
     {
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly IDisposable scope;
@@ -154,7 +154,7 @@ public sealed class HardwareAddressingAdmissionTests
             All = descriptors;
         }
     }
-    private sealed class UnboundWorker : IFoundationWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    internal sealed class UnboundWorker : IFoundationWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls;
         public bool Faulted => false;

@@ -77,13 +77,20 @@ namespace TiaMcp.PlcWorker
                 readOnly=WorkerOperations.IsReadOnly(name);
                 if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
                 var values = WorkerJson.ParseArguments(request.ArgumentsJson);
-                if (name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate || name == WorkerOperations.SessionCandidate || name == WorkerOperations.SaveCloseCandidate || name == WorkerOperations.SourceCandidate || name == WorkerOperations.CompileCandidate)
+                string actionName = WorkerJson.Get(values, "action").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "action").GetString()! : "";
+                string scope = WorkerJson.Get(values, "family").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "family").GetString()! : WorkerJson.Get(values, "kind").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "kind").GetString()! : "";
+                if (HardwareCapabilities.Unsupported(releaseKey, name, actionName, scope,
+                    WorkerJson.Get(values, "positionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "positionNumber").GetInt32() : -1,
+                    WorkerJson.Get(values, "extendedPositionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "extendedPositionNumber").GetInt32() : -1,
+                    WorkerJson.Get(values, "password").ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(WorkerJson.Get(values, "password").GetString())) is string unavailable)
+                    throw new NotSupportedException(unavailable);
+                if (name == "hardware-devices.HardwareDeviceCandidate" || name == WorkerOperations.DeviceCreationCandidate || name == WorkerOperations.PlcImportCandidate || name == WorkerOperations.PlcExportCandidate || name == WorkerOperations.SessionCandidate || name == WorkerOperations.SaveCloseCandidate || name == WorkerOperations.SourceCandidate || name == WorkerOperations.CompileCandidate)
                 {
                     if (values.ContainsKey("bindingEpoch")) throw new ArgumentException("The worker owns the binding epoch.");
                     values["bindingEpoch"] = System.Text.Json.JsonSerializer.SerializeToElement(bindingEpoch);
                     var candidateMode = WorkerJson.Get(values, "mode");
                     string? mode = candidateMode.ValueKind == System.Text.Json.JsonValueKind.Undefined ? null : candidateMode.GetString();
-                    readOnly = WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode) || WorkerOperations.IsSessionPreview(name, mode) || WorkerOperations.IsSaveClosePreview(name, mode) || WorkerOperations.IsSourcePreview(name, mode) || WorkerOperations.IsCompilePreview(name, mode);
+                    readOnly = name == "hardware-devices.HardwareDeviceCandidate" && mode != "apply" || WorkerOperations.IsDevicePreview(name, mode) || WorkerOperations.IsImportPreview(name, mode) || WorkerOperations.IsExportPreview(name, mode) || WorkerOperations.IsSessionPreview(name, mode) || WorkerOperations.IsSaveClosePreview(name, mode) || WorkerOperations.IsSourcePreview(name, mode) || WorkerOperations.IsCompilePreview(name, mode);
                 }
                 if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                 if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");

@@ -48,7 +48,8 @@ namespace TiaMcp.FoundationHost
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
                 if (!seen.Add(property.Name)) return McpServer.InvalidInput("arguments");
-            string problem = tool.Execution == "foundation" ? "" : McpServer.VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
+            string problem = tool.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer.VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
                 : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);

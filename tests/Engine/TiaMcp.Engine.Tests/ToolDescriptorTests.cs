@@ -104,8 +104,9 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(80, ToolExecution.Table.Count(pair => pair.Value == "host"));
             foreach (var name in new[] { "CallTool", "GetExportContent", "StageImportFiles", "RestartOpennessWorker", "BuildStructuredText", "RenderPlcBlock", "GetOpennessCompatibility", "GetEnvironmentDiagnostics", "CheckProductUpdate" })
                 Assert.Equal("host", ToolExecution.Table[name]);
-            foreach (var name in new[] { "InitializeEnvironment", "BuildAndImportPlcArtifact", "BuildDeviceAmlDocument" })
+            foreach (var name in new[] { "InitializeEnvironment", "BuildAndImportPlcArtifact" })
                 Assert.Equal("worker", ToolExecution.Table[name]);
+            Assert.Equal("foundation", ToolExecution.Table["BuildDeviceAmlDocument"]);
             Assert.Equal(BehaviorCapabilities.Table(typeof(ToolCatalog).Assembly, McpServer.ReleaseKey).ToJsonString(), new ToolCatalog(new[] { typeof(Probe) }).BehaviorCapabilities.ToJsonString());
         }
 

@@ -8,6 +8,16 @@
     <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ATTRIBUTE_DELEGATE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_TRANSFER_MULTICAST</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_CATALOG_ENTRIES</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_CAX_TRANSFER_RESULT</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_TRANSFER_AREAS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_DOMAINS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_MRP_INSTANCES</DefineConstants>
+    <DefineConstants Condition="('$(TiaReleaseKey)' == '17' Or '$(TiaReleaseKey)' == '18' Or '$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21')">$(DefineConstants);PLC_HARDWARE_DIAGNOSTICS</DefineConstants>
+    <DefineConstants Condition="('$(TiaReleaseKey)' == '18' Or '$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21')">$(DefineConstants);PLC_HARDWARE_CERTIFICATES</DefineConstants>
+    <DefineConstants Condition="('$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21')">$(DefineConstants);PLC_HARDWARE_TELECONTROL</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_HARDWARE_LINKED_TAGS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SOURCE_RESULTS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_RH</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_READ</DefineConstants>

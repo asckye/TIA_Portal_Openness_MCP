@@ -17,7 +17,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal static class HardwareContract
     {
         private static readonly AsyncLocal<string?> Release = new AsyncLocal<string?>();
-        private static string ReleaseKey => Release.Value ?? McpServer.ReleaseKey;
+        internal static string ReleaseKey => Release.Value ?? McpServer.ReleaseKey;
         internal static IDisposable UseRelease(string release)
         {
             var previous = Release.Value; Release.Value = release;
@@ -204,6 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             var empty = new Dictionary<string, JsonElement>();
+            if (ReleaseKey != "20" && ReleaseKey != "21" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
             var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) : BehaviorPolicy.NotApplicable;
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
             if (policy == BehaviorPolicy.Current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));

@@ -3284,6 +3284,1213 @@
           "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
         ],
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+      },
+      "CreateDevice": {
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "PLC_2"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "inline": true,
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4.",
+          "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "CreateGsdDevice": {
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "parameters": {
+          "preferredDap": {
+            "exampleValue": "<preferredDap from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4.",
+          "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "CreateHardwareCatalogDevice": {
+        "arguments": {
+          "keyword": "1513",
+          "deviceName": "PLC_2"
+        },
+        "parameters": {
+          "preferredText": {
+            "exampleValue": "<preferredText from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4.",
+          "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ListDevices": {
+        "arguments": {},
+        "parameters": {
+          "includePlcSoftware": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetDeviceInfo": {
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetDeviceItemInfo": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetDeviceItemTree": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "parameters": {
+          "maxDepth": {
+            "exampleValue": 4
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "SearchInstalledGsdDevices": {
+        "arguments": {
+          "keyword": "1513"
+        },
+        "parameters": {
+          "limit": {
+            "exampleValue": 50
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetDeviceAttributes": {
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "parameters": {
+          "nameFilter": {
+            "exampleValue": "<nameFilter from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "SetDeviceItemAttribute": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "attributeName": "Name",
+          "value": "TRUE"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "SetPlcCpuSettings": {
+        "arguments": {
+          "cpuPath": "PLC_1/CPU_1",
+          "settings": {
+            "exactAttributes": {
+              "Name": "PLC_1"
+            }
+          }
+        },
+        "parameters": {
+          "settings": {
+            "requiresBinding": true,
+            "meaning": "Exact attributes must first be read from this CPU; the example does not establish that Name is writable on a particular device."
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetDevicePlugLocations": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "parameters": {
+          "plugOnDevice": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "PlugDeviceItem": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "parameters": {
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "plugOnDevice": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "inline": true,
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageHardwareObject": {
+        "arguments": {
+          "devicePath": [
+            "PLC_2"
+          ],
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "parameters": {
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "destinationDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "destinationItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "position": {
+            "exampleValue": 2
+          }
+        },
+        "operations": {
+          "deleteDevice": {
+            "arguments": {}
+          },
+          "deleteItem": {
+            "arguments": {
+              "action": "deleteItem"
+            }
+          },
+          "moveItem": {
+            "arguments": {
+              "action": "moveItem"
+            }
+          },
+          "copyItem": {
+            "arguments": {
+              "action": "copyItem"
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "inline": true,
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageDeviceUserGroup": {
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "groupPath": {
+            "exampleValue": "Examples"
+          },
+          "newName": {
+            "exampleValue": "Example_2"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "create": {
+            "arguments": {
+              "action": "create",
+              "groupPath": "Examples"
+            }
+          },
+          "rename": {
+            "arguments": {
+              "action": "rename",
+              "newName": "Examples2",
+              "groupPath": "Examples"
+            }
+          },
+          "deleteEmpty": {
+            "arguments": {
+              "action": "deleteEmpty",
+              "groupPath": "Examples"
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetHardwareFeatures": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageDeviceServiceObjects": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "family": "webApplications",
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "name": {
+            "exampleValue": "Example_1"
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "filePath": {
+            "exampleValue": "C:\\Examples\\exports\\Main.xml"
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "setDefault": {
+            "arguments": {
+              "action": "setDefault",
+              "name": "Example_1"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "name": "Example_1"
+            }
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete",
+              "name": "Example_1"
+            }
+          },
+          "export": {
+            "arguments": {
+              "action": "export",
+              "filePath": "C:\\Examples\\exports\\Main.xml",
+              "name": "Example_1"
+            }
+          },
+          "import": {
+            "arguments": {
+              "action": "import",
+              "filePath": "C:\\Examples\\exports\\Main.xml",
+              "name": "Example_1"
+            }
+          },
+          "setServiceGroupName": {
+            "arguments": {
+              "action": "setServiceGroupName"
+            }
+          },
+          "createService": {
+            "arguments": {
+              "action": "createService"
+            }
+          },
+          "deleteService": {
+            "arguments": {
+              "action": "deleteService"
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageHardwareUtilities": {
+        "arguments": {
+          "dryRun": true,
+          "action": "list"
+        },
+        "parameters": {
+          "typeIdentifier": {
+            "exampleValue": "<exact TypeIdentifier from SearchHardwareCatalog>",
+            "requiresBinding": true
+          },
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "filePath": {
+            "exampleValue": "C:\\Examples\\exports\\Main.xml"
+          },
+          "password": {
+            "exampleValue": "<password supplied for this target>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "list": {
+            "arguments": {}
+          },
+          "findModuleTypes": {
+            "arguments": {
+              "action": "findModuleTypes",
+              "typeIdentifier": "<exact TypeIdentifier from SearchHardwareCatalog>"
+            }
+          },
+          "findContainerTypes": {
+            "arguments": {
+              "action": "findContainerTypes",
+              "typeIdentifier": "<exact TypeIdentifier from SearchHardwareCatalog>"
+            }
+          },
+          "normalizeTypeIdentifier": {
+            "arguments": {
+              "action": "normalizeTypeIdentifier",
+              "typeIdentifier": "<exact TypeIdentifier from SearchHardwareCatalog>"
+            }
+          },
+          "exportOpcUa": {
+            "arguments": {
+              "action": "exportOpcUa",
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ],
+              "filePath": "C:\\Examples\\exports\\Main.xml"
+            }
+          },
+          "exportCardReaderPsc": {
+            "arguments": {
+              "action": "exportCardReaderPsc",
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "itemPath": [
+                "<exact device item from GetProjectTree>"
+              ],
+              "filePath": "C:\\Examples\\exports\\Main.xml"
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ExchangeSystemDiagnosticsSettings": {
+        "arguments": {
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "parameters": {
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "export": {
+            "arguments": {}
+          },
+          "import": {
+            "arguments": {
+              "action": "import"
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ListIoSystems": {
+        "arguments": {},
+        "parameters": {
+          "subnetName": {
+            "exampleValue": "PN_IE_1"
+          },
+          "devicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageIoSystem": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "action": "create",
+          "name": "ExampleIO",
+          "subnetName": "PN_IE_1",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "ioSystemName": {
+            "exampleValue": "<ioSystemName from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "connect": {
+            "arguments": {
+              "action": "connect",
+              "ioSystemName": "ExampleIO"
+            }
+          },
+          "disconnect": {
+            "arguments": {
+              "action": "disconnect",
+              "ioSystemName": "ExampleIO"
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ListNetworkDomains": {
+        "arguments": {
+          "subnetName": "PN_IE_1"
+        },
+        "parameters": {
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageNetworkDomain": {
+        "arguments": {
+          "subnetName": "PN_IE_1",
+          "kind": "sync",
+          "action": "create",
+          "name": "ExampleSyncDomain",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "parameters": {
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "participantDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "participantItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "addParticipant": {
+            "arguments": {
+              "action": "addParticipant",
+              "participantDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "participantItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ListTransferAreas": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "positionNumber": {
+            "exampleValue": 2
+          },
+          "extendedPositionNumber": {
+            "exampleValue": -1
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManageTransferArea": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "action": "create",
+          "kind": "standard",
+          "name": "ExampleTransfer",
+          "type": "IN",
+          "positionNumber": 0,
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "extendedPositionNumber": {
+            "exampleValue": -1
+          },
+          "partnerDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "partnerItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "senderName": {
+            "exampleValue": "<senderName from this operation's target or user input>",
+            "requiresBinding": true
+          },
+          "length": {
+            "exampleValue": -1
+          },
+          "properties": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "attributes": {
+            "exampleValue": {
+              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+            },
+            "requiresBinding": true
+          },
+          "ruleIndex": {
+            "exampleValue": -1
+          },
+          "targetDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "targetItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "create": {
+            "arguments": {}
+          },
+          "delete": {
+            "arguments": {
+              "action": "delete"
+            }
+          },
+          "update": {
+            "arguments": {
+              "action": "update",
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "createMappingRule": {
+            "arguments": {
+              "action": "createMappingRule",
+              "ruleIndex": -1,
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "updateMappingRule": {
+            "arguments": {
+              "action": "updateMappingRule",
+              "ruleIndex": -1,
+              "properties": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              }
+            }
+          },
+          "deleteMappingRule": {
+            "arguments": {
+              "action": "deleteMappingRule",
+              "ruleIndex": -1
+            }
+          },
+          "createReceiver": {
+            "arguments": {
+              "action": "createReceiver",
+              "senderName": "<senderName from this operation's target or user input>",
+              "targetDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "targetItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ListDeviceItemChannels": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ]
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "channelType": {
+            "exampleValue": "None"
+          },
+          "channelIoType": {
+            "exampleValue": "None"
+          },
+          "channelNumber": {
+            "exampleValue": -1
+          },
+          "attributeNames": {
+            "exampleValue": [
+              "ChannelAddress",
+              "ChannelWidth"
+            ],
+            "requiresBinding": true
+          },
+          "offset": {
+            "exampleValue": 0
+          },
+          "limit": {
+            "exampleValue": 100
+          },
+          "includeLinkedTags": {
+            "exampleValue": false
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "SetDeviceItemChannel": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "channelType": "None",
+          "channelIoType": "None",
+          "channelNumber": 1,
+          "attributes": {
+            "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          },
+          "dryRun": true
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "attributes": {
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ManagePortInterconnection": {
+        "arguments": {
+          "devicePath": [
+            "<exact device name from GetProjectTree>"
+          ],
+          "itemPath": [
+            "<exact device item from GetProjectTree>"
+          ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "parameters": {
+          "devicePath": {
+            "requiresBinding": true
+          },
+          "itemPath": {
+            "requiresBinding": true
+          },
+          "partnerDevicePath": {
+            "exampleValue": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          },
+          "partnerItemPath": {
+            "exampleValue": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "requiresBinding": true
+          }
+        },
+        "operations": {
+          "read": {
+            "arguments": {}
+          },
+          "connect": {
+            "arguments": {
+              "action": "connect",
+              "partnerDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "partnerItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
+            }
+          },
+          "disconnect": {
+            "arguments": {
+              "action": "disconnect",
+              "partnerDevicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "partnerItemPath": [
+                "<exact device item from GetProjectTree>"
+              ]
+            }
+          }
+        },
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetDeviceItemNetworkInfo": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ConnectDeviceNodesToProfinetSubnet": {
+        "arguments": {
+          "firstRootPath": "PLC_1",
+          "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
+          "subnetName": "PN_IE_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "inline": true,
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "PlanHardwareNetworkConfiguration": {
+        "arguments": {
+          "plan": {
+            "operations": [
+              {
+                "type": "EnsureSubnet",
+                "subnetName": "PN_IE_1",
+                "subnetType": "PROFINET",
+                "anchorDeviceItemPath": "PLC_1"
+              }
+            ]
+          }
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "EnsureSubnet": {
+        "arguments": {
+          "anchorDeviceItemPath": "PLC_1/CPU_1",
+          "subnetType": "System:Subnet.Ethernet",
+          "subnetName": "PN_IE_1"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "AttachDeviceNodeToSubnet": {
+        "arguments": {
+          "deviceItemPath": "PLC_1/CPU_1",
+          "interfaceIndex": 1,
+          "subnetName": "PN_IE_1"
+        },
+        "parameters": {
+          "anchorDeviceItemPath": {
+            "exampleValue": "PLC_1/CPU_1"
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ProbeHardwareHmiConnectionOwnerCandidates": {
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "parameters": {
+          "deepScan": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ProbeHardwareHmiConnectionWhitelistedServices": {
+        "arguments": {
+          "plcRootPath": "PLC_1",
+          "hmiRootPath": "HMI_1"
+        },
+        "parameters": {
+          "deepScan": {
+            "exampleValue": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "GetProjectTopology": {
+        "arguments": {},
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "BuildDeviceAmlDocument": {
+        "arguments": {
+          "spec": {
+            "projectName": "Example",
+            "devices": [
+              {
+                "name": "PLC_1",
+                "typeIdentifier": "System:Device.S71500",
+                "deviceItems": []
+              }
+            ]
+          },
+          "outputPath": "C:\\Examples\\generated\\Example.aml"
+        },
+        "parameters": {
+          "referenceAmlPath": {
+            "exampleValue": "<referenceAmlPath from this operation's target or user input>",
+            "requiresBinding": true
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ExportDeviceAml": {
+        "arguments": {
+          "devicePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\Device.aml"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+      },
+      "ImportDeviceAml": {
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Device.aml",
+          "logFilePath": "C:\\Examples\\import.log",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "parameters": {
+          "importOption": {
+            "exampleValue": "RetainTiaDevice"
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "resultReading": [
+          "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes. behaviorPolicy=current; existing native behavior has not switched to safe-v4."
+        ],
+        "note": " P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
       }
     },
     "full-engine": {

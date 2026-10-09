@@ -170,7 +170,9 @@ internal static class DomainShapeChecks
             "ReadReflectedString", "EnumerateReflectedProperty" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
                 name + " stays on the kernel and is exposed through IEngineeringSession");
-        check(surface.Method("LinkedTagRows", all).DeclaringType == portal, "LinkedTagRows remains shared with hardware on the kernel");
+        check(surface.Adapter!.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!.GetMethod("HardwareLinkedTagRows", all) != null
+            && portal.GetMethod("LinkedTagRows", all) == null && contract.GetMethod("LinkedTagRows") == null,
+            "Hardware linked-tag projection belongs only to the adapter");
         foreach (var name in new[] { "ExactDriveItem", "ExactDriveContainer", "DccContainerSummary", "DcbLibraryRow",
             "AddressRow", "ExactTechnology", "InterfaceRow" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,

@@ -123,8 +123,8 @@
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
     <Compile Include="../../../src/Engine/Siemens/SecurityDeepLogic.cs" Link="SecurityDeepLogic.cs" />
-    <Compile Include="../../../src/Engine/Siemens/HardwareUtilityRules.cs" Link="HardwareUtilityRules.cs" />
-    <Compile Include="../../../src/Engine/Siemens/DeviceServiceObjectRules.cs" Link="DeviceServiceObjectRules.cs" />
+    <Compile Include="../../../src/Shared/HardwareUtilityRules.cs" Link="HardwareUtilityRules.cs" />
+    <Compile Include="../../../src/Shared/DeviceServiceObjectRules.cs" Link="DeviceServiceObjectRules.cs" />
     <Compile Include="../../../src/Engine/Siemens/ObjectIdentityRules.cs" Link="ObjectIdentityRules.cs" />
     <Compile Include="../../../src/Engine/Siemens/ToolTransactionRules.cs" Link="ToolTransactionRules.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringCredentialRules.cs" Link="EngineeringCredentialRules.cs" />
@@ -216,4 +216,18 @@
     <Compile Include="../../../src/Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/HardwareAddressingService.cs" Link="Shared/HardwareAddressingService.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/HardwareDevicesTools.cs" Link="Shared/HardwareDevicesTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareDevicesService.cs" Link="Shared/HardwareDevicesService.cs" />
+    <Compile Include="../../../src/Shared/HardwareModulesService.cs" Link="Shared/HardwareModulesService.cs" />
+    <Compile Include="../../../src/Shared/ModulesTools.cs" Link="Shared/ModulesTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareManagementTools.cs" Link="Shared/HardwareManagementTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareManagementService.cs" Link="Shared/HardwareManagementService.cs" />
+    <Compile Include="../../../src/Shared/HardwareNetworkTools.cs" Link="Shared/HardwareNetworkTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareNetworkPortService.cs" Link="Shared/HardwareNetworkPortService.cs" />
+    <Compile Include="../../../src/Shared/HardwareServicesPortTools.cs" Link="Shared/HardwareServicesPortTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareServicesPortService.cs" Link="Shared/HardwareServicesPortService.cs" />
+    <Compile Include="../../../src/Shared/HardwareAmlTools.cs" Link="Shared/HardwareAmlTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareAmlService.cs" Link="Shared/HardwareAmlService.cs" />
+  </ItemGroup>
 </Project>

@@ -97,6 +97,9 @@ namespace TiaMcp.FoundationHost
                 new HashSet<string>(published.Lite.Select(t => t.Name), StringComparer.Ordinal));
             InvocationJournal.BindingSnapshot = () => EngineHostConfiguration.Worker.Binding as JsonObject;
             var selected = McpServer.IsLiteProfile() ? published.Lite : published.All.Values.ToArray();
+            foreach (var descriptor in published.All.Values.Where(t => t.Execution == "foundation"))
+                if (sharedTools == null || sharedTools.Count(t => t.ProtocolTool.Name == descriptor.Name) != 1)
+                    throw new InvalidDataException("Foundation implementation coverage mismatch: " + descriptor.Name);
             Tools = selected.SelectMany(t => t.Execution == "foundation"
                 ? new[] { sharedTools!.Single(s => s.ProtocolTool.Name == t.Name) }
                 : McpServer.WrapTools(new[] { McpServer.ToolInvoker.CreateTool(t) })).Select(t => (McpServerTool)new SessionTool(this, t)).ToList();

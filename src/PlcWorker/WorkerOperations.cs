@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TiaMcp.PlcWorker
 {
@@ -8,7 +9,7 @@ namespace TiaMcp.PlcWorker
         internal static string[] FamilyNames(string family) => family == "F19" ? new[] {
             "ReadHardwareIoAddresses", "DescribeHardwareIoChildren", "SetHardwareIoAddress",
             "ReadHardwareAddressing", "UpdateHardwareAddress", "ReadHardwareIpAddress"
-        } : Array.Empty<string>();
+        } : family == "F18" ? new[] { "HardwareCreateDevice", "HardwareCreateCatalogDevice", "HardwareCreateGsdDevice", "HardwareCreateDeviceFallback", "HardwareLegacySearchInstalledGsdDevices", "HardwareLegacySearchHardwareCatalog", "HardwareDescribeDevices", "HardwareDescribeDeviceAt", "HardwareDescribeItemAt", "HardwareReadItemTree", "HardwareReadPlcNames", "HardwareLegacySetDeviceItemAttribute", "HardwareLegacySetCpuCommonSettings", "HardwareLegacyDumpDeviceAttributes", "HardwareReadPlugLocations", "HardwarePlugModule", "HardwareManageHardwareObject", "HardwareDeviceCandidate", "HardwareReadCommunicationConnections", "HardwareManageCommunicationConnection", "HardwareExchangeSystemDiagnosticsSettings", "HardwareReadHardwareFeatures", "HardwareManageDeviceServiceObjects", "HardwareManageHardwareUtilities", "HardwareManageDeviceUserGroup" } : family == "F20" ? new[] { "HardwareReadIoSystems", "HardwareManageIoSystem", "HardwareReadNetworkDomains", "HardwareManageNetworkDomain", "HardwareReadTransferAreas", "HardwareManageTransferArea", "HardwareReadDeviceItemChannels", "HardwareUpdateDeviceItemChannel", "HardwareManagePortInterconnection", "HardwareGetProjectTopology", "HardwareEnsureSubnet", "HardwareAttachDeviceNodeToSubnet", "ReadHardwareOwnerCandidates", "ReadHardwareWhitelistedServices", "HardwareGetDeviceItemNetworkInfo", "HardwareProbeConnectDeviceNodesToSubnet", "HardwareReadCommunicationConnections", "HardwareManageCommunicationConnection" } : family == "F21" ? new[] { "ExportHardwareAml", "ImportHardwareAml" } : Array.Empty<string>();
         internal static bool IsFamilyOperation(string name)
         {
             foreach (var family in TiaMcp.Adapters.Contracts.PortedFamilies.All)
@@ -20,7 +21,8 @@ namespace TiaMcp.PlcWorker
             => sharedFamilyIdentity != null && IsFamilyOperation(name) ? sharedFamilyIdentity : nativeIdentity;
         private static bool IsFamilyRead(string name) => name == "hardware-addressing.ReadHardwareIoAddresses"
             || name == "hardware-addressing.DescribeHardwareIoChildren" || name == "hardware-addressing.ReadHardwareAddressing"
-            || name == "hardware-addressing.ReadHardwareIpAddress";
+            || name == "hardware-addressing.ReadHardwareIpAddress" || name == "hardware-aml.ExportHardwareAml"
+            || new[] { "hardware-devices.HardwareLegacySearchInstalledGsdDevices", "hardware-devices.HardwareLegacySearchHardwareCatalog", "hardware-devices.HardwareDescribeDevices", "hardware-devices.HardwareDescribeDeviceAt", "hardware-devices.HardwareDescribeItemAt", "hardware-devices.HardwareReadItemTree", "hardware-devices.HardwareReadPlcNames", "hardware-devices.HardwareLegacyDumpDeviceAttributes", "hardware-devices.HardwareReadPlugLocations", "hardware-devices.HardwareReadHardwareFeatures", "hardware-network.HardwareReadIoSystems", "hardware-network.HardwareReadNetworkDomains", "hardware-network.HardwareReadTransferAreas", "hardware-network.HardwareReadDeviceItemChannels", "hardware-network.HardwareGetProjectTopology", "hardware-network.ReadHardwareOwnerCandidates", "hardware-network.ReadHardwareWhitelistedServices", "hardware-network.HardwareGetDeviceItemNetworkInfo", "hardware-network.HardwareReadCommunicationConnections" }.Contains(name, StringComparer.Ordinal);
         internal const string DeviceCreationCandidate = "CreateHardwareDeviceCandidate";
         internal const string CompileCandidate = "CompileCandidate";
         internal static bool IsCompilePreview(string name, string? mode) => name == CompileCandidate && (mode == null || mode == "preview");
@@ -37,7 +39,7 @@ namespace TiaMcp.PlcWorker
         internal static bool IsDevicePreview(string name, string? mode) => name == DeviceCreationCandidate && (mode == null || mode == "preview");
         internal static bool RequiresPortal(string name) => name != "Attach" && name != "Disconnect"
             && name != "ReadState" && name != "ReadPortalProcessProjects" && name != "ReadPortalConnectReadiness"
-            && name != SessionCandidate;
+            && name != SessionCandidate && name != "hardware-devices.HardwareLegacySearchInstalledGsdDevices";
         internal static bool IsReadOnly(string name) => name == "plc-analysis.ExportBlockDocument" || IsFamilyRead(name) || name=="SearchHardwareCatalog" || name=="PlanPlcExternalSourceImport" || name=="ReadState" || name=="ReadPortalProcessProjects" || name=="ReadPortalConnectReadiness" || name=="ReadWatchTableNames" || name=="ReadTechnologyObjects" || name=="ReadSoftwareInfo" || name=="ReadSoftwareTree" || name=="ReadExternalSourceNames" || name=="ListTags" || name=="ListUserConstants" || name=="ListSystemConstants" || name=="ReadBlockInfo" || name=="ReadTypeInfo" || name=="ReadBlocks" || name=="ReadTypes" || name=="ReadTagTableNames" || name=="ReadBlockHierarchy" || name=="ReadProjectTree" || name=="ListProjects";
 
         internal static readonly HashSet<string> Names=new HashSet<string>(StringComparer.Ordinal) {

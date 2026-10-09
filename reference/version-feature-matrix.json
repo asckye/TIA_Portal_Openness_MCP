@@ -3275,7 +3275,11 @@
         "family": "P6-DEVICE",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice"
+        ]
       },
       {
         "family": "P6-IMPORT",
@@ -3347,6 +3351,66 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
       },
       {
         "family": "F19",
@@ -3366,7 +3430,11 @@
         "family": "P6-DEVICE",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice"
+        ]
       },
       {
         "family": "P6-IMPORT",
@@ -3438,6 +3506,66 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
       },
       {
         "family": "F19",
@@ -3457,7 +3585,11 @@
         "family": "P6-DEVICE",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice"
+        ]
       },
       {
         "family": "P6-IMPORT",
@@ -3529,6 +3661,66 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
       },
       {
         "family": "F19",
@@ -3548,7 +3740,11 @@
         "family": "P6-DEVICE",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice"
+        ]
       },
       {
         "family": "P6-IMPORT",
@@ -3620,6 +3816,66 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
       },
       {
         "family": "F19",
@@ -3639,7 +3895,11 @@
         "family": "P6-DEVICE",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice"
+        ]
       },
       {
         "family": "P6-IMPORT",
@@ -3711,6 +3971,66 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
       },
       {
         "family": "F19",
@@ -3731,6 +4051,9 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
           "CreateHardwareDevice"
         ]
       },
@@ -3804,6 +4127,66 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
       },
       {
         "family": "F19",

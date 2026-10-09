@@ -98,7 +98,7 @@ def builder_ranges(tokens, pairs):
             # wrapper on old releases. It does not construct an MCP envelope;
             # Check-AdapterBoundary separately forbids JSON in this layer.
             for lo, hi, name in method_ranges(tokens, pairs):
-                if i + 2 < lo < hi < pairs[i + 2] and name == 'RunHardwareAddressStep':
+                if i + 2 < lo < hi < pairs[i + 2] and name in ('RunHardwareAddressStep', 'HardwareStepMeta'):
                     ranges.append((lo, hi))
     return ranges
 
@@ -364,12 +364,13 @@ class SelfTests(unittest.TestCase):
     def test_worker_evidence_builder_is_qualified_and_method_bounded(self):
         source = '''class PlcFoundationEngine {
             private HardwareAddressingReply RunHardwareAddressStep() { meta["success"] = false; return reply; }
+            private Dictionary HardwareStepMeta() { meta["success"] = false; return meta; }
             private void Other() { meta["success"] = true; }
         }'''
         counts, written = scan_tokens(lexer.Lexer('namespace TiaMcp.Adapters { ' + source + ' }').scan()[0])
-        self.assertEqual(2, counts['success_assignments'])
+        self.assertEqual(3, counts['success_assignments'])
         self.assertEqual(1, written['success_assignments'])
-        self.assertEqual(2, scan_tokens(lexer.Lexer('namespace Other { ' + source + ' }').scan()[0])[1]['success_assignments'])
+        self.assertEqual(3, scan_tokens(lexer.Lexer('namespace Other { ' + source + ' }').scan()[0])[1]['success_assignments'])
 
     def test_move_exclusions_and_determinism(self):
         with lexer.scratch_directory() as root:

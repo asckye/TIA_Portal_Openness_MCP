@@ -34,6 +34,151 @@ namespace TiaMcpServer.ModelContextProtocol
     }
 }
 
+namespace TiaMcpServer.ModelContextProtocol
+{
+    public class Attribute
+    {
+        public string? Name { get; set; }
+        public object? Value { get; set; }
+        public string? AccessMode { get; set; }
+    }
+
+    public class GsdDeviceCandidate
+    {
+        public string? Source { get; set; }
+        public string? Keyword { get; set; }
+        public string? Vendor { get; set; }
+        public string? ProductFamily { get; set; }
+        public string? MainFamily { get; set; }
+        public string? DapId { get; set; }
+        public string? DapName { get; set; }
+        public string? ArticleNumber { get; set; }
+        public string? CatalogPath { get; set; }
+        public string? Description { get; set; }
+        public string? TypeIdentifier { get; set; }
+        public string? TypeIdentifierNormalized { get; set; }
+        public string? TypeName { get; set; }
+        public string? Version { get; set; }
+        public string? GsdmlPath { get; set; }
+        public int? Score { get; set; }
+    }
+
+    public class HardwareCatalogCandidate
+    {
+        public string? Source { get; set; }
+        public string? Keyword { get; set; }
+        public string? ArticleNumber { get; set; }
+        public string? CatalogPath { get; set; }
+        public string? Description { get; set; }
+        public string? TypeIdentifier { get; set; }
+        public string? TypeIdentifierNormalized { get; set; }
+        public string? TypeName { get; set; }
+        public string? Version { get; set; }
+        public bool? Insertable { get; set; }
+        public int? Score { get; set; }
+    }
+
+    public class CaxExportResult
+    {
+        public string? DeviceName { get; set; }
+        public string? FilePath { get; set; }
+        public bool Success { get; set; }
+        public string? State { get; set; }
+        public bool? NativeBooleanResult { get; set; }
+        public int ErrorCount { get; set; }
+        public int WarningCount { get; set; }
+        public List<string>? Messages { get; set; }
+    }
+
+    public class ResponseAttributes : ResponseMessage
+    {
+        public IEnumerable<Attribute>? Attributes { get; set; }
+    }
+
+    public class ResponseDeviceInfo : ResponseAttributes
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class ResponseDeviceItemInfo : ResponseAttributes
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class ResponseTree : ResponseMessage
+    {
+        public string? Tree { get; set; }
+    }
+
+    public class ResponseDevices : ResponseMessage
+    {
+        public IEnumerable<ResponseDeviceInfo>? Items { get; set; }
+    }
+
+    public class ResponseDeviceProbe : ResponseMessage
+    {
+        public bool? Ok { get; set; }
+        public string? DeviceName { get; set; }
+        public string? Family { get; set; }
+        public string? MlfbUsed { get; set; }
+        public string? VersionUsed { get; set; }
+        public IEnumerable<string>? Attempts { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class ResponseGsdDeviceSearch : ResponseMessage
+    {
+        public string? Keyword { get; set; }
+        public int? Count { get; set; }
+        public IEnumerable<GsdDeviceCandidate>? Items { get; set; }
+    }
+
+    public class ResponseHardwareCatalogSearch : ResponseMessage
+    {
+        public string? Keyword { get; set; }
+        public int? Count { get; set; }
+        public IEnumerable<HardwareCatalogCandidate>? Items { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class ResponseGsdDeviceProbe : ResponseMessage
+    {
+        public bool? Ok { get; set; }
+        public string? Keyword { get; set; }
+        public string? DeviceName { get; set; }
+        public string? PreferredDap { get; set; }
+        public GsdDeviceCandidate? CandidateUsed { get; set; }
+        public IEnumerable<GsdDeviceCandidate>? Candidates { get; set; }
+        public IEnumerable<string>? Attempts { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class ResponseHardwareCatalogDeviceProbe : ResponseMessage
+    {
+        public bool? Ok { get; set; }
+        public string? Keyword { get; set; }
+        public string? DeviceName { get; set; }
+        public string? PreferredText { get; set; }
+        public HardwareCatalogCandidate? CandidateUsed { get; set; }
+        public IEnumerable<HardwareCatalogCandidate>? Candidates { get; set; }
+        public IEnumerable<string>? Attempts { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class ResponseExportDeviceAml : ResponseMessage
+    {
+        public string? DeviceName { get; set; }
+        public string? FilePath { get; set; }
+        public bool Success { get; set; }
+        public string? State { get; set; }
+        public int ErrorCount { get; set; }
+        public int WarningCount { get; set; }
+        public IEnumerable<string>? Messages { get; set; }
+    }
+}
+
 // Application service doubles only: invalid inputs must never cross this boundary.
 namespace TiaMcpServer.Siemens.Services
 {
@@ -117,15 +262,19 @@ namespace TiaMcp.Engine.Tests
         private readonly HardwareNetworkService network = new HardwareNetworkService();
         private readonly HardwareServicesService services = new HardwareServicesService();
         private readonly HardwareNetworkTools networkTools;
+        private readonly HardwareSecurityTools securityTools;
         private readonly HardwareServicesTools serviceTools;
         private readonly ToolCatalog catalog;
         public HardwareContractsTests()
         {
-            networkTools = new HardwareNetworkTools(network);
+            networkTools = new HardwareNetworkTools(new HardwareNetworkPortService((operation, _) => operation == "hardware-network.HardwareGetProjectTopology"
+                ? network.GetProjectTopology() : JsonSerializer.SerializeToNode(network.Next()), () => true, () => "fixture"));
+            securityTools = new HardwareSecurityTools(network);
             serviceTools = new HardwareServicesTools(services);
-            catalog = new ToolCatalog(new[] { typeof(HardwareNetworkTools), typeof(HardwareServicesTools) });
+            var portTools = new HardwareServicesPortTools(new HardwareServicesPortService((_, __) => JsonSerializer.SerializeToNode(services.Next()), () => true, () => "fixture"));
+            catalog = new ToolCatalog(new[] { typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
-            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(networkTools).AddSingleton(serviceTools).BuildServiceProvider());
+            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(networkTools).AddSingleton(securityTools).AddSingleton(serviceTools).AddSingleton(portTools).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static JsonObject Body(CallToolResult result)
@@ -169,7 +318,7 @@ namespace TiaMcp.Engine.Tests
             Rejected(networkTools.ListTransferAreas(Enumerable.Repeat("x", 65).ToArray(), Array.Empty<string>()));
             Rejected(serviceTools.CompileDevice(null!));
             Rejected(networkTools.ListDeviceItemChannels(new[] { "PLC" }, Array.Empty<string>(), attributeNames: new[] { "Name", "Name" }));
-            Rejected(networkTools.ManageDeviceUsers(new[] { "PLC" }, Array.Empty<string>(), "webserver", permissions: Enumerable.Range(0, 33).Select(i => "p" + i).ToArray()));
+            Rejected(securityTools.ManageDeviceUsers(new[] { "PLC" }, Array.Empty<string>(), "webserver", permissions: Enumerable.Range(0, 33).Select(i => "p" + i).ToArray()));
             var properties = V4Json.Deserialize<AttributeMap<Scalar>>("{\"Name\":\"" + new string('x', 32768) + "\"}");
             Rejected(networkTools.ManageIoSystem(new[] { "PLC" }, Array.Empty<string>(), "update", properties: properties));
             Rejected(networkTools.ListNetworkDomains("subnet", limit: 501));

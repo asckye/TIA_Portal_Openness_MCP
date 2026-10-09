@@ -36,6 +36,8 @@ namespace TiaMcpServer.Worker
         private Portal? portal;
         private SharedSessionLifecycle? lifecycle;
         private bool ownedPortal;
+        private string? deviceBindingGeneration;
+        private long deviceBindingEpoch;
 
 
         internal static string Hash(string path)
@@ -91,6 +93,23 @@ namespace TiaMcpServer.Worker
             foundation.AcquireEngineeringEditAccess = engineering.AcquireHmiEditAccess;
             foundation.EngineeringProjectMissing = engineering.IsProjectNull;
             foundation.ResolveEngineeringBlock = (software, block) => engineering.GetBlock(software, block);
+            foundation.ResolveEngineeringDevice = path => engineering.GetDevice(path);
+            foundation.ResolveEngineeringItem = path => engineering.GetDeviceItemByPath(path);
+            foundation.FormatEngineeringException = engineering.FormatExceptionDetail;
+            foundation.ResolveEngineeringSoftwareContainer = name => engineering.GetSoftwareContainer(name);
+            foundation.SharedHardwareCandidateIdentity = projectPath => {
+                engineering.VerifyBinding("device-creation-candidate");
+                var identity = engineering.GetBindingIdentity()["identity"]!.AsObject();
+                string generation = identity["generation"]!.GetValue<string>();
+                if (generation != deviceBindingGeneration) { deviceBindingGeneration = generation; deviceBindingEpoch++; }
+                return new TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity(identity["processId"]!.GetValue<int>(),
+                    DateTimeOffset.Parse(identity["processStartUtc"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
+                    DeviceCreationSession.CanonicalProject(projectPath()), deviceBindingEpoch);
+            };
+            foundation.AdmitHardwareAmlExport = path => {
+                CallerInputFiles.ValidateNativeFile("ExportDeviceAml", new JsonObject { ["exportPath"] = path });
+                CallerInputFiles.ResolveExportTarget(path);
+            };
             foundation.EngineeringBlockGroupPath = group => engineering.GetPlcBlockGroupPath((global::Siemens.Engineering.SW.Blocks.PlcBlockGroup)group);
             foundation.EngineeringRecordExportPath = portal.RecordAnalysisExportPath;
             // The shared binding and host lane already capture the target. Its
@@ -110,7 +129,7 @@ namespace TiaMcpServer.Worker
                     Message = step.Message, Meta = step.Meta.ToDictionary(p => p.Key, p =>
                         p.Value is JsonValue value && value.TryGetValue<bool>(out var flag) ? (object?)flag : p.Value),
                     RequiresSessionReset = (bool?)step.Meta["connectionUnavailable"] == true
-                        || (bool?)step.Meta["mayHaveChanged"] == true && step.Meta["after"] == null
+                        || (bool?)step.Meta["mayHaveChanged"] == true && ((bool?)step.Meta["operationSuccess"] == false || (bool?)step.Meta["writeOutcomeUnknown"] == true)
                 };
             };
             lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {

@@ -1,111 +1,17 @@
-using TiaMcp.Adapters.Contracts;
-using static TiaMcpServer.Siemens.Services.DevicesService;
-using Microsoft.Extensions.Logging;
-using Siemens.Engineering.HW;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TiaMcpServer.ModelContextProtocol;
-
-namespace TiaMcpServer.Siemens.Services
+using Siemens.Engineering.HW;
+using TiaMcp.Adapters.Contracts;
+namespace TiaMcp.Adapters
 {
-    /// <summary>
-    /// Partial: 往已存在的设备（CPU / 机架）上**插入子模块** —— 信号板 SB、信号模块 SM、通信模块 CM。
-    ///
-    /// 为什么单独一份：整机添加走 <c>Devices.CreateWithItem</c>，插子模块走的是完全不同的一套
-    /// （<c>HardwareObject.PlugNew</c>），失败模式也不一样 —— 整机失败是「订货号不存在」，
-    /// 插子模块失败还多出「槽位被占」和「这台 CPU 不接受这块板」两种，必须分开报。
-    ///
-    /// API 形态是**反射实测**出来的，不是推理的（2026-09-03，V21，Siemens.Engineering.Base.dll）：
-    ///   DeviceItem : HardwareObject                      → 子模块直接插在 DeviceItem（CPU）上
-    ///   HardwareObject.PlugNew(string typeIdentifier, string name, int positionNumber) → DeviceItem
-    ///   HardwareObject.CanPlugNew(string, string, int)   → bool，**插之前可以预检**（dryRun 靠它）
-    ///   HardwareObject.GetPlugLocations()                → IList&lt;PlugLocation&gt;，元素只有
-    ///                                                      Label(string) + PositionNumber(int)，都只读
-    ///   DeviceItem.PositionNumber / IsPlugged / IsBuiltIn → 只读，用来读回验证
-    /// 注意 <c>DeviceItemComposition</c> 上**没有**任何 Create/PlugNew 方法（只有 CreateFrom(MasterCopy)），
-    /// 所以插模块只能走宿主 HardwareObject，不能往集合里塞。
-    ///
-    /// **槽位号不写死**：S7-1200 信号板的槽位号由 <c>GetPlugLocations()</c> 在运行时报出来，
-    /// 引擎不猜也不硬编码任何 CPU 的槽位表。
-    /// </summary>
-    internal sealed class ModulesService
+    public sealed partial class PlcFoundationEngine
     {
-        private readonly IEngineeringSession _session;
-        private readonly DevicesService _devices;
-
-        public ModulesService(IEngineeringSession session, DevicesService devices)
-        {
-            _session = session;
-            _devices = devices;
-        }
-
-        #region plug submodule
-
-        /// <summary>一个可插槽位（空位）。Label 是 TIA 给的槽位描述，PositionNumber 是 PlugNew 要的那个数。</summary>
-        public sealed class PlugLocationInfo
-        {
-            public int PositionNumber { get; set; }
-            public string Label { get; set; } = "";
-        }
-
-        /// <summary>一个已经插着东西的槽位。用来把「槽位被占」和「槽位不存在」分开。</summary>
-        public sealed class PluggedItemInfo
-        {
-            public string Name { get; set; } = "";
-            public int PositionNumber { get; set; }
-            public bool IsPlugged { get; set; }
-            public bool IsBuiltIn { get; set; }
-            public string TypeIdentifier { get; set; } = "";
-        }
-
-        /// <summary>插入子模块的结果。失败时 <see cref="Reason"/> 给出**可判定的失败类别**，不是一句「插入失败」。</summary>
-        public sealed class PlugResult
-        {
-            /// <summary>整体成功（dryRun 时表示「预检通过、可以插」）。</summary>
-            public bool Ok { get; set; }
-
-            /// <summary>
-            /// 失败类别，取值：NotConnected / DeviceItemNotFound / InvalidParams /
-            /// SlotOccupied / SlotNotAvailable / OrderNumberNotFound / NotSupportedByDevice /
-            /// PlugFailed / VerifyFailed。成功时为 null。
-            /// </summary>
-            public string? Reason { get; set; }
-
-            public string Message { get; set; } = "";
-
-            /// <summary>最终被接受的 TypeIdentifier（试出来的那个变体），失败时可能为 null。</summary>
-            public string? TypeIdentifier { get; set; }
-
-            /// <summary>最终落位的槽位号。positionNumber 传 -1 时这里是自动选中的那个。</summary>
-            public int? PositionNumber { get; set; }
-
-            /// <summary>插入后**读回**的模块信息。dryRun 或失败时为 null。</summary>
-            public PluggedItemInfo? Plugged { get; set; }
-
-            /// <summary>插入后读回的 I/O 地址（读到什么就报什么，不换算）。</summary>
-            public IReadOnlyList<IoAddressInfo>? Addresses { get; set; }
-
-            /// <summary>预检时该宿主上的空闲槽位，帮调用方直接改参数重试。</summary>
-            public IReadOnlyList<PlugLocationInfo>? FreeSlots { get; set; }
-
-            /// <summary>已被占用的槽位。</summary>
-            public IReadOnlyList<PluggedItemInfo>? OccupiedSlots { get; set; }
-
-            /// <summary>实际试过的 TypeIdentifier 变体和结论，失败时排障全靠它。</summary>
-            public List<string> Attempts { get; } = new List<string>();
-        }
-
-        /// <summary>
-        /// 读一个宿主（CPU / 机架）上的槽位情况：哪些空着、哪些被占。
-        /// 返回 null 表示「没连项目 / 设备项没找到」——和「这台设备一个空槽都没有」（空列表）是两回事。
-        /// </summary>
-        public (IReadOnlyList<PlugLocationInfo> free, IReadOnlyList<PluggedItemInfo> occupied)? GetDevicePlugLocations(
+        public (IReadOnlyList<HardwarePlugLocation> free, IReadOnlyList<HardwarePluggedItem> occupied)? HardwareReadPlugLocationsRaw(
             string deviceItemPath, bool plugOnDevice = false)
         {
-            _session.Logger?.LogInformation($"Getting plug locations of: {deviceItemPath} (plugOnDevice={plugOnDevice})");
 
-            if (_session.IsProjectNull())
+            if (HardwareProjectMissing())
             {
                 return null;
             }
@@ -119,16 +25,12 @@ namespace TiaMcpServer.Siemens.Services
             return (ReadFreeSlots(item), ReadOccupiedSlots(item));
         }
 
-        // Startdrive drive components (Motor Modules, and below them motors / encoders) are plugged on the Device itself -
-        // official "Creating a drive component": sdrDevice.PlugNew(@"OrderNumber:6SL3xxx-xxxxx-xxxx", "MotorModul", 65535). On the
-        // TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md): CanPlugNew on the CU device item and on the rack item answered false for every motor-module identifier;
-        // a bare device name resolves to the head device item by default, so the Device host has to be asked for explicitly.
         private HardwareObject? ResolvePlugHost(string path, bool plugOnDevice)
-            => plugOnDevice ? (HardwareObject?)_session.GetDeviceByPath(path) : _session.GetDeviceItemByPath(path);
+            => plugOnDevice ? (HardwareObject?)HardwareResolveDevice(path) : HardwareResolveItem(path);
 
-        private List<PlugLocationInfo> ReadFreeSlots(HardwareObject host)
+        private List<HardwarePlugLocation> ReadFreeSlots(HardwareObject host)
         {
-            var list = new List<PlugLocationInfo>();
+            var list = new List<HardwarePlugLocation>();
             try
             {
                 var locations = host.GetPlugLocations();
@@ -144,25 +46,24 @@ namespace TiaMcpServer.Siemens.Services
                         continue;
                     }
 
-                    list.Add(new PlugLocationInfo
+                    list.Add(new HardwarePlugLocation
                     {
                         PositionNumber = loc.PositionNumber,
                         Label = loc.Label ?? ""
                     });
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
                 // 有的宿主对象（接口、通道之类）根本不支持插拔，这里会抛。空列表就是答案，不该整体失败。
-                _session.Logger?.LogWarning(ex, "GetPlugLocations failed; treating as no free slots");
             }
 
             return list.OrderBy(x => x.PositionNumber).ToList();
         }
 
-        private static List<PluggedItemInfo> ReadOccupiedSlots(HardwareObject host)
+        private static List<HardwarePluggedItem> ReadOccupiedSlots(HardwareObject host)
         {
-            var list = new List<PluggedItemInfo>();
+            var list = new List<HardwarePluggedItem>();
             var seen = new HashSet<string>(StringComparer.Ordinal);
             void Add(DeviceItem? child)
             {
@@ -198,9 +99,9 @@ namespace TiaMcpServer.Siemens.Services
             return null;
         }
 
-        private static PluggedItemInfo DescribeItem(DeviceItem item)
+        private static HardwarePluggedItem DescribeItem(DeviceItem item)
         {
-            var info = new PluggedItemInfo { Name = item.Name ?? "" };
+            var info = new HardwarePluggedItem { Name = item.Name ?? "" };
 
             // 这些属性个别对象会抛（未插的代理/特殊类型），逐个兜底，别让一个属性毁掉整条描述。
             try { info.PositionNumber = item.PositionNumber; } catch /* swallow(probe-optional): 不支持的槽位属性保留既有默认值，仍返回其余模块信息。 */ { info.PositionNumber = -1; }
@@ -211,23 +112,11 @@ namespace TiaMcpServer.Siemens.Services
             return info;
         }
 
-        /// <summary>
-        /// 往一个宿主设备项上插子模块（信号板 / 信号模块 / 通信模块）。
-        /// </summary>
-        /// <param name="deviceItemPath">宿主设备项路径。信号板插在 **CPU 本体**上，所以传 CPU 的路径。</param>
-        /// <param name="orderNumber">订货号，例如 6ES7221-3BD30-0XB0，带不带空格都行。也可直接传完整 TypeIdentifier（OrderNumber:.../V1.1）。</param>
-        /// <param name="version">固件/模块版本，例如 V1.1。留空则让 TIA 自己挑。</param>
-        /// <param name="positionNumber">槽位号。传 -1 表示由引擎从空闲槽位里自动挑一个能插的。</param>
-        /// <param name="name">新模块名。留空则自动生成且避开同名兄弟。</param>
-        /// <param name="dryRun">true 时只用 CanPlugNew 预检，绝不写工程。</param>
-        public PlugResult PlugSubmodule(
+        public HardwarePlugResult HardwarePlugModule(
             string deviceItemPath, string orderNumber, string version, int positionNumber, string? name, bool dryRun, bool plugOnDevice = false)
         {
-            _session.Logger?.LogInformation(
-                $"Plug submodule: host={deviceItemPath}, order={orderNumber}, version={version}, "
-                + $"pos={positionNumber}, dryRun={dryRun}, plugOnDevice={plugOnDevice}");
 
-            var result = new PlugResult();
+            var result = new HardwarePlugResult();
 
             if (string.IsNullOrWhiteSpace(orderNumber))
             {
@@ -236,7 +125,7 @@ namespace TiaMcpServer.Siemens.Services
                 return result;
             }
 
-            if (_session.IsProjectNull())
+            if (HardwareProjectMissing())
             {
                 result.Reason = "NotConnected";
                 result.Message = "No TIA Portal project is bound. Call ConnectPortal, "
@@ -322,7 +211,7 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         can = host.CanPlugNew(typeId, itemName, slot);
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
                     {
                         // 一抛异常代理就可能死掉，必须重新取宿主句柄再继续试，否则后面全是 disposed 假象。
                         result.Attempts.Add($"slot={slot} {typeId} -> preflight exception: {ex.Message}");
@@ -401,9 +290,11 @@ namespace TiaMcpServer.Siemens.Services
             DeviceItem? created;
             try
             {
+                result.MayHaveChanged = true;
+                result.RequiresSessionReset = true;
                 created = host.PlugNew(acceptedType, itemName, acceptedSlot);
             }
-            catch (Exception ex)
+            catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
                 result.Reason = "PlugFailed";
                 result.Message = $"CanPlugNew accepted the operation, but PlugNew failed during execution: {ex.Message} "
@@ -470,6 +361,7 @@ namespace TiaMcpServer.Siemens.Services
             }
 
             result.Ok = true;
+            result.RequiresSessionReset = false;
             var addrText = result.Addresses == null || result.Addresses.Count == 0
                 ? "the module currently has no I/O addresses"
                 : "current addresses: " + string.Join(" / ", result.Addresses.Select(a => a.ToString()));
@@ -481,7 +373,7 @@ namespace TiaMcpServer.Siemens.Services
             return result;
         }
 
-        private static string FormatSlots(IReadOnlyList<PlugLocationInfo> free)
+        private static string FormatSlots(IReadOnlyList<HardwarePlugLocation> free)
         {
             return free.Count == 0
                 ? "(none)"
@@ -490,10 +382,6 @@ namespace TiaMcpServer.Siemens.Services
                     : $"{x.PositionNumber}({x.Label})"));
         }
 
-        /// <summary>
-        /// 拼 TypeIdentifier 变体。订货号空格写法（6ES7221... / 6ES7 221...）TIA 只认其中一种，
-        /// 而用户两种都会写，所以复用整机添加那套归一化逻辑挨个试。
-        /// </summary>
         private static List<string> BuildPlugTypeIdentifiers(string orderNumber, string version)
         {
             var raw = (orderNumber ?? "").Trim();
@@ -545,7 +433,6 @@ namespace TiaMcpServer.Siemens.Services
             return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }
 
-        /// <summary>新模块名：用户没给就自动生成，并且避开同名兄弟（重名 PlugNew 会直接失败）。</summary>
         private static string ResolveNewItemName(HardwareObject host, string? requested, int slot)
         {
             var siblings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -582,16 +469,11 @@ namespace TiaMcpServer.Siemens.Services
             return baseName;
         }
 
-        /// <summary>
-        /// 问硬件目录认不认这个订货号。
-        /// 返回 (null, 说明) 表示**查不了**（没连 Portal / 目录不可用）—— 这和「查了但没有」必须分开，
-        /// 否则会把「目录用不了」误报成「订货号不存在」。
-        /// </summary>
         private (bool? known, string note) ProbeCatalogForOrderNumber(string orderNumber)
         {
             try
             {
-                var hits = _devices.SearchHardwareCatalog(NormalizeOrderNumber(orderNumber), 5);
+                var hits = HardwareLegacySearchHardwareCatalog(NormalizeOrderNumber(orderNumber), 5);
                 if (hits == null || hits.Count == 0)
                 {
                     return (false, "");
@@ -602,14 +484,16 @@ namespace TiaMcpServer.Siemens.Services
                 var ver = string.IsNullOrWhiteSpace(first?.Version) ? "" : $", catalog version {first!.Version}";
                 return (true, string.IsNullOrWhiteSpace(desc) ? ver : $"（{desc}{ver}）");
             }
-            catch (Exception ex)
+            catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
-                _session.Logger?.LogWarning(ex, "Hardware catalog probe failed while classifying plug failure");
                 return (null, "(the hardware catalog is currently unavailable; the existence of the order number cannot be confirmed)");
             }
         }
+        public Dictionary<string, object?>? HardwareReadPlugLocations(string deviceItemPath, bool plugOnDevice = false)
+        {
+            var result = HardwareReadPlugLocationsRaw(deviceItemPath, plugOnDevice);
+            return result == null ? null : new Dictionary<string, object?> { ["free"] = result.Value.free, ["occupied"] = result.Value.occupied };
+        }
 
-        #endregion
-        internal bool HasProject => _session.CurrentProject is object;
     }
 }

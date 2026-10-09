@@ -23,6 +23,24 @@ namespace TiaMcpServer
                 (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
                 () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
             services.TryAddSingleton<ImportStagingHostLifetime>();
+            services.TryAddSingleton<TiaMcpServer.Siemens.Services.HardwareServicesPortService>(_ => new TiaMcpServer.Siemens.Services.HardwareServicesPortService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
+            services.TryAddSingleton<TiaMcpServer.Siemens.Services.HardwareManagementService>(_ => new TiaMcpServer.Siemens.Services.HardwareManagementService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
+            services.TryAddSingleton<TiaMcpServer.Siemens.Services.HardwareModulesService>(_ => new TiaMcpServer.Siemens.Services.HardwareModulesService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
+            services.TryAddSingleton<TiaMcpServer.Siemens.Services.HardwareDevicesService>(_ => new TiaMcpServer.Siemens.Services.HardwareDevicesService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
+            services.TryAddSingleton<TiaMcpServer.Siemens.Services.HardwareNetworkPortService>(_ => new TiaMcpServer.Siemens.Services.HardwareNetworkPortService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
+            services.TryAddSingleton<TiaMcpServer.Siemens.Services.HardwareAmlService>(_ => new TiaMcpServer.Siemens.Services.HardwareAmlService(
+                (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
+                () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
             if (includeSession && OpennessReadiness.Ready)
             {
                 RegisterPortalServices(services);

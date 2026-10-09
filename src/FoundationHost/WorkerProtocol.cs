@@ -51,7 +51,8 @@ internal sealed class WorkerOutcomeState
     internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
     {
         WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
-        if (operation.StartsWith("hardware-addressing.", StringComparison.Ordinal) && result?["RequiresSessionReset"]?.GetValue<bool>() == true)
+        if (TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation) && result is JsonObject reply
+            && reply["RequiresSessionReset"]?.GetValue<bool>() == true)
             Failed(true, new IOException("Hardware addressing outcome is unknown; inspect before a new explicit session."));
         if ((operation == TiaMcp.PlcWorker.WorkerOperations.DeviceCreationCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.PlcImportCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.PlcExportCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.SessionCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.SaveCloseCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.SourceCandidate || operation == TiaMcp.PlcWorker.WorkerOperations.CompileCandidate) && result?["RequiresSessionReset"]?.GetValue<bool>() == true)
             Failed(true, new IOException("Device candidate outcome is unknown; inspect before a new explicit session."));
@@ -68,6 +69,8 @@ internal static class WorkerProtocol
     internal static void ValidateExchangeResult(string operation,JsonObject arguments,JsonNode? result)
     {
         if (operation.StartsWith("hardware-addressing.", StringComparison.Ordinal)) { HardwareAddressingWire.Validate(operation, result); return; }
+        if (operation == "hardware-devices.HardwareDeviceCandidate") { CandidateWire.Device(result, arguments); return; }
+        if (TiaMcp.PlcWorker.WorkerOperations.IsFamilyOperation(operation)) { HardwareFamilyWire.Validate(operation, result); return; }
         if (operation == TiaMcp.PlcWorker.WorkerOperations.CompileCandidate) { CandidateWire.Compile(result, arguments); return; }
         if (operation == TiaMcp.PlcWorker.WorkerOperations.SourceCandidate) { CandidateWire.Source(result, arguments); return; }
         if (operation == TiaMcp.PlcWorker.WorkerOperations.SaveCloseCandidate) { CandidateWire.SaveClose(result, arguments); return; }

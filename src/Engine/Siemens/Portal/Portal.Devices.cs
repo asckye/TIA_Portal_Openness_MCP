@@ -95,33 +95,7 @@ namespace TiaMcpServer.Siemens
         }
 
 
-        public List<Device> GetDevices(string regexName = "")
-        {
-            _logger?.LogInformation("Getting devices...");
 
-            if (IsProjectNull())
-            {
-                return [];
-            }
-
-            var list = new List<Device>();
-
-            if (_project?.Devices != null)
-            {
-                foreach (Device device in _project.Devices)
-                {
-                    list.Add(device);
-                }
-
-                foreach (var group in _project.DeviceGroups)
-                {
-                    GetDevicesRecursive(group, list, regexName);
-                }
-
-            }
-
-            return list;
-        }
 
         public Device? GetDevice(string devicePath)
         {
@@ -173,103 +147,18 @@ namespace TiaMcpServer.Siemens
         }
 
         public string GetDeviceItemTree(string deviceItemPath, int maxDepth = 4)
-        {
-            _logger?.LogInformation($"Getting device item tree by path: {deviceItemPath}, depth={maxDepth}");
-
-            if (IsProjectNull())
-            {
-                return string.Empty;
-            }
-
-            var root = GetDeviceItemByPath(deviceItemPath);
-            if (root == null)
-            {
-                return string.Empty;
-            }
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"{root.Name} [DeviceItem]");
-            BuildDeviceItemTree(sb, root, new List<bool>(), 0, Math.Max(0, maxDepth));
-            return sb.ToString();
-        }
+            => IsProjectNull() ? string.Empty : new Services.HardwareDevicesService(HardwareAddressWorkerBridge.Call, () => true, HardwareAddressWorkerBridge.ProjectIdentity).GetDeviceItemTree(deviceItemPath, maxDepth);
 
         public List<ModelContextProtocol.NetworkAttribute>? GetDeviceItemNetworkInfo(string deviceItemPath)
-        {
-            if (IsProjectNull()) return null;
-            var di = GetDeviceItemByPath(deviceItemPath);
-            if (di == null) return null;
-
-            // Heuristic: filter attribute names that likely contain network addressing / interface identity.
-            var keys = new[]
-            {
-                "ip", "ipv4", "subnet", "mask", "gateway", "mac", "pn", "profinet", "device", "station", "interface", "name", "address"
-            };
-
-            var list = new List<ModelContextProtocol.NetworkAttribute>();
-            try
-            {
-                foreach (var info in di.GetAttributeInfos())
-                {
-                    var n = info.Name ?? "";
-                    var lower = n.ToLowerInvariant();
-                    if (!keys.Any(k => lower.Contains(k))) continue;
-
-                    object vObj;
-                    try { vObj = di.GetAttribute(info.Name); }
-                    catch /* swallow(probe-optional): an unreadable device attribute is omitted from address diagnostics */ { continue; }
-
-                    var v = vObj?.ToString();
-                    if (string.IsNullOrWhiteSpace(v)) continue;
-
-                    list.Add(new ModelContextProtocol.NetworkAttribute
-                    {
-                        Name = info.Name,
-                        Value = v,
-                        DataType = TryGetPropertyValue(info, "DataType", "Type")?.ToString(),
-                        IsWritable = IsAttributeWritable(info)
-                    });
-                }
-            }
-            catch /* swallow(enumerate-optional): unavailable attribute metadata leaves the collected address diagnostics intact */
-            {
-                // best-effort
-            }
-
-            return list;
-        }
+            => IsProjectNull() ? null : new Services.HardwareNetworkPortService(HardwareAddressWorkerBridge.Call, () => true, HardwareAddressWorkerBridge.ProjectIdentity).GetDeviceItemNetworkInfo(deviceItemPath);
 
 
         // ----- Network topology / IP read-out (Openness as the source of truth) -----
         // Replaces the old "probe S7 / hand-parse exported AML" workaround for finding a PLC's IP.
 
-        private static string? ReadNodeAddress(object node)
-            => TryGetPropertyValue(node, "Address")?.ToString()
-               ?? TryGetPropertyValue(node, "IpAddress")?.ToString()
-               ?? TryGetPropertyValue(node, "IPAddress")?.ToString()
-               ?? TryGetEngineeringAttribute(node, "Address")?.ToString()
-               ?? TryGetEngineeringAttribute(node, "IpAddress")?.ToString();
 
-        private JsonArray BuildDeviceNodesJson(Device device)
-        {
-            var arr = new JsonArray();
-            foreach (var root in device.DeviceItems)
-            {
-                foreach (var n in FindNetworkNodes(root))
-                {
-                    var subnet = TryGetPropertyValue(n.Node, "ConnectedSubnet");
-                    arr.Add(new JsonObject
-                    {
-                        ["nodeName"] = TryGetName(n.Node) ?? "<unnamed>",
-                        ["address"] = ReadNodeAddress(n.Node) ?? string.Empty,
-                        ["nodeType"] = TryGetPropertyValue(n.Node, "NodeType")?.ToString() ?? string.Empty,
-                        ["connectedSubnet"] = TryGetName(subnet) ?? subnet?.ToString() ?? string.Empty,
-                        ["interfacePath"] = n.Path,
-                        ["isIndustrialEthernet"] = IsIndustrialEthernetNode(n.Node)
-                    });
-                }
-            }
-            return arr;
-        }
+
+
 
         // ----- PUT/GET access (dependency check for S7 reads) -----
 
@@ -335,97 +224,7 @@ namespace TiaMcpServer.Siemens
         }
 
         public string ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName)
-        {
-            var sb = new StringBuilder();
-            if (IsProjectNull()) return "Project is null";
-
-            var plcRoot = GetDeviceItemByPath(plcRootPath);
-            var hmiRoot = GetDeviceItemByPath(hmiRootPath);
-            sb.AppendLine("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
-            sb.AppendLine("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
-            if (plcRoot == null || hmiRoot == null) return sb.ToString();
-
-            var plcNodes = FindNetworkNodes(plcRoot).ToList();
-            var hmiNodes = FindNetworkNodes(hmiRoot).ToList();
-            sb.AppendLine("PLC item service scan:");
-            foreach (var line in DescribeNetworkServiceScan(plcRoot)) sb.AppendLine("  " + line);
-            sb.AppendLine("HMI item service scan:");
-            foreach (var line in DescribeNetworkServiceScan(hmiRoot)) sb.AppendLine("  " + line);
-            sb.AppendLine("PLC nodes:");
-            foreach (var n in plcNodes) sb.AppendLine("  " + FormatNodeInfo(n));
-            sb.AppendLine("HMI nodes:");
-            foreach (var n in hmiNodes) sb.AppendLine("  " + FormatNodeInfo(n));
-
-            var plcNode = plcNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node));
-            var hmiNode = hmiNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node));
-            sb.AppendLine("Selected PLC node: " + (plcNode.Node == null ? "<none>" : FormatNodeInfo(plcNode)));
-            sb.AppendLine("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : FormatNodeInfo(hmiNode)));
-            if (plcNode.Node == null || hmiNode.Node == null) return sb.ToString();
-
-            object? subnet = null;
-            try
-            {
-                subnet = TryGetPropertyValue(plcNode.Node, "ConnectedSubnet");
-                if (subnet == null)
-                {
-                    var create = plcNode.Node.GetType().GetMethod("CreateAndConnectToSubnet", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
-                    subnet = create?.Invoke(plcNode.Node, new object[] { subnetName });
-                    sb.AppendLine("PLC CreateAndConnectToSubnet: " + (subnet == null ? "NULL" : "OK " + TryGetName(subnet)));
-                }
-                else
-                {
-                    sb.AppendLine("PLC already connected to subnet: " + (TryGetName(subnet) ?? subnet.ToString()));
-                }
-            }
-            catch (Exception ex)
-            {
-                sb.AppendLine("PLC subnet create/connect error: " + FormatExceptionDetail(ex));
-            }
-
-            if (subnet != null)
-            {
-                try
-                {
-                    var connect = hmiNode.Node.GetType().GetMethod("ConnectToSubnet", BindingFlags.Public | BindingFlags.Instance);
-                    connect?.Invoke(hmiNode.Node, new object[] { subnet });
-                    sb.AppendLine("HMI ConnectToSubnet: OK");
-                }
-                catch (Exception ex)
-                {
-                    sb.AppendLine("HMI ConnectToSubnet error: " + FormatExceptionDetail(ex));
-                }
-            }
-
-            sb.AppendLine("Readback PLC node: " + FormatNodeInfo(plcNode));
-            sb.AppendLine("Readback HMI node: " + FormatNodeInfo(hmiNode));
-
-            try
-            {
-                var sw = GetSoftwareContainer("HMI_RT_1")?.Software;
-                var connections = sw == null ? null : TryGetPropertyValue(sw, "Connections");
-                sb.AppendLine("HMI Connections after subnet:");
-                if (connections is IEnumerable en)
-                {
-                    var any = false;
-                    foreach (var c in en)
-                    {
-                        any = true;
-                        sb.AppendLine("  " + (TryGetName(c) ?? c?.ToString() ?? "<null>"));
-                    }
-                    if (!any) sb.AppendLine("  <empty>");
-                }
-                else
-                {
-                    sb.AppendLine("  <not found>");
-                }
-            }
-            catch (Exception ex)
-            {
-                sb.AppendLine("HMI connection readback error: " + FormatExceptionDetail(ex));
-            }
-
-            return sb.ToString();
-        }
+            => IsProjectNull() ? "Project is null" : new Services.HardwareNetworkPortService(HardwareAddressWorkerBridge.Call, () => true, HardwareAddressWorkerBridge.ProjectIdentity).ProbeConnectDeviceNodesToSubnet(plcRootPath, hmiRootPath, subnetName);
 
         public string ProbeDeviceNetworkExposure(string deviceItemPath)
         {
@@ -861,22 +660,7 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
-        private JsonArray BuildDeviceItemNetworkReadbackJson(string deviceItemPath)
-        {
-            var arr = new JsonArray();
-            var attrs = GetDeviceItemNetworkInfo(deviceItemPath) ?? new List<ModelContextProtocol.NetworkAttribute>();
-            foreach (var attr in attrs)
-            {
-                arr.Add(new JsonObject
-                {
-                    ["name"] = attr.Name ?? string.Empty,
-                    ["value"] = attr.Value ?? string.Empty,
-                    ["dataType"] = attr.DataType ?? string.Empty,
-                    ["isWritable"] = attr.IsWritable
-                });
-            }
-            return arr;
-        }
+
 
         private static IEnumerable<string> ProbeInterestingServices(object target)
         {
@@ -956,46 +740,9 @@ namespace TiaMcpServer.Siemens
         }
 
 
-        private static void BuildDeviceItemTree(StringBuilder sb, DeviceItem node, List<bool> ancestorStates, int depth, int maxDepth)
-        {
-            if (depth >= maxDepth) return;
 
-            // Hardware components (Items)
-            if (node.Items != null && node.Items.Count > 0)
-            {
-                var items = node.Items.ToList();
-                for (int i = 0; i < items.Count; i++)
-                {
-                    var it = items[i];
-                    var isLast = (i == items.Count - 1) && (node.DeviceItems == null || node.DeviceItems.Count == 0);
-                    sb.AppendLine($"{GetTreePrefixStatic(ancestorStates, isLast)}{it.Name} [Hardware Component]");
-                }
-            }
 
-            // Sub device items
-            if (node.DeviceItems != null && node.DeviceItems.Count > 0)
-            {
-                var children = node.DeviceItems.ToList();
-                for (int i = 0; i < children.Count; i++)
-                {
-                    var child = children[i];
-                    var isLast = i == children.Count - 1;
-                    sb.AppendLine($"{GetTreePrefixStatic(ancestorStates, isLast)}{child.Name} [DeviceItem]");
-                    BuildDeviceItemTree(sb, child, new List<bool>(ancestorStates) { isLast }, depth + 1, maxDepth);
-                }
-            }
-        }
 
-        private static string GetTreePrefixStatic(List<bool> ancestorStates, bool isLast)
-        {
-            var prefix = new StringBuilder();
-            for (int i = 0; i < ancestorStates.Count; i++)
-            {
-                prefix.Append(ancestorStates[i] ? "    " : "│   ");
-            }
-            prefix.Append(isLast ? "└── " : "├── ");
-            return prefix.ToString();
-        }
 
 
         public ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath = "PLC_1", string expectedHmiSoftwarePath = "HMI_RT_1")

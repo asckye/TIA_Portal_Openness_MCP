@@ -130,7 +130,6 @@ namespace TiaMcpServer.Siemens
             => ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, importedNames);
         bool IEngineeringSession.TrySetProperty(object target, string propName, object? value) => TrySetProperty(target, propName, value);
         string IEngineeringSession.GetProjectTree() => GetProjectTree();
-        List<Device> IEngineeringSession.GetDevices(string regexName) => GetDevices(regexName);
         Device? IEngineeringSession.GetDevice(string devicePath) => GetDevice(devicePath);
         DeviceItem? IEngineeringSession.GetDeviceItem(string deviceItemPath) => GetDeviceItem(deviceItemPath);
         string IEngineeringSession.GetDeviceItemTree(string deviceItemPath, int maxDepth) => GetDeviceItemTree(deviceItemPath, maxDepth);
@@ -138,17 +137,13 @@ namespace TiaMcpServer.Siemens
         IEnumerable<object> IEngineeringSession.FindHardwareCatalogEntries(object catalog, string filter) => FindHardwareCatalogEntries(catalog, filter);
         bool? IEngineeringSession.IsAttributeWritable(object attributeInfo) => IsAttributeWritable(attributeInfo);
         object IEngineeringSession.CoerceAttributeValue(string value, object? oldValue, object attributeInfo) => CoerceAttributeValue(value, oldValue, attributeInfo);
-        JsonArray IEngineeringSession.BuildDeviceItemNetworkReadbackJson(string deviceItemPath) => BuildDeviceItemNetworkReadbackJson(deviceItemPath);
         IEnumerable<Device> IEngineeringSession.EnumerateAllDevices() => EnumerateAllDevices();
 
         string[] IEngineeringSession.GetPlcSoftwareNamesForDesktop() => GetPlcSoftwareNamesForDesktop();
         ResponseMessage IEngineeringSession.ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)
             => ValidateAutomationContext(expectedPlcSoftwarePath, expectedHmiSoftwarePath);
         JsonArray IEngineeringSession.ToJsonArray(IEnumerable<string> values) => ToJsonArray(values);
-        DeviceItem IEngineeringSession.RequireDeviceItem(HardwareObject owner, string parameter) => RequireDeviceItem(owner, parameter);
-        void IEngineeringSession.ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write) => ApplyScalarsAndAttributes(target, propertiesJson, attributesJson, meta, write);
         IEngineeringServiceProvider IEngineeringSession.ServiceProvider(HardwareObject owner) => ServiceProvider(owner);
-        JsonNode? IEngineeringSession.LinkedTagRows(Channel channel, JsonObject row) => LinkedTagRows(channel, row);
         System.Collections.Generic.List<PlcSoftware> IEngineeringSession.GetAllPlcSoftware() => GetAllPlcSoftware();
         System.Collections.Generic.List<(string Path, bool? Consistent)> IEngineeringSession.ReadPlcConsistency(string softwarePath)
             => ReadPlcConsistency(softwarePath);
@@ -233,7 +228,6 @@ namespace TiaMcpServer.Siemens
         ResponseMessage IEngineeringSession.ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun) => ImportProjectTexts(filePath, updateSourceLanguage, dryRun);
         List<ModelContextProtocol.NetworkAttribute>? IEngineeringSession.GetDeviceItemNetworkInfo(string deviceItemPath) => GetDeviceItemNetworkInfo(deviceItemPath);
         string IEngineeringSession.ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName) => ProbeConnectDeviceNodesToSubnet(plcRootPath, hmiRootPath, subnetName);
-        JsonArray IEngineeringSession.BuildDeviceNodesJson(Device device) => BuildDeviceNodesJson(device);
         string IEngineeringSession.NormalizeAttrName(string? n) => NormalizeAttrName(n);
         IEnumerable<(DeviceItem Item, string Path)> IEngineeringSession.TraverseDeviceItems(DeviceItem root, string path) => TraverseDeviceItems(root, path);
         IEnumerable<Portal.NetworkNodeInfo> IEngineeringSession.FindNetworkNodes(DeviceItem root) => FindNetworkNodes(root);

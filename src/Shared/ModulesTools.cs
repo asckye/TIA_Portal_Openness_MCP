@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4.Hmi;
 using TiaMcp.Logic.V4.Inputs;
 using TiaMcp.Logic.V4;
@@ -17,9 +18,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ModulesTools
     {
-        private readonly ModulesService _service;
+        private readonly HardwareModulesService _service;
 
-        public ModulesTools(ModulesService service) => _service = service;
+        public ModulesTools(HardwareModulesService service) => _service = service;
         #region plug submodule
 
         [McpServerTool(Name = "GetDevicePlugLocations"), Description(

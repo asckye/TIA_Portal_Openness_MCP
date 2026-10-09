@@ -26,10 +26,10 @@ internal static class HardwareContractsTests
             "SetDeviceItemAttribute", "ValidateAutomationContext", "SearchInstalledGsdDevices", "SearchHardwareCatalog",
             "GetDevicePlugLocations",
             "PlugDeviceItem", "ExportDeviceAml", "ImportDeviceAml", "BuildDeviceAmlDocument", "ManageHardwareObject" }) names[name] = name;
-        var group = new[] { "DevicesTools", "HardwareAmlTools", "HardwareManagementTools", "ModulesTools" }
+        var group = new[] { "DevicesTools", "HardwareDevicesTools", "HardwareAmlTools", "HardwareManagementTools", "ModulesTools" }
             .Select(n => server.GetType("TiaMcpServer.ModelContextProtocol." + n, true)!)
             .SelectMany(t => t.GetMethods(All)).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
-        check(group.Length == 21, "P6-12 retains exactly 21 engine entries after the five-tool F19 port");
+        check(group.Length == 21, "P6-12 retains exactly 21 typed declarations across shared ports and F05");
         EngineSurface.CheckPortedHardwareRetirement(server, check);
         foreach (var pair in names)
         {
@@ -119,7 +119,17 @@ internal static class HardwareContractsTests
         {
             var method = surface.Tool(sample.Item1);
             var target = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.DeclaringType!);
-            method.DeclaringType!.GetField("_service", All)!.SetValue(target, service);
+            var field = method.DeclaringType!.GetField("_service", All)!;
+            object injected = service;
+            if (field.FieldType.Name == "HardwareDevicesService")
+            {
+                injected = field.FieldType.GetConstructors(All).Single().Invoke(new object?[] {
+                    new Func<string, JsonObject, JsonNode?>((_, __) => throw (Exception)Activator.CreateInstance(
+                        Type.GetType("TiaMcp.Adapters.Contracts.AdapterPreconditionException, TiaMcp.Adapters.Contracts", true)!,
+                        "No TIA Portal is connected. Call ListPortalProcessProjects, ConnectPortal or ConnectProject first.", "session", false, null)!),
+                    new Func<bool>(() => false), new Func<string>(() => ""), null });
+            }
+            field.SetValue(target, injected);
             var body = Body(method.Invoke(target, sample.Item2)!);
             check((string?)body["error"]?["code"] == "PRECONDITION_FAILED"
                 && (string?)body["error"]?["details"]?["parameter"] == "session"

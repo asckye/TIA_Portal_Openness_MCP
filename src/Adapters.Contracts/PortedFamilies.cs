@@ -34,13 +34,28 @@ namespace TiaMcp.Adapters.Contracts
             new Family("F03", "hmi-offline",
                 new[] { "20", "21" },
                 new[] { "AnalyzeGlobalLibraryPackage", "AnalyzeHmiTemplateReference", "AnalyzeUnifiedHmiTemplateLayout", "BuildClassicHmiMinimalPackage", "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildUnifiedHmiButtonActionScript", "BuildUnifiedHmiLayoutDesign", "BuildUnifiedHmiTemplateApplyDesign", "BuildUnifiedHmiTemplateApplyDesignManifest", "BuildUnifiedHmiThemeDesign", "ManageUnifiedCwcPackage", "PlanGlobalLibraryTemplateReuse", "RunClassicHmiOfflineValidationSuite", "RunClassicHmiTemporaryImportPreflight", "RunHmiActionScriptRecipeSafetySelfTest", "RunHmiTemplatePlcSyncPrecheckSuite", "ValidateClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackagePlcSync", "WriteClassicHmiMinimalPackageFiles" }),
+            new Family("F18", "hardware-devices",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "CreateDevice", "CreateGsdDevice", "CreateHardwareCatalogDevice", "ListDevices", "GetDeviceInfo", "GetDeviceItemInfo", "GetDeviceItemTree", "SearchInstalledGsdDevices", "GetDeviceAttributes", "SetDeviceItemAttribute", "SetPlcCpuSettings", "GetDevicePlugLocations", "PlugDeviceItem", "ManageHardwareObject", "ManageDeviceUserGroup", "GetHardwareFeatures", "ManageDeviceServiceObjects", "ManageHardwareUtilities", "ExchangeSystemDiagnosticsSettings" }),
+            new Family("F20", "hardware-network",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "ListIoSystems", "ManageIoSystem", "ListNetworkDomains", "ManageNetworkDomain", "ListTransferAreas", "ManageTransferArea", "ListDeviceItemChannels", "SetDeviceItemChannel", "ManagePortInterconnection", "GetDeviceItemNetworkInfo", "ConnectDeviceNodesToProfinetSubnet", "PlanHardwareNetworkConfiguration", "EnsureSubnet", "AttachDeviceNodeToSubnet", "ProbeHardwareHmiConnectionOwnerCandidates", "ProbeHardwareHmiConnectionWhitelistedServices", "GetProjectTopology", "ListCommunicationConnections", "ManageCommunicationConnection" }),
+            new Family("F21", "hardware-aml",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "BuildDeviceAmlDocument", "ExportDeviceAml", "ImportDeviceAml" }),
             new Family("F19", "hardware-addressing",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "GetDeviceAddressing", "GetDeviceIpAddress", "GetDeviceItemIoAddresses", "SetDeviceAddress", "SetDeviceItemIoAddress" })
         };
 
+        public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
+            ["ListCommunicationConnections"] = new[] { "21" },
+            ["ManageCommunicationConnection"] = new[] { "21" }
+        };
+
         public static Family ForTool(string tool) => All.Single(f => f.Tools.Contains(tool, StringComparer.Ordinal));
         public static bool Contains(string tool) => All.Any(f => f.Tools.Contains(tool, StringComparer.Ordinal));
-        public static bool Available(string release, string tool) => ForTool(tool).Available(release);
+        public static bool Available(string release, string tool) => ForTool(tool).Available(release)
+            && (!ToolReleases.TryGetValue(tool, out var releases) || releases.Contains(release, StringComparer.Ordinal));
     }
 }

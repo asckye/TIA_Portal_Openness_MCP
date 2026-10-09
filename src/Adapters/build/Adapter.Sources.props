@@ -11,6 +11,25 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDelete.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressing.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetworkLegacy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareGroupCreation.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetwork.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareServices.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareDevices.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareModules.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareCatalogPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareOfficialService.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetworkPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareServicesPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareServiceObjectPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareUtilityPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareGroupOperations.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwarePath.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareScalarEvidence.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetworkPrimitives.cs" />
+
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAml.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAmlPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressingSteps.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressPrimitives.cs" />

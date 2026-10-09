@@ -357,10 +357,13 @@ namespace TiaMcp.Adapters
 
         private sealed class NetworkNodeInfo
         {
+            internal NetworkNodeInfo() { Path = ""; Item = null!; NetworkInterface = null!; Node = null!; }
             internal string Path { get; }
+            internal DeviceItem Item { get; }
+            internal object NetworkInterface { get; }
             internal object Node { get; }
             internal NetworkNodeInfo(string path, DeviceItem item, object networkInterface, object node)
-            { Path = path; Node = node; }
+            { Path = path; Item = item; NetworkInterface = networkInterface; Node = node; }
         }
         private static object? TryGetPropertyValue(object obj, params string[] propertyNames)
         {

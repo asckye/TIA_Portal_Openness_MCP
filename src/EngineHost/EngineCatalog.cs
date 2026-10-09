@@ -56,10 +56,9 @@ namespace TiaMcp.FoundationHost
             if (descriptors.Count != tools.Count) throw new InvalidDataException("Engine catalog descriptor coverage mismatch.");
             // The transitional engine export excludes migrated declarations. The
             // host reflects the shared source and merges it in the original order.
-            foreach (var method in PortedToolDeclarations.Methods(release))
+            foreach (var method in PortedToolDeclarations.Methods(release, includeUnavailable: true))
             {
                 string name = method.GetCustomAttribute<ModelContextProtocol.Server.McpServerToolAttribute>()!.Name!;
-                if (!TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, name)) continue;
                 if (descriptors.ContainsKey(name)) throw new InvalidDataException("Ported declaration remained in the engine export: " + name);
                 DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
                 descriptors.Add(name, descriptor);
@@ -67,7 +66,8 @@ namespace TiaMcp.FoundationHost
             descriptors = descriptors.OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
             IncludingUnavailable = descriptors;
             All = root["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => descriptors[(string)t!["name"]!], StringComparer.OrdinalIgnoreCase);
-            All = All.Concat(descriptors.Where(p => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(p.Key)))
+            All = All.Concat(descriptors.Where(p => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(p.Key)
+                    && TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, p.Key)))
                 .OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
             Lite = root["liteTools"]!.AsArray().Select(n => descriptors[(string)n!]).ToArray();
             Instructions = (string)root["serverInstructions"]!;

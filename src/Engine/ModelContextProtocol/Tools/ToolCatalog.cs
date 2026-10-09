@@ -27,6 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "CompileCandidateTools",
             "DccTools",
             "DevicesTools",
+            "HardwareDevicesTools",
             "DiagnosticsTools",
             "DocumentsTools",
             "EcosystemTools",
@@ -38,7 +39,9 @@ namespace TiaMcpServer.ModelContextProtocol
             "HardwareAmlTools",
             "HardwareManagementTools",
             "HardwareNetworkTools",
+            "HardwareSecurityTools",
             "HardwareServicesTools",
+            "HardwareServicesPortTools",
             "HmiDescribeTools",
             "HmiExchangeTools",
             "HmiInspectionTools",
@@ -119,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "HmiTagDeletionService",
             "LibraryService",
             "MigrationReadService",
-            "ModulesService",
+            "HardwareModulesService",
             "MotionProDiagClassicHmiService",
             "NativeExchangeService",
             "OnlineDownloadService",
@@ -203,7 +206,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (attribute == null) continue;
                     var name = attribute.Name ?? method.Name;
 #if TIA_ENGINE_PORTED
-                    if (TiaMcp.Adapters.Contracts.PortedFamilies.All.Any(f => f.Name != "F19" && f.Tools.Contains(name, StringComparer.Ordinal)))
+                    if (TiaMcp.Adapters.Contracts.PortedFamilies.All.Any(f => (f.Name == "F01" || f.Name == "F02" || f.Name == "F03") && f.Tools.Contains(name, StringComparer.Ordinal)))
                         throw new InvalidOperationException("A host-owned tool is still registered in the engine: " + name);
 #endif
                     if (methods.TryGetValue(name, out var previous))

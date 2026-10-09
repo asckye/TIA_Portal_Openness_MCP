@@ -63,18 +63,5 @@ namespace TiaMcpServer.Siemens
         private static JsonObject DocumentImportRow(DocumentImportResult result, JsonArray imported)
             => new JsonObject { ["state"] = result.State.ToString(), ["imported"] = imported, ["messages"] = DocumentMessages(result.Messages) };
 
-        // ---- channel linked tags (ReadDeviceItemChannels includeLinkedTags) ---------------------------------------------------------------
-        private static JsonNode? LinkedTagRows(Channel channel, JsonObject row)
-        {
-#if TIA_V20
-            row["linkedTagsNote"] = "PlcTagProvider.GetLinkedTags exists in the V21 PublicAPI only.";
-            return null;
-#else
-            PlcTagProvider? provider = channel.GetService<PlcTagProvider>();
-            if (provider == null) { row["linkedTagsNote"] = "PlcTagProvider unavailable on this channel."; return null; }
-            IList<PlcTag> tags = provider.GetLinkedTags();
-            return new JsonArray(tags.Select(t => (JsonNode)new JsonObject { ["name"] = t.Name, ["dataTypeName"] = t.DataTypeName, ["logicalAddress"] = t.LogicalAddress, ["tagTable"] = (t.Parent as PlcTagTable)?.Name }).ToArray());
-#endif
-        }
     }
 }

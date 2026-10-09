@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import ported_families
 import urllib.error
 import urllib.request
 
@@ -230,7 +231,12 @@ def engine_transports(args, temp, counts):
             if args.engine_fixture:
                 fixture = args.engine_fixture.resolve()
                 (fixture.parent / f'TiaMcp.Adapter.{key}.dll').write_text('offline session fixture', encoding='utf-8')
-                catalog = json.loads((ROOT / f'runtime/v{key}/worker/tool-catalog.json').read_text('utf-8'))
+                catalog_source = (args.sdk_fixture_root / key / 'tool-catalog.json') if args.sdk_fixture_root else ROOT / f'runtime/v{key}/worker/tool-catalog.json'
+                catalog = json.loads(catalog_source.read_text('utf-8'))
+                migrated = {name for family in ported_families.families(ROOT).values() for name in family['tools']}
+                catalog['tools'] = [row for row in catalog['tools'] if row['name'] not in migrated]
+                catalog['descriptors'] = [row for row in catalog['descriptors'] if row['name'] not in migrated]
+                catalog['unavailableTools'] = [row for row in catalog.get('unavailableTools', []) if row['tool']['name'] not in migrated]
                 catalog['workerSha256'] = hashlib.sha256(fixture.read_bytes()).hexdigest()
                 catalog_path = temp / f'engine-fixture-catalog-{key}.json'
                 catalog_path.write_text(json.dumps(catalog), encoding='utf-8')

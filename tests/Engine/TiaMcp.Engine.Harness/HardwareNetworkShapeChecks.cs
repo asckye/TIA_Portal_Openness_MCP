@@ -161,18 +161,24 @@ internal static class HardwareNetworkShapeChecks
     {
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var surface = EngineSurface.For(server);
-        var service = server.GetType("TiaMcpServer.Siemens.Services." + domain + "Service", true)!;
-        var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
+        var originalService = server.GetType("TiaMcpServer.Siemens.Services." + domain + "Service", true)!;
+        var originalTools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
         check(session != null && ReferenceEquals(session, provider.GetService(server.GetType("TiaMcpServer.Siemens.Portal", true)!)),
             domain + " uses the registered Portal session");
-        foreach (var type in new[] { service, tools })
-            check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
-                type.FullName + " is a non-disposable singleton class");
         foreach (var name in names)
         {
             string registered = V4Name(name);
+            var tool = surface.Tool(registered);
+            var tools = tool.DeclaringType!;
+            var service = domain == "HardwareNetwork" && name != "ManageDeviceUsers" ? server.GetType("TiaMcpServer.Siemens.Services.HardwareNetworkPortService", true)!
+                : domain == "HardwareServices" && new[] { "ReadCommunicationConnections", "ManageCommunicationConnection", "ExchangeSystemDiagnosticsSettings", "ReadHardwareFeatures", "ManageDeviceServiceObjects", "ManageHardwareUtilities" }.Contains(name) ? server.GetType("TiaMcpServer.Siemens.Services.HardwareServicesPortService", true)!
+                : domain == "Devices" ? server.GetType("TiaMcpServer.Siemens.Services.HardwareDevicesService", true)! : originalService;
+        foreach (var type in new[] { service, tools })
+            check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
+                type.FullName + " is a non-disposable singleton class");
+
             if ((name == "ReadCommunicationConnections" || name == "ManageCommunicationConnection")
                 && !tools.GetMethods(all).Any(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == registered))
                 continue; // V20 does not advertise the V21 communication API.
@@ -185,13 +191,14 @@ internal static class HardwareNetworkShapeChecks
             }
             var method = name == "GetDeviceItemNetworkInfo" || name == "GetPutGetAccess" || name == "ConnectDeviceNodesToProfinetSubnet"
                 ? service.GetMethod(name == "ConnectDeviceNodesToProfinetSubnet" ? "ProbeConnectDeviceNodesToSubnet" : name, all)!
-                : surface.Method(name);
-            var tool = surface.Tool(registered);
+                : service.GetMethod(name, all)!;
             var target = surface.Target(method);
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
                 && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
                 domain + " resolves the service and tool singletons: " + name);
-            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+            bool sessionShared = service.GetField("_session", all) is FieldInfo sessionField ? ReferenceEquals(sessionField.GetValue(target), session)
+                : service.GetField("call", all)!.GetValue(target) is Delegate && service.GetField("hasProject", all)!.GetValue(target) is Delegate;
+            check(sessionShared
                 && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(surface.Target(tool)), target),
                 domain + " tool uses the service with the shared session: " + name);
             bool callsService = CallsService(tool, method, tools, new HashSet<MethodBase>());

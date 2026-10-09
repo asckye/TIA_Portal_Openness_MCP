@@ -16,8 +16,7 @@ namespace TiaMcpServer.Siemens
     // dynamic attributes are read per name with the failure captured, never assumed present.
     public partial class Portal
     {
-        private static DeviceItem RequireDeviceItem(HardwareObject owner, string parameter)
-            => owner as DeviceItem ?? throw new ArgumentException(parameter + " must address a DeviceItem (non-empty itemPathJson).");
+
         private static T RequireHardwareService<T>(HardwareObject owner, string parameter) where T : class, IEngineeringService
             => ServiceProvider(owner).GetService<T>() ?? throw new NotSupportedException(parameter + " does not expose " + typeof(T).Name + " (service is null for this hardware object).");
 
@@ -82,15 +81,7 @@ namespace TiaMcpServer.Siemens
                 if (!EngineeringScalarProperties.SameValue(target.GetAttribute(pair.Key), value)) throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
             }
         }
-        private static void ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write)
-        {
-            var properties = HardwareNetworkLogic.ParseObject(propertiesJson, "propertiesJson"); var attributes = HardwareNetworkLogic.ParseObject(attributesJson, "attributesJson");
-            var prepared = EngineeringScalarProperties.Prepare(target.GetType(), properties);
-            meta["requestedProperties"] = properties.DeepClone(); meta["requestedAttributes"] = attributes.DeepClone();
-            if (!write) return;
-            if (prepared.Count > 0) EngineeringScalarProperties.Apply(target, prepared, meta);
-            if (attributes.Count > 0) SetDynamicAttributes((IEngineeringObject)target, attributes, meta);
-        }
+
         // TIA Portal V21, 2026-09-18 (docs/reference/real-machine-ledger.md): a composition proxy fetched before Create/Delete is stale (the new MrpDomain was not found
         // on it; enumerating it after Delete raised EngineeringObjectDisposedException). Verification therefore always
         // re-navigates to a fresh composition, and a disposed-proxy error while looking for a deleted object counts as

@@ -78,7 +78,7 @@ namespace TiaMcp.Engine.Tests
 {
     internal static class ToolBridgeFixture
     {
-        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(DcbVersionProbe), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools) });
+        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(DcbVersionProbe), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools) });
 
         internal static void Configure(bool lite = false)
         {
@@ -245,7 +245,8 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(new ToolCatalog(new[] {
                 typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(HostMetaTools), typeof(ExportTools), typeof(EngineeringDiagnosticsTools), typeof(HmiInspectionTools), typeof(MigrationReadTools),
                 typeof(RuntimeSettingsTools), typeof(OnlineDownloadTools), typeof(PlcSimAdvancedTools), typeof(RuntimeChannelTools), typeof(RuntimeTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools), typeof(ToolUsageTools),
-                typeof(AddressesTools), typeof(HardwareNetworkTools), typeof(HardwareServicesTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
+                typeof(AddressesTools), typeof(HardwareNetworkTools), typeof(HardwareSecurityTools), typeof(HardwareServicesTools), typeof(HardwareServicesPortTools),
+                typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareAmlTools), typeof(EcosystemTools), typeof(EngineeringAuditTools),
                 typeof(GitWorkflowTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(OfflineAnalysisTools), typeof(OfflineSuiteTools),
                 typeof(PlcBuildTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools), typeof(TemplateTools),
                 typeof(V21EcosystemTools), typeof(XmlBuilderTools), typeof(AlarmsTools), typeof(OpcUaTools),

@@ -1132,6 +1132,9 @@ def plc_exchange_reply(reply, name):
 # live in the Siemens-free host types. Explicit rosters keep a missing fixture
 # or a declaration moved to the wrong type from silently disappearing.
 PORTED_DOMAIN_TOOLS = {
+    'Devices': {'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
+    'HardwareNetwork': {'HardwareSecurityTools': ('ManageDeviceUsers',)},
+    'HardwareServices': {'HardwareServicesPortTools': ('ListCommunicationConnections', 'ManageCommunicationConnection', 'ExchangeSystemDiagnosticsSettings', 'GetHardwareFeatures', 'ManageDeviceServiceObjects', 'ManageHardwareUtilities')},
     'Library': {'HmiOfflineTools': (
         'AnalyzeHmiTemplateReference', 'AnalyzeGlobalLibraryPackage',
         'PlanGlobalLibraryTemplateReuse', 'AnalyzeUnifiedHmiTemplateLayout')},

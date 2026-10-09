@@ -389,12 +389,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 发布键 | 当前广告工具 | 当前 lite | string …Json | 涉及工具 | V4 工具 | V4 lite 提案 |
 |---|---|---|---|---|---|---|
-| 14sp1 | 67 | 不设 | 15 | 11 | 67 | 不设 |
-| 15.1 | 68 | 不设 | 15 | 11 | 68 | 不设 |
-| 16 | 70 | 不设 | 15 | 11 | 70 | 不设 |
-| 17 | 70 | 不设 | 15 | 11 | 70 | 不设 |
-| 18 | 70 | 不设 | 15 | 11 | 70 | 不设 |
-| 19 | 72 | 不设 | 15 | 11 | 72 | 不设 |
+| 14sp1 | 106 | 不设 | 61 | 27 | 106 | 不设 |
+| 15.1 | 107 | 不设 | 61 | 27 | 107 | 不设 |
+| 16 | 109 | 不设 | 61 | 27 | 109 | 不设 |
+| 17 | 109 | 不设 | 61 | 27 | 109 | 不设 |
+| 18 | 109 | 不设 | 61 | 27 | 109 | 不设 |
+| 19 | 111 | 不设 | 61 | 27 | 111 | 不设 |
 | 20 | 482 | 63 | 272 | 156 | 480 | 73 |
 | 21 | 493 | 63 | 289 | 164 | 491 | 73 |
 
@@ -405,10 +405,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 当前名称 | 4.0 名称 | 保留发布键 | 依据/合并证明 |
 |---|---|---|---|
-| `AddDevice` | `CreateDevice` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `AddDeviceWithFallback` | `CreateHardwareDevice` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `AddGsdDeviceWithProbe` | `CreateGsdDevice` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `AddHardwareCatalogDeviceWithProbe` | `CreateHardwareCatalogDevice` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `AddDevice` | `CreateDevice` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
+| `AddDeviceWithFallback` | `CreateHardwareDevice` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
+| `AddGsdDeviceWithProbe` | `CreateGsdDevice` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
+| `AddHardwareCatalogDeviceWithProbe` | `CreateHardwareCatalogDevice` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `AnalyzeGlobalLibraryPackage` | `AnalyzeGlobalLibraryPackage` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
 | `AnalyzeHmiTemplateReference` | `AnalyzeHmiTemplateReference` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
 | `AnalyzePlcReferences` | `AnalyzePlcReferences` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
@@ -418,7 +418,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ApplyUnifiedHmiScreenDesignJson` | `ApplyUnifiedHmiScreenDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ApplyUnifiedHmiTheme` | `ApplyUnifiedHmiTheme` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `ArchiveSavedProject` | `ArchiveSavedProject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
-| `AttachDeviceNodeToSubnet` | `AttachDeviceNodeToSubnet` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `AttachDeviceNodeToSubnet` | `AttachDeviceNodeToSubnet` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `AttachToOpenProject` | `AttachOpenProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `AuditEngineeringExports` | `AuditEngineeringExports` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/QualityAuditTools.cs) |
 | `BindUnifiedHmiButtonPressedTag` | `BindUnifiedHmiButtonPressedTag` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
@@ -427,7 +427,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `BuildClassicHmiMinimalPackage` | `BuildClassicHmiMinimalPackage` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `BuildClassicHmiScreenXml` | `BuildClassicHmiScreen` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildClassicHmiTagTableXml` | `BuildClassicHmiTagTable` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `BuildDeviceAmlDocument` | `BuildDeviceAmlDocument` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `BuildDeviceAmlDocument` | `BuildDeviceAmlDocument` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareAmlTools.cs) |
 | `BuildFlgNetCallXml` | `BuildFlgNetCall` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildPlcGlobalDbXml` | `BuildPlcGlobalDb` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildPlcSymbolManifestFromXmlPath` | `BuildPlcSymbolManifestFromPath` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/OfflineSuiteTools.cs) |
@@ -465,7 +465,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ComposePlcLadFcBlockXml` | `BuildPlcLadFcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `ConfigureMotionHardwareConnection` | `ConfigureMotionHardwareConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `Connect` | `ConnectPortal` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
-| `ConnectDeviceNodesToProfinetSubnet` | `ConnectDeviceNodesToProfinetSubnet` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ConnectDeviceNodesToProfinetSubnet` | `ConnectDeviceNodesToProfinetSubnet` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ConnectIsolated` | `ConnectIsolatedPortal` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | `ConnectProjectToWorkspace` | `ConnectProjectToWorkspace` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs) |
 | `ConnectToProject` | `ConnectProject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
@@ -505,10 +505,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `Doctor` | `GetEnvironmentDiagnostics` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Doctor.cs) |
 | `DownloadPlcToFolder` | `DownloadPlcToFolder` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `DownloadToPlc` | `DownloadPlc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
-| `DumpDeviceAttributes` | `GetDeviceAttributes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `DumpDeviceAttributes` | `GetDeviceAttributes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `EnsureOpennessUserGroup` | `EnsureOpennessUserGroup` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | `EnsureStartStopUnifiedHmi` | `SetUnifiedHmiRuntimeState` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
-| `EnsureSubnet` | `EnsureSubnet` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `EnsureSubnet` | `EnsureSubnet` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `EnsureUnifiedHmiButtonAction` | `EnsureUnifiedHmiButtonAction` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `EnsureUnifiedHmiButtonEventHandler` | `EnsureUnifiedHmiButtonEventHandler` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
 | `EnsureUnifiedHmiConnection` | `EnsureUnifiedHmiConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
@@ -521,7 +521,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ExchangeMotionCamData` | `ExchangeMotionCamData` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ExchangePlcAlarmTextListsXlsx` | `ExchangePlcAlarmTextLists` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs) |
 | `ExchangePlcSupervisions` | `ExchangePlcSupervisions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SpecializedExchangeTools.cs) |
-| `ExchangeSystemDiagnosticsSettings` | `ExchangeSystemDiagnosticsSettings` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ExchangeSystemDiagnosticsSettings` | `ExchangeSystemDiagnosticsSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ExchangeTestSuiteCase` | `ExchangeTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `ExchangeUnifiedScriptModules` | `ExchangeUnifiedScriptModules` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
 | `ExchangeUnifiedTags` | `ExchangeUnifiedTags` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
@@ -532,7 +532,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ExportBlock` | `ExportPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ExportBlocks` | `ExportPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ExportBlocksAsDocuments` | `ExportPlcBlocksDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs) |
-| `ExportDeviceAml` | `ExportDeviceAml` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `ExportDeviceAml` | `ExportDeviceAml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareAmlTools.cs) |
 | `ExportHmiConnection` | `ExportHmiConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
 | `ExportHmiProgram` | `ExportHmiProgram` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
 | `ExportHmiScreen` | `ExportHmiScreen` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
@@ -565,14 +565,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GetBlocks` | `ListPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `GetBlocksWithHierarchy` | `GetPlcBlockHierarchy` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `GetCrossReferences` | `GetPlcCrossReferences` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
-| `GetDeviceInfo` | `GetDeviceInfo` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetDeviceInfo` | `GetDeviceInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `GetDeviceIpAddress` | `GetDeviceIpAddress` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareAddressTools.cs) |
-| `GetDeviceItemInfo` | `GetDeviceItemInfo` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetDeviceItemInfo` | `GetDeviceItemInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `GetDeviceItemIoAddresses` | `GetDeviceItemIoAddresses` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareAddressTools.cs) |
-| `GetDeviceItemNetworkInfo` | `GetDeviceItemNetworkInfo` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `GetDeviceItemTree` | `GetDeviceItemTree` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `GetDevicePlugLocations` | `GetDevicePlugLocations` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs) |
-| `GetDevices` | `ListDevices` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetDeviceItemNetworkInfo` | `GetDeviceItemNetworkInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
+| `GetDeviceItemTree` | `GetDeviceItemTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
+| `GetDevicePlugLocations` | `GetDevicePlugLocations` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/ModulesTools.cs) |
+| `GetDevices` | `ListDevices` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `GetExport` | `GetExportContent` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/ExportTools.cs) |
 | `GetHmiConnections` | `ListHmiConnections` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
 | `GetHmiProgramInfo` | `GetHmiProgramInfo` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
@@ -588,7 +588,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `GetPlcTagTables` | `ListPlcTagTables` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `GetPlcWatchTables` | `ListPlcWatchTables` | 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `GetProject` | `GetProjectInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
-| `GetProjectTopology` | `GetProjectTopology` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `GetProjectTopology` | `GetProjectTopology` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `GetProjectTree` | `GetProjectTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
 | `GetPutGetAccess` | `GetPlcPutGetAccess` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
 | `GetRecipe` | `GetToolUsage` | 20, 21 | 原指南入口已删除；ToolUsageCatalog.GuideSelection 保留逐主题选择器映射；GetToolUsage 和 ToolRecipes.Rows 读取同一 Sequences/语言示例库，保留目的、前置条件、步骤、预期与说明，无原生动作。；[源码](../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs) |
@@ -610,7 +610,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ImportBlock` | `ImportPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ImportBlocksFromDirectory` | `ImportPlcBlocksFromDirectory` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `ImportBlocksFromDocuments` | `ImportPlcBlocksDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs) |
-| `ImportDeviceAml` | `ImportDeviceAml` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `ImportDeviceAml` | `ImportDeviceAml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareAmlTools.cs) |
 | `ImportFromDocuments` | `ImportPlcBlockDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs) |
 | `ImportHmiConnection` | `ImportHmiConnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
 | `ImportHmiScreen` | `ImportHmiScreen` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
@@ -656,15 +656,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageClassicHmiScreenObject` | `ManageClassicHmiScreenObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs) |
 | `ManageClassicHmiScript` | `ManageClassicHmiScript` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageClassicHmiTextGraphicList` | `ManageClassicHmiTextGraphicList` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
-| `ManageCommunicationConnection` | `ManageCommunicationConnection` | 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | `ManageCommunicationConnection` | 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDcbLibraries` | `ManageDcbLibraries` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccBlock` | `ManageDccBlock` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccChart` | `ManageDccChart` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccChartInterface` | `ManageDccChartInterface` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccChartPartition` | `ManageDccChartPartition` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccPin` | `ManageDccPin` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDeviceServiceObjects` | `ManageDeviceServiceObjects` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageDeviceUserGroup` | `ManageDeviceUserGroup` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageDeviceServiceObjects` | `ManageDeviceServiceObjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageDeviceUserGroup` | `ManageDeviceUserGroup` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageDeviceUsers` | `ManageDeviceUsers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
 | `ManageDriveFunctions` | `ManageDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageDriveHardwareModule` | `ManageDriveHardwareModule` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
@@ -672,16 +672,16 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageDriveSecurity` | `ManageDriveSecurity` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageDriveTelegrams` | `ManageDriveTelegrams` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageGlobalLibrary` | `ManageGlobalLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
-| `ManageHardwareObject` | `ManageHardwareObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
-| `ManageHardwareUtilities` | `ManageHardwareUtilities` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageIoSystem` | `ManageIoSystem` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageHardwareObject` | `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareManagementTools.cs) |
+| `ManageHardwareUtilities` | `ManageHardwareUtilities` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageIoSystem` | `ManageIoSystem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageLibraryFolder` | `ManageLibraryFolder` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryMasterCopy` | `ManageLibraryMasterCopy` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryType` | `ManageLibraryType` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryTypeVersion` | `ManageLibraryTypeVersion` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageMotionAxis` | `ManageMotionAxis` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageMultiuserSession` | `ManageMultiuserSession` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
-| `ManageNetworkDomain` | `ManageNetworkDomain` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageOnlineDriveFunctions` | `ManageOnlineDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageOpcUaAccessControl` | `ManageOpcUaAccessControl` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
 | `ManageOpcUaInterface` | `ManageOpcUaInterface` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
@@ -703,7 +703,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManagePlcTableEntries` | `ManagePlcTableEntries` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `ManagePlcTagDefinition` | `ManagePlcTagDefinition` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `ManagePlcUserGroup` | `ManagePlcUserGroup` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
-| `ManagePortInterconnection` | `ManagePortInterconnection` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | `ManagePortInterconnection` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageProjectCompilationSettings` | `ManageProjectCompilationSettings` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
 | `ManageProjectLanguage` | `ManageProjectLanguage` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
 | `ManageProjectUserManagement` | `ManageProjectUserManagement` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
@@ -727,7 +727,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageTechnologyExtensions` | `ManageTechnologyExtensions` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageTechnologyObject` | `ManageTechnologyObject` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
 | `ManageTestSuiteCase` | `ManageTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
-| `ManageTransferArea` | `ManageTransferArea` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageUmcUsers` | `ManageUmcUsers` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
 | `ManageUnifiedCwcPackage` | `ManageUnifiedCwcPackage` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/V21EcosystemTools.cs) |
 | `ManageUnifiedDynamization` | `ManageUnifiedDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
@@ -748,38 +748,38 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `PatchPlcBlockDocument` | `PatchPlcBlockDocument` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/PlcOfflineTools.cs) |
 | `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) |
 | `PlanGlobalLibraryTemplateReuse` | `PlanGlobalLibraryTemplateReuse` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HmiOfflineTools.cs) |
-| `PlanHardwareNetworkConfiguration` | `PlanHardwareNetworkConfiguration` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `PlanHardwareNetworkConfiguration` | `PlanHardwareNetworkConfiguration` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `PlanOnlineReadOnlyDataProvider` | `PlanOnlineReadOnlyDataProvider` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanOnlineReadOnlyMonitoring` | `PlanOnlineReadOnlyMonitoring` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | 14sp1, 15.1, 16, 17, 18, 19 | 不变；符合命名规则；[源码](../../src/FoundationHost/FoundationTools.cs) |
 | `PlcBuildAndImport` | `BuildAndImportPlcArtifact` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs) |
-| `PlugDeviceItem` | `PlugDeviceItem` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs) |
+| `PlugDeviceItem` | `PlugDeviceItem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/ModulesTools.cs) |
 | `PreflightToolCall` | `PreviewToolCall` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `PreviewToolBatch` | `PreviewToolBatch` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
 | `ProbeGlobalLibrary` | `ProbeGlobalLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
-| `ProbeHardwareHmiConnectionOwnerCandidates` | `ProbeHardwareHmiConnectionOwnerCandidates` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ProbeHardwareHmiConnectionWhitelistedServices` | `ProbeHardwareHmiConnectionWhitelistedServices` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ProbeHardwareHmiConnectionOwnerCandidates` | `ProbeHardwareHmiConnectionOwnerCandidates` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
+| `ProbeHardwareHmiConnectionWhitelistedServices` | `ProbeHardwareHmiConnectionWhitelistedServices` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ProbePlcMonitorOnlineCapabilities` | `ProbePlcMonitorOnlineCapabilities` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `ProbeS7CpuIdentity` | `ProbeS7CpuIdentity` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
 | `ReadClassicHmiFaceplates` | `ListClassicHmiFaceplates` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ReadClassicHmiGlobalization` | `GetClassicHmiGlobalization` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ReadClassicHmiScreenTree` | `GetClassicHmiScreenTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs) |
 | `ReadClassicHmiScripts` | `ListClassicHmiScripts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
-| `ReadCommunicationConnections` | `ListCommunicationConnections` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadCommunicationConnections` | `ListCommunicationConnections` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadDccCharts` | `ListDccCharts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ReadDccObject` | `GetDccObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ReadDeviceAddressing` | `GetDeviceAddressing` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareAddressTools.cs) |
-| `ReadDeviceItemChannels` | `ListDeviceItemChannels` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadDeviceItemChannels` | `ListDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadDriveObjects` | `ListDriveObjects` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | `GetDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadHardwareFeatures` | `GetHardwareFeatures` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadHardwareFeatures` | `GetHardwareFeatures` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadHmiScreenSnapshot` | `GetHmiScreenSnapshot` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
-| `ReadIoSystems` | `ListIoSystems` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadIoSystems` | `ListIoSystems` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadLibraryOverview` | `GetLibraryOverview` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ReadLibraryType` | `GetLibraryType` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ReadMotionAxisConfiguration` | `GetMotionAxisConfiguration` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ReadNativeInvocationLog` | `GetNativeInvocationLog` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/EngineeringDiagnosticsTools.cs) |
-| `ReadNetworkDomains` | `ListNetworkDomains` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadNetworkDomains` | `ListNetworkDomains` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadObjectIdentifier` | `GetObjectIdentifier` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ReadOnlineDriveParameters` | `GetOnlineDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadOpcUaAccessControl` | `GetOpcUaAccessControl` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
@@ -816,7 +816,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadTechnologyObjectTree` | `GetTechnologyObjectTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
 | `ReadTestSuiteCases` | `ListTestSuiteCases` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
 | `ReadToolBatch` | `RunReadOnlyToolBatch` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/Host/McpServer.Batch.cs) |
-| `ReadTransferAreas` | `ListTransferAreas` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadTransferAreas` | `ListTransferAreas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadTransferRoutes` | `ListTransferRoutes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `ReadUnifiedAlarmCommon` | `GetUnifiedAlarmCommon` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ReadUnifiedAuditSettings` | `GetUnifiedAuditSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
@@ -865,11 +865,11 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ScaffoldProject` | `BuildProjectScaffold` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ScanAccessibleDevices` | `ScanAccessibleDevices` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
 | `ScanPlcSourceAnnotations` | `ScanPlcSourceAnnotations` | 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/Host/OfflineAnalysisTools.cs) |
-| `SearchHardwareCatalog` | `SearchHardwareCatalog` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `SearchInstalledGsdDevices` | `SearchInstalledGsdDevices` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SearchHardwareCatalog` | `SearchHardwareCatalog` | 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
+| `SearchInstalledGsdDevices` | `SearchInstalledGsdDevices` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `SeedProjectFromReference` | `SeedProjectFromReference` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs) |
-| `SetCpuCommonSettings` | `SetPlcCpuSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
-| `SetDeviceItemAttribute` | `SetDeviceItemAttribute` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SetCpuCommonSettings` | `SetPlcCpuSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareDevicesTools.cs) |
+| `SetDeviceItemAttribute` | `SetDeviceItemAttribute` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareDevicesTools.cs) |
 | `SetDeviceItemIoAddress` | `SetDeviceItemIoAddress` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../src/Shared/HardwareAddressTools.cs) |
 | `SetOpcUaInterfaceEnabled` | `SetOpcUaInterfaceEnabled` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
 | `SetPlcUnitObjectAccess` | `SetPlcUnitObjectAccess` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs) |
@@ -886,7 +886,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `TraceTagCauseLive` | `TraceTagCauseLive` | 20, 21 | 不变；符合命名规则；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
 | `UnifiedOpenPipeRequest` | `InvokeUnifiedOpenPipe` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
 | `UpdateDeviceAddress` | `SetDeviceAddress` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareAddressTools.cs) |
-| `UpdateDeviceItemChannel` | `SetDeviceItemChannel` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `UpdateDeviceItemChannel` | `SetDeviceItemChannel` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Shared/HardwareNetworkTools.cs) |
 | `UpdatePlcProgram` | `SetPlcProgram` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
 | `UpdateUnifiedGlobalScript` | `SetUnifiedGlobalScript` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/GlobalScriptEditTools.cs) |
 | `UpdateUnifiedMultilingualProperty` | `SetUnifiedMultilingualProperty` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
@@ -929,7 +929,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `BuildClassicHmiMinimalPackage` | 20, 21 | `packageJson` → `package` | string | H | `ClassicPackageSpec` | [入口及校验调用](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | `BuildClassicHmiScreenXml` | 20, 21 | `designJson` → `design` | string | H | `ClassicScreenSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildClassicHmiTagTableXml` | 20, 21 | `tableJson` → `table` | string | H | `ClassicTagTableSpec` | [入口及校验调用](../../src/Shared/Host/OfflineSuiteTools.cs) |
-| `BuildDeviceAmlDocument` | 20, 21 | `specJson` → `spec` | string | H | `DeviceAmlSpec` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `BuildDeviceAmlDocument` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `specJson` → `spec` | string | H | `DeviceAmlSpec` | [入口及校验调用](../../src/Shared/HardwareAmlTools.cs) |
 | `BuildFlgNetCallXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `flgNetJson` → `flgNet` | string | B | `FlgNetCallSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildPlcGlobalDbXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `globalDbJson` → `globalDb` | string | B | `GlobalDbSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
 | `BuildPlcTagTableXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `tagTableJson` → `tagTable` | string | B | `PlcTagTableSpec` | [入口及校验调用](../../src/Shared/Host/XmlBuilderTools.cs) |
@@ -955,8 +955,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ExchangeCfcCharts` | 20, 21 | `chartNamesJson` → `chartNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs) |
 | `ExchangePlcAlarmTextListsXlsx` | 20, 21 | `culturesJson` → `cultures` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs) |
 | `ExchangePlcAlarmTextListsXlsx` | 20, 21 | `textListNamesJson` → `textListNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs) |
-| `ExchangeSystemDiagnosticsSettings` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ExchangeSystemDiagnosticsSettings` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ExchangeSystemDiagnosticsSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ExchangeSystemDiagnosticsSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ExchangeUnifiedTags` | 20, 21 | `expectedTagNamesJson` → `expectedTagNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
 | `ExtractPlcBlockMetrics` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
 | `GenerateOpcUaModelledInterface` | 20, 21 | `accessLevelsJson` → `accessLevels` | string | L | `map<string,int32>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
@@ -975,12 +975,12 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageClassicHmiCycle` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageClassicHmiScript` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageClassicHmiTextGraphicList` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
-| `ManageCommunicationConnection` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageCommunicationConnection` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageCommunicationConnection` | 21 | `localInterfaceItemPathJson` → `localInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageCommunicationConnection` | 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageCommunicationConnection` | 21 | `partnerInterfaceItemPathJson` → `partnerInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageCommunicationConnection` | 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageCommunicationConnection` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageCommunicationConnection` | 21 | `localInterfaceItemPathJson` → `localInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageCommunicationConnection` | 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageCommunicationConnection` | 21 | `partnerInterfaceItemPathJson` → `partnerInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageCommunicationConnection` | 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDcbLibraries` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDcbLibraries` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccBlock` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
@@ -999,9 +999,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageDccPin` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccPin` | 20, 21 | `partnerJson` → `partner` | string | X | `DccPartnerSpec(action)` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ManageDccPin` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
-| `ManageDeviceServiceObjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageDeviceServiceObjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageDeviceServiceObjects` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDeviceServiceObjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageDeviceServiceObjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageDeviceServiceObjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ManageDeviceUsers` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
 | `ManageDeviceUsers` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
 | `ManageDeviceUsers` | 20, 21 | `permissionsJson` → `permissions` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
@@ -1016,24 +1016,24 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageDriveSecurity` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageDriveTelegrams` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageDriveTelegrams` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ManageHardwareObject` | 20, 21 | `destinationDevicePathJson` → `destinationDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
-| `ManageHardwareObject` | 20, 21 | `destinationItemPathJson` → `destinationItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
-| `ManageHardwareObject` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
-| `ManageHardwareObject` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
-| `ManageHardwareUtilities` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageHardwareUtilities` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ManageIoSystem` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageIoSystem` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageIoSystem` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageIoSystem` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `destinationDevicePathJson` → `destinationDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
+| `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `destinationItemPathJson` → `destinationItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
+| `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
+| `ManageHardwareObject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareManagementTools.cs) |
+| `ManageHardwareUtilities` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageHardwareUtilities` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ManageIoSystem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageIoSystem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageIoSystem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageIoSystem` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageLibraryType` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageLibraryType` | 20, 21 | `scopeSoftwarePathsJson` → `scopeSoftwarePaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) |
 | `ManageMotionAxis` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManageMotionAxis` | 20, 21 | `targetJson` → `target` | string | X | `MotionTarget` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
-| `ManageNetworkDomain` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageNetworkDomain` | 20, 21 | `participantDevicePathJson` → `participantDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageNetworkDomain` | 20, 21 | `participantItemPathJson` → `participantItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageNetworkDomain` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `participantDevicePathJson` → `participantDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `participantItemPathJson` → `participantItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageOnlineDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageOnlineDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageOpcUaAccessControl` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) |
@@ -1051,10 +1051,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManagePlcSoftwareUnit` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
 | `ManagePlcSupervision` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
 | `ManagePlcTagDefinition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
-| `ManagePortInterconnection` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManagePortInterconnection` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManagePortInterconnection` | 20, 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManagePortInterconnection` | 20, 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageProjectCompilationSettings` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
 | `ManageProjectUserManagement` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
 | `ManageProjectUserManagement` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
@@ -1092,14 +1092,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ManageTechnologyExtensions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ManageTechnologyObject` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
 | `ManageTestSuiteCase` | 20, 21 | `scopeJson` → `scope` | string | X | `TestScope[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) |
-| `ManageTransferArea` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `targetDevicePathJson` → `targetDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ManageTransferArea` | 20, 21 | `targetItemPathJson` → `targetItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `targetDevicePathJson` → `targetDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `targetItemPathJson` → `targetItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ManageUnifiedDynamization` | 20, 21 | `mappingEntriesJson` → `mappingEntries` | string | X | `DynamizationMapping[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedDynamization` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ManageUnifiedDynamization` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
@@ -1120,15 +1120,15 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `PatchPlcBlockDocument` | 20, 21 | `changesJson` → `changes` | string | D | `BlockEdit[]` | [入口及校验调用](../../src/Shared/PlcOfflineTools.cs) |
 | `PlanArtifactImportOrder` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `artifactsJson` → `artifacts` | string | D | `Artifact[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) |
 | `PlanGlobalLibraryTemplateReuse` | 20, 21 | `templateIntentJson` → `templateIntent` | string | X | `TemplateIntent` | [入口及校验调用](../../src/Shared/HmiOfflineTools.cs) |
-| `PlanHardwareNetworkConfiguration` | 20, 21 | `planJson` → `plan` | string | D | `NetworkPlan` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `PlanHardwareNetworkConfiguration` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `planJson` → `plan` | string | D | `NetworkPlan` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `PlanOnlineReadOnlyDataProvider` | 20, 21 | `optionsJson` → `options` | string | X | `MonitoringOptions` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanOnlineReadOnlyDataProvider` | 20, 21 | `tagPathsJson` → `tagPaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlanOnlineReadOnlyMonitoring` | 20, 21 | `tagPathsJson` → `tagPaths` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs) |
 | `PlcBuildAndImport` | 20, 21 | `json` → `spec` | string | B | `PlcArtifactSpec(kind)` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs) |
 | `PreflightToolCall` | 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../src/Shared/Host/McpServer.ToolBridge.cs) |
 | `PreviewToolBatch` | 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
-| `ReadCommunicationConnections` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ReadCommunicationConnections` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadCommunicationConnections` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ReadCommunicationConnections` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
 | `ReadDccCharts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ReadDccCharts` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ReadDccObject` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
@@ -1136,19 +1136,19 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadDccObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) |
 | `ReadDeviceAddressing` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
 | `ReadDeviceAddressing` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
-| `ReadDeviceItemChannels` | 20, 21 | `attributeNamesJson` → `attributeNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ReadDeviceItemChannels` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ReadDeviceItemChannels` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `attributeNamesJson` → `attributeNames` | string | S | `string[]` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ReadDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ReadDeviceItemChannels` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadDriveObjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveObjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
 | `ReadDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `ParameterRef[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
-| `ReadHardwareFeatures` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ReadHardwareFeatures` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
-| `ReadIoSystems` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ReadIoSystems` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadHardwareFeatures` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ReadHardwareFeatures` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareServicesPortTools.cs) |
+| `ReadIoSystems` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ReadIoSystems` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadObjectIdentifier` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ReadObjectIdentifier` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ReadOnlineDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) |
@@ -1164,8 +1164,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `ReadSafetyActivationTests` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
 | `ReadSiVArcRules` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
 | `ReadToolBatch` | 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../src/Shared/Host/McpServer.Batch.cs) |
-| `ReadTransferAreas` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `ReadTransferAreas` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadTransferAreas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `ReadTransferAreas` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `ReadUnifiedGraphicSelection` | 20, 21 | `itemNamesJson` → `itemNames` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
 | `ReadUnifiedObjectEvents` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
 | `ReadUnifiedObjectProperties` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
@@ -1183,7 +1183,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `SamplePlcLiveValuesS7` | 20, 21 | `itemsJson` → `items` | string | S | `string[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/RuntimeTools.cs) |
 | `ScanPlcSourceAnnotations` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
 | `ScanPlcSourceAnnotations` | 20, 21 | `markersJson` → `markers` | string | S | `string[]` | [入口及校验调用](../../src/Shared/Host/OfflineAnalysisTools.cs) |
-| `SetCpuCommonSettings` | 20, 21 | `settingsJson` → `settings` | string | M | `CpuSettings{exactAttributes:AttributeMap<Scalar>}` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SetCpuCommonSettings` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `settingsJson` → `settings` | string | M | `CpuSettings{exactAttributes:AttributeMap<Scalar>}` | [入口及校验调用](../../src/Shared/HardwareDevicesTools.cs) |
 | `SetUnifiedLogDuration` | 20, 21 | `durationPathJson` → `durationPath` | string | P | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `ShowObjectInEditor` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
 | `ShowObjectInEditor` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
@@ -1195,9 +1195,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `UpdateDeviceAddress` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
 | `UpdateDeviceAddress` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
 | `UpdateDeviceAddress` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareAddressTools.cs) |
-| `UpdateDeviceItemChannel` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `UpdateDeviceItemChannel` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
-| `UpdateDeviceItemChannel` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `UpdateDeviceItemChannel` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `UpdateDeviceItemChannel` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
+| `UpdateDeviceItemChannel` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../src/Shared/HardwareNetworkTools.cs) |
 | `UpdateUnifiedMultilingualProperty` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `UpdateUnifiedObjectProperties` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
 | `UpdateUnifiedObjectProperties` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
@@ -1231,7 +1231,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | BuildClassicHmiMinimalPackage.packageJson | 20, 21 | packageJson: JSON object with Name, ScreenDesign, and TagTable. Screen items may reference HMI tags through Tag/HmiTag/ProcessValueTag or Properties.*Tag. | {} |
 | BuildClassicHmiScreenXml.designJson | 20, 21 | designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus Name/Left/Top/Width/Height/Text/Properties. | {} |
 | BuildClassicHmiTagTableXml.tableJson | 20, 21 | tableJson: JSON object with Name/TableName and Tags[]. Tag fields: Name, DataType, Length, optional Connection and ControllerTag/PlcTag. | {} |
-| BuildDeviceAmlDocument.specJson | 20, 21 | specJson: JSON object describing the document to build (see the tool description). | {} |
+| BuildDeviceAmlDocument.specJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | specJson: JSON object describing the document to build (see the tool description). | {} |
 | BuildFlgNetCallXml.flgNetJson | 14sp1, 15.1, 16, 17, 18, 19 | Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md. | {"maxLength": 262144} |
 | BuildFlgNetCallXml.flgNetJson | 20, 21 | flgNetJson: JSON object with callName/name and parameters[]. Global parameters use symbolPath[] or dotted symbol; constants use sourceKind='constant' and value. | {} |
 | BuildPlcGlobalDbXml.globalDbJson | 14sp1, 15.1, 16, 17, 18, 19 | JSON {dbName,dbNumber:positive integer,staticMembers:[{name,datatype,externalWritable?:boolean,commentZhCn?:string,startValue?:string}]}; flat members, 1..1000 rows, strings <=4096. Aliases documented in legacy-offline-composition-candidate.md. | {"maxLength": 262144} |
@@ -1265,8 +1265,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ExchangeCfcCharts.chartNamesJson | 20, 21 | chartNamesJson: JSON array of chart paths. | {} |
 | ExchangePlcAlarmTextListsXlsx.culturesJson | 20, 21 | culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages). | {} |
 | ExchangePlcAlarmTextListsXlsx.textListNamesJson | 20, 21 | textListNamesJson: JSON array of text list names ('[]' = all). | {} |
-| ExchangeSystemDiagnosticsSettings.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ExchangeSystemDiagnosticsSettings.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ExchangeSystemDiagnosticsSettings.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ExchangeSystemDiagnosticsSettings.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ExchangeUnifiedTags.expectedTagNamesJson | 20, 21 | expectedTagNamesJson: JSON array of tag names expected after the import (verified). | {} |
 | ExtractPlcBlockMetrics.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
 | GenerateOpcUaModelledInterface.accessLevelsJson | 20, 21 | JSON area-to-level map; see tool description; safety permits only 0 or 1. | {} |
@@ -1309,9 +1309,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ManageDccPin.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ManageDccPin.partnerJson | 20, 21 | partnerJson: JSON object naming the partner pin {block, pin} (or the parameter for updateParameter). | {} |
 | ManageDccPin.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
-| ManageDeviceServiceObjects.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ManageDeviceServiceObjects.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ManageDeviceServiceObjects.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDeviceServiceObjects.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDeviceServiceObjects.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDeviceServiceObjects.propertiesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageDeviceUsers.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ManageDeviceUsers.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ManageDeviceUsers.permissionsJson | 20, 21 | permissionsJson: JSON array of permission names (see the tool description). | {} |
@@ -1326,24 +1326,24 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ManageDriveSecurity.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ManageDriveTelegrams.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ManageDriveTelegrams.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ManageHardwareObject.destinationDevicePathJson | 20, 21 | destinationDevicePathJson: for moveItem / copyItem - JSON array naming the destination station. | {} |
-| ManageHardwareObject.destinationItemPathJson | 20, 21 | destinationItemPathJson: for moveItem / copyItem - JSON array of device-item names of the destination container. | {} |
-| ManageHardwareObject.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name, e.g. ["PLC_2"]. | {"examples": ["[\"PLC_2\"]"]} |
-| ManageHardwareObject.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice. | {} |
-| ManageHardwareUtilities.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ManageHardwareUtilities.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ManageIoSystem.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
-| ManageIoSystem.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ManageIoSystem.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ManageIoSystem.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageHardwareObject.destinationDevicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | destinationDevicePathJson: for moveItem / copyItem - JSON array naming the destination station. | {} |
+| ManageHardwareObject.destinationItemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | destinationItemPathJson: for moveItem / copyItem - JSON array of device-item names of the destination container. | {} |
+| ManageHardwareObject.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name, e.g. ["PLC_2"]. | {"examples": ["[\"PLC_2\"]"]} |
+| ManageHardwareObject.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice. | {} |
+| ManageHardwareUtilities.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageHardwareUtilities.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageIoSystem.attributesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageIoSystem.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageIoSystem.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageIoSystem.propertiesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageLibraryType.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageLibraryType.scopeSoftwarePathsJson | 20, 21 | scopeSoftwarePathsJson: JSON array of software paths that limit the update scope ('[]' = whole project). | {} |
 | ManageMotionAxis.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageMotionAxis.targetJson | 20, 21 | targetJson: JSON object naming the target (see the tool description). | {} |
-| ManageNetworkDomain.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
-| ManageNetworkDomain.participantDevicePathJson | 20, 21 | participantDevicePathJson: JSON array naming the station to add to the domain. | {} |
-| ManageNetworkDomain.participantItemPathJson | 20, 21 | participantItemPathJson: JSON array of device-item names of the participant's interface. | {} |
-| ManageNetworkDomain.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageNetworkDomain.attributesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageNetworkDomain.participantDevicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | participantDevicePathJson: JSON array naming the station to add to the domain. | {} |
+| ManageNetworkDomain.participantItemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | participantItemPathJson: JSON array of device-item names of the participant's interface. | {} |
+| ManageNetworkDomain.propertiesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageOnlineDriveFunctions.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ManageOnlineDriveFunctions.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ManageOpcUaAccessControl.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
@@ -1361,10 +1361,10 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ManagePlcSoftwareUnit.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManagePlcSupervision.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
 | ManagePlcTagDefinition.propertiesJson | 20, 21 | propertiesJson: JSON object of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; Comment as text or per culture). | {} |
-| ManagePortInterconnection.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ManagePortInterconnection.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ManagePortInterconnection.partnerDevicePathJson | 20, 21 | partnerDevicePathJson: JSON array naming the partner station, like devicePathJson. | {} |
-| ManagePortInterconnection.partnerItemPathJson | 20, 21 | partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson. | {} |
+| ManagePortInterconnection.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManagePortInterconnection.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManagePortInterconnection.partnerDevicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | partnerDevicePathJson: JSON array naming the partner station, like devicePathJson. | {} |
+| ManagePortInterconnection.partnerItemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson. | {} |
 | ManageProjectCompilationSettings.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
 | ManageProjectUserManagement.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ManageProjectUserManagement.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
@@ -1402,14 +1402,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ManageTechnologyExtensions.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ManageTechnologyObject.valueJson | 20, 21 | valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects). | {} |
 | ManageTestSuiteCase.scopeJson | 20, 21 | scopeJson: JSON object describing the test scope (see the tool description). | {} |
-| ManageTransferArea.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
-| ManageTransferArea.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ManageTransferArea.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ManageTransferArea.partnerDevicePathJson | 20, 21 | partnerDevicePathJson: JSON array naming the partner station, like devicePathJson. | {} |
-| ManageTransferArea.partnerItemPathJson | 20, 21 | partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson. | {} |
-| ManageTransferArea.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
-| ManageTransferArea.targetDevicePathJson | 20, 21 | targetDevicePathJson: JSON array naming the target station. | {} |
-| ManageTransferArea.targetItemPathJson | 20, 21 | targetItemPathJson: JSON array of device-item names on the target. | {} |
+| ManageTransferArea.attributesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageTransferArea.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageTransferArea.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageTransferArea.partnerDevicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | partnerDevicePathJson: JSON array naming the partner station, like devicePathJson. | {} |
+| ManageTransferArea.partnerItemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson. | {} |
+| ManageTransferArea.propertiesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageTransferArea.targetDevicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | targetDevicePathJson: JSON array naming the target station. | {} |
+| ManageTransferArea.targetItemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | targetItemPathJson: JSON array of device-item names on the target. | {} |
 | ManageUnifiedDynamization.mappingEntriesJson | 20, 21 | mappingEntriesJson: JSON array of mapping entries. | {} |
 | ManageUnifiedDynamization.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
 | ManageUnifiedDynamization.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
@@ -1431,7 +1431,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | PlanArtifactImportOrder.artifactsJson | 14sp1, 15.1, 16, 17, 18, 19 |  | {"maxLength": 1048576} |
 | PlanArtifactImportOrder.artifactsJson | 20, 21 | JSON array, e.g. [{"Id":"UDT_A"},{"Id":"FB_A","Dependencies":["UDT_A"]}]. IDs are unique ignoring case; dependency IDs must be included. Optional Target and integer Priority order independent artifacts. | {} |
 | PlanGlobalLibraryTemplateReuse.templateIntentJson | 20, 21 | templateIntentJson: optional JSON {"screenType":"overview","targetRuntime":"Unified","preferredComponents":[...]}. | {} |
-| PlanHardwareNetworkConfiguration.planJson | 20, 21 | planJson: JSON with operations[]. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetCpuCommonSettings. This is offline-only and performs validation only. | {} |
+| PlanHardwareNetworkConfiguration.planJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | planJson: JSON with operations[]. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetCpuCommonSettings. This is offline-only and performs validation only. | {} |
 | PlanOnlineReadOnlyDataProvider.optionsJson | 20, 21 | optionsJson: optional JSON object such as {"pollMs":1000,"source":"watch-table-export"}. | {} |
 | PlanOnlineReadOnlyDataProvider.tagPathsJson | 20, 21 | tagPathsJson: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected. | {} |
 | PlanOnlineReadOnlyMonitoring.tagPathsJson | 20, 21 | tagPathsJson: JSON array of symbolic PLC tag/member paths, for example ["DB_HMI.MotorRun","DB_HMI.SpeedSet"]. Do not pass guessed M bits. | {} |
@@ -1447,19 +1447,19 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ReadDccObject.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
 | ReadDeviceAddressing.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ReadDeviceAddressing.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ReadDeviceItemChannels.attributeNamesJson | 20, 21 | attributeNamesJson: JSON array of attribute names to read ('[]' = the documented set). | {} |
-| ReadDeviceItemChannels.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ReadDeviceItemChannels.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadDeviceItemChannels.attributeNamesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | attributeNamesJson: JSON array of attribute names to read ('[]' = the documented set). | {} |
+| ReadDeviceItemChannels.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadDeviceItemChannels.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ReadDriveObjects.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {"examples": ["[\"<exact drive device>\"]"]} |
 | ReadDriveObjects.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {"examples": ["[\"<exact drive/control unit item>\"]"]} |
 | ReadDriveParameters.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {"examples": ["[\"<exact drive device>\"]"]} |
 | ReadDriveParameters.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {"examples": ["[\"<exact drive/control unit item>\"]"]} |
 | ReadDriveParameters.namesJson | 20, 21 | namesJson: JSON array of exact names (or a comma-separated list where the tool says so). | {"examples": ["[\"p1070[0]\"]"]} |
 | ReadDriveParameters.numbersJson | 20, 21 | numbersJson: JSON array of parameter numbers. | {} |
-| ReadHardwareFeatures.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ReadHardwareFeatures.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
-| ReadIoSystems.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ReadIoSystems.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadHardwareFeatures.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadHardwareFeatures.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadIoSystems.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadIoSystems.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ReadObjectIdentifier.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ReadObjectIdentifier.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ReadOnlineDriveParameters.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
@@ -1475,8 +1475,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | ReadSafetyActivationTests.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
 | ReadSiVArcRules.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
 | ReadToolBatch.operationsJson | 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
-| ReadTransferAreas.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| ReadTransferAreas.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadTransferAreas.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadTransferAreas.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | ReadUnifiedGraphicSelection.itemNamesJson | 20, 21 | itemNamesJson: JSON array of screen item names. | {} |
 | ReadUnifiedObjectEvents.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
 | ReadUnifiedObjectProperties.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
@@ -1494,7 +1494,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | SamplePlcLiveValuesS7.itemsJson | 20, 21 | itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. ["DB10.DBD0:REAL","M0.0"]. | {} |
 | ScanPlcSourceAnnotations.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
 | ScanPlcSourceAnnotations.markersJson | 20, 21 | markersJson: JSON array of annotation markers to look for, e.g. ['TODO','FIXME']. | {} |
-| SetCpuCommonSettings.settingsJson | 20, 21 | settingsJson: JSON object { "exactAttributes": { "ExactAttributeNameFromReadback": "value" } }. No aliases or guessed attribute names are accepted. | {} |
+| SetCpuCommonSettings.settingsJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | settingsJson: JSON object { "exactAttributes": { "ExactAttributeNameFromReadback": "value" } }. No aliases or guessed attribute names are accepted. | {} |
 | SetUnifiedLogDuration.durationPathJson | 20, 21 | durationPathJson: JSON array path of the duration property. | {} |
 | ShowObjectInEditor.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | ShowObjectInEditor.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
@@ -1506,9 +1506,9 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | UpdateDeviceAddress.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
 | UpdateDeviceAddress.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | UpdateDeviceAddress.propertiesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
-| UpdateDeviceItemChannel.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
-| UpdateDeviceItemChannel.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
-| UpdateDeviceItemChannel.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| UpdateDeviceItemChannel.attributesJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| UpdateDeviceItemChannel.devicePathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| UpdateDeviceItemChannel.itemPathJson | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
 | UpdateUnifiedMultilingualProperty.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
 | UpdateUnifiedObjectProperties.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
 | UpdateUnifiedObjectProperties.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
@@ -1541,8 +1541,6 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [ModelContextProtocol/Tools/ProjectSessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs):566 | `if (string.IsNullOrWhiteSpace(text) \|\| text.Length > 200) return V4Reject(tool, InvalidInput("text"));` |
 | [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):32 | `[McpServerTool(Name="ManageUnifiedScreenItem"), Description("[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial properties), update, delete (confirmDelete=true). properties accepts scalars or one level of parts ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); at most 50 leaves, every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. Current native policy; V4 safety behavior is not yet accepted.")]` |
 | [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):71 | `if (!string.IsNullOrWhiteSpace(culture.Name) && culture.Name.Length <= 16)` |
-| [Siemens/DeviceServiceObjectRules.cs](../../src/Engine/Siemens/DeviceServiceObjectRules.cs):42 | `if ((properties["ServiceGroupName"]!.ToString()).Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters.");` |
-| [Siemens/DeviceServiceObjectRules.cs](../../src/Engine/Siemens/DeviceServiceObjectRules.cs):53 | `if (value.Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters (TIA throws EngineeringTargetInvocationException above it).");` |
 | [Siemens/Hmi/UnifiedExchangeLogic.cs](../../src/Engine/Siemens/Hmi/UnifiedExchangeLogic.cs):34 | `if (name.Length > 128 \|\| name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 \|\| name.IndexOfAny(new[] { '/', '\\' }) >= 0 \|\| name == "." \|\| name == "..")` |
 | [Siemens/Hmi/UnifiedScreenItemLogic.cs](../../src/Engine/Siemens/Hmi/UnifiedScreenItemLogic.cs):27 | `if (!string.IsNullOrEmpty(itemName) && (itemName.Length > 128 \|\| itemName.IndexOfAny(new[] { '/', '\\' }) >= 0)) throw new ArgumentException("itemName must be 1..128 characters without path separators.");` |
 | [Siemens/Hmi/UnifiedScreenItemLogic.cs](../../src/Engine/Siemens/Hmi/UnifiedScreenItemLogic.cs):39 | `if (string.IsNullOrWhiteSpace(propertiesJson) \|\| propertiesJson.Length > 65536) throw new ArgumentException("propertiesJson must be a JSON object (<= 64 KB).");` |
@@ -1614,13 +1612,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):14 | `public const int MaximumDepth = 64;` |
 | [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):23 | `using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = MaximumDepth });` |
 | [Generation/CanonicalJson.cs](../../src/Logic/Generation/CanonicalJson.cs):135 | `if (exponent >= 0 && trimmed.Length + exponent <= 21)` |
-| [Generation/GenerationAllocator.cs](../../src/Logic/Generation/GenerationAllocator.cs):97 | `if (parts.Length != 2 \|\| !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var prefix) \|\| prefix < 1 \|\| prefix > 30)` |
 | [Generation/GenerationDocuments.cs](../../src/Logic/Generation/GenerationDocuments.cs):14 | `MaxDepth = CanonicalJson.MaximumDepth` |
-| [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):41 | `if (result.Length > 4096) throw CanonicalJson.Failure("", "name-length", "Expanded text exceeds 4096 characters.");` |
-| [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):43 | `if (result.Length > 4096) throw CanonicalJson.Failure("", "name-length", "Expanded text exceeds 4096 characters.");` |
-| [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):105 | `if (name.Length < (rule.MinLength ?? 1) \|\| name.Length > (rule.MaxLength ?? 4096) \|\| name.Any(c => char.IsControl(c) \|\| c == '"')) return false;` |
-| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):158 | `if (steps.Count > 10000) throw CanonicalJson.Failure("/steps", "limit", "Plan exceeds 10000 steps.");` |
-| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):671 | `if (entries.Count >= options.MaximumObjects) throw CanonicalJson.Failure("/expected", "limit", "Expanded model exceeds its object budget.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):51 | `if (schemas.Count != 14) throw new InvalidOperationException("Generation schema resources are missing.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):57 | `if (errors.Count >= 100) return;` |
 | [Generation/StandardPackageLoader.cs](../../src/Logic/Generation/StandardPackageLoader.cs):141 | `if (files.Count >= limits.MaximumFiles) throw CanonicalJson.Failure(name, "file-count", "Too many package files.");` |
@@ -1845,7 +1837,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [src/Shared/Host/OfflineAnalysisTools.cs](../../src/Shared/Host/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. Native export branches retain behaviorPolicy=current pending V4 native acceptance.")]` |
 | [src/Shared/Host/PlcDocumentationTools.cs](../../src/Shared/Host/PlcDocumentationTools.cs):145 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
 
-共 316 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
+共 308 个边界表达式；包含第 I 步由 src/Shared/shared-native/*.props 引用的共享原语及 src/Logic/V4 校验。路径移动只改变排序/行号，不改变输入契约。
 
 </details>
 
@@ -1856,14 +1848,14 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 |---|---|---|---|---|
 | F1 | VersionPolicyTool 的 isError 文本/preflight | 准入→rejected-before-operation，error.code/details；无原生动作 | 0 | 0 |
 | F2 | POCO/Meta、McpException、success=false | 领域字段→data；异常由错误分类器生成 error；message 不判断成功 | 23 | legacy-existing-meta:2; legacy-independent-verdicts:1; legacy-late-stamp:1; legacy-late-verdict:1; legacy-multiple-dynamic-fields:8; legacy-roundtrip-data-stamp:2; legacy-single-verdict:3; legacy-stamp-then-verdict:2; legacy-stamp-without-verdict:2; legacy-verdict-last:1 |
-| F3 | operationSuccess/status/error、执行器 | 按执行证据确定 outcome；逐项结果→data.items；保留完整性与原生 verdict | 20 | legacy-independent-verdicts:1; legacy-migration-page:1; legacy-multiple-dynamic-fields:5; legacy-ok-only:1; legacy-plcsim-complete:1; legacy-plcsim-failure:1; legacy-roundtrip-data-stamp:2; legacy-runtime-settings:1; legacy-single-verdict:5; legacy-success-last:1; legacy-verdict-last:1 |
+| F3 | operationSuccess/status/error、执行器 | 按执行证据确定 outcome；逐项结果→data.items；保留完整性与原生 verdict | 16 | legacy-independent-verdicts:1; legacy-migration-page:1; legacy-multiple-dynamic-fields:3; legacy-ok-only:1; legacy-plcsim-complete:1; legacy-plcsim-failure:1; legacy-roundtrip-data-stamp:2; legacy-runtime-settings:1; legacy-single-verdict:3; legacy-success-last:1; legacy-verdict-last:1 |
 | F4 | Message 中序列化 JSON/failed 文本 | CallTool 透传目标 envelope；批次逐项 envelope；无二次编码 | 2 | legacy-independent-verdicts:1; legacy-stamp-then-verdict:1 |
 | F5 | 导出句柄 ok/InvalidParams | data.export 与 meta.paging；缺句柄 NOT_FOUND，覆盖 ALREADY_EXISTS | 0 | 0 |
 | F6 | Portal 文本失败，无 meta | 按实际分支判定，边界生成 error/outcome；无法证实写入结果则 unknown | 0 | 0 |
 | F7 | Foundation PascalCase DTO/裸数组/V17 envelope | data 保留原领域数据及 evidence；Executed→meta.execution，RequiresSessionReset→meta；裸数组→data.items | 0 | 0 |
 | CLI | 报告 ok/roundtrip/后写判定 | 同 envelope、同 outcome；退出码见正文；报告正文/路径进入 data | 0 | 0 |
 
-共 45 个注释站点、16 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
+共 41 个注释站点、16 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
 
 | variant | 源码文件 |
 |---|---|
@@ -1872,17 +1864,17 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | legacy-late-stamp | [ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
 | legacy-late-verdict | [ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs) |
 | legacy-migration-page | [Siemens/Services/MigrationReadService.cs](../../src/Engine/Siemens/Services/MigrationReadService.cs) |
-| legacy-multiple-dynamic-fields | [ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[Siemens/Services/VersionControlService.cs](../../src/Engine/Siemens/Services/VersionControlService.cs)<br>[src/Shared/CapabilitySelfTestLogic.cs](../../src/Shared/CapabilitySelfTestLogic.cs)<br>[src/Shared/Host/EngineeringDiagnosticsTools.cs](../../src/Shared/Host/EngineeringDiagnosticsTools.cs)<br>[src/Shared/Host/OfflineSuiteTools.cs](../../src/Shared/Host/OfflineSuiteTools.cs) |
+| legacy-multiple-dynamic-fields | [ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[Siemens/Services/VersionControlService.cs](../../src/Engine/Siemens/Services/VersionControlService.cs)<br>[src/Shared/CapabilitySelfTestLogic.cs](../../src/Shared/CapabilitySelfTestLogic.cs)<br>[src/Shared/HardwareNetworkTools.cs](../../src/Shared/HardwareNetworkTools.cs)<br>[src/Shared/Host/EngineeringDiagnosticsTools.cs](../../src/Shared/Host/EngineeringDiagnosticsTools.cs)<br>[src/Shared/Host/OfflineSuiteTools.cs](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | legacy-ok-only | [Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
 | legacy-plcsim-complete | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
 | legacy-plcsim-failure | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
 | legacy-roundtrip-data-stamp | [Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs)<br>[src/Shared/HmiOfflineTools.cs](../../src/Shared/HmiOfflineTools.cs)<br>[src/Shared/Host/OfflineSuiteTools.cs](../../src/Shared/Host/OfflineSuiteTools.cs) |
 | legacy-runtime-settings | [Siemens/Services/RuntimeSettingsService.cs](../../src/Engine/Siemens/Services/RuntimeSettingsService.cs) |
-| legacy-single-verdict | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs)<br>[Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OnlineDownloadService.cs](../../src/Engine/Siemens/Services/OnlineDownloadService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[src/Shared/Host/EcosystemTools.cs](../../src/Shared/Host/EcosystemTools.cs) |
+| legacy-single-verdict | [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../src/Engine/ModelContextProtocol/Tools/RuntimeChannelTools.cs)<br>[Siemens/Services/OnlineDownloadService.cs](../../src/Engine/Siemens/Services/OnlineDownloadService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[src/Shared/Host/EcosystemTools.cs](../../src/Shared/Host/EcosystemTools.cs) |
 | legacy-stamp-then-verdict | [ModelContextProtocol/Tools/SessionTools.cs](../../src/Engine/ModelContextProtocol/Tools/SessionTools.cs)<br>[src/Shared/Host/McpServer.Maintenance.cs](../../src/Shared/Host/McpServer.Maintenance.cs)<br>[src/Shared/Host/McpServer.ToolBridge.cs](../../src/Shared/Host/McpServer.ToolBridge.cs) |
-| legacy-stamp-without-verdict | [ModelContextProtocol/Tools/ModulesTools.cs](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs) |
+| legacy-stamp-without-verdict | [src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs)<br>[src/Shared/ModulesTools.cs](../../src/Shared/ModulesTools.cs) |
 | legacy-success-last | [Siemens/Services/AlarmsService.cs](../../src/Engine/Siemens/Services/AlarmsService.cs) |
-| legacy-verdict-last | [ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs) |
+| legacy-verdict-last | [Siemens/Services/UnifiedHmiService.cs](../../src/Engine/Siemens/Services/UnifiedHmiService.cs)<br>[src/Shared/HardwareDevicesTools.cs](../../src/Shared/HardwareDevicesTools.cs) |
 
 </details>
 
@@ -2052,8 +2044,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | P6-09 | [ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[ModelContextProtocol/Tools/PlcBuildTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[src/Shared/Host/EcosystemTools.cs](../../src/Shared/Host/EcosystemTools.cs)<br>[src/Shared/Host/OfflineAnalysisTools.cs](../../src/Shared/Host/OfflineAnalysisTools.cs)<br>[src/Shared/Host/OfflineSuiteTools.cs](../../src/Shared/Host/OfflineSuiteTools.cs)<br>[src/Shared/Host/PlcDocumentationTools.cs](../../src/Shared/Host/PlcDocumentationTools.cs)<br>[src/Shared/Host/QualityAuditTools.cs](../../src/Shared/Host/QualityAuditTools.cs)<br>[src/Shared/Host/TemplateTools.cs](../../src/Shared/Host/TemplateTools.cs)<br>[src/Shared/Host/V21EcosystemTools.cs](../../src/Shared/Host/V21EcosystemTools.cs)<br>[src/Shared/Host/XmlBuilderTools.cs](../../src/Shared/Host/XmlBuilderTools.cs) | 48 |
 | P6-10 | [ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs)<br>[ModelContextProtocol/Tools/PlcTablesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[src/Shared/PlcOfflineTools.cs](../../src/Shared/PlcOfflineTools.cs)<br>[src/Shared/PlcToolContract.cs](../../src/Shared/PlcToolContract.cs) | 54 |
 | P6-11 | [ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Patch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[ModelContextProtocol/Tools/NativeExchangeTools.cs](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[src/Shared/Host/ExportTools.cs](../../src/Shared/Host/ExportTools.cs) | 24 |
-| P6-12 | [ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[ModelContextProtocol/Tools/HardwareAmlTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs)<br>[ModelContextProtocol/Tools/HardwareManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs)<br>[ModelContextProtocol/Tools/ModulesTools.cs](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs) | 26 |
-| P6-13 | [ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/HardwareServicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs) | 30 |
+| P6-12 | [ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs)<br>[src/Shared/HardwareAmlTools.cs](../../src/Shared/HardwareAmlTools.cs)<br>[src/Shared/HardwareDevicesTools.cs](../../src/Shared/HardwareDevicesTools.cs)<br>[src/Shared/HardwareManagementTools.cs](../../src/Shared/HardwareManagementTools.cs)<br>[src/Shared/ModulesTools.cs](../../src/Shared/ModulesTools.cs) | 26 |
+| P6-13 | [ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/HardwareServicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs)<br>[src/Shared/HardwareNetworkTools.cs](../../src/Shared/HardwareNetworkTools.cs)<br>[src/Shared/HardwareServicesPortTools.cs](../../src/Shared/HardwareServicesPortTools.cs) | 30 |
 | P6-14 | [ModelContextProtocol/Tools/CertificateManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/CertificateManagementTools.cs)<br>[ModelContextProtocol/Tools/ProjectSecurityTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs)<br>[ModelContextProtocol/Tools/SafetyManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs)<br>[ModelContextProtocol/Tools/SafetyValidationTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs)<br>[ModelContextProtocol/Tools/SecurityDeepTools.cs](../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs) | 20 |
 | P6-15 | [ModelContextProtocol/Tools/AlarmsTools.cs](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs)<br>[ModelContextProtocol/Tools/OpcUaTools.cs](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs)<br>[ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs)<br>[ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs)<br>[ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 31 |
 | P6-16 | [ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs](../../src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs)<br>[ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) | 16 |
@@ -2086,8 +2078,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | <a id="phase6-path-p6-09"></a>P6-09 | [src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[src/Shared/Host/EcosystemTools.cs](../../src/Shared/Host/EcosystemTools.cs)<br>[src/Shared/Host/OfflineAnalysisTools.cs](../../src/Shared/Host/OfflineAnalysisTools.cs)<br>[src/Shared/Host/OfflineSuiteTools.cs](../../src/Shared/Host/OfflineSuiteTools.cs)<br>[src/Shared/Host/PlcDocumentationTools.cs](../../src/Shared/Host/PlcDocumentationTools.cs)<br>[src/Shared/Host/QualityAuditTools.cs](../../src/Shared/Host/QualityAuditTools.cs)<br>[src/Shared/Host/TemplateTools.cs](../../src/Shared/Host/TemplateTools.cs)<br>[src/Shared/Host/V21EcosystemTools.cs](../../src/Shared/Host/V21EcosystemTools.cs)<br>[src/Shared/Host/XmlBuilderTools.cs](../../src/Shared/Host/XmlBuilderTools.cs)<br>[src/Engine/Siemens/Services/EngineeringAuditService.cs](../../src/Engine/Siemens/Services/EngineeringAuditService.cs) |
 | <a id="phase6-path-p6-10"></a>P6-10 | [src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/TypesTools.cs](../../src/Engine/ModelContextProtocol/Tools/TypesTools.cs)<br>[src/Shared/PlcOfflineTools.cs](../../src/Shared/PlcOfflineTools.cs)<br>[src/Shared/PlcToolContract.cs](../../src/Shared/PlcToolContract.cs)<br>[src/Engine/Siemens/Services/PlcBlocksService.cs](../../src/Engine/Siemens/Services/PlcBlocksService.cs)<br>[src/Engine/Siemens/Services/PlcSoftwareService.cs](../../src/Engine/Siemens/Services/PlcSoftwareService.cs)<br>[src/Engine/Siemens/Services/PlcTablesService.cs](../../src/Engine/Siemens/Services/PlcTablesService.cs)<br>[src/Engine/Siemens/Services/TypesService.cs](../../src/Engine/Siemens/Services/TypesService.cs) |
 | <a id="phase6-path-p6-11"></a>P6-11 | [src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs](../../src/Engine/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs](../../src/Engine/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs](../../src/Engine/ModelContextProtocol/Tools/NativeExchangeTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../src/Engine/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[src/Shared/Host/ExportTools.cs](../../src/Shared/Host/ExportTools.cs)<br>[src/Engine/Siemens/Services/DocumentsService.cs](../../src/Engine/Siemens/Services/DocumentsService.cs)<br>[src/Engine/Siemens/Services/NativeExchangeService.cs](../../src/Engine/Siemens/Services/NativeExchangeService.cs)<br>[src/Engine/Siemens/Services/PlcExternalSourcesService.cs](../../src/Engine/Siemens/Services/PlcExternalSourcesService.cs) |
-| <a id="phase6-path-p6-12"></a>P6-12 | [src/Engine/ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/ModulesTools.cs](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs)<br>[src/Engine/Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs)<br>[src/Engine/Siemens/Services/HardwareAmlService.cs](../../src/Engine/Siemens/Services/HardwareAmlService.cs)<br>[src/Engine/Siemens/Services/HardwareManagementService.cs](../../src/Engine/Siemens/Services/HardwareManagementService.cs)<br>[src/Engine/Siemens/Services/ModulesService.cs](../../src/Engine/Siemens/Services/ModulesService.cs) |
-| <a id="phase6-path-p6-13"></a>P6-13 | [src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs)<br>[src/Engine/Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[src/Engine/Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
+| <a id="phase6-path-p6-12"></a>P6-12 | [src/Engine/ModelContextProtocol/Tools/DevicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs)<br>[src/Shared/HardwareAddressTools.cs](../../src/Shared/HardwareAddressTools.cs)<br>[src/Shared/HardwareAmlTools.cs](../../src/Shared/HardwareAmlTools.cs)<br>[src/Shared/HardwareDevicesTools.cs](../../src/Shared/HardwareDevicesTools.cs)<br>[src/Shared/HardwareManagementTools.cs](../../src/Shared/HardwareManagementTools.cs)<br>[src/Shared/ModulesTools.cs](../../src/Shared/ModulesTools.cs)<br>[src/Engine/Siemens/Services/DevicesService.cs](../../src/Engine/Siemens/Services/DevicesService.cs) |
+| <a id="phase6-path-p6-13"></a>P6-13 | [src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs](../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs)<br>[src/Shared/HardwareNetworkTools.cs](../../src/Shared/HardwareNetworkTools.cs)<br>[src/Shared/HardwareServicesPortTools.cs](../../src/Shared/HardwareServicesPortTools.cs)<br>[src/Engine/Siemens/Services/HardwareNetworkService.cs](../../src/Engine/Siemens/Services/HardwareNetworkService.cs)<br>[src/Engine/Siemens/Services/HardwareServicesService.cs](../../src/Engine/Siemens/Services/HardwareServicesService.cs) |
 | <a id="phase6-path-p6-14"></a>P6-14 | [src/Engine/ModelContextProtocol/Tools/CertificateManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/CertificateManagementTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs](../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs](../../src/Engine/ModelContextProtocol/Tools/SafetyValidationTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs](../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs)<br>[src/Engine/Siemens/Services/CertificateManagementService.cs](../../src/Engine/Siemens/Services/CertificateManagementService.cs)<br>[src/Engine/Siemens/Services/ProjectSecurityService.cs](../../src/Engine/Siemens/Services/ProjectSecurityService.cs)<br>[src/Engine/Siemens/Services/SafetyManagementService.cs](../../src/Engine/Siemens/Services/SafetyManagementService.cs)<br>[src/Engine/Siemens/Services/SafetyValidationService.cs](../../src/Engine/Siemens/Services/SafetyValidationService.cs)<br>[src/Engine/Siemens/Services/SecurityDeepService.cs](../../src/Engine/Siemens/Services/SecurityDeepService.cs) |
 | <a id="phase6-path-p6-15"></a>P6-15 | [src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[src/Engine/Siemens/Services/AlarmsService.cs](../../src/Engine/Siemens/Services/AlarmsService.cs)<br>[src/Engine/Siemens/Services/OpcUaService.cs](../../src/Engine/Siemens/Services/OpcUaService.cs)<br>[src/Engine/Siemens/Services/SoftwareUnitDeepService.cs](../../src/Engine/Siemens/Services/SoftwareUnitDeepService.cs)<br>[src/Engine/Siemens/Services/SoftwareUnitManagementService.cs](../../src/Engine/Siemens/Services/SoftwareUnitManagementService.cs)<br>[src/Engine/Siemens/Services/TechnologyObjectsService.cs](../../src/Engine/Siemens/Services/TechnologyObjectsService.cs) |
 | <a id="phase6-path-p6-16"></a>P6-16 | [src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs](../../src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs)<br>[src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs](../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs)<br>[src/Engine/Siemens/Services/ClassicHmiFoldersService.cs](../../src/Engine/Siemens/Services/ClassicHmiFoldersService.cs)<br>[src/Engine/Siemens/Services/MotionProDiagClassicHmiService.cs](../../src/Engine/Siemens/Services/MotionProDiagClassicHmiService.cs) |
@@ -2172,7 +2164,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | P6-02：未接线的 V4 信封/错误/分页/批次/计划与单一序列化校验 | [V4/BehaviorCapabilities.cs](../../src/Logic/V4/BehaviorCapabilities.cs)<br>[V4/CallerInputFiles.cs](../../src/Logic/V4/CallerInputFiles.cs)<br>[V4/CandidateHostMapping.cs](../../src/Logic/V4/CandidateHostMapping.cs)<br>[V4/CompileCandidate.cs](../../src/Logic/V4/CompileCandidate.cs)<br>[V4/CompileContract.cs](../../src/Logic/V4/CompileContract.cs)<br>[V4/CompileResultMapping.cs](../../src/Logic/V4/CompileResultMapping.cs)<br>[V4/Construction/Blocks.cs](../../src/Logic/V4/Construction/Blocks.cs)<br>[V4/Construction/ConstructionAdapter.cs](../../src/Logic/V4/Construction/ConstructionAdapter.cs)<br>[V4/Construction/ConstructionInput.cs](../../src/Logic/V4/Construction/ConstructionInput.cs)<br>[V4/Construction/ConstructionJson.cs](../../src/Logic/V4/Construction/ConstructionJson.cs)<br>[V4/Construction/ConstructionSchemas.cs](../../src/Logic/V4/Construction/ConstructionSchemas.cs)<br>[V4/Construction/Declarations.cs](../../src/Logic/V4/Construction/Declarations.cs)<br>[V4/Construction/FoundationConstructionValidation.cs](../../src/Logic/V4/Construction/FoundationConstructionValidation.cs)<br>[V4/Construction/StructuredText.cs](../../src/Logic/V4/Construction/StructuredText.cs)<br>[V4/DeviceCreation.cs](../../src/Logic/V4/DeviceCreation.cs)<br>[V4/DeviceCreationContract.cs](../../src/Logic/V4/DeviceCreationContract.cs)<br>[V4/Domain/BranchStep.cs](../../src/Logic/V4/Domain/BranchStep.cs)<br>[V4/Domain/DomainDto.cs](../../src/Logic/V4/Domain/DomainDto.cs)<br>[V4/Domain/DomainInputs.cs](../../src/Logic/V4/Domain/DomainInputs.cs)<br>[V4/Domain/DomainModels.cs](../../src/Logic/V4/Domain/DomainModels.cs)<br>[V4/Domain/DomainNativeValue.cs](../../src/Logic/V4/Domain/DomainNativeValue.cs)<br>[V4/Domain/DomainSchemas.cs](../../src/Logic/V4/Domain/DomainSchemas.cs)<br>[V4/Domain/DomainShape.cs](../../src/Logic/V4/Domain/DomainShape.cs)<br>[V4/Domain/DomainValidation.cs](../../src/Logic/V4/Domain/DomainValidation.cs)<br>[V4/Domain/DynamizationValidation.cs](../../src/Logic/V4/Domain/DynamizationValidation.cs)<br>[V4/Domain/GraphicSelectionModels.cs](../../src/Logic/V4/Domain/GraphicSelectionModels.cs)<br>[V4/Domain/GraphicSelectionSchemas.cs](../../src/Logic/V4/Domain/GraphicSelectionSchemas.cs)<br>[V4/Domain/GraphicSelectionValidation.cs](../../src/Logic/V4/Domain/GraphicSelectionValidation.cs)<br>[V4/Domain/OpenPipeRequest.cs](../../src/Logic/V4/Domain/OpenPipeRequest.cs)<br>[V4/Domain/SubjectAlternativeName.cs](../../src/Logic/V4/Domain/SubjectAlternativeName.cs)<br>[V4/Envelope.cs](../../src/Logic/V4/Envelope.cs)<br>[V4/Error.cs](../../src/Logic/V4/Error.cs)<br>[V4/FallbackCandidate.cs](../../src/Logic/V4/FallbackCandidate.cs)<br>[V4/FallbackContract.cs](../../src/Logic/V4/FallbackContract.cs)<br>[V4/HardwareCatalogAdmission.cs](../../src/Logic/V4/HardwareCatalogAdmission.cs)<br>[V4/Hmi/ClassicSpecs.cs](../../src/Logic/V4/Hmi/ClassicSpecs.cs)<br>[V4/Hmi/DeviceAmlSpec.cs](../../src/Logic/V4/Hmi/DeviceAmlSpec.cs)<br>[V4/Hmi/HmiBuilderAdapter.cs](../../src/Logic/V4/Hmi/HmiBuilderAdapter.cs)<br>[V4/Hmi/HmiJson.cs](../../src/Logic/V4/Hmi/HmiJson.cs)<br>[V4/Hmi/HmiRules.cs](../../src/Logic/V4/Hmi/HmiRules.cs)<br>[V4/Hmi/HmiSchemas.cs](../../src/Logic/V4/Hmi/HmiSchemas.cs)<br>[V4/Hmi/UnifiedSpecs.cs](../../src/Logic/V4/Hmi/UnifiedSpecs.cs)<br>[V4/HostBehavior.cs](../../src/Logic/V4/HostBehavior.cs)<br>[V4/Inputs/CompositeAttributeMap.cs](../../src/Logic/V4/Inputs/CompositeAttributeMap.cs)<br>[V4/Inputs/DriveFunctionPolicy.cs](../../src/Logic/V4/Inputs/DriveFunctionPolicy.cs)<br>[V4/Inputs/InputSchema.cs](../../src/Logic/V4/Inputs/InputSchema.cs)<br>[V4/Inputs/InputValidation.cs](../../src/Logic/V4/Inputs/InputValidation.cs)<br>[V4/Inputs/InputValues.cs](../../src/Logic/V4/Inputs/InputValues.cs)<br>[V4/Inputs/MapInputs.cs](../../src/Logic/V4/Inputs/MapInputs.cs)<br>[V4/Inputs/NativeValueInputs.cs](../../src/Logic/V4/Inputs/NativeValueInputs.cs)<br>[V4/Inputs/ParameterRef.cs](../../src/Logic/V4/Inputs/ParameterRef.cs)<br>[V4/Inputs/SequenceInputs.cs](../../src/Logic/V4/Inputs/SequenceInputs.cs)<br>[V4/Inputs/ToolCallInputs.cs](../../src/Logic/V4/Inputs/ToolCallInputs.cs)<br>[V4/Inputs/TypedToolInputs.cs](../../src/Logic/V4/Inputs/TypedToolInputs.cs)<br>[V4/NativeResultState.cs](../../src/Logic/V4/NativeResultState.cs)<br>[V4/Paging.cs](../../src/Logic/V4/Paging.cs)<br>[V4/Plan.cs](../../src/Logic/V4/Plan.cs)<br>[V4/PlcBatchImportResultMapping.cs](../../src/Logic/V4/PlcBatchImportResultMapping.cs)<br>[V4/PlcExport.cs](../../src/Logic/V4/PlcExport.cs)<br>[V4/PlcExportContract.cs](../../src/Logic/V4/PlcExportContract.cs)<br>[V4/PlcImport.cs](../../src/Logic/V4/PlcImport.cs)<br>[V4/PlcImportContract.cs](../../src/Logic/V4/PlcImportContract.cs)<br>[V4/PlcImportFiles.cs](../../src/Logic/V4/PlcImportFiles.cs)<br>[V4/ResultMapping.cs](../../src/Logic/V4/ResultMapping.cs)<br>[V4/SaveCloseCandidate.cs](../../src/Logic/V4/SaveCloseCandidate.cs)<br>[V4/SaveCloseContract.cs](../../src/Logic/V4/SaveCloseContract.cs)<br>[V4/SessionCandidate.cs](../../src/Logic/V4/SessionCandidate.cs)<br>[V4/SessionCandidateContract.cs](../../src/Logic/V4/SessionCandidateContract.cs)<br>[V4/SourceCandidate.cs](../../src/Logic/V4/SourceCandidate.cs)<br>[V4/SourceContract.cs](../../src/Logic/V4/SourceContract.cs)<br>[V4/V4Json.cs](../../src/Logic/V4/V4Json.cs)<br>[V4/V4Validation.cs](../../src/Logic/V4/V4Validation.cs) |
 | D334：源码目录迁移完成；产品名/运行目录仍待 36–39 | [docs/development/repository-layout.md](../../docs/development/repository-layout.md) |
 
-D1 发布政策按台账逐版本生成；只有族行中明确的 `L5[releaseKey]=PASSED` 启用 safe-v4，未记录或失败均保持 current。当前 70/70 条记录为 current。生成器不运行原生调用，测试构建覆盖不改变台账或发布记录。
+D1 发布政策按台账逐版本生成；只有族行中明确的 `L5[releaseKey]=PASSED` 启用 safe-v4，未记录或失败均保持 current。当前 88/88 条记录为 current。生成器不运行原生调用，测试构建覆盖不改变台账或发布记录。
 
 </details>
 

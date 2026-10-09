@@ -88,7 +88,11 @@ resources = helper('Test-ResourceDiscovery')
 contracts = helper('Snapshot-ToolContracts')
 RELEASES = contracts.RELEASES
 FULL_RELEASES = ('20', '21')
-SESSION_APPROVAL_TOOLS = {'SaveProject', 'SaveProjectCopy', 'CloseProject'}
+SESSION_APPROVAL_TOOLS = {'SaveProject', 'SaveProjectCopy', 'CloseProject',
+    'CreateDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice',
+    'SetDeviceItemAttribute', 'SetPlcCpuSettings', 'EnsureSubnet',
+    'AttachDeviceNodeToSubnet', 'ConnectDeviceNodesToProfinetSubnet',
+    'ExportDeviceAml', 'BuildDeviceAmlDocument'}
 RESPONSE_LIMIT = 16 * 1024
 RESPONSE_FORMAT_VERSION = 3
 FULL_RESPONSE_FIELDS = {'formatVersion', 'rawMaskRules', 'release', 'profiles', 'transport',
@@ -235,6 +239,56 @@ V21_ONLY = (
 )
 
 
+# Reviewed B2 unattached calls. The fresh SDK fixture owns no Portal/project;
+# the original HardwareContract.RequireProject, RunHmiStepTool and legacy
+# topology/probe null guards precede every native access. No attach, project
+# open or lifecycle mutation is issued by this capture. File paths below are
+# deliberately relative: AML builders/importers reject before file I/O.
+# Keep this literal roster independent of examples/descriptions.
+HARDWARE_UNATTACHED_CALLS = {
+    'CreateDevice': {'orderNumber': '6ES7211-1BE40-0XB0', 'version': 'V4.7', 'deviceName': 'Fixture'},
+    'CreateGsdDevice': {'keyword': 'Fixture', 'deviceName': 'Fixture'},
+    'CreateHardwareCatalogDevice': {'keyword': 'Fixture', 'deviceName': 'Fixture'},
+    'ListDevices': {},
+    'GetDeviceInfo': {'devicePath': 'Fixture'},
+    'GetDeviceItemInfo': {'deviceItemPath': 'Fixture/CPU'},
+    'GetDeviceItemTree': {'deviceItemPath': 'Fixture/CPU'},
+    'SearchInstalledGsdDevices': {'keyword': 'Fixture'},
+    'GetDeviceAttributes': {'devicePath': 'Fixture'},
+    'SetDeviceItemAttribute': {'deviceItemPath': 'Fixture/CPU', 'attributeName': 'Name', 'value': 'Fixture'},
+    'SetPlcCpuSettings': {'cpuPath': 'Fixture/CPU', 'settings': {'exactAttributes': {'Name': 'Fixture'}}},
+    'GetDevicePlugLocations': {'deviceItemPath': 'Fixture/CPU'},
+    'PlugDeviceItem': {'deviceItemPath': 'Fixture/CPU', 'orderNumber': '6ES7221-3BD30-0XB0'},
+    'ManageHardwareObject': {'devicePath': ['Fixture'], 'action': 'deleteDevice'},
+    'ManageDeviceUserGroup': {},
+    'GetHardwareFeatures': {'devicePath': ['Fixture']},
+    'ManageDeviceServiceObjects': {'devicePath': ['Fixture'], 'itemPath': [], 'family': 'certificateServices'},
+    'ManageHardwareUtilities': {},
+    'ExchangeSystemDiagnosticsSettings': {'action': 'export', 'filePath': 'fixture.dat'},
+    'ListIoSystems': {'subnetName': 'Fixture'},
+    'ManageIoSystem': {'devicePath': ['Fixture'], 'itemPath': [], 'action': 'create'},
+    'ListNetworkDomains': {'subnetName': 'Fixture'},
+    'ManageNetworkDomain': {'subnetName': 'Fixture', 'kind': 'sync', 'action': 'create', 'name': 'Fixture'},
+    'ListTransferAreas': {'devicePath': ['Fixture'], 'itemPath': []},
+    'ManageTransferArea': {'devicePath': ['Fixture'], 'itemPath': [], 'action': 'create', 'name': 'Fixture', 'type': 'IN'},
+    'ListDeviceItemChannels': {'devicePath': ['Fixture'], 'itemPath': []},
+    'SetDeviceItemChannel': {'devicePath': ['Fixture'], 'itemPath': [], 'channelType': 'Digital', 'channelIoType': 'Input', 'channelNumber': 0, 'attributes': {'ChannelAddress': 0}},
+    'ManagePortInterconnection': {'devicePath': ['Fixture'], 'itemPath': []},
+    'GetDeviceItemNetworkInfo': {'deviceItemPath': 'Fixture/CPU'},
+    'ConnectDeviceNodesToProfinetSubnet': {'firstRootPath': 'Fixture/CPU', 'secondRootPath': 'Fixture/HMI'},
+    'PlanHardwareNetworkConfiguration': {'plan': {'operations': []}},
+    'EnsureSubnet': {'anchorDeviceItemPath': 'Fixture/CPU', 'subnetType': 'IndustrialEthernet', 'subnetName': 'Fixture'},
+    'AttachDeviceNodeToSubnet': {'deviceItemPath': 'Fixture/CPU', 'interfaceIndex': 0, 'subnetName': 'Fixture'},
+    'ProbeHardwareHmiConnectionOwnerCandidates': {'plcRootPath': 'Fixture/CPU', 'hmiRootPath': 'Fixture/HMI'},
+    'ProbeHardwareHmiConnectionWhitelistedServices': {'plcRootPath': 'Fixture/CPU', 'hmiRootPath': 'Fixture/HMI'},
+    'GetProjectTopology': {},
+    'ListCommunicationConnections': {'devicePath': ['Fixture']},
+    'ManageCommunicationConnection': {'devicePath': ['Fixture'], 'itemPath': [], 'action': 'delete', 'connectionName': 'Fixture'},
+    'ExportDeviceAml': {'devicePath': 'Fixture', 'exportPath': 'fixture.aml'},
+    'ImportDeviceAml': {'filePath': 'fixture.aml', 'logFilePath': ''},
+    'BuildDeviceAmlDocument': {'spec': {}, 'outputPath': 'fixture.aml'},
+}
+
 def canonical(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'),
                       allow_nan=False)
@@ -248,8 +302,8 @@ RAW_MASK_RULES = [
     {'tool': 'V4 infrastructure only', 'kind': 'requestId', 'path': ['meta', 'requestId'],
      'reason': 'V4 invocation journal correlation ID (32 lowercase hex). Also masks actual batch result envelopes, never examples.'},
     *[{'tool': tool, 'path': ['error', 'details', 'requestId'],
-       'reason': 'Workbench approval request correlation ID on save/close refusal.'}
-      for tool in ('SaveProject', 'SaveProjectCopy', 'CloseProject')],
+       'reason': 'Workbench approval correlation at error.details.requestId; two B2 unattached captures varied only this GUID (AttachDeviceNodeToSubnet), as with save/close. Plan hashes remain exact.'}
+      for tool in sorted(SESSION_APPROVAL_TOOLS)],
     {'tool': 'CallTool', 'path': ['error', 'details', 'requestId'],
      'reason': 'Workbench approval request correlation ID on a lite save/close target refusal.'},
     {'tool': '*', 'path': ['meta', 'timestamp'],
@@ -737,6 +791,12 @@ def capture_release(args, release, exe, public_api):
                 resources.require(name in domains[domain], name + ' moved out of its L1 domain')
                 call(name, example(name))
 
+            # B2 bodies and their typed null-session responses are exercised in
+            # addition to the exhaustive pre-admission rejection sweep.
+            for name, arguments in HARDWARE_UNATTACHED_CALLS.items():
+                if name in registered:
+                    call(name, arguments)
+
             # Unknown argument, wrong JSON type, and missing required argument.
             # Safe targets ensure even a diagnostic regression cannot attach TIA.
             call('GetSessionState', {'unknownParameter': True})
@@ -905,6 +965,9 @@ def capture(args):
             second = capture_foundation(args, release, exe)
         difference = first_difference(first, second)
         if difference:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            for label, value in (('first', first), ('second', second)):
+                (args.output.parent / f'{args.output.name}-{release}-{label}.diagnostic.json').write_text(snapshot_text(value), encoding='utf-8', newline='\n')
             raise ValueError(f'V{release}: consecutive captures differ at {difference}; baseline not written')
         snapshots[release] = first
         c = first['coverage']

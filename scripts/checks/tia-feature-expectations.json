@@ -14,6 +14,7 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "PLC_HARDWARE_TRANSFER_AREAS",
       "PLC_RH",
       "PLC_SOURCE_RESULTS",
       "PLC_WATCH_READ",
@@ -27,6 +28,8 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "PLC_HARDWARE_DOMAINS",
+      "PLC_HARDWARE_TRANSFER_AREAS",
       "PLC_RH",
       "PLC_SOURCE_RESULTS",
       "PLC_SPECIAL_EXPORT",
@@ -43,6 +46,9 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "PLC_HARDWARE_DIAGNOSTICS",
+      "PLC_HARDWARE_DOMAINS",
+      "PLC_HARDWARE_TRANSFER_AREAS",
       "PLC_RH",
       "PLC_SAFETY",
       "PLC_SOURCE_RESULTS",
@@ -61,6 +67,12 @@
     "targetFramework": "net48",
     "defineConstants": [
       "PLC_ATTRIBUTE_DELEGATE",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_HARDWARE_CERTIFICATES",
+      "PLC_HARDWARE_DIAGNOSTICS",
+      "PLC_HARDWARE_DOMAINS",
+      "PLC_HARDWARE_TRANSFER_AREAS",
+      "PLC_HARDWARE_TRANSFER_MULTICAST",
       "PLC_RH",
       "PLC_SAFETY",
       "PLC_SOURCE_RESULTS",
@@ -78,7 +90,14 @@
     "targetFramework": "net48",
     "defineConstants": [
       "PLC_ATTRIBUTE_DELEGATE",
+      "PLC_CAX_TRANSFER_RESULT",
       "PLC_HARDWARE_CATALOG",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_HARDWARE_CERTIFICATES",
+      "PLC_HARDWARE_DIAGNOSTICS",
+      "PLC_HARDWARE_DOMAINS",
+      "PLC_HARDWARE_TRANSFER_AREAS",
+      "PLC_HARDWARE_TRANSFER_MULTICAST",
       "PLC_RH",
       "PLC_SAFETY",
       "PLC_SOURCE_RESULTS",
@@ -97,8 +116,17 @@
     "targetFramework": "net48",
     "defineConstants": [
       "PLC_ATTRIBUTE_DELEGATE",
+      "PLC_CAX_TRANSFER_RESULT",
       "PLC_DOCUMENT_EXPORT",
       "PLC_HARDWARE_CATALOG",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_HARDWARE_CERTIFICATES",
+      "PLC_HARDWARE_DIAGNOSTICS",
+      "PLC_HARDWARE_DOMAINS",
+      "PLC_HARDWARE_MRP_INSTANCES",
+      "PLC_HARDWARE_TELECONTROL",
+      "PLC_HARDWARE_TRANSFER_AREAS",
+      "PLC_HARDWARE_TRANSFER_MULTICAST",
       "PLC_RH",
       "PLC_SAFETY",
       "PLC_SOURCE_RESULTS",
@@ -119,9 +147,19 @@
     "defineConstants": [
       "PLC_ADDRESS_PROCESS_IMAGE_SERVICE",
       "PLC_ATTRIBUTE_DELEGATE",
+      "PLC_CAX_TRANSFER_RESULT",
       "PLC_DOCUMENT_EXPORT",
       "PLC_EXTERNAL_SOURCE_GROUP_RENAME",
       "PLC_HARDWARE_CATALOG",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_HARDWARE_CERTIFICATES",
+      "PLC_HARDWARE_DIAGNOSTICS",
+      "PLC_HARDWARE_DOMAINS",
+      "PLC_HARDWARE_LINKED_TAGS",
+      "PLC_HARDWARE_MRP_INSTANCES",
+      "PLC_HARDWARE_TELECONTROL",
+      "PLC_HARDWARE_TRANSFER_AREAS",
+      "PLC_HARDWARE_TRANSFER_MULTICAST",
       "PLC_RH",
       "PLC_SAFETY",
       "PLC_SOURCE_RESULTS",
@@ -476,6 +514,8 @@
     "targetFramework": "net10.0",
     "defineConstants": [
       "PLC_HARDWARE_CATALOG",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_SAFETY",
       "RELEASE"
     ]
   },
@@ -485,6 +525,8 @@
     "targetFramework": "net10.0",
     "defineConstants": [
       "PLC_HARDWARE_CATALOG",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_SAFETY",
       "RELEASE",
       "TRACE"
     ]

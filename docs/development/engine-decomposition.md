@@ -444,9 +444,9 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
 | Devices | [DevicesService](../../src/Engine/Siemens/Services/DevicesService.cs) / [DevicesTools](../../src/Engine/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
-| HardwareManagement | [HardwareManagementService](../../src/Engine/Siemens/Services/HardwareManagementService.cs) / [HardwareManagementTools](../../src/Engine/ModelContextProtocol/Tools/HardwareManagementTools.cs) | 1 |
-| HardwareAml | [HardwareAmlService](../../src/Engine/Siemens/Services/HardwareAmlService.cs) / [HardwareAmlTools](../../src/Engine/ModelContextProtocol/Tools/HardwareAmlTools.cs) | 3 |
-| Modules | [ModulesService](../../src/Engine/Siemens/Services/ModulesService.cs) / [ModulesTools](../../src/Engine/ModelContextProtocol/Tools/ModulesTools.cs) | 2 |
+| HardwareManagement | [HardwareManagementService](../../src/Shared/HardwareManagementService.cs) / [HardwareManagementTools](../../src/Shared/HardwareManagementTools.cs) | 1 |
+| HardwareAml | [HardwareAmlService](../../src/Shared/HardwareAmlService.cs) / [HardwareAmlTools](../../src/Shared/HardwareAmlTools.cs) | 3 |
+| Modules | [ModulesService](../../src/Shared/HardwareModulesService.cs) / [ModulesTools](../../src/Shared/ModulesTools.cs) | 2 |
 | Addresses（P8-02 已迁） | [Foundation native](../../src/Adapters/Native/Hardware/HardwareAddressing.cs) / [共享声明](../../src/Shared/HardwareAddressTools.cs) | 2（原引擎文件已删除） |
 
 `ModulesService` 通过构造器接收同一容器的 `DevicesService` 单例以复用目录查询；模块地址读取复用

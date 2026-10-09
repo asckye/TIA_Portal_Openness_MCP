@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static string[] Path(string json) => V4Json.Deserialize<string[]>(json);
-        private static Dictionary<string, HardwareScalar> Scalars(string json)
+        internal static Dictionary<string, HardwareScalar> Scalars(string json)
         {
             var result = new Dictionary<string, HardwareScalar>(StringComparer.Ordinal);
             foreach (var property in V4Json.ParseInput(json).EnumerateObject())

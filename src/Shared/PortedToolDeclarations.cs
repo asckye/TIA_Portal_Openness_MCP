@@ -15,10 +15,13 @@ namespace TiaMcpServer.ModelContextProtocol
             ["F02"] = new[] { typeof(PlcOfflineTools), typeof(PlcDocumentationTools), typeof(OfflineAnalysisTools), typeof(TemplateTools), typeof(QualityAuditTools), typeof(EngineeringDiagnosticsTools), typeof(EcosystemTools), typeof(V21EcosystemTools) },
             ["F03"] = new[] { typeof(HmiOfflineTools), typeof(OfflineSuiteTools), typeof(XmlBuilderTools), typeof(V21EcosystemTools) },
 #endif
-            ["F19"] = new[] { typeof(AddressesTools) }
+            ["F18"] = new[] { typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareNetworkTools), typeof(HardwareServicesPortTools) },
+            ["F20"] = new[] { typeof(HardwareNetworkTools), typeof(HardwareServicesPortTools) },
+            ["F19"] = new[] { typeof(AddressesTools) },
+            ["F21"] = new[] { typeof(HardwareAmlTools) }
         };
 
-        internal static IEnumerable<MethodInfo> Methods(string release)
+        internal static IEnumerable<MethodInfo> Methods(string release, bool includeUnavailable = false)
         {
             foreach (var family in PortedFamilies.All.Where(f => f.Available(release)))
             {
@@ -28,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (names.Length != family.Tools.Length || names.Distinct(StringComparer.Ordinal).Count() != names.Length
                     || names.Except(family.Tools, StringComparer.Ordinal).Any())
                     throw new InvalidOperationException("Ported declaration roster mismatch: " + family.Name);
-                foreach (var method in methods) yield return method;
+                foreach (var method in methods) if (includeUnavailable || PortedFamilies.Available(release, method.GetCustomAttribute<McpServerToolAttribute>()!.Name!)) yield return method;
             }
         }
     }

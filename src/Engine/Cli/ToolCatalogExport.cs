@@ -25,7 +25,7 @@ namespace TiaMcpServer.Cli
                 serverInstructions = McpGuides.ServerInstructions,
                 descriptors = tools.Select(t => Describe(McpServer.CatalogView.All[t.ProtocolTool.Name])).ToArray(),
                 unavailableTools = McpServer.CatalogView.IncludingUnavailable.Values
-                    .Where(t => !McpServer.CatalogView.All.ContainsKey(t.Name))
+                    .Where(t => !McpServer.CatalogView.All.ContainsKey(t.Name) && !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.Name))
                     .Select(t => new { tool = t.Tool, descriptor = Describe(t) }).ToArray()
             };
             File.WriteAllText(Path.GetFullPath(path), JsonSerializer.Serialize(catalog, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions), new UTF8Encoding(false));

@@ -14,6 +14,67 @@ using System.Web.Script.Serialization;
 internal static partial class Program
 {
     private static Assembly Server = null!;
+    // Source captures run the host in-process. Keep the unattached adapter on
+    // its own MTA thread without adopting a Portal or changing session lifecycle.
+    private sealed class SourceHardwareBridge : IDisposable
+    {
+        private readonly System.Collections.Concurrent.BlockingCollection<Action> queue = new System.Collections.Concurrent.BlockingCollection<Action>();
+        private readonly Thread thread;
+        private readonly FieldInfo bridge;
+        private readonly object previous;
+        private IDisposable adapter = null!;
+        private object dispatcher = null!;
+        private MethodInfo dispatch = null!;
+        private Type request = null!;
+
+        internal SourceHardwareBridge(Assembly server, string api)
+        {
+            bridge = FindServerType(server, "TiaMcpServer.ModelContextProtocol.HardwareAddressWorkerBridge").GetField("Call", All)!;
+            previous = bridge.GetValue(null)!;
+            var ready = new TaskCompletionSource<bool>();
+            thread = new Thread(() => {
+                try {
+                    var type = FindServerType(server, "TiaMcp.Adapters.PlcFoundationEngine");
+                    string release = server.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major.ToString();
+                    adapter = (IDisposable)Activator.CreateInstance(type, new object[] { release, api })!;
+                    var dispatcherType = server.GetType("TiaMcp.PlcWorker.FoundationWorkerDispatcher", true)!;
+                    dispatcher = Activator.CreateInstance(dispatcherType, All, null, new object[] { adapter, server, null! }, null)!;
+                    dispatch = dispatcherType.GetMethod("Dispatch", All)!;
+                    request = FindServerType(server, "TiaMcp.WorkerChannel.ChannelRequest");
+                    ready.SetResult(true);
+                    foreach (var action in queue.GetConsumingEnumerable()) action();
+                }
+                catch (Exception error) { ready.TrySetException(error); }
+                finally { adapter?.Dispose(); }
+            }) { IsBackground = true };
+            thread.SetApartmentState(ApartmentState.MTA);
+            thread.Start();
+            ready.Task.GetAwaiter().GetResult();
+            Func<string, System.Text.Json.Nodes.JsonObject, System.Text.Json.Nodes.JsonNode?> call = (operation, input) => {
+                var completion = new TaskCompletionSource<System.Text.Json.Nodes.JsonNode?>();
+                queue.Add(() => {
+                    try {
+                        var message = Activator.CreateInstance(request, new object[] { 0L, "adapter." + operation, input.ToJsonString(), (Action<int, string?>)((_, __) => { }), null! })!;
+                        var response = dispatch.Invoke(dispatcher, new[] { message })!;
+                        var failure = response.GetType().GetProperty("Failure")!.GetValue(response);
+                        if (failure != null) throw new InvalidOperationException((string)failure.GetType().GetProperty("Message")!.GetValue(failure)!);
+                        completion.SetResult(System.Text.Json.Nodes.JsonNode.Parse((string)response.GetType().GetProperty("ResultJson")!.GetValue(response)!));
+                    }
+                    catch (Exception error) { completion.SetException(error); }
+                });
+                return completion.Task.GetAwaiter().GetResult();
+            };
+            bridge.SetValue(null, call);
+        }
+
+        public void Dispose()
+        {
+            bridge.SetValue(null, previous);
+            queue.CompleteAdding();
+            thread.Join();
+            queue.Dispose();
+        }
+    }
     internal static Type FindServerType(Assembly server, string name)
         => FindReferencedType(server, name);
     internal static Type FindReferencedType(Assembly server, string name)
@@ -45,7 +106,8 @@ internal static partial class Program
         var release = (Dictionary<string, object>)releases[major.ToString(System.Globalization.CultureInfo.InvariantCulture)];
         return Convert.ToInt32(release["toolCount"], System.Globalization.CultureInfo.InvariantCulture);
     }
-    internal static int ExpectedEngineToolCount(int major) => ExpectedFullToolCount(major) - EngineSurface.HostTools(Server).Length - 7;
+    internal static int ExpectedEngineToolCount(int major) => ExpectedFullToolCount(major)
+        - EngineSurface.PortedTools(Server, major.ToString(System.Globalization.CultureInfo.InvariantCulture)).Length - 2;
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     internal static bool HasChinese(string? value) => !String.IsNullOrEmpty(value)
@@ -833,7 +895,10 @@ internal static partial class Program
                     Func<System.Diagnostics.ProcessStartInfo> start=()=>TestWorkerStart(exe,api,(int)requestedMajor,options!);
                     isolated.GetMethod("Configure",All)!.Invoke(null,new object[]{options!,start});
                 }
-                await (Task)program.GetMethod(transport=="http"?"RunHttpHost":"RunStdioHost",All)!.Invoke(null,new[]{options})!;
+                if (args[1] == "protocol-host" && transport != "http") {
+                    using var hardware = new SourceHardwareBridge(Server, api);
+                    await (Task)program.GetMethod("RunStdioHost",All)!.Invoke(null,new[]{options})!;
+                } else await (Task)program.GetMethod(transport=="http"?"RunHttpHost":"RunStdioHost",All)!.Invoke(null,new[]{options})!;
                 isolated.GetMethod("Stop",All)!.Invoke(null,null);
                 return 0;
             }

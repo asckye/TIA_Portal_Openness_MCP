@@ -212,7 +212,7 @@ internal static class FoundationPassiveDiagnostics
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
         bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(FoundationV4Tool.Name(d.Name), StringComparer.Ordinal) && (d.ResponseMember == "ImportStaging" || sourceOperations.Contains(d.Operation)))
-            && PortedToolContract.Families(releaseKey).SelectMany(family => family.Tools)
+            && PortedToolContract.Families(releaseKey).SelectMany(family => family.Tools.Where(name => TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, name)))
                 .All(name => names.Contains(name, StringComparer.Ordinal) && PortedToolContract.WiredOperations(name).All(sourceOperations.Contains));
         var roster = new JsonArray();
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal))
@@ -222,7 +222,7 @@ internal static class FoundationPassiveDiagnostics
             var definition = FoundationTools.Definitions.SingleOrDefault(d => FoundationV4Tool.Name(d.Name) == name);
             bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name);
             var operations = ported ? PortedToolContract.WiredOperations(name) : null;
-            var row = new JsonObject { ["name"] = name, ["execution"] = ported || definition != null && definition.ResponseMember != "ImportStaging" ? "worker-protocol" : "host-only", ["wiredOperation"] = ported ? operations![0] : definition?.ResponseMember == "ImportStaging" ? null : definition?.Operation, ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) };
+            var row = new JsonObject { ["name"] = name, ["execution"] = ported && operations!.Length != 0 || definition != null && definition.ResponseMember != "ImportStaging" ? "worker-protocol" : "host-only", ["wiredOperation"] = ported ? operations!.FirstOrDefault() : definition?.ResponseMember == "ImportStaging" ? null : definition?.Operation, ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) };
             if (ported) row["wiredOperations"] = new JsonArray(operations!.Select(operation => (JsonNode)JsonValue.Create(operation)!).ToArray());
             roster.Add(row);
         }

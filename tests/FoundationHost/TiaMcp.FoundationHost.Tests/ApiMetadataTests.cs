@@ -189,6 +189,7 @@ internal static class ApiMetadataTests
     private static void CheckHardwareBranches(string directory,string key,Action<bool,string> check)
     {
         bool directAssignment=false,serviceAssignment=false,attributeDelegate=false;
+        var types=new HashSet<string>();
         foreach(var dll in Directory.GetFiles(directory,"Siemens.Engineering*.dll"))
         {
             using var stream=File.OpenRead(dll); using var pe=new PEReader(stream);
@@ -198,6 +199,7 @@ internal static class ApiMetadataTests
             {
                 var type=md.GetTypeDefinition(handle);
                 string name=md.GetString(type.Namespace)+"."+md.GetString(type.Name);
+                types.Add(name);
                 foreach(var methodHandle in type.GetMethods())
                 {
                     var method=md.GetMethodDefinition(methodHandle);
@@ -216,5 +218,20 @@ internal static class ApiMetadataTests
             key+" F19 process-image branch binds the released native entry point");
         check(attributeDelegate==(key is "18" or "19" or "20" or "21"),
             key+" F19 attribute-write branch matches the real delegate overload");
+        int version=key=="14sp1"?14:key=="15.1"?15:int.Parse(key);
+        foreach(var branch in new Dictionary<string,int> {
+            ["Siemens.Engineering.HW.Systemdiagnostics.Settings.SystemdiagnosticsSettingsDataProvider"]=17,
+            ["Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"]=18,
+            ["Siemens.Engineering.HW.TransferArea"]=15,
+            ["Siemens.Engineering.HW.Features.MrpDomainOwner"]=16,
+            ["Siemens.Engineering.HW.Features.SyncDomainOwner"]=16,
+            ["Siemens.Engineering.HW.Features.MrpInstancesOwner"]=20,
+            ["Siemens.Engineering.HW.Features.TelecontrolManagement"]=20,
+            ["Siemens.Engineering.HW.Features.DefaultWebPagesFeature"]=21,
+            ["Siemens.Engineering.HW.Features.CertificateManagementConfiguration"]=18,
+            ["Siemens.Engineering.HW.Utilities.CardReaderPscProvider"]=15 })
+            check(types.Contains(branch.Key)==(version>=branch.Value),key+" B2 released API branch "+branch.Key);
+        check(types.Any(name=>name.StartsWith("Siemens.Engineering.HW.CommunicationConnections.",StringComparison.Ordinal))==(version>=21),
+            key+" B2 communication connections are V21 only");
     }
 }

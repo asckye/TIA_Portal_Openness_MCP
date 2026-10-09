@@ -23,8 +23,12 @@ namespace TiaMcpServer.ModelContextProtocol
             return TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey, engineSource: true);
 #endif
         }
+        // Contract identity is independent of which release initializes this type.
+        // The selected catalog still owns version availability and admission.
         private static readonly HashSet<string> V4ToolNames = new HashSet<string>(
-            Enumerable.Concat(RuntimeProfileEntries(), (IEnumerable<JsonNode?>)TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey, engineSource: true))
+            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.SelectMany(release =>
+                Enumerable.Concat(TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(release),
+                    (IEnumerable<JsonNode?>)TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(release, engineSource: true)))
                 .Where(row => (int?)row!["envelopeVersion"] == 4).Select(row => (string)row!["currentName"]!), StringComparer.Ordinal);
         internal static bool IsInfrastructureV4(string name) => V4ToolNames.Contains(name);
         internal static void AssertV4Tool(string name)

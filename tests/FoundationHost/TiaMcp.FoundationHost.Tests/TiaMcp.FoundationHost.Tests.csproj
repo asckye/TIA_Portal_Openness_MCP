@@ -66,6 +66,7 @@
     <Compile Include="../../../src/FoundationHost/FoundationTools.cs" Link="FoundationTools.cs" />
     <Compile Include="../../../src/FoundationHost/PortedToolContract.cs" Link="PortedToolContract.cs" />
     <Compile Include="../../../src/FoundationHost/HardwareAddressingWire.cs" Link="HardwareAddressingWire.cs" />
+    <Compile Include="../../../src/FoundationHost/HardwareFamilyWire.cs" Link="HardwareFamilyWire.cs" />
     <Compile Include="../../../src/FoundationHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerClient.cs" Link="WorkerClient.cs" />
     <Compile Include="../../../src/FoundationHost/WorkerJob.cs" Link="WorkerJob.cs" />
