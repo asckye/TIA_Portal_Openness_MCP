@@ -30,7 +30,8 @@ internal static class HostPortRunner
             ?? Path.Combine(root, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe");
         string release = server.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major.ToString();
         string catalog = Path.Combine(Path.GetDirectoryName(server.Location)!, "tool-catalog.json");
-        if (!File.Exists(catalog)) server.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { catalog });
+        // Always rewrite: a catalog left by an earlier build carries another worker hash and the host refuses it.
+        server.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { catalog });
         string Quote(string value) => "\"" + value.Replace("\"", "\\\"") + "\"";
         var start = new ProcessStartInfo(host, "--bundle-root " + Quote(root) + " --release-key " + release
             + " --engine-worker " + Quote(server.Location) + " --engine-catalog " + Quote(catalog) + " --host-command " + command) {
