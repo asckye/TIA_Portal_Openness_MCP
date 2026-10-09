@@ -53,6 +53,27 @@ public sealed class CompileCandidateTests
         => s.Run(a, "21", r.Entry, "test", r, password, mode, confirm, hash, Project);
     private static string Hash(Envelope e) => e.Data!.Value.GetProperty("plan").GetProperty("hash").GetString()!;
     [Theory]
+    [InlineData("Success", Outcome.Succeeded)]
+    [InlineData("Information", Outcome.Succeeded)]
+    [InlineData("Warning", Outcome.Succeeded)]
+    [InlineData("Error", Outcome.Failed)]
+    [InlineData("987654", Outcome.Unknown)]
+    public void EachCompileCandidateEntryUsesEverySdkState(string state, Outcome outcome)
+    {
+        foreach (string entry in new[] { "CompilePlcSoftware", "CompilePlcDiagnostics", "CompileHmiDiagnostics", "CompileDevice" })
+        {
+            var a = new Adapter(); var s = new CompileSession(); var r = Request(entry);
+            a.Diagnostics.State = state;
+            var preview = Run(s, a, r); Assert.True(preview.Ok);
+            var result = Run(s, a, r, "apply", Hash(preview));
+            Assert.Equal(outcome, result.Meta.Outcome);
+            Assert.Equal(outcome == Outcome.Unknown, result.Meta.RequiresSessionReset);
+            Assert.Equal(state == "Warning", result.Meta.Warnings.Any(w => w.Code == WarningCode.NativeWarning));
+            Assert.Equal(state, result.Data!.Value.GetProperty("attempt").GetProperty("diagnostics").GetProperty("state").GetString());
+            Assert.Equal(1, a.Trace.Count(t => t == "compile"));
+        }
+    }
+    [Theory]
     [InlineData("CompilePlcSoftware", "PlcSoftware")][InlineData("CompilePlcDiagnostics", "PlcSoftware")]
     [InlineData("CompileHmiDiagnostics", "HmiTarget")][InlineData("CompileHmiDiagnostics", "HmiSoftware via Device")]
     [InlineData("CompileDevice", "Device")][InlineData("CompileDevice", "DeviceItem")]

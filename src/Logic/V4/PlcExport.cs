@@ -118,6 +118,7 @@ namespace TiaMcp.Logic.V4
                     check.Digest = CandidateExportFiles.Digest(check);
                     attempt = adapter is IExportCandidateBoundary boundary ? boundary.Execute(check) : CandidateExecution.Export(adapter, check);
                     issued = attempt.Issued;
+                    if (attempt.Fault?.Kind == "native-result") throw new TiaMcp.Adapters.Contracts.NativeResultException(attempt.Fault.Subject, attempt.Fault.Message.Length == 0 ? null : attempt.Fault.Message);
                     if (attempt.Fault != null) throw new CandidateObservationException(attempt.Fault);
                     VerifyStaged(check, attempt);
                     // The destination may have appeared while the native exporter ran.
@@ -136,7 +137,9 @@ namespace TiaMcp.Logic.V4
             }
             catch (Exception ex)
             {
-                bool unknown = issued && (!publishing || published);
+                var native = ex as TiaMcp.Adapters.Contracts.NativeResultException;
+                bool nativeFailed = native != null && TiaMcp.Adapters.Contracts.NativeResultStates.Classify(native.Evidence.EnumType, native.Evidence.State) == TiaMcp.Adapters.Contracts.NativeStateKind.Failure;
+                bool unknown = issued && (!publishing || published) && !nativeFailed;
                 if (publishAttempted && !published && expectedDestination != null)
                 {
                     try { unknown |= CandidateDigest.Files(new[] { expectedDestination }) != CandidateDigest.Files(new[] { files.Observe(expectedDestination.Path) }); }
@@ -153,23 +156,30 @@ namespace TiaMcp.Logic.V4
                     residue["status"] = "checked";
                 }
                 catch (Exception) /* swallow(privacy): preserve unavailable destination/staging residue after failed observation */ { }
+                if (native != null)
+                {
+                    NativeResultState.Record(residue, native.Evidence.State, false);
+                    residue["nativeStateType"] = native.Evidence.EnumType;
+                }
                 data ??= new JsonObject(); data["residue"] = residue;
                 var admission = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
                     ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                         typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message)) : null;
                 var error = unknown ? new Error("Export outcome is unknown; inspect staging and destination and rebuild the session. Never replay.", new OutcomeUnknownDetails("native-export-or-readback", new Dictionary<string, JsonElement> { ["residue"] = V4Json.Data(residue)!.Value }))
+                    : nativeFailed ? new Error("The native export returned a failure state; inspect retained file evidence.",
+                        new NativeOperationFailedDetails(native!.Evidence.State, null, new Dictionary<string, JsonElement> { ["residue"] = V4Json.Data(residue)!.Value }))
                     : admission ?? new Error("Export stopped; retained staging and original destination evidence are available.", details);
                 if (mode == "apply" && objects.Length > 0)
                 {
                     children.Add(new BatchItem(index, destination, Result(release, tool, id, new JsonObject { ["residue"] = residue.DeepClone(), ["nativeExportCalls"] = issued ? 1 : 0 }, error,
-                        unknown ? Outcome.Unknown : publishing ? Outcome.Failed : Outcome.RejectedBeforeOperation, unknown ? Execution.Unknown : publishing ? Execution.Completed : Execution.NotStarted)));
+                        unknown ? Outcome.Unknown : publishing || nativeFailed ? Outcome.Failed : Outcome.RejectedBeforeOperation, unknown ? Execution.Unknown : publishing || nativeFailed ? Execution.Completed : Execution.NotStarted)));
                     for (int i = index + 1; i < objects.Length; i++) children.Add(new BatchItem(i, objects[i].Path, Result(release, tool, id, null,
                         new Error("A previous export stopped this batch.", new NotExecutedDetails(index)), Outcome.RejectedBeforeOperation, Execution.NotStarted)));
                     data["items"] = JsonNode.Parse(V4Json.Serialize(new BatchData(children)))!["items"]!.DeepClone();
                     if (!unknown && children.Any(c => c.Result.Ok)) error = new Error("Verified exports succeeded before the batch stopped.", new PartialFailureDetails(children.Count(c => c.Result.Ok), 1, Math.Max(0, objects.Length - index - 1)));
                 }
-                return Result(release, tool, id, data, error, unknown ? Outcome.Unknown : children.Any(c => c.Result.Ok) ? Outcome.Partial : publishing ? Outcome.Failed : Outcome.RejectedBeforeOperation,
-                    unknown ? Execution.Unknown : children.Any(c => c.Result.Ok) ? Execution.Partial : publishing ? Execution.Completed : Execution.NotStarted);
+                return Result(release, tool, id, data, error, unknown ? Outcome.Unknown : children.Any(c => c.Result.Ok) ? Outcome.Partial : publishing || nativeFailed ? Outcome.Failed : Outcome.RejectedBeforeOperation,
+                    unknown ? Execution.Unknown : children.Any(c => c.Result.Ok) ? Execution.Partial : publishing || nativeFailed ? Execution.Completed : Execution.NotStarted);
             }
         }
         public static void VerifyStaged(PlcExportCheck check, PlcExportAttempt attempt)

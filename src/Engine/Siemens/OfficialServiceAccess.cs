@@ -45,6 +45,16 @@ namespace TiaMcpServer.Siemens
         internal static void AttachResult(JsonObject meta,object? result)
         {
             var evidence=Result(result);meta["result"]=evidence;meta["apiCallSuccess"]=true;
+            var enumType = result?.GetType().GetProperty("State")?.PropertyType.FullName;
+            if (enumType != null && TiaMcp.Adapters.Contracts.NativeResultStates.EnumTypes.Contains(enumType))
+            {
+                var state = evidence["nativeResult"]?["values"]?["State"] ?? evidence["nativeResult"]?["State"];
+                TiaMcp.Logic.V4.NativeResultState.Record(meta, state?.ToString(), meta["mayHaveChanged"]?.GetValue<bool>() == true,
+                    messages: evidence["nativeResult"]?["Messages"]);
+                meta["nativeStateType"] = enumType;
+                meta["nativeSuccessVerified"] = TiaMcp.Logic.V4.NativeResultState.Succeeded(meta);
+                if (!TiaMcp.Logic.V4.NativeResultState.Succeeded(meta)) meta["operationSuccess"] = false;
+            }
             if(evidence["nativeFailureDetected"]!.GetValue<bool>())meta["operationSuccess"]=false;
         }
     }

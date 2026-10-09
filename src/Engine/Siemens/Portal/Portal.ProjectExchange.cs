@@ -81,8 +81,9 @@ namespace TiaMcpServer.Siemens
                 if (!dryRun) {
                     meta["mayHaveChanged"] = true;
                     var result = EngineeringGroupOperations.Call(_project, "ImportProjectTexts", signature, file, updateSourceLanguage);
-                    meta["nativeResult"] = EngineeringScalarProperties.Read(result); meta["nativeState"] = EngineeringGroupOperations.Get(result, "State").ToString();
-                    meta["apiCallSuccess"] = true; meta["operationSuccess"] = meta["nativeState"]!.GetValue<string>() == "Info"; meta["dataComplete"] = false;
+                    meta["nativeResult"] = EngineeringScalarProperties.Read(result);
+                    TiaMcp.Logic.V4.NativeResultState.Record(meta, EngineeringGroupOperations.Get(result, "State"), true, messages: meta["nativeResult"]);
+                    meta["apiCallSuccess"] = true; meta["operationSuccess"] = TiaMcp.Logic.V4.NativeResultState.Succeeded(meta); meta["dataComplete"] = false;
                 }
                 return dryRun ? "Native project text import preview; file contents not applied." : "Native import completed; translated text changes require separate export/readback verification. No explicit save/compile/download.";
             });

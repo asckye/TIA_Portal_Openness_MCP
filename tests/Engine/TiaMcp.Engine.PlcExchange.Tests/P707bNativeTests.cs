@@ -73,7 +73,8 @@ namespace PlcExchangeTests
         [InlineData("Error", true)]
         public void HardwareAndScopedDocumentContractsUseReturnedNativeEvidence(string state, bool modifiesProject)
         {
-            var evidence = new JsonObject { ["success"] = false };
+            var evidence = new JsonObject { ["success"] = false,
+                ["nativeStateType"] = state == "Failure" ? TiaMcp.Adapters.Contracts.NativeResultStates.Documents : TiaMcp.Adapters.Contracts.NativeResultStates.Cax };
             NativeResultState.Record(evidence, state, modifiesProject, "native.log", Path.Combine(Path.GetTempPath(), "missing.aml"), new JsonArray("native message"));
             foreach (string contract in new[] { "HardwareContract", "PlcExchangeContract" })
             {

@@ -170,7 +170,9 @@ namespace TiaMcp.Adapters.Native.Plc
 #if PLC_DOCUMENT_EXPORT
                 if (!(value is PlcBlock block)) CandidatePrimitives.Unsupported(release, "documents");
                 var result = PlcDocumentPrimitives.Export((PlcBlock)value, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(stagingPath)), item.Name);
-                if (result == null || PlcDocumentPrimitives.State(result) != DocumentResultState.Success) throw new InvalidDataException("Native document export did not succeed.");
+                var state = result == null ? (object?)null : PlcDocumentPrimitives.State(result);
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
 #else
                 CandidatePrimitives.Unsupported(release, "documents");
 #endif

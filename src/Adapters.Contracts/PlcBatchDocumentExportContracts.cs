@@ -29,6 +29,7 @@ namespace TiaMcp.Adapters
         public bool InventoryComplete { get; set; } = true;
         public string Status { get; set; } = "planned";
         public bool RequiresSessionReset { get; set; }
+        public TiaMcp.Adapters.Contracts.NativeResultEvidence? NativeResult { get; set; }
         public string RecoveryDirectory { get; set; } = "";
         public string Options { get; set; } = "native-default-two-argument-overload";
         public string Evidence { get; set; } = "official-manual-source-candidate; exact-sdk-build/native-acceptance-pending; no-cross-version-roundtrip-claim";

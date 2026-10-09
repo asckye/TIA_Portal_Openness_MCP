@@ -128,6 +128,7 @@ namespace TiaMcp.Logic.V4
                     issued = attempt.Issued;
                     nativeAttempted |= issued;
                     if (issued) data["importIssued"] = true;
+                    if (attempt.Fault?.Kind == "native-result") throw new TiaMcp.Adapters.Contracts.NativeResultException(attempt.Fault.Subject, attempt.Fault.Message.Length == 0 ? null : attempt.Fault.Message);
                     if (attempt.Fault != null) throw CandidateHostMapping.Import(attempt.Fault, expectedPlanHash);
                     var imported = attempt.Imported!;
                     string contentHash = attempt.ContentHash;
@@ -145,7 +146,7 @@ namespace TiaMcp.Logic.V4
             catch (Exception ex)
             {
                 if (ex is CandidateObservationException observed) ex = CandidateHostMapping.Import(observed.Fault);
-                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException && (ex is not PlcImportRejection rejected
+                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.NativeResultException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException && (ex is not PlcImportRejection rejected
                     || rejected.Error.Code != ErrorCode.IdentityMismatch && rejected.Error.Code != ErrorCode.PlanStale))
                     ex = new PlcImportRejection(new Error("The reviewed input can no longer be read or admitted.", new PlanStaleDetails(expectedPlanHash, "input-unavailable-or-changed")));
                 Error error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
@@ -163,22 +164,36 @@ namespace TiaMcp.Logic.V4
                     error = new Error("Import outcome is unknown. Inspect the residue and rebuild the session; never replay or roll back automatically.",
                         new OutcomeUnknownDetails("native-import-or-content-readback", new Dictionary<string, JsonElement> { ["residueCheck"] = V4Json.Data(residue)!.Value }));
                 }
+                var failureOutcome = issued ? Outcome.Unknown : Outcome.RejectedBeforeOperation;
+                var failureExecution = issued ? Execution.Unknown : Execution.NotStarted;
+                if (ex is TiaMcp.Adapters.Contracts.NativeResultException native)
+                {
+                    var evidence = new JsonObject { ["nativeStateType"] = native.Evidence.EnumType };
+                    NativeResultState.Record(evidence, native.Evidence.State, issued);
+                    data ??= new JsonObject(); data["nativeResultEvidence"] = evidence;
+                    if (NativeResultState.TryUnsuccessful(evidence, true, out var nativeOutcome, out var nativeError))
+                    {
+                        error = nativeError!; failureOutcome = nativeOutcome;
+                        failureExecution = nativeOutcome == Outcome.Unknown ? Execution.Unknown : Execution.Completed;
+                        RequiresSessionReset |= nativeOutcome == Outcome.Unknown;
+                    }
+                }
                 if (data != null && inputs.Length > 0 && mode == "apply")
                 {
                     if (index < inputs.Length) children.Add(new BatchItem(index, inputs[index].Path,
                         Result(release, tool, id, new JsonObject { ["nativeImportCalls"] = issued ? 1 : 0 }, error,
-                            issued ? Outcome.Unknown : Outcome.RejectedBeforeOperation, issued ? Execution.Unknown : Execution.NotStarted)));
+                            failureOutcome, failureExecution)));
                     for (int i = index + 1; i < inputs.Length; i++) children.Add(new BatchItem(i, inputs[i].Path,
                         Result(release, tool, id, null, new Error("A previous import stopped this batch.", new NotExecutedDetails(Math.Min(index, inputs.Length - 1))), Outcome.RejectedBeforeOperation, Execution.NotStarted)));
                     var batch = new BatchData(children);
                     data["items"] = JsonNode.Parse(V4Json.Serialize(batch))!["items"]!.DeepClone();
                     int succeeded = children.Count(c => c.Result.Ok);
                     data["succeeded"] = succeeded; data["failed"] = index < inputs.Length ? 1 : 0; data["notExecuted"] = Math.Max(0, inputs.Length - index - 1);
-                    if (!issued && succeeded > 0) error = new Error("Verified imports succeeded before the batch stopped.", new PartialFailureDetails(succeeded, index < inputs.Length ? 1 : 0, Math.Max(0, inputs.Length - index - 1)));
-                    return Result(release, tool, id, data, error, issued ? Outcome.Unknown : succeeded > 0 ? Outcome.Partial : Outcome.RejectedBeforeOperation,
-                        issued ? Execution.Unknown : succeeded > 0 ? Execution.Partial : Execution.NotStarted);
+                    if (failureOutcome != Outcome.Unknown && succeeded > 0) error = new Error("Verified imports succeeded before the batch stopped.", new PartialFailureDetails(succeeded, index < inputs.Length ? 1 : 0, Math.Max(0, inputs.Length - index - 1)));
+                    return Result(release, tool, id, data, error, failureOutcome == Outcome.Unknown ? Outcome.Unknown : succeeded > 0 ? Outcome.Partial : failureOutcome,
+                        failureOutcome == Outcome.Unknown ? Execution.Unknown : succeeded > 0 ? Execution.Partial : failureExecution);
                 }
-                return Result(release, tool, id, data, error, issued ? Outcome.Unknown : Outcome.RejectedBeforeOperation, issued ? Execution.Unknown : Execution.NotStarted);
+                return Result(release, tool, id, data, error, failureOutcome, failureExecution);
             }
         }
 

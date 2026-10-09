@@ -87,9 +87,10 @@ namespace TiaMcpServer.ModelContextProtocol
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false) success = false;
             string? state = (evidence["nativeState"] ?? evidence["state"] ?? evidence["result"]?["state"])?.ToString();
-            bool nativeKnown = state == "Success" || state == "Warning" || state == "Error" || state == "Failure";
+            var nativeKind = NativeResultState.Classify(evidence, tool);
+            bool nativeKnown = nativeKind != TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected;
             if (state != null || evidence.ContainsKey("nativeState"))
-                success = nativeKnown && state != "Error" && state != "Failure" && success != false;
+                success = NativeResultState.Succeeded(evidence, tool) && success != false;
             bool issued = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true;
             bool before = !issued && (writes && Flag(evidence, "mayHaveChanged") == false || evidence["v4Rejection"] != null);
             string status = evidence["v4Rejection"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
@@ -134,7 +135,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 && (evidence["total"] ?? evidence["totalCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
             Clean(data);
-            if (NativeResultState.TryFailure(evidence, writes, out var nativeOutcome, out var nativeError)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+            if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             if (outcome != Outcome.Succeeded) data.Remove("summary");
             return Result(tool, data, error, outcome, completeness, writes, paging, reset);
         }
@@ -171,6 +172,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) };
+            if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.", new Dictionary<string, JsonElement>()));
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;

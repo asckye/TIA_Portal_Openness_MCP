@@ -74,6 +74,12 @@ namespace TiaMcp.Logic.V4
                     return Result(release, tool, id, data, error, partial ? Outcome.Partial : Outcome.Failed, partial ? Execution.Partial : Execution.Completed, attempt);
                 }
                 var d = attempt.Diagnostics ?? throw new InvalidOperationException("Missing compile diagnostics.");
+                if (TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, d.State) == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected)
+                {
+                    RequiresSessionReset = true; adapter.MarkUncertain();
+                    return Result(release, tool, id, data, new Error("The native compiler returned an unexpected state.",
+                        new OutcomeUnknownDetails("native-compile-state", Evidence(attempt))), Outcome.Unknown, Execution.Unknown, attempt);
+                }
                 if (!Good(d)) return Result(release, tool, id, data, CompileResultMapping.Errors(new JsonObject { ["state"] = d.State, ["errorCount"] = d.RootErrorCount, ["warningCount"] = d.RootWarningCount, ["diagnosticMessages"] = JsonNode.Parse(V4Json.Serialize(d.Messages)) }) ?? new Error("Compilation finished with inconsistent root and leaf diagnostic counts.",
                     new NativeOperationFailedDetails(null, null, Evidence(attempt))), Outcome.Failed, Execution.Completed, attempt);
                 return Result(release, tool, id, data, null, Outcome.Succeeded, Execution.Completed, attempt);
@@ -91,7 +97,7 @@ namespace TiaMcp.Logic.V4
                 return Result(release, tool, id, data, refusal, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }
         }
-        private static bool Good(CompileDiagnostics d) => d.CountsConsistent && d.RootErrorCount == 0 && d.LeafErrorCount == 0 && (d.State == "Success" || d.State == "Warning");
+        private static bool Good(CompileDiagnostics d) => d.CountsConsistent && d.RootErrorCount == 0 && d.LeafErrorCount == 0 && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, d.State);
         private static Dictionary<string, JsonElement> Evidence(CompileAttempt? attempt) => new Dictionary<string, JsonElement> {
             ["attempt"] = JsonSerializer.SerializeToElement(attempt), ["retry"] = JsonSerializer.SerializeToElement("never") };
         public static Error Map(CandidateFault fault, string release, string hash)
@@ -107,8 +113,11 @@ namespace TiaMcp.Logic.V4
         }
         public static Envelope Result(string release, string tool, string id, JsonObject? data, Error? error, Outcome outcome, Execution execution, CompileAttempt? attempt = null)
         {
-            var warnings = attempt?.CleanupFault == null ? Array.Empty<Warning>() : new[] { new Warning(WarningCode.CleanupFailed,
-                "Safety cleanup failed; retained evidence describes the observed permission state.", Evidence(attempt)) };
+            var warnings = new List<Warning>();
+            if (attempt?.CleanupFault != null) warnings.Add(new Warning(WarningCode.CleanupFailed,
+                "Safety cleanup failed; retained evidence describes the observed permission state.", Evidence(attempt)));
+            if (TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, attempt?.Diagnostics?.State) == TiaMcp.Adapters.Contracts.NativeStateKind.Warning)
+                warnings.Add(new Warning(WarningCode.NativeWarning, "The native compiler returned a warning state.", Evidence(attempt)));
             return Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, BehaviorPolicy.SafeV4,
                 outcome == Outcome.Unknown ? Completeness.Unknown : data != null ? Completeness.Complete : Completeness.None, null, warnings));

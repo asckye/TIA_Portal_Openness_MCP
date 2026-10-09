@@ -146,8 +146,21 @@ internal static class FoundationV4Result
         if (definition.ResponseMember == "Compile" && !preview
             && ((data["errorCount"]?.GetValue<int>() ?? 0) > 0 || Text(data, "state") == "Error" || data["errors"] is JsonArray { Count: > 0 }))
             outcome = Outcome.Failed;
+        if (definition.ResponseMember == "Compile" && !preview && data["state"] != null
+            && TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, Text(data, "state"))
+                == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected)
+            outcome = Outcome.Unknown;
         if (outcome == Outcome.Unknown) error = Unknown();
         else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping.Errors(data) ?? NativeFailure(data) : NativeFailure(data);
+        if (definition.ResponseMember is "DocumentExport" or "BatchDocumentExport" && data["nativeResult"] is JsonObject native)
+        {
+            var evidence = new JsonObject { ["nativeStateType"] = native["enumType"]?.DeepClone() };
+            NativeResultState.Record(evidence, native["state"]?.ToString(), false);
+            evidence["recoveryDirectory"] = data["recoveryDirectory"]?.DeepClone();
+            data["nativeResultEvidence"] = evidence;
+            if (NativeResultState.TryUnsuccessful(evidence, true, out var nativeOutcome, out var nativeError))
+            { outcome = nativeOutcome; error = nativeError; reset = outcome == Outcome.Unknown; }
+        }
         // Preserve the void API's observations without inventing a native return value.
         if (definition.Operation == "GenerateBlocksFromExternalSource" && release == "14sp1")
         {
@@ -224,6 +237,9 @@ internal static class FoundationV4Result
         Execution execution, Completeness completeness, Error? error, bool current, bool reset, bool candidate = false, Paging? paging = null)
     {
         var warnings = new List<Warning>();
+        if (data != null && name is "CompilePlcSoftware" or "CompilePlcDiagnostics" && data["state"]?.ToString() == "Warning")
+            warnings.AddRange(NativeResultState.Warnings(new JsonObject { ["nativeState"] = "Warning",
+                ["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Compiler }));
         if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", Empty));
         if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "Candidate output only; target schema, import and program semantics remain unverified.", Empty));
         if (HostBehavior.BackupSkipped(data) is Warning backup) warnings.Add(backup);

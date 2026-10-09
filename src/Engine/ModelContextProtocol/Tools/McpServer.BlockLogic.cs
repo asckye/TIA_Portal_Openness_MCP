@@ -66,7 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };
                     }
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
-                if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence && NativeResultState.TryFailure(nativeEvidence, writes, out var nativeOutcome, out var nativeError))
+                if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence && NativeResultState.TryUnsuccessful(nativeEvidence, writes, out var nativeOutcome, out var nativeError, tool))
                     return Result(tool, new JsonObject { ["evidence"] = nativeEvidence.DeepClone() }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
             if (exception is Rejection rejection)
                 return Result(tool, null, rejection.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
@@ -99,7 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
             HostBehavior.ExportPreview(root);
             Clean(root);
 
-            if (NativeResultState.TryFailure(evidence, writes, out var nativeOutcome, out var nativeError))
+            if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, root, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current, writes);
             bool? Flag(string key) => Bool(evidence[key]) ?? Bool(root[key]);
             string? Text(string key) => (evidence[key] ?? root[key])?.ToString();
@@ -111,6 +111,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, root, compileError, Outcome.Failed, incomplete ? Completeness.Partial : Completeness.Complete, current, true);
             bool preview = !writes;
             bool? success = Flag("operationSuccess") ?? Flag("success") ?? Flag("ok");
+            if (NativeResultState.State(evidence) != null && NativeResultState.EnumType(evidence, tool) != null)
+                success = NativeResultState.Succeeded(evidence, tool) && success != false;
             // A positive outer wrapper cannot override an explicit negative domain verdict.
             if (Flag("ok") == false || Flag("operationSuccess") == false) success = false;
             int succeeded = Count(root, "imported") + Count(root, "importedTypes") + Count(root, "importedTagTables")
@@ -191,6 +193,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Completeness completeness, bool current, bool writes = false)
         {
             var warnings = new List<Warning>();
+            if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData,

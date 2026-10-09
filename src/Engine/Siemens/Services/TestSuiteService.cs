@@ -236,8 +236,8 @@ namespace TiaMcpServer.Siemens.Services
                         break;
                 }
                 var row = TestResultsRow(results); meta["result"] = row; meta["apiCallSuccess"] = true;
-                var state = results.State.ToString(); meta["nativeState"] = state;
-                bool passed = state == "Success" || state == "Information"; meta["testPassed"] = passed; meta["operationSuccess"] = passed;
+                var state = results.State.ToString(); TiaMcp.Logic.V4.NativeResultState.Record(meta, state, true); meta["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.TestSuite;
+                bool passed = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.TestSuite, state); meta["testPassed"] = passed; meta["operationSuccess"] = passed;
                 return "Native Test Suite execution returned TestResults (state " + state + ", " + results.ErrorCount + " error(s), " + results.WarningCount + " warning(s)); testPassed reflects the native state only. No automatic project save or Portal close.";
                 }
                 catch (Exception ex) { OptionalPackageContract.RecordFailure(meta, ex); throw; }

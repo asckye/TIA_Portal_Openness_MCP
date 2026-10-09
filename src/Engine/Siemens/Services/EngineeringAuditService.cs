@@ -70,9 +70,9 @@ namespace TiaMcpServer.Siemens.Services
                     meta["mayHaveWrittenFiles"] = true;
                     var exported = InvocationJournal.Native("ScopedBlock.ExportAsDocuments", () => block!.ExportAsDocuments(directory, name));
                     meta["result"] = _session.DocumentExportRow(exported);
-                    NativeResultState.Record(meta, exported.State.ToString(), false, messages: _session.DocumentMessages(exported.Messages));
+                    NativeResultState.Record(meta, exported.State, false, messages: _session.DocumentMessages(exported.Messages));
                     meta["targetFiles"] = new JsonArray(new[] { ".s7dcl", ".s7res" }.Select(ext => (JsonNode)NativeResultState.FileRow(Path.Combine(directory.FullName, name + ext))).ToArray());
-                    if (exported.State != DocumentResultState.Success) throw new PortalException(PortalErrorCode.ExportFailed, "Document export did not return Success.");
+                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(exported.State)) throw new PortalException(PortalErrorCode.ExportFailed, "Document export did not return Success.");
                     return "Exact scoped block exported as SIMATIC SD; format limitations apply.";
                 }
                 var declaration = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directoryPath, name + ".s7dcl")));
@@ -83,8 +83,8 @@ namespace TiaMcpServer.Siemens.Services
                 meta["mayHaveChanged"] = true;
                 var result = InvocationJournal.Native("ScopedBlock.ImportFromDocuments", () => group.Blocks.ImportFromDocuments(directory, name, option));
                 meta["result"] = _session.DocumentImportRow(result, Names(result.ImportedPlcBlocks));
-                NativeResultState.Record(meta, result.State.ToString(), true, messages: _session.DocumentMessages(result.Messages));
-                if (result.State != DocumentResultState.Success) throw new PortalException(PortalErrorCode.ImportFailed, "Document import did not return Success; may have changed, inspect the native messages before retrying.");
+                NativeResultState.Record(meta, result.State, true, messages: _session.DocumentMessages(result.Messages));
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State)) throw new PortalException(PortalErrorCode.ImportFailed, "Document import did not return Success; may have changed, inspect the native messages before retrying.");
                 var imported = EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
                 meta["existsVerified"] = EngineeringAuditLogic.ExactNamesPresent(imported, EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name));
                 if (meta["existsVerified"]!.GetValue<bool>() != true) throw new InvalidOperationException("Import returned but exact target readback failed.");
@@ -96,7 +96,7 @@ namespace TiaMcpServer.Siemens.Services
                     meta["mayHaveWrittenFiles"] = true; meta["readbackDirectory"] = readbackDir.FullName;
                     var readback = InvocationJournal.Native("ScopedBlock.verifyExport", () => group.Blocks.Find(imported[0]).ExportAsDocuments(readbackDir, name));
                     meta["verificationResult"] = _session.DocumentExportRow(readback);
-                    if (readback.State != DocumentResultState.Success) throw new InvalidOperationException("Import succeeded, but verification export failed.");
+                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(readback.State)) throw new InvalidOperationException("Import succeeded, but verification export failed.");
                     var comparisons = new JsonArray(); bool equal = true;
                     foreach (var extension in new[] { ".s7dcl", ".s7res" })
                     {

@@ -151,7 +151,9 @@ namespace TiaMcp.Adapters.Native.Plc
             {
 #if PLC_DOCUMENT_EXPORT
                 var result = ((PlcBlockGroup)group).Blocks.ImportFromDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetDirectoryName(input.Path)!)), Path.GetFileNameWithoutExtension(input.Path), overwrite ? ImportDocumentOptions.Override : ImportDocumentOptions.None);
-                if (result == null || result.State != DocumentResultState.Success) throw new InvalidDataException("Native document import did not return success.");
+                var state = result == null ? (object?)null : result.State;
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
                 imported = result.ImportedPlcBlocks.Take(2).Cast<object>().ToArray();
 #else
                 throw new NotSupportedException("Document import is not available on this exact release.");
@@ -200,7 +202,9 @@ namespace TiaMcp.Adapters.Native.Plc
 #if PLC_DOCUMENT_EXPORT
             string path = AuditDirectory(), name = imported.Name;
             var result = ((PlcBlock)item).ExportAsDocuments(new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), name);
-            if (result == null || result.State != DocumentResultState.Success) throw new InvalidDataException("Document content export did not succeed.");
+            var state = result == null ? (object?)null : result.State;
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
             byte[] Read(string file) { using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read); return CandidatePrimitives.Read(stream); }
             var code = Read(Path.Combine(path, name + ".s7dcl"));
             string resource = Path.Combine(path, name + ".s7res");

@@ -550,9 +550,10 @@ namespace TiaMcpServer.Siemens.Services
 
                     meta["messages"]=new JsonArray(EngineeringGroupOperations.Items(result.Messages).Cast<TransferResultMessage>().Select(m=>(JsonNode)m.Message).ToArray());
 
+                    meta["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Library;
                     NativeResultState.Record(meta, meta["transferResultState"]?.ToString(), true, messages: meta["messages"]);
                     meta["createdVersion"]=result.CreatedVersion==null?null:VersionRow(result.CreatedVersion,false);meta["after"]=TypeRow(type,true);meta["apiCallSuccess"]=true;
-                    if(result.TransferResultState!=TransferResultState.Success)meta["operationSuccess"]=false;
+                    if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.TransferResultState))meta["operationSuccess"]=false;
                     return "Native version import returned "+result.TransferResultState+"; created version and messages attached. No automatic library/project save.";
                 }
                 var folder=_session.EngineeringLibraryFolder(library,folderPath,"TypeFolder");
@@ -564,9 +565,10 @@ namespace TiaMcpServer.Siemens.Services
 
                 meta["messages"]=new JsonArray(EngineeringGroupOperations.Items(created.Messages).Cast<TransferResultMessage>().Select(m=>(JsonNode)m.Message).ToArray());
 
+                meta["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Library;
                 NativeResultState.Record(meta, meta["transferResultState"]?.ToString(), true, messages: meta["messages"]);
                 meta["createdType"]=created.CreatedType==null?null:TypeRow(created.CreatedType,true);meta["apiCallSuccess"]=true;
-                if(created.TransferResultState!=TransferResultState.Success)meta["operationSuccess"]=false;
+                if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(created.TransferResultState))meta["operationSuccess"]=false;
                 return "Native type import returned "+created.TransferResultState+"; created type (default version InWork) and messages attached. No automatic library/project save.";
             });
         public ResponseMessage ManageGlobalLibrary(string action, string libraryName="", string filePath="", string destinationDirectory="", string openMode="ReadOnly", bool upgrade=false,

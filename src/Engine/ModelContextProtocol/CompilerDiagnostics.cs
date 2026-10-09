@@ -30,9 +30,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 var countIndicatesMissing = rootErrors > Nodes.Count || rootWarnings > Nodes.Count ||
                     DeclaredTotals.OfType<JsonObject>().Any(x => Count(x,"errors") > Nodes.Count || Count(x,"warnings") > Nodes.Count);
                 var incomplete = Truncated || CollectFailures.Count > 0 || countIndicatesMissing;
-                var state = errors ? "Error" : incomplete ? "Unknown" : HasWarning || rootWarnings > 0 ? "Warning" : rootState;
-                var success = !errors && !incomplete && (state == "Success" || state == "Warning");
-                return new JsonObject {
+                var nativeUnknown = TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, rootState)
+                    == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected;
+                var state = nativeUnknown ? rootState : errors ? "Error" : incomplete ? "Unknown" : HasWarning || rootWarnings > 0 ? "Warning" : rootState;
+                var success = !errors && !incomplete && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, state);
+                var summary = new JsonObject {
                     ["success"] = success, ["operationSuccess"] = success, ["effectiveState"] = state,
                     ["rootState"] = rootState, ["rootCounts"] = new JsonObject { ["errors"] = rootErrors, ["warnings"] = rootWarnings },
                     ["countSource"] = "Root API counts only; child/subtree and description totals are separate scopes, never added",
@@ -47,6 +49,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["collectionElapsedMs"] = ElapsedMs, ["nodeLimit"] = MaxNodes, ["collectionBudgetMs"] = 30000,
                     ["budgetScope"] = "Checked between Openness calls; a single blocking API call cannot be preempted",
                     ["compileMode"] = "ICompilable.Compile; rebuild not requested" };
+                if (nativeUnknown)
+                {
+                    summary["nativeResultReturned"] = true;
+                    summary["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Compiler;
+                    summary["nativeState"] = rootState;
+                }
+                return summary;
             }
         }
 

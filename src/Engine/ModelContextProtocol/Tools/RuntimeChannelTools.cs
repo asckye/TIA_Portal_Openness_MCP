@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "GetOnlineState") success = state.Length > 0 && state != "Unknown";
             if (tool == "CompareSoftwareToOnline") success = data["entries"] is JsonArray && data["summary"] is JsonObject;
             if (tool == "DownloadPlc" || tool == "DownloadPlcToFolder")
-                success = state == "Success" || state == "Warning" ? true : state == "Error" ? false : success;
+                success = NativeResultState.Succeeded(data, tool) && success != false;
             if (data["refusal"] != null) status = "CONFIRMATION_REQUIRED";
 
             var items = data["items"] as JsonArray;
@@ -179,7 +179,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int total = Count(data, "totalCount");
             if (data["offset"] != null && Count(data, "limit") > 0) paging = McpServer.OffsetPage(Count(data, "offset"), Count(data, "limit"), total);
             Sanitize(data);
-            if (NativeResultState.TryFailure(data, !readOnly, out var nativeOutcome, out var nativeError)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+            if (NativeResultState.TryUnsuccessful(data, !readOnly, out var nativeOutcome, out var nativeError, tool)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             return Result(tool, data, error, outcome, completeness, current, readOnly, paging);
         }
 
@@ -214,6 +214,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : readOnly || outcome == Outcome.ReadFailed ? Execution.ReadOnly : Execution.Completed;
             var warnings = new List<Warning>();
+            if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, System.Text.Json.JsonElement>()));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect the retained per-item evidence.", new Dictionary<string, System.Text.Json.JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,

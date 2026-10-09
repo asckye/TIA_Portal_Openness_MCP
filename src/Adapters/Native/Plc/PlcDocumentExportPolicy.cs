@@ -79,6 +79,11 @@ namespace TiaMcp.Adapters
                 result.Files=published; result.Status="exported";
             }
             catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) when(!exportReturned) { throw; }
+            catch(TiaMcp.Adapters.Contracts.NativeResultException ex)
+            {
+                result.Status="failed"; result.NativeResult=ex.Evidence; result.RecoveryDirectory=stage.FullName;
+                result.RequiresSessionReset=TiaMcp.Adapters.Contracts.NativeResultStates.Classify(ex.Evidence.EnumType,ex.Evidence.State)!=TiaMcp.Adapters.Contracts.NativeStateKind.Failure;
+            }
             catch(Exception) /* swallow(native-fallback): failed export or publication retains staging evidence and returns failed status with a session reset */
             {
                 result.Status="failed"; result.RequiresSessionReset=true; result.RecoveryDirectory=stage.FullName;

@@ -124,6 +124,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "GetDevicePlugLocations" || tool == "GetDeviceItemIoAddresses") verdict = true;
             if (tool == "ExportDeviceAml" && ((int?)body["errorCount"] > 0 || (string?)body["state"] == "Error")) verdict = false;
 
+            if (NativeResultState.State(evidence) != null && NativeResultState.EnumType(evidence, tool) != null)
+                verdict = NativeResultState.Succeeded(evidence, tool) && verdict != false;
             bool unknown = write && (Bool(evidence, "writeOutcomeUnknown") == true || Bool(evidence, "verified") == false && Bool(evidence, "mayHaveChanged") != false && Bool(evidence, "postStateKnown") != true
                 || (string?)body["state"] == "Unknown" || (string?)evidence["reason"] == "VerifyFailed");
             int applied = (evidence["applied"] as JsonArray)?.Count ?? 0;
@@ -168,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = Failure(false, evidence); }
 
-            if (NativeResultState.TryFailure(evidence, write, out var nativeOutcome, out var nativeError))
+            if (NativeResultState.TryUnsuccessful(evidence, write, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, body, nativeError, nativeOutcome, current, write, nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete);
             Paging? paging = null;
             if (evidence["offset"] != null && evidence["limit"] != null && (evidence["total"] ?? evidence["expectedCount"]) != null)
@@ -203,6 +205,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var warnings = new List<Warning>();
             var empty = new Dictionary<string, JsonElement>();
             var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, ReleaseKey, tool, BehaviorPolicy.Current) : BehaviorPolicy.NotApplicable;
+            if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
             if (policy == BehaviorPolicy.Current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));
             if (incomplete) warnings.Add(new Warning(WarningCode.IncompleteData, "The returned observation is incomplete; consult the retained evidence.", empty));
             if (candidate) warnings.Add(new Warning(WarningCode.CandidateOnly, "The AML document is a candidate; successful import has not been verified.", empty));

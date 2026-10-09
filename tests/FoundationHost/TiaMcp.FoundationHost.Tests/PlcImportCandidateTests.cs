@@ -24,6 +24,7 @@ public sealed class PlcImportCandidateTests
         internal readonly List<string> Trace = new();
         internal string[] Kinds = { "FC", "UDT", "TagTable" };
         internal Action? OnBefore;
+        internal Action? OnImport;
         private string ContentHash => PlcImportSession.ByteHash(Encoding.UTF8.GetBytes(Content));
         public CandidateIdentity ReadIdentity() { Trace.Add("identity"); return new(23, DateTimeOffset.Parse("2026-10-03T00:00:00Z", CultureInfo.InvariantCulture), Project, Epoch); }
         public IReadOnlyList<PlcImportInput> ReadInputs(string release, string tool, PlcImportRequest request, IDictionary<string, Stream> locks)
@@ -53,6 +54,7 @@ public sealed class PlcImportCandidateTests
         public PlcImportObject Import(PlcImportInput input, bool overwrite)
         {
             Trace.Add("import:" + Calls); int index = Calls++;
+            OnImport?.Invoke();
             if (index == FailIndex && Fault == "during-before") throw new IOException("native call failed before observable addition");
             var row = Clone(input.Target); row.Id = "object" + index; row.ContentHash = input.ContentHash;
             if (overwrite) Rows.RemoveAll(o => o.Name == row.Name && o.GroupPath == row.GroupPath);
@@ -74,6 +76,23 @@ public sealed class PlcImportCandidateTests
         => session.Run(adapter, release, tool, "import-test", request ?? Request(), mode, confirm, hash, adapter.Project);
     private static string Hash(Envelope result) => result.Data!.Value.GetProperty("plan").GetProperty("hash").GetString()!;
     private static JsonObject Data(Envelope result) => JsonNode.Parse(result.Data!.Value.GetRawText())!.AsObject();
+
+    [Theory]
+    [InlineData("Failure")]
+    [InlineData("PartialSuccess")]
+    [InlineData("987654")]
+    [InlineData(null)]
+    public void NativeDocumentImportRetainsRawStateWhenProjectChangesArePossible(string? state)
+    {
+        var session = new PlcImportSession(); var adapter = new Adapter(); var preview = Run(session, adapter);
+        Assert.True(preview.Ok);
+        adapter.OnImport = () => throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
+        var result = Run(session, adapter, mode: "apply", hash: Hash(preview));
+        Assert.Equal(Outcome.Unknown, result.Meta.Outcome); Assert.True(result.Meta.RequiresSessionReset);
+        Assert.Equal(state, (string?)Data(result)["nativeResultEvidence"]?["nativeState"]);
+        Assert.Equal(1, adapter.Calls);
+        Assert.Equal(ErrorCode.OutcomeUnknown, result.Error!.Code);
+    }
 
     public static IEnumerable<object[]> Faults()
     {

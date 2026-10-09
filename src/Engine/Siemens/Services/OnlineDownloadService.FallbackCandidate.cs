@@ -166,7 +166,7 @@ namespace TiaMcpServer.Siemens.Services
                     void Returned(DownloadResult raw)
                     {
                         var observed = new FallbackNativeResult { State = "returned" }; evidence.NativeResult = observed;
-                        observed.State = raw.State.ToString(); observed.Success = raw.State != DownloadResultState.Error && raw.ErrorCount == 0;
+                        observed.State = raw.State.ToString(); observed.Success = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(raw.State) && raw.ErrorCount == 0;
                         observed.Items = new[] { new Dictionary<string, string> { ["errorCount"] = raw.ErrorCount.ToString(CultureInfo.InvariantCulture),
                             ["warningCount"] = raw.WarningCount.ToString(CultureInfo.InvariantCulture), ["unansweredPrompts"] = policy.UnansweredSummary() } };
                     }
@@ -198,7 +198,7 @@ namespace TiaMcpServer.Siemens.Services
                     if (r.Entry == "CompilePlcSoftware")
                     {
                         var result = _session.CompileSoftware(r.SoftwarePath, password);
-                        return new FallbackNativeResult { Success = result.ErrorCount == 0 && result.State != global::Siemens.Engineering.Compiler.CompilerResultState.Error, State = result.State.ToString(),
+                        return new FallbackNativeResult { Success = result.ErrorCount == 0 && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State), State = result.State.ToString(),
                             Items = new[] { new Dictionary<string, string> { ["errorCount"] = result.ErrorCount.ToString(CultureInfo.InvariantCulture), ["warningCount"] = result.WarningCount.ToString(CultureInfo.InvariantCulture) } } };
                     }
                     bool ok = r.Entry == "ExportPlcBlockDocuments" ? documents.ExportAsDocuments(r.SoftwarePath, r.Parameters["blockPath"], r.Parameters["exportPath"], r.Parameters["preservePath"] == "true")

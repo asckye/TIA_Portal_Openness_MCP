@@ -107,8 +107,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (total >= 0) paging = McpServer.OffsetPage(offset.Value, pageSize, total.Value);
             }
             Clean(evidence);
-            var nativeFailure = NativeResultState.FindFailure(evidence);
-            if (nativeFailure != null && NativeResultState.TryFailure(nativeFailure, writes, out var nativeOutcome, out var nativeError))
+            var nativeFailure = NativeResultState.FindUnsuccessful(evidence, tool);
+            if (nativeFailure != null && NativeResultState.TryUnsuccessful(nativeFailure, writes, out var nativeOutcome, out var nativeError, tool))
             { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Partial; }
             // This exact page is accepted by GraphicSelectionPage[] and retains
             // the existing snapshot scope identifier, including its native label.
@@ -143,6 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool writes, bool current, Paging? paging = null, bool reset = false)
         {
             var warnings = new List<Warning>();
+            if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; inspect coverage and failures.", new Dictionary<string, JsonElement>()));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown

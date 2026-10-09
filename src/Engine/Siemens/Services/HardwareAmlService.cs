@@ -82,7 +82,7 @@ namespace TiaMcpServer.Siemens.Services
             var result = cax.Export(device, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)));
             var messageLines = FlattenTransferMessages(result?.Messages);
             var state = result?.State.ToString() ?? "Unknown";
-            var ok = result != null && result.State != TransferResultState.Error;
+            var ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
 
             // A returned Error is an explicit file-operation failure even when no file exists.
 

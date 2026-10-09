@@ -24,7 +24,9 @@ namespace TiaMcp.Adapters
                 if(!Documents.IsConsistent(target) || target.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Block eligibility changed after preview.","export-plan",false);
                 // Same native overload and success criterion as the full V20/V21 engine; no old-file deletion.
                 var result=Documents.Export(target,stage,name);
-                if(result==null || Documents.State(result)!=DocumentResultState.Success) throw new InvalidOperationException("Native document export did not succeed.");
+                var state=result==null ? (object?)null : Documents.State(result);
+                if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
+                    throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents,state);
                 return result.ExportedDocuments.Select(f=>f.FullName).Take(3).ToArray();
             });
 #else

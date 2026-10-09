@@ -76,6 +76,25 @@ public sealed class PlcExportCandidateTests
     private static Envelope Run(PlcExportSession s, Adapter a, PlcExportRequest r, Files f, string mode = "preview", string hash = "", bool confirm = true, string tool = "ExportPlcBlocks", string release = "21")
         => s.Run(a, release, tool, "export-test", r, mode, confirm, hash, a.Project, f);
 
+    [Theory]
+    [InlineData("Failure", false)]
+    [InlineData("PartialSuccess", true)]
+    [InlineData("987654", true)]
+    [InlineData(null, true)]
+    public void NativeDocumentResultSurvivesTheCandidateBoundary(string? state, bool reset)
+    {
+        var a = new Adapter { Count = 1 }; var f = new Files(); var s = new PlcExportSession(); var r = Request(Path.Combine(Root(), "documents"), 1);
+        var preview = Run(s, a, r, f, tool: "ExportPlcBlockDocuments");
+        Assert.True(preview.Ok);
+        a.OnExport = () => throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents, state);
+        var result = Run(s, a, r, f, "apply", Hash(preview), tool: "ExportPlcBlockDocuments");
+        Assert.Equal(reset ? Outcome.Unknown : Outcome.Failed, result.Meta.Outcome);
+        Assert.Equal(reset ? ErrorCode.OutcomeUnknown : ErrorCode.NativeOperationFailed, result.Error!.Code);
+        Assert.Equal(reset, result.Meta.RequiresSessionReset);
+        Assert.Equal(state, (string?)Data(result)["residue"]?["nativeState"]);
+        Assert.Equal(1, a.Calls); Assert.Equal(0, f.Publishes);
+    }
+
     public static IEnumerable<object[]> Faults()
     {
         foreach (string fault in new[] { "before", "during-before", "during-after", "after", "identity-after", "missing-output", "stage", "access", "disk", "after-publish", "readback" })

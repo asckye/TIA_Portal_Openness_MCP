@@ -16,6 +16,7 @@ namespace TiaMcpServer.Siemens
         internal readonly List<string> Paths = new List<string>();
         internal readonly string OperationId = Guid.NewGuid().ToString("N");
         internal bool Script, ApiCallSuccess, NativeSuccess, InspectionComplete;
+        private readonly bool libraryResult;
         internal bool ConnectionUnavailable, RemoteInspectionStopped, ExportAttempted, LibraryXml;
         internal string Method = "Export(DirectoryInfo, string)";
         internal string State = "Unknown", DiagnosticsStatus = "notRead", Phase = "prepare";
@@ -33,7 +34,7 @@ namespace TiaMcpServer.Siemens
         }
 
         private NativeExportCapture(string scope, bool libraryVersion)
-        { this.scope = scope; Script = !libraryVersion; }
+        { this.scope = scope; Script = !libraryVersion; libraryResult = libraryVersion; }
 
         private void Begin(string phase)
         { Phase = phase; Log("begin"); }
@@ -113,7 +114,7 @@ namespace TiaMcpServer.Siemens
                     Begin("readNativeState");
                     if (result == null) throw new InvalidOperationException("Native export returned no ExportTransferResult.");
                     State = MigrationRead.Get(result, "TransferResultState")?.ToString() ?? "Unknown";
-                    NativeSuccess = State == "Success";
+                    NativeSuccess = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Library, State);
                     Log(State);
                 }
                 catch (Exception ex) { Fail("NativeStatusReadFailed", ex); return; }
@@ -128,7 +129,7 @@ namespace TiaMcpServer.Siemens
             }
             catch (Exception ex) { Fail("NativeFileListFailed", ex); return; }
 
-            if (libraryVersion && !NativeSuccess)
+            if (libraryVersion && State != "Success")
             {
                 try
                 {
@@ -242,8 +243,9 @@ namespace TiaMcpServer.Siemens
                     : !ApiCallSuccess ? "Native call did not return successfully."
                     : !InspectionComplete ? "The native call returned, but result inspection failed at " + FailurePhase + ". nativeState is the previously observed raw value; it does not establish complete data."
                     : "Native call and result inspection returned, but the native state was " + State + ". Inspect diagnostics and the file summary." };
-            if (ApiCallSuccess && (State == "Error" || State == "Failure" || State == "Failed"))
+            if (ApiCallSuccess && libraryResult && !LibraryXml)
             {
+                status["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Library;
                 TiaMcp.Logic.V4.NativeResultState.Record(status, State, false, DiagnosticLog, messages: new JsonArray(Rows.Select(r => (JsonNode)r.DeepClone()).ToArray()));
                 status["targetFiles"] = new JsonArray(Directory.GetFiles(outputDirectory!).Select(p => (JsonNode)TiaMcp.Logic.V4.NativeResultState.FileRow(p)).ToArray());
             }

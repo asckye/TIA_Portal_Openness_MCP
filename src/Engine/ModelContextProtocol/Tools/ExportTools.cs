@@ -162,6 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // Retain the first explicit failure when later files in a batch succeed.
             if (NativeResultState.TryFailure(observation.Fields, true, out _, out _)) return;
             NativeResultState.Record(observation.Fields, state, changesProject, messages: messages);
+            observation.Fields["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Documents;
             observation.Fields["targetFiles"] = new JsonArray(new[] { ".s7dcl", ".s7res" }.Select(ext => (JsonNode)NativeResultState.FileRow(Path.Combine(directory, name + ext))).ToArray());
         }
         internal static void Observe(string key, JsonNode? value)
@@ -215,7 +216,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 data["executionEvidence"] = new JsonObject { ["issued"] = observation.Issued, ["confirmed"] = observation.Confirmed,
                     ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage };
             }
-            if (NativeResultState.TryFailure(data, write, out var nativeOutcome, out var nativeError))
+            if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             bool changed = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
@@ -274,7 +275,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = new JsonObject { ["executionEvidence"] = new JsonObject { ["issued"] = observation.Issued,
                 ["confirmed"] = observation.Confirmed, ["knownSideEffects"] = observation.Changed, ["stage"] = observation.Stage } };
             foreach (var pair in observation.Fields) data[pair.Key] = pair.Value?.DeepClone();
-            if (NativeResultState.TryFailure(data, write, out var nativeOutcome, out var nativeError))
+            if (NativeResultState.TryUnsuccessful(data, write, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current: current);
             if (observation.Issued > observation.Confirmed) return Result(tool, data,
@@ -309,6 +310,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Execution? execution = null, Completeness? completeness = null, Paging? paging = null, bool current = false)
         {
             var warnings = new List<Warning>();
+            if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; family acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial || completeness == Completeness.Unknown) warnings.Add(new Warning(WarningCode.IncompleteData,
                 "The retained observations do not establish complete content or post-operation state.", new Dictionary<string, JsonElement>()));

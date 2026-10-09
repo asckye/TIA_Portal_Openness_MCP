@@ -27,7 +27,9 @@ namespace TiaMcp.Adapters
                     RequireTargetOffline(selected);
                     if(!Documents.IsConsistent(block) || block.IsKnowHowProtected) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Block eligibility changed after preview.","export-plan",false);
                     var result=Documents.Export(block,stage,name);
-                    if(result==null || Documents.State(result)!=DocumentResultState.Success) throw new InvalidOperationException("Native document export did not succeed.");
+                    var state=result==null ? (object?)null : Documents.State(result);
+                    if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(state))
+                        throw new TiaMcp.Adapters.Contracts.NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents,state);
                     return result.ExportedDocuments.Select(file=>file.FullName).Take(3).ToArray();
                 }
             }));

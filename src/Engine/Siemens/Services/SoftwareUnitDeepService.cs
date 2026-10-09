@@ -227,7 +227,7 @@ namespace TiaMcpServer.Siemens.Services
                         meta["mayHaveWrittenFiles"] = true;
                         DocumentExportResult result = document ? ((PlcDocument)target).ExportAsDocuments(directory, name) : ((PlcType)target).ExportAsDocuments(directory, name);
                         meta["apiCallSuccess"] = true; meta["result"] = _session.DocumentExportRow(result); meta["newFiles"] = SoftwareUnitDeepLogic.NewFilesSince(directory.FullName, before);
-                        NativeResultState.Record(meta, result.State.ToString(), false, messages: _session.DocumentMessages(result.Messages));
+                        NativeResultState.Record(meta, result.State, false, messages: _session.DocumentMessages(result.Messages));
                         meta["targetFiles"] = new JsonArray(new[] { ".s7dcl", ".s7res", ".nvt" }.Select(ext => (JsonNode)NativeResultState.FileRow(Path.Combine(directory.FullName, name + ext))).ToArray());
                         if (result.State == DocumentResultState.Failure) throw new PortalException(PortalErrorCode.ExportFailed, "ExportAsDocuments reported Failure: " + string.Join(" | ", _session.DocumentMessages(result.Messages).Select(m => m?.ToString())));
                         return "Documents exported and hashed; no project change.";
@@ -244,14 +244,14 @@ namespace TiaMcpServer.Siemens.Services
                     {
                         DocumentImportResultForSplDocument result = documents.ImportFromDocuments(directory, name, option);
                         meta["apiCallSuccess"] = true; meta["result"] = _session.DocumentImportRow(result, Names(result.ImportedDocuments));
-                        NativeResultState.Record(meta, result.State.ToString(), true, messages: _session.DocumentMessages(result.Messages));
+                        NativeResultState.Record(meta, result.State, true, messages: _session.DocumentMessages(result.Messages));
                         if (result.State == DocumentResultState.Failure) throw new PortalException(PortalErrorCode.ImportFailed, "ImportFromDocuments reported Failure: " + string.Join(" | ", _session.DocumentMessages(result.Messages).Select(m => m?.ToString())));
                     }
                     else
                     {
                         DocumentImportResultForTypes result = types.ImportFromDocuments(directory, name, option);
                         meta["apiCallSuccess"] = true; meta["result"] = _session.DocumentImportRow(result, Names(result.ImportedPlcTypes));
-                        NativeResultState.Record(meta, result.State.ToString(), true, messages: _session.DocumentMessages(result.Messages));
+                        NativeResultState.Record(meta, result.State, true, messages: _session.DocumentMessages(result.Messages));
                         if (result.State == DocumentResultState.Failure) throw new PortalException(PortalErrorCode.ImportFailed, "ImportFromDocuments reported Failure: " + string.Join(" | ", _session.DocumentMessages(result.Messages).Select(m => m?.ToString())));
                     }
                     if ((document ? (object?)documents.Find(name) : types.Find(name)) == null) throw new InvalidOperationException("Imported " + objectKind + " not found by readback.");

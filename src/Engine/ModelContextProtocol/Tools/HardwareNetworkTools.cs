@@ -92,7 +92,10 @@ namespace TiaMcpServer.ModelContextProtocol
             bool? success = evidence.ContainsKey("operationSuccess") ? Flag(evidence, "operationSuccess") : Flag(evidence, "success");
             if (response is ResponseJsonReport verdict) success = verdict.Ok ?? success;
             foreach (var pair in data) if (!evidence.ContainsKey(pair.Key)) evidence[pair.Key] = pair.Value?.DeepClone();
-            if (tool == "CompileDevice" && CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) is Error compileError)
+            if (NativeResultState.State(evidence) != null && NativeResultState.EnumType(evidence, tool) != null)
+                success = NativeResultState.Succeeded(evidence, tool) && success != false;
+            if (tool == "CompileDevice" && !NativeResultState.TryUnsuccessful(evidence, !readOnly, out _, out _, tool)
+                && CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) is Error compileError)
             {
                 data["evidence"] = evidence;
                 return Result(tool, data, compileError, Outcome.Failed, Execution.Completed, Incomplete(evidence) ? Completeness.Partial : Completeness.Complete, current);
@@ -105,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "SetPlcPutGetAccess" && Flag(evidence, "writeOutcomeKnown") != true
                 && Flag(evidence, "mayHaveChanged") == true) success = null;
             if (tool == "CompileDevice" && evidence["effectiveState"] != null)
-                success = evidence["effectiveState"]!.ToString() == "Success" || evidence["effectiveState"]!.ToString() == "Warning";
+                success = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, evidence["effectiveState"]!.ToString());
 
             bool issued = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true;
             bool nestedUnknown = evidence["ensureSubnet"] is JsonObject ensure && Flag(ensure, "mayHaveChanged") == true && Flag(ensure, "success") != true;
@@ -163,6 +166,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 paging = McpServer.OffsetPage(start, size, total);
             foreach (string key in new[] { "timestamp", "tool", "success", "offset", "limit", "nextOffset" }) data.Remove(key);
             Sanitize(data);
+            if (NativeResultState.TryUnsuccessful(evidence, !readOnly, out var nativeOutcome, out var nativeError, tool))
+                return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : readOnly ? Execution.ReadOnly : Execution.Completed,
+                    nativeOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current);
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : outcome == Outcome.Unknown || outcome == Outcome.ReadFailed ? Completeness.Unknown
                 : incomplete ? Completeness.Partial : Completeness.Complete;
@@ -202,6 +208,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Completeness completeness, bool current, Paging? paging = null)
         {
             var warnings = new List<Warning>();
+            if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData, "The hardware observation covers only the reported scope and available fields.", new Dictionary<string, JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,

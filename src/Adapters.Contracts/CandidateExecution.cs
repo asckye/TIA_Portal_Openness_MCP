@@ -78,6 +78,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     public static partial class CandidateExecution
     {
         private static CandidateFault Fault(Exception ex) => ex is CandidateObservationException observed ? observed.Fault
+            : ex is NativeResultException native ? new CandidateFault { Kind = "native-result", Subject = native.Evidence.EnumType, Message = native.Evidence.State ?? "" }
             : new CandidateFault { Kind = ex is IOException || ex is UnauthorizedAccessException ? "io" : "preflight" };
         private static void Identity(CandidateIdentity expected, CandidateIdentity actual)
         { if (CandidateDigest.Binding(expected) != CandidateDigest.Binding(actual)) CandidatePrimitives.Fail("identity", "project-binding"); }

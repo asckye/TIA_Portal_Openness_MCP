@@ -68,11 +68,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Flag(data, "nativeResult") == false) success = false;
             bool stateRequired = (tool == "RunTestSuiteCase" || tool == "ExchangePlcSupervisions") && writes && rejection == null;
             string? state = data["nativeState"]?.ToString();
-            bool stateKnown = new[] { "Success", "Information", "Info", "Warning", "Error", "Failed", "Failure" }.Contains(state);
+            bool stateKnown = NativeResultState.Classify(data, tool) != TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected;
             if (stateRequired || data.ContainsKey("nativeState"))
             {
                 nativeKnown |= stateKnown;
-                success = stateKnown && state != "Error" && state != "Failed" && state != "Failure" && success != false;
+                success = NativeResultState.Succeeded(data, tool) && success != false;
             }
             bool verificationFailed = Flag(data, "expectedPresenceVerified") == false || Flag(data, "verifiedAbsent") == false;
             if (verificationFailed) success = false;
@@ -102,15 +102,14 @@ namespace TiaMcpServer.ModelContextProtocol
             if (offset.HasValue && limit.HasValue && data["expectedCount"] is JsonValue count && count.TryGetValue<int>(out var total)
                 && offset >= 0 && limit > 0) paging = McpServer.OffsetPage(offset.Value, limit.Value, total);
             Clean(data);
-            if (NativeResultState.TryFailure(data, writes, out var nativeOutcome, out var nativeError)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
+            if (NativeResultState.TryUnsuccessful(data, writes, out var nativeOutcome, out var nativeError, tool)) { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete; }
             if (outcome == Outcome.Succeeded) data["summary"] = response.Message;
             if (data["records"] is JsonArray records) { data.Remove("records"); data["items"] = records; }
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) };
             if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData,
                 "Only the reported fields and native evidence were observed; content semantics are not asserted.", new Dictionary<string, JsonElement>()));
-            if (state == "Warning") warnings.Add(new Warning(WarningCode.NativeWarning,
-                "The native operation returned a warning state.", new Dictionary<string, JsonElement>()));
+            warnings.AddRange(NativeResultState.Warnings(data, tool));
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution.ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,

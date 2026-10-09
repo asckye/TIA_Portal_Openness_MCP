@@ -184,7 +184,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
             }
             catch (Exception ex)
             {
-                result.Fault = Fault(ex); result.RequiresSessionReset = result.Issued;
+                result.Fault = Fault(ex); result.RequiresSessionReset = result.Issued && !(result.Fault.Kind == "native-result" && NativeResultStates.Classify(result.Fault.Subject, result.Fault.Message) == NativeStateKind.Failure);
                 try { result.Residue = new[] { CandidateExportFiles.Observe(check.StagingPath), CandidateExportFiles.Observe(check.Destination.Path) }; result.ResidueStatus = "checked"; }
                 catch (Exception) /* swallow(privacy): preserve unavailable residue when export-state observation fails */ { }
             }

@@ -33,8 +33,8 @@ namespace TiaMcpServer.Siemens.Services
                 OfficialServiceAccess.AttachResult(meta,result);
                 var state=result?.GetType().GetProperty("State")?.GetValue(result)?.ToString();
                 meta["nativeLogFile"]=(result?.GetType().GetProperty("LogFilePath")?.GetValue(result) as FileInfo)?.FullName;
-                meta["nativeState"]=state;meta["nativeSuccessVerified"]=state=="Success" || state=="Info";
-                if(state=="Error" || state=="Failed" || state=="Failure") meta["operationSuccess"]=false;
+                meta["nativeState"]=state;meta["nativeSuccessVerified"]=TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionXlsx, state);
+                if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionXlsx, state)) meta["operationSuccess"]=false;
                 if(!write)meta["file"]=NativeFileOutput.Verify(file);
                 return "Native ProDiag exchange returned; inspect native state and diagnostics. No save/compile/download.";
                 }

@@ -535,8 +535,8 @@ namespace TiaMcpServer.Siemens.Services
                 meta["mayHaveChanged"] = true;
                 LayoutDataImportResult result = layout.Import(input);
                 meta["result"] = new JsonObject { ["state"] = result.State.ToString(), ["numberOfLayouts"] = result.NumberOfLayouts };
-                NativeResultState.Record(meta, result.State.ToString(), true);
-                if (result.State != LayoutImportResultState.Success) meta["operationSuccess"] = false;
+                NativeResultState.Record(meta, result.State, true);
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State)) meta["operationSuccess"] = false;
                 return "SiVArc screen layouts imported (LayoutData.Import); inspect result.state; project not saved.";
 #endif
             });

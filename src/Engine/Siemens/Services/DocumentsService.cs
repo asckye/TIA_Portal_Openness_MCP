@@ -146,7 +146,7 @@ namespace TiaMcpServer.Siemens.Services
                             var result = Documents.ExportOptional(group, exportPath, blockName);
 
                             PlcExchangeContract.ObserveNativeResult(result?.State.ToString(), false, result == null ? null : _session.DocumentMessages(result.Messages), exportPath, blockName);
-                            if (result != null && Documents.State(result) == DocumentResultState.Success)
+                            if (result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)))
                             {
                                 PlcExchangeContract.ConfirmWrite();
                                 success = true;
@@ -294,7 +294,7 @@ namespace TiaMcpServer.Siemens.Services
                     }
 
                     PlcExchangeContract.ObserveNativeResult(Documents.State(result).ToString(), false, _session.DocumentMessages(result.Messages), exportPath, Documents.Name(block));
-                    if (Documents.State(result) == DocumentResultState.Success)
+                    if (TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)))
                     {
                         PlcExchangeContract.ConfirmWrite();
                         exportList.Add(block);
@@ -403,7 +403,7 @@ namespace TiaMcpServer.Siemens.Services
             try
             {
                 PlcExchangeContract.ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : _session.DocumentMessages(result.Messages), dir.FullName, fileNameWithoutExtension);
-                if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
+                if (result == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)) || Documents.ImportedBlocks(result) == null)
                 {
                     throw new PortalException(PortalErrorCode.ImportFailed,
                         $"PlcBlockComposition.ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
@@ -549,7 +549,7 @@ namespace TiaMcpServer.Siemens.Services
                     PlcExchangeContract.StartWrite("document-import");
                     result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => Documents.Import(Documents.Blocks(group), dir, name, option));
                     PlcExchangeContract.ObserveNativeResult(Documents.OptionalState(result)?.ToString(), true, result == null ? null : _session.DocumentMessages(result.Messages), dir.FullName, name);
-                    if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
+                    if (result == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)) || Documents.ImportedBlocks(result) == null)
                     {
                         failures.Add($"{name}: native state={Documents.OptionalState(result)?.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."
                             + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));

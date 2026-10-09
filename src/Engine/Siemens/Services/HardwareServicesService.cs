@@ -652,8 +652,8 @@ namespace TiaMcpServer.Siemens.Services
                 meta["warnings"] = new JsonArray(collected.Warnings.Select(w => (JsonNode)JsonValue.Create(w)!).ToArray());
                 // envelope: legacy-independent-verdicts
                 meta["nativeCompleted"] = true;
-                meta["success"] = result.State != CompilerResultState.Error;
-                meta["operationSuccess"] = result.State != CompilerResultState.Error;
+                meta["success"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
+                meta["operationSuccess"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
                 return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result.WarningCount + "). Project not saved.";
             });
 

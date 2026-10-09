@@ -38,7 +38,9 @@ namespace TiaMcp.Engine.Tests
                 {
                     string path = Path.Combine(directory, "target.xlsx");
                     if (fileExists) File.WriteAllBytes(path, new byte[] { 1, 2, 3 });
-                    var evidence = new JsonObject { ["success"] = false, ["mayHaveWrittenFiles"] = !changesProject };
+                    var evidence = new JsonObject { ["success"] = false, ["mayHaveWrittenFiles"] = !changesProject,
+                        ["nativeStateType"] = state == "Failure" ? TiaMcp.Adapters.Contracts.NativeResultStates.Documents
+                            : state == "Failed" ? TiaMcp.Adapters.Contracts.NativeResultStates.SafetyTest : TiaMcp.Adapters.Contracts.NativeResultStates.Compiler };
                     NativeResultState.Record(evidence, state, changesProject, "native.log", path, new JsonArray("native message"));
                     var response = new ResponseMessage { Meta = evidence };
                     foreach (var result in new[] {

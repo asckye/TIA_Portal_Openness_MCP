@@ -931,7 +931,7 @@ namespace TiaMcpServer.Siemens.Services
                         var result = PlcNative.Compile(compiler);
                         if (result == null) throw new InvalidOperationException("Block compiler returned no result.");
                         meta["compileState"] = PlcNative.State(result).ToString(); meta["compileErrorCount"] = PlcNative.ErrorCount(result); meta["compileWarningCount"] = PlcNative.WarningCount(result);
-                        if (PlcNative.ErrorCount(result) != 0 || (PlcNative.State(result).ToString() != "Success" && PlcNative.State(result).ToString() != "Warning")) throw new InvalidOperationException("Imported block compilation failed. Backup retained; no further native readback attempted.");
+                        if (PlcNative.ErrorCount(result) != 0 || (PlcNative.State(result).ToString() != "Success" && !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(PlcNative.State(result)))) throw new InvalidOperationException("Imported block compilation failed. Backup retained; no further native readback attempted.");
                     }
                     var identity = _session.GetBindingIdentity();
                     if (identity["identity"] == null) throw new InvalidOperationException("Exact binding identity required.");
@@ -1104,7 +1104,7 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                     var exp = PlcNative.ExportDocuments(block, new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName);
-                    usedDocs = exp != null && PlcNative.State(exp) == DocumentResultState.Success;
+                    usedDocs = exp != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(PlcNative.State(exp));
                 }
                 catch (EngineeringNotSupportedException)
                 {
@@ -1115,10 +1115,10 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     PlcNative.Delete(block);
                     var res = PlcNative.ImportDocuments(PlcNative.Blocks(targetGroup), new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(tempDir)), blockName, ImportDocumentOptions.Override);
-                    if (res == null || PlcNative.State(res) != DocumentResultState.Success)
+                    if (res == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(PlcNative.State(res)))
                     {
                         var evidence = new JsonObject();
-                        TiaMcp.Logic.V4.NativeResultState.Record(evidence, res?.State.ToString(), true, messages: res == null ? null : _session.DocumentMessages(res.Messages));
+                        TiaMcp.Logic.V4.NativeResultState.Record(evidence, res?.State, true, messages: res == null ? null : _session.DocumentMessages(res.Messages));
                         var failure = new PortalException(PortalErrorCode.ImportFailed,
                             $"Re-import of '{blockName}' into '{targetGroupPath}' failed (documents)");
                         failure.Data["nativeResultEvidence"] = evidence;

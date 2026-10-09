@@ -254,7 +254,10 @@ namespace TiaMcp.Engine.Tests
         [InlineData("{\"status\":\"InvalidState\",\"tool\":\"ManagePlcSoftwareUnit\",\"operationSuccess\":false}", true, "rejected-before-operation", "not-started", "none")]
         public void EnvelopeMappingUsesEvidenceRatherThanMessages(string json, bool writes, string outcome, string execution, string completeness)
         {
-            var body = Body(EngineeringToolContract.Map("ManagePlcSoftwareUnit", new ResponseMessage { Message = "success", Meta = JsonNode.Parse(json)!.AsObject() }, writes));
+            var evidence = JsonNode.Parse(json)!.AsObject();
+            if (NativeResultState.State(evidence) != null) evidence["nativeStateType"] = NativeResultState.State(evidence) == "Failure"
+                ? TiaMcp.Adapters.Contracts.NativeResultStates.Documents : TiaMcp.Adapters.Contracts.NativeResultStates.Compiler;
+            var body = Body(EngineeringToolContract.Map("ManagePlcSoftwareUnit", new ResponseMessage { Message = "success", Meta = evidence }, writes));
             Assert.Equal(outcome, (string?)body["meta"]!["outcome"]);
             Assert.Equal(execution, (string?)body["meta"]!["execution"]);
             Assert.Equal(completeness, (string?)body["meta"]!["completeness"]);

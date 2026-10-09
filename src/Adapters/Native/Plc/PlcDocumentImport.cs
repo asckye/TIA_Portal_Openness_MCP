@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters
                     // Association has no Find: enumerate the exact typed returned association (bounded).
                     var imported=Documents.ImportedBlocks(native).Take(2).ToArray();
                     outcome.Identities=imported.Select(b=>PlcDocumentImportPolicy.InventoryItem(object.Equals(Documents.Parent(b),target)?groupPath:"<unverified-parent>",Documents.Name(b),b.GetType().Name,"returned")).ToArray();
-                    if(Documents.State(native)!=DocumentResultState.Success || imported.Length!=1 || Documents.Name(imported[0])!=fileNameWithoutExtension || imported[0].GetType().Name!="GlobalDB" || !object.Equals(Documents.Parent(imported[0]),target))return outcome;
+                    if(!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(native)) || imported.Length!=1 || Documents.Name(imported[0])!=fileNameWithoutExtension || imported[0].GetType().Name!="GlobalDB" || !object.Equals(Documents.Parent(imported[0]),target))return outcome;
                     var found=Documents.FindBlock(Documents.Blocks(target),fileNameWithoutExtension);
                     outcome.ExistsVerified=found!=null && Documents.Name(found)==fileNameWithoutExtension && found.GetType().Name=="GlobalDB" && object.Equals(Documents.Parent(found),target) && object.Equals(found,imported[0]);
                     outcome.Success=true;

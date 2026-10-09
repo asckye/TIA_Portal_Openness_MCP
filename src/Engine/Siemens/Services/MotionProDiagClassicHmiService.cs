@@ -345,8 +345,8 @@ namespace TiaMcpServer.Siemens.Services
                         meta["messages"] = new JsonArray(EngineeringGroupOperations.Items(typed.Messages).Cast<global::Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResultMessage>().Select(m => (JsonNode)m.Message).ToArray());
                     }
                     var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString();
-                    meta["nativeState"] = state; meta["nativeSuccessVerified"] = state == "Success";
-                    if (state != "Success") meta["operationSuccess"] = false;
+                    meta["nativeState"] = state; meta["nativeSuccessVerified"] = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionSettings, state);
+                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.SupervisionSettings, state)) meta["operationSuccess"] = false;
                     if (!import) meta["file"] = NativeFileOutput.Verify(file);
                     return "Native supervision settings " + method.ToLowerInvariant() + " returned; inspect native state and messages. No save/compile/download.";
                 }

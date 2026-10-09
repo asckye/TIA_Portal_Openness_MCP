@@ -100,7 +100,11 @@ namespace TiaMcpServer.Siemens
                 foreach (var row in capture.Rows) yield return row;
                 yield return capture.Status();
                 var exported = new SortedDictionary<string, FileInfo>(StringComparer.OrdinalIgnoreCase);
-                bool complete = capture.NativeSuccess && callSuccess && capture.InspectionComplete;
+                // A warning completes the operation but does not prove that every
+                // requested document and internal body was exported completely.
+                bool complete = capture.NativeSuccess && callSuccess && capture.InspectionComplete
+                    && TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Library, state)
+                        != TiaMcp.Adapters.Contracts.NativeStateKind.Warning;
                 // Inspect only this export directory; never search the project,
                 // library or arbitrary paths from the API's returned manifest.
                 var candidates = new List<FileInfo>();

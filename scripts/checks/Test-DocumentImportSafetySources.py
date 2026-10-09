@@ -59,7 +59,7 @@ class DocumentImportSafetySources(unittest.TestCase):
 
     def test_one_native_call_site_no_retry_and_stop_for_ambiguous_state(self):
         self.assertEqual(BATCH.count('Documents.Import('), 1)
-        self.assertIn('result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null', BATCH)
+        self.assertIn('result == null || !TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(Documents.State(result)) || Documents.ImportedBlocks(result) == null', BATCH)
         self.assertEqual(BATCH.count('LastImportFromDocumentsStopped = true;\n                    break;'), 1)
         self.assertEqual(BATCH.count('LastImportFromDocumentsStopped = true;\n                        break;'), 1)
         self.assertNotIn('continue;', BATCH)

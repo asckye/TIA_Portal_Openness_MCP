@@ -370,7 +370,7 @@ namespace TiaMcp.Engine.Tests
         [InlineData("{\"success\":false,\"synchronized\":2,\"failed\":1}", true, "unknown", "unknown", "unknown")]
         [InlineData("{\"success\":true,\"result\":{\"state\":\"Unrecognized\"}}", true, "unknown", "unknown", "unknown")]
         [InlineData("{\"success\":true,\"generationPassed\":false}", true, "failed", "completed", "complete")]
-        [InlineData("{\"success\":false,\"transferResultState\":\"Failure\",\"createdType\":{\"name\":\"T\"}}", true, "partial", "partial", "partial")]
+        [InlineData("{\"success\":false,\"transferResultState\":\"Failure\",\"createdType\":{\"name\":\"T\"}}", true, "unknown", "unknown", "unknown")]
         public void EnvelopePreservesKnownPartialAndUnknownEvidence(string json, bool writes, string outcome, string execution, string completeness)
         {
             var body = Body(LibraryToolContract.Map("fixture", new ResponseMessage { Meta = JsonNode.Parse(json)!.AsObject() }, writes));
