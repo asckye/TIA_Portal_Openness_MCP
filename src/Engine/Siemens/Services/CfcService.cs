@@ -56,13 +56,19 @@ namespace TiaMcpServer.Siemens.Services
             if (missing.Length > 0) throw new PortalException(PortalErrorCode.NotFound, "CFC chart(s) " + string.Join(", ", missing) + " not in the CompleteExport inventory (" + string.Join(", ", inventory.Charts.Take(20)) + "); " + purpose + " is refused (unknown chart names took TIA Portal V21 down).");
         }
 
+        private static void RequireSafeChartInventory(JsonObject meta, string action)
+        {
+            try { Logic.RequireSafeChartInventory(int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), "CFC " + action); }
+            catch (NotSupportedException error) { meta["unsupportedReason"] = error.Message; throw; }
+        }
+
         public ResponseMessage ExchangeCfcCharts(string softwarePath, string action, string filePath, string modelVersion = "", long filter = 0, bool unattended = true, bool deleteAtTarget = false, bool dryRun = true, string chartNamesJson = "[]", bool skipChartPreflight = false)
             => _session.RunHmiStepTool("ExchangeCfcCharts", meta =>
             {
                 try
                 {
                 var r = Logic.ValidateExchangeRequest(action, filePath, modelVersion, filter, chartNamesJson, deleteAtTarget, dryRun);
-                if (action != "import") Logic.RequireSafeChartInventory(int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), "CFC " + action);
+                if (action != "import") RequireSafeChartInventory(meta, action);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
                 var provider = RequireChartProvider(plc);
@@ -96,7 +102,7 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                 var r = Logic.ValidateProtectionRequest(action, chartName, currentPassword, newHashedPassword, dryRun);
-                if (action != "import") Logic.RequireSafeChartInventory(int.Parse(McpServer.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), "CFC " + action);
+                if (action != "import") RequireSafeChartInventory(meta, action);
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
                 var provider = RequireChartProvider(plc);

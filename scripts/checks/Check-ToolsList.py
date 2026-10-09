@@ -23,6 +23,7 @@ EXCEPTIONS = {
     'ListExports': ('FILE', 'READ', 'Lists in-memory response handles; no file I/O.'),
     'ClearExports': ('FILE', 'WRITE', 'Deletes in-memory response handles, not files.'),
     'DeleteExport': ('FILE', 'WRITE', 'Deletes an in-memory response handle, not a file.'),
+    'SaveAsProject': ('FILE', 'SESSION', 'TIA Save As switches the open project and MCP binding (P7-07b finding 48).'),
 }
 MERGED = {'GetAuthoringGuide', 'GetRecipe'}
 # P7-04 additions to the V20/V21 product, absent from the frozen engine baseline.

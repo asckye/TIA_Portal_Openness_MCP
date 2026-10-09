@@ -419,13 +419,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project]Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "SaveProjectCopy"), Description("[L2][Project][SESSION] TIA Save As via Project.SaveAs: the open project and MCP binding switch to the new location. Unsaved changes are saved into the new copy; the original project file keeps its last saved state. Requires Workbench approval before dispatch, like SaveProject and CloseProject. Ordinary projects only; local sessions are refused. The result reports previousProjectFile and newProjectFile from the cached binding; confirm the new location with GetSessionState. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SaveProjectCopyV4(
-            [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
+            [Description("newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding.")] string newProjectPath)
             => SessionToolContract.Run("SaveProjectCopy", true, true, () => SaveAsProject(newProjectPath), () => !_session.IsProjectNull());
 
         public ResponseSaveAsProject SaveAsProject(
-            [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
+            [Description("newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding.")] string newProjectPath)
         {
             try
             {
@@ -435,12 +435,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
+                    string previousProjectFile = (string?)_session.GetBindingIdentity()["identity"]?["projectPath"]
+                        ?? throw new PortalException(PortalErrorCode.InvalidState, "Save As requires an exact cached project binding.");
                     if (_session.SaveAsProject(newProjectPath))
                     {
+                        var binding = _session.GetBindingIdentity();
+                        string newProjectFile = (string?)binding["identity"]?["projectPath"]
+                            ?? throw new InvalidOperationException("Save As returned without a refreshed project binding.");
                         return new ResponseSaveAsProject
                         {
-                            Message = $"Local project saved as '{newProjectPath}'",
-                            Meta = ResponseMeta.Basic(DateTime.Now, true)
+                            Message = $"TIA Save As switched the open project and MCP binding from '{previousProjectFile}' to '{newProjectFile}'. Unsaved changes were saved into the new copy; the original file keeps its last saved state.",
+                            PreviousProjectFile = previousProjectFile, NewProjectFile = newProjectFile,
+                            Meta = ResponseMeta.Unstamped(true, ("binding", binding))
                         };
                     }
                     else

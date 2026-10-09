@@ -24,7 +24,7 @@ var categories = data["categories"]?.AsArray() ?? throw new InvalidDataException
 
 var operationMeaning = new Dictionary<string, string>(StringComparer.Ordinal)
 {
-    ["SESSION"] = "会话与发现，不改工程",
+    ["SESSION"] = "会话与发现，包含工程保存、另存与关闭；写操作须审批",
     ["READ"] = "读取已打开工程，不改动",
     ["WRITE"] = "修改离线工程数据，默认预览，不自动保存/编译/下载",
     ["FILE"] = "导出/导入文件或生成离线产物",

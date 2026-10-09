@@ -1,6 +1,6 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "a7b161fc439778b2297a41ac30de2db4419fe0d181926dbaac94eb71a078d118",
+  "catalogSha256": "cd0322e0adec67eacd339535e314839d3ff171d867b454a9c574f5833f0a392d",
   "uniqueTools": 498,
   "documents": 89,
   "versionToolPairs": 1402,

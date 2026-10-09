@@ -213,6 +213,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseSaveAsProject : ResponseMessage
     {
+        public string? PreviousProjectFile { get; set; }
+        public string? NewProjectFile { get; set; }
     }
 
     public class ResponseCloseProject : ResponseMessage

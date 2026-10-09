@@ -14,6 +14,14 @@ namespace TiaMcp.Engine.Tests
     {
         private static JsonObject Body(CallToolResult result) => result.StructuredContent!.AsObject();
 
+        [Fact]
+        public void SaveAsUsesTheSameSessionClassificationAsSaveAndClose()
+        {
+            foreach (string tool in new[] { "SaveProject", "SaveProjectCopy", "CloseProject" })
+                Assert.Equal("SESSION", ToolMetadata.Find(tool)!.Operation);
+            Assert.Equal("SESSION", ToolTaxonomy.OperationOf("SaveProjectCopy", "").Operation);
+        }
+
         [Theory]
         [InlineData("Error", false)]
         [InlineData("Failure", false)]

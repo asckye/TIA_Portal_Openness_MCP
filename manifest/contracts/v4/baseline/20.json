@@ -40167,12 +40167,12 @@
       }
     },
     {
-      "descriptionSha256": "606bc7144cced0e172fd43bbe7736c74fcb3cd2da2ef4dccd2d1d5c2ee652b9c",
+      "descriptionSha256": "0d61d8c08fbdbe7b313ff62ea5325e42b72fcf6940b28fb5b8184fde486567a0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "newProjectPath": {
-            "description": "newProjectPath: defines the new path where to save the project",
+            "description": "newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding.",
             "type": "string"
           }
         },

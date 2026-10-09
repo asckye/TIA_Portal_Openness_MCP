@@ -231,6 +231,10 @@ FB/FC 的原生可用性仍须在 VM 复验。两版的 `ChartProvider`/`ChartPr
 导出和保护方法，没有独立、已验证安全的图表枚举入口。因此本次接受正常 CFC 导出/保护也被拒绝的
 功能限制，直到得到安全 inventory 方案与 VM 证据；不能恢复以 `CompleteExport` 来证明调用自身安全的预检。
 
+维护者决定（2026-10-08，P7-07b follow-up）：4.0 保持 V20/V21 CFC 保护及导出拒绝，
+拒绝消息须说明缺少独立安全 inventory 及已观察到的崩溃；import 不受此 guard 阻断。
+审查者会用新 journal 再复现一次，再按原生证据恢复能够证明安全的部分。
+
 I10 同步要求：宿主显式把配置的 diagnostics directory 传给 engine worker 与 PlcWorker；
 所有 `native:`/`nativeCallId` 行必须同步 `Flush(true)`，宿主工具的吞吐分类不能降低原生 BEFORE 的持久性。
 后续会话读取所有会话及轮转文件，按行 UTC 合并后取最近 `take` 条，不能只扫描最后六个文件。

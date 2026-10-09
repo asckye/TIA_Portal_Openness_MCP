@@ -17420,7 +17420,7 @@
           "newProjectPath": {
             "type": "string",
             "default": null,
-            "description": "newProjectPath: defines the new path where to save the project"
+            "description": "newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding."
           }
         },
         "arguments": {
@@ -37329,7 +37329,7 @@
           "newProjectPath": {
             "type": "string",
             "default": null,
-            "description": "newProjectPath: defines the new path where to save the project"
+            "description": "newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding."
           }
         },
         "arguments": {

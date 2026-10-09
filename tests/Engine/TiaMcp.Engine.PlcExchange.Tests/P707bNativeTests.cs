@@ -34,6 +34,10 @@ namespace PlcExchangeTests
                     var body = Body(Call(tool, "ManageCfcChartProtection", "PLC_1", "Chart_1", action,
                         action == "change" || action == "remove" ? "private" : "", action == "add" || action == "change" ? "hash" : "", preview, "V2.0", skip));
                     Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+                    Assert.Contains("independent CFC chart inventory", (string?)body["error"]?["message"]);
+                    Assert.Contains("CompleteExport", (string?)body["error"]?["message"]);
+                    Assert.Contains("skipChartPreflight", (string?)body["error"]?["message"]);
+                    Assert.Contains("CFC imports remain available", (string?)body["error"]?["message"]);
                     Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
                     Assert.Equal(0, ((SessionFake)fake).NativeCalls);
                 }
@@ -55,6 +59,10 @@ namespace PlcExchangeTests
                         action == "exportInstructionData" ? "" : "V2.0", 0L, true, false, preview,
                         action == "selectiveExport" ? new[] { "Chart_1" } : Array.Empty<string>(), skip));
                     Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+                    Assert.Contains("independent CFC chart inventory", (string?)body["error"]?["message"]);
+                    Assert.Contains("CompleteExport", (string?)body["error"]?["message"]);
+                    Assert.Contains("skipChartPreflight", (string?)body["error"]?["message"]);
+                    Assert.Contains("CFC imports remain available", (string?)body["error"]?["message"]);
                     Assert.Equal(0, ((SessionFake)fake).NativeCalls);
                 }
         }
@@ -107,12 +115,105 @@ namespace PlcExchangeTests
             Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ImportStillReachesTheOriginalSessionPath(bool preview)
+        {
+            foreach (bool skip in new[] { true, false })
+            {
+                var fake = DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SessionFake));
+                var service = Activator.CreateInstance(EngineType("Siemens.Services.CfcService"), fake)!;
+                var tool = Activator.CreateInstance(EngineType("ModelContextProtocol.CfcTools"), service)!;
+                var body = Body(Call(tool, "ExchangeCfcCharts", "PLC_1", "import", Path.Combine(Path.GetTempPath(), "charts.xml.zip"),
+                    "V2.0", 0L, true, false, preview, Array.Empty<string>(), skip));
+                Assert.NotEqual("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+                Assert.Equal(1, ((SessionFake)fake).NativeCalls);
+                Assert.Equal(preview ? "ExactPlcForEngineering" : "AcquireHmiEditAccess", ((SessionFake)fake).LastNativeCall);
+            }
+        }
+
+        [Fact]
+        public void ProductionSaveAsRemainsApprovalGated()
+        {
+            var method = EngineType("ModelContextProtocol.McpServer").GetMethod("ApprovalWrite", BindingFlags.Static | BindingFlags.NonPublic)!;
+            Assert.True((bool)method.Invoke(null, new object[] { "SaveProjectCopy", "{\"newProjectPath\":\"C:/fixture/Copy\"}" })!);
+        }
+
+        private static object SaveAsTool(SaveAsFake fake)
+            => Activator.CreateInstance(EngineType("ModelContextProtocol.ProjectSessionTools"), fake, null, null, null, null)!;
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ProductionSaveAsReturnsBothObservedProjectFiles(bool missingAfter)
+        {
+            var fake = (SaveAsFake)DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SaveAsFake));
+            fake.MissingAfter = missingAfter;
+            var body = Body(Call(SaveAsTool(fake), "SaveProjectCopyV4", Path.Combine(Path.GetTempPath(), "Copy")));
+            Assert.Equal(1, fake.SaveCalls);
+            Assert.Equal(2, fake.BindingReads);
+            if (missingAfter)
+            {
+                Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+                Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+            }
+            else
+            {
+                Assert.True((bool)body["ok"]!);
+                Assert.Equal(fake.Previous, (string?)body["data"]?["previousProjectFile"]);
+                Assert.Equal(fake.New, (string?)body["data"]?["newProjectFile"]);
+                Assert.Equal(fake.New, (string?)body["data"]?["evidence"]?["binding"]?["identity"]?["projectPath"]);
+                Assert.Contains("original file keeps its last saved state", (string?)body["data"]?["summary"]);
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void SaveAsRefusesLocalSessionsOrAnAbsentCachedBinding(bool local)
+        {
+            var fake = (SaveAsFake)DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SaveAsFake));
+            fake.LocalSession = local;
+            fake.MissingBefore = !local;
+            var body = Body(Call(SaveAsTool(fake), "SaveProjectCopyV4", Path.Combine(Path.GetTempPath(), "Copy")));
+            Assert.False((bool)body["ok"]!);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Equal(0, fake.SaveCalls);
+        }
+
+        public class SaveAsFake : DispatchProxy
+        {
+            public int SaveCalls, BindingReads;
+            public bool LocalSession, MissingBefore, MissingAfter;
+            public string Previous = Path.Combine(Path.GetTempPath(), "Original.ap21");
+            public string New = Path.Combine(Path.GetTempPath(), "Copy", "NativeObserved.ap21");
+            protected override object? Invoke(MethodInfo? method, object?[]? args)
+            {
+                switch (method!.Name)
+                {
+                    case "IsProjectNull": return false;
+                    case "get_IsLocalSession": return LocalSession;
+                    case "GetBindingIdentity":
+                        BindingReads++;
+                        return new JsonObject { ["identity"] = SaveCalls == 0 && MissingBefore || SaveCalls != 0 && MissingAfter ? null
+                            : new JsonObject { ["projectPath"] = SaveCalls == 0 ? Previous : New } };
+                    case "SaveAsProject":
+                        EngineType("ModelContextProtocol.InvocationJournal").GetMethod("NativeCallStarted", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, null);
+                        SaveCalls++;
+                        return true;
+                    default: throw new Exception("Unexpected session call: " + method.Name);
+                }
+            }
+        }
+
         public class SessionFake : DispatchProxy
         {
             public int NativeCalls;
+            public string? LastNativeCall;
             protected override object? Invoke(MethodInfo? method, object?[]? args)
             {
-                if (method!.Name != "RunHmiStepTool") { NativeCalls++; throw new Exception("Native access must not run"); }
+                if (method!.Name != "RunHmiStepTool") { NativeCalls++; LastNativeCall = method.Name; throw new Exception("Native access must not run"); }
                 var meta = new JsonObject();
                 try { ((Func<JsonObject, string>)args![1]!)(meta); meta["success"] = true; }
                 catch { meta["success"] = false; }

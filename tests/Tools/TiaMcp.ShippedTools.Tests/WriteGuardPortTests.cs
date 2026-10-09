@@ -37,7 +37,7 @@ public sealed class WriteGuardPortTests
         }
         var restored = new Dictionary<string, string> {
             ["ConnectIsolatedPortal"] = "SESSION", ["BuildProjectScaffold"] = "WRITE", ["RetrieveProjectArchive"] = "WRITE",
-            ["SaveProjectCopy"] = "FILE", ["ManageMultiuserSession"] = "WRITE"
+            ["SaveProjectCopy"] = "SESSION", ["ManageMultiuserSession"] = "WRITE"
         };
         foreach (var (name, operation) in restored)
         {

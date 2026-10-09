@@ -4,7 +4,7 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.cs` 从 `manifest/tools-list.json`（FoundationHost 的 V21 full 产品目录）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-08 19:25:30
+- 生成时间：2026-10-08 21:18:24
 - 产品文件版本：3.3.0.0
 - 工具数量：498
 
@@ -14,10 +14,10 @@
 
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
-| `SESSION` | 会话与发现，不改工程 | 15 |
+| `SESSION` | 会话与发现，包含工程保存、另存与关闭；写操作须审批 | 16 |
 | `READ` | 读取已打开工程，不改动 | 152 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 197 |
-| `FILE` | 导出/导入文件或生成离线产物 | 52 |
+| `FILE` | 导出/导入文件或生成离线产物 | 51 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 34 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
@@ -160,7 +160,7 @@
 | `RetrieveProjectArchive` | L2 | WRITE | Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: "RetrieveProjectArchive"), optionally operation or language. |
 | `RunTestSuiteCase` | L2 | EXECUTE | Typed Test Suite execution through the executor service of the category's system group: one definition (name), several (names) or the whole group (runAll) - RuleSetExecutor.Run(RuleSet \| IEnumerable<RuleSet> \| StyleGuideSystemGroup), TestCaseExecutor.Run(TestCase \| IEnumerable<TestCase> \| ApplicationTestSystemGroup, or with kind testSet ApplicationTestSet \| IEnumerable<ApplicationTestSet>), SystemTestCaseExecutor.Run(SystemTestCase \| IEnumerable<SystemTestCase> \| SystemTestSystemGroup). Returns the typed TestResults (state Success\|Information\|Warning\|Error, error / warning counts, recursive messages with path, state, description, UTC time) and testPassed. runAll on an empty group is refused (2.7.42 real project: the application executor answered a native NullReferenceException, the system executor 'No test case(s) in the selected project'; only the style-guide executor returned Success for an empty group). Default preview; application / system runs need confirmExternalExecution=true because they start a PLCSIM Advanced instance (SystemManaged) or use the configured instance / OPC UA server (official: SupportSimulationNotEnabledException / OpcUaServerAddressNotValidException / LicenseNotFoundException are the recoverable failures). No automatic save. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "RunTestSuiteCase"), optionally operation or language. |
 | `RunToolTransaction` | L2 | WRITE | Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save. Examples: GetToolUsage(toolName: "RunToolTransaction"), optionally operation or language. |
-| `SaveProjectCopy` | L2 | FILE* | Save current TIA-Portal project/session with a new name Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "SaveProjectCopy"), optionally operation or language. |
+| `SaveProjectCopy` | L2 | SESSION* | TIA Save As via Project.SaveAs: the open project and MCP binding switch to the new location. Unsaved changes are saved into the new copy; the original project file keeps its last saved state. Requires Workbench approval before dispatch, like SaveProject and CloseProject. Ordinary projects only; local sessions are refused. The result reports previousProjectFile and newProjectFile from the cached binding; confirm the new location with GetSessionState. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "SaveProjectCopy"), optionally operation or language. |
 | `ShowObjectInEditor` | L2 | WRITE | IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true. Examples: GetToolUsage(toolName: "ShowObjectInEditor"), optionally operation or language. |
 
 ### [Library]（13）

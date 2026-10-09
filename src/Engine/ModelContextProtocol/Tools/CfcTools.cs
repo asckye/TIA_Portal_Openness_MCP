@@ -85,7 +85,10 @@ namespace TiaMcpServer.ModelContextProtocol
             Outcome outcome = unknown ? Outcome.Unknown : rejection != null ? Outcome.RejectedBeforeOperation
                 : success == true ? Outcome.Succeeded : knownPartial ? Outcome.Partial
                 : writes && nativeKnown || verificationFailed ? Outcome.Failed : writes && !notStarted ? Outcome.Unknown : Outcome.ReadFailed;
-            Error? error = outcome == Outcome.Succeeded ? null : new Error("The optional-package operation did not establish success.",
+            string failureMessage = outcome == Outcome.RejectedBeforeOperation && rejection == "UNSUPPORTED_CAPABILITY"
+                && (tool == "ExchangeCfcCharts" || tool == "ManageCfcChartProtection") && data["unsupportedReason"] is JsonValue reason
+                && reason.TryGetValue<string>(out var guardReason) ? guardReason : "The optional-package operation did not establish success.";
+            Error? error = outcome == Outcome.Succeeded ? null : new Error(failureMessage,
                 outcome == Outcome.Unknown ? new OutcomeUnknownDetails("optional-package-operation", new Dictionary<string, JsonElement>())
                 : outcome == Outcome.Partial ? new PartialFailureDetails(imported, imported > 0 ? 1 : 0, 0)
                 : outcome == Outcome.RejectedBeforeOperation ? Rejection(rejection!, tool)
