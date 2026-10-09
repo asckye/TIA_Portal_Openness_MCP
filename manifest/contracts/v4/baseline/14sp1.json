@@ -16,6 +16,7 @@
         "ImportPlcBlocksFromDirectory",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
+        "ImportPlcTagTablesFromDirectory",
         "ImportPlcType"
       ],
       "family": "P6-IMPORT",
@@ -60,6 +61,7 @@
         "GenerateBlocksFromExternalSource",
         "ImportPlcExternalSource",
         "ListPlcExternalSources",
+        "ManagePlcExternalSources",
         "PlanPlcExternalSourceImport"
       ],
       "family": "P6-SOURCE",
@@ -68,6 +70,8 @@
     },
     {
       "entries": [
+        "CompileDevice",
+        "CompileHmiDiagnostics",
         "CompilePlcDiagnostics",
         "CompilePlcSoftware"
       ],
@@ -142,6 +146,60 @@
         "PlanGlobalLibraryTemplateReuse"
       ],
       "family": "F03",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "CreatePlcBlockGroup",
+        "CreatePlcTypeGroup",
+        "DeleteEmptyPlcBlockGroup",
+        "DeletePlcBlock",
+        "DeletePlcTagTable",
+        "DeletePlcType",
+        "ListPlcSystemGroups",
+        "ManagePlcBlockProtection",
+        "ManagePlcUserGroup",
+        "MovePlcBlockToGroup"
+      ],
+      "family": "F08",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "BuildAndImportPlcArtifact",
+        "CreatePlcInstanceDb",
+        "DescribePlcBlockLogic",
+        "GetPlcBlockEditCapabilities",
+        "GetPlcTagTableConstants",
+        "ImportPlcBlockVerified",
+        "ImportPlcTagTablesFromDirectory",
+        "ManagePlcTagDefinition",
+        "RepairAndReimportPlcBlock",
+        "SeedProjectFromReference",
+        "SetPlcProgram"
+      ],
+      "family": "F09",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "GeneratePlcSourceFromBlocks",
+        "GetPlcCrossReferences",
+        "ManagePlcExternalSources"
+      ],
+      "family": "F11",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "CompileDevice",
+        "CompileHmiDiagnostics"
+      ],
+      "family": "F17",
       "l5": "NOT RUN",
       "state": "current"
     },
@@ -664,6 +722,1611 @@
         "type": "object"
       },
       "name": "AuditEngineeringExports",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "904dd9583b8468074942a30fd5dab21897994a37be81539f36b9a838225c55cb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockGroupPath": {
+            "default": "",
+            "description": "blockGroupPath: PLC block group path for kind=globaldb|fc.",
+            "type": "string"
+          },
+          "compileAfter": {
+            "default": true,
+            "description": "compileAfter: compile PLC after import when dryRun=false.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true writes temporary candidate XML and returns the import plan without importing/compiling.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "kind: udt|tagtable|globaldb|fc|fb",
+            "enum": [
+              "udt",
+              "tagtable",
+              "globaldb",
+              "fc",
+              "fb"
+            ],
+            "examples": [
+              "fc"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          },
+          "spec": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "members": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "externalWritable": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "externalWritable": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "name": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "members"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "tableName": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "items": {
+                      "additionalProperties": false,
+                      "minProperties": 0,
+                      "properties": {
+                        "dataTypeName": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "logicalAddress": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "dataTypeName",
+                        "logicalAddress"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "tableName",
+                  "tags"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "dbName": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "dbNumber": {
+                    "maximum": 2147483647,
+                    "minimum": -2147483648,
+                    "type": "integer"
+                  },
+                  "staticMembers": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "externalWritable": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "startValue": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "externalWritable": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "startValue": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "dbName",
+                  "dbNumber",
+                  "staticMembers"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "blockName": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "blockNumber": {
+                    "maximum": 2147483647,
+                    "minimum": -2147483648,
+                    "type": "integer"
+                  },
+                  "commentZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "inputs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "networkCommentZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "networkTitleZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "outputs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "structuredText": {
+                    "additionalProperties": false,
+                    "minProperties": 0,
+                    "properties": {
+                      "firstUid": {
+                        "maximum": 2147483647,
+                        "minimum": -2147483648,
+                        "type": "integer"
+                      },
+                      "operations": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "minProperties": 0,
+                                  "properties": {
+                                    "indent": {
+                                      "maximum": 2147483647,
+                                      "minimum": -2147483648,
+                                      "type": "integer"
+                                    },
+                                    "op": {
+                                      "enum": [
+                                        "assign"
+                                      ],
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "source": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "op",
+                                    "target",
+                                    "source"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "minProperties": 0,
+                                  "properties": {
+                                    "indent": {
+                                      "maximum": 2147483647,
+                                      "minimum": -2147483648,
+                                      "type": "integer"
+                                    },
+                                    "literalValue": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "op": {
+                                      "enum": [
+                                        "assign"
+                                      ],
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "op",
+                                    "target",
+                                    "literalValue"
+                                  ],
+                                  "type": "object"
+                                }
+                              ]
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "condition": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                },
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "if",
+                                    "elsif"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "condition"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "else",
+                                    "endif"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "name": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "symbol",
+                                    "global",
+                                    "local"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "name"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "literal"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "value"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "token"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "text": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "text"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "count": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "blank"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "op": {
+                                  "enum": [
+                                    "newline"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "items": {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "sym": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "sym"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "token": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "token"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "lit": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "lit"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "raw": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "raw"
+                                        ],
+                                        "type": "object"
+                                      }
+                                    ]
+                                  },
+                                  "maxItems": 1000,
+                                  "minItems": 0,
+                                  "type": "array"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "line"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "items"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        },
+                        "maxItems": 1000,
+                        "minItems": 0,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "operations"
+                    ],
+                    "type": "object"
+                  },
+                  "titleZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "blockName",
+                  "blockNumber",
+                  "inputs",
+                  "outputs",
+                  "structuredText"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "blockName": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "blockNumber": {
+                    "maximum": 2147483647,
+                    "minimum": -2147483648,
+                    "type": "integer"
+                  },
+                  "commentZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "inouts": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "inputs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "networkCommentZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "networkTitleZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "outputs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "statics": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "structuredText": {
+                    "additionalProperties": false,
+                    "minProperties": 0,
+                    "properties": {
+                      "firstUid": {
+                        "maximum": 2147483647,
+                        "minimum": -2147483648,
+                        "type": "integer"
+                      },
+                      "operations": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "minProperties": 0,
+                                  "properties": {
+                                    "indent": {
+                                      "maximum": 2147483647,
+                                      "minimum": -2147483648,
+                                      "type": "integer"
+                                    },
+                                    "op": {
+                                      "enum": [
+                                        "assign"
+                                      ],
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "source": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "op",
+                                    "target",
+                                    "source"
+                                  ],
+                                  "type": "object"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "minProperties": 0,
+                                  "properties": {
+                                    "indent": {
+                                      "maximum": 2147483647,
+                                      "minimum": -2147483648,
+                                      "type": "integer"
+                                    },
+                                    "literalValue": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "op": {
+                                      "enum": [
+                                        "assign"
+                                      ],
+                                      "minLength": 0,
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "maxLength": 4096,
+                                      "minLength": 0,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "op",
+                                    "target",
+                                    "literalValue"
+                                  ],
+                                  "type": "object"
+                                }
+                              ]
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "condition": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                },
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "if",
+                                    "elsif"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "condition"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "else",
+                                    "endif"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "name": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "symbol",
+                                    "global",
+                                    "local"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "name"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "literal"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "value"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "token"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                },
+                                "text": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "text"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "count": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "blank"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "op": {
+                                  "enum": [
+                                    "newline"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "type": "object"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "minProperties": 0,
+                              "properties": {
+                                "indent": {
+                                  "maximum": 2147483647,
+                                  "minimum": -2147483648,
+                                  "type": "integer"
+                                },
+                                "items": {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "sym": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "sym"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "token": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "token"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "lit": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "lit"
+                                        ],
+                                        "type": "object"
+                                      },
+                                      {
+                                        "additionalProperties": false,
+                                        "minProperties": 0,
+                                        "properties": {
+                                          "raw": {
+                                            "maxLength": 4096,
+                                            "minLength": 0,
+                                            "pattern": "\\S",
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "raw"
+                                        ],
+                                        "type": "object"
+                                      }
+                                    ]
+                                  },
+                                  "maxItems": 1000,
+                                  "minItems": 0,
+                                  "type": "array"
+                                },
+                                "op": {
+                                  "enum": [
+                                    "line"
+                                  ],
+                                  "minLength": 0,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "items"
+                              ],
+                              "type": "object"
+                            }
+                          ]
+                        },
+                        "maxItems": 1000,
+                        "minItems": 0,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "operations"
+                    ],
+                    "type": "object"
+                  },
+                  "temps": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "comment": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "commentZhCn": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "datatype": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            "name": {
+                              "maxLength": 4096,
+                              "minLength": 0,
+                              "pattern": "\\S",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "datatype"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 1000,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "titleZhCn": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "blockName",
+                  "blockNumber",
+                  "structuredText"
+                ],
+                "type": "object"
+              }
+            ],
+            "description": "spec: PlcArtifactSpec(kind). Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
+          },
+          "tagFolderPath": {
+            "default": "",
+            "description": "tagFolderPath: PLC tag table group path for kind=tagtable.",
+            "type": "string"
+          },
+          "typeGroupPath": {
+            "default": "",
+            "description": "typeGroupPath: PLC data type group path for kind=udt.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "kind",
+          "spec"
+        ],
+        "type": "object"
+      },
+      "name": "BuildAndImportPlcArtifact",
       "outputSchema": null
     },
     {
@@ -4938,6 +6601,60 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "8192891511d2fbc11bde677d9222f8dcdcd15754628a72953f488bffc8bc52aa",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "description": "devicePath: array naming the station to compile, e.g. [\"PLC_1\"].",
+            "examples": [
+              [
+                "PLC_1"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "itemPath": {
+            "description": "itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "CompileDevice",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "5981a58e5e23afe55696e4df89f72ca34758bf104326fd981eefcf30262088e4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: HMI software path, e.g. 'HMI_RT_1'",
+            "examples": [
+              "HMI_RT_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "CompileHmiDiagnostics",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "5d8e1f45eae8d0efc8120e3d0e305e9e8076e87a655cb8a840ad8f8bc95fdb51",
       "inputSchema": {
         "additionalProperties": false,
@@ -5504,6 +7221,77 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "da18614d0ec69402f40565dfd663c6b9afd8494b4ad5b31ec050365dc8a3ef5b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "groupPath": {
+            "description": "groupPath: '/'-separated group path under Program blocks, e.g. '01_手动控制/手动意图'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcBlockGroup",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "b370d631ad028eb2f48f21e74d85ca2c85bd00c8677c2d7d52cd3cc209a13389",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "autoNumber": {
+            "default": true,
+            "description": "autoNumber: true lets TIA assign the block number.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "fbPath": {
+            "description": "fbPath: 'Group/Name' of the function block the instance DB is created for.",
+            "type": "string"
+          },
+          "groupPath": {
+            "default": "",
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "name": {
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "number": {
+            "default": 0,
+            "description": "number: block number when autoNumber is false.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "fbPath",
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcInstanceDb",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "a9880270f1f2159581fcf2b834859c40f7e8758d74333e5f6469df6f37cbf9c5",
       "inputSchema": {
         "additionalProperties": false,
@@ -5828,6 +7616,34 @@
       }
     },
     {
+      "descriptionSha256": "6ef8b2bbe0063d4e2f40f7191a48f334abef86c40a9b6315764d967f733d9568",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "groupPath": {
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcTypeGroup",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "9a0e9a3af8b81d5e4faba053f3f8a729a373d01c46b74654a40f6296ac34c0da",
       "inputSchema": {
         "additionalProperties": false,
@@ -6147,6 +7963,34 @@
       }
     },
     {
+      "descriptionSha256": "ef04611dceb97f30c76c7228e5d898e95fc281ae89ba02856be05fb43105022d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "groupPath": {
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath"
+        ],
+        "type": "object"
+      },
+      "name": "DeleteEmptyPlcBlockGroup",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "9285b824a715954683badb52e48f63c291b31a66119d56c0852af33bc9932781",
       "inputSchema": {
         "additionalProperties": false,
@@ -6164,6 +8008,39 @@
         "type": "object"
       },
       "name": "DeleteExportHandle",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ffd998f143f9b86151ccd88a5d562ca185d966340f40fcae3aebb27bf993db5d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.",
+            "type": "string"
+          },
+          "crossReferences": {
+            "default": false,
+            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "DeletePlcBlock",
       "outputSchema": null
     },
     {
@@ -6327,6 +8204,101 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "75bc00eb6580500ea5e95d62947cc7adaca4619def676eb61fb251a45e00ac9d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "crossReferences": {
+            "default": false,
+            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          },
+          "tagTableName": {
+            "description": "tagTableName: bare table name, or the group-qualified path from ListPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTableName"
+        ],
+        "type": "object"
+      },
+      "name": "DeletePlcTagTable",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "d6171723fd63b1cc567e169e9c1ea9359df3383d203f6db0b0175ba7f67045aa",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "crossReferences": {
+            "default": false,
+            "description": "crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "typePath"
+        ],
+        "type": "object"
+      },
+      "name": "DeletePlcType",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "95ce5ad6ff268290684f2f4dea412948be0efc837afb18f8428c99cabe8516f0",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "blockPath: fully qualified 'Group/Subgroup/Name' from GetSoftwareTree",
+            "examples": [
+              "Main"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path, e.g. '5T车' or 'PLC_1' (from GetProjectTree)",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "DescribePlcBlockLogic",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "26046978f87acaff918c9b39be46165e30b1dd53e07b3841485da1393195da37",
@@ -7904,6 +9876,42 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "ed7f2511ac63e76a95c88aed937f2564b2e163c09fcfbd3d21c10c469bd2716c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPaths": {
+            "description": "blockPaths: Array of block paths.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: new absolute native source file in an existing directory, e.g. FC_Ready.scl; the selected blocks determine the source language.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPaths",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "GeneratePlcSourceFromBlocks",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "d979eb5a041285af52b99c5a95abd9a252bfcd13e478d0ffe32efea3d34ccfa4",
       "inputSchema": {
         "additionalProperties": false,
@@ -8264,6 +10272,35 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "95836f7e6734cde128dbebdbda5e8ff0474af91fb3562b4147860da0bd94b010",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "default": "",
+            "description": "Exact group-qualified live block path; empty for file-only mode.",
+            "type": "string"
+          },
+          "filePath": {
+            "default": "",
+            "description": "Absolute exported SimaticML XML; mutually exclusive with blockPath.",
+            "examples": [
+              "C:\\Examples\\exports\\Main.xml"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "Exact PLC software path when exporting a live block.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetPlcBlockEditCapabilities",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "8f2c141cd38f7a74da8869e92738874b8e5599cb84f533b7d6fe631ad279a34d",
       "inputSchema": {
         "additionalProperties": false,
@@ -8531,6 +10568,130 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "3576cc684f4f2995cada90ec1bbcbce8e59be487009b8be312293c5ef32ede4a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "filter": {
+            "default": "AllObjects",
+            "description": "filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)",
+            "examples": [
+              "AllObjects"
+            ],
+            "type": "string"
+          },
+          "objectKind": {
+            "default": "Block",
+            "description": "objectKind: Block | Type | Tag | SystemConstant",
+            "enum": [
+              "Block",
+              "Type",
+              "Tag",
+              "SystemConstant"
+            ],
+            "examples": [
+              "Block"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope",
+            "examples": [
+              "Main"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: unit | safety. Empty unitName selects PLC root.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: exact software/safety unit; empty selects PLC root.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcCrossReferences",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "4c5d0949c2ef35ef159ec27cc197a369b735637a6f90a78aad6a3debf78e2091",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "default": "all",
+            "description": "kind: all | user | system.",
+            "enum": [
+              "all",
+              "user",
+              "system"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "default": 200,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "tablePath": {
+            "description": "tablePath: 'Group/Table' path of the table as the read tools show it.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tablePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcTagTableConstants",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "f309b68a5e1e5f614948409603993363182678b9d1dc18c3dccc79f0ea8178ad",
@@ -10129,6 +12290,72 @@
       }
     },
     {
+      "descriptionSha256": "3539fd04975cccd30d680af4cd968e9fc66f4ffd7cd143a4d5c5e21d7f193934",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact existing block path relative to Program blocks, e.g. Pumps/FB_Pump.",
+            "examples": [
+              "Pumps/FB_Pump"
+            ],
+            "type": "string"
+          },
+          "compileAfterImport": {
+            "default": false,
+            "description": "Explicitly compile only the imported block before readback; default false. Compilation is never run in preview.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "True exports a backup and preview only; false attempts the native import.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "evidenceDirectory": {
+            "description": "Absolute local folder for retained before/planned/after evidence, one new subdirectory per invocation.",
+            "examples": [
+              "C:\\Temp\\plc-backups"
+            ],
+            "type": "string"
+          },
+          "expectedToken": {
+            "default": "",
+            "description": "Token returned by the matching preview; binds session, project, target, current document, candidate and compile option.",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Absolute reviewed single-block SimaticML XML; name must equal the target.",
+            "examples": [
+              "C:\\Temp\\FB_Pump.edited.xml"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact PLC software path.",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath",
+          "importPath",
+          "evidenceDirectory"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcBlockVerified",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "07aafb4390e05952c9df88a9a50e0222f39bc3c4d3801f882026b85e5a72c2b5",
       "inputSchema": {
         "additionalProperties": false,
@@ -10846,6 +13073,44 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "ae5b84ac8e4c06d2cbfa7a3f1a4b087f1d33323142e401cc7b269e8e5bb2a8ed",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dir": {
+            "description": "dir: directory containing PLC tag table XML files",
+            "type": "string"
+          },
+          "folderPath": {
+            "description": "folderPath: optional tag table group path (use empty for root)",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": true,
+            "description": "overwrite: true=Override (default)",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: optional regex filter applied to filename without extension",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "dir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcTagTablesFromDirectory",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "f7f558e0cefce5214ee3ea17eee9ae74b2aa5fe090c2eac566e867624eda76a3",
@@ -11789,6 +14054,48 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "0749363664efba5708d92ddd02e45123e324949a31924254144fa2ec6418d6fa",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeBlocks": {
+            "default": true,
+            "description": "includeBlocks: true also returns the blocks of each chart / group.",
+            "type": "boolean"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcSystemGroups",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "967a8ab708d801007ab94cc489ae0e83c16f3fd69a4c072dcda0ceaf2330f8a8",
@@ -13551,6 +15858,355 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "ad38e696ee8383b2bd7e92122564e43cf1c12f982774ca26afc1f78419bd7a3f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - read | protect | unprotect.",
+            "enum": [
+              "read",
+              "protect",
+              "unprotect"
+            ],
+            "type": "string"
+          },
+          "blockPath": {
+            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "type": "string"
+          },
+          "confirmProtectionChange": {
+            "default": false,
+            "description": "confirmProtectionChange: must be true together with dryRun=false to change the protection.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "password": {
+            "default": "",
+            "description": "password: password when the object is protected; never logged.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcBlockProtection",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "70f9fdd87262511a5d3fe525c532031d5861fbc7235510c2b1ac6f3cf44b881b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: list | read | createFromFile | createFromMasterCopy | delete | generateBlocks | createGroup | renameGroup | deleteGroup.",
+            "enum": [
+              "list",
+              "read",
+              "createFromFile",
+              "createFromMasterCopy",
+              "delete",
+              "generateBlocks",
+              "createGroup",
+              "renameGroup",
+              "deleteGroup"
+            ],
+            "examples": [
+              "list"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false for delete / deleteGroup.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "copyMode": {
+            "default": "",
+            "description": "copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.",
+            "enum": [
+              "ThrowIfExists",
+              "Rename",
+              "Replace",
+              ""
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: for createFromFile - full path of the .scl / .awl / .stl / .db / .udt file on the TIA machine.",
+            "examples": [
+              "C:\\Temp\\FC_Add.scl"
+            ],
+            "type": "string"
+          },
+          "generateOption": {
+            "default": "None",
+            "description": "generateOption: for generateBlocks - None | KeepOnError.",
+            "enum": [
+              "None",
+              "KeepOnError"
+            ],
+            "type": "string"
+          },
+          "groupPath": {
+            "default": "",
+            "description": "groupPath: 'Folder/Subfolder' inside the external sources ('' = root).",
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: for createFromMasterCopy - global library name ('' = the project library).",
+            "type": "string"
+          },
+          "masterCopyPath": {
+            "default": "",
+            "description": "masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "description": "name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / deleteGroup).",
+            "examples": [
+              "FC_Add"
+            ],
+            "type": "string"
+          },
+          "newName": {
+            "default": "",
+            "description": "newName: for renameGroup.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          },
+          "targetGroupPath": {
+            "default": "",
+            "description": "targetGroupPath: for generateBlocks - block / type group that receives the result ('' = root).",
+            "type": "string"
+          },
+          "targetKind": {
+            "default": "",
+            "description": "targetKind: for generateBlocks - block | type ('' = the source decides).",
+            "enum": [
+              "block",
+              "type",
+              ""
+            ],
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: unit | safety - which unit collection unitName refers to.",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit holding the sources ('' = the PLC program).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcExternalSources",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "01c041debddd36c3cede1feaaefea9c6c552d3da45f451b0f93b6146fd67bb8f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: read | create | update | delete.",
+            "enum": [
+              "read",
+              "create",
+              "update",
+              "delete"
+            ],
+            "examples": [
+              "read"
+            ],
+            "type": "string"
+          },
+          "addressOrValue": {
+            "default": "",
+            "description": "addressOrValue: for create / update - logical address of a tag (e.g. %M0.0, %I0.0) or the value of a constant.",
+            "examples": [
+              "%M0.0"
+            ],
+            "type": "string"
+          },
+          "dataType": {
+            "default": "",
+            "description": "dataType: for create / update - PLC data type, e.g. Bool, Int, Real.",
+            "examples": [
+              "Bool"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes (project must be offline).",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "kind: tag | constant.",
+            "enum": [
+              "tag",
+              "constant"
+            ],
+            "examples": [
+              "tag"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "name: exact tag or constant name.",
+            "examples": [
+              "Ready"
+            ],
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "properties: Scalar attribute map of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; constants: Value; Comment: text).",
+            "type": "object"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          },
+          "tablePath": {
+            "description": "tablePath: 'Group/Table' path of the tag table, e.g. 'Default tag table'.",
+            "examples": [
+              "Default tag table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tablePath",
+          "name",
+          "kind",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcTagDefinition",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "2d592ce041dd173c15a38e5d85172e36adf958933147aa67ce70c2c30c642a9b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "create | rename | deleteEmpty. ",
+            "enum": [
+              "create",
+              "rename",
+              "deleteEmpty"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "family": {
+            "description": "blocks | types | tags | technology | watchTables | externalSources. PLC user-group family.",
+            "enum": [
+              "blocks",
+              "types",
+              "tags",
+              "technology",
+              "watchTables",
+              "externalSources"
+            ],
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "newName": {
+            "default": "",
+            "description": "newName: the new name (rename actions).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "family",
+          "groupPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcUserGroup",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "6197287744f660acc260d074755e2eba9683f2e852be6843c95080270a492e70",
       "inputSchema": {
         "additionalProperties": false,
@@ -13975,6 +16631,39 @@
         "type": "object"
       },
       "name": "ManageTransferArea",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "c4214b5ff316b2712cf100d423e16385220a63291e4f61c08f953e67ca2acf35",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "autoCreateGroup": {
+            "default": true,
+            "description": "autoCreateGroup: create the target group path if it does not exist (default true)",
+            "type": "boolean"
+          },
+          "blockName": {
+            "description": "blockName: exact block name to move (searched across all groups)",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
+            "type": "string"
+          },
+          "targetGroupPath": {
+            "description": "targetGroupPath: '/'-separated destination group under Program blocks, e.g. '02_手自动接口'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockName",
+          "targetGroupPath"
+        ],
+        "type": "object"
+      },
+      "name": "MovePlcBlockToGroup",
       "outputSchema": null
     },
     {
@@ -15691,6 +18380,39 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "2dca8420449e7957da32a672f74ce9257a38bdd00e5fce2017cdd0cda73975c7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "compileAfter": {
+            "default": true,
+            "description": "compileAfter: compile PLC after import",
+            "type": "boolean"
+          },
+          "groupPath": {
+            "default": "",
+            "description": "groupPath: block group path; use empty for root Program blocks",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "importPath: block XML path",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "RepairAndReimportPlcBlock",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "e0b645400471444d4a37fc35c2e62b753f119c569de4c177f7bf849b2e41d2ce",
       "inputSchema": {
         "additionalProperties": false,
@@ -16185,6 +18907,38 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "8fbf66d9343cd1ac2defb82a0cfced9164e6a08389e8b2534c256313932cf9ec",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "hmiSoftwarePath": {
+            "description": "hmiSoftwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          },
+          "placeholders": {
+            "description": "placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}",
+            "type": "object"
+          },
+          "plcSoftwarePath": {
+            "description": "plcSoftwarePath: path in the project structure to the PLC software",
+            "type": "string"
+          },
+          "referenceDir": {
+            "description": "referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plcSoftwarePath",
+          "hmiSoftwarePath",
+          "referenceDir"
+        ],
+        "type": "object"
+      },
+      "name": "SeedProjectFromReference",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "17dae950c7a85687fb21c395f5977837b5fed4deb831133d4ef7ef748a3d0d47",
       "inputSchema": {
         "additionalProperties": false,
@@ -16473,6 +19227,34 @@
         "type": "object"
       },
       "name": "SetPlcCpuSettings",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "66540a57fc27fdd2e37231e372db4293751d14a21fd1e6d84c95ba53ea19d978",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmUpdate": {
+            "default": false,
+            "description": "confirmUpdate: must be true together with dryRun=false to update the program.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "SetPlcProgram",
       "outputSchema": null
     },
     {

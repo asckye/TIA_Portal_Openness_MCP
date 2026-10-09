@@ -1,9 +1,9 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "028d97e480d5edb50f249dabea7878566affe73828ea5c624543bf6a473c6ee3",
+  "catalogSha256": "ccb7691a3b3b842123f56333d65a565583923e2c938bf6458be746ec5f312ee0",
   "uniqueTools": 511,
   "documents": 89,
-  "versionToolPairs": 2006,
+  "versionToolPairs": 2162,
   "offlineCallExecutions": 115,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,11 +48,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 162,
-      "checkedToolCount": 162,
+      "registeredToolCount": 188,
+      "checkedToolCount": 188,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 59,
+      "operationExampleCount": 78,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -169,6 +169,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildAndImportPlcArtifact",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -321,6 +333,26 @@
           "operations": []
         },
         {
+          "toolName": "CompileDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompileHmiDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CompilePlcDiagnostics",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -408,6 +440,30 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcInstanceDb",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTag",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -424,6 +480,15 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTypeGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
           ],
           "operations": []
         },
@@ -448,6 +513,18 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyPlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -455,7 +532,50 @@
           "operations": []
         },
         {
+          "toolName": "DeletePlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcType",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribePlcBlockLogic",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -634,6 +754,18 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcSourceFromBlocks",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetDeviceAddressing",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -807,6 +939,13 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcBlockEditCapabilities",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcBlockHierarchy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -827,6 +966,28 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcCrossReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcTagTableConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -968,6 +1129,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcBlockVerified",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcBlocksFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1005,6 +1178,16 @@
         },
         {
           "toolName": "ImportPlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcTagTablesFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -1128,6 +1311,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -1500,6 +1695,149 @@
           ]
         },
         {
+          "toolName": "ManagePlcBlockProtection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "protect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unprotect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcExternalSources",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromFile",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "generateBlocks",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "renameGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcTagDefinition",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcUserGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/sw-units/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SoftwareUnitsSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePortInterconnection",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1611,6 +1949,18 @@
               "releaseProblem": null
             }
           ]
+        },
+        {
+          "toolName": "MovePlcBlockToGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
         },
         {
           "toolName": "OpenProject",
@@ -1741,6 +2091,18 @@
           "operations": []
         },
         {
+          "toolName": "RepairAndReimportPlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -1813,6 +2175,16 @@
           "operations": []
         },
         {
+          "toolName": "SeedProjectFromReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SetDeviceAddress",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1874,6 +2246,18 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcProgram",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -1942,11 +2326,11 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 163,
-      "checkedToolCount": 163,
+      "registeredToolCount": 189,
+      "checkedToolCount": 189,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 59,
+      "operationExampleCount": 78,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -2063,6 +2447,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildAndImportPlcArtifact",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -2215,6 +2611,26 @@
           "operations": []
         },
         {
+          "toolName": "CompileDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompileHmiDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CompilePlcDiagnostics",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2302,6 +2718,30 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcInstanceDb",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTag",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2318,6 +2758,15 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTypeGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
           ],
           "operations": []
         },
@@ -2342,6 +2791,18 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyPlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -2349,7 +2810,50 @@
           "operations": []
         },
         {
+          "toolName": "DeletePlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcType",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribePlcBlockLogic",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -2528,6 +3032,18 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcSourceFromBlocks",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetDeviceAddressing",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2701,6 +3217,13 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcBlockEditCapabilities",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcBlockHierarchy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2721,6 +3244,28 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcCrossReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcTagTableConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -2862,6 +3407,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcBlockVerified",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcBlocksFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2899,6 +3456,16 @@
         },
         {
           "toolName": "ImportPlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcTagTablesFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -3022,6 +3589,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -3406,6 +3985,149 @@
           ]
         },
         {
+          "toolName": "ManagePlcBlockProtection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "protect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unprotect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcExternalSources",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromFile",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "generateBlocks",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "renameGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcTagDefinition",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcUserGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/sw-units/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SoftwareUnitsSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePortInterconnection",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3517,6 +4239,18 @@
               "releaseProblem": null
             }
           ]
+        },
+        {
+          "toolName": "MovePlcBlockToGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
         },
         {
           "toolName": "OpenProject",
@@ -3647,6 +4381,18 @@
           "operations": []
         },
         {
+          "toolName": "RepairAndReimportPlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -3719,6 +4465,16 @@
           "operations": []
         },
         {
+          "toolName": "SeedProjectFromReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SetDeviceAddress",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3780,6 +4536,18 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcProgram",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -3848,11 +4616,11 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 165,
-      "checkedToolCount": 165,
+      "registeredToolCount": 191,
+      "checkedToolCount": 191,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 59,
+      "operationExampleCount": 78,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -3969,6 +4737,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildAndImportPlcArtifact",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -4121,6 +4901,26 @@
           "operations": []
         },
         {
+          "toolName": "CompileDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompileHmiDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CompilePlcDiagnostics",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4208,6 +5008,30 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcInstanceDb",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTag",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4224,6 +5048,15 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTypeGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
           ],
           "operations": []
         },
@@ -4248,6 +5081,18 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyPlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -4255,7 +5100,50 @@
           "operations": []
         },
         {
+          "toolName": "DeletePlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcType",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribePlcBlockLogic",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -4456,6 +5344,18 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcSourceFromBlocks",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetDeviceAddressing",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4629,6 +5529,13 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcBlockEditCapabilities",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcBlockHierarchy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4649,6 +5556,28 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcCrossReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcTagTableConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -4790,6 +5719,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcBlockVerified",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcBlocksFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4827,6 +5768,16 @@
         },
         {
           "toolName": "ImportPlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcTagTablesFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -4950,6 +5901,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -5334,6 +6297,149 @@
           ]
         },
         {
+          "toolName": "ManagePlcBlockProtection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "protect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unprotect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcExternalSources",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromFile",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "generateBlocks",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "renameGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcTagDefinition",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcUserGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/sw-units/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SoftwareUnitsSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePortInterconnection",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5445,6 +6551,18 @@
               "releaseProblem": null
             }
           ]
+        },
+        {
+          "toolName": "MovePlcBlockToGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
         },
         {
           "toolName": "OpenProject",
@@ -5575,6 +6693,18 @@
           "operations": []
         },
         {
+          "toolName": "RepairAndReimportPlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -5647,6 +6777,16 @@
           "operations": []
         },
         {
+          "toolName": "SeedProjectFromReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SetDeviceAddress",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5708,6 +6848,18 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcProgram",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -5776,11 +6928,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 165,
-      "checkedToolCount": 165,
+      "registeredToolCount": 191,
+      "checkedToolCount": 191,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 59,
+      "operationExampleCount": 78,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -5897,6 +7049,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildAndImportPlcArtifact",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -6049,6 +7213,26 @@
           "operations": []
         },
         {
+          "toolName": "CompileDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompileHmiDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CompilePlcDiagnostics",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6136,6 +7320,30 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcInstanceDb",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTag",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6152,6 +7360,15 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTypeGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
           ],
           "operations": []
         },
@@ -6176,6 +7393,18 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyPlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -6183,7 +7412,50 @@
           "operations": []
         },
         {
+          "toolName": "DeletePlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcType",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribePlcBlockLogic",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -6384,6 +7656,18 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcSourceFromBlocks",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetDeviceAddressing",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6557,6 +7841,13 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcBlockEditCapabilities",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcBlockHierarchy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6577,6 +7868,28 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcCrossReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcTagTableConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -6718,6 +8031,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcBlockVerified",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcBlocksFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6755,6 +8080,16 @@
         },
         {
           "toolName": "ImportPlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcTagTablesFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -6878,6 +8213,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -7262,6 +8609,149 @@
           ]
         },
         {
+          "toolName": "ManagePlcBlockProtection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "protect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unprotect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcExternalSources",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromFile",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "generateBlocks",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "renameGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcTagDefinition",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcUserGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/sw-units/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SoftwareUnitsSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePortInterconnection",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7373,6 +8863,18 @@
               "releaseProblem": null
             }
           ]
+        },
+        {
+          "toolName": "MovePlcBlockToGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
         },
         {
           "toolName": "OpenProject",
@@ -7503,6 +9005,18 @@
           "operations": []
         },
         {
+          "toolName": "RepairAndReimportPlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -7575,6 +9089,16 @@
           "operations": []
         },
         {
+          "toolName": "SeedProjectFromReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SetDeviceAddress",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -7636,6 +9160,18 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcProgram",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -7704,11 +9240,11 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 165,
-      "checkedToolCount": 165,
+      "registeredToolCount": 191,
+      "checkedToolCount": 191,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 59,
+      "operationExampleCount": 78,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -7825,6 +9361,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildAndImportPlcArtifact",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -7977,6 +9525,26 @@
           "operations": []
         },
         {
+          "toolName": "CompileDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompileHmiDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CompilePlcDiagnostics",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8064,6 +9632,30 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcInstanceDb",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTag",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8080,6 +9672,15 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTypeGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
           ],
           "operations": []
         },
@@ -8104,6 +9705,18 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyPlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8111,7 +9724,50 @@
           "operations": []
         },
         {
+          "toolName": "DeletePlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcType",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribePlcBlockLogic",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -8312,6 +9968,18 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcSourceFromBlocks",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetDeviceAddressing",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8485,6 +10153,13 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcBlockEditCapabilities",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcBlockHierarchy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8505,6 +10180,28 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcCrossReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcTagTableConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -8646,6 +10343,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcBlockVerified",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcBlocksFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8683,6 +10392,16 @@
         },
         {
           "toolName": "ImportPlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcTagTablesFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -8806,6 +10525,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -9190,6 +10921,149 @@
           ]
         },
         {
+          "toolName": "ManagePlcBlockProtection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "protect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unprotect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcExternalSources",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromFile",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "generateBlocks",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "renameGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcTagDefinition",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcUserGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/sw-units/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SoftwareUnitsSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePortInterconnection",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -9301,6 +11175,18 @@
               "releaseProblem": null
             }
           ]
+        },
+        {
+          "toolName": "MovePlcBlockToGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
         },
         {
           "toolName": "OpenProject",
@@ -9431,6 +11317,18 @@
           "operations": []
         },
         {
+          "toolName": "RepairAndReimportPlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -9503,6 +11401,16 @@
           "operations": []
         },
         {
+          "toolName": "SeedProjectFromReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SetDeviceAddress",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -9564,6 +11472,18 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcProgram",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -9632,11 +11552,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 175,
-      "checkedToolCount": 175,
+      "registeredToolCount": 201,
+      "checkedToolCount": 201,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 61,
+      "operationExampleCount": 80,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -9761,6 +11681,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BuildAndImportPlcArtifact",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -9948,6 +11880,26 @@
           "operations": []
         },
         {
+          "toolName": "CompileDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CompileHmiDiagnostics",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "CompilePlcDiagnostics",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10048,6 +12000,30 @@
           "operations": []
         },
         {
+          "toolName": "CreatePlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcInstanceDb",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "CreatePlcTag",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10064,6 +12040,15 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreatePlcTypeGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
           ],
           "operations": []
         },
@@ -10088,6 +12073,18 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyPlcBlockGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -10095,7 +12092,50 @@
           "operations": []
         },
         {
+          "toolName": "DeletePlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "DeletePlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DeletePlcType",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "DescribePlcBlockLogic",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -10296,6 +12336,18 @@
           "operations": []
         },
         {
+          "toolName": "GeneratePlcSourceFromBlocks",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetDeviceAddressing",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10469,6 +12521,13 @@
           "operations": []
         },
         {
+          "toolName": "GetPlcBlockEditCapabilities",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetPlcBlockHierarchy",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10489,6 +12548,28 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcCrossReferences",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "GetPlcTagTableConstants",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
           "operations": []
         },
@@ -10630,6 +12711,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcBlockVerified",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcBlocksFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10667,6 +12760,16 @@
         },
         {
           "toolName": "ImportPlcTagTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcTagTablesFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -10790,6 +12893,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -11174,6 +13289,149 @@
           ]
         },
         {
+          "toolName": "ManagePlcBlockProtection",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "protect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "unprotect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcExternalSources",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromFile",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createFromMasterCopy",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "generateBlocks",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "renameGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteGroup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcTagDefinition",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/tags-and-tagtables/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManagePlcUserGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/sw-units/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/SoftwareUnitsSnippets.cs"
+          ],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePortInterconnection",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -11305,6 +13563,18 @@
           ]
         },
         {
+          "toolName": "MovePlcBlockToGroup",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "OpenProject",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -11433,6 +13703,18 @@
           "operations": []
         },
         {
+          "toolName": "RepairAndReimportPlcBlock",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "RestartOpennessWorker",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -11525,6 +13807,16 @@
           "operations": []
         },
         {
+          "toolName": "SeedProjectFromReference",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/session-and-project/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SetDeviceAddress",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -11586,6 +13878,18 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "SetPlcProgram",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },

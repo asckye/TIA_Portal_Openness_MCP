@@ -422,6 +422,30 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F08",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F09",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -464,6 +488,30 @@
     },
     {
       "releaseKey": "15.1",
+      "family": "F08",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F09",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -506,6 +554,30 @@
     },
     {
       "releaseKey": "16",
+      "family": "F08",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F09",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -548,6 +620,30 @@
     },
     {
       "releaseKey": "17",
+      "family": "F08",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F09",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -590,6 +686,30 @@
     },
     {
       "releaseKey": "18",
+      "family": "F08",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F09",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F17",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F18",
       "state": "current",
       "l5": "NOT RUN"
@@ -627,6 +747,30 @@
     {
       "releaseKey": "19",
       "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F08",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F09",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F17",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -685,6 +829,31 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "CompilePlcDiagnostics",
       "family": "P6-COMPILE",
       "example": {
@@ -953,6 +1122,25 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ImportPlcType",
       "family": "P6-IMPORT",
       "example": {
@@ -974,6 +1162,22 @@
       "example": {
         "softwarePath": "",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -1046,6 +1250,31 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "CompilePlcDiagnostics",
       "family": "P6-COMPILE",
       "example": {
@@ -1314,6 +1543,25 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ImportPlcType",
       "family": "P6-IMPORT",
       "example": {
@@ -1335,6 +1583,22 @@
       "example": {
         "softwarePath": "",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -1407,6 +1671,31 @@
     },
     {
       "releaseKey": "16",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "CompilePlcDiagnostics",
       "family": "P6-COMPILE",
       "example": {
@@ -1675,6 +1964,25 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ImportPlcType",
       "family": "P6-IMPORT",
       "example": {
@@ -1696,6 +2004,22 @@
       "example": {
         "softwarePath": "",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -1768,6 +2092,31 @@
     },
     {
       "releaseKey": "17",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "CompilePlcDiagnostics",
       "family": "P6-COMPILE",
       "example": {
@@ -2036,6 +2385,25 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ImportPlcType",
       "family": "P6-IMPORT",
       "example": {
@@ -2057,6 +2425,22 @@
       "example": {
         "softwarePath": "",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -2129,6 +2513,31 @@
     },
     {
       "releaseKey": "18",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "CompilePlcDiagnostics",
       "family": "P6-COMPILE",
       "example": {
@@ -2397,6 +2806,25 @@
     },
     {
       "releaseKey": "18",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "ImportPlcType",
       "family": "P6-IMPORT",
       "example": {
@@ -2418,6 +2846,22 @@
       "example": {
         "softwarePath": "",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -2490,6 +2934,31 @@
     },
     {
       "releaseKey": "19",
+      "entry": "CompileDevice",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "devicePath": [
+          "Device_1"
+        ],
+        "itemPath": []
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompileHmiDiagnostics",
+      "family": "P6-COMPILE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "offlinePolicy": "require",
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "CompilePlcDiagnostics",
       "family": "P6-COMPILE",
       "example": {
@@ -2770,6 +3239,25 @@
     },
     {
       "releaseKey": "19",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "P6-IMPORT",
+      "example": {
+        "softwarePath": "&lt;exact PLC software path&gt;",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "versionPolicy": "exact",
+        "onError": "stop",
+        "compileAfter": false,
+        "dir": "C:\\reviewed-imports",
+        "folderPath": "",
+        "importOrder": [
+          "Object_1.xml"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "ImportPlcType",
       "family": "P6-IMPORT",
       "example": {
@@ -2791,6 +3279,22 @@
       "example": {
         "softwarePath": "",
         "groupPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcExternalSources",
+      "family": "P6-SOURCE",
+      "example": {
+        "softwarePath": "",
+        "groupPath": "",
+        "mode": "preview",
+        "confirm": false,
+        "overwrite": false,
+        "onError": "stop",
+        "missingPolicy": "reject",
+        "sourceName": "Source_1.scl",
+        "action": "list"
       }
     },
     {
@@ -4501,6 +5005,309 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "CreatePlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreatePlcTypeGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DeleteEmptyPlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DeletePlcBlock",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DeletePlcTagTable",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagTableName": "Default tag table",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DeletePlcType",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "typePath": "UDT_Status",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcBlockProtection",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmProtectionChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcUserGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "family": "blocks",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "MovePlcBlockToGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockName": "FC_Example",
+        "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreatePlcInstanceDb",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "fbPath": "FB_Motor",
+        "name": "Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcTagDefinition",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table",
+        "name": "Ready",
+        "kind": "tag",
+        "action": "read",
+        "dataType": "Bool",
+        "addressOrValue": "%M0.0",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SetPlcProgram",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmUpdate": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcTagTableConstants",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcBlockEditCapabilities",
+      "family": "F09",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcBlockVerified",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Pumps/FB_Pump",
+        "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+        "evidenceDirectory": "C:\\Temp\\plc-backups",
+        "dryRun": true,
+        "compileAfterImport": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "BuildAndImportPlcArtifact",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "kind": "fc",
+        "dryRun": true,
+        "spec": {
+          "blockName": "FC_DryRun",
+          "blockNumber": 12,
+          "inputs": [
+            {
+              "name": "Start",
+              "datatype": "Bool"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Run",
+              "datatype": "Bool"
+            }
+          ],
+          "structuredText": {
+            "operations": [
+              {
+                "op": "if",
+                "condition": "Start"
+              },
+              {
+                "op": "assign",
+                "target": "Run",
+                "indent": 2,
+                "literalValue": "TRUE"
+              },
+              {
+                "op": "endif"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DescribePlcBlockLogic",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RepairAndReimportPlcBlock",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SeedProjectFromReference",
+      "family": "F09",
+      "example": {
+        "plcSoftwarePath": "PLC_1",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "referenceDir": "C:\\Examples\\reference"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GeneratePlcSourceFromBlocks",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+        "dryRun": true,
+        "blockPaths": [
+          "FC_Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcExternalSources",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "name": "FC_Add",
+        "filePath": "C:\\Temp\\FC_Add.scl",
+        "dryRun": true,
+        "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPlcCrossReferences",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Main",
+        "objectKind": "Block",
+        "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CompileDevice",
+      "family": "F17",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CompileHmiDiagnostics",
+      "family": "F17",
+      "example": {
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -5375,6 +6182,309 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "CreatePlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreatePlcTypeGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DeleteEmptyPlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DeletePlcBlock",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DeletePlcTagTable",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagTableName": "Default tag table",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DeletePlcType",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "typePath": "UDT_Status",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcBlockProtection",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmProtectionChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcUserGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "family": "blocks",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "MovePlcBlockToGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockName": "FC_Example",
+        "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreatePlcInstanceDb",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "fbPath": "FB_Motor",
+        "name": "Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcTagDefinition",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table",
+        "name": "Ready",
+        "kind": "tag",
+        "action": "read",
+        "dataType": "Bool",
+        "addressOrValue": "%M0.0",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetPlcProgram",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmUpdate": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcTagTableConstants",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcBlockEditCapabilities",
+      "family": "F09",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcBlockVerified",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Pumps/FB_Pump",
+        "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+        "evidenceDirectory": "C:\\Temp\\plc-backups",
+        "dryRun": true,
+        "compileAfterImport": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "BuildAndImportPlcArtifact",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "kind": "fc",
+        "dryRun": true,
+        "spec": {
+          "blockName": "FC_DryRun",
+          "blockNumber": 12,
+          "inputs": [
+            {
+              "name": "Start",
+              "datatype": "Bool"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Run",
+              "datatype": "Bool"
+            }
+          ],
+          "structuredText": {
+            "operations": [
+              {
+                "op": "if",
+                "condition": "Start"
+              },
+              {
+                "op": "assign",
+                "target": "Run",
+                "indent": 2,
+                "literalValue": "TRUE"
+              },
+              {
+                "op": "endif"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DescribePlcBlockLogic",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RepairAndReimportPlcBlock",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SeedProjectFromReference",
+      "family": "F09",
+      "example": {
+        "plcSoftwarePath": "PLC_1",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "referenceDir": "C:\\Examples\\reference"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GeneratePlcSourceFromBlocks",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+        "dryRun": true,
+        "blockPaths": [
+          "FC_Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcExternalSources",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "name": "FC_Add",
+        "filePath": "C:\\Temp\\FC_Add.scl",
+        "dryRun": true,
+        "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcCrossReferences",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Main",
+        "objectKind": "Block",
+        "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CompileDevice",
+      "family": "F17",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CompileHmiDiagnostics",
+      "family": "F17",
+      "example": {
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -6249,6 +7359,309 @@
     },
     {
       "releaseKey": "16",
+      "entry": "CreatePlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreatePlcTypeGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DeleteEmptyPlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DeletePlcBlock",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DeletePlcTagTable",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagTableName": "Default tag table",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DeletePlcType",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "typePath": "UDT_Status",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcBlockProtection",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmProtectionChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcUserGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "family": "blocks",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "MovePlcBlockToGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockName": "FC_Example",
+        "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreatePlcInstanceDb",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "fbPath": "FB_Motor",
+        "name": "Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcTagDefinition",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table",
+        "name": "Ready",
+        "kind": "tag",
+        "action": "read",
+        "dataType": "Bool",
+        "addressOrValue": "%M0.0",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetPlcProgram",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmUpdate": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcTagTableConstants",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcBlockEditCapabilities",
+      "family": "F09",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcBlockVerified",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Pumps/FB_Pump",
+        "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+        "evidenceDirectory": "C:\\Temp\\plc-backups",
+        "dryRun": true,
+        "compileAfterImport": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "BuildAndImportPlcArtifact",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "kind": "fc",
+        "dryRun": true,
+        "spec": {
+          "blockName": "FC_DryRun",
+          "blockNumber": 12,
+          "inputs": [
+            {
+              "name": "Start",
+              "datatype": "Bool"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Run",
+              "datatype": "Bool"
+            }
+          ],
+          "structuredText": {
+            "operations": [
+              {
+                "op": "if",
+                "condition": "Start"
+              },
+              {
+                "op": "assign",
+                "target": "Run",
+                "indent": 2,
+                "literalValue": "TRUE"
+              },
+              {
+                "op": "endif"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DescribePlcBlockLogic",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RepairAndReimportPlcBlock",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SeedProjectFromReference",
+      "family": "F09",
+      "example": {
+        "plcSoftwarePath": "PLC_1",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "referenceDir": "C:\\Examples\\reference"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GeneratePlcSourceFromBlocks",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+        "dryRun": true,
+        "blockPaths": [
+          "FC_Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcExternalSources",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "name": "FC_Add",
+        "filePath": "C:\\Temp\\FC_Add.scl",
+        "dryRun": true,
+        "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcCrossReferences",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Main",
+        "objectKind": "Block",
+        "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CompileDevice",
+      "family": "F17",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CompileHmiDiagnostics",
+      "family": "F17",
+      "example": {
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -7123,6 +8536,309 @@
     },
     {
       "releaseKey": "17",
+      "entry": "CreatePlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreatePlcTypeGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DeleteEmptyPlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DeletePlcBlock",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DeletePlcTagTable",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagTableName": "Default tag table",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DeletePlcType",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "typePath": "UDT_Status",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcBlockProtection",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmProtectionChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcUserGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "family": "blocks",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "MovePlcBlockToGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockName": "FC_Example",
+        "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreatePlcInstanceDb",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "fbPath": "FB_Motor",
+        "name": "Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcTagDefinition",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table",
+        "name": "Ready",
+        "kind": "tag",
+        "action": "read",
+        "dataType": "Bool",
+        "addressOrValue": "%M0.0",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetPlcProgram",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmUpdate": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcTagTableConstants",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcBlockEditCapabilities",
+      "family": "F09",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcBlockVerified",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Pumps/FB_Pump",
+        "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+        "evidenceDirectory": "C:\\Temp\\plc-backups",
+        "dryRun": true,
+        "compileAfterImport": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "BuildAndImportPlcArtifact",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "kind": "fc",
+        "dryRun": true,
+        "spec": {
+          "blockName": "FC_DryRun",
+          "blockNumber": 12,
+          "inputs": [
+            {
+              "name": "Start",
+              "datatype": "Bool"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Run",
+              "datatype": "Bool"
+            }
+          ],
+          "structuredText": {
+            "operations": [
+              {
+                "op": "if",
+                "condition": "Start"
+              },
+              {
+                "op": "assign",
+                "target": "Run",
+                "indent": 2,
+                "literalValue": "TRUE"
+              },
+              {
+                "op": "endif"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DescribePlcBlockLogic",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RepairAndReimportPlcBlock",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SeedProjectFromReference",
+      "family": "F09",
+      "example": {
+        "plcSoftwarePath": "PLC_1",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "referenceDir": "C:\\Examples\\reference"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GeneratePlcSourceFromBlocks",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+        "dryRun": true,
+        "blockPaths": [
+          "FC_Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcExternalSources",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "name": "FC_Add",
+        "filePath": "C:\\Temp\\FC_Add.scl",
+        "dryRun": true,
+        "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcCrossReferences",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Main",
+        "objectKind": "Block",
+        "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CompileDevice",
+      "family": "F17",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CompileHmiDiagnostics",
+      "family": "F17",
+      "example": {
+        "softwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "CreateDevice",
       "family": "F18",
       "example": {
@@ -7993,6 +9709,309 @@
       "family": "F03",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreatePlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreatePlcTypeGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DeleteEmptyPlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DeletePlcBlock",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DeletePlcTagTable",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagTableName": "Default tag table",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DeletePlcType",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "typePath": "UDT_Status",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcBlockProtection",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmProtectionChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcUserGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "family": "blocks",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "MovePlcBlockToGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockName": "FC_Example",
+        "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreatePlcInstanceDb",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "fbPath": "FB_Motor",
+        "name": "Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcTagDefinition",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table",
+        "name": "Ready",
+        "kind": "tag",
+        "action": "read",
+        "dataType": "Bool",
+        "addressOrValue": "%M0.0",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetPlcProgram",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmUpdate": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcTagTableConstants",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcBlockEditCapabilities",
+      "family": "F09",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcBlockVerified",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Pumps/FB_Pump",
+        "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+        "evidenceDirectory": "C:\\Temp\\plc-backups",
+        "dryRun": true,
+        "compileAfterImport": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildAndImportPlcArtifact",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "kind": "fc",
+        "dryRun": true,
+        "spec": {
+          "blockName": "FC_DryRun",
+          "blockNumber": 12,
+          "inputs": [
+            {
+              "name": "Start",
+              "datatype": "Bool"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Run",
+              "datatype": "Bool"
+            }
+          ],
+          "structuredText": {
+            "operations": [
+              {
+                "op": "if",
+                "condition": "Start"
+              },
+              {
+                "op": "assign",
+                "target": "Run",
+                "indent": 2,
+                "literalValue": "TRUE"
+              },
+              {
+                "op": "endif"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DescribePlcBlockLogic",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RepairAndReimportPlcBlock",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SeedProjectFromReference",
+      "family": "F09",
+      "example": {
+        "plcSoftwarePath": "PLC_1",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "referenceDir": "C:\\Examples\\reference"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GeneratePlcSourceFromBlocks",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+        "dryRun": true,
+        "blockPaths": [
+          "FC_Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcExternalSources",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "name": "FC_Add",
+        "filePath": "C:\\Temp\\FC_Add.scl",
+        "dryRun": true,
+        "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcCrossReferences",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Main",
+        "objectKind": "Block",
+        "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompileDevice",
+      "family": "F17",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompileHmiDiagnostics",
+      "family": "F17",
+      "example": {
+        "softwarePath": "HMI_RT_1"
       }
     },
     {
@@ -8955,6 +10974,309 @@
       "entry": "RunHmiActionScriptRecipeSafetySelfTest",
       "family": "F03",
       "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreatePlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreatePlcTypeGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeleteEmptyPlcBlockGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeletePlcBlock",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeletePlcTagTable",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagTableName": "Default tag table",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeletePlcType",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "typePath": "UDT_Status",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcBlockProtection",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "action": "read",
+        "confirmProtectionChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcUserGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "family": "blocks",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "MovePlcBlockToGroup",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockName": "FC_Example",
+        "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreatePlcInstanceDb",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "fbPath": "FB_Motor",
+        "name": "Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcTagDefinition",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table",
+        "name": "Ready",
+        "kind": "tag",
+        "action": "read",
+        "dataType": "Bool",
+        "addressOrValue": "%M0.0",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetPlcProgram",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmUpdate": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcTagTableConstants",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tablePath": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcBlockEditCapabilities",
+      "family": "F09",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcBlockVerified",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Pumps/FB_Pump",
+        "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+        "evidenceDirectory": "C:\\Temp\\plc-backups",
+        "dryRun": true,
+        "compileAfterImport": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildAndImportPlcArtifact",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "kind": "fc",
+        "dryRun": true,
+        "spec": {
+          "blockName": "FC_DryRun",
+          "blockNumber": 12,
+          "inputs": [
+            {
+              "name": "Start",
+              "datatype": "Bool"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Run",
+              "datatype": "Bool"
+            }
+          ],
+          "structuredText": {
+            "operations": [
+              {
+                "op": "if",
+                "condition": "Start"
+              },
+              {
+                "op": "assign",
+                "target": "Run",
+                "indent": 2,
+                "literalValue": "TRUE"
+              },
+              {
+                "op": "endif"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DescribePlcBlockLogic",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RepairAndReimportPlcBlock",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcTagTablesFromDirectory",
+      "family": "F09",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SeedProjectFromReference",
+      "family": "F09",
+      "example": {
+        "plcSoftwarePath": "PLC_1",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "referenceDir": "C:\\Examples\\reference"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GeneratePlcSourceFromBlocks",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+        "dryRun": true,
+        "blockPaths": [
+          "FC_Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcExternalSources",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "name": "FC_Add",
+        "filePath": "C:\\Temp\\FC_Add.scl",
+        "dryRun": true,
+        "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcCrossReferences",
+      "family": "F11",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Main",
+        "objectKind": "Block",
+        "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompileDevice",
+      "family": "F17",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompileHmiDiagnostics",
+      "family": "F17",
+      "example": {
+        "softwarePath": "HMI_RT_1"
+      }
     },
     {
       "releaseKey": "19",
@@ -26947,6 +29269,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileHmiDiagnostics",
+        "sourceName": "CompileAndDiagnoseHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompilePlcDiagnostics",
         "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
@@ -26957,6 +29291,20 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompileDevice",
+        "currentName": "CompileDevice",
+        "sourceName": "CompileDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -27099,6 +29447,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreatePlcBlockGroup",
+        "currentName": "CreatePlcBlockGroup",
+        "sourceName": "CreatePlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcInstanceDb",
+        "currentName": "CreatePlcInstanceDb",
+        "sourceName": "CreatePlcInstanceDb",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "fbPath": "FB_Motor",
+          "name": "Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -27129,6 +29505,20 @@
           "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcTypeGroup",
+        "currentName": "CreatePlcTypeGroup",
+        "sourceName": "CreatePlcTypeGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -27166,6 +29556,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyPlcBlockGroup",
+        "currentName": "DeleteEmptyPlcBlockGroup",
+        "sourceName": "DeleteEmptyPlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -27174,6 +29578,20 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcBlock",
+        "currentName": "DeletePlcBlock",
+        "sourceName": "DeletePlcBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -27190,6 +29608,47 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcTagTable",
+        "currentName": "DeletePlcTagTable",
+        "sourceName": "DeletePlcTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "Default tag table",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcType",
+        "currentName": "DeletePlcType",
+        "sourceName": "DeletePlcType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribePlcBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
+        "sourceName": "DescribeBlockLogic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -27457,6 +29916,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcSourceFromBlocks",
+        "currentName": "GeneratePlcSourceFromBlocks",
+        "sourceName": "GeneratePlcSourceFromBlocks",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -27490,6 +29966,21 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcCrossReferences",
+        "currentName": "GetPlcCrossReferences",
+        "sourceName": "GetCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Main",
+          "objectKind": "Block",
+          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -27788,6 +30279,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportPlcBlockVerified",
+        "currentName": "ImportPlcBlockVerified",
+        "sourceName": "ImportPlcBlockVerified",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Pumps/FB_Pump",
+          "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+          "evidenceDirectory": "C:\\Temp\\plc-backups",
+          "dryRun": true,
+          "compileAfterImport": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -27836,6 +30344,20 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcTagTablesFromDirectory",
+        "currentName": "ImportPlcTagTablesFromDirectory",
+        "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -28593,6 +31115,74 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcBlockProtection",
+        "currentName": "ManagePlcBlockProtection",
+        "sourceName": "ManagePlcBlockProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmProtectionChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcExternalSources",
+        "currentName": "ManagePlcExternalSources",
+        "sourceName": "ManagePlcExternalSources",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "name": "FC_Add",
+          "filePath": "C:\\Temp\\FC_Add.scl",
+          "dryRun": true,
+          "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTagDefinition",
+        "currentName": "ManagePlcTagDefinition",
+        "sourceName": "ManagePlcTagDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table",
+          "name": "Ready",
+          "kind": "tag",
+          "action": "read",
+          "dataType": "Bool",
+          "addressOrValue": "%M0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcUserGroup",
+        "currentName": "ManagePlcUserGroup",
+        "sourceName": "ManagePlcUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "family": "blocks",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePortInterconnection",
         "currentName": "ManagePortInterconnection",
         "sourceName": "ManagePortInterconnection",
@@ -28649,6 +31239,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MovePlcBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
+        "sourceName": "MoveBlockToGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockName": "FC_Example",
+          "targetGroupPath": "Examples"
         },
         "envelopeVersion": 4
       },
@@ -28758,6 +31362,53 @@
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildAndImportPlcArtifact",
+        "currentName": "BuildAndImportPlcArtifact",
+        "sourceName": "PlcBuildAndImport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
         "envelopeVersion": 4
       },
@@ -28951,6 +31602,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
+        "sourceName": "ReadPlcBlockEditCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -28960,6 +31623,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
+        "sourceName": "ReadPlcTagTableConstants",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -29099,6 +31787,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RepairAndReimportPlcBlock",
+        "currentName": "RepairAndReimportPlcBlock",
+        "sourceName": "RepairAndReimportBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -29194,6 +31895,20 @@
         ],
         "arguments": {
           "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SeedProjectFromReference",
+        "currentName": "SeedProjectFromReference",
+        "sourceName": "SeedProjectFromReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcSoftwarePath": "PLC_1",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "referenceDir": "C:\\Examples\\reference"
         },
         "envelopeVersion": 4
       },
@@ -29302,6 +32017,20 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcProgram",
+        "currentName": "SetPlcProgram",
+        "sourceName": "UpdatePlcProgram",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -29839,6 +32568,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileHmiDiagnostics",
+        "sourceName": "CompileAndDiagnoseHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompilePlcDiagnostics",
         "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
@@ -29849,6 +32590,20 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompileDevice",
+        "currentName": "CompileDevice",
+        "sourceName": "CompileDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -29991,6 +32746,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreatePlcBlockGroup",
+        "currentName": "CreatePlcBlockGroup",
+        "sourceName": "CreatePlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcInstanceDb",
+        "currentName": "CreatePlcInstanceDb",
+        "sourceName": "CreatePlcInstanceDb",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "fbPath": "FB_Motor",
+          "name": "Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -30021,6 +32804,20 @@
           "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcTypeGroup",
+        "currentName": "CreatePlcTypeGroup",
+        "sourceName": "CreatePlcTypeGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -30058,6 +32855,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyPlcBlockGroup",
+        "currentName": "DeleteEmptyPlcBlockGroup",
+        "sourceName": "DeleteEmptyPlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -30066,6 +32877,20 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcBlock",
+        "currentName": "DeletePlcBlock",
+        "sourceName": "DeletePlcBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -30082,6 +32907,47 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcTagTable",
+        "currentName": "DeletePlcTagTable",
+        "sourceName": "DeletePlcTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "Default tag table",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcType",
+        "currentName": "DeletePlcType",
+        "sourceName": "DeletePlcType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribePlcBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
+        "sourceName": "DescribeBlockLogic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -30349,6 +33215,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcSourceFromBlocks",
+        "currentName": "GeneratePlcSourceFromBlocks",
+        "sourceName": "GeneratePlcSourceFromBlocks",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -30382,6 +33265,21 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcCrossReferences",
+        "currentName": "GetPlcCrossReferences",
+        "sourceName": "GetCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Main",
+          "objectKind": "Block",
+          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -30692,6 +33590,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportPlcBlockVerified",
+        "currentName": "ImportPlcBlockVerified",
+        "sourceName": "ImportPlcBlockVerified",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Pumps/FB_Pump",
+          "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+          "evidenceDirectory": "C:\\Temp\\plc-backups",
+          "dryRun": true,
+          "compileAfterImport": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -30740,6 +33655,20 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcTagTablesFromDirectory",
+        "currentName": "ImportPlcTagTablesFromDirectory",
+        "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -31497,6 +34426,74 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcBlockProtection",
+        "currentName": "ManagePlcBlockProtection",
+        "sourceName": "ManagePlcBlockProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmProtectionChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcExternalSources",
+        "currentName": "ManagePlcExternalSources",
+        "sourceName": "ManagePlcExternalSources",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "name": "FC_Add",
+          "filePath": "C:\\Temp\\FC_Add.scl",
+          "dryRun": true,
+          "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTagDefinition",
+        "currentName": "ManagePlcTagDefinition",
+        "sourceName": "ManagePlcTagDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table",
+          "name": "Ready",
+          "kind": "tag",
+          "action": "read",
+          "dataType": "Bool",
+          "addressOrValue": "%M0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcUserGroup",
+        "currentName": "ManagePlcUserGroup",
+        "sourceName": "ManagePlcUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "family": "blocks",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePortInterconnection",
         "currentName": "ManagePortInterconnection",
         "sourceName": "ManagePortInterconnection",
@@ -31553,6 +34550,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MovePlcBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
+        "sourceName": "MoveBlockToGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockName": "FC_Example",
+          "targetGroupPath": "Examples"
         },
         "envelopeVersion": 4
       },
@@ -31662,6 +34673,53 @@
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildAndImportPlcArtifact",
+        "currentName": "BuildAndImportPlcArtifact",
+        "sourceName": "PlcBuildAndImport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
         "envelopeVersion": 4
       },
@@ -31855,6 +34913,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
+        "sourceName": "ReadPlcBlockEditCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -31864,6 +34934,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
+        "sourceName": "ReadPlcTagTableConstants",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -32003,6 +35098,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RepairAndReimportPlcBlock",
+        "currentName": "RepairAndReimportPlcBlock",
+        "sourceName": "RepairAndReimportBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -32098,6 +35206,20 @@
         ],
         "arguments": {
           "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SeedProjectFromReference",
+        "currentName": "SeedProjectFromReference",
+        "sourceName": "SeedProjectFromReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcSoftwarePath": "PLC_1",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "referenceDir": "C:\\Examples\\reference"
         },
         "envelopeVersion": 4
       },
@@ -32206,6 +35328,20 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcProgram",
+        "currentName": "SetPlcProgram",
+        "sourceName": "UpdatePlcProgram",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -32743,6 +35879,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileHmiDiagnostics",
+        "sourceName": "CompileAndDiagnoseHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompilePlcDiagnostics",
         "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
@@ -32753,6 +35901,20 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompileDevice",
+        "currentName": "CompileDevice",
+        "sourceName": "CompileDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -32895,6 +36057,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreatePlcBlockGroup",
+        "currentName": "CreatePlcBlockGroup",
+        "sourceName": "CreatePlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcInstanceDb",
+        "currentName": "CreatePlcInstanceDb",
+        "sourceName": "CreatePlcInstanceDb",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "fbPath": "FB_Motor",
+          "name": "Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -32925,6 +36115,20 @@
           "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcTypeGroup",
+        "currentName": "CreatePlcTypeGroup",
+        "sourceName": "CreatePlcTypeGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -32962,6 +36166,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyPlcBlockGroup",
+        "currentName": "DeleteEmptyPlcBlockGroup",
+        "sourceName": "DeleteEmptyPlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -32970,6 +36188,20 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcBlock",
+        "currentName": "DeletePlcBlock",
+        "sourceName": "DeletePlcBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -32986,6 +36218,47 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcTagTable",
+        "currentName": "DeletePlcTagTable",
+        "sourceName": "DeletePlcTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "Default tag table",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcType",
+        "currentName": "DeletePlcType",
+        "sourceName": "DeletePlcType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribePlcBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
+        "sourceName": "DescribeBlockLogic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -33285,6 +36558,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcSourceFromBlocks",
+        "currentName": "GeneratePlcSourceFromBlocks",
+        "sourceName": "GeneratePlcSourceFromBlocks",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -33318,6 +36608,21 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcCrossReferences",
+        "currentName": "GetPlcCrossReferences",
+        "sourceName": "GetCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Main",
+          "objectKind": "Block",
+          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -33628,6 +36933,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportPlcBlockVerified",
+        "currentName": "ImportPlcBlockVerified",
+        "sourceName": "ImportPlcBlockVerified",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Pumps/FB_Pump",
+          "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+          "evidenceDirectory": "C:\\Temp\\plc-backups",
+          "dryRun": true,
+          "compileAfterImport": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -33676,6 +36998,20 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcTagTablesFromDirectory",
+        "currentName": "ImportPlcTagTablesFromDirectory",
+        "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -34433,6 +37769,74 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcBlockProtection",
+        "currentName": "ManagePlcBlockProtection",
+        "sourceName": "ManagePlcBlockProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmProtectionChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcExternalSources",
+        "currentName": "ManagePlcExternalSources",
+        "sourceName": "ManagePlcExternalSources",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "name": "FC_Add",
+          "filePath": "C:\\Temp\\FC_Add.scl",
+          "dryRun": true,
+          "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTagDefinition",
+        "currentName": "ManagePlcTagDefinition",
+        "sourceName": "ManagePlcTagDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table",
+          "name": "Ready",
+          "kind": "tag",
+          "action": "read",
+          "dataType": "Bool",
+          "addressOrValue": "%M0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcUserGroup",
+        "currentName": "ManagePlcUserGroup",
+        "sourceName": "ManagePlcUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "family": "blocks",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePortInterconnection",
         "currentName": "ManagePortInterconnection",
         "sourceName": "ManagePortInterconnection",
@@ -34489,6 +37893,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MovePlcBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
+        "sourceName": "MoveBlockToGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockName": "FC_Example",
+          "targetGroupPath": "Examples"
         },
         "envelopeVersion": 4
       },
@@ -34598,6 +38016,53 @@
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildAndImportPlcArtifact",
+        "currentName": "BuildAndImportPlcArtifact",
+        "sourceName": "PlcBuildAndImport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
         "envelopeVersion": 4
       },
@@ -34791,6 +38256,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
+        "sourceName": "ReadPlcBlockEditCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -34800,6 +38277,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
+        "sourceName": "ReadPlcTagTableConstants",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -34939,6 +38441,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RepairAndReimportPlcBlock",
+        "currentName": "RepairAndReimportPlcBlock",
+        "sourceName": "RepairAndReimportBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -35034,6 +38549,20 @@
         ],
         "arguments": {
           "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SeedProjectFromReference",
+        "currentName": "SeedProjectFromReference",
+        "sourceName": "SeedProjectFromReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcSoftwarePath": "PLC_1",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "referenceDir": "C:\\Examples\\reference"
         },
         "envelopeVersion": 4
       },
@@ -35142,6 +38671,20 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcProgram",
+        "currentName": "SetPlcProgram",
+        "sourceName": "UpdatePlcProgram",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -35679,6 +39222,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileHmiDiagnostics",
+        "sourceName": "CompileAndDiagnoseHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompilePlcDiagnostics",
         "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
@@ -35689,6 +39244,20 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompileDevice",
+        "currentName": "CompileDevice",
+        "sourceName": "CompileDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -35831,6 +39400,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreatePlcBlockGroup",
+        "currentName": "CreatePlcBlockGroup",
+        "sourceName": "CreatePlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcInstanceDb",
+        "currentName": "CreatePlcInstanceDb",
+        "sourceName": "CreatePlcInstanceDb",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "fbPath": "FB_Motor",
+          "name": "Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -35861,6 +39458,20 @@
           "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcTypeGroup",
+        "currentName": "CreatePlcTypeGroup",
+        "sourceName": "CreatePlcTypeGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -35898,6 +39509,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyPlcBlockGroup",
+        "currentName": "DeleteEmptyPlcBlockGroup",
+        "sourceName": "DeleteEmptyPlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -35906,6 +39531,20 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcBlock",
+        "currentName": "DeletePlcBlock",
+        "sourceName": "DeletePlcBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -35922,6 +39561,47 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcTagTable",
+        "currentName": "DeletePlcTagTable",
+        "sourceName": "DeletePlcTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "Default tag table",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcType",
+        "currentName": "DeletePlcType",
+        "sourceName": "DeletePlcType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribePlcBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
+        "sourceName": "DescribeBlockLogic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -36221,6 +39901,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcSourceFromBlocks",
+        "currentName": "GeneratePlcSourceFromBlocks",
+        "sourceName": "GeneratePlcSourceFromBlocks",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -36254,6 +39951,21 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcCrossReferences",
+        "currentName": "GetPlcCrossReferences",
+        "sourceName": "GetCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Main",
+          "objectKind": "Block",
+          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -36564,6 +40276,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportPlcBlockVerified",
+        "currentName": "ImportPlcBlockVerified",
+        "sourceName": "ImportPlcBlockVerified",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Pumps/FB_Pump",
+          "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+          "evidenceDirectory": "C:\\Temp\\plc-backups",
+          "dryRun": true,
+          "compileAfterImport": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -36612,6 +40341,20 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcTagTablesFromDirectory",
+        "currentName": "ImportPlcTagTablesFromDirectory",
+        "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -37369,6 +41112,74 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcBlockProtection",
+        "currentName": "ManagePlcBlockProtection",
+        "sourceName": "ManagePlcBlockProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmProtectionChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcExternalSources",
+        "currentName": "ManagePlcExternalSources",
+        "sourceName": "ManagePlcExternalSources",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "name": "FC_Add",
+          "filePath": "C:\\Temp\\FC_Add.scl",
+          "dryRun": true,
+          "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTagDefinition",
+        "currentName": "ManagePlcTagDefinition",
+        "sourceName": "ManagePlcTagDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table",
+          "name": "Ready",
+          "kind": "tag",
+          "action": "read",
+          "dataType": "Bool",
+          "addressOrValue": "%M0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcUserGroup",
+        "currentName": "ManagePlcUserGroup",
+        "sourceName": "ManagePlcUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "family": "blocks",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePortInterconnection",
         "currentName": "ManagePortInterconnection",
         "sourceName": "ManagePortInterconnection",
@@ -37425,6 +41236,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MovePlcBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
+        "sourceName": "MoveBlockToGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockName": "FC_Example",
+          "targetGroupPath": "Examples"
         },
         "envelopeVersion": 4
       },
@@ -37534,6 +41359,53 @@
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildAndImportPlcArtifact",
+        "currentName": "BuildAndImportPlcArtifact",
+        "sourceName": "PlcBuildAndImport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
         "envelopeVersion": 4
       },
@@ -37727,6 +41599,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
+        "sourceName": "ReadPlcBlockEditCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -37736,6 +41620,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
+        "sourceName": "ReadPlcTagTableConstants",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -37875,6 +41784,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RepairAndReimportPlcBlock",
+        "currentName": "RepairAndReimportPlcBlock",
+        "sourceName": "RepairAndReimportBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -37970,6 +41892,20 @@
         ],
         "arguments": {
           "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SeedProjectFromReference",
+        "currentName": "SeedProjectFromReference",
+        "sourceName": "SeedProjectFromReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcSoftwarePath": "PLC_1",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "referenceDir": "C:\\Examples\\reference"
         },
         "envelopeVersion": 4
       },
@@ -38078,6 +42014,20 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcProgram",
+        "currentName": "SetPlcProgram",
+        "sourceName": "UpdatePlcProgram",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -38615,6 +42565,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileHmiDiagnostics",
+        "sourceName": "CompileAndDiagnoseHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompilePlcDiagnostics",
         "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
@@ -38625,6 +42587,20 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompileDevice",
+        "currentName": "CompileDevice",
+        "sourceName": "CompileDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -38767,6 +42743,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreatePlcBlockGroup",
+        "currentName": "CreatePlcBlockGroup",
+        "sourceName": "CreatePlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcInstanceDb",
+        "currentName": "CreatePlcInstanceDb",
+        "sourceName": "CreatePlcInstanceDb",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "fbPath": "FB_Motor",
+          "name": "Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -38797,6 +42801,20 @@
           "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcTypeGroup",
+        "currentName": "CreatePlcTypeGroup",
+        "sourceName": "CreatePlcTypeGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -38834,6 +42852,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyPlcBlockGroup",
+        "currentName": "DeleteEmptyPlcBlockGroup",
+        "sourceName": "DeleteEmptyPlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -38842,6 +42874,20 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcBlock",
+        "currentName": "DeletePlcBlock",
+        "sourceName": "DeletePlcBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -38858,6 +42904,47 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcTagTable",
+        "currentName": "DeletePlcTagTable",
+        "sourceName": "DeletePlcTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "Default tag table",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcType",
+        "currentName": "DeletePlcType",
+        "sourceName": "DeletePlcType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribePlcBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
+        "sourceName": "DescribeBlockLogic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -39157,6 +43244,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcSourceFromBlocks",
+        "currentName": "GeneratePlcSourceFromBlocks",
+        "sourceName": "GeneratePlcSourceFromBlocks",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -39190,6 +43294,21 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcCrossReferences",
+        "currentName": "GetPlcCrossReferences",
+        "sourceName": "GetCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Main",
+          "objectKind": "Block",
+          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -39500,6 +43619,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportPlcBlockVerified",
+        "currentName": "ImportPlcBlockVerified",
+        "sourceName": "ImportPlcBlockVerified",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Pumps/FB_Pump",
+          "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+          "evidenceDirectory": "C:\\Temp\\plc-backups",
+          "dryRun": true,
+          "compileAfterImport": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -39548,6 +43684,20 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcTagTablesFromDirectory",
+        "currentName": "ImportPlcTagTablesFromDirectory",
+        "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -40305,6 +44455,74 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcBlockProtection",
+        "currentName": "ManagePlcBlockProtection",
+        "sourceName": "ManagePlcBlockProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmProtectionChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcExternalSources",
+        "currentName": "ManagePlcExternalSources",
+        "sourceName": "ManagePlcExternalSources",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "name": "FC_Add",
+          "filePath": "C:\\Temp\\FC_Add.scl",
+          "dryRun": true,
+          "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTagDefinition",
+        "currentName": "ManagePlcTagDefinition",
+        "sourceName": "ManagePlcTagDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table",
+          "name": "Ready",
+          "kind": "tag",
+          "action": "read",
+          "dataType": "Bool",
+          "addressOrValue": "%M0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcUserGroup",
+        "currentName": "ManagePlcUserGroup",
+        "sourceName": "ManagePlcUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "family": "blocks",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePortInterconnection",
         "currentName": "ManagePortInterconnection",
         "sourceName": "ManagePortInterconnection",
@@ -40361,6 +44579,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MovePlcBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
+        "sourceName": "MoveBlockToGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockName": "FC_Example",
+          "targetGroupPath": "Examples"
         },
         "envelopeVersion": 4
       },
@@ -40470,6 +44702,53 @@
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildAndImportPlcArtifact",
+        "currentName": "BuildAndImportPlcArtifact",
+        "sourceName": "PlcBuildAndImport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
         "envelopeVersion": 4
       },
@@ -40663,6 +44942,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
+        "sourceName": "ReadPlcBlockEditCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -40672,6 +44963,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
+        "sourceName": "ReadPlcTagTableConstants",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -40811,6 +45127,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RepairAndReimportPlcBlock",
+        "currentName": "RepairAndReimportPlcBlock",
+        "sourceName": "RepairAndReimportBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -40906,6 +45235,20 @@
         ],
         "arguments": {
           "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SeedProjectFromReference",
+        "currentName": "SeedProjectFromReference",
+        "sourceName": "SeedProjectFromReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcSoftwarePath": "PLC_1",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "referenceDir": "C:\\Examples\\reference"
         },
         "envelopeVersion": 4
       },
@@ -41014,6 +45357,20 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcProgram",
+        "currentName": "SetPlcProgram",
+        "sourceName": "UpdatePlcProgram",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -41663,6 +46020,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileHmiDiagnostics",
+        "sourceName": "CompileAndDiagnoseHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CompilePlcDiagnostics",
         "currentName": "CompilePlcDiagnostics",
         "sourceName": "CompileAndDiagnosePlc",
@@ -41673,6 +46042,20 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompileDevice",
+        "currentName": "CompileDevice",
+        "sourceName": "CompileDevice",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -41815,6 +46198,34 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreatePlcBlockGroup",
+        "currentName": "CreatePlcBlockGroup",
+        "sourceName": "CreatePlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcInstanceDb",
+        "currentName": "CreatePlcInstanceDb",
+        "sourceName": "CreatePlcInstanceDb",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "fbPath": "FB_Motor",
+          "name": "Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -41845,6 +46256,20 @@
           "name": "&lt;fresh caller-selected table name; verify ListPlcTagTables&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreatePlcTypeGroup",
+        "currentName": "CreatePlcTypeGroup",
+        "sourceName": "CreatePlcTypeGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -41882,6 +46307,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyPlcBlockGroup",
+        "currentName": "DeleteEmptyPlcBlockGroup",
+        "sourceName": "DeleteEmptyPlcBlockGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -41890,6 +46329,20 @@
         ],
         "arguments": {
           "exportId": "&lt;exportId from response&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcBlock",
+        "currentName": "DeletePlcBlock",
+        "sourceName": "DeletePlcBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -41906,6 +46359,47 @@
           "externalSourceName": "FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcTagTable",
+        "currentName": "DeletePlcTagTable",
+        "sourceName": "DeletePlcTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagTableName": "Default tag table",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeletePlcType",
+        "currentName": "DeletePlcType",
+        "sourceName": "DeletePlcType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribePlcBlockLogic",
+        "currentName": "DescribePlcBlockLogic",
+        "sourceName": "DescribeBlockLogic",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -42205,6 +46699,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GeneratePlcSourceFromBlocks",
+        "currentName": "GeneratePlcSourceFromBlocks",
+        "sourceName": "GeneratePlcSourceFromBlocks",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\FC_Ready.scl",
+          "dryRun": true,
+          "blockPaths": [
+            "FC_Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcBlockInfo",
         "currentName": "GetPlcBlockInfo",
         "sourceName": "GetBlockInfo",
@@ -42238,6 +46749,21 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcCrossReferences",
+        "currentName": "GetPlcCrossReferences",
+        "sourceName": "GetCrossReferences",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Main",
+          "objectKind": "Block",
+          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -42548,6 +47074,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportPlcBlockVerified",
+        "currentName": "ImportPlcBlockVerified",
+        "sourceName": "ImportPlcBlockVerified",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Pumps/FB_Pump",
+          "importPath": "C:\\Temp\\FB_Pump.edited.xml",
+          "evidenceDirectory": "C:\\Temp\\plc-backups",
+          "dryRun": true,
+          "compileAfterImport": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcExternalSource",
         "currentName": "ImportPlcExternalSource",
         "sourceName": "ImportPlcExternalSource",
@@ -42596,6 +47139,20 @@
           "dryRun": true,
           "confirm": false,
           "overwrite": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcTagTablesFromDirectory",
+        "currentName": "ImportPlcTagTablesFromDirectory",
+        "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -43353,6 +47910,74 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcBlockProtection",
+        "currentName": "ManagePlcBlockProtection",
+        "sourceName": "ManagePlcBlockProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "action": "read",
+          "confirmProtectionChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcExternalSources",
+        "currentName": "ManagePlcExternalSources",
+        "sourceName": "ManagePlcExternalSources",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "name": "FC_Add",
+          "filePath": "C:\\Temp\\FC_Add.scl",
+          "dryRun": true,
+          "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTagDefinition",
+        "currentName": "ManagePlcTagDefinition",
+        "sourceName": "ManagePlcTagDefinition",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table",
+          "name": "Ready",
+          "kind": "tag",
+          "action": "read",
+          "dataType": "Bool",
+          "addressOrValue": "%M0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcUserGroup",
+        "currentName": "ManagePlcUserGroup",
+        "sourceName": "ManagePlcUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "family": "blocks",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePortInterconnection",
         "currentName": "ManagePortInterconnection",
         "sourceName": "ManagePortInterconnection",
@@ -43423,6 +48048,20 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MovePlcBlockToGroup",
+        "currentName": "MovePlcBlockToGroup",
+        "sourceName": "MoveBlockToGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockName": "FC_Example",
+          "targetGroupPath": "Examples"
         },
         "envelopeVersion": 4
       },
@@ -43532,6 +48171,53 @@
           "allowedFilePath": "C:\\Examples\\FC_Add.scl",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BuildAndImportPlcArtifact",
+        "currentName": "BuildAndImportPlcArtifact",
+        "sourceName": "PlcBuildAndImport",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "dryRun": true,
+          "spec": {
+            "blockName": "FC_DryRun",
+            "blockNumber": 12,
+            "inputs": [
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Run",
+                "datatype": "Bool"
+              }
+            ],
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "if",
+                  "condition": "Start"
+                },
+                {
+                  "op": "assign",
+                  "target": "Run",
+                  "indent": 2,
+                  "literalValue": "TRUE"
+                },
+                {
+                  "op": "endif"
+                }
+              ]
+            }
+          }
         },
         "envelopeVersion": 4
       },
@@ -43725,6 +48411,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockEditCapabilities",
+        "currentName": "GetPlcBlockEditCapabilities",
+        "sourceName": "ReadPlcBlockEditCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -43734,6 +48432,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcTagTableConstants",
+        "currentName": "GetPlcTagTableConstants",
+        "sourceName": "ReadPlcTagTableConstants",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tablePath": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -43873,6 +48596,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RepairAndReimportPlcBlock",
+        "currentName": "RepairAndReimportPlcBlock",
+        "sourceName": "RepairAndReimportBlock",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -43994,6 +48730,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SeedProjectFromReference",
+        "currentName": "SeedProjectFromReference",
+        "sourceName": "SeedProjectFromReference",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "plcSoftwarePath": "PLC_1",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "referenceDir": "C:\\Examples\\reference"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcCpuSettings",
         "currentName": "SetPlcCpuSettings",
         "sourceName": "SetCpuCommonSettings",
@@ -44098,6 +48848,20 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcProgram",
+        "currentName": "SetPlcProgram",
+        "sourceName": "UpdatePlcProgram",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
