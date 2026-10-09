@@ -22,7 +22,7 @@ def unwrap_usage(reply):
     return body
 
 
-def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
+def check_usage(call, tools, release, exhaustive=True, verify_documents=False, registered_only=False):
     """call returns the decoded MCP text envelope. Never call the sampled tool."""
     assert any(t['name'] == 'GetToolUsage' for t in tools), 'Usage tool is absent from this catalog'
     first = unwrap_usage(call('GetToolUsage', {'limit': 1}))
@@ -46,6 +46,8 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
     # ConnectProject is withdrawn from the V20/V21 product catalog (P7-04); the engine host still lists it until it is retired
     # (P7-08), and its usage lookup is refused. Every other listed name must describe itself.
     selected = [name for name in selected if name not in WITHDRAWN_FROM_PRODUCT]
+    if registered_only:
+        selected = [name for name in selected if name in schemas]
     for name in selected:
         usage = unwrap_usage(call('GetToolUsage', {'toolName': name}))
         assert usage['available'] and usage['releaseKey'] == str(release) and usage['toolName'] == name

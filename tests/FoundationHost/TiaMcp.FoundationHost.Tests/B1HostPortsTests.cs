@@ -107,6 +107,59 @@ public sealed class B1HostPortsTests
     }
 
     [Fact]
+    public async Task UpdateCheckUsesTheWorkerLayoutBeforeRepositoryAndHttpChecks()
+    {
+        using var scope = EngineHostParity.EnterScope();
+        string root = Path.Combine(Path.GetTempPath(), "update layout 中文 " + Guid.NewGuid().ToString("N"));
+        const string selection = "TiaOpenness.Shared.BundleLayout.v4";
+        object? previous = AppDomain.CurrentDomain.GetData(selection);
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "manifest"));
+            File.WriteAllText(Path.Combine(root, "manifest", "package-manifest.json"), "{}");
+            AppDomain.CurrentDomain.SetData(selection, root);
+            var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current;
+            foreach (string release in new[] { "20", "21" })
+            {
+                foreach (string anchor in new[] { "src/Engine/bin/Release/net48", "sdk-fixture", "runtime/v" + release + "/worker" })
+                {
+                    context.WorkerBaseDirectory = Path.Combine(root, anchor.Replace('/', Path.DirectorySeparatorChar));
+                    var result = (await Host.McpServer.CheckProductUpdateV4("x")).StructuredContent!;
+                    Assert.StartsWith("repository must be 'owner/name'", (string)result["data"]!["summary"]!);
+                    var evidence = result["data"]!["evidence"]!;
+                    Assert.Null(evidence["installRoot"]);
+                    Assert.Null(evidence["updaterScript"]);
+                    Assert.False((bool)evidence["success"]!);
+                    Assert.Null(evidence["releaseApiUrl"]);
+                }
+                context.WorkerBaseDirectory = Path.Combine(root, "runtime", "v" + release);
+                var missing = (await Host.McpServer.CheckProductUpdateV4("x")).StructuredContent!;
+                Assert.Equal("RESOURCE_UNAVAILABLE", (string?)missing["error"]?["code"]);
+                Assert.Contains("delivery.json", missing.ToJsonString());
+                File.WriteAllText(Path.Combine(root, "manifest", "delivery.json"), "{}");
+                missing = (await Host.McpServer.CheckProductUpdateV4("x")).StructuredContent!;
+                Assert.Equal("RESOURCE_UNAVAILABLE", (string?)missing["error"]?["code"]);
+                Assert.Contains("TiaMcp.Updater.exe", missing.ToJsonString());
+                Directory.CreateDirectory(Path.Combine(root, "runtime", "tools"));
+                string updater = Path.Combine(root, "runtime", "tools", "TiaMcp.Updater.exe");
+                File.WriteAllText(updater, "fixture");
+                var installed = (await Host.McpServer.CheckProductUpdateV4("x")).StructuredContent!;
+                Assert.StartsWith("repository must be 'owner/name'", (string)installed["data"]!["summary"]!);
+                Assert.Equal(root, (string?)installed["data"]!["evidence"]!["installRoot"]);
+                Assert.Equal(updater, (string?)installed["data"]!["evidence"]!["updaterScript"]);
+                Assert.Null(installed["data"]!["evidence"]!["releaseApiUrl"]);
+                File.Delete(updater);
+                File.Delete(Path.Combine(root, "manifest", "delivery.json"));
+            }
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.SetData(selection, previous);
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
     public void NativeJournalReaderRetainsRotatedPairsAndCountsTrailingRecords()
     {
         using var scope = EngineHostParity.EnterScope();

@@ -49,7 +49,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>The delivery root selected by the common bundle resolver.</summary>
         internal static string? FindInstallRoot()
+#if TIA_ENGINE_HOST
+            // Preserve the engine's layout checks when the implementation runs in the host.
+            => FindInstallRoot(TiaMcp.FoundationHost.EngineHostConfiguration.Current.WorkerBaseDirectory);
+#else
             => FindInstallRoot(AppContext.BaseDirectory);
+#endif
 
         internal static string? FindInstallRoot(string baseDirectory, string? bundleRoot = null)
         {

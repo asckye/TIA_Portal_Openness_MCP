@@ -59,6 +59,7 @@ namespace TiaMcp.FoundationHost
     internal sealed class EngineSessionContext(IEngineWorker worker)
     {
         internal IEngineWorker Worker { get; } = worker;
+        internal string WorkerBaseDirectory = AppContext.BaseDirectory;
         internal Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession>? StagingOwner;
         internal IToolCatalogView? Catalog;
         internal IToolInvoker? Invoker;
@@ -84,7 +85,7 @@ namespace TiaMcp.FoundationHost
             IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
         {
             EngineHostConfiguration.ReleaseKey = releaseKey;
-            context = new EngineSessionContext(worker);
+            context = new EngineSessionContext(worker) { WorkerBaseDirectory = Path.GetDirectoryName(Path.GetFullPath(workerPath))! };
             using var session = EnterSession();
             EngineHostConfiguration.StagingOwner = () => stagingLifetime.Session;
             var catalog = new EngineCatalog(path, workerPath, releaseKey);
