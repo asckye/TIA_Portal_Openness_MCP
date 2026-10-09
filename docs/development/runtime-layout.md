@@ -10,7 +10,7 @@ P2-05 的初始统计取自 2026-10-03，完成情况另行标明。
 
 V20/V21 MCP host startup no longer exits solely because TIA is absent, the detected major version differs, or Openness initialization/user-group checks fail. It records a shared readiness state for Bootstrap, the environment doctor, and tool admission. `RESOURCE_UNAVAILABLE` with resource `tia-openness-environment` is returned before a TIA-dependent native call; the V4 outcome is `rejected-before-operation` and execution is `not-started`. Diagnostic and offline-classified tools remain available. Explicit CLI verbs, `doctor`, and syntax/runtime exit codes keep their command behavior.
 
-八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，默认 lite 为 81 个工具，full 分别为 495/506 个工具。引擎的 stdio/HTTP 宿主与隔离 supervisor 已退役；引擎只接受 `--engine-worker`、`--write-tool-catalog <path>` 和 CLI 动词。无参数启动打印新用法并以 64 退出。
+八版产品统一由 `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>` 启动（net10）。V14 SP1–V19 使用 PLC worker；V20/V21 使用完整引擎的 `--engine-worker` 模式，默认 lite 为 82 个工具，full 分别为 500/511 个工具。引擎的 stdio/HTTP 宿主与隔离 supervisor 已退役；引擎只接受 `--engine-worker`、`--write-tool-catalog <path>` 和 CLI 动词。无参数启动打印新用法并以 64 退出。
 
 V20/V21 每个 MCP 会话拥有一个独立 engine worker：stdio 为一个会话、一个 worker；HTTP 的 N 个同时存活会话对应 N 个 worker，不另设会话数量上限，部署时需按 worker 内存和 TIA 实例数限制客户端并发。HTTP 启动校验使用的短期 probe 在监听前退出，每个 worker 都绑定宿主 job object，会话结束、超时或宿主退出时终止。Disconnect 只结束当前会话的原生连接，RestartOpennessWorker 只重启调用方 worker；新 HTTP 会话从未绑定状态开始。工具桥接、审批/故障键、预演计划、暂存归属和导出句柄访问按会话隔离；导出内容仍共用进程内的 32 句柄/8,000,000 字符容量限制，避免 HTTP 并发扩大缓存上限。`/mcp/health` 无需鉴权，含 fileVersion 和 full-engine profile；`/mcp/ready` 与 MCP 调用使用相同 Bearer 鉴权，只证明宿主已就绪。
 

@@ -8,22 +8,22 @@ does not translate or upgrade a project.
 
 | Version | Advertised catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 157 | Foundation host and V14 SP1 worker |
-| V15.1 | 158 | Foundation host and V15.1 worker |
-| V16 | 160 | Foundation host and V16 worker |
-| V17 | 160 | Foundation host and V17 worker |
-| V18 | 160 | Foundation host and V18 worker |
-| V19 | 170 | Foundation host and V19 worker |
-| V20 | 495 | Foundation host and V20 engine worker |
-| V21 | 506 | Foundation host and V21 engine worker |
+| V14 SP1 | 162 | Foundation host and V14 SP1 worker |
+| V15.1 | 163 | Foundation host and V15.1 worker |
+| V16 | 165 | Foundation host and V16 worker |
+| V17 | 165 | Foundation host and V17 worker |
+| V18 | 165 | Foundation host and V18 worker |
+| V19 | 175 | Foundation host and V19 worker |
+| V20 | 500 | Foundation host and V20 engine worker |
+| V21 | 511 | Foundation host and V21 engine worker |
 
 V14 SP1–V19 advertise their full registered Foundation catalog, including all 28 F01
 discovery, bridge, preview and batch tools (maintainer decision, 2026-10-08).
 `FindTools` and `CallTool` reach exactly the selected release's registered catalog;
 version gates, target approvals and batch project identity checks remain enforced.
 Old releases have no lite profile; the bounded registry requires a lite design or
-a reviewed bound change before reaching 257 tools. V20/V21 use the 81-tool lite profile.
-The eight release catalogs contain 1,966 version/tool combinations and 507 distinct V4 names.
+a reviewed bound change before reaching 257 tools. V20/V21 use the 82-tool lite profile.
+The eight release catalogs contain 2,006 version/tool combinations and 511 distinct V4 names.
 
 Newly enabled F01/F02/F03 behavior is `current / NOT RUN` until VM acceptance.
 F02 offers 12 tools on old releases: V20/V21 schema validation, SIMATIC ML decoding,
