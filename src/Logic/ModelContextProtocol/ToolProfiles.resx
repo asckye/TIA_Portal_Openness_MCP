@@ -440,6 +440,24 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F12",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F17",
       "state": "current",
       "l5": "NOT RUN"
@@ -506,6 +524,24 @@
     },
     {
       "releaseKey": "15.1",
+      "family": "F12",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
       "family": "F17",
       "state": "current",
       "l5": "NOT RUN"
@@ -572,6 +608,24 @@
     },
     {
       "releaseKey": "16",
+      "family": "F12",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F17",
       "state": "current",
       "l5": "NOT RUN"
@@ -638,6 +692,24 @@
     },
     {
       "releaseKey": "17",
+      "family": "F12",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F17",
       "state": "current",
       "l5": "NOT RUN"
@@ -704,6 +776,24 @@
     },
     {
       "releaseKey": "18",
+      "family": "F12",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F16",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F17",
       "state": "current",
       "l5": "NOT RUN"
@@ -765,6 +855,24 @@
     {
       "releaseKey": "19",
       "family": "F11",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F12",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F16",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -5190,6 +5298,109 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "PlanOnlineReadOnlyDataProvider",
+      "family": "F12",
+      "example": {
+        "provider": "opcua",
+        "endpoint": "opc.tcp://192.0.2.10:4840",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "PlanOnlineReadOnlyMonitoring",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "TraceTagCause",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "TraceTagCauseLive",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ConfigureMotionHardwareConnection",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "interfaceKind": "actor",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportTechnologyObjectsToDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportDir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetMotionAxisConfiguration",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetTechnologyObjectTree",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageMotionAxis",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "CompileDevice",
       "family": "F17",
       "example": {
@@ -6251,6 +6462,208 @@
         "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcWatchTablesToDirectory",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcWatchTableCurrentValuesReadOnly",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportPlcWatchTableOffline",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListPlcForceTables",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcTableEntries",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableKind": "watch",
+        "tablePath": "MCP_W/MCP_WT",
+        "action": "createComment",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "MonitorPlcWatchTableS7",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PlanOnlineReadOnlyDataProvider",
+      "family": "F12",
+      "example": {
+        "provider": "opcua",
+        "endpoint": "opc.tcp://192.0.2.10:4840",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "PlanOnlineReadOnlyMonitoring",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ProbePlcMonitorOnlineCapabilities",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "TraceTagCause",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "TraceTagCauseLive",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ConfigureMotionHardwareConnection",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "interfaceKind": "actor",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExchangeMotionCamData",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Cam_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+        "dryRun": true,
+        "format": "MCD",
+        "separator": "Tab"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportTechnologyObjectsToDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportDir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetMotionAxisConfiguration",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetTechnologyObjectTree",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageMotionAxis",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcChecksums",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcObjectFingerprints",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "block",
+        "objectPath": "Main"
       }
     },
     {
@@ -7349,6 +7762,259 @@
         "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcWatchTablesToDirectory",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcWatchTableCurrentValuesReadOnly",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcWatchTableOffline",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListPlcForceTables",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcTableEntries",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableKind": "watch",
+        "tablePath": "MCP_W/MCP_WT",
+        "action": "createComment",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "MonitorPlcWatchTableS7",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PlanOnlineReadOnlyDataProvider",
+      "family": "F12",
+      "example": {
+        "provider": "opcua",
+        "endpoint": "opc.tcp://192.0.2.10:4840",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "PlanOnlineReadOnlyMonitoring",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ProbePlcMonitorOnlineCapabilities",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "TraceTagCause",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "TraceTagCauseLive",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConfigureMotionHardwareConnection",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "interfaceKind": "actor",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExchangeMotionCamData",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Cam_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+        "dryRun": true,
+        "format": "MCD",
+        "separator": "Tab"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportTechnologyObjectsToDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportDir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetMotionAxisConfiguration",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetTechnologyObjectTree",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportTechnologyObjectsFromDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageMotionAxis",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListPlcSoftwareUnits",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcSoftwareUnit",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetPlcUnitObjectAccess",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "unitName": "Unit_1",
+        "objectKind": "block",
+        "objectPath": "FC_Ready",
+        "access": "Published",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcChecksums",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcObjectFingerprints",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "block",
+        "objectPath": "Main"
       }
     },
     {
@@ -8468,6 +9134,271 @@
         "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcWatchTablesToDirectory",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcWatchTableCurrentValuesReadOnly",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcWatchTableOffline",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListPlcForceTables",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcTableEntries",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableKind": "watch",
+        "tablePath": "MCP_W/MCP_WT",
+        "action": "createComment",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "MonitorPlcWatchTableS7",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PlanOnlineReadOnlyDataProvider",
+      "family": "F12",
+      "example": {
+        "provider": "opcua",
+        "endpoint": "opc.tcp://192.0.2.10:4840",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "PlanOnlineReadOnlyMonitoring",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ProbePlcMonitorOnlineCapabilities",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetPlcWatchTableModifyValue",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableName": "MCP_W/MCP_WT",
+        "address": "%M0.0",
+        "modifyValue": "TRUE",
+        "trigger": "OnceOnlyAtStart"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "TraceTagCause",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "TraceTagCauseLive",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConfigureMotionHardwareConnection",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "interfaceKind": "actor",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExchangeMotionCamData",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Cam_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+        "dryRun": true,
+        "format": "MCD",
+        "separator": "Tab"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportTechnologyObjectsToDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportDir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetMotionAxisConfiguration",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetTechnologyObjectTree",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportTechnologyObjectsFromDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageMotionAxis",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListPlcSoftwareUnits",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcSoftwareUnit",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetPlcUnitObjectAccess",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "unitName": "Unit_1",
+        "objectKind": "block",
+        "objectPath": "FC_Ready",
+        "access": "Published",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcChecksums",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcObjectFingerprints",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "block",
+        "objectPath": "Main"
       }
     },
     {
@@ -9619,6 +10550,271 @@
         "objectPath": "Main",
         "objectKind": "Block",
         "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcWatchTablesToDirectory",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcWatchTableCurrentValuesReadOnly",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcWatchTableOffline",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListPlcForceTables",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcTableEntries",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableKind": "watch",
+        "tablePath": "MCP_W/MCP_WT",
+        "action": "createComment",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "MonitorPlcWatchTableS7",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PlanOnlineReadOnlyDataProvider",
+      "family": "F12",
+      "example": {
+        "provider": "opcua",
+        "endpoint": "opc.tcp://192.0.2.10:4840",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "PlanOnlineReadOnlyMonitoring",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ProbePlcMonitorOnlineCapabilities",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetPlcWatchTableModifyValue",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableName": "MCP_W/MCP_WT",
+        "address": "%M0.0",
+        "modifyValue": "TRUE",
+        "trigger": "OnceOnlyAtStart"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "TraceTagCause",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "TraceTagCauseLive",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConfigureMotionHardwareConnection",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "interfaceKind": "actor",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExchangeMotionCamData",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Cam_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+        "dryRun": true,
+        "format": "MCD",
+        "separator": "Tab"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportTechnologyObjectsToDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportDir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetMotionAxisConfiguration",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetTechnologyObjectTree",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportTechnologyObjectsFromDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageMotionAxis",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListPlcSoftwareUnits",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcSoftwareUnit",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetPlcUnitObjectAccess",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "unitName": "Unit_1",
+        "objectKind": "block",
+        "objectPath": "FC_Ready",
+        "access": "Published",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcChecksums",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcObjectFingerprints",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "block",
+        "objectPath": "Main"
       }
     },
     {
@@ -10883,6 +12079,271 @@
         "objectPath": "Main",
         "objectKind": "Block",
         "filter": "AllObjects"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcWatchTablesToDirectory",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcWatchTableCurrentValuesReadOnly",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcWatchTableOffline",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListPlcForceTables",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcTableEntries",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableKind": "watch",
+        "tablePath": "MCP_W/MCP_WT",
+        "action": "createComment",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "MonitorPlcWatchTableS7",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "watchTableName": "Watch_1",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PlanOnlineReadOnlyDataProvider",
+      "family": "F12",
+      "example": {
+        "provider": "opcua",
+        "endpoint": "opc.tcp://192.0.2.10:4840",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "PlanOnlineReadOnlyMonitoring",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tagPaths": [
+          "DB_Status.Ready"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ProbePlcMonitorOnlineCapabilities",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetPlcWatchTableModifyValue",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tableName": "MCP_W/MCP_WT",
+        "address": "%M0.0",
+        "modifyValue": "TRUE",
+        "trigger": "OnceOnlyAtStart"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "TraceTagCause",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "TraceTagCauseLive",
+      "family": "F12",
+      "example": {
+        "softwarePath": "PLC_1",
+        "tag": "DB_Status.Ready",
+        "ip": "192.0.2.10"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConfigureMotionHardwareConnection",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "interfaceKind": "actor",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangeMotionCamData",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Cam_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+        "dryRun": true,
+        "format": "MCD",
+        "separator": "Tab"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportTechnologyObjectsToDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportDir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetMotionAxisConfiguration",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetTechnologyObjectTree",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportTechnologyObjectsFromDirectory",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "folderPath": "",
+        "dir": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageMotionAxis",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTechnologyObject",
+      "family": "F13",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectPath": "Axis_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListPlcSoftwareUnits",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcSoftwareUnit",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetPlcUnitObjectAccess",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "unitName": "Unit_1",
+        "objectKind": "block",
+        "objectPath": "FC_Ready",
+        "access": "Published",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcChecksums",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcObjectFingerprints",
+      "family": "F16",
+      "example": {
+        "softwarePath": "PLC_1",
+        "objectKind": "block",
+        "objectPath": "Main"
       }
     },
     {
@@ -30202,6 +31663,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConfigureMotionHardwareConnection",
+        "currentName": "ConfigureMotionHardwareConnection",
+        "sourceName": "ConfigureMotionHardwareConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "interfaceKind": "actor",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ConnectPortal",
         "currentName": "ConnectPortal",
         "sourceName": "Connect",
@@ -30549,6 +32026,19 @@
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportTechnologyObjectsToDirectory",
+        "currentName": "ExportTechnologyObjectsToDirectory",
+        "sourceName": "ExportTechnologyObjectsToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -31825,6 +33315,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMotionAxis",
+        "currentName": "ManageMotionAxis",
+        "sourceName": "ManageMotionAxis",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -31908,6 +33414,21 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTechnologyObject",
+        "currentName": "ManageTechnologyObject",
+        "sourceName": "ManageTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -32015,6 +33536,37 @@
               }
             ]
           }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyDataProvider",
+        "currentName": "PlanOnlineReadOnlyDataProvider",
+        "sourceName": "PlanOnlineReadOnlyDataProvider",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "provider": "opcua",
+          "endpoint": "opc.tcp://192.0.2.10:4840",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyMonitoring",
+        "currentName": "PlanOnlineReadOnlyMonitoring",
+        "sourceName": "PlanOnlineReadOnlyMonitoring",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -32763,6 +34315,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
+        "sourceName": "ReadMotionAxisConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetNativeInvocationLog",
         "currentName": "GetNativeInvocationLog",
         "sourceName": "ReadNativeInvocationLog",
@@ -32865,6 +34430,18 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
+        "sourceName": "ReadTechnologyObjectTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -33148,6 +34725,33 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCause",
+        "currentName": "TraceTagCause",
+        "sourceName": "TraceTagCause",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCauseLive",
+        "currentName": "TraceTagCauseLive",
+        "sourceName": "TraceTagCauseLive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -33882,6 +35486,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConfigureMotionHardwareConnection",
+        "currentName": "ConfigureMotionHardwareConnection",
+        "sourceName": "ConfigureMotionHardwareConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "interfaceKind": "actor",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ConnectPortal",
         "currentName": "ConnectPortal",
         "sourceName": "Connect",
@@ -34187,6 +35807,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeMotionCamData",
+        "currentName": "ExchangeMotionCamData",
+        "sourceName": "ExchangeMotionCamData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Cam_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+          "dryRun": true,
+          "format": "MCD",
+          "separator": "Tab"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -34244,6 +35882,32 @@
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportPlcWatchTablesToDirectory",
+        "currentName": "ExportPlcWatchTablesToDirectory",
+        "sourceName": "ExportPlcWatchTablesToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportTechnologyObjectsToDirectory",
+        "currentName": "ExportTechnologyObjectsToDirectory",
+        "sourceName": "ExportTechnologyObjectsToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -34547,6 +36211,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListPlcForceTables",
+        "currentName": "ListPlcForceTables",
+        "sourceName": "GetPlcForceTables",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcTagTables",
         "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
@@ -34813,6 +36489,20 @@
           "softwarePath": "PLC_1",
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcWatchTableOffline",
+        "currentName": "ImportPlcWatchTableOffline",
+        "sourceName": "ImportPlcWatchTableOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -35532,6 +37222,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMotionAxis",
+        "currentName": "ManageMotionAxis",
+        "sourceName": "ManageMotionAxis",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcBlockProtection",
         "currentName": "ManagePlcBlockProtection",
         "sourceName": "ManagePlcBlockProtection",
@@ -35561,6 +37267,23 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTableEntries",
+        "currentName": "ManagePlcTableEntries",
+        "sourceName": "ManagePlcTableEntries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableKind": "watch",
+          "tablePath": "MCP_W/MCP_WT",
+          "action": "createComment",
+          "confirmDelete": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -35636,6 +37359,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageTechnologyObject",
+        "currentName": "ManageTechnologyObject",
+        "sourceName": "ManageTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageTransferArea",
         "currentName": "ManageTransferArea",
         "sourceName": "ManageTransferArea",
@@ -35656,6 +37394,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MonitorPlcWatchTableS7",
+        "currentName": "MonitorPlcWatchTableS7",
+        "sourceName": "MonitorWatchTableLiveS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -35762,6 +37514,37 @@
               }
             ]
           }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyDataProvider",
+        "currentName": "PlanOnlineReadOnlyDataProvider",
+        "sourceName": "PlanOnlineReadOnlyDataProvider",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "provider": "opcua",
+          "endpoint": "opc.tcp://192.0.2.10:4840",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyMonitoring",
+        "currentName": "PlanOnlineReadOnlyMonitoring",
+        "sourceName": "PlanOnlineReadOnlyMonitoring",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -36455,6 +38238,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbePlcMonitorOnlineCapabilities",
+        "currentName": "ProbePlcMonitorOnlineCapabilities",
+        "sourceName": "ProbePlcMonitorOnlineCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -36510,6 +38305,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
+        "sourceName": "ReadMotionAxisConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetNativeInvocationLog",
         "currentName": "GetNativeInvocationLog",
         "sourceName": "ReadNativeInvocationLog",
@@ -36560,6 +38368,32 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcChecksums",
+        "currentName": "GetPlcChecksums",
+        "sourceName": "ReadPlcChecksums",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
+        "sourceName": "ReadPlcObjectFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "block",
+          "objectPath": "Main"
         },
         "envelopeVersion": 4
       },
@@ -36624,6 +38458,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
+        "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
+        "sourceName": "ReadTechnologyObjectTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -36924,6 +38783,33 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCause",
+        "currentName": "TraceTagCause",
+        "sourceName": "TraceTagCause",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCauseLive",
+        "currentName": "TraceTagCauseLive",
+        "sourceName": "TraceTagCauseLive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -37658,6 +39544,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConfigureMotionHardwareConnection",
+        "currentName": "ConfigureMotionHardwareConnection",
+        "sourceName": "ConfigureMotionHardwareConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "interfaceKind": "actor",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ConnectPortal",
         "currentName": "ConnectPortal",
         "sourceName": "Connect",
@@ -37963,6 +39865,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeMotionCamData",
+        "currentName": "ExchangeMotionCamData",
+        "sourceName": "ExchangeMotionCamData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Cam_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+          "dryRun": true,
+          "format": "MCD",
+          "separator": "Tab"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -38040,6 +39960,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportPlcWatchTablesToDirectory",
+        "currentName": "ExportPlcWatchTablesToDirectory",
+        "sourceName": "ExportPlcWatchTablesToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -38052,6 +39985,19 @@
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportTechnologyObjectsToDirectory",
+        "currentName": "ExportTechnologyObjectsToDirectory",
+        "sourceName": "ExportTechnologyObjectsToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -38355,6 +40301,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListPlcForceTables",
+        "currentName": "ListPlcForceTables",
+        "sourceName": "GetPlcForceTables",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcTagTables",
         "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
@@ -38614,6 +40572,48 @@
         "name": "ImportPlcTagTablesFromDirectory",
         "currentName": "ImportPlcTagTablesFromDirectory",
         "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcWatchTableOffline",
+        "currentName": "ImportPlcWatchTableOffline",
+        "sourceName": "ImportPlcWatchTableOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObject",
+        "currentName": "ImportTechnologyObject",
+        "sourceName": "ImportTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObjectsFromDirectory",
+        "currentName": "ImportTechnologyObjectsFromDirectory",
+        "sourceName": "ImportTechnologyObjectsFromDirectory",
         "profiles": [
           "plc-foundation"
         ],
@@ -39340,6 +41340,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMotionAxis",
+        "currentName": "ManageMotionAxis",
+        "sourceName": "ManageMotionAxis",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -39386,6 +41402,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSoftwareUnit",
+        "currentName": "ManagePlcSoftwareUnit",
+        "sourceName": "ManagePlcSoftwareUnit",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTableEntries",
+        "currentName": "ManagePlcTableEntries",
+        "sourceName": "ManagePlcTableEntries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableKind": "watch",
+          "tablePath": "MCP_W/MCP_WT",
+          "action": "createComment",
+          "confirmDelete": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -39461,6 +41508,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageTechnologyObject",
+        "currentName": "ManageTechnologyObject",
+        "sourceName": "ManageTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageTransferArea",
         "currentName": "ManageTransferArea",
         "sourceName": "ManageTransferArea",
@@ -39481,6 +41543,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MonitorPlcWatchTableS7",
+        "currentName": "MonitorPlcWatchTableS7",
+        "sourceName": "MonitorWatchTableLiveS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -39587,6 +41663,37 @@
               }
             ]
           }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyDataProvider",
+        "currentName": "PlanOnlineReadOnlyDataProvider",
+        "sourceName": "PlanOnlineReadOnlyDataProvider",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "provider": "opcua",
+          "endpoint": "opc.tcp://192.0.2.10:4840",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyMonitoring",
+        "currentName": "PlanOnlineReadOnlyMonitoring",
+        "sourceName": "PlanOnlineReadOnlyMonitoring",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -40280,6 +42387,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbePlcMonitorOnlineCapabilities",
+        "currentName": "ProbePlcMonitorOnlineCapabilities",
+        "sourceName": "ProbePlcMonitorOnlineCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -40332,6 +42451,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
+        "sourceName": "ReadMotionAxisConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1"
+        },
         "envelopeVersion": 4
       },
       {
@@ -40401,6 +42533,44 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcChecksums",
+        "currentName": "GetPlcChecksums",
+        "sourceName": "ReadPlcChecksums",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
+        "sourceName": "ReadPlcObjectFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "block",
+          "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSoftwareUnits",
+        "currentName": "ListPlcSoftwareUnits",
+        "sourceName": "ReadPlcSoftwareUnits",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -40461,6 +42631,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
+        "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
+        "sourceName": "ReadTechnologyObjectTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -40746,6 +42941,23 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcUnitObjectAccess",
+        "currentName": "SetPlcUnitObjectAccess",
+        "sourceName": "SetPlcUnitObjectAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "unitName": "Unit_1",
+          "objectKind": "block",
+          "objectPath": "FC_Ready",
+          "access": "Published",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -40761,6 +42973,33 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCause",
+        "currentName": "TraceTagCause",
+        "sourceName": "TraceTagCause",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCauseLive",
+        "currentName": "TraceTagCauseLive",
+        "sourceName": "TraceTagCauseLive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -41495,6 +43734,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConfigureMotionHardwareConnection",
+        "currentName": "ConfigureMotionHardwareConnection",
+        "sourceName": "ConfigureMotionHardwareConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "interfaceKind": "actor",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ConnectPortal",
         "currentName": "ConnectPortal",
         "sourceName": "Connect",
@@ -41800,6 +44055,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeMotionCamData",
+        "currentName": "ExchangeMotionCamData",
+        "sourceName": "ExchangeMotionCamData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Cam_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+          "dryRun": true,
+          "format": "MCD",
+          "separator": "Tab"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeSystemDiagnosticsSettings",
         "currentName": "ExchangeSystemDiagnosticsSettings",
         "sourceName": "ExchangeSystemDiagnosticsSettings",
@@ -41892,6 +44165,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportPlcWatchTablesToDirectory",
+        "currentName": "ExportPlcWatchTablesToDirectory",
+        "sourceName": "ExportPlcWatchTablesToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -41904,6 +44190,19 @@
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportTechnologyObjectsToDirectory",
+        "currentName": "ExportTechnologyObjectsToDirectory",
+        "sourceName": "ExportTechnologyObjectsToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -42207,6 +44506,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListPlcForceTables",
+        "currentName": "ListPlcForceTables",
+        "sourceName": "GetPlcForceTables",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcTagTables",
         "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
@@ -42466,6 +44777,48 @@
         "name": "ImportPlcTagTablesFromDirectory",
         "currentName": "ImportPlcTagTablesFromDirectory",
         "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcWatchTableOffline",
+        "currentName": "ImportPlcWatchTableOffline",
+        "sourceName": "ImportPlcWatchTableOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObject",
+        "currentName": "ImportTechnologyObject",
+        "sourceName": "ImportTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObjectsFromDirectory",
+        "currentName": "ImportTechnologyObjectsFromDirectory",
+        "sourceName": "ImportTechnologyObjectsFromDirectory",
         "profiles": [
           "plc-foundation"
         ],
@@ -43192,6 +45545,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMotionAxis",
+        "currentName": "ManageMotionAxis",
+        "sourceName": "ManageMotionAxis",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -43238,6 +45607,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSoftwareUnit",
+        "currentName": "ManagePlcSoftwareUnit",
+        "sourceName": "ManagePlcSoftwareUnit",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTableEntries",
+        "currentName": "ManagePlcTableEntries",
+        "sourceName": "ManagePlcTableEntries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableKind": "watch",
+          "tablePath": "MCP_W/MCP_WT",
+          "action": "createComment",
+          "confirmDelete": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -43313,6 +45713,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageTechnologyObject",
+        "currentName": "ManageTechnologyObject",
+        "sourceName": "ManageTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageTransferArea",
         "currentName": "ManageTransferArea",
         "sourceName": "ManageTransferArea",
@@ -43333,6 +45748,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MonitorPlcWatchTableS7",
+        "currentName": "MonitorPlcWatchTableS7",
+        "sourceName": "MonitorWatchTableLiveS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -43439,6 +45868,37 @@
               }
             ]
           }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyDataProvider",
+        "currentName": "PlanOnlineReadOnlyDataProvider",
+        "sourceName": "PlanOnlineReadOnlyDataProvider",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "provider": "opcua",
+          "endpoint": "opc.tcp://192.0.2.10:4840",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyMonitoring",
+        "currentName": "PlanOnlineReadOnlyMonitoring",
+        "sourceName": "PlanOnlineReadOnlyMonitoring",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -44132,6 +46592,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbePlcMonitorOnlineCapabilities",
+        "currentName": "ProbePlcMonitorOnlineCapabilities",
+        "sourceName": "ProbePlcMonitorOnlineCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -44184,6 +46656,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
+        "sourceName": "ReadMotionAxisConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1"
+        },
         "envelopeVersion": 4
       },
       {
@@ -44253,6 +46738,44 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcChecksums",
+        "currentName": "GetPlcChecksums",
+        "sourceName": "ReadPlcChecksums",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
+        "sourceName": "ReadPlcObjectFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "block",
+          "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSoftwareUnits",
+        "currentName": "ListPlcSoftwareUnits",
+        "sourceName": "ReadPlcSoftwareUnits",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -44313,6 +46836,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
+        "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
+        "sourceName": "ReadTechnologyObjectTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -44598,6 +47146,39 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcUnitObjectAccess",
+        "currentName": "SetPlcUnitObjectAccess",
+        "sourceName": "SetPlcUnitObjectAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "unitName": "Unit_1",
+          "objectKind": "block",
+          "objectPath": "FC_Ready",
+          "access": "Published",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcWatchTableModifyValue",
+        "currentName": "SetPlcWatchTableModifyValue",
+        "sourceName": "SetWatchTableModifyValue",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableName": "MCP_W/MCP_WT",
+          "address": "%M0.0",
+          "modifyValue": "TRUE",
+          "trigger": "OnceOnlyAtStart"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -44613,6 +47194,33 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCause",
+        "currentName": "TraceTagCause",
+        "sourceName": "TraceTagCause",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCauseLive",
+        "currentName": "TraceTagCauseLive",
+        "sourceName": "TraceTagCauseLive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -45360,6 +47968,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConfigureMotionHardwareConnection",
+        "currentName": "ConfigureMotionHardwareConnection",
+        "sourceName": "ConfigureMotionHardwareConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "interfaceKind": "actor",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ConnectPortal",
         "currentName": "ConnectPortal",
         "sourceName": "Connect",
@@ -45665,6 +48289,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeMotionCamData",
+        "currentName": "ExchangeMotionCamData",
+        "sourceName": "ExchangeMotionCamData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Cam_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+          "dryRun": true,
+          "format": "MCD",
+          "separator": "Tab"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeSystemDiagnosticsSettings",
         "currentName": "ExchangeSystemDiagnosticsSettings",
         "sourceName": "ExchangeSystemDiagnosticsSettings",
@@ -45757,6 +48399,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportPlcWatchTablesToDirectory",
+        "currentName": "ExportPlcWatchTablesToDirectory",
+        "sourceName": "ExportPlcWatchTablesToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -45769,6 +48424,19 @@
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportTechnologyObjectsToDirectory",
+        "currentName": "ExportTechnologyObjectsToDirectory",
+        "sourceName": "ExportTechnologyObjectsToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -46087,6 +48755,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListPlcForceTables",
+        "currentName": "ListPlcForceTables",
+        "sourceName": "GetPlcForceTables",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcTagTables",
         "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
@@ -46346,6 +49026,48 @@
         "name": "ImportPlcTagTablesFromDirectory",
         "currentName": "ImportPlcTagTablesFromDirectory",
         "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcWatchTableOffline",
+        "currentName": "ImportPlcWatchTableOffline",
+        "sourceName": "ImportPlcWatchTableOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObject",
+        "currentName": "ImportTechnologyObject",
+        "sourceName": "ImportTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObjectsFromDirectory",
+        "currentName": "ImportTechnologyObjectsFromDirectory",
+        "sourceName": "ImportTechnologyObjectsFromDirectory",
         "profiles": [
           "plc-foundation"
         ],
@@ -47093,6 +49815,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMotionAxis",
+        "currentName": "ManageMotionAxis",
+        "sourceName": "ManageMotionAxis",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -47139,6 +49877,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSoftwareUnit",
+        "currentName": "ManagePlcSoftwareUnit",
+        "sourceName": "ManagePlcSoftwareUnit",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTableEntries",
+        "currentName": "ManagePlcTableEntries",
+        "sourceName": "ManagePlcTableEntries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableKind": "watch",
+          "tablePath": "MCP_W/MCP_WT",
+          "action": "createComment",
+          "confirmDelete": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -47214,6 +49983,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageTechnologyObject",
+        "currentName": "ManageTechnologyObject",
+        "sourceName": "ManageTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageTransferArea",
         "currentName": "ManageTransferArea",
         "sourceName": "ManageTransferArea",
@@ -47234,6 +50018,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MonitorPlcWatchTableS7",
+        "currentName": "MonitorPlcWatchTableS7",
+        "sourceName": "MonitorWatchTableLiveS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -47340,6 +50138,37 @@
               }
             ]
           }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyDataProvider",
+        "currentName": "PlanOnlineReadOnlyDataProvider",
+        "sourceName": "PlanOnlineReadOnlyDataProvider",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "provider": "opcua",
+          "endpoint": "opc.tcp://192.0.2.10:4840",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyMonitoring",
+        "currentName": "PlanOnlineReadOnlyMonitoring",
+        "sourceName": "PlanOnlineReadOnlyMonitoring",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -48033,6 +50862,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbePlcMonitorOnlineCapabilities",
+        "currentName": "ProbePlcMonitorOnlineCapabilities",
+        "sourceName": "ProbePlcMonitorOnlineCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -48085,6 +50926,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
+        "sourceName": "ReadMotionAxisConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1"
+        },
         "envelopeVersion": 4
       },
       {
@@ -48154,6 +51008,44 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcChecksums",
+        "currentName": "GetPlcChecksums",
+        "sourceName": "ReadPlcChecksums",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
+        "sourceName": "ReadPlcObjectFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "block",
+          "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSoftwareUnits",
+        "currentName": "ListPlcSoftwareUnits",
+        "sourceName": "ReadPlcSoftwareUnits",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -48214,6 +51106,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
+        "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
+        "sourceName": "ReadTechnologyObjectTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -48499,6 +51416,39 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcUnitObjectAccess",
+        "currentName": "SetPlcUnitObjectAccess",
+        "sourceName": "SetPlcUnitObjectAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "unitName": "Unit_1",
+          "objectKind": "block",
+          "objectPath": "FC_Ready",
+          "access": "Published",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcWatchTableModifyValue",
+        "currentName": "SetPlcWatchTableModifyValue",
+        "sourceName": "SetWatchTableModifyValue",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableName": "MCP_W/MCP_WT",
+          "address": "%M0.0",
+          "modifyValue": "TRUE",
+          "trigger": "OnceOnlyAtStart"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -48514,6 +51464,33 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCause",
+        "currentName": "TraceTagCause",
+        "sourceName": "TraceTagCause",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCauseLive",
+        "currentName": "TraceTagCauseLive",
+        "sourceName": "TraceTagCauseLive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -49387,6 +52364,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConfigureMotionHardwareConnection",
+        "currentName": "ConfigureMotionHardwareConnection",
+        "sourceName": "ConfigureMotionHardwareConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "interfaceKind": "actor",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ConnectPortal",
         "currentName": "ConnectPortal",
         "sourceName": "Connect",
@@ -49692,6 +52685,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangeMotionCamData",
+        "currentName": "ExchangeMotionCamData",
+        "sourceName": "ExchangeMotionCamData",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Cam_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+          "dryRun": true,
+          "format": "MCD",
+          "separator": "Tab"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeSystemDiagnosticsSettings",
         "currentName": "ExchangeSystemDiagnosticsSettings",
         "sourceName": "ExchangeSystemDiagnosticsSettings",
@@ -49784,6 +52795,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportPlcWatchTablesToDirectory",
+        "currentName": "ExportPlcWatchTablesToDirectory",
+        "sourceName": "ExportPlcWatchTablesToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportTechnologyObject",
         "currentName": "ExportTechnologyObject",
         "sourceName": "ExportTechnologyObject",
@@ -49796,6 +52820,19 @@
           "exportPath": "C:\\Examples\\exports\\Axis_1.xml",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportTechnologyObjectsToDirectory",
+        "currentName": "ExportTechnologyObjectsToDirectory",
+        "sourceName": "ExportTechnologyObjectsToDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
       },
@@ -50114,6 +53151,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListPlcForceTables",
+        "currentName": "ListPlcForceTables",
+        "sourceName": "GetPlcForceTables",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcTagTables",
         "currentName": "ListPlcTagTables",
         "sourceName": "GetPlcTagTables",
@@ -50373,6 +53422,48 @@
         "name": "ImportPlcTagTablesFromDirectory",
         "currentName": "ImportPlcTagTablesFromDirectory",
         "sourceName": "ImportPlcTagTablesFromDirectory",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcWatchTableOffline",
+        "currentName": "ImportPlcWatchTableOffline",
+        "sourceName": "ImportPlcWatchTableOffline",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObject",
+        "currentName": "ImportTechnologyObject",
+        "sourceName": "ImportTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "folderPath": "",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportTechnologyObjectsFromDirectory",
+        "currentName": "ImportTechnologyObjectsFromDirectory",
+        "sourceName": "ImportTechnologyObjectsFromDirectory",
         "profiles": [
           "plc-foundation"
         ],
@@ -51120,6 +54211,22 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMotionAxis",
+        "currentName": "ManageMotionAxis",
+        "sourceName": "ManageMotionAxis",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -51166,6 +54273,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSoftwareUnit",
+        "currentName": "ManagePlcSoftwareUnit",
+        "sourceName": "ManagePlcSoftwareUnit",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcTableEntries",
+        "currentName": "ManagePlcTableEntries",
+        "sourceName": "ManagePlcTableEntries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableKind": "watch",
+          "tablePath": "MCP_W/MCP_WT",
+          "action": "createComment",
+          "confirmDelete": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -51241,6 +54379,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageTechnologyObject",
+        "currentName": "ManageTechnologyObject",
+        "sourceName": "ManageTechnologyObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageTransferArea",
         "currentName": "ManageTransferArea",
         "sourceName": "ManageTransferArea",
@@ -51275,6 +54428,20 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "MonitorPlcWatchTableS7",
+        "currentName": "MonitorPlcWatchTableS7",
+        "sourceName": "MonitorWatchTableLiveS7",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },
@@ -51381,6 +54548,37 @@
               }
             ]
           }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyDataProvider",
+        "currentName": "PlanOnlineReadOnlyDataProvider",
+        "sourceName": "PlanOnlineReadOnlyDataProvider",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "provider": "opcua",
+          "endpoint": "opc.tcp://192.0.2.10:4840",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PlanOnlineReadOnlyMonitoring",
+        "currentName": "PlanOnlineReadOnlyMonitoring",
+        "sourceName": "PlanOnlineReadOnlyMonitoring",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tagPaths": [
+            "DB_Status.Ready"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -52074,6 +55272,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbePlcMonitorOnlineCapabilities",
+        "currentName": "ProbePlcMonitorOnlineCapabilities",
+        "sourceName": "ProbePlcMonitorOnlineCapabilities",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetDeviceAddressing",
         "currentName": "GetDeviceAddressing",
         "sourceName": "ReadDeviceAddressing",
@@ -52126,6 +55336,19 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetMotionAxisConfiguration",
+        "currentName": "GetMotionAxisConfiguration",
+        "sourceName": "ReadMotionAxisConfiguration",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectPath": "Axis_1"
+        },
         "envelopeVersion": 4
       },
       {
@@ -52195,6 +55418,44 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcChecksums",
+        "currentName": "GetPlcChecksums",
+        "sourceName": "ReadPlcChecksums",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcObjectFingerprints",
+        "currentName": "GetPlcObjectFingerprints",
+        "sourceName": "ReadPlcObjectFingerprints",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "objectKind": "block",
+          "objectPath": "Main"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListPlcSoftwareUnits",
+        "currentName": "ListPlcSoftwareUnits",
+        "sourceName": "ReadPlcSoftwareUnits",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -52255,6 +55516,31 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcWatchTableCurrentValuesReadOnly",
+        "currentName": "GetPlcWatchTableCurrentValuesReadOnly",
+        "sourceName": "ReadPlcWatchTableCurrentValuesReadOnly",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "watchTableName": "Watch_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetTechnologyObjectTree",
+        "currentName": "GetTechnologyObjectTree",
+        "sourceName": "ReadTechnologyObjectTree",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -52562,6 +55848,39 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcUnitObjectAccess",
+        "currentName": "SetPlcUnitObjectAccess",
+        "sourceName": "SetPlcUnitObjectAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "unitName": "Unit_1",
+          "objectKind": "block",
+          "objectPath": "FC_Ready",
+          "access": "Published",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetPlcWatchTableModifyValue",
+        "currentName": "SetPlcWatchTableModifyValue",
+        "sourceName": "SetWatchTableModifyValue",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableName": "MCP_W/MCP_WT",
+          "address": "%M0.0",
+          "modifyValue": "TRUE",
+          "trigger": "OnceOnlyAtStart"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -52577,6 +55896,33 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCause",
+        "currentName": "TraceTagCause",
+        "sourceName": "TraceTagCause",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "TraceTagCauseLive",
+        "currentName": "TraceTagCauseLive",
+        "sourceName": "TraceTagCauseLive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tag": "DB_Status.Ready",
+          "ip": "192.0.2.10"
         },
         "envelopeVersion": 4
       },

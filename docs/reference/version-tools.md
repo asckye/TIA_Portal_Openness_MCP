@@ -8,12 +8,12 @@ does not translate or upgrade a project.
 
 | Version | Advertised catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 176 | Foundation host and V14 SP1 worker |
-| V15.1 | 182 | Foundation host and V15.1 worker |
-| V16 | 186 | Foundation host and V16 worker |
-| V17 | 187 | Foundation host and V17 worker |
-| V18 | 191 | Foundation host and V18 worker |
-| V19 | 201 | Foundation host and V19 worker |
+| V14 SP1 | 186 | Foundation host and V14 SP1 worker |
+| V15.1 | 202 | Foundation host and V15.1 worker |
+| V16 | 211 | Foundation host and V16 worker |
+| V17 | 213 | Foundation host and V17 worker |
+| V18 | 217 | Foundation host and V18 worker |
+| V19 | 227 | Foundation host and V19 worker |
 | V20 | 500 | Foundation host and V20 engine worker |
 | V21 | 511 | Foundation host and V21 engine worker |
 
@@ -23,7 +23,7 @@ discovery, bridge, preview and batch tools (maintainer decision, 2026-10-08).
 version gates, target approvals and batch project identity checks remain enforced.
 Old releases have no lite profile; the bounded registry requires a lite design or
 a reviewed bound change before reaching 257 tools. V20/V21 use the 82-tool lite profile.
-The eight release catalogs contain 2,134 version/tool combinations and 511 distinct V4 names.
+The eight release catalogs contain 2,267 version/tool combinations and 511 distinct V4 names.
 
 On V14 SP1–V19 a ported tool is registered only when at least one implemented action can run on that release’s API (maintainer decision, 2026-10-09). Tools with no usable action are absent from discovery, usage, bridges and passive diagnostics. Partial tools retain `UNSUPPORTED_CAPABILITY` before any native call. PLC protection, system groups and instance DB creation start at V15.1; program updates and native cross-references start at V18. Network domains start at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation and certificate service objects at V18. Communication connections remain V21 only. Older overloads and per-attribute writes keep the other migrated tools usable.
 

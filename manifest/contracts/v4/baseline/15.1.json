@@ -193,6 +193,47 @@
     },
     {
       "entries": [
+        "ExportPlcWatchTablesToDirectory",
+        "GetPlcWatchTableCurrentValuesReadOnly",
+        "ImportPlcWatchTableOffline",
+        "ListPlcForceTables",
+        "ManagePlcTableEntries",
+        "MonitorPlcWatchTableS7",
+        "PlanOnlineReadOnlyDataProvider",
+        "PlanOnlineReadOnlyMonitoring",
+        "ProbePlcMonitorOnlineCapabilities",
+        "TraceTagCause",
+        "TraceTagCauseLive"
+      ],
+      "family": "F12",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ConfigureMotionHardwareConnection",
+        "ExchangeMotionCamData",
+        "ExportTechnologyObjectsToDirectory",
+        "GetMotionAxisConfiguration",
+        "GetTechnologyObjectTree",
+        "ManageMotionAxis",
+        "ManageTechnologyObject"
+      ],
+      "family": "F13",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "GetPlcChecksums",
+        "GetPlcObjectFingerprints"
+      ],
+      "family": "F16",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
         "CompileDevice",
         "CompileHmiDiagnostics"
       ],
@@ -7105,6 +7146,74 @@
       }
     },
     {
+      "descriptionSha256": "81ea4923011c70fa58b0e3526cf1ee32838091a38d39054a98e72de1e888d6e7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - read | connect | disconnect.",
+            "enum": [
+              "read",
+              "connect",
+              "disconnect"
+            ],
+            "type": "string"
+          },
+          "connectOption": {
+            "default": "Default",
+            "description": "connectOption: connect option name (Default or AllowAllModules).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "inputBitAddress": {
+            "default": 0,
+            "description": "Nonnegative integer input BIT address; e.g. byte 10 bit 0 is 80.",
+            "type": "integer"
+          },
+          "interfaceKind": {
+            "description": "interfaceKind: actor | sensor | torque.",
+            "enum": [
+              "actor",
+              "sensor",
+              "torque"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "outputBitAddress": {
+            "default": 0,
+            "description": "Nonnegative integer output BIT address; e.g. byte 10 bit 0 is 80.",
+            "type": "integer"
+          },
+          "sensorIndex": {
+            "default": 0,
+            "description": "sensorIndex: 0-based encoder / sensor index.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath",
+          "interfaceKind",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ConfigureMotionHardwareConnection",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "708336cd088b03691aa2dc32fe0620602a37e122f2cebfbc8bc6cba3c3b9443e",
       "inputSchema": {
         "additionalProperties": false,
@@ -8709,6 +8818,77 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "3e62f32265b2c0d7d0a10c005015e3774cc00a37871ad7e4c9c15819f98c6f07",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "export | import | exportBinary | importBinary | exportPoints. Text, native binary or point-list exchange.",
+            "enum": [
+              "export",
+              "import",
+              "exportBinary",
+              "importBinary",
+              "exportPoints"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: absolute cam data file. Text/point-list actions use the selected format and separator (e.g. Cam_1.txt); binary actions use the native binary format. New output or existing import file.",
+            "type": "string"
+          },
+          "format": {
+            "default": "",
+            "description": "MCD | Scout | PointList. Native CamDataFormat for text export.",
+            "enum": [
+              "MCD",
+              "Scout",
+              "PointList",
+              ""
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "pointCount": {
+            "default": 0,
+            "description": "pointCount: number of points to export.",
+            "type": "integer"
+          },
+          "separator": {
+            "default": "",
+            "description": "Comma | Tab. Native CamDataFormatSeparator name for text import/export and point lists; do not pass a literal separator character.",
+            "enum": [
+              "Comma",
+              "Tab",
+              ""
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath",
+          "action",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "ExchangeMotionCamData",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "3f76a1fc596faf80d2a158599a92c096866101b4c48523fa682bb15e8493860f",
       "inputSchema": {
         "additionalProperties": false,
@@ -9557,6 +9737,62 @@
       }
     },
     {
+      "descriptionSha256": "668f6dcbff932730075817d48b1ffbd8acce33f0253be0221d45afdc4149efbe",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dir": {
+            "description": "dir: output directory",
+            "type": "string"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: optional regex filter applied to table name",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "dir"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcWatchTablesToDirectory",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "3879b1e1cb6448355ac7ec54f4fb0000d7c120378a648cdd385fd75d27d8ecbc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportDir": {
+            "description": "exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'",
+            "type": "string"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: optional regex filter on TO name; empty = export all",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportDir"
+        ],
+        "type": "object"
+      },
+      "name": "ExportTechnologyObjectsToDirectory",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "4129322fb48d6ada68812a6ae315bca58b16db1dafc3ff5f201a5f2c1971ee2c",
       "inputSchema": {
         "additionalProperties": false,
@@ -10401,6 +10637,46 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "69eb61028e1a220d2c8267ebd31654e663747103f6730edf56256d7da11ce8d6",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeParameters": {
+            "default": false,
+            "description": "includeParameters: true also returns parameters.",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetMotionAxisConfiguration",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "ed0d40d029fd6986c6074ce3828e300067c69cc0c173514dc8ee950f855871dc",
       "inputSchema": {
         "additionalProperties": false,
@@ -10771,6 +11047,70 @@
       }
     },
     {
+      "descriptionSha256": "8980e7e025d2d88616dff9524bec656ad1c3b9846cad99433d272c315caa43a7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcChecksums",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "05ca8448450941f81c497b47d713b23461b91fc48e7ecf1a388c8f8178a66a4c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "objectKind": {
+            "description": "objectKind: block | type.",
+            "enum": [
+              "block",
+              "type"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectKind",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcObjectFingerprints",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "4c5d0949c2ef35ef159ec27cc197a369b735637a6f90a78aad6a3debf78e2091",
       "inputSchema": {
         "additionalProperties": false,
@@ -10965,6 +11305,34 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "351b41178cbf2559c199066391c9fa500ecebe164fdeffc18559acda392eec21",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxEntries": {
+            "default": 50,
+            "description": "maxEntries: maximum entries to inspect.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.",
+            "type": "string"
+          },
+          "watchTableName": {
+            "description": "watchTableName: existing PLC watch table path/name returned by ListPlcWatchTables.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "watchTableName"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcWatchTableCurrentValuesReadOnly",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "9452c27a1a7dea252d46cf1d767e0a987b448834a6121ac5a017c8a30de363bb",
@@ -11746,6 +12114,44 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "117ca85115d45a870578a0c54916b9f0b2c1ab8719613df944bbd5f57c58e29d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "groupPath": {
+            "default": "",
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "includeMotionView": {
+            "default": false,
+            "description": "includeMotionView: true also returns the motion view of each object.",
+            "type": "boolean"
+          },
+          "includeParameters": {
+            "default": false,
+            "description": "includeParameters: true also returns parameters.",
+            "type": "boolean"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetTechnologyObjectTree",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "a2476ec8bff2bef1e69d466153a51094b1f7bac9389adfa9348ac32e970f4743",
@@ -13411,6 +13817,39 @@
       }
     },
     {
+      "descriptionSha256": "2da2b2a5de26704c2047de436d99f029e5663bb70b13d96293e41063585dd72f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "groupPath": {
+            "default": "",
+            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcWatchTableOffline",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "c882bf6362371fd8c8be70c159551dc95c37164c33b2e58ac155481b9ac47e8b",
       "inputSchema": {
         "additionalProperties": false,
@@ -14023,6 +14462,24 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "3b6d2938cc7231fe1dd8c8711ec2e8d73affbe00c60c289100f41024cc770923",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListPlcForceTables",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "7ebac435e6ad941eea66e599e7d60a281c19d6e0ef947475ceeba54692c678b5",
@@ -15896,6 +16353,315 @@
       }
     },
     {
+      "descriptionSha256": "6ada690397dddf46ff210d916ae79316aa14a5c41d251e6e6b24d9a15cce0ee5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "read | addMasterValue | removeMasterValue | createMapping | updateMapping | deleteMapping | connect | disconnect | connectIdent. ",
+            "enum": [
+              "read",
+              "addMasterValue",
+              "removeMasterValue",
+              "createMapping",
+              "updateMapping",
+              "deleteMapping",
+              "connect",
+              "disconnect",
+              "connectIdent"
+            ],
+            "type": "string"
+          },
+          "aspect": {
+            "default": "",
+            "description": "aspect: which aspect of the axis to manage (see the tool description).",
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact name of the object (case-sensitive).",
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "sensorIndex": {
+            "default": 0,
+            "description": "sensorIndex: 0-based encoder / sensor index.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "target": {
+            "description": "target: Object naming the target (see the tool description).",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "connectOption": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "secondItemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath",
+                  "secondItemPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "channelIndex": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath",
+                  "channelIndex"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "channelIoType": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "channelNumber": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "channelType": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "devicePath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "itemPath": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devicePath",
+                  "itemPath",
+                  "channelType",
+                  "channelIoType",
+                  "channelNumber"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "dbMemberPath": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "dbMemberPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "plcTagPath": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plcTagPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "address": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "address"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "connectOption": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "inputBitAddress": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "outputBitAddress": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "inputBitAddress",
+                  "outputBitAddress"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageMotionAxis",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "ad38e696ee8383b2bd7e92122564e43cf1c12f982774ca26afc1f78419bd7a3f",
       "inputSchema": {
         "additionalProperties": false,
@@ -16078,6 +16844,94 @@
         "type": "object"
       },
       "name": "ManagePlcExternalSources",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "911690d197dd7d2c810652b30b5ba81d01e8351361440a9c636f741d8085b1ff",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "action: read | createComment | deleteEntry | deleteTable (force tables: read only).",
+            "enum": [
+              "read",
+              "createComment",
+              "deleteEntry",
+              "deleteTable"
+            ],
+            "examples": [
+              "read"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "entryIndex": {
+            "default": -1,
+            "description": "entryIndex: 0-based row index from a read, for deleteEntry.",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 200,
+            "description": "limit: maximum rows to return.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: first row to return (paging).",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          },
+          "tableKind": {
+            "description": "tableKind: watch | force.",
+            "enum": [
+              "watch",
+              "force"
+            ],
+            "examples": [
+              "watch"
+            ],
+            "type": "string"
+          },
+          "tablePath": {
+            "description": "tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root table).",
+            "examples": [
+              "MCP_W/MCP_WT"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tableKind",
+          "tablePath"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcTableEntries",
       "outputSchema": null
     },
     {
@@ -16478,6 +17332,131 @@
       }
     },
     {
+      "descriptionSha256": "64f48a61f1c8cfdfcd3302681b51629602d1274e8e1e0b7f2dc8923432c2202c",
+      "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - read | create | delete | setParameter.",
+            "enum": [
+              "read",
+              "create",
+              "delete",
+              "setParameter"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "objectPath": {
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "parameter": {
+            "default": "",
+            "description": "parameter: exact parameter name.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "typeIdentifier": {
+            "default": "",
+            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
+            "type": "string"
+          },
+          "value": {
+            "description": "value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.",
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ],
+            "x-maxDepth": 62,
+            "x-maxUtf8Bytes": 10485760
+          },
+          "version": {
+            "default": "",
+            "description": "version: catalog / firmware version string, e.g. 'V2.9'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageTechnologyObject",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "4eac8d28a466b517b74fcc9a7bafd643c65132f0d7a999d397cd53343695074c",
       "inputSchema": {
         "additionalProperties": false,
@@ -16669,6 +17648,49 @@
         "type": "object"
       },
       "name": "ManageTransferArea",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "10c59a53a0327dbc23c8f4956a5fee7f9c917f936ef5e074477450ecc4e95d02",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectModuleContains": {
+            "default": "",
+            "description": "expectModuleContains: optional identity guard (e.g. '1211C'); aborts on a positive module-type mismatch.",
+            "type": "string"
+          },
+          "ip": {
+            "description": "ip: CPU IP address, e.g. '192.168.0.32'.",
+            "type": "string"
+          },
+          "rack": {
+            "default": 0,
+            "description": "rack: hardware rack. S7-1200/1500 = 0.",
+            "type": "integer"
+          },
+          "slot": {
+            "default": 1,
+            "description": "slot: hardware slot. S7-1200/1500 = 1.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path, e.g. '安全PLC'.",
+            "type": "string"
+          },
+          "watchTableName": {
+            "description": "watchTableName: existing watch table name from ListPlcWatchTables.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "watchTableName",
+          "ip"
+        ],
+        "type": "object"
+      },
+      "name": "MonitorPlcWatchTableS7",
       "outputSchema": null
     },
     {
@@ -17407,6 +18429,86 @@
         "type": "object"
       },
       "name": "PlanHardwareNetworkConfiguration",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "e67da94e63108644abbace761ec6824c7f66b2cea8a3f680ca9949e845529f0a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint": {
+            "description": "endpoint: OPC UA endpoint URL or PLC endpoint/IP. It is validated only for shape and is not opened.",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": false,
+            "description": "options: optional JSON object such as {\"pollMs\":1000,\"source\":\"watch-table-export\"}.",
+            "minProperties": 0,
+            "properties": {
+              "pollMs": {
+                "maximum": 2147483647,
+                "minimum": -2147483648,
+                "type": "integer"
+              },
+              "source": {
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
+          },
+          "provider": {
+            "description": "provider: opcua or s7-readonly. opcua is preferred for commercial symbolic readback.",
+            "type": "string"
+          },
+          "tagPaths": {
+            "description": "tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "provider",
+          "endpoint",
+          "tagPaths"
+        ],
+        "type": "object"
+      },
+      "name": "PlanOnlineReadOnlyDataProvider",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "4366f4a119f499768cc2500b0ab1d5b63a97f46f5cb0e88b65c4ef8895e60921",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "default": "current-values",
+            "description": "mode: current-values or watch-table-export-plan. Both are read-only planning modes.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.",
+            "type": "string"
+          },
+          "tagPaths": {
+            "description": "tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagPaths"
+        ],
+        "type": "object"
+      },
+      "name": "PlanOnlineReadOnlyMonitoring",
       "outputSchema": null
     },
     {
@@ -18216,6 +19318,24 @@
         "type": "object"
       },
       "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "1583f85f026917c79b038133d97614b62626f6214d7bd3b5c49d98c3f4a87fb1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the PLC software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ProbePlcMonitorOnlineCapabilities",
       "outputSchema": null
     },
     {
@@ -20272,6 +21392,82 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "989958949605cb37a418748efba7f382e6bc86a7a90b397e0f4a4502ad3aa4a3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockScope": {
+            "default": "",
+            "description": "blockScope: optional regex to limit scanned code blocks by name (e.g. 'FC|Main'). Empty scans all code blocks.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.",
+            "type": "string"
+          },
+          "tag": {
+            "description": "tag: symbol to trace. Accepts a full path ('Crew_Data.Saddle_locationX') or a member name ('故障代码'). Quotes/whitespace are ignored.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tag"
+        ],
+        "type": "object"
+      },
+      "name": "TraceTagCause",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "9d4e82718132d2dfdd3a9127084da131bfb8ee15e650b3bb19bcbc011a6ab756",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockScope": {
+            "default": "",
+            "description": "blockScope: optional regex to limit scanned code blocks by name. Empty scans all.",
+            "type": "string"
+          },
+          "expectModuleContains": {
+            "default": "",
+            "description": "expectModuleContains: optional identity guard substring (e.g. '1211C').",
+            "type": "string"
+          },
+          "ip": {
+            "description": "ip: CPU IP address for the live read, e.g. '192.168.0.32'.",
+            "type": "string"
+          },
+          "rack": {
+            "default": 0,
+            "description": "rack: hardware rack. S7-1200/1500 = 0.",
+            "type": "integer"
+          },
+          "slot": {
+            "default": 1,
+            "description": "slot: hardware slot. S7-1200/1500 = 1.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.",
+            "type": "string"
+          },
+          "tag": {
+            "description": "tag: symbol to trace (full path or member name; quotes/whitespace ignored).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tag",
+          "ip"
+        ],
+        "type": "object"
+      },
+      "name": "TraceTagCauseLive",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "05eac58480cb4b5fca487396ea7d13ef00b5a1dee2a3188968b4f82d5ce6d5b7",
