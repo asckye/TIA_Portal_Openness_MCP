@@ -5,14 +5,17 @@
 The latest published release is [v3.3.0](../releases/v3.3.0.md). The 4.0 source is
 unreleased. **Maintainer decision 2026-10-09: 4.0 is not released until phases 7 and 8 are complete;** real-machine
 acceptance happens once at the end on all eight releases (including the retest of findings 39-52, the old-release
-enablement of ported families and each batch's V20/V21 recheck). Every merge still runs all registered suites in a clean
-checkout, the CI checks and a full release candidate. Phase 6 is merged apart from P6-42/P6-43. In phase 7 (see the
-[refactor plan](refactor-plan.md)) P7-01 to P7-06, P7-07a/b/c (V20/V21 findings 37-48 and 52), P7-10 and P7-11a are
-merged; P7-08 and P7-11b no longer wait for VM acceptance. Phase 8: the [port plan](phase8-port-plan.md), the port
-framework with family F19, Python batch 1 of the [Python plan](phase8-python-plan.md), the Workbench control protocol and the
-generation model are merged; B1 step 1 (F01-F03 out of the engine), the TIA process lease on V14 SP1-V19 with findings 49-51,
-the Workbench control server, human/AI attribution and generation planning are in review. The discovery bridge and batch
-tools ship on all eight releases (maintainer decision U8, B1 step 2).
+enablement of ported families and each batch's V20/V21 recheck). Every merge runs all registered suites in a clean
+checkout, the release-pipeline harness modes and the CI checks; a full release candidate runs only for changes to the release
+chain and once at the end to build the VM test package (maintainer decision 2026-10-10). Phase 6 is merged apart from
+P6-42/P6-43. In phase 7 (see the [refactor plan](refactor-plan.md)) P7-01 to P7-08, P7-07a/b/c (V20/V21 findings 37-48 and
+52), P7-10 and P7-11a are merged; P7-08 retired the engine's own MCP host and isolation modes. Phase 8: port batches B1
+(F01-F03), B2 (F18, F20, F21) and B3 (F08, F09, F11, F17) and the F19 pilot of the [port plan](phase8-port-plan.md) run through
+the Foundation adapters and are enabled on V14 SP1-V19 where the API allows; Python batches 1-2 of the
+[Python plan](phase8-python-plan.md), the TIA process lease with findings 49-51, human/AI attribution, the Workbench control
+channel with its eight host tools and the standard package tools are merged. The discovery bridge and batch tools ship on all
+eight releases (maintainer decision U8). Maintainer decision 2026-10-09: an old release lists a ported tool only when at
+least one of its actions has API there; P8-03x applies it to the merged batches.
 Current 4.0 real-machine acceptance is pending. Offline tests, SDK builds, schemas,
 and static call evidence do not establish native TIA behavior.
 
