@@ -97,12 +97,12 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class RuntimeContractsTests : IDisposable
     {
-        private readonly ToolCatalog catalog = new ToolCatalog(new[] { typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools), typeof(RuntimeSettingsTools), typeof(OnlineDownloadTools) });
+        private readonly ToolCatalog catalog = new ToolCatalog(new[] { typeof(RuntimeTools), typeof(PlcCausalTraceTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools), typeof(RuntimeSettingsTools), typeof(OnlineDownloadTools) });
         private readonly TiaMcpServer.Siemens.Services.OnlineDownloadService service = new TiaMcpServer.Siemens.Services.OnlineDownloadService();
         public RuntimeContractsTests()
         {
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
-            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new RuntimeTools(null!))
+            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new RuntimeTools(null!)).AddSingleton(new PlcCausalTraceTools(null!))
                 .AddSingleton(new RuntimeChannelTools()).AddSingleton(new PlcSimAdvancedTools())
                 .AddSingleton(new RuntimeSettingsTools(null!)).AddSingleton(new OnlineDownloadTools(service)).BuildServiceProvider());
         }

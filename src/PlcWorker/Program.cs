@@ -60,6 +60,7 @@ internal static class Program
     {
         using (var engine = new PlcFoundationEngine(releaseKey, api))
         {
+            engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
             var dispatcher = new FoundationWorkerDispatcher(engine, typeof(Program).Assembly);
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 dispatcher.Dispatch, () => dispatcher.State.IsAttached, () => dispatcher.Detached,

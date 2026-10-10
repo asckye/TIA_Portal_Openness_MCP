@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -9,11 +10,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         internal static JsonObject Stamp() => new JsonObject { ["timestamp"] = ResponseClock.Now };
 
-        internal static JsonObject Basic(bool success) => new JsonObject
-        {
-            ["timestamp"] = ResponseClock.Now,
-            ["success"] = success
-        };
+        internal static JsonObject Basic(bool success) => FromScalars(ResponseClock.Now, success);
 
         internal static JsonObject Basic(bool success, params (string Key, JsonNode? Value)[] after)
         {
@@ -25,14 +22,14 @@ namespace TiaMcpServer.ModelContextProtocol
         // Inline callers evaluate the clock before success and the remaining values.
         internal static JsonObject Basic(DateTime timestamp, bool success, params (string Key, JsonNode? Value)[] after)
         {
-            var meta = new JsonObject { ["timestamp"] = timestamp, ["success"] = success };
+            var meta = FromScalars(timestamp, success);
             Append(meta, after);
             return meta;
         }
 
         internal static JsonObject Unstamped(bool success, params (string Key, JsonNode? Value)[] after)
         {
-            var meta = new JsonObject { ["success"] = success };
+            var meta = FromScalars(null, success);
             Append(meta, after);
             return meta;
         }
@@ -96,6 +93,19 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         internal static JsonObject RoundTripStamp() => new JsonObject { ["timestamp"] = ResponseClock.Now.ToString("O") };
+
+        private static JsonObject FromScalars(DateTime? timestamp, bool success)
+        {
+            var meta = new JsonObject();
+            foreach (var pair in LegacyResponseMetadata.Basic(timestamp, success)) meta[pair.Key] = pair.Value switch {
+                DateTime stamp => JsonValue.Create(stamp),
+                bool flag => JsonValue.Create(flag),
+                string text => JsonValue.Create(text),
+                null => null,
+                _ => throw new InvalidOperationException("Unsupported legacy response scalar.")
+            };
+            return meta;
+        }
 
         private static void Append(JsonObject meta, (string Key, JsonNode? Value)[] after)
         {

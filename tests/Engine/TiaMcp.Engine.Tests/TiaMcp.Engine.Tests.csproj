@@ -107,6 +107,7 @@
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiEventAccess.cs" Link="HmiEventAccess.cs" />
     <Compile Include="../../../src/Engine/Siemens/PropertyPathReader.cs" Link="PropertyPathReader.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringExport.cs" Link="EngineeringExport.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/EngineeringFileExport.cs" Link="EngineeringFileExport.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
     <Compile Include="../../../src/Shared/Host/McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
@@ -169,9 +170,21 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs" Link="AlarmsTools.cs" />
+    <Compile Include="../../../src/Shared/EngineeringToolContract.cs" Link="EngineeringToolContract.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs" Link="OpcUaTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs" Link="SoftwareUnitDeepTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs" Link="SoftwareUnitManagementTools.cs" />
+    <Compile Include="../../../src/Shared/PlcIntegrityTools.cs" Link="PlcIntegrityTools.cs" />
+    <Compile Include="../../../src/Shared/MotionProDiagClassicHmiLogic.cs" Link="Shared/MotionProDiagClassicHmiLogic.cs" />
+    <Compile Include="../../../src/Shared/RuntimeToolContract.cs" Link="RuntimeToolContract.cs" />
+    <Compile Include="../../../src/Shared/PlcWatchPortService.cs" Link="PlcWatchPortService.cs" />
+    <Compile Include="../../../src/Shared/PlcCausalTraceTools.cs" Link="PlcCausalTraceTools.cs" />
+    <Compile Include="../../../src/Shared/PlcWatchTools.cs" Link="PlcWatchTools.cs" />
+    <Compile Include="../../../src/Shared/ClassicMotionToolContract.cs" Link="ClassicMotionToolContract.cs" />
+    <Compile Include="../../../src/Shared/PlcTechnologyPortService.cs" Link="PlcTechnologyPortService.cs" />
+    <Compile Include="../../../src/Shared/PlcMotionTools.cs" Link="PlcMotionTools.cs" />
+    <Compile Include="../../../src/Shared/PlcTechnologyTools.cs" Link="PlcTechnologyTools.cs" />
+    <Compile Include="../../../src/Shared/PlcIntegrityPortService.cs" Link="PlcIntegrityPortService.cs" />
+    <Compile Include="../../../src/Shared/Host/McpServer.ExportFailure.cs" Link="McpServer.ExportFailure.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs" Link="TechnologyObjectsTools.cs" />
     <Compile Include="../../../src/Shared/Host/EcosystemTools.cs" Link="EcosystemTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />

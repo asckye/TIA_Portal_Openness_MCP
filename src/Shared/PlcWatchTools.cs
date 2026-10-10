@@ -1,0 +1,547 @@
+using TiaMcp.Logic.V4.Domain;
+using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Logic.V4;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ModelContextProtocol;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using TiaMcpServer.Siemens;
+using TiaMcpServer.Siemens.Services;
+
+
+using TiaMcpServer.Siemens.Services;
+
+namespace TiaMcpServer.ModelContextProtocol
+{
+    [McpServerToolType]
+    internal sealed class PlcWatchTools
+    {
+        private readonly PlcOrganisationPortService _tables;
+        public PlcWatchTools(PlcOrganisationPortService service) => _tables = service;
+        [McpServerTool(Name = "ListPlcForceTables"), Description(
+            "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
+            " List all force table names in the PLC software." +
+            " Force tables configure which variables are continuously forced to specific values while the CPU is online." +
+            " Read-only: this server exposes NO tool for creating or editing force entries — forcing overrides live PLC logic" +
+            " (a forced output stays forced regardless of what the program writes) and is deliberately kept out of the AI tool surface." +
+            " Create or edit force entries in the TIA Portal UI. For a one-shot value written from a watch table instead," +
+            " use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards). Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult GetPlcForceTablesV4(
+            [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath)
+            => PlcToolContract.Run("ListPlcForceTables", false, true, () => GetPlcForceTables(softwarePath));
+
+        public ResponseStringList GetPlcForceTables(
+            string softwarePath)
+        {
+            try
+            {
+                var names = _tables.GetPlcForceTables(softwarePath);
+                if (names == null)
+                {
+                    // 原来这里返回 Items=[] + 一句「not found」的**正常**响应。
+                    // 只读 Items 的调用方看到的是「这台 PLC 没有强制表」——和「你路径写错了」
+                    // 是完全不同的结论，而它分辨不出来。
+                    throw new McpException(
+                        $"ListPlcForceTables: PLC software not found at '{softwarePath}'. "
+                        + "Use GetProjectTree to get the exact PLC path." + _tables.ForceTablePathsSuffix(),
+                        McpErrorCode.InvalidParams);
+                }
+
+                return new ResponseStringList
+                {
+                    Items = names,
+                    Message = $"{names.Count} force table(s) found.",
+                    Meta = new JsonObject { ["softwarePath"] = softwarePath, ["timestamp"] = DateTime.Now }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error listing force tables for '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "SetPlcWatchTableModifyValue"), Description(
+            "[L2][Category:PLC-Online][ONLINE-WRITE][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc]" +
+            " Configure a watch table entry to write a value to a PLC variable once (or on a trigger)." +
+            " This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires." +
+            " Trigger options: Permanent (every cycle), PermanentAtStart (every cycle, at scan start), OnceOnlyAtStart (single write at scan start), PermanentAtEnd, OnceOnlyAtEnd, OnceOnlyAtStop." +
+            " Use ConnectOnlinePlc before calling this for the write to reach the PLC." +
+            " SAFETY: the target is a variable in the physical CPU, not a simulation. The moment the trigger fires the value" +
+            " lands on the real address — if that address is a coil, a valve, a contactor or a drive enable, the machine moves" +
+            " at that instant, with no acknowledgement step. Before calling, know exactly what the address drives and confirm" +
+            " nobody is at or inside the machine. The resulting physical motion is NOT undone by calling this tool again with" +
+            " another value; the equipment stays wherever it moved to." +
+            " Not a Force: this writes the value once per trigger event and the variable then follows PLC logic again" +
+            " (a force would keep overriding the program continuously). This server exposes no tool for force entries —" +
+            " ListPlcForceTables only lists them; use TIA Portal directly to force a value." +
+            " Implementation (2.7.50): the typed Openness API cannot create tag rows (PlcWatchTable.Entries.Create() only makes comment rows), so the table is exported," +
+            " the row added or updated in the SimaticML and the table re-imported (override mode) into its own group; the row is read back (meta.after, readbackVerified). Project not saved." +
+            " Example: SetPlcWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart') Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult SetWatchTableModifyValueV4(
+            [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
+            [Description("tableName: watch table name or group-qualified path (e.g. 'MCP_W/MCP_WT'); a bare name is searched through every group (ambiguity refused) and the table is created at the root only when it exists nowhere")] string tableName,
+            [Description("address: absolute address ('%M0.0', 'DB1.DBX0.0') goes to the row's Address; a symbol ('MyTag', '\"DB\".Member') goes to its Name (quoted per segment like TIA)")] string address,
+            [Description("modifyValue: value to write, e.g. 'TRUE', '42', '3.14'")] string modifyValue,
+            [Description("trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)")] string trigger = "Permanent")
+            => PlcToolContract.Run("SetPlcWatchTableModifyValue", true, true, () => SetWatchTableModifyValue(softwarePath, tableName, address, modifyValue, trigger));
+
+        public ResponseMessage SetWatchTableModifyValue(
+            string softwarePath,
+            string tableName,
+            string address,
+            string modifyValue,
+            string trigger = "Permanent")
+        {
+            try
+            {
+                return _tables.EnsureWatchTableEntry(softwarePath, tableName, address, modifyValue, trigger);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error setting watch table entry: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        // Force-write capability retained in the Portal layer but intentionally NOT exposed as an MCP tool:
+        // forcing overrides live PLC logic and must not be AI-invocable. Online monitoring stays read-only
+        // (see RunOnlineMonitoringSafetySelfTest / Test_OnlineMonitoringNoUnsafeToolNames). Use TIA Portal
+        // directly for commissioning forces.
+        [McpServerTool(Name = "ExportPlcWatchTablesToDirectory"), Description("[L2][PLC-Software]Export all PLC watch/monitor tables to XML files. Read-only against the TIA project. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ExportPlcWatchTablesToDirectoryV4(
+            [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
+            [Description("dir: output directory")] string dir,
+            [Description("regexName: optional regex filter applied to table name")] string regexName = "")
+            => PlcToolContract.Run("ExportPlcWatchTablesToDirectory", true, true, () => ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName));
+
+        public ResponseImportBatch ExportPlcWatchTablesToDirectory(
+            string softwarePath,
+            string dir,
+            string regexName = "")
+        {
+            try
+            {
+                var result = _tables.ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName);
+                return new ResponseImportBatch
+                {
+                    Message = $"Exported {result.Imported?.Count() ?? 0} PLC watch tables to '{dir}'. Failed={result.Failed?.Count() ?? 0}",
+                    Imported = result.Imported,
+                    Failed = result.Failed,
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error exporting PLC watch tables: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "ProbePlcMonitorOnlineCapabilities"), Description("[L2][Online-Monitoring]Read-only probe for PLC online/offline/watch/monitor API surfaces. It does not go online/offline, change watch tables, write values, or touch restricted safety APIs. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ProbePlcMonitorOnlineCapabilitiesV4(
+            [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath)
+            => PlcToolContract.Run("ProbePlcMonitorOnlineCapabilities", false, true, () => ProbePlcMonitorOnlineCapabilities(softwarePath));
+
+        public ResponseJsonReport ProbePlcMonitorOnlineCapabilities(
+            string softwarePath)
+        {
+            try
+            {
+                var result = _tables.ProbePlcMonitorOnlineCapabilities(softwarePath);
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
+                return result;
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error probing PLC monitor/online capabilities: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "GetPlcWatchTableCurrentValuesReadOnly"), Description("[L2][Online-Monitoring] Read current/monitor value properties from an existing PLC watch table only. It does not create/modify watch tables, write PLC values, go offline, or use force operations. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ReadPlcWatchTableCurrentValuesReadOnlyV4(
+            [Description("softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.")] string softwarePath,
+            [Description("watchTableName: existing PLC watch table path/name returned by ListPlcWatchTables.")] string watchTableName,
+            [Description("maxEntries: maximum entries to inspect.")] int maxEntries = 50)
+            => PlcToolContract.Run("GetPlcWatchTableCurrentValuesReadOnly", false, true, () => ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, watchTableName, maxEntries));
+
+        public ResponseJsonReport ReadPlcWatchTableCurrentValuesReadOnly(
+            string softwarePath,
+            string watchTableName,
+            int maxEntries = 50)
+        {
+            try
+            {
+                var result = _tables.ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, watchTableName, maxEntries);
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
+                return result;
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error reading PLC watch table values read-only: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "PlanOnlineReadOnlyMonitoring"), Description("[L2][Online-Monitoring] Validate an online-monitoring request shape without connecting to TIA Portal. Read-only preflight only: no go-online/offline, no watch-table modification, no value write, and no force operation.")]
+        public CallToolResult PlanOnlineReadOnlyMonitoringV4(
+            [Description("softwarePath: PLC software path resolved from GetProjectTree/ValidateAutomationContext.")] string softwarePath,
+            [Description("tagPaths: JSON array of symbolic PLC tag/member paths, for example [\"DB_HMI.MotorRun\",\"DB_HMI.SpeedSet\"]. Do not pass guessed M bits.")] string[] tagPaths,
+            [Description("mode: current-values or watch-table-export-plan. Both are read-only planning modes.")] string mode = "current-values")
+            => PlcToolContract.Run("PlanOnlineReadOnlyMonitoring", false, false, () =>
+            {
+                var tagPathsValue = PlcToolContract.Input(NameListValidator.Create(new NameListPolicy(minimum: 1, trim: true)), tagPaths, "tagPaths");
+                return PlanOnlineReadOnlyMonitoring(softwarePath, V4Json.Serialize(tagPathsValue), mode);
+            });
+
+        public ResponseJsonReport PlanOnlineReadOnlyMonitoring(
+            string softwarePath,
+            string tagPathsJson,
+            string mode = "current-values")
+        {
+            try
+            {
+                var warnings = new JsonArray();
+                var acceptedTags = new JsonArray();
+                var rejectedTags = new JsonArray();
+                var policy = new JsonArray();
+                foreach (var policyLine in OnlineMonitoringPolicy.GetOnlineMonitoringSafetyPolicy())
+                {
+                    policy.Add(policyLine);
+                }
+                var normalizedMode = (mode ?? string.Empty).Trim();
+                var allowedModes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "current-values",
+                    "watch-table-export-plan"
+                };
+
+                if (!allowedModes.Contains(normalizedMode))
+                {
+                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, $"Unsupported mode '{mode}'. Supported values: current-values, watch-table-export-plan.");
+                }
+
+                if (string.IsNullOrWhiteSpace(softwarePath))
+                {
+                    warnings.Add("softwarePath is empty. Resolve the PLC software path from GetProjectTree before real online monitoring.");
+                }
+
+                JsonNode? parsed;
+                try
+                {
+                    parsed = JsonNode.Parse(tagPathsJson);
+                }
+                catch (Exception ex)
+                {
+                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, "tagPaths must be a JSON array of symbolic PLC paths. Parse error: " + ex.Message);
+                }
+
+                if (parsed is not JsonArray tagArray)
+                {
+                    return BuildOnlineMonitoringPlanResponse(false, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, "tagPaths must be a JSON array.");
+                }
+
+                foreach (var item in tagArray)
+                {
+                    var tag = item?.GetValue<string>()?.Trim() ?? string.Empty;
+                    var rejectReason = GetOnlineMonitoringTagRejectReason(tag);
+                    if (rejectReason == null)
+                    {
+                        acceptedTags.Add(tag);
+                    }
+                    else
+                    {
+                        rejectedTags.Add(new JsonObject
+                        {
+                            ["tagPath"] = tag,
+                            ["reason"] = rejectReason
+                        });
+                    }
+                }
+
+                if (acceptedTags.Count == 0)
+                {
+                    warnings.Add("No accepted tag paths. Real online monitoring requires at least one declared PLC symbol or DB member.");
+                }
+
+                var ok = rejectedTags.Count == 0 && acceptedTags.Count > 0;
+                var message = ok
+                    ? "Online read-only monitoring plan validated. This preflight did not connect to TIA Portal."
+                    : "Online read-only monitoring plan rejected. Fix rejected tag paths before any real online workflow.";
+
+                return BuildOnlineMonitoringPlanResponse(ok, softwarePath, normalizedMode, acceptedTags, rejectedTags, warnings, policy, message);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error planning online read-only monitoring: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        private static ResponseJsonReport BuildOnlineMonitoringPlanResponse(bool ok, string softwarePath, string mode, JsonArray acceptedTags, JsonArray rejectedTags, JsonArray warnings, JsonArray policy, string message)
+        {
+            return new ResponseJsonReport
+            {
+                Ok = ok,
+                Message = message,
+                Data = new JsonObject
+                {
+                    ["softwarePath"] = softwarePath,
+                    ["mode"] = mode,
+                    ["readOnly"] = true,
+                    ["connectsToTia"] = false,
+                    ["goesOnlineOrOffline"] = false,
+                    ["modifiesWatchTables"] = false,
+                    ["writesPlcValues"] = false,
+                    ["usesForce"] = false,
+                    ["acceptedTags"] = acceptedTags,
+                    ["rejectedTags"] = rejectedTags,
+                    ["warnings"] = warnings,
+                    ["policy"] = policy
+                },
+                Meta = ResponseMeta.Basic(DateTime.Now, ok)
+            };
+        }
+
+        private static string? GetOnlineMonitoringTagRejectReason(string tagPath)
+        {
+            if (string.IsNullOrWhiteSpace(tagPath))
+            {
+                return "Tag path is empty.";
+            }
+
+            var forbiddenIntent = new[]
+            {
+                "force", "write", "modify", "update", "create",
+                "delete", "remove", "import", "insert", "download", "activate", "start", "stop",
+                "goonline", "gooffline", "watchtable", "forcetable"
+            };
+            var compact = Regex.Replace(tagPath, @"[\s_\-\.]+", string.Empty);
+            var segments = Regex.Split(tagPath, @"[\.\s_\-]+").Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+            var forbidden = forbiddenIntent.FirstOrDefault(x =>
+                compact.Equals(x, StringComparison.OrdinalIgnoreCase) ||
+                segments.Any(segment => segment.StartsWith(x, StringComparison.OrdinalIgnoreCase)));
+            if (forbidden != null)
+            {
+                return $"Tag path contains unsafe online/write/force/watch-table intent keyword '{forbidden}'.";
+            }
+
+            if (Regex.IsMatch(tagPath, @"^%?[MIQ][BWD]?\d+(\.\d+)?$", RegexOptions.IgnoreCase))
+            {
+                return "Absolute I/Q/M address is not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
+            }
+
+            if (!Regex.IsMatch(tagPath, @"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$"))
+            {
+                return "Use a symbolic PLC path with at least one member separator, for example DB_HMI.MotorRun.";
+            }
+
+            return null;
+        }
+
+        [McpServerTool(Name = "PlanOnlineReadOnlyDataProvider"), Description("[L2][Online-Monitoring] Plan the commercial current-value path through an external read-only data provider such as opcua or s7-readonly. This is a preflight only: it does not connect, write PLC values, modify watch tables, go online/offline through TIA, or use force operations.")]
+        public CallToolResult PlanOnlineReadOnlyDataProviderV4(
+            [Description("provider: opcua or s7-readonly. opcua is preferred for commercial symbolic readback.")] string provider,
+            [Description("endpoint: OPC UA endpoint URL or PLC endpoint/IP. It is validated only for shape and is not opened.")] string endpoint,
+            [Description("tagPaths: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected.")] string[] tagPaths,
+            [Description("options: optional JSON object such as {\"pollMs\":1000,\"source\":\"watch-table-export\"}.")] MonitoringOptions? options = null)
+            => PlcToolContract.Run("PlanOnlineReadOnlyDataProvider", false, false, () =>
+            {
+                var tagPathsValue = PlcToolContract.Input(NameListValidator.Create(new NameListPolicy(minimum: 1, trim: true)), tagPaths, "tagPaths");
+                return PlanOnlineReadOnlyDataProvider(provider, endpoint, V4Json.Serialize(tagPathsValue), options?.Json.GetRawText()!);
+            });
+
+        public ResponseJsonReport PlanOnlineReadOnlyDataProvider(
+            string provider,
+            string endpoint,
+            string tagPathsJson,
+            string optionsJson = "{}")
+        {
+            try
+            {
+                var normalizedProvider = (provider ?? "").Trim().ToLowerInvariant();
+                var allowedProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "opcua",
+                    "s7-readonly"
+                };
+
+                var policy = new JsonArray(OnlineMonitoringPolicy.GetOnlineMonitoringSafetyPolicy().Select(x => JsonValue.Create(x)).ToArray());
+                var warnings = new JsonArray();
+                var acceptedTags = new JsonArray();
+                var rejectedTags = new JsonArray();
+                var options = ToolJsonArguments.ParseJsonObjectOrEmpty(optionsJson, "options");
+
+                if (!allowedProviders.Contains(normalizedProvider))
+                {
+                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, $"Unsupported provider '{provider}'. Supported providers: opcua, s7-readonly.");
+                }
+
+                if (string.IsNullOrWhiteSpace(endpoint))
+                {
+                    warnings.Add("endpoint is empty. Real read-only providers require an OPC UA endpoint URL or PLC endpoint/IP before execution.");
+                }
+
+                JsonNode? parsed;
+                try
+                {
+                    parsed = JsonNode.Parse(tagPathsJson);
+                }
+                catch (Exception ex)
+                {
+                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, "tagPaths must be a JSON array. Parse error: " + ex.Message);
+                }
+
+                if (parsed is not JsonArray tagArray)
+                {
+                    return BuildReadOnlyProviderPlan(false, normalizedProvider, endpoint, acceptedTags, rejectedTags, warnings, policy, options, "tagPaths must be a JSON array.");
+                }
+
+                foreach (var item in tagArray)
+                {
+                    var tag = item?.GetValue<string>()?.Trim() ?? "";
+                    var rejectReason = GetOnlineMonitoringTagRejectReason(tag);
+                    if (rejectReason == null)
+                    {
+                        acceptedTags.Add(tag);
+                    }
+                    else
+                    {
+                        rejectedTags.Add(new JsonObject
+                        {
+                            ["tagPath"] = tag,
+                            ["reason"] = rejectReason
+                        });
+                    }
+                }
+
+                if (normalizedProvider == "s7-readonly")
+                {
+                    warnings.Add("s7-readonly must be implemented as a read-only adapter with no Write/Force API surface exposed by MCP.");
+                }
+
+                var ok = acceptedTags.Count > 0 && rejectedTags.Count == 0;
+                return BuildReadOnlyProviderPlan(
+                    ok,
+                    normalizedProvider,
+                    endpoint,
+                    acceptedTags,
+                    rejectedTags,
+                    warnings,
+                    policy,
+                    options,
+                    ok
+                        ? "Read-only data provider plan validated. This preflight did not open a network connection."
+                        : "Read-only data provider plan rejected. Fix rejected tags/provider settings before any real read workflow.");
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error planning read-only data provider: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        private static ResponseJsonReport BuildReadOnlyProviderPlan(bool ok, string provider, string endpoint, JsonArray acceptedTags, JsonArray rejectedTags, JsonArray warnings, JsonArray policy, JsonObject options, string message)
+        {
+            return new ResponseJsonReport
+            {
+                Ok = ok,
+                Message = message,
+                Data = new JsonObject
+                {
+                    ["provider"] = provider,
+                    ["endpoint"] = endpoint ?? "",
+                    ["implementationPath"] = provider.Equals("opcua", StringComparison.OrdinalIgnoreCase)
+                        ? "Use OPC UA read/subscribe as the preferred commercial current-value channel."
+                        : "Use a strictly read-only S7 adapter for address/symbol reads when OPC UA is unavailable.",
+                    ["status"] = "planned-read-only-provider",
+                    ["usesTiaOpennessForCurrentValues"] = false,
+                    ["usesTiaOpennessForTagDiscovery"] = true,
+                    ["readOnly"] = true,
+                    ["connectsNow"] = false,
+                    ["writesPlcValues"] = false,
+                    ["modifiesWatchTables"] = false,
+                    ["usesForce"] = false,
+                    ["acceptedTags"] = acceptedTags,
+                    ["rejectedTags"] = rejectedTags,
+                    ["warnings"] = warnings,
+                    ["policy"] = policy,
+                    ["options"] = options
+                },
+                Meta = ResponseMeta.Basic(DateTime.Now, ok)
+            };
+        }
+
+
+        [McpServerTool(Name = "MonitorPlcWatchTableS7"), Description("[L2][Online-Monitoring] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult MonitorWatchTableLiveS7V4(
+            [Description("softwarePath: PLC software path, e.g. '安全PLC'.")] string softwarePath,
+            [Description("watchTableName: existing watch table name from ListPlcWatchTables.")] string watchTableName,
+            [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
+            [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
+            [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
+            [Description("expectModuleContains: optional identity guard (e.g. '1211C'); aborts on a positive module-type mismatch.")] string expectModuleContains = "")
+            => PlcToolContract.Run("MonitorPlcWatchTableS7", true, true, () => MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains));
+
+        public ResponseJsonReport MonitorWatchTableLiveS7(
+            string softwarePath,
+            string watchTableName,
+            string ip,
+            int rack = 0,
+            int slot = 1,
+            string expectModuleContains = "")
+        {
+            try
+            {
+                var result = _tables.MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains);
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
+                return result;
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"MonitorPlcWatchTableS7 failed: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
+
+        [McpServerTool(Name = "ImportPlcWatchTableOffline"), Description("[L2][PLC-Software][WRITE] Import native SimaticML watch tables into an exact existing group. Offline-only, no overwrite. Rejects force-table and mixed-object XML and DTD. dryRun=true default. Does not execute modify values, start monitoring, save or download. filePath is on the MCP server. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcWatchTableOfflineV4(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
+            => PlcToolContract.Run("ImportPlcWatchTableOffline", !dryRun, true, () => ImportPlcWatchTableOffline(softwarePath, filePath, groupPath, dryRun));
+
+        public ResponseMessage ImportPlcWatchTableOffline(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
+            => _tables.ImportPlcWatchTableOffline(softwarePath,filePath,groupPath,dryRun);
+
+
+
+
+
+        [McpServerTool(Name = "ManagePlcTableEntries"), Description("[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ManagePlcTableEntriesV4(
+            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
+            [Description("tableKind: watch | force.")] string tableKind,
+            [Description("tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root table).")] string tablePath,
+            [Description("action: read | createComment | deleteEntry | deleteTable (force tables: read only).")] string action="read",
+            [Description("entryIndex: 0-based row index from a read, for deleteEntry.")] int entryIndex=-1,
+            [Description("confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.")] bool confirmDelete=false,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true,
+            [Description("offset: first row to return (paging).")] int offset=0,
+            [Description("limit: maximum rows to return.")] int limit=200)
+            => PlcToolContract.Run("ManagePlcTableEntries", !dryRun && action != "read", true, () => ManagePlcTableEntries(softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit));
+
+        public ResponseMessage ManagePlcTableEntries(
+            string softwarePath,
+            string tableKind,
+            string tablePath,
+            string action="read",
+            int entryIndex=-1,
+            bool confirmDelete=false,
+            bool dryRun=true,
+            int offset=0,
+            int limit=200)
+            => _tables.ManagePlcTableEntries(softwarePath,tableKind,tablePath,action,entryIndex,confirmDelete,dryRun,offset,limit);
+    }
+}

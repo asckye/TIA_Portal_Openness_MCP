@@ -47,14 +47,7 @@ namespace TiaMcpServer.Siemens
         }
 
         private PlcTag ExactPlcTag(string softwarePath, string tagPath)
-        {
-            var plc = ExactPlcForEngineering(softwarePath, false);
-            var parts = EngineeringGroupOperations.Parts(tagPath);
-            if (parts.Length < 2) throw new ArgumentException("plcTagPath must be [group/...]/table/tag.");
-            var group = EngineeringGroupOperations.Group(plc.TagTableGroup, string.Join("/", parts.Take(parts.Length - 2)));
-            var table = EngineeringGroupOperations.Find(EngineeringGroupOperations.Get(group, "TagTables"), parts[parts.Length - 2]) ?? throw new InvalidOperationException("Exact PLC tag table not found.");
-            return EngineeringGroupOperations.Find(EngineeringGroupOperations.Get(table, "Tags"), parts.Last()) as PlcTag ?? throw new InvalidOperationException("Exact PLC tag not found.");
-        }
+            => new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ExactPlcTag(softwarePath, tagPath);
 
         private DeviceItem ExactDeviceItem(string[] devicePath, string[] itemPath)
             => ExactEngineeringHardware(new JsonArray(devicePath.Select(x => (JsonNode)x).ToArray()).ToJsonString(), new JsonArray(itemPath.Select(x => (JsonNode)x).ToArray()).ToJsonString()) as DeviceItem

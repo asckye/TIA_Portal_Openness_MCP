@@ -112,8 +112,10 @@ namespace TiaMcpServer.Siemens
 
         // ---- channels ----------------------------------------------------------------------------------------------------
         private static Channel ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber)
-            => item.Channels.Find((ChannelType)Enum.Parse(typeof(ChannelType), channelType), (ChannelIoType)Enum.Parse(typeof(ChannelIoType), channelIoType), channelNumber)
-               ?? throw new PortalException(PortalErrorCode.NotFound, "Channel not found: " + channelType + "/" + channelIoType + "/" + channelNumber);
+        {
+            try { return TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter.ExactChannel(item, channelType, channelIoType, channelNumber); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException ex) { throw new PortalException(PortalErrorCode.NotFound, ex.Message); }
+        }
 
     }
 }

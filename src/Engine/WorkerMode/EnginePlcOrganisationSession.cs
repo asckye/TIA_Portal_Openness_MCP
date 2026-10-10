@@ -24,6 +24,9 @@ namespace TiaMcpServer.Worker
         public global::Siemens.Engineering.HW.HardwareObject ExactEngineeringHardware(string[] devicePath, string[] itemPath) => session.ExactEngineeringHardware(JsonSerializer.Serialize(devicePath), JsonSerializer.Serialize(itemPath));
         public string PlcSoftwarePath(PlcSoftware? software) => SoftwareContainerLookup.PathOf(software);
         public string ReleaseKey => Engineering.TiaMajorVersion.ToString();
+        public string SerializeEvidence(Dictionary<string, object?> evidence) => JsonSerializer.SerializeToNode(evidence)!.ToJsonString();
+        public void RecordExportFailure(Exception error) => TiaMcp.Logic.V4.CallerInputFiles.RecordExportFailure(error);
+        public void LogEngineeringFailure(Exception error, string message) => session.Logger?.LogError(error, message);
         public void RecordExportPath(string? path) => ((Portal)session).RecordPlcSoftwareExportPath(path);
         public PlcTypeGroup? GetPlcTypeGroupByPath(string path, string groupPath) => ((Portal)session).GetPlcTypeGroupByPath(path, groupPath);
         public string GetPlcBlockGroupPath(PlcBlockGroup group) => session.GetPlcBlockGroupPath(group);

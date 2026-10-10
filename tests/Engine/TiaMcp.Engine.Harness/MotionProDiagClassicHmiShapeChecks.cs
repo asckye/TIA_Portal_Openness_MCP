@@ -138,15 +138,16 @@ internal static class MotionProDiagClassicHmiShapeChecks
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
         foreach (var domain in new[] {
-            (Name: "ClassicHmiFolders", Field: "_classicHmiFolders", Tools: new[] {
+            (Name: "ClassicHmiFolders", Ported: false, Field: "_classicHmiFolders", Tools: new[] {
                 "GetClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic" }),
-            (Name: "MotionProDiagClassicHmi", Field: "_motionProDiagClassicHmi", Tools: new[] {
-                "GetMotionAxisConfiguration", "ManageMotionAxis", "ManagePlcSupervision", "ListClassicHmiScripts",
+            (Name: "MotionProDiagClassicHmi", Ported: false, Field: "_motionProDiagClassicHmi", Tools: new[] {
+                "ManagePlcSupervision", "ListClassicHmiScripts",
                 "ManageClassicHmiScript", "ManageClassicHmiCycle", "ManageClassicHmiTextGraphicList",
-                "GetClassicHmiGlobalization", "ListClassicHmiFaceplates", "ExportPlcProDiagInfo",
-                "ExchangeMotionCamData", "ConfigureMotionHardwareConnection" }) })
+                "GetClassicHmiGlobalization", "ListClassicHmiFaceplates", "ExportPlcProDiagInfo" }),
+            (Name: "PlcMotion", Ported: true, Field: "_technology", Tools: new[] {
+                "GetMotionAxisConfiguration", "ManageMotionAxis", "ExchangeMotionCamData", "ConfigureMotionHardwareConnection" }) })
         {
-            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + (domain.Ported ? "PlcOrganisationPort" : domain.Name) + "Service", true)!;
             var toolType = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             var registered = toolType.GetMethods(all).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
                 .Select(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name).OrderBy(name => name).ToArray();
@@ -167,7 +168,8 @@ internal static class MotionProDiagClassicHmiShapeChecks
                 check(method.DeclaringType == service && tool.DeclaringType == toolType && !tool.IsStatic
                     && ReferenceEquals(target, tools.Target(method)) && ReferenceEquals(tools.Target(tool), tools.Target(tool)),
                     domain.Name + " surface resolves service and tool singletons: " + name);
-                check(session != null && ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                check((domain.Ported ? service.GetField("call", all)!.GetValue(target) is Delegate
+                    : session != null && ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(toolType.GetField(domain.Field, all)!.GetValue(tools.Target(tool)), target),
                     domain.Name + " tool uses the service with the shared session: " + name);
                 bool callsService = CallsService(tool, method, toolType, new HashSet<MethodBase>());

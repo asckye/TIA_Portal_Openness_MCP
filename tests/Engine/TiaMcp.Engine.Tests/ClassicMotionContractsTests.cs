@@ -24,6 +24,9 @@ namespace TiaMcp.Engine.Tests
         private readonly MotionProDiagClassicHmiService motion = new MotionProDiagClassicHmiService();
         private readonly ToolCatalog catalog;
         private readonly MotionProDiagClassicHmiTools tools;
+        private readonly PlcMotionTools motionTools;
+        private int portCalls;
+        private JsonObject? lastPortArguments;
         private static readonly string[] Names = {
             "GetClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic",
             "GetMotionAxisConfiguration", "ManageMotionAxis", "ManagePlcSupervision", "ListClassicHmiScripts", "ManageClassicHmiScript",
@@ -34,9 +37,10 @@ namespace TiaMcp.Engine.Tests
         public ClassicMotionContractsTests()
         {
             tools = new MotionProDiagClassicHmiTools(motion);
-            catalog = new ToolCatalog(new[] { typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools) });
+            motionTools = new PlcMotionTools(new PlcOrganisationPortService((_, arguments) => { portCalls++; lastPortArguments = (JsonObject)arguments.DeepClone(); return new JsonObject { ["Message"] = "", ["Meta"] = new JsonObject { ["success"] = true } }; }, () => true, () => "fixture"));
+            catalog = new ToolCatalog(new[] { typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools), typeof(PlcMotionTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
-            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ClassicHmiFoldersTools(folders)).AddSingleton(tools).BuildServiceProvider());
+            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ClassicHmiFoldersTools(folders)).AddSingleton(tools).AddSingleton(motionTools).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static ToolArguments Args(string json) => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));
@@ -83,6 +87,26 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Theory]
+        [InlineData("read")]
+        [InlineData("manage")]
+        [InlineData("cam")]
+        [InlineData("connect")]
+        public void UnboundMotionProjectIsRefusedBeforeWorkerDispatch(string operation)
+        {
+            var service = new PlcOrganisationPortService((_, __) => throw new Exception("Worker must not be called."), () => false, () => throw new Exception("Identity must not be read."));
+            var tools = new PlcMotionTools(service);
+            var result = operation switch {
+                "read" => tools.GetMotionAxisConfiguration("PLC", "Axis"),
+                "manage" => tools.ManageMotionAxis("PLC", "Axis", "read"),
+                "cam" => tools.ExchangeMotionCamData("PLC", "Cam", "export", "fixture.csv"),
+                _ => tools.ConfigureMotionHardwareConnection("PLC", "Axis", "actor", "disconnect")
+            };
+            Assert.Equal("PROJECT_NOT_BOUND", (string?)result.StructuredContent!["error"]!["code"]);
+            Assert.Equal("rejected-before-operation", (string?)result.StructuredContent!["meta"]!["outcome"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent!["meta"]!["execution"]);
+        }
+
+        [Theory]
         [InlineData("\"{}\"")]
         [InlineData("null")]
         [InlineData("{}")]
@@ -101,7 +125,7 @@ namespace TiaMcp.Engine.Tests
             Rejected(await Direct("ManageMotionAxis", json));
             Rejected(await Direct("CallTool", "{\"name\":\"ManageMotionAxis\",\"arguments\":" + json + "}"));
             Rejected(await Direct("PreviewToolBatch", "{\"operations\":[{\"name\":\"ManageMotionAxis\",\"arguments\":" + json + "}],\"expectedProject\":\"Fixture\"}"));
-            Assert.Equal(0, folders.Calls + motion.Calls);
+            Assert.Equal(0, folders.Calls + motion.Calls + portCalls);
         }
 
         [Theory]
@@ -164,7 +188,9 @@ namespace TiaMcp.Engine.Tests
         public async Task OmittedTargetUsesTheDeclaredDefaultAndReadsHaveTheSameEnvelope()
         {
             Body(McpServer.CallTool("ManageMotionAxis", Args("{\"softwarePath\":\"PLC\",\"objectPath\":\"Axis\",\"action\":\"read\"}")));
-            Assert.Equal("{}", motion.LastTarget);
+            Assert.Equal("read", (string?)lastPortArguments?["request"]?["Action"]);
+            Assert.Equal("", (string?)lastPortArguments?["request"]?["MotionTarget"]?["Mode"]);
+            Assert.Null(lastPortArguments?["request"]?["MotionTarget"]?["DevicePath"]);
             const string json = "{\"softwarePath\":\"HMI\"}";
             var direct = Body(await Direct("ListClassicHmiScripts", json));
             var bridge = Body(McpServer.CallTool("ListClassicHmiScripts", Args(json)));

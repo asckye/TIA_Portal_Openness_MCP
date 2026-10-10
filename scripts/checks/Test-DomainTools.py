@@ -1151,7 +1151,13 @@ PORTED_DOMAIN_TOOLS = {
         'PlcReadModifyTools': ('SetPlcProgram', 'GetPlcBlockEditCapabilities', 'ImportPlcBlockVerified',
             'RepairAndReimportPlcBlock', 'DescribePlcBlockLogic')},
     'NativeExchange': {'PlcReadModifyTools': ('CreatePlcInstanceDb', 'GeneratePlcSourceFromBlocks', 'ManagePlcTagDefinition')},
-    'PlcTables': {'PlcReadModifyTools': ('GetPlcTagTableConstants', 'ImportPlcTagTablesFromDirectory')},
+    'PlcTables': {'PlcReadModifyTools': ('GetPlcTagTableConstants', 'ImportPlcTagTablesFromDirectory'),
+        'PlcWatchTools': ('ExportPlcWatchTablesToDirectory', 'GetPlcWatchTableCurrentValuesReadOnly', 'ImportPlcWatchTableOffline', 'ListPlcForceTables', 'ManagePlcTableEntries', 'MonitorPlcWatchTableS7', 'PlanOnlineReadOnlyDataProvider', 'PlanOnlineReadOnlyMonitoring', 'ProbePlcMonitorOnlineCapabilities', 'SetPlcWatchTableModifyValue')},
+    'Runtime': {'PlcCausalTraceTools': ('TraceTagCause', 'TraceTagCauseLive')},
+    'MotionProDiagClassicHmi': {'PlcMotionTools': ('GetMotionAxisConfiguration', 'ManageMotionAxis', 'ExchangeMotionCamData', 'ConfigureMotionHardwareConnection')},
+    'TechnologyObjects': {'PlcTechnologyTools': ('ExportTechnologyObjectsToDirectory', 'ImportTechnologyObject', 'ImportTechnologyObjectsFromDirectory', 'GetTechnologyObjectTree', 'ManageTechnologyObject')},
+    'SoftwareUnitDeep': {'PlcIntegrityTools': ('ListPlcSoftwareUnits', 'ManagePlcSoftwareUnit', 'GetPlcChecksums', 'GetPlcObjectFingerprints', 'ManagePlcBlockWriteProtection')},
+    'SoftwareUnitManagement': {'PlcIntegrityTools': ('SetPlcUnitObjectAccess',)},
     'Types': {'PlcReadModifyTools': ('SeedProjectFromReference',)},
     'Diagnostics': {'HostMetaTools': (
         'GenerateAcceptanceReport', 'GenerateErrorReport', 'RunOnlineMonitoringSafetySelfTest')}
@@ -1173,7 +1179,12 @@ def check_coverage(domains):
         resources.require(actual == names,
             f'{type_name} ported fixture coverage differs: actual={actual}, covered={names}')
     for domain in domains:
-        actual = declarations(domain + 'Tools')
+        if domain == 'SoftwareUnitManagement':
+            resources.require(not (Path(__file__).resolve().parents[2] / 'src/Engine/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs').exists(),
+                              'Retired SoftwareUnitManagementTools must not reappear')
+            actual = set()
+        else:
+            actual = declarations(domain + 'Tools')
         for names in PORTED_DOMAIN_TOOLS.get(domain, {}).values():
             actual.update(names)
         covered = {name for name, _, _ in CASES[domain]}

@@ -84,6 +84,19 @@
     <Compile Include="../Shared/PlcReadModifyTools.cs" Link="Shared/PlcReadModifyTools.cs" />
     <Compile Include="../Shared/PlcSoftwarePortService.cs" Link="Shared/PlcSoftwarePortService.cs" />
     <Compile Include="../Shared/PlcOrganisationPortService.cs" Link="Shared/PlcOrganisationPortService.cs" />
+    <Compile Include="../Shared/EngineeringToolContract.cs" Link="Shared/EngineeringToolContract.cs" />
+    <Compile Include="../Shared/PlcIntegrityTools.cs" Link="Shared/PlcIntegrityTools.cs" />
+    <Compile Include="../Shared/RuntimeToolContract.cs" Link="Shared/RuntimeToolContract.cs" />
+    <Compile Include="../Shared/PlcWatchPortService.cs" Link="Shared/PlcWatchPortService.cs" />
+    <Compile Include="../Shared/PlcCausalTraceTools.cs" Link="Shared/PlcCausalTraceTools.cs" />
+    <Compile Include="../Shared/PlcWatchTools.cs" Link="Shared/PlcWatchTools.cs" />
+    <Compile Include="../Shared/MotionProDiagClassicHmiLogic.cs" Link="Shared/MotionProDiagClassicHmiLogic.cs" />
+    <Compile Include="../Shared/ClassicMotionToolContract.cs" Link="Shared/ClassicMotionToolContract.cs" />
+    <Compile Include="../Shared/PlcTechnologyPortService.cs" Link="Shared/PlcTechnologyPortService.cs" />
+    <Compile Include="../Shared/PlcMotionTools.cs" Link="Shared/PlcMotionTools.cs" />
+    <Compile Include="../Shared/PlcTechnologyTools.cs" Link="Shared/PlcTechnologyTools.cs" />
+    <Compile Include="../Shared/Host/McpServer.ExportFailure.cs" Link="Shared/McpServer.ExportFailure.cs" />
+    <Compile Include="../Shared/PlcIntegrityPortService.cs" Link="Shared/PlcIntegrityPortService.cs" />
     <Compile Include="../Shared/HardwareAddressTools.cs" Link="Shared/HardwareAddressTools.cs" />
     <Compile Include="../Shared/HardwareNetworkTools.cs" Link="Shared/HardwareNetworkTools.cs" />
     <Compile Include="../Shared/HardwareNetworkPortService.cs" Link="Shared/HardwareNetworkPortService.cs" />

@@ -20,6 +20,7 @@ namespace TiaMcpServer.Siemens.Services
         private JsonObject Invoke(PlcSoftwareRequest request)
         {
             string? unsupported = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action, request.Family, request.UnitName, request.UnitKind, request.TargetKind, request.CopyMode, request.GenerateOption);
+            unsupported ??= PlcB4Capabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unsupported != null) throw new NotSupportedException(unsupported);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
             if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = projectIdentity(); }
@@ -45,6 +46,8 @@ namespace TiaMcpServer.Siemens.Services
         private static ResponseMessage Step(JsonObject reply) => new ResponseMessage {
             Message = (string?)reply["Message"] ?? "", Meta = (JsonObject)reply["Meta"]!.DeepClone()
         };
+        private ResponseMessage OrganisationStep(PlcSoftwareRequest request)
+            => !hasProject() ? NoProject(request.Operation) : Step(Invoke(request));
         private static ResponseMessage NoProject(string tool) => new ResponseMessage {
             Message = "Project is null", Meta = ResponseMeta.Step(tool, ("error", JsonValue.Create("Project is null")), ("status", JsonValue.Create("InvalidState")), ("operationSuccess", JsonValue.Create(false)))
         };

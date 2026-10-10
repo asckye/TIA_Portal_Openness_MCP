@@ -3470,6 +3470,36 @@
         ]
       },
       {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
         "family": "F17",
         "state": "current",
         "l5": "NOT RUN",
@@ -3734,6 +3764,47 @@
         "entries": [
           "GeneratePlcSourceFromBlocks",
           "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints"
         ]
       },
       {
@@ -4006,6 +4077,52 @@
         ]
       },
       {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints",
+          "ListPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
+        ]
+      },
+      {
         "family": "F17",
         "state": "current",
         "l5": "NOT RUN",
@@ -4274,6 +4391,53 @@
         "entries": [
           "GeneratePlcSourceFromBlocks",
           "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "SetPlcWatchTableModifyValue",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints",
+          "ListPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
         ]
       },
       {
@@ -4549,6 +4713,53 @@
           "GeneratePlcSourceFromBlocks",
           "GetPlcCrossReferences",
           "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "SetPlcWatchTableModifyValue",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints",
+          "ListPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
         ]
       },
       {
@@ -4835,6 +5046,53 @@
           "GeneratePlcSourceFromBlocks",
           "GetPlcCrossReferences",
           "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "SetPlcWatchTableModifyValue",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints",
+          "ListPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
         ]
       },
       {

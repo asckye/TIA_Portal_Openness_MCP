@@ -773,12 +773,26 @@ def capture_release(args, release, exe, public_api):
                 source = args.repo_root / resource
                 target = scratch / resource
                 if source.is_dir():
-                    shutil.copytree(source, target)
+                    shutil.copytree(source, target, dirs_exist_ok=True)
                 elif source.is_file():
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(source, target)
             capture_args.engine_host = capture_exe
             capture_args.repo_root = scratch
+            workers = contracts.engine_overrides(args.engine_worker, '--engine-worker')
+            catalogs = contracts.engine_overrides(args.engine_catalog, '--engine-catalog')
+            if (release in workers) != (release in catalogs):
+                raise ValueError('EngineHost overrides require both worker and catalog for V' + release)
+            if release in workers:
+                worker_root = scratch / 'runtime' / ('v' + release) / 'worker'
+                shutil.copytree(workers[release].parent, worker_root, dirs_exist_ok=True, ignore=lambda _dir, names: {
+                    name for name in names if name.lower().startswith('siemens.engineering') and name.lower().endswith('.dll')})
+                worker_catalog = worker_root / 'tool-catalog.json'
+                shutil.copy2(catalogs[release], worker_catalog)
+                workers[release] = worker_root / workers[release].name
+                catalogs[release] = worker_catalog
+                capture_args.engine_worker = [key + '=' + str(path) for key, path in workers.items()]
+                capture_args.engine_catalog = [key + '=' + str(path) for key, path in catalogs.items()]
         server = (contracts.engine_host_server(capture_args, release, portal_root, 'full', env) if args.engine_host
                   else resources.server(capture_exe, portal_root, int(release), 'stdio', 'full',
                               harness, public_api, env_overrides=env

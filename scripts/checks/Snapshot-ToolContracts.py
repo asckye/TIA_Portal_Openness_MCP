@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 from contextlib import contextmanager
 import os
 import queue
@@ -225,7 +226,10 @@ def capture(args):
         executables[release] = Path(path).resolve()
     # The SDK-only installation copies the whole PublicAPI tree (schemas, parameter PDFs); a short
     # temporary root keeps it under MAX_PATH when the release candidate's output path is deep.
-    fixture_root = Path(tempfile.mkdtemp(prefix='tc-sdk-'))
+    # Inherit the worktree/temp parent's ACL; mkdtemp's private Windows ACL
+    # cannot be reopened by restricted release-check processes.
+    fixture_root = Path(tempfile.gettempdir()) / ('tc-sdk-' + uuid.uuid4().hex)
+    fixture_root.mkdir()
     if args.harness is None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
     requested_host = args.engine_host

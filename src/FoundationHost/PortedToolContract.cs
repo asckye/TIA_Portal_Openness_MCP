@@ -26,7 +26,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+        PortedFamilies.All.Where(family => (family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
         string? candidate = tool.ProtocolTool.Name switch {
@@ -42,6 +42,9 @@ internal static class PortedToolContract
     // also part of the wiring. Pure builders do not read session state.
     internal static string[] WiredOperations(string tool) => tool switch
     {
+        "ConfigureMotionHardwareConnection" or "ExchangeMotionCamData" or "ExportTechnologyObjectsToDirectory" or "GetMotionAxisConfiguration" or "GetTechnologyObjectTree" or "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory" or "ManageMotionAxis" or "ManageTechnologyObject" => new[] { "plc-technology.ExecutePlcOrganisation", "ReadState" },
+        "ExportPlcWatchTablesToDirectory" or "GetPlcWatchTableCurrentValuesReadOnly" or "ImportPlcWatchTableOffline" or "ListPlcForceTables" or "ManagePlcTableEntries" or "MonitorPlcWatchTableS7" or "ProbePlcMonitorOnlineCapabilities" or "SetPlcWatchTableModifyValue" or "TraceTagCause" or "TraceTagCauseLive" => new[] { "plc-watch.ExecutePlcOrganisation", "ReadState" },
+        "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider" => Array.Empty<string>(),
         "GetDeviceAddressing" => new[] { "hardware-addressing.ReadHardwareAddressing", "ReadState" },
         "GetDeviceIpAddress" => new[] { "hardware-addressing.ReadHardwareIpAddress", "ReadState" },
         "GetDeviceItemIoAddresses" => new[] { "hardware-addressing.ReadHardwareIoAddresses", "hardware-addressing.DescribeHardwareIoChildren", "ReadState" },
@@ -91,6 +94,7 @@ internal static class PortedToolContract
         "CreatePlcBlockGroup" or "CreatePlcTypeGroup" or "DeleteEmptyPlcBlockGroup" or "DeletePlcBlock" or "DeletePlcTagTable" or "DeletePlcType" or "ManagePlcBlockProtection" or "ManagePlcUserGroup" or "MovePlcBlockToGroup" or "ListPlcSystemGroups" => new[] { "plc-organisation.ExecutePlcOrganisation", "ReadState" },
         "CreatePlcInstanceDb" or "ManagePlcTagDefinition" or "SetPlcProgram" or "GetPlcTagTableConstants" or "ImportPlcBlockVerified" or "BuildAndImportPlcArtifact" or "DescribePlcBlockLogic" or "RepairAndReimportPlcBlock" or "ImportPlcTagTablesFromDirectory" => new[] { "plc-software.ExecutePlcOrganisation", "ReadState" },
         "SeedProjectFromReference" => new[] { "plc-software.ExecutePlcOrganisation", "plc-software.SeedReferenceHmi", "ReadState" },
+        "ListPlcSoftwareUnits" or "ManagePlcSoftwareUnit" or "SetPlcUnitObjectAccess" or "GetPlcChecksums" or "GetPlcObjectFingerprints" or "ManagePlcBlockWriteProtection" => new[] { "plc-integrity.ExecutePlcOrganisation", "ReadState" },
         "CompileDevice" or "CompileHmiDiagnostics" => new[] { "plc-compile.ExecutePlcOrganisation", "ReadState" },
         "GetPlcBlockEditCapabilities" => new[] { "plc-analysis.ExportBlockDocument", "ReadState" },
         "GeneratePlcSourceFromBlocks" or "ManagePlcExternalSources" or "GetPlcCrossReferences" => new[] { "plc-sources.ExecutePlcOrganisation", "ReadState" },
@@ -170,6 +174,16 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("copyMode", out var copyMode) ? copyMode.GetString() ?? "" : "",
             arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        var b4 = new PlcSoftwareRequest { Operation = tool.Name, Action = actionName };
+        string Text(string name) => arguments.TryGetValue(name, out var value) ? value.GetString() ?? "" : "";
+        b4.Aspect = Text(tool.Name == "ConfigureMotionHardwareConnection" ? "interfaceKind" : "aspect");
+        b4.Path = Text("objectPath");
+        b4.GroupPath = Text(tool.Name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath");
+        if (tool.Name == "ManagePlcSoftwareUnit" && arguments.TryGetValue("properties", out var properties)
+            && properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty("NamespacePreset", out _))
+            b4.Properties["NamespacePreset"] = new HardwareScalar();
+        if (PlcB4Capabilities.Unsupported(portedRelease!, b4) != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         return null;
     }
 
@@ -182,7 +196,7 @@ internal sealed partial class FoundationTool
         // the same lane as the eventual request so approval cannot race a rebind.
         using var lane = await AcquireLane(token);
         ActivateLane(lane);
-        var state = (tool.Name == "BuildDeviceAmlDocument" || tool.Name == "PlanHardwareNetworkConfiguration") ? null : await worker.Call("ReadState", new JsonObject(), token);
+        var state = (tool.Name == "BuildDeviceAmlDocument" || tool.Name == "PlanHardwareNetworkConfiguration" || tool.Name == "PlanOnlineReadOnlyMonitoring" || tool.Name == "PlanOnlineReadOnlyDataProvider") ? null : await worker.Call("ReadState", new JsonObject(), token);
         var service = new HardwareAddressingService((operation, values) => worker.Call(operation, values, token).GetAwaiter().GetResult(),
             () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]), () => (string?)state?["ProjectFile"] ?? "");
         Func<string, JsonObject, JsonNode?> call = (operation, input) => worker.Call(operation, input, token).GetAwaiter().GetResult();
@@ -190,6 +204,11 @@ internal sealed partial class FoundationTool
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
         object target = portedMethod!.DeclaringType!.Name switch
         {
+            "PlcTechnologyTools" => new PlcTechnologyTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcMotionTools" => new PlcMotionTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcWatchTools" => new PlcWatchTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcCausalTraceTools" => new PlcCausalTraceTools(new PlcOrganisationPortService(call, hasProject, identity)),
+            "PlcIntegrityTools" => new PlcIntegrityTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcCompilePortTools" => new PlcCompilePortTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcBuildTools" => new PlcBuildTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcReadModifyTools" => new PlcReadModifyTools(new PlcOrganisationPortService(call, hasProject, identity)),

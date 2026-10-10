@@ -16,12 +16,7 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         private static JsonNode? MultilingualJson(MultilingualText? text)
-        {
-            if (text == null) return null;
-            var items = new JsonObject();
-            foreach (var item in EngineeringGroupOperations.Items(text.Items).Cast<MultilingualTextItem>()) items[item.Language?.Culture?.Name ?? "?"] = item.Text;
-            return items;
-        }
+            => System.Text.Json.JsonSerializer.SerializeToNode(TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter.ReadMultilingualEvidence(text));
         private static string LibraryPathOf(object node, string rootTypeName)
         {
             // Folder path of a type/master copy/folder relative to the library's system folder, by walking Parent names.

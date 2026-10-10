@@ -23,12 +23,16 @@ namespace TiaMcp.Adapters
         public Func<PlcSoftwareRequest, PlcVerifiedCandidate>? ValidatePlcVerifiedCandidate { get; set; }
         public Func<PlcVerifiedExecution, string>? ExecutePlcVerifiedWorkflow { get; set; }
         public IPlcOrganisationSession? EngineeringPlcOrganisationSession { get; set; }
+        public Func<Dictionary<string, object?>, string>? OrganisationEvidenceJson { get; set; }
+        public Action<Exception>? OrganisationExportFailure { get; set; }
+        public Action<Exception, string>? OrganisationLogFailure { get; set; }
 
         public PlcSoftwareReply ExecutePlcOrganisation(PlcSoftwareRequest request, bool dryRun = true)
         {
             Check();
             if (request.DryRun != dryRun) throw new ArgumentException("Conflicting PLC preview mode.");
             string? unavailable = PlcSoftwareCapabilities.Unsupported(ReleaseKey, request.Operation, request.Action, request.Family, request.UnitName, request.UnitKind, request.TargetKind, request.CopyMode, request.GenerateOption);
+            unavailable ??= PlcB4Capabilities.Unsupported(ReleaseKey, request);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             var adapter = new PlcOrganisationAdapter(EngineeringPlcOrganisationSession ?? new OrganisationSession(this));
             var reply = new PlcSoftwareReply();
@@ -38,6 +42,40 @@ namespace TiaMcp.Adapters
                 HardwareAddressingReply? step = null;
                 switch (request.Operation)
                 {
+#if PLC_UNITS
+                    case "ListPlcSoftwareUnits": step = adapter.ReadPlcSoftwareUnits(request.SoftwarePath, request.UnitName, request.UnitKind, request.IncludeBlocks, request.Offset, request.Limit); break;
+                    case "ManagePlcSoftwareUnit": step = adapter.ManagePlcSoftwareUnit(request.SoftwarePath, request.Action, request.Name, request.RelatedUnit, request.RelationType, request.Properties, dryRun, request.UnitKind, request.Comments, request.LibraryName, request.MasterCopyPath, request.CopyMode, request.ValidationError); break;
+                    case "SetPlcUnitObjectAccess": step = adapter.SetPlcUnitObjectAccess(request.SoftwarePath, request.UnitName, request.Kind, request.Path, request.Access, dryRun); break;
+#endif
+#if PLC_INTEGRITY_PROVIDERS
+                    case "GetPlcChecksums": step = adapter.ReadPlcChecksums(request.SoftwarePath); break;
+                    case "GetPlcObjectFingerprints": step = adapter.ReadPlcObjectFingerprints(request.SoftwarePath, request.Kind, request.Path, request.UnitName, request.UnitKind); break;
+                    case "ManagePlcBlockWriteProtection": step = adapter.ManagePlcBlockWriteProtection(request.SoftwarePath, request.Path, request.Action, request.Password, request.NewPassword, request.Confirm, dryRun, request.UnitName, request.UnitKind); break;
+#endif
+                    case "ImportTechnologyObject": adapter.ImportTechnologyObject(request.SoftwarePath, request.GroupPath, request.FilePath, true, new List<string>()); reply.Found = true; break;
+                    case "ImportTechnologyObjectsFromDirectory": reply.Batch = adapter.ImportTechnologyObjectsFromDirectory(request.SoftwarePath, request.GroupPath, request.FilePath, request.RegexName, request.Overwrite); break;
+                    case "ExportTechnologyObjectsToDirectory": reply.Batch = adapter.ExportTechnologyObjectsToDirectory(request.SoftwarePath, request.FilePath, request.RegexName); break;
+                    case "TraceTagCause": reply.Report = adapter.TraceTagCause(request.SoftwarePath, request.Name, request.RegexName); break;
+                    case "TraceTagCauseLive":
+                        if (request.Action == "tagMap") reply.TagAddresses = adapter.ReadPlcTraceTagAddresses(request.SoftwarePath);
+                        else reply.Report = adapter.TraceTagCause(request.SoftwarePath, request.Name, request.RegexName);
+                        break;
+#if PLC_WATCH_READ
+                    case "ExportPlcWatchTablesToDirectory": reply.Batch = adapter.ExportPlcWatchTablesToDirectory(request.SoftwarePath, request.FilePath, request.RegexName); break;
+                    case "ListPlcForceTables": reply.Names = adapter.GetPlcForceTables(request.SoftwarePath)?.ToArray(); if (reply.Names == null) reply.Reason = (EngineeringPlcOrganisationSession ?? new OrganisationSession(this)).AvailablePlcPathsSuffix(); break;
+                    case "SetPlcWatchTableModifyValue": step = adapter.EnsureWatchTableEntry(request.SoftwarePath, request.Path, request.AddressOrValue, request.Value.Text, request.GenerateOption); break;
+                    case "ImportPlcWatchTableOffline": step = adapter.ImportPlcWatchTableOffline(request.SoftwarePath, request.FilePath, request.GroupPath, dryRun); break;
+                    case "ManagePlcTableEntries": step = adapter.ManagePlcTableEntries(request.SoftwarePath, request.Kind, request.Path, request.Action, request.EntryIndex, request.Confirm, dryRun, request.Offset, request.Limit); break;
+                    case "GetPlcWatchTableCurrentValuesReadOnly": reply.Report = adapter.ReadPlcWatchTableCurrentValuesReadOnly(request.SoftwarePath, request.Path, request.Limit); break;
+                    case "ProbePlcMonitorOnlineCapabilities": reply.Report = adapter.ProbePlcMonitorOnlineCapabilities(request.SoftwarePath); break;
+                    case "MonitorPlcWatchTableS7": reply.Report = adapter.MonitorWatchTableLiveS7(request.SoftwarePath, request.Path, request.Ip); break;
+#endif
+                    case "GetTechnologyObjectTree": step = adapter.ReadTechnologyObjectTree(request.SoftwarePath, request.GroupPath, request.IncludeParameters, request.IncludeMotionView, request.MaxDepth); break;
+                    case "ManageTechnologyObject": step = adapter.ManageTechnologyObject(request.SoftwarePath, request.Path, request.Action, request.TypeIdentifier, request.Version, request.Parameter, request.Value, request.ValidationError, dryRun); break;
+                    case "GetMotionAxisConfiguration": step = adapter.ReadMotionAxisConfiguration(request.SoftwarePath, request.Path, request.IncludeParameters, request.Offset, request.Limit); break;
+                    case "ManageMotionAxis": step = adapter.ManageMotionAxis(request.SoftwarePath, request.Path, request.Action, request.Aspect, request.Name, request.MotionTarget, request.Properties, request.TargetError, request.PropertiesError, request.SensorIndex, request.Confirm, dryRun); break;
+                    case "ExchangeMotionCamData": step = adapter.ExchangeMotionCamData(request.SoftwarePath, request.Path, request.Action, request.FilePath, request.Format, request.Separator, request.PointCount, dryRun); break;
+                    case "ConfigureMotionHardwareConnection": step = adapter.ConfigureMotionHardwareConnection(request.SoftwarePath, request.Path, request.Aspect, request.Action, request.InputBitAddress, request.OutputBitAddress, request.CopyMode, request.SensorIndex, dryRun); break;
                     case "DeletePlcBlock": reply.Data = adapter.DeletePlcBlock(request.SoftwarePath, request.Path, dryRun, request.CrossReferences); break;
                     case "DeletePlcTagTable": reply.Data = adapter.DeletePlcTagTable(request.SoftwarePath, request.Path, dryRun, request.CrossReferences); break;
                     case "DeletePlcType": reply.Data = adapter.DeletePlcType(request.SoftwarePath, request.Path, dryRun, request.CrossReferences); break;
@@ -114,6 +152,9 @@ namespace TiaMcp.Adapters
             public Siemens.Engineering.HW.HardwareObject ExactEngineeringHardware(string[] devicePath, string[] itemPath) => engine.ExactHardware(devicePath, itemPath);
             public string PlcSoftwarePath(PlcSoftware? software) => software == null ? "" : engine.Plcs().Single(p => object.Equals(p.Value, software)).Path;
             public string ReleaseKey => engine.ReleaseKey;
+            public string SerializeEvidence(Dictionary<string, object?> evidence) => (engine.OrganisationEvidenceJson ?? throw new InvalidOperationException("Missing evidence formatter."))(evidence);
+            public void RecordExportFailure(Exception error) => engine.OrganisationExportFailure?.Invoke(error);
+            public void LogEngineeringFailure(Exception error, string message) => engine.OrganisationLogFailure?.Invoke(error, message);
             public void RecordExportPath(string? path) => engine.EngineeringRecordExportPath?.Invoke(path);
             public PlcTypeGroup? GetPlcTypeGroupByPath(string path, string groupPath)
             {
@@ -227,18 +268,7 @@ namespace TiaMcp.Adapters
                 var group = PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
                 return PlcGroupOperations.Find(PlcGroupOperations.Get(group, collection), parts.Last()) ?? throw new PlcSoftwareException("NotFound", "Exact " + label + " not found: " + path);
             }
-            public object? OptionalUnit(PlcSoftware plc, string unitName, string unitKind)
-            {
-                if (string.IsNullOrEmpty(unitName)) return null;
-                if (unitKind != "unit" && unitKind != "safety") throw new ArgumentException("unitKind must be unit or safety.");
-                var type = typeof(PlcSoftware).Assembly.GetType("Siemens.Engineering.SW.Units.PlcUnitProvider")
-                    ?? throw new NotSupportedException("PLC units are unavailable in this API.");
-                var provider = typeof(IEngineeringServiceProvider).GetMethod("GetService")!.MakeGenericMethod(type).Invoke(plc, null)
-                    ?? throw new NotSupportedException("PLC unit provider is unavailable on this PLC.");
-                var group = PlcGroupOperations.Get(provider, "UnitGroup");
-                return PlcGroupOperations.Find(PlcGroupOperations.Get(group, unitKind == "safety" ? "SafetyUnits" : "Units"), unitName)
-                    ?? throw new PlcSoftwareException("NotFound", "Exact PLC unit not found: " + unitName);
-            }
+            public object? OptionalUnit(PlcSoftware plc, string unitName, string unitKind) => PlcUnitScope.OptionalLegacy(plc, unitName, unitKind);
             public PlcBlockGroup BlockRootOf(PlcSoftware plc, object? unit) => unit == null ? plc.BlockGroup : (PlcBlockGroup)PlcGroupOperations.Get(unit, "BlockGroup");
             public PlcTypeGroup TypeRootOf(PlcSoftware plc, object? unit) => unit == null ? plc.TypeGroup : (PlcTypeGroup)PlcGroupOperations.Get(unit, "TypeGroup");
             public PlcBlock? GetBlock(string path, string blockPath)

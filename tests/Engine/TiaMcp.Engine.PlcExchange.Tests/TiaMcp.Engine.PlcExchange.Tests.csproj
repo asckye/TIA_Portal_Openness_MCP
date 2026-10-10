@@ -21,16 +21,16 @@
     <PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" ExcludeAssets="compile;runtime" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.7.1" ExcludeAssets="compile;runtime" />
     <Reference Include="ModelContextProtocol">
-      <HintPath>$(NuGetPackageRoot)modelcontextprotocol/0.3.0-preview.4/lib/netstandard2.0/ModelContextProtocol.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)/modelcontextprotocol/0.3.0-preview.4/lib/netstandard2.0/ModelContextProtocol.dll</HintPath>
     </Reference>
     <Reference Include="ModelContextProtocol.Core">
-      <HintPath>$(NuGetPackageRoot)modelcontextprotocol.core/0.3.0-preview.4/lib/netstandard2.0/ModelContextProtocol.Core.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)/modelcontextprotocol.core/0.3.0-preview.4/lib/netstandard2.0/ModelContextProtocol.Core.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.AI.Abstractions">
-      <HintPath>$(NuGetPackageRoot)microsoft.extensions.ai.abstractions/9.7.1/lib/net462/Microsoft.Extensions.AI.Abstractions.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)/microsoft.extensions.ai.abstractions/9.7.1/lib/net462/Microsoft.Extensions.AI.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces">
-      <HintPath>$(NuGetPackageRoot)microsoft.bcl.asyncinterfaces/10.0.12/lib/net462/Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)/microsoft.bcl.asyncinterfaces/10.0.12/lib/net462/Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

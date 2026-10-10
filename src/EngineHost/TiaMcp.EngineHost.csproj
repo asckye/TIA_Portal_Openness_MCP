@@ -9,6 +9,7 @@
   <Import Project="EngineHostSources.props" />
   <ItemGroup>
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" />
+    <PackageReference Include="Sharp7" Version="1.1.84" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.4.25258.110" />
     <Compile Include="../Shared/InvocationJournal.cs" Link="Shared/InvocationJournal.cs" />

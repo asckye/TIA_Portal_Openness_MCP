@@ -64,6 +64,24 @@ namespace TiaMcp.Adapters.Contracts
     public sealed class PlcSoftwareRequest
     {
         public string Operation { get; set; } = "";
+        public int EntryIndex { get; set; } = -1;
+        public string Ip { get; set; } = "";
+        public HardwareScalar Value { get; set; } = new HardwareScalar { Kind = "null" };
+        public MotionConnectionTarget MotionTarget { get; set; } = new MotionConnectionTarget();
+        public string TargetError { get; set; } = "";
+        public string PropertiesError { get; set; } = "";
+        public string Aspect { get; set; } = "";
+        public string Version { get; set; } = "";
+        public string Parameter { get; set; } = "";
+        public string TypeIdentifier { get; set; } = "";
+        public string Format { get; set; } = "";
+        public string Separator { get; set; } = "";
+        public int PointCount { get; set; }
+        public int SensorIndex { get; set; }
+        public int InputBitAddress { get; set; }
+        public int OutputBitAddress { get; set; }
+        public bool IncludeParameters { get; set; }
+        public bool IncludeMotionView { get; set; }
         public string ValidationError { get; set; } = "";
         public string RegexName { get; set; } = "";
         public bool Overwrite { get; set; } = true;
@@ -97,6 +115,10 @@ namespace TiaMcp.Adapters.Contracts
         public string Kind { get; set; } = "all";
         public int Offset { get; set; }
         public int Limit { get; set; } = 200;
+        public string NewPassword { get; set; } = "";
+        public string Access { get; set; } = "";
+        public string RelatedUnit { get; set; } = "";
+        public string RelationType { get; set; } = "";
         public string Password { get; set; } = "";
         public bool Confirm { get; set; }
         public bool CrossReferences { get; set; }
@@ -118,6 +140,9 @@ namespace TiaMcp.Adapters.Contracts
 
     public sealed class PlcSoftwareReply : IWorkerOperationReply
     {
+        public PlcWatchReport? Report { get; set; }
+        public string[]? Names { get; set; }
+        public Dictionary<string, PlcTagAddress>? TagAddresses { get; set; }
         public string Message { get; set; } = "";
         public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();
         public Dictionary<string, object?>? Data { get; set; }

@@ -1,0 +1,142 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Xml.Linq;
+
+namespace TiaMcp.Adapters.Contracts
+{
+    // Real-machine observation and PublicAPI: a watch table entry with a tag cannot be created through the typed API -
+    // PlcWatchTable.Entries is a PlcTableCommentEntryComposition whose Create() yields a comment row that refuses
+    // Address / Name / ModifyValue ("'Address' is not supported by type PlcTableCommentEntry"). The official way to add
+    // or change a tag row is the SimaticML round trip: export the table, edit the XML, import it with ImportOptions.Override.
+    // This class holds the pure XML part so the offline suite can cover it; the Openness calls stay in Portal.Software.cs.
+    // Native table exchange evidence: docs/reference/real-machine-ledger.md.
+    public static class WatchTableEntryXml
+    {
+        public const string TableElement = "SW.WatchAndForceTables.PlcWatchTable";
+        public const string EntryElement = "SW.WatchAndForceTables.PlcWatchTableEntry";
+
+        // Which attribute a caller's "address" belongs to: absolute addresses go to Address, symbols to Name.
+        public static string AttributeFor(string address) {
+            var text = (address ?? "").Trim();
+            if (text.StartsWith("%")) return "Address";
+            if (text.StartsWith("\"")) return "Name";
+            return System.Text.RegularExpressions.Regex.IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? "Address" : "Name";
+        }
+
+        // TIA writes symbols quoted per segment: "Tag", "DB".Member, "DB".Struct.Member. A bare Tag / Struct.Member is quoted the same way.
+        public static string QuoteSymbol(string symbol)
+        {
+            var text = (symbol ?? "").Trim();
+            if (text.Length == 0 || text.StartsWith("\"")) return text;
+            var dot = text.IndexOf('.');
+            return dot < 0 ? "\"" + text + "\"" : "\"" + text.Substring(0, dot) + "\"" + text.Substring(dot);
+        }
+
+        public static bool SameSymbol(string a, string b)
+            => string.Equals(QuoteSymbol(a), QuoteSymbol(b), StringComparison.OrdinalIgnoreCase);
+
+        // A minimal SimaticML document for a new watch table (no entries yet).
+        public static XDocument NewTable(string tableName, int engineeringMajorVersion)
+        {
+            return new XDocument(
+                new XDeclaration("1.0", "utf-8", null),
+                new XElement("Document",
+                    new XElement("Engineering", new XAttribute("version", "V" + engineeringMajorVersion)),
+                    new XElement(TableElement, new XAttribute("ID", "0"),
+                        new XElement("AttributeList", new XElement("Name", tableName)),
+                        new XElement("ObjectList"))));
+        }
+
+        public static XElement Table(XDocument doc)
+            => doc.Root?.Elements().FirstOrDefault(e => e.Name.LocalName == TableElement)
+               ?? throw new ArgumentException("The XML holds no " + TableElement + " object.");
+
+        public static string TableName(XDocument doc)
+            => Table(doc).Element("AttributeList")?.Element("Name")?.Value ?? "";
+
+        public static IEnumerable<XElement> Entries(XDocument doc)
+            => Table(doc).Element("ObjectList")?.Elements().Where(e => e.Name.LocalName == EntryElement) ?? Enumerable.Empty<XElement>();
+
+        public static XElement? FindEntry(XDocument doc, string address)
+        {
+            var attribute = AttributeFor(address);
+            foreach (var entry in Entries(doc))
+            {
+                var list = entry.Element("AttributeList");
+                var value = list?.Element(attribute)?.Value ?? "";
+                if (value.Length == 0) continue;
+                if (attribute == "Address" ? string.Equals(value, address.Trim(), StringComparison.OrdinalIgnoreCase) : SameSymbol(value, address)) return entry;
+            }
+            return null;
+        }
+
+        // Adds or updates the row for `address` and returns "updated" / "appended". Attribute order follows TIA's alphabetical export.
+        public static string Upsert(XDocument doc, string address, string modifyValue, string trigger)
+        {
+            var attribute = AttributeFor(address);
+            var value = attribute == "Name" ? QuoteSymbol(address) : address.Trim();
+            var entry = FindEntry(doc, address);
+            string action;
+            if (entry == null)
+            {
+                var objects = Table(doc).Element("ObjectList");
+                if (objects == null) { objects = new XElement("ObjectList"); Table(doc).Add(objects); }
+                entry = new XElement(EntryElement, new XAttribute("ID", NextId(doc)), new XAttribute("CompositionName", "Entries"), new XElement("AttributeList"));
+                objects.Add(entry);
+                action = "appended";
+            }
+            else action = "updated";
+            var list = entry.Element("AttributeList")!;
+            if (action == "appended") Set(list, attribute, value);   // an existing row keeps TIA's own spelling of the address / symbol
+            Set(list, "ModifyTrigger", trigger);
+            Set(list, "ModifyValue", modifyValue);
+            if (list.Element("MonitorTrigger") == null) Set(list, "MonitorTrigger", "Permanent");
+            StripReadOnlyAttributes(doc);
+            Reorder(list);
+            return action;
+        }
+
+        // Real-machine observation, TIA V21, 2026-09-21 (docs/reference/real-machine-ledger.md):
+        // an imported row carrying ModifyIntention is refused ("'set_ModifyIntention' is not
+        // supported by type PlcWatchTableEntry ... The property 'ModifyIntention' is read-only").
+        // An export may carry it, so drop it from every row before import, not only from the edited one.
+        public static readonly string[] ReadOnlyEntryAttributes = { "ModifyIntention" };
+
+        public static int StripReadOnlyAttributes(XDocument doc)
+        {
+            var removed = 0;
+            foreach (var entry in Entries(doc))
+            {
+                var list = entry.Element("AttributeList");
+                if (list == null) continue;
+                foreach (var name in ReadOnlyEntryAttributes)
+                    foreach (var e in list.Elements(name).ToList()) { e.Remove(); removed++; }
+            }
+            return removed;
+        }
+
+        // SimaticML IDs are hexadecimal; the next free one keeps every existing ID (comment rows carry MultilingualText children with IDs too).
+        public static string NextId(XDocument doc)
+        {
+            long max = -1;
+            foreach (var id in doc.Descendants().Select(e => (string?)e.Attribute("ID")).Where(v => !string.IsNullOrEmpty(v)))
+                if (long.TryParse(id, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var n) && n > max) max = n;
+            return (max + 1).ToString("X", CultureInfo.InvariantCulture);
+        }
+
+        private static void Set(XElement list, string name, string value)
+        {
+            var element = list.Element(name);
+            if (element == null) list.Add(new XElement(name, value)); else element.Value = value;
+        }
+
+        private static void Reorder(XElement list)
+        {
+            var ordered = list.Elements().OrderBy(e => e.Name.LocalName, StringComparer.Ordinal).ToList();
+            list.RemoveNodes();
+            foreach (var e in ordered) list.Add(e);
+        }
+    }
+}

@@ -15,6 +15,9 @@ namespace TiaMcp.Adapters.Native.Plc
         Siemens.Engineering.HW.HardwareObject ExactEngineeringHardware(string[] devicePath, string[] itemPath);
         string PlcSoftwarePath(PlcSoftware? software);
         string ReleaseKey { get; }
+        string SerializeEvidence(Dictionary<string, object?> evidence);
+        void RecordExportFailure(Exception error);
+        void LogEngineeringFailure(Exception error, string message);
         void RecordExportPath(string? path);
         PlcTypeGroup? GetPlcTypeGroupByPath(string path, string groupPath);
         string GetPlcBlockGroupPath(PlcBlockGroup group);

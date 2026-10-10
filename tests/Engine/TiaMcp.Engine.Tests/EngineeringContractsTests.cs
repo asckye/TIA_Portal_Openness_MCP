@@ -67,22 +67,24 @@ namespace TiaMcp.Engine.Tests
         private readonly AlarmsService alarms = new AlarmsService();
         private readonly OpcUaService opc = new OpcUaService();
         private readonly SoftwareUnitDeepService units = new SoftwareUnitDeepService();
-        private readonly SoftwareUnitManagementService access = new SoftwareUnitManagementService();
+        private int integrityCalls;
+        private PlcIntegrityTools IntegrityTools() => new PlcIntegrityTools(new PlcOrganisationPortService((_, __) => { integrityCalls++; return new JsonObject { ["Message"] = "", ["Meta"] = new JsonObject { ["success"] = true } }; }, () => true, () => "fixture"));
         private readonly TechnologyObjectsService technology = new TechnologyObjectsService();
         private readonly ToolCatalog catalog;
         private readonly Dictionary<string, McpServerTool> tools;
         public EngineeringContractsTests()
         {
-            catalog = new ToolCatalog(new[] { typeof(AlarmsTools), typeof(OpcUaTools), typeof(SoftwareUnitDeepTools), typeof(SoftwareUnitManagementTools), typeof(TechnologyObjectsTools) });
+            catalog = new ToolCatalog(new[] { typeof(AlarmsTools), typeof(OpcUaTools), typeof(SoftwareUnitDeepTools), typeof(PlcIntegrityTools), typeof(PlcTechnologyTools), typeof(TechnologyObjectsTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection()
                 .AddSingleton(new AlarmsTools(alarms)).AddSingleton(new OpcUaTools(opc))
-                .AddSingleton(new SoftwareUnitDeepTools(units)).AddSingleton(new SoftwareUnitManagementTools(access))
+                .AddSingleton(new SoftwareUnitDeepTools(units)).AddSingleton(IntegrityTools())
+                .AddSingleton(new PlcTechnologyTools(new PlcOrganisationPortService((_, __) => { integrityCalls++; return new JsonObject { ["Message"] = "", ["Meta"] = new JsonObject { ["success"] = true } }; }, () => true, () => "fixture")))
                 .AddSingleton(new TechnologyObjectsTools(technology)).BuildServiceProvider());
             tools = catalog.Methods.ToDictionary(p => p.Key, p => (McpServerTool)new VersionPolicyTool(McpServer.CreateTool(p.Key, p.Value)));
         }
         public void Dispose() => ToolBridgeFixture.Configure();
-        private int Calls => alarms.Calls + opc.Calls + units.Calls + access.Calls + technology.Calls;
+        private int Calls => alarms.Calls + opc.Calls + units.Calls + integrityCalls + technology.Calls;
         private static ToolArguments Arguments(string json) => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));
         private static RequestContext<CallToolRequestParams> Request(string name, string json)
             => new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ToolCatalogServerProxy>())

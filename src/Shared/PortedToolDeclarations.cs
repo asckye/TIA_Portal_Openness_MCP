@@ -17,6 +17,9 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
             ["F09"] = new[] { typeof(PlcReadModifyTools), typeof(PlcBuildTools) },
             ["F11"] = new[] { typeof(PlcReadModifyTools) },
+            ["F12"] = new[] { typeof(PlcWatchTools), typeof(PlcCausalTraceTools) },
+            ["F13"] = new[] { typeof(PlcTechnologyTools), typeof(PlcMotionTools) },
+            ["F16"] = new[] { typeof(PlcIntegrityTools) },
             ["F17"] = new[] { typeof(PlcCompilePortTools) },
             ["F08"] = new[] { typeof(PlcOrganisationTools) },
             ["F18"] = new[] { typeof(HardwareDevicesTools), typeof(ModulesTools), typeof(HardwareManagementTools), typeof(HardwareNetworkTools), typeof(HardwareServicesPortTools) },

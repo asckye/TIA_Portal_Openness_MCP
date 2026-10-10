@@ -49,29 +49,8 @@ namespace TiaMcpServer.Siemens
 
         private void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames)
         {
-            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
-
-            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
-            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'" + AvailablePlcPathsSuffix());
-
-            try
-            {
-                // Use the typed TechnologicalObjectGroup property.
-                // Native observation: the misspelled reflective lookup fell through to the PLC with "TechnologyObjects collection not found".
-                // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
-                var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, folderPath ?? "");
-                var col = group.TechnologicalObjects;
-                if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err)) return;
-                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportTechnologyObject failed");
-            }
-            catch (PortalException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
-            }
+            try { new TiaMcp.Adapters.Native.Plc.PlcOrganisationAdapter(new TiaMcpServer.Worker.EnginePlcOrganisationSession(this)).ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, importedNames); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error) { throw new PortalException(PortalErrorCode.NotFound, error.Message); }
         }
 
         #endregion

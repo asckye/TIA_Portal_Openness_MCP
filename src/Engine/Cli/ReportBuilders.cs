@@ -809,7 +809,7 @@ namespace TiaMcpServer
 
             try
             {
-                var export = report.Capture("ExportPlcWatchTablesToDirectory", () => EngineServices.Get<PlcTablesTools>().ExportPlcWatchTablesToDirectory(softwarePath, exportDir, regexName), writes: true);
+                var export = report.Capture("ExportPlcWatchTablesToDirectory", () => EngineServices.Get<PlcWatchTools>().ExportPlcWatchTablesToDirectory(softwarePath, exportDir, regexName), writes: true);
                 root["watchTableExport"] = new JsonObject
                 {
                     ["message"] = export.Message ?? "",
@@ -832,7 +832,7 @@ namespace TiaMcpServer
 
             try
             {
-                var probe = report.Capture("ProbePlcMonitorOnlineCapabilities", () => EngineServices.Get<PlcTablesTools>().ProbePlcMonitorOnlineCapabilities(softwarePath));
+                var probe = report.Capture("ProbePlcMonitorOnlineCapabilities", () => EngineServices.Get<PlcWatchTools>().ProbePlcMonitorOnlineCapabilities(softwarePath));
                 root["onlineCapabilityProbe"] = probe.Data ?? new JsonObject();
                 root["onlineCapabilityProbeOk"] = probe.Ok == true;
             }
@@ -854,7 +854,7 @@ namespace TiaMcpServer
 
                 if (!string.IsNullOrWhiteSpace(selectedTable))
                 {
-                    var read = report.Capture("GetPlcWatchTableCurrentValuesReadOnly", () => EngineServices.Get<PlcTablesTools>().ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, selectedTable!, 50));
+                    var read = report.Capture("GetPlcWatchTableCurrentValuesReadOnly", () => EngineServices.Get<PlcWatchTools>().ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, selectedTable!, 50));
                     root["onlineCurrentValueRead"] = read.Data ?? new JsonObject();
                     root["onlineCurrentValueReadOk"] = read.Ok == true;
                     root["onlineCurrentValueReadMessage"] = read.Message ?? "";

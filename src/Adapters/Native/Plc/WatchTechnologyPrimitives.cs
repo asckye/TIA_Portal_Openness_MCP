@@ -1,6 +1,7 @@
 #nullable disable
 #if TIA_ENGINE_LOCAL_PRIMITIVES
 #define PLC_WATCH_READ
+#define PLC_WATCH_ENTRIES
 #define PLC_TECH_GROUP_READ
 #define PLC_DOCUMENT_EXPORT
 #define PLC_WATCH_EXPORT
@@ -43,8 +44,6 @@ namespace TiaMcp.Adapters
 #endif
 #endif
 
-        // This editing surface is used by the V20/V21 engines only.
-#if PLC_DOCUMENT_EXPORT
         public static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
         public static void SetAttribute(IEngineeringObject target, string name, object value) => target.SetAttribute(name, value);
         public static TechnologicalInstanceDB Create(TechnologicalInstanceDBComposition objects, string name, string typeIdentifier, Version version) => objects.Create(name, typeIdentifier, version);
@@ -52,7 +51,10 @@ namespace TiaMcp.Adapters
         public static TechnologicalParameter Find(TechnologicalParameterComposition parameters, string name) => parameters.Find(name);
         public static TechnologicalParameterComposition Parameters(TechnologicalInstanceDB item) => item.Parameters;
         public static int Count(TechnologicalInstanceDBComposition objects) => objects.Count;
+#if PLC_TECH_GROUP_READ
         public static int Count(TechnologicalInstanceDBUserGroupComposition groups) => groups.Count;
+#endif
+#if PLC_WATCH_READ
         public static PlcWatchTable Find(PlcWatchTableComposition tables, string name) => tables.Find(name);
         public static IList<PlcWatchTable> Import(PlcWatchTableComposition tables, FileInfo file, ImportOptions options) => tables.Import(file, options);
         public static PlcTableCommentEntryComposition Entries(PlcWatchTable table) => table.Entries;
@@ -63,6 +65,7 @@ namespace TiaMcp.Adapters
         public static PlcTableCommentEntry Create(PlcTableCommentEntryComposition entries) => entries.Create();
         public static void Delete(PlcWatchTable table) => table.Delete();
         public static void Delete(PlcTableCommentEntry entry) => entry.Delete();
+#if PLC_WATCH_ENTRIES
         public static string Name(PlcWatchTableEntry entry) => entry.Name;
         public static string Address(PlcWatchTableEntry entry) => entry.Address;
         public static PlcWatchAndForceTableDisplayFormat DisplayFormat(PlcWatchTableEntry entry) => entry.DisplayFormat;
@@ -76,6 +79,7 @@ namespace TiaMcp.Adapters
         public static PlcWatchAndForceTablePreDefinedTrigger MonitorTrigger(PlcForceTableEntry entry) => entry.MonitorTrigger;
         public static string ForceValue(PlcForceTableEntry entry) => entry.ForceValue;
         public static bool ForceIntention(PlcForceTableEntry entry) => entry.ForceIntention;
+#endif
 #endif
     }
 }

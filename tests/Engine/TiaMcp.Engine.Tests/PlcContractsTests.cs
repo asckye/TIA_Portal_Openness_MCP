@@ -162,7 +162,7 @@ namespace TiaMcp.Engine.Tests
             while (dir != null && !File.Exists(Path.Combine(dir.FullName, "AGENTS.md"))) dir = dir.Parent;
             Assert.NotNull(dir);
             var files = new[] { "PlcBlocksTools.cs", "PlcSoftwareTools.cs", "PlcTablesTools.cs", "TypesTools.cs" };
-            var sources = files.Select(f => File.ReadAllText(Path.Combine(dir!.FullName, "src", "Engine", "ModelContextProtocol", "Tools", f))).Concat(new[] { File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcOfflineTools.cs")), File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcOrganisationTools.cs")), File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcReadModifyTools.cs")) }).ToArray();
+            var sources = files.Select(f => File.ReadAllText(Path.Combine(dir!.FullName, "src", "Engine", "ModelContextProtocol", "Tools", f))).Concat(new[] { File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcWatchTools.cs")), File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcOfflineTools.cs")), File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcOrganisationTools.cs")), File.ReadAllText(Path.Combine(dir!.FullName, "src/Shared/PlcReadModifyTools.cs")) }).ToArray();
             var names = sources.SelectMany(s => Regex.Matches(s, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value)).ToArray();
             string[] expected = {
             "GetPlcBlockInfo",

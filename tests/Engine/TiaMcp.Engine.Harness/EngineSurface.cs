@@ -55,7 +55,6 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.PlcSoftwareService",
         "TiaMcpServer.Siemens.Services.ReflectionService",
         "TiaMcpServer.Siemens.Services.EngineeringAuditService",
-        "TiaMcpServer.Siemens.Services.SoftwareUnitManagementService",
         "TiaMcpServer.Siemens.Services.TypesService",
         "TiaMcpServer.Siemens.Services.DocumentsService",
         "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",

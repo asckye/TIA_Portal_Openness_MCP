@@ -32,23 +32,16 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         // ---- unit resolution ----------------------------------------------------------------------------------------------------
-        private static PlcUnitProvider RequireUnitProvider(PlcSoftware plc)
-            => plc.GetService<PlcUnitProvider>() ?? throw new NotSupportedException("PlcUnitProvider unavailable: this PLC family does not support software units.");
+        private static PlcUnitProvider RequireUnitProvider(PlcSoftware plc) => TiaMcp.Adapters.Native.Plc.PlcUnitScope.RequireProvider(plc);
         private static PlcUnitBase ExactUnit(PlcUnitSystemGroup group, string unitKind, string name)
         {
-            if (unitKind == "safety")
-            {
-                PlcSafetyUnitComposition safetyUnits = group.SafetyUnits;
-                return safetyUnits.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact safety unit not found: " + name + " (available: " + string.Join(", ", EngineeringGroupOperations.Items(safetyUnits).Cast<PlcSafetyUnit>().Select(u => u.Name)) + ").");
-            }
-            PlcUnitComposition units = group.Units;
-            return units.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact software unit not found: " + name + " (available: " + string.Join(", ", EngineeringGroupOperations.Items(units).Cast<PlcUnit>().Select(u => u.Name)) + ").");
+            try { return TiaMcp.Adapters.Native.Plc.PlcUnitScope.Exact(group, unitKind, name); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error) { throw new PortalException(PortalErrorCode.NotFound, error.Message); }
         }
-        // Object roots for paths: the PLC itself, or a unit's own block / type system group.
         private PlcUnitBase? OptionalUnit(PlcSoftware plc, string unitName, string unitKind)
             => string.IsNullOrEmpty(unitName) ? null : ExactUnit(RequireUnitProvider(plc).UnitGroup, unitKind, unitName);
-        private static PlcBlockGroup BlockRootOf(PlcSoftware plc, PlcUnitBase? unit) => unit == null ? plc.BlockGroup : unit.BlockGroup;
-        private static PlcTypeGroup TypeRootOf(PlcSoftware plc, PlcUnitBase? unit) => unit == null ? plc.TypeGroup : unit.TypeGroup;
+        private static PlcBlockGroup BlockRootOf(PlcSoftware plc, PlcUnitBase? unit) => TiaMcp.Adapters.Native.Plc.PlcUnitScope.Blocks(plc, unit);
+        private static PlcTypeGroup TypeRootOf(PlcSoftware plc, PlcUnitBase? unit) => TiaMcp.Adapters.Native.Plc.PlcUnitScope.Types(plc, unit);
         private static object ExactObjectUnder(object root, string objectPath, string collection, string label)
         {
             var parts = EngineeringGroupOperations.Parts(objectPath);

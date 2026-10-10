@@ -16,7 +16,7 @@ internal static class DomainShapeChecks
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
         check(session != null && ReferenceEquals(session, provider.GetService(portal)), "Optional domains share the Portal singleton");
-        foreach (var domain in new[] { (Name: "Runtime", Count: 7), (Name: "RuntimeChannel", Count: 8), (Name: "PlcSimAdvanced", Count: 5) })
+        foreach (var domain in new[] { (Name: "Runtime", Count: 5), (Name: "PlcCausalTrace", Count: 2), (Name: "RuntimeChannel", Count: 8), (Name: "PlcSimAdvanced", Count: 5) })
         {
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             check(tools.IsSealed && !typeof(IDisposable).IsAssignableFrom(tools), domain.Name + " tools are sealed and non-disposable");
@@ -34,6 +34,9 @@ internal static class DomainShapeChecks
             }
             if (domain.Name == "Runtime")
                 check(ReferenceEquals(tools.GetField("_session", all)!.GetValue(target), session), "Runtime project reads share the engineering session");
+            else if (domain.Name == "PlcCausalTrace")
+                check(tools.GetConstructors().Single().GetParameters().Single().ParameterType.Name == "PlcOrganisationPortService",
+                    "Causal tracing uses the shared PLC organisation port");
             else
                 check(tools.GetConstructors().All(constructor => constructor.GetParameters().Length == 0), domain.Name + " needs no engineering session");
         }
@@ -54,7 +57,7 @@ internal static class DomainShapeChecks
         var domains = new[] {
             (Name: "TestSuite", Count: 4), (Name: "V20Options", Count: 5),
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
-            (Name: "SoftwareUnitDeep", Count: 7),
+            (Name: "SoftwareUnitDeep", Count: 2),
             (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11),
             (Name: "Library", Count: 14), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
         };

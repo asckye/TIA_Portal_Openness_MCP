@@ -1,6 +1,15 @@
 // Test doubles only. Compiles the actual traversal with distinct system/user types.
 // This is not Siemens SDK compatibility, export-policy validation or native acceptance.
-namespace Siemens.Engineering { public enum ExportOptions { None } }
+namespace Siemens.Engineering
+{
+    public enum ExportOptions { None }
+    public enum ImportOptions { None }
+    public interface IEngineeringObject
+    {
+        object GetAttribute(string name);
+        void SetAttribute(string name, object value);
+    }
+}
 namespace Siemens.Engineering.SW.WatchAndForceTables
 {
     public abstract class PlcWatchAndForceTableGroup
@@ -11,12 +20,29 @@ namespace Siemens.Engineering.SW.WatchAndForceTables
     }
     public sealed class PlcWatchAndForceTableSystemGroup : PlcWatchAndForceTableGroup { }
     public sealed class PlcWatchAndForceTableUserGroup : PlcWatchAndForceTableGroup { }
-    public sealed class PlcWatchTableComposition : List<PlcWatchTable> { }
+    public sealed class PlcWatchTableComposition : List<PlcWatchTable>
+    {
+        public PlcWatchTable? Find(string name) => this.SingleOrDefault(table => table.Name == name);
+        public IList<PlcWatchTable> Import(FileInfo file, Siemens.Engineering.ImportOptions options) => Array.Empty<PlcWatchTable>();
+    }
+    public sealed class PlcTableCommentEntryComposition : List<PlcTableCommentEntry>
+    {
+        public PlcTableCommentEntry Create() { var entry = new PlcTableCommentEntry(); Add(entry); return entry; }
+    }
+    public sealed class PlcTableCommentEntry { public void Delete() { } }
+    public sealed class PlcForceTable
+    {
+        public string Name { get; set; } = "";
+        public bool IsConsistent { get; set; } = true;
+        public PlcTableCommentEntryComposition Entries { get; } = new();
+    }
     public sealed class PlcWatchAndForceTableUserGroupComposition : List<PlcWatchAndForceTableUserGroup> { }
     public sealed class PlcWatchTable
     {
         public string Name { get; set; } = "";
         public bool IsConsistent { get; set; } = true;
+        public PlcTableCommentEntryComposition Entries { get; } = new();
+        public void Delete() { }
         public int ExportCalls { get; private set; }
         public void Export(FileInfo file, Siemens.Engineering.ExportOptions options) { ExportCalls++; }
     }
@@ -28,10 +54,20 @@ namespace Siemens.Engineering.SW.TechnologicalObjects
         public string Name { get; set; } = "";
         public TechnologicalInstanceDBComposition TechnologicalObjects { get; } = new();
     }
-    public sealed class TechnologicalInstanceDBComposition : List<TechnologicalInstanceDB> { }
+    public sealed class TechnologicalInstanceDBComposition : List<TechnologicalInstanceDB>
+    {
+        public TechnologicalInstanceDB Create(string name, string typeIdentifier, Version version) { var db = new TechnologicalInstanceDB { Name = name }; Add(db); return db; }
+        public TechnologicalInstanceDB? Find(string name) => this.SingleOrDefault(db => db.Name == name);
+    }
+    public sealed class TechnologicalParameter { }
+    public sealed class TechnologicalParameterComposition : List<TechnologicalParameter>
+    {
+        public TechnologicalParameter? Find(string name) => null;
+    }
     public sealed class TechnologicalInstanceDB
     {
         public string Name { get; set; } = "";
+        public TechnologicalParameterComposition Parameters { get; } = new();
         public bool IsKnowHowProtected { get; set; }
         public bool IsConsistent { get; set; } = true;
     }
