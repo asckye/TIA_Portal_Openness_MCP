@@ -122,7 +122,7 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                     }
                     Changed(); return;
                 }
-                if (item.Kind != "request") throw new InvalidDataException("Only host requests are accepted.");
+                if (item.Kind != "request" && item.Kind != "plan") throw new InvalidDataException("Only host requests are accepted.");
                 item.Validate(); id = item.RequestId;
                 var decision = new TaskCompletionSource<ApprovalDecision>(TaskCreationOptions.RunContinuationsAsynchronously);
                 ApprovalRequest row;
@@ -133,7 +133,7 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                     row = new ApprovalRequest(id, item.EffectiveActor == ActorScope.Workbench ? "Workbench" : "MCP", "MCP", item.Host, item.ReleaseKey, item.ProjectIdentity, "",
                         item.Operations.Select(op => new ApprovalOperation(LocalizedText.Literal(op.Action), op.Target, op.Tool)).ToArray(), [],
                         item.PlanHash, item.TimeoutSeconds, item.Deadline, ApprovalState.Pending, item.ParametersJson)
-                    { Actor = item.EffectiveActor, OperatorCallId = item.OperatorCallId };
+                    { Actor = item.EffectiveActor, OperatorCallId = item.OperatorCallId, GenerationPlan = item.PlanJson };
                     pending.Add(id, new Pending(item, decision)); requests.Add(row);
                     while (requests.Count > 1024 && requests[0].State != ApprovalState.Pending) requests.RemoveAt(0);
                 }

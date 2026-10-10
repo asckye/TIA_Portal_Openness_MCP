@@ -15,6 +15,19 @@ namespace TiaOpenness.Shared
         private static readonly AsyncLocal<AuditInvocation?> Current = new AsyncLocal<AuditInvocation?>();
         private static readonly AsyncLocal<AuditLog?> LogOverride = new AsyncLocal<AuditLog?>();
         private static readonly AsyncLocal<int> PreviewDepth = new AsyncLocal<int>();
+        private static readonly AsyncLocal<string[]?> Generation = new AsyncLocal<string[]?>();
+        internal static IDisposable GenerationStep(string planId, string stepId, string runId, string parentRequestId, string planHash, string requestId)
+        {
+            var previous = Generation.Value;
+            Generation.Value = new[] { planId, stepId, runId, parentRequestId, planHash, requestId };
+            return new GenerationScope(() => Generation.Value = previous);
+        }
+        private sealed class GenerationScope : IDisposable
+        {
+            private readonly Action restore;
+            internal GenerationScope(Action restore) { this.restore = restore; }
+            public void Dispose() => restore();
+        }
         internal static bool IsReadOnlyPreview => PreviewDepth.Value > 0;
         internal static IDisposable ReadOnlyPreview() => new PreviewScope();
         private sealed class PreviewScope : IDisposable
@@ -26,7 +39,7 @@ namespace TiaOpenness.Shared
         private AuditInvocation(AuditLog log, string requestId, string host, string release, string tool, string actor)
         { this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; this.actor = actor; previous = Current.Value; Current.Value = this; }
         internal string RequestId => requestId;
-        internal static string? CurrentRequestId => Current.Value?.requestId;
+        internal static string? CurrentRequestId => Generation.Value?[5] ?? Current.Value?.requestId;
         internal static AuditLog? CurrentLog => Current.Value?.log ?? LogOverride.Value;
         internal static AuditInvocation? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null, string? actor = null)
         {
@@ -82,7 +95,12 @@ namespace TiaOpenness.Shared
         internal void End(string outcome) { if (completed) return; RecordRequest(); completed = true; Emit("end", outcome); }
         private void Emit(string kind, string? outcome = null, string? planHash = null)
         {
-            try { log.Append(kind, requestId, host, release, tool, outcome, planHash, actor: actor); }
+            try
+            {
+                var generation = Generation.Value;
+                log.Append(kind, requestId, host, release, tool, outcome, planHash ?? generation?[4], actor: actor,
+                    planId: generation?[0], stepId: generation?[1], runId: generation?[2], parentRequestId: generation?[3]);
+            }
             catch (Exception ex) { ReportFailure(ex); }
         }
         private static void ReportFailure(Exception ex)

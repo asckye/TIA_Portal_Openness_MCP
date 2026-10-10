@@ -28,6 +28,10 @@ namespace TiaOpenness.Shared
         internal int ProcessId { get; set; }
         internal string PreviousHash { get; set; } = "";
         internal string? Actor { get; set; }
+        internal string? PlanId { get; set; }
+        internal string? StepId { get; set; }
+        internal string? RunId { get; set; }
+        internal string? ParentRequestId { get; set; }
     }
 
     internal sealed class AuditVerificationReport
@@ -63,7 +67,8 @@ namespace TiaOpenness.Shared
         }
 
         internal AuditRecord Append(string kind, string requestId, string host, string release, string tool,
-            string? outcome = null, string? planHash = null, bool? approvalEnabled = null, string? actor = null)
+            string? outcome = null, string? planHash = null, bool? approvalEnabled = null, string? actor = null,
+            string? planId = null, string? stepId = null, string? runId = null, string? parentRequestId = null)
         {
             if (!Events.Contains(kind)) throw new ArgumentException("Unknown audit event.", nameof(kind));
             if (actor != null && !ActorScope.IsValid(actor)) throw new ArgumentException("Invalid audit actor.", nameof(actor));
@@ -96,7 +101,7 @@ namespace TiaOpenness.Shared
                     Utc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture), Event = kind,
                     RequestId = requestId, Host = host, Release = release, Tool = tool, Outcome = outcome,
                     PlanHash = planHash, ApprovalEnabled = approvalEnabled, ProcessId = Process.GetCurrentProcess().Id,
-                    PreviousHash = previousHash, Actor = actor };
+                    PreviousHash = previousHash, Actor = actor, PlanId = planId, StepId = stepId, RunId = runId, ParentRequestId = parentRequestId };
                 byte[] bytes = Encoding.UTF8.GetBytes(Canonical(row) + "\n");
                 if (path == null || new FileInfo(path).Length + bytes.Length > maxBytes)
                     path = Path.Combine(directory, "audit-" + row.Index.ToString("D20", CultureInfo.InvariantCulture) + ".jsonl");
@@ -213,6 +218,11 @@ namespace TiaOpenness.Shared
                         writer.WriteString("actor", row.Actor);
                     }
                     if (row.ApprovalEnabled.HasValue) writer.WriteBoolean("approvalEnabled", row.ApprovalEnabled.Value); else writer.WriteNull("approvalEnabled");
+                    if (row.PlanId != null)
+                    {
+                        writer.WriteString("parentRequestId", row.ParentRequestId); writer.WriteString("planId", row.PlanId);
+                        writer.WriteString("runId", row.RunId); writer.WriteString("stepId", row.StepId);
+                    }
                     writer.WriteString("event", row.Event); writer.WriteString("host", row.Host); writer.WriteNumber("index", row.Index);
                     writer.WriteString("outcome", row.Outcome); writer.WriteString("planHash", row.PlanHash); writer.WriteString("previousHash", row.PreviousHash);
                     writer.WriteNumber("processId", row.ProcessId); writer.WriteString("release", row.Release); writer.WriteString("requestId", row.RequestId);
@@ -229,7 +239,9 @@ namespace TiaOpenness.Shared
                 var root = document.RootElement;
                 if (root.ValueKind != JsonValueKind.Object) throw new InvalidDataException("Invalid audit record fields.");
                 int count = root.EnumerateObject().Count();
-                if ((count != 12 && count != 13) || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count
+                bool generation = root.TryGetProperty("planId", out _);
+                if (generation) count -= 4;
+                if ((count != 12 && count != 13) || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count + (generation ? 4 : 0)
                     || (count == 13 && !root.TryGetProperty("actor", out _)))
                     throw new InvalidDataException("Invalid audit record fields.");
                 string Required(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String
@@ -247,7 +259,9 @@ namespace TiaOpenness.Shared
                     throw new InvalidDataException("Invalid audit metadata.");
                 return new AuditRecord { Index = number, Utc = utc, Event = kind, RequestId = Required("requestId"), Host = Required("host"),
                     Release = Required("release"), Tool = Required("tool"), Outcome = Optional("outcome"), PlanHash = Optional("planHash"),
-                    ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash, Actor = actor };
+                    ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash, Actor = actor,
+                    PlanId = generation ? Required("planId") : null, StepId = generation ? Required("stepId") : null,
+                    RunId = generation ? Required("runId") : null, ParentRequestId = generation ? Required("parentRequestId") : null };
             }
         }
     }

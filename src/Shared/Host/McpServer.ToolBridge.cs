@@ -260,6 +260,8 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
 
         internal static CallToolResult DispatchNestedTool(string name, ToolArguments? arguments) => CallToolCore(name, arguments);
+        internal static CallToolResult DispatchGenerationStep(string name, ToolArguments arguments, Func<CallToolResult?> beforeDispatch)
+            => CallToolCore(name, arguments, beforeDispatch);
 
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {

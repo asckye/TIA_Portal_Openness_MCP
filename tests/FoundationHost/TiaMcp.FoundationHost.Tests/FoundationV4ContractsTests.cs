@@ -25,8 +25,8 @@ public sealed class FoundationV4ContractsTests
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
 
     [Theory]
-    [InlineData("14sp1", 176)] [InlineData("15.1", 182)] [InlineData("16", 186)]
-    [InlineData("17", 187)] [InlineData("18", 191)] [InlineData("19", 201)]
+    [InlineData("14sp1", 179)] [InlineData("15.1", 185)] [InlineData("16", 189)]
+    [InlineData("17", 190)] [InlineData("18", 194)] [InlineData("19", 204)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

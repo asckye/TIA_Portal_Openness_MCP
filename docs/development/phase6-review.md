@@ -395,8 +395,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | 17 | 174 | 不设 | 73 | 39 | 174 | 不设 |
 | 18 | 178 | 不设 | 76 | 40 | 178 | 不设 |
 | 19 | 188 | 不设 | 78 | 42 | 188 | 不设 |
-| 20 | 482 | 63 | 272 | 156 | 480 | 82 |
-| 21 | 493 | 63 | 289 | 164 | 491 | 82 |
+| 20 | 482 | 63 | 272 | 156 | 480 | 84 |
+| 21 | 493 | 63 | 289 | 164 | 491 | 84 |
 
 八版当前名称并集 501；V4 名称并集 499；改名/合并入口 183；不变 318。数字只指目录，不代表原生能力验收。
 
@@ -1977,6 +1977,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 
 | 4.0 名称 | 当前示例入口 | 选择理由 | 版本 |
 |---|---|---|---|
+| `ApplyGenerationPlan` | `ApplyGenerationPlan` | Shared Foundation contract | 20, 21 |
 | `AttachOpenProject` | `AttachOpenProject` | Shared Foundation contract | 20, 21 |
 | `BuildFlgNetCall` | `BuildFlgNetCall` | Shared Foundation contract | 20, 21 |
 | `BuildPlcFbBlock` | `BuildPlcFbBlock` | Shared Foundation contract | 20, 21 |
@@ -2045,6 +2046,7 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | `OpenProject` | `OpenProject` | Shared Foundation contract | 20, 21 |
 | `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | Shared Foundation contract | 20, 21 |
 | `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | Shared Foundation contract | 20, 21 |
+| `PlanProjectGeneration` | `PlanProjectGeneration` | Shared Foundation contract | 20, 21 |
 | `PrefillWorkbenchForm` | `PrefillWorkbenchForm` | Shared Foundation contract | 20, 21 |
 | `PreviewToolCall` | `PreviewToolCall` | Engine discovery/bridge/worker supervisor | 20, 21 |
 | `RenderPlcBlock` | `RenderPlcBlock` | Shared Foundation contract | 20, 21 |

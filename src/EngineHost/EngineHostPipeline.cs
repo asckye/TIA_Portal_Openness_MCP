@@ -69,6 +69,7 @@ namespace TiaMcp.FoundationHost
         private readonly ConditionalWeakTable<object, BatchPlanStore> batchPlans = new();
         internal BatchPlanStore BatchPlans => batchPlans.GetValue(Worker.SessionKey, _ => new BatchPlanStore());
         internal SessionExports Exports { get; set; } = new();
+        internal GenerationExecutionSession Generation { get; } = new();
         internal string? HttpSessionId;
         internal volatile bool Ended;
     }

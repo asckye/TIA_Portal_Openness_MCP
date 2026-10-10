@@ -242,7 +242,7 @@
   },
   "engine-host": {
     "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
-    "minimumPassed": 40,
+      "minimumPassed": 139,
     "maximumSkipped": 0,
     "arguments": []
   },

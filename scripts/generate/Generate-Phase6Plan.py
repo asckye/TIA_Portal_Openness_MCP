@@ -18,6 +18,9 @@ NEW_V4_TOOLS = {
     'ValidateStandardPackage': {'owner': 'P8-31d', 'operation': 'OFFLINE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'DescribeStandardPackage': {'owner': 'P8-31d', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'ManageMachineDescription': {'owner': 'P8-31d', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'PlanProjectGeneration': {'owner': 'P8-31e', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'ApplyGenerationPlan': {'owner': 'P8-31e', 'operation': 'WRITE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
+    'GetGenerationRun': {'owner': 'P8-31e', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'StageImportFiles': {'owner': 'P6-67', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'ListStagedImportFiles': {'owner': 'P6-67', 'operation': 'READ', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
     'CleanupStagedImportFiles': {'owner': 'P6-67', 'operation': 'FILE', 'releases': ['14sp1', '15.1', '16', '17', '18', '19', '20', '21']},
@@ -605,7 +608,7 @@ for key in keys:
     profile = 'full-engine' if key in ('20', '21') else 'plc-foundation'
     rows = {row['currentName']: row for row in runtime['releases'][key]}
     rows.update({name: {'name': name, 'currentName': name, 'sourceName': name,
-        'profiles': (['full', 'plc-foundation'] if name in NEW_V4_TOOLS and name != 'DescribeStandardPackage'
+        'profiles': (['full', 'plc-foundation'] if name in NEW_V4_TOOLS and name not in ('DescribeStandardPackage', 'PlanProjectGeneration', 'ApplyGenerationPlan')
                      else ['full', 'lite', 'plc-foundation']) if key in ('20', '21') else ['plc-foundation'],
         'arguments': calls[profile][name]['arguments'], 'envelopeVersion': 4} for name in sorted(host_only_p8)})
     # Preserve the published source order, followed by the Workbench additions.

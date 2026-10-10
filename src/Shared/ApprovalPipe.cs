@@ -44,8 +44,9 @@ namespace TiaOpenness.Shared
         internal PendingApproval Request { get; }
         internal bool Disabled { get; }
         internal string? Reason { get; }
-        internal ApprovalOutcome(PendingApproval request, bool disabled, string? reason)
-        { Request = request; Disabled = disabled; Reason = reason; }
+        internal bool Delegated { get; }
+        internal ApprovalOutcome(PendingApproval request, bool disabled, string? reason, bool delegated = false)
+        { Request = request; Disabled = disabled; Reason = reason; Delegated = delegated; }
     }
 
     internal static class ApprovalClient
@@ -60,7 +61,7 @@ namespace TiaOpenness.Shared
         }
         internal static async Task Complete(ApprovalOutcome approval, string outcome, string? pipeName = null)
         {
-            if (approval.Disabled || approval.Reason != null) return;
+            if (approval.Disabled || approval.Reason != null || approval.Delegated) return;
             try
             {
                 using (var limit = new CancellationTokenSource(1000))
@@ -79,6 +80,7 @@ namespace TiaOpenness.Shared
         internal static async Task<ApprovalOutcome> Wait(PendingApproval request, ApprovalSettings settings,
             CancellationToken cancellation, string? pipeName = null, AuditLog? audit = null)
         {
+            if (GenerationStepApproval.Match(request) is { } granted) return granted;
             if (!settings.Enabled) return new ApprovalOutcome(request, true, null);
             string? reason = "workbench-unavailable";
             var log = audit ?? AuditInvocation.CurrentLog ?? AuditLog.Current;

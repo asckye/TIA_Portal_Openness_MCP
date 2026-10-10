@@ -18,6 +18,7 @@ public sealed record ApprovalRequest(string Id, string Client, string Transport,
 {
     public string Actor { get; init; } = "mcp";
     public string? OperatorCallId { get; init; }
+    public string? GenerationPlan { get; init; }
 }
 
 public sealed record CallRecord(string RequestId, DateTimeOffset Time, string Host, string Release, string Tool,

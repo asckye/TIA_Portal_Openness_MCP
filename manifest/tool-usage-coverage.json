@@ -1,13 +1,13 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "94b0d3bd1cb5746aa6b64033f9a8a51ba64a980b3a154bc0e47ef5a9e67cabae",
-  "uniqueTools": 511,
+  "catalogSha256": "7ab7f6bfbaccad407a4d5cc414c14b81f0a7311a0bf4e482a93d531e34297fa1",
+  "uniqueTools": 514,
   "documents": 89,
-  "versionToolPairs": 2134,
+  "versionToolPairs": 2158,
   "offlineCallExecutions": 115,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 34,
+  "callSequences": 36,
   "languages": [
     "scl",
     "scl-sd",
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 258,
-  "noDirectVendoredExampleMappings": 253,
+  "noDirectVendoredExampleMappings": 256,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -48,13 +48,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 176,
-      "checkedToolCount": 176,
+      "registeredToolCount": 179,
+      "checkedToolCount": 179,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 53,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -128,6 +128,13 @@
         },
         {
           "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -843,6 +850,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1742,6 +1756,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2041,13 +2062,13 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 182,
-      "checkedToolCount": 182,
+      "registeredToolCount": 185,
+      "checkedToolCount": 185,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 63,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -2121,6 +2142,13 @@
         },
         {
           "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -2848,6 +2876,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3863,6 +3898,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -4162,13 +4204,13 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 186,
-      "checkedToolCount": 186,
+      "registeredToolCount": 189,
+      "checkedToolCount": 189,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 67,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -4242,6 +4284,13 @@
         },
         {
           "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -4991,6 +5040,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -6055,6 +6111,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -6354,13 +6417,13 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 187,
-      "checkedToolCount": 187,
+      "registeredToolCount": 190,
+      "checkedToolCount": 190,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 69,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -6434,6 +6497,13 @@
         },
         {
           "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -7213,6 +7283,13 @@
           "operations": []
         },
         {
+          "toolName": "GetGenerationRun",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetHardwareFeatures",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8271,6 +8348,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8570,13 +8654,13 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 191,
-      "checkedToolCount": 191,
+      "registeredToolCount": 194,
+      "checkedToolCount": 194,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 78,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -8650,6 +8734,13 @@
         },
         {
           "toolName": "AnalyzePlcSclSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -9436,6 +9527,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -10571,6 +10669,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -10882,13 +10987,13 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 201,
-      "checkedToolCount": 201,
+      "registeredToolCount": 204,
+      "checkedToolCount": 204,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 80,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -10970,6 +11075,13 @@
         },
         {
           "toolName": "AnalyzeUnifiedHmiTemplateLayout",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -11804,6 +11916,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -12957,6 +13076,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -13288,13 +13414,13 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 500,
-      "checkedToolCount": 500,
+      "registeredToolCount": 503,
+      "checkedToolCount": 503,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 502,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -13376,6 +13502,13 @@
         },
         {
           "toolName": "AnalyzeUnifiedHmiTemplateLayout",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -15070,6 +15203,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -19779,6 +19919,13 @@
           "operations": []
         },
         {
+          "toolName": "PlanProjectGeneration",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "PlugDeviceItem",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -20498,13 +20645,13 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 511,
-      "checkedToolCount": 511,
+      "registeredToolCount": 514,
+      "checkedToolCount": 514,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 554,
       "programmingExampleCount": 25,
-      "callSequenceCount": 34,
+      "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -20586,6 +20733,13 @@
         },
         {
           "toolName": "AnalyzeUnifiedHmiTemplateLayout",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyGenerationPlan",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -22280,6 +22434,13 @@
         },
         {
           "toolName": "GetExportContent",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetGenerationRun",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -27358,6 +27519,13 @@
         },
         {
           "toolName": "PlanPlcExternalSourceImport",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PlanProjectGeneration",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],

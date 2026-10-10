@@ -403,6 +403,7 @@ public sealed class CallRow(CallRecord record) : ObservableObject
 public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel owner) : ObservableObject
 {
     private bool _jsonOpen;
+    private bool _planOpen;
     private string? _parameters;
     public ApprovalRequest Request { get; private set; } = request;
     public string Actor => ActorDisplay.Name(Request.Actor);
@@ -414,6 +415,32 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     public FeatureTone CountdownTone => Remaining < 20 ? FeatureTone.Warning : FeatureTone.Accent;
     public bool JsonOpen { get => _jsonOpen; set => Set(ref _jsonOpen, value); }
     public string Parameters => _parameters ??= FeatureJson.Redact(Request.ParametersJson);
+    public bool IsGenerationPlan => Request.GenerationPlan != null;
+    public bool IsToolRequest => !IsGenerationPlan;
+    public bool PlanOpen { get => _planOpen; set => Set(ref _planOpen, value); }
+    public string CompletePlan => Request.GenerationPlan ?? "";
+    public IEnumerable<GenerationDifferenceRow> GenerationDifferences
+    {
+        get
+        {
+            if (Request.GenerationPlan == null) return Array.Empty<GenerationDifferenceRow>();
+            var plan = System.Text.Json.Nodes.JsonNode.Parse(Request.GenerationPlan)!;
+            return new[] { ("conflicts", Loc.Current["Approval.Conflicts"]), ("skipped", Loc.Current["Approval.Skipped"]), ("unavailable", Loc.Current["Approval.Unavailable"]) }
+                .Select(kind => new GenerationDifferenceRow(kind.Item2, plan[kind.Item1]!.AsArray()
+                    .Select(row => new GenerationDifferenceRow(((string?)row?["key"] ?? (string?)row?["phase"]) + ": " + (string?)row?["reason"]
+                        + (row?["detail"] == null ? "" : " · " + (string?)row["detail"]), Array.Empty<GenerationDifferenceRow>())).ToArray())).ToArray();
+        }
+    }
+    public IEnumerable<GenerationStepRow> GenerationSteps
+    {
+        get
+        {
+            if (Request.GenerationPlan == null) return Array.Empty<GenerationStepRow>();
+            var plan = System.Text.Json.Nodes.JsonNode.Parse(Request.GenerationPlan)!;
+            return plan["steps"]!.AsArray().Where(step => Request.Operations.Any(op => op.Object == (string?)step!["key"] && op.Tool == (string?)step["tool"]))
+                .Select(step => new GenerationStepRow((string)step!["id"]!, (string)step["phase"]!, (string)step["key"]!, (string)step["tool"]!)).ToArray();
+        }
+    }
     public string Metadata => "#" + Request.PlanHash + " · " + Request.Id;
     public FeatureTone Tone => Request.State switch
     {
@@ -444,7 +471,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     }
     internal void RefreshLanguage()
     {
-        foreach (string name in new[] { nameof(Actor), nameof(Client), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote) }) Raise(name);
+        foreach (string name in new[] { nameof(Actor), nameof(Client), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note), nameof(HasNote), nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps), nameof(CompletePlan) }) Raise(name);
     }
     public void RefreshCountdown()
     {
@@ -474,6 +501,9 @@ public sealed record AuditRow(AuditEvent Record, bool Selected)
         AuditEventType.Reject or AuditEventType.Timeout => FeatureTone.Muted, _ => FeatureTone.Normal,
     };
 }
+
+public sealed record GenerationDifferenceRow(string Text, IReadOnlyList<GenerationDifferenceRow> Children);
+public sealed record GenerationStepRow(string Id, string Phase, string Key, string Tool);
 
 internal static class ActorDisplay
 {

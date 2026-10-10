@@ -34,12 +34,12 @@ public sealed class B3HostPortsTests
     }
 
     [Theory]
-    [InlineData("14sp1", 176)]
-    [InlineData("15.1", 182)]
-    [InlineData("16", 186)]
-    [InlineData("17", 187)]
-    [InlineData("18", 191)]
-    [InlineData("19", 201)]
+    [InlineData("14sp1", 179)]
+    [InlineData("15.1", 185)]
+    [InlineData("16", 189)]
+    [InlineData("17", 190)]
+    [InlineData("18", 194)]
+    [InlineData("19", 204)]
     public async Task Old_release_discovery_usage_bridges_batches_and_passive_reports_share_the_registry(string release, int count)
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();

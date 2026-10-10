@@ -270,7 +270,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 && (!args.TryGetValue("mode", out var mode) || mode.GetString() != "apply");
             TiaOpenness.Shared.PendingApproval? pending = null;
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
-            if (write && !preview)
+            if (write && !preview && inner is not GenerationTool { OwnsApproval: true })
             {
                 pending = TiaOpenness.Shared.PendingApproval.Create("foundation", release, tool.Name, JsonSerializer.Serialize(args),
                     (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
@@ -371,7 +371,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             request.Params = new CallToolRequestParams { Name = inner.ProtocolTool.Name, Arguments = adapted };
             try
             {
-                audit?.Start();
+                if (inner is not GenerationTool { OwnsApproval: true }) audit?.Start();
                 if (inner is FoundationTool foundation) return Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
                 var result = await inner.InvokeAsync(request, cancellationToken);
                 if (inner is GenerationTool) return Recorded(result);

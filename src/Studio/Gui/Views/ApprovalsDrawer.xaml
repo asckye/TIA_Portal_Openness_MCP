@@ -37,7 +37,7 @@
                 <TextBlock Grid.Row="1" Text="PLC" Style="{StaticResource Primer.Muted}"/>
                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Request.Plc}" Style="{StaticResource Primer.Text}" FontSize="11"/>
               </Grid>
-              <Border Padding="10,6" Style="{StaticResource Primer.InputSurface}">
+              <Border Padding="10,6" Style="{StaticResource Primer.InputSurface}" Visibility="{Binding IsToolRequest, Converter={StaticResource BoolToVisibility}}">
                 <ScrollViewer MaxHeight="118" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                   <ItemsControl ItemsSource="{Binding Request.Operations}">
                     <ItemsControl.ItemTemplate>
@@ -57,6 +57,25 @@
                   </ItemsControl>
                 </ScrollViewer>
               </Border>
+              <StackPanel Margin="0,8,0,0" Visibility="{Binding IsGenerationPlan, Converter={StaticResource BoolToVisibility}}">
+                <TreeView ItemsSource="{Binding GenerationDifferences}" MaxHeight="180" Background="Transparent" BorderThickness="0">
+                  <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}"><TextBlock Text="{Binding Text}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/></HierarchicalDataTemplate>
+                  </TreeView.ItemTemplate>
+                </TreeView>
+                <DataGrid ItemsSource="{Binding GenerationSteps}" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="200" Margin="0,6,0,0">
+                  <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70"/>
+                    <DataGridTextColumn Header="{l:Tr Approval.Phase}" Binding="{Binding Phase}" Width="100"/>
+                    <DataGridTextColumn Header="{l:Tr Calls.Target}" Binding="{Binding Key}" Width="*"/>
+                    <DataGridTextColumn Header="{l:Tr Calls.Tool}" Binding="{Binding Tool}" Width="180"/>
+                  </DataGrid.Columns>
+                </DataGrid>
+                <Button Content="{l:Tr Approval.CompletePlan}" Style="{StaticResource Primer.Quiet}" Click="OnPlan"/>
+                <Border Padding="12" Margin="0,8,0,0" Style="{StaticResource Primer.CodeBlock}" Visibility="{Binding PlanOpen, Converter={StaticResource BoolToVisibility}}">
+                  <TextBox Text="{Binding CompletePlan, Mode=OneWay}" IsReadOnly="True" MaxHeight="300" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Style="{StaticResource Primer.Input}"/>
+                </Border>
+              </StackPanel>
               <DockPanel Margin="0,12,0,0">
                 <TextBlock DockPanel.Dock="Right" Text="{Binding Metadata}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="9.5" Margin="4,0,0,0"/>
                 <ItemsControl ItemsSource="{Binding Request.Risks}">

@@ -12,7 +12,7 @@ using TiaMcp.Logic.V4.Inputs;
 namespace TiaMcpServer.ModelContextProtocol
 {
     [McpServerToolType]
-    internal sealed class GenerationTools
+    internal sealed partial class GenerationTools
     {
         private readonly Func<StandardPackageStore> store;
         private readonly string release;

@@ -98,7 +98,7 @@ public sealed class GenerationToolTests : IDisposable
         Assert.True((bool?)preview.StructuredContent?["ok"]);
         args["dryRun"] = false; args["expectedPlanHash"] = preview.StructuredContent!["data"]!["planHash"]!.DeepClone();
         var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args));
-        Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.True((string?)result.StructuredContent?["error"]?["code"] == "CONFIRMATION_REQUIRED", result.StructuredContent?.ToJsonString());
         Assert.Equal(1, waits); Assert.False(Directory.Exists(Path.Combine(root, "csv")));
     }
 }

@@ -15,4 +15,9 @@ public partial class ApprovalsDrawer : UserControl
         var row = (ApprovalRow)((Button)sender).DataContext;
         row.JsonOpen = !row.JsonOpen;
     }
+    private void OnPlan(object sender, RoutedEventArgs e)
+    {
+        var row = (ApprovalRow)((Button)sender).DataContext;
+        row.PlanOpen = !row.PlanOpen;
+    }
 }

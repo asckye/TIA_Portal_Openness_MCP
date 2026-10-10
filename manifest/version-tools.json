@@ -5,12 +5,13 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 176,
+      "toolCount": 179,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -84,6 +85,7 @@
         "GetDevicePlugLocations",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetNativeInvocationLog",
         "GetOpennessCompatibility",
@@ -149,6 +151,7 @@
         "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -187,12 +190,13 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 182,
+      "toolCount": 185,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -267,6 +271,7 @@
         "GetDevicePlugLocations",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetNativeInvocationLog",
         "GetOpennessCompatibility",
@@ -337,6 +342,7 @@
         "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -375,12 +381,13 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 186,
+      "toolCount": 189,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -457,6 +464,7 @@
         "GetDevicePlugLocations",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetNativeInvocationLog",
         "GetOpennessCompatibility",
@@ -529,6 +537,7 @@
         "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -567,12 +576,13 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 187,
+      "toolCount": 190,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -650,6 +660,7 @@
         "GetDevicePlugLocations",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetNativeInvocationLog",
         "GetOpennessCompatibility",
@@ -722,6 +733,7 @@
         "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -760,12 +772,13 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 191,
+      "toolCount": 194,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -844,6 +857,7 @@
         "GetDevicePlugLocations",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetNativeInvocationLog",
         "GetOpennessCompatibility",
@@ -918,6 +932,7 @@
         "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -957,13 +972,14 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 201,
+      "toolCount": 204,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
         "AnalyzeUnifiedHmiTemplateLayout",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
@@ -1048,6 +1064,7 @@
         "GetDevicePlugLocations",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetNativeInvocationLog",
         "GetOpennessCompatibility",
@@ -1123,6 +1140,7 @@
         "PlanGlobalLibraryTemplateReuse",
         "PlanHardwareNetworkConfiguration",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -1164,13 +1182,14 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 500,
+      "toolCount": 503,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
         "AnalyzeUnifiedHmiTemplateLayout",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "ApplyUnifiedHmiLayout",
         "ApplyUnifiedHmiScreenDesign",
@@ -1338,6 +1357,7 @@
         "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetHmiProgramInfo",
         "GetHmiScreenSnapshot",
@@ -1583,6 +1603,7 @@
         "PlanOnlineReadOnlyDataProvider",
         "PlanOnlineReadOnlyMonitoring",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -1670,13 +1691,14 @@
     },
     "21": {
       "profile": "full-engine",
-      "toolCount": 511,
+      "toolCount": 514,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
         "AnalyzePlcReferences",
         "AnalyzePlcSclSource",
         "AnalyzeUnifiedHmiTemplateLayout",
+        "ApplyGenerationPlan",
         "ApplyToolBatch",
         "ApplyUnifiedHmiLayout",
         "ApplyUnifiedHmiScreenDesign",
@@ -1844,6 +1866,7 @@
         "GetDriveParameters",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
+        "GetGenerationRun",
         "GetHardwareFeatures",
         "GetHmiProgramInfo",
         "GetHmiScreenSnapshot",
@@ -2100,6 +2123,7 @@
         "PlanOnlineReadOnlyDataProvider",
         "PlanOnlineReadOnlyMonitoring",
         "PlanPlcExternalSourceImport",
+        "PlanProjectGeneration",
         "PlugDeviceItem",
         "PrefillWorkbenchForm",
         "PreviewToolBatch",
@@ -2187,7 +2211,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 176,
+    "all-releases": 179,
     "shared-subset": 324,
     "release-only": 11
   },
@@ -2260,6 +2284,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ApplyGenerationPlan",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4214,6 +4253,21 @@
     },
     {
       "name": "GetExportContent",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetGenerationRun",
       "releases": [
         "14sp1",
         "15.1",
@@ -6935,6 +6989,21 @@
     },
     {
       "name": "PlanPlcExternalSourceImport",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlanProjectGeneration",
       "releases": [
         "14sp1",
         "15.1",

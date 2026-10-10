@@ -36,10 +36,14 @@ internal sealed class GenerationTool : McpServerTool
         yield return new GenerationTool("ValidateStandardPackage", release);
         yield return new GenerationTool("DescribeStandardPackage", release);
         yield return new GenerationTool("ManageMachineDescription", release);
+        yield return new GenerationTool("PlanProjectGeneration", release);
+        yield return new GenerationTool("ApplyGenerationPlan", release);
+        yield return new GenerationTool("GetGenerationRun", release);
     }
-    internal bool ApprovalWrite(System.Text.Json.Nodes.JsonObject arguments) => ProtocolTool.Name == "ManageStandardPackage"
+    internal bool ApprovalWrite(System.Text.Json.Nodes.JsonObject arguments) => ProtocolTool.Name == "ApplyGenerationPlan" || ProtocolTool.Name == "ManageStandardPackage"
         || ProtocolTool.Name == "ManageMachineDescription" && (string?)arguments["action"] != "validate"
             && !string.IsNullOrEmpty((string?)arguments["outputPath"]);
+    internal bool OwnsApproval => ProtocolTool.Name == "ApplyGenerationPlan";
     public override Tool ProtocolTool => tool;
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     { cancellationToken.ThrowIfCancellationRequested(); return inner.InvokeAsync(request, cancellationToken); }

@@ -31,6 +31,8 @@ def new_v4_tools(root=ROOT):
     expected.update({name: ('P8-31d', operation) for name, operation in {
         'ListStandardPackages': 'READ', 'ManageStandardPackage': 'FILE', 'ValidateStandardPackage': 'OFFLINE',
         'DescribeStandardPackage': 'READ', 'ManageMachineDescription': 'FILE'}.items()})
+    expected.update({name: ('P8-31e', operation) for name, operation in {
+        'PlanProjectGeneration': 'READ', 'ApplyGenerationPlan': 'WRITE', 'GetGenerationRun': 'READ'}.items()})
     assert set(result) == set(expected), 'Reviewed new V4 list differs'
     for name, entry in result.items():
         assert (entry['owner'], entry['operation']) == expected[name], ('Unreviewed owner/category', name)
@@ -65,10 +67,10 @@ def host_only_p8_tools(root=ROOT):
     metadata = (root / 'src/Logic/ModelContextProtocol/ToolMetadata.cs').read_text('utf-8-sig')
     rows = dict(re.findall(r'\["([^"\n]+)"\] = new Classification\("L1", "Workbench", "(UI|READ)",', metadata))
     assert set(rows) == set(names), 'Workbench classification coverage differs'
-    packages = {name: entry['operation'] for name, entry in new_v4_tools(root).items() if entry['owner'] == 'P8-31d'}
+    packages = {name: entry['operation'] for name, entry in new_v4_tools(root).items() if entry['owner'] in ('P8-31d', 'P8-31e')}
     source = (root / 'src/FoundationHost/GenerationTool.cs').read_text('utf-8-sig')
     assert set(re.findall(r'new GenerationTool\("([^"]+)"', source)) == set(packages), 'Closed package tool roster differs'
-    classifications = dict(re.findall(r'\["([^"\n]+)"\] = new Classification\("L1", "Project", "(READ|FILE|OFFLINE)",', metadata))
+    classifications = dict(re.findall(r'\["([^"\n]+)"\] = new Classification\("L1", "Project", "(READ|FILE|OFFLINE|WRITE)",', metadata))
     assert all(classifications.get(name) == operation for name, operation in packages.items()), 'Package classification coverage differs'
     rows.update(packages)
     return rows
@@ -530,7 +532,7 @@ class RosterTests(unittest.TestCase):
 
     def test_host_only_p8_tools_are_published_without_engine_source_mappings(self):
         host_only = set(host_only_p8_tools())
-        self.assertEqual(len(host_only), 13)
+        self.assertEqual(len(host_only), 16)
         rosters, mapping = registered_rosters()
         self.assertFalse(host_only & (mapping.keys() | set(mapping.values())))
         for key, roster in rosters.items():
@@ -541,10 +543,10 @@ class RosterTests(unittest.TestCase):
         for key, rows in catalog['engineSourceReleases'].items():
             with self.subTest(engine=key):
                 self.assertFalse(host_only & {row['currentName'] for row in rows})
-        packages = {name for name, entry in new_v4_tools().items() if entry['owner'] == 'P8-31d'}
+        packages = {name for name, entry in new_v4_tools().items() if entry['owner'] in ('P8-31d', 'P8-31e')}
         for key in ('20', '21'):
             lite = {row['currentName'] for row in catalog['releases'][key] if 'lite' in row['profiles']}
-            self.assertEqual(packages & lite, {'DescribeStandardPackage'})
+            self.assertEqual(packages & lite, {'DescribeStandardPackage', 'PlanProjectGeneration', 'ApplyGenerationPlan'})
 
     def test_migrated_and_unmigrated_names(self):
         targets = {'BuildOld': 'BuildNew', 'ReadOld': 'GetNew', 'Typed': 'Typed'}

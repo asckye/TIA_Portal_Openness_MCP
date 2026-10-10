@@ -30,6 +30,10 @@ namespace TiaOpenness.Shared
         public string ArgumentDigest { get; set; } = "";
         public string ProjectIdentity { get; set; } = "{}";
         public string ParametersJson { get; set; } = "{}";
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? PlanJson { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal string InvocationArgumentsDigest { get; set; } = "";
         public ApprovalAction[] Operations { get; set; } = Array.Empty<ApprovalAction>();
         public int TimeoutSeconds { get; set; } = 120;
         public DateTimeOffset Deadline { get; set; }
@@ -55,6 +59,7 @@ namespace TiaOpenness.Shared
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
                 Tool = tool, PlanHash = plan ?? digest, ArgumentDigest = digest, ProjectIdentity = Display(target, "identity").ToJsonString(),
                 ParametersJson = display.ToJsonString(), TimeoutSeconds = seconds,
+                InvocationArgumentsDigest = Hash(Canonical(args)),
                 Version = ActorScope.Actor == ActorScope.Workbench ? 2 : 1,
                 Actor = ActorScope.Actor == ActorScope.Workbench ? ActorScope.Workbench : null,
                 OperatorCallId = ActorScope.Actor == ActorScope.Workbench ? ActorScope.OperatorCallId : null,
@@ -111,14 +116,23 @@ namespace TiaOpenness.Shared
         {
             ValidateAttribution();
             if (string.IsNullOrWhiteSpace(RequestId) || string.IsNullOrWhiteSpace(Host)
-                || string.IsNullOrWhiteSpace(ReleaseKey) || string.IsNullOrWhiteSpace(Tool) || !IsHash(PlanHash) || !IsHash(ArgumentDigest)
+                || string.IsNullOrWhiteSpace(ReleaseKey) || string.IsNullOrWhiteSpace(Tool)
+                || !(IsHash(PlanHash) || Kind == "plan" && PlanHash.StartsWith("sha256:", StringComparison.Ordinal) && IsHash(PlanHash.Substring(7))) || !IsHash(ArgumentDigest)
                 || TimeoutSeconds < 1 || TimeoutSeconds > 3600 || Deadline <= DateTimeOffset.UtcNow
-                || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations.Length > 50)
+                || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations.Length > (Kind == "plan" ? 10000 : 50)
+                || Kind == "plan" && (Tool != "ApplyGenerationPlan" || PlanJson == null))
                 throw new InvalidDataException("Invalid approval request.");
             using (var project = JsonDocument.Parse(ProjectIdentity))
             using (var args = JsonDocument.Parse(ParametersJson))
                 if (project.RootElement.ValueKind != JsonValueKind.Object || args.RootElement.ValueKind != JsonValueKind.Object)
                     throw new InvalidDataException("Approval identity and arguments must be objects.");
+            if (Kind == "plan")
+            {
+                var plan = JsonNode.Parse(PlanJson!)!.AsObject();
+                if ((string?)plan["planHash"] != PlanHash) throw new InvalidDataException("Approval plan hash differs.");
+                plan.Remove("planHash");
+                if ("sha256:" + Hash(Canonical(plan)) != PlanHash) throw new InvalidDataException("Approval plan content differs.");
+            }
         }
         internal void ValidateAttribution()
         {
@@ -127,15 +141,49 @@ namespace TiaOpenness.Shared
                     || OperatorCallId != null && !Guid.TryParseExact(OperatorCallId, "N", out _))
                 throw new InvalidDataException("Invalid approval attribution.");
         }
-        internal static bool IsHash(string? hash) => hash != null && hash.Length == 64 && hash.All(c => "0123456789abcdef".Contains(c));
+        internal static bool IsHash(string? hash)
+        {
+            return hash != null && hash.Length == 64 && hash.All(c => "0123456789abcdef".Contains(c));
+        }
         internal static string Hash(string value)
         { using (var sha = SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-", "").ToLowerInvariant(); }
-        private static string Canonical(JsonNode? node)
+        internal static string Canonical(JsonNode? node)
         {
             if (node is JsonObject obj) return "{" + string.Join(",", obj.OrderBy(p => p.Key, StringComparer.Ordinal)
                 .Select(p => JsonSerializer.Serialize(p.Key) + ":" + Canonical(p.Value))) + "}";
             if (node is JsonArray array) return "[" + string.Join(",", array.Select(Canonical)) + "]";
             return node?.ToJsonString() ?? "null";
+        }
+    }
+    // An in-process, single-step grant. It is never accepted from MCP arguments or pipe metadata.
+    internal static class GenerationStepApproval
+    {
+        private sealed class Grant
+        {
+            internal string Release = "", Tool = "", Digest = "";
+            internal ApprovalOutcome Approval = null!;
+        }
+        private static readonly AsyncLocal<Grant?> Current = new AsyncLocal<Grant?>();
+        internal static IDisposable Enter(ApprovalOutcome approval, string tool, string arguments)
+        {
+            if (approval.Reason != null || approval.Request.Kind != "plan") throw new InvalidOperationException("A granted plan is required.");
+            var previous = Current.Value;
+            Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = tool,
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(JsonNode.Parse(arguments))), Approval = approval };
+            return new Scope(() => Current.Value = previous);
+        }
+        internal static ApprovalOutcome? Match(PendingApproval request)
+        {
+            var grant = Current.Value;
+            if (grant == null) return null;
+            return new ApprovalOutcome(request, grant.Approval.Disabled,
+                grant.Release == request.ReleaseKey && grant.Tool == request.Tool && grant.Digest == request.InvocationArgumentsDigest ? null : "denied", true);
+        }
+        private sealed class Scope : IDisposable
+        {
+            private readonly Action restore;
+            internal Scope(Action restore) { this.restore = restore; }
+            public void Dispose() => restore();
         }
     }
     [System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]

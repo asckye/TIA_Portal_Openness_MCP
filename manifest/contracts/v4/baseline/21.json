@@ -106,6 +106,7 @@
   ],
   "formatVersion": 1,
   "liteTools": [
+    "ApplyGenerationPlan",
     "AttachOpenProject",
     "BuildFlgNetCall",
     "BuildPlcFbBlock",
@@ -174,6 +175,7 @@
     "OpenProject",
     "PlanArtifactImportOrder",
     "PlanPlcExternalSourceImport",
+    "PlanProjectGeneration",
     "PrefillWorkbenchForm",
     "PreviewToolCall",
     "RenderPlcBlock",
@@ -379,6 +381,160 @@
       },
       "name": "AnalyzeUnifiedHmiTemplateLayout",
       "outputSchema": null
+    },
+    {
+      "descriptionSha256": "39583bccb9fb23cd9b45f269a8df9ebadb9ad69505bc8608d803a6b8fb0379e3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "true previews without approval/write audit; false executes once.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "description": "Exact planHash from planning; required even for preview.",
+            "type": "string"
+          },
+          "expectedProject": {
+            "description": "Exact bound project file recorded by the plan.",
+            "type": "string"
+          },
+          "phases": {
+            "description": "Optional phase names; dependencies must be selected too.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "planId": {
+            "description": "planId returned in this MCP session.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "planId",
+          "expectedPlanHash",
+          "expectedProject"
+        ],
+        "type": "object"
+      },
+      "name": "ApplyGenerationPlan",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "c57bfc422ea0e46902ac166cf3d83b596a2a4815d0bd7c807f2743cedb4379cd",
@@ -20667,6 +20823,138 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "5a7fb7b0f6dd9302180a9fffff33a537054a2d9d1ceaa3cb222b1069047ebecc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "runId": {
+            "description": "Exact runId returned by ApplyGenerationPlan.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "type": "object"
+      },
+      "name": "GetGenerationRun",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "499623bcf1255194263c6100b3bcc578d467bc6193616dddec5c5f4be559bb0a",
       "inputSchema": {
         "additionalProperties": false,
@@ -40141,6 +40429,150 @@
         "type": "object"
       },
       "name": "PlanPlcExternalSourceImport",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "descriptionSha256": "31c2eb3db0ffced8b3b1bcc02a464781dcdf3a221fb773465936fe131436ffac",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "machine": {
+            "additionalProperties": {},
+            "description": "Structured tiamcp.machine/1, existing bound project; projectIdentity must be its exact project file.",
+            "minProperties": 0,
+            "type": "object"
+          },
+          "packageId": {
+            "description": "Exact installed package id.",
+            "type": "string"
+          },
+          "version": {
+            "description": "Exact installed SemVer version.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "packageId",
+          "version",
+          "machine"
+        ],
+        "type": "object"
+      },
+      "name": "PlanProjectGeneration",
       "outputSchema": {
         "additionalProperties": false,
         "properties": {
