@@ -8,6 +8,9 @@ namespace TiaMcpServer.Dispatch
 {
     internal static class ToolDispatchLanes
     {
+#if TIA_ENGINE_HOST
+        internal interface IWorkerLane { void Activate(); }
+#endif
         private static readonly ConditionalWeakTable<object, SemaphoreSlim> Sessions = new ConditionalWeakTable<object, SemaphoreSlim>();
         private static readonly object UnavailableSession = new object();
         private static readonly SemaphoreSlim Local = new SemaphoreSlim(8, 8);
@@ -21,7 +24,10 @@ namespace TiaMcpServer.Dispatch
             // Orchestration waits for approval and takes each target's lane itself.
             if (ToolTaxonomy.DispatchesTargets(name)) return null;
 #if TIA_ENGINE_HOST
-            bool workerTool = McpServer.CatalogView.Find(name, true)?.Execution == "worker";
+            var execution = McpServer.CatalogView.Find(name, true)?.Execution;
+            // Ported Foundation tools share the same worker and native journal lane.
+            bool workerTool = execution == "worker" || execution == "foundation"
+                && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name) && ToolTaxonomy.MayCallOpenness(name);
             var gate = workerTool && ToolTaxonomy.UsesOpennessLane(name) ? Sessions.GetValue(session, _ => new SemaphoreSlim(1, 1)) : Local;
 #else
             var gate = ToolTaxonomy.UsesOpennessLane(name) ? Sessions.GetValue(session, _ => new SemaphoreSlim(1, 1)) : Local;
@@ -63,7 +69,13 @@ namespace TiaMcpServer.Dispatch
             internal Lease? previous;
             private bool disposed;
             internal Lease(SemaphoreSlim gate) { this.gate = gate; }
-            internal void Activate() { previous = Held.Value; Held.Value = this; }
+            internal void Activate()
+            {
+                previous = Held.Value; Held.Value = this;
+#if TIA_ENGINE_HOST
+                if (workerLane is IWorkerLane lane) lane.Activate();
+#endif
+            }
             public void Dispose()
             {
                 if (disposed) return;

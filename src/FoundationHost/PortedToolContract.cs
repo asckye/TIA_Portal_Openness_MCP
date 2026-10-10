@@ -207,11 +207,16 @@ internal sealed partial class FoundationTool
             ? JsonSerializer.Deserialize(value.GetRawText(), p.ParameterType, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }) : p.DefaultValue).ToArray();
         try
         {
+            using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             var result = (CallToolResult)portedMethod.Invoke(target, values)!;
-            // Retain the retired engine host's no-native-call admission projection.
-            if (tool.Name == "CompileHmiDiagnostics" && state?["ProcessId"] == null
+            // Preserve typed refusals and offline previews. A missing session can
+            // make legacy write wrappers report unknown even though no operation
+            // started; use the retired engine's no-native-call projection for all ports.
+            if (state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true
+                && !hasProject() && !nativeCalls.NativeCallIssued
+                && PortedToolContract.WiredOperations(tool.Name).Any(TiaMcp.PlcWorker.WorkerOperations.RequiresPortal)
                 && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
-                return McpServer.V4Result(tool.Name, null,
+                return McpServer.V4Result(tool.Name, result.StructuredContent?["data"] is JsonObject data ? (JsonObject)data.DeepClone() : null,
                     new Error(TiaOpenness.Shared.SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),
                     Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: true);
             return result;

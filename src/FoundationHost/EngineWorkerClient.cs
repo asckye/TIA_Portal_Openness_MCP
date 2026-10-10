@@ -232,11 +232,11 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         Interlocked.Increment(ref active);
         return new Lane(this);
     }
-    private sealed class Lane(EngineWorkerClient owner) : IDisposable
+    private sealed class Lane(EngineWorkerClient owner) : IDisposable, TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane
     {
         private int disposed;
         private EngineWorkerClient? previous;
-        internal void Activate() { previous = Held.Value; Held.Value = owner; }
+        public void Activate() { previous = Held.Value; Held.Value = owner; }
         public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { Held.Value = previous; Interlocked.Decrement(ref owner.active); owner.serial.Release(); } }
     }
 
