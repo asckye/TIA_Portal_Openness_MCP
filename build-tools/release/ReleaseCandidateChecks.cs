@@ -61,7 +61,8 @@ internal static partial class ReleaseCommands
         var snapshotArgs = new[] { "--repo-root", Root, "--public-api-root", api };
         var harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         var fixtureWorkers = new Dictionary<string, string>(StringComparer.Ordinal);
-        if (plan.Includes("engine-responses"))
+        // Response captures and the source-layout contract capture run the combined host with an SDK fixture worker.
+        if (plan.Includes("engine-responses") || plan.Includes("engine-contracts"))
         {
             foreach (var release in new[] { "20", "21" })
             {
@@ -95,7 +96,7 @@ internal static partial class ReleaseCommands
                 {
                     var host = Path.Combine(Root, sourceLayout ? "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe" : $"runtime/v{release}/TiaMcp.FoundationHost.exe");
                     args.AddRange(["--engine-host", host, "--transport", transport]);
-                    if (responses) args.AddRange(["--engine-worker", release + "=" + fixtureWorkers[release],
+                    if (responses || sourceLayout) args.AddRange(["--engine-worker", release + "=" + fixtureWorkers[release],
                         "--engine-catalog", release + "=" + Path.Combine(Path.GetDirectoryName(fixtureWorkers[release])!, "tool-catalog.json")]);
                 }
                 if (responses) args.AddRange(["--dotnet-root", Path.Combine(Root, "runtime/dotnet")]);
