@@ -33,20 +33,30 @@ internal static class EngineReleaseHost
             await HostToolCommand.Run(options.HostCommand, pipeline);
             return 0;
         }
+        await using var operatorEndpoint = OperatorEndpoint.Start(options, async token => await CreateHostSession(options, true, token));
+        using var operatorStopping = stoppingToken.Register(() => operatorEndpoint?.Stop());
+        if (options.Transport == "operator")
+        {
+            session.Dispose();
+            await operatorEndpoint!.Completion;
+            return 0;
+        }
         if (options.Transport == "http")
         {
             // Verify the release and capabilities before listening; sessions never use this probe.
             session.Dispose();
-            await RunHttp(options, logger, pipeline, stoppingToken);
+            await RunHttp(options, logger, pipeline, operatorEndpoint, stoppingToken);
         }
         else
         {
             using var engineContext = pipeline.EnterSession();
+            using var hostSession = CreateHostSession(options, session);
+            using var registration = operatorEndpoint?.Register(hostSession);
             var builder = Host.CreateEmptyApplicationBuilder(settings: null);
             builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
             builder.Logging.AddProvider(logger);
             builder.Logging.SetMinimumLevel(LogLevel.Warning);
-            var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithStdioServerTransport().WithTools(pipeline.Tools);
+            var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithStdioServerTransport().WithTools(hostSession.Tools);
             pipeline.RegisterHandlers(mcp);
             using var host = builder.Build();
             using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
@@ -61,9 +71,24 @@ internal static class EngineReleaseHost
         try { return new Session(worker, CreatePipeline(options, worker)); }
         catch { worker.Dispose(); throw; }
     }
+    private static HostSession CreateHostSession(HostOptions options, Session session, bool operatorOwned = false)
+        => new(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
+            session.Pipeline.OperatorTools, session.Worker.OperatorSnapshot, session.Dispose);
+    internal static async Task<HostSession> CreateHostSession(HostOptions options, bool operatorOwned, CancellationToken token = default)
+    {
+        var session = CreateSession(options);
+        try
+        {
+            using var context = session.Pipeline.EnterSession();
+            await session.Worker.Status(token);
+            return CreateHostSession(options, session, operatorOwned);
+        }
+        catch { session.Dispose(); throw; }
+    }
 
     private static EngineHostPipeline CreatePipeline(HostOptions options, EngineWorkerClient worker)
     {
+        EngineHostConfiguration.ReleaseKey = options.ReleaseKey;
         IReadOnlyList<McpServerTool>? roster = null;
         var foundationNames = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, false).Select(t => t.ProtocolTool.Name).Where(n => !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(n)).ToHashSet(StringComparer.Ordinal);
         var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
@@ -79,12 +104,13 @@ internal static class EngineReleaseHost
 
     private sealed class Session(EngineWorkerClient worker, EngineHostPipeline pipeline) : IDisposable
     {
+        private int disposed;
         internal EngineWorkerClient Worker => worker;
         internal EngineHostPipeline Pipeline => pipeline;
-        public void Dispose() { worker.SessionLocked = null; worker.Dispose(); pipeline.Dispose(); }
+        public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { worker.SessionLocked = null; worker.Dispose(); pipeline.Dispose(); } }
     }
 
-    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, CancellationToken stoppingToken)
+    private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint, CancellationToken stoppingToken)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
         builder.Logging.ClearProviders();
@@ -95,23 +121,28 @@ internal static class EngineReleaseHost
         var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = probe.Instructions).WithHttpTransport(o => {
             o.ConfigureSessionOptions = async (context, server, token) => {
                 var session = CreateSession(options);
+                var hostSession = CreateHostSession(options, session);
                 try
                 {
                     using var scope = session.Pipeline.EnterSession();
                     await session.Worker.Status(token);
                     var tools = new McpServerPrimitiveCollection<McpServerTool>();
-                    foreach (var tool in session.Pipeline.Tools) tools.Add(tool);
+                    foreach (var tool in hostSession.Tools) tools.Add(tool);
                     // Keep the resource and prompt capabilities registered on the server builder; only the tools are per session.
                     server.Capabilities ??= new ServerCapabilities();
                     server.Capabilities.Tools = new ToolsCapability { ToolCollection = tools };
                     context.Items["engineSession"] = session;
+                    context.Items["hostSession"] = hostSession;
                 }
-                catch { session.Dispose(); throw; }
+                catch { hostSession.Dispose(); throw; }
             };
             o.RunSessionHandler = async (context, server, token) => {
-                using var session = (Session)context.Items["engineSession"]!;
+                var session = (Session)context.Items["engineSession"]!;
+                using var hostSession = (HostSession)context.Items["hostSession"]!;
                 using var staging = session.Pipeline.RegisterHttpSession(server.SessionId ?? throw new InvalidOperationException("HTTP MCP session id is unavailable."));
                 using var scope = session.Pipeline.EnterSession();
+                hostSession.BindAi(server);
+                using var registration = operatorEndpoint?.Register(hostSession);
                 await server.RunAsync(token);
             };
         });

@@ -1,0 +1,7 @@
+<Project>
+  <Import Project="LocalPipeSecuritySources.props" Condition="'$(TiaLocalPipeSecuritySourcesIncluded)' != 'true'" />
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)OperatorProtocol.cs" Link="Shared/OperatorProtocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)OperatorPipe.cs" Link="Shared/OperatorPipe.cs" />
+  </ItemGroup>
+</Project>

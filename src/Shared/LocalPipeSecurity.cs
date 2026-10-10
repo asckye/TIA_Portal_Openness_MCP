@@ -65,6 +65,27 @@ namespace TiaOpenness.Shared
                     && string.Equals(Path.GetFullPath(image.ToString()), Path.GetFullPath(expectedImagePath), StringComparison.OrdinalIgnoreCase);
             }
         }
+        internal static int? VerifiedClientProcessId(NamedPipeServerStream pipe, string sid, string image)
+            => GetNamedPipeClientProcessId(pipe.SafePipeHandle, out uint pid) && ProcessMatches(pid, sid, image) ? (int?)pid : null;
+        internal static bool ServerProcessMatches(NamedPipeClientStream pipe, string sid, string image, int expectedPid)
+            => GetNamedPipeServerProcessId(pipe.SafePipeHandle, out uint pid) && pid == expectedPid && ProcessMatches(pid, sid, image);
+        internal static bool ProcessMatches(uint pid, string sid, string expectedImagePath)
+        {
+            if (string.IsNullOrWhiteSpace(expectedImagePath) || !Path.IsPathRooted(expectedImagePath)) return false;
+            using (var process = OpenProcess(0x1000, false, pid))
+            {
+                if (process.IsInvalid || !OpenProcessToken(process.DangerousGetHandle(), 8, out var token)) return false;
+                using (token)
+                using (var identity = new WindowsIdentity(token.DangerousGetHandle()))
+                {
+                    if (identity.User?.Value != sid) return false;
+                    var image = new StringBuilder(32768);
+                    uint size = (uint)image.Capacity;
+                    return QueryFullProcessImageName(process, 0, image, ref size)
+                        && string.Equals(Path.GetFullPath(image.ToString()), Path.GetFullPath(expectedImagePath), StringComparison.OrdinalIgnoreCase);
+                }
+            }
+        }
         [StructLayout(LayoutKind.Sequential)] private struct SecurityAttributes
         { internal int Length; internal IntPtr Descriptor; [MarshalAs(UnmanagedType.Bool)] internal bool Inherit; }
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

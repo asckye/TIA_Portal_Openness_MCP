@@ -40,6 +40,12 @@ if (options.CatalogOnly)
 }
 
 const string instructions = TiaOpenness.Shared.ToolUsageCatalog.Instructions + " This release uses the PLC foundation catalog. InitializeEnvironment reports environment/session state; ListPortalProcessProjects returns current process/project identities. Only listed contracts are available.";
+await using var operatorEndpoint = OperatorEndpoint.Start(options, token => { token.ThrowIfCancellationRequested(); return Task.FromResult<IHostSession>(HostSession.Legacy(options, instructions, true)); });
+if (options.Transport == "operator")
+{
+    await operatorEndpoint!.Completion;
+    return 0;
+}
 if (options.Transport == "http")
 {
     var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
@@ -51,18 +57,19 @@ if (options.Transport == "http")
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
         .WithHttpTransport(o => {
             o.ConfigureSessionOptions = (context, server, cancellationToken) => {
-                var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled) { Bundled = options.BundledWorker };
-                context.Items["foundationWorker"] = worker;
+                var session = HostSession.Legacy(options, instructions);
+                context.Items["foundationSession"] = session;
                 var toolCollection = new McpServerPrimitiveCollection<McpServerTool>();
-                foreach (var tool in LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource)) toolCollection.Add(tool);
+                foreach (var tool in session.Tools) toolCollection.Add(tool);
                 server.Capabilities = new ServerCapabilities { Tools = new ToolsCapability {
                     ToolCollection = toolCollection
                 } };
                 return Task.CompletedTask;
             };
             o.RunSessionHandler = async (context, server, cancellationToken) => {
-                using var worker = (WorkerClient)context.Items["foundationWorker"]!;
-                using var stagingSession = FoundationTool.RegisterStagingSession(worker, server.SessionId ?? Guid.NewGuid().ToString("N"));
+                using var session = (HostSession)context.Items["foundationSession"]!;
+                session.BindAi(server);
+                using var registration = operatorEndpoint?.Register(session);
                 await server.RunAsync(cancellationToken);
             };
         });
@@ -83,14 +90,14 @@ if (options.Transport == "http")
 }
 else
 {
-    using var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled) { Bundled = options.BundledWorker };
-    using var stagingSession = FoundationTool.RegisterStagingSession(worker, Guid.NewGuid().ToString("N"));
+    using var session = HostSession.Legacy(options, instructions);
+    using var registration = operatorEndpoint?.Register(session);
     var builder = Host.CreateEmptyApplicationBuilder(settings: null);
     builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
     builder.Logging.AddProvider(fileLogger);
     builder.Logging.SetMinimumLevel(LogLevel.Warning);
     builder.Services.AddMcpServer(o => o.ServerInstructions = instructions)
-        .WithStdioServerTransport().WithTools(LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource));
+        .WithStdioServerTransport().WithTools(session.Tools);
     using var host = builder.Build();
     using var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.Register(WorkerShutdown.StopAll);
     await host.RunAsync();

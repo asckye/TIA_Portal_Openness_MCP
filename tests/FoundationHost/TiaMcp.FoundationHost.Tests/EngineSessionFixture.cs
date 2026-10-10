@@ -62,7 +62,7 @@ internal static class EngineSessionFixture
                     ["ProjectFile"] = null, ["OwnsProject"] = false, ["IsLocalSession"] = false,
                     ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" }.ToJsonString());
             string name = (string)input["name"]!, id = (string)input["requestId"]!;
-            if ((bool?)input["arguments"]?["hang"] == true) Thread.Sleep(10000);
+            if ((bool?)input["arguments"]?["hang"] == true) { if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), ""); Thread.Sleep(10000); }
             bool unknown = (bool?)input["arguments"]?["fault"] == true;
             var data = new JsonObject { ["fixturePid"] = Environment.ProcessId };
             if (unknown) data["nativeOutcomeUnknown"] = true;

@@ -37,6 +37,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     {
         if (ReferenceEquals(Held.Value, this)) return null;
         await serial.WaitAsync(token);
+        HostSessionCall.LaneChanged(true);
         return new Lane(this);
     }
     internal static void ActivateLane(IDisposable? lane) { if (lane is Lane held) held.Activate(); }
@@ -45,7 +46,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         private WorkerClient? previous;
         private bool disposed;
         internal void Activate() { previous = Held.Value; Held.Value = owner; }
-        public void Dispose() { if (!disposed) { disposed = true; Held.Value = previous; owner.serial.Release(); } }
+        public void Dispose() { if (!disposed) { disposed = true; Held.Value = previous; HostSessionCall.LaneChanged(false); owner.serial.Release(); } }
     }
     private readonly object stateSync = new();
     private Process? process;
@@ -64,6 +65,15 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     internal object HostSessionKey { get; private set; } = new();
     private string? hostProcessStartUtc;
     private JsonObject? hostState;
+    private long generation = 1;
+    internal JsonObject OperatorSnapshot()
+    {
+        lock (stateSync) return new JsonObject { ["pid"] = process?.Id, ["generation"] = generation,
+            ["disconnected"] = disconnecting, ["sessionLocked"] = Poisoned,
+            ["binding"] = new JsonObject { ["processId"] = approvalIdentity["ProcessId"]?.DeepClone(),
+                ["projectFile"] = (approvalIdentity["ProjectFile"] ?? approvalIdentity["ProjectPath"])?.DeepClone(),
+                ["bindingEpoch"] = approvalIdentity["BindingEpoch"]?.DeepClone() } };
+    }
     private static string? ProcessStartUtc(int processId)
     {
         try
@@ -102,6 +112,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     {
         if (!confirmed) return TiaMcpServer.ModelContextProtocol.ResponseMeta.Unstamped(true, ("dryRun", JsonValue.Create(true)), ("worker", HostSnapshot()));
         if (!serial.Wait(0)) return TiaMcpServer.ModelContextProtocol.ResponseMeta.Unstamped(false, ("worker", HostSnapshot()));
+        HostSessionCall.LaneChanged(true);
         using var lane = new Lane(this); lane.Activate();
         var detached = await Disconnect(token);
         bool restartTia = (bool?)detached?["RequiresTiaRestart"] == true;
@@ -111,6 +122,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             approvalIdentity = new JsonObject(); attachedProcessId = null; attachAttempted = false;
             disconnectAcknowledgement = null; disconnecting = false; priorUnknownRequestId = null;
             outcome = new WorkerOutcomeState(); ClearHostBinding(); FoundationCandidateSession.Reset(this);
+            generation++;
         }
         return TiaMcpServer.ModelContextProtocol.ResponseMeta.Unstamped(true, ("restarted", JsonValue.Create(true)), ("requiresExplicitRebind", JsonValue.Create(true)),
             ("requiresTiaRestart", JsonValue.Create(restartTia)), ("worker", HostSnapshot()));
@@ -195,6 +207,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
             activeRequestId = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+            HostSessionCall.RequestIdChanged(activeRequestId);
             var change = BindingChangeFor(operation, arguments);
             string response;
             try
@@ -280,6 +293,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
         token.ThrowIfCancellationRequested();
         if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
         disconnecting = true;
+        HostSessionCall.Ended("disconnect");
         bool acquired = !ReferenceEquals(Held.Value, this);
         bool idle = !acquired || serial.Wait(0);
         try

@@ -48,6 +48,15 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     private long generation = 1;
     private int queued, active;
     private readonly JsonArray previousGenerations = new();
+    internal JsonObject OperatorSnapshot()
+    {
+        var snapshot = Snapshot();
+        lock (stateSync) return new JsonObject { ["pid"] = process?.Id, ["generation"] = generation,
+            ["disconnected"] = disconnecting, ["sessionLocked"] = snapshot["sessionLocked"]?.DeepClone(),
+            ["binding"] = new JsonObject { ["processId"] = attachedProcessId,
+                ["projectFile"] = (binding?["identity"]?["projectPath"] ?? binding?["projectPath"])?.DeepClone(),
+                ["bindingEpoch"] = channel?.BindingEpoch } };
+    }
     internal Func<bool>? SessionLocked { get; set; }
     private readonly Queue<string> diagnostics = new();
     public IDisposable UseProgress(Action<string>? report)
@@ -154,6 +163,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         token.ThrowIfCancellationRequested();
         if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
         disconnecting = true;
+        HostSessionCall.Ended("disconnect");
         bool acquired = !ReferenceEquals(Held.Value, this);
         bool idle = !acquired || serial.Wait(0);
         try
@@ -230,6 +240,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         try { await serial.WaitAsync(token).ConfigureAwait(false); }
         finally { Interlocked.Decrement(ref queued); }
         Interlocked.Increment(ref active);
+        HostSessionCall.LaneChanged(true);
         return new Lane(this);
     }
     private sealed class Lane(EngineWorkerClient owner) : IDisposable, TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane
@@ -237,7 +248,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         private int disposed;
         private EngineWorkerClient? previous;
         public void Activate() { previous = Held.Value; Held.Value = owner; }
-        public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { Held.Value = previous; Interlocked.Decrement(ref owner.active); owner.serial.Release(); } }
+        public void Dispose() { if (Interlocked.Exchange(ref disposed, 1) == 0) { Held.Value = previous; Interlocked.Decrement(ref owner.active); HostSessionCall.LaneChanged(false); owner.serial.Release(); } }
     }
 
     private async Task Start(CancellationToken token)
@@ -278,6 +289,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
     // Only the pre-dispatch token is observed. An issued native call cannot be cancelled.
     public async Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
     {
+        HostSessionCall.RequestIdChanged(id);
         bool sent = false;
         var report = preview ? null : progressScope.Value;
         var payload = new JsonObject { ["requestId"] = id, ["name"] = name, ["arguments"] = arguments.DeepClone(), ["preview"] = preview, ["progress"] = report != null };
@@ -350,6 +362,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         if (!confirmed) return new JsonObject { ["success"] = true, ["dryRun"] = true, ["worker"] = Snapshot() };
         if (Volatile.Read(ref queued) > 0 || !serial.Wait(0))
             return new JsonObject { ["success"] = false, ["requiresTiaRestart"] = false, ["worker"] = Snapshot() };
+        HostSessionCall.LaneChanged(true);
         try
         {
             var previous = Snapshot();
@@ -370,7 +383,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             return new JsonObject { ["success"] = true, ["restarted"] = true, ["requiresExplicitRebind"] = true, ["requiresTiaRestart"] = requiresTiaRestart,
                 ["recoveryMessage"] = requiresTiaRestart ? TiaOpenness.Shared.SessionBehavior.TiaRestartRequired : null, ["worker"] = Snapshot() };
         }
-        finally { serial.Release(); }
+        finally { HostSessionCall.LaneChanged(false); serial.Release(); }
     }
     private void Stop()
     {

@@ -2,6 +2,7 @@
   <Import Project="../Shared/AuditSources.props" />
   <Import Project="../Shared/ApprovalSources.props" />
   <Import Project="../Shared/WorkbenchControlSources.props" />
+  <Import Project="../Shared/OperatorSources.props" />
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);TIA_APPROVAL_PRIVATE_JOURNAL</DefineConstants>

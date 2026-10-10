@@ -31,11 +31,15 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static bool HttpTransport { get; set; }
         internal static void RegisterHttpSession(ImportStagingSession session) => HttpSessions[session.SessionId] = session;
         internal static void RemoveHttpSession(ImportStagingSession session) => HttpSessions.TryRemove(session.SessionId, out _);
+        internal static IDisposable UseOwnedSession(ImportStagingSession session) => new SessionScope(session);
         internal static IDisposable? UseSession(RequestContext<CallToolRequestParams> request)
         {
             if (!HttpTransport || CurrentSession.Value != null) return null;
             ImportStagingSession? session = null;
 #if TIA_ENGINE_HOST
+            // An in-process HTTP host may coexist with a stream session. The pipeline,
+            // rather than the process-wide HTTP flag, owns that session's transport.
+            if (TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull is { HttpSessionId: null }) return null;
             // The SDK owns the HTTP session; the staging owner records that id as its MCP session id.
             string? mcpSessionId = request.Server.SessionId;
             if (mcpSessionId != null)

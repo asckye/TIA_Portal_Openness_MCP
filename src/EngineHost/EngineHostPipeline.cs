@@ -43,6 +43,7 @@ namespace TiaMcp.FoundationHost
     {
         internal static string ReleaseKey = "21";
         private static readonly AsyncLocal<EngineSessionContext?> Session = new();
+        internal static readonly AsyncLocal<EngineSessionContext?> OperatorSession = new();
         internal static EngineSessionContext Current => Session.Value is { Ended: false } context ? context
             : throw new InvalidOperationException("The MCP engine session is unavailable; initialize a new session.");
         internal static EngineSessionContext? CurrentOrNull => Session.Value is { Ended: false } context ? context : null;
@@ -82,6 +83,21 @@ namespace TiaMcp.FoundationHost
         public JsonArray BehaviorCapabilities { get; }
         public IList<McpServerTool> Tools { get; }
         public IReadOnlyList<McpServerTool> AllTools { get; }
+        private bool operatorSessionLocked;
+        internal bool OperatorSessionLocked
+        {
+            get
+            {
+                if (context.Ended) return operatorSessionLocked;
+                try { return operatorSessionLocked = SessionLocked; }
+                catch (InvalidOperationException) when (context.Ended) /* swallow(teardown): retain the observed lock after worker shutdown ends the pipeline */
+                { return operatorSessionLocked; }
+            }
+        }
+        // Only the authenticated operator transport selects this view. Nested bridge calls
+        // retain this exact context without changing the SDK's MCP session id.
+        internal IReadOnlyList<McpServerTool> OperatorTools => Tools.Select(t =>
+            (McpServerTool)new OperatorSessionTool(this, ((SessionTool)t).Inner)).ToArray();
 
         public EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
             IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
@@ -159,6 +175,29 @@ namespace TiaMcp.FoundationHost
             if (context.Ended) throw new InvalidOperationException("The MCP engine session has ended; initialize a new session.");
             return EngineHostConfiguration.Enter(context);
         }
+        internal IDisposable EnterOperatorSession()
+        {
+            var session = EnterSession();
+            var previous = EngineHostConfiguration.OperatorSession.Value;
+            EngineHostConfiguration.OperatorSession.Value = context;
+            return new OperatorScope(session, ImportStagingTools.UseOwnedSession(context.StagingOwner!()), previous);
+        }
+        private sealed class OperatorScope(IDisposable session, IDisposable staging, EngineSessionContext? previous) : IDisposable
+        {
+            public void Dispose()
+            {
+                staging.Dispose(); EngineHostConfiguration.OperatorSession.Value = previous; session.Dispose();
+            }
+        }
+        private sealed class OperatorSessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
+        {
+            public override Tool ProtocolTool => inner.ProtocolTool;
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+            {
+                using var session = owner.EnterOperatorSession();
+                return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            }
+        }
         internal void ResetExports()
         {
             context.Exports.Dispose();
@@ -170,10 +209,12 @@ namespace TiaMcp.FoundationHost
         }
         private sealed class SessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
         {
+            internal McpServerTool Inner => inner;
             public override Tool ProtocolTool => inner.ProtocolTool;
             public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
             {
-                if (owner.context.HttpSessionId != null && request.Server.SessionId != owner.context.HttpSessionId)
+                if (owner.context.HttpSessionId != null && request.Server.SessionId != owner.context.HttpSessionId
+                    && !ReferenceEquals(EngineHostConfiguration.OperatorSession.Value, owner.context))
                     throw new InvalidOperationException("The tool belongs to a different MCP engine session.");
                 using var session = owner.EnterSession();
                 return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
