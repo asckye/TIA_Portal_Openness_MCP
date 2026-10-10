@@ -12,13 +12,92 @@ using Xunit;
 
 public sealed class B3HostPortsTests
 {
+    private static readonly IReadOnlyDictionary<string, int> FirstRelease = new Dictionary<string, int> {
+        ["ManagePlcBlockProtection"] = 15, ["ListPlcSystemGroups"] = 15, ["CreatePlcInstanceDb"] = 15,
+        ["SetPlcProgram"] = 18, ["GetPlcCrossReferences"] = 18, ["CreateHardwareCatalogDevice"] = 18,
+        ["ManageDeviceServiceObjects"] = 18, ["ExchangeSystemDiagnosticsSettings"] = 17,
+        ["ListNetworkDomains"] = 16, ["ManageNetworkDomain"] = 16,
+        ["ListTransferAreas"] = 15, ["ManageTransferArea"] = 15,
+        ["ListCommunicationConnections"] = 21, ["ManageCommunicationConnection"] = 21
+    };
+
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
+    [Theory, MemberData(nameof(Releases))]
+    public void Whole_tool_availability_matches_the_implemented_API_routes(string release)
+    {
+        int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
+        foreach (var pair in FirstRelease)
+            Assert.Equal(version >= pair.Value, PortedFamilies.Available(release, pair.Key));
+        foreach (string name in new[] { "ManageDeviceUserGroup", "PlugDeviceItem", "ManageIoSystem", "SetDeviceItemChannel",
+            "ManageHardwareUtilities", "ManagePlcUserGroup", "ManagePlcExternalSources", "BuildAndImportPlcArtifact", "CompileHmiDiagnostics" })
+            Assert.True(PortedFamilies.Available(release, name));
+    }
+
+    [Theory]
+    [InlineData("14sp1", 176)]
+    [InlineData("15.1", 182)]
+    [InlineData("16", 186)]
+    [InlineData("17", 187)]
+    [InlineData("18", 191)]
+    [InlineData("19", 201)]
+    public async Task Old_release_discovery_usage_bridges_batches_and_passive_reports_share_the_registry(string release, int count)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var registry = LegacyHostToolRegistry.Create(worker, release, false);
+        var names = registry.Select(t => t.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
+        Assert.Equal(count, names.Count);
+        foreach (string name in PortedFamilies.All.SelectMany(f => f.Tools))
+            Assert.Equal(PortedFamilies.Available(release, name), names.Contains(name));
+        async Task<JsonNode> Invoke(string name, object arguments)
+        {
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(arguments)) } };
+            return (await registry.Single(t => t.ProtocolTool.Name == name).InvokeAsync(request)).StructuredContent!;
+        }
+        var categories = await Invoke("ListToolCategories", new { });
+        Assert.Equal(count, (int)categories["data"]!["toolCount"]!);
+        var foundItems = new List<string>();
+        for (int offset = 0; offset < count; offset += 12)
+        {
+            var found = await Invoke("FindTools", new { limit = 12, offset });
+            Assert.True((bool)found["ok"]!, found.ToJsonString());
+            Assert.True(found["data"]?["items"] != null, found.ToJsonString());
+            foundItems.AddRange(found["data"]!["items"]!.AsArray().Select(item => (string)item!));
+        }
+        Assert.Equal(count * 3, foundItems.Count);
+        var usage = await Invoke("GetToolUsage", new { limit = 1 });
+        Assert.Equal(count, (int)usage["data"]!["toolCount"]!);
+        foreach (string name in FirstRelease.Keys.Where(name => !names.Contains(name)))
+        {
+            foreach (string bridge in new[] { "CallTool", "PreviewToolCall" })
+            {
+                var refusal = await Invoke(bridge, new { name, arguments = new { } });
+                Assert.Equal("TOOL_NOT_FOUND", (string?)refusal["error"]?["code"]);
+                Assert.Equal("Tool is not registered in this release.", (string?)refusal["error"]?["message"]);
+                Assert.Equal("not-started", (string?)refusal["meta"]?["execution"]);
+            }
+            foreach (string batch in new[] { "RunReadOnlyToolBatch", "PreviewToolBatch" })
+            {
+                var refusal = await Invoke(batch, new { expectedProject = "Fixture", operations = new[] { new { name, arguments = new { } } } });
+                Assert.Equal("TOOL_NOT_FOUND", (string?)refusal["error"]?["code"]);
+            }
+            var missingUsage = await Invoke("GetToolUsage", new { toolName = name });
+            Assert.False((bool)missingUsage["ok"]!);
+            Assert.DoesNotContain(foundItems, item => item.StartsWith(name + "(", StringComparison.Ordinal));
+        }
+        var passive = FoundationPassiveDiagnostics.Inspect(release, false, registry);
+        Assert.Equal(count, (int)passive["registeredToolCount"]!);
+        Assert.True((bool)passive["checks"]!["passed"]!);
+        Assert.Equal(0, worker.Calls);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Every_declaration_is_available_without_native_host_dependencies(string release)
     {
         var families = PortedFamilies.All.Where(f => f.Name is "F08" or "F09" or "F11" or "F17").ToArray();
         Assert.Equal(26, families.Sum(f => f.Tools.Length));
-        foreach (var family in families) foreach (var tool in family.Tools) Assert.True(PortedFamilies.Available(release, tool));
+        foreach (var family in families) foreach (var tool in family.Tools)
+            Assert.Equal(PlcSoftwareCapabilities.Unsupported(release, tool, family: "udt") == null, PortedFamilies.Available(release, tool));
         Assert.DoesNotContain(typeof(Service).Assembly.GetReferencedAssemblies(), a => a.Name!.StartsWith("Siemens."));
     }
 
@@ -57,7 +136,7 @@ public sealed class B3HostPortsTests
         var registry = LegacyHostToolRegistry.Create(worker, release, false);
         var moved = PortedFamilies.All.Where(family => family.Name is "F08" or "F09" or "F11" or "F17")
             .SelectMany(family => family.Tools).ToArray();
-        Assert.All(moved, name => Assert.Contains(registry, tool => tool.ProtocolTool.Name == name));
+        Assert.All(moved, name => Assert.Equal(PortedFamilies.Available(release, name), registry.Any(tool => tool.ProtocolTool.Name == name)));
         var legacyRegistry = registry.Where(tool => !moved.Contains(tool.ProtocolTool.Name)).ToArray();
         var actual = FoundationPassiveDiagnostics.Inspect(release, false, registry);
         if (release is "20" or "21")
@@ -90,9 +169,9 @@ public sealed class B3HostPortsTests
     }
 
     [Theory]
-    [InlineData("14sp1", "CreatePlcInstanceDb", "{\"softwarePath\":\"PLC\",\"fbPath\":\"FB\",\"name\":\"DB\"}")]
-    [InlineData("17", "SetPlcProgram", "{\"softwarePath\":\"PLC\"}")]
-    [InlineData("17", "GetPlcCrossReferences", "{\"softwarePath\":\"PLC\",\"objectPath\":\"FC\"}")]
+    [InlineData("14sp1", "ManagePlcUserGroup", "{\"softwarePath\":\"PLC\",\"family\":\"watchTables\",\"groupPath\":\"Group\",\"action\":\"rename\",\"newName\":\"Next\"}")]
+    [InlineData("16", "ManagePlcExternalSources", "{\"softwarePath\":\"PLC\",\"action\":\"generateBlocks\",\"name\":\"Source\",\"targetKind\":\"block\",\"targetGroupPath\":\"Group\"}")]
+    [InlineData("17", "GetPlcTagTableConstants", "{\"softwarePath\":\"PLC\",\"tablePath\":\"Tags\",\"unitName\":\"Safety\",\"unitKind\":\"safety\"}")]
     [InlineData("18", "ManagePlcUserGroup", "{\"softwarePath\":\"PLC\",\"family\":\"technology\",\"groupPath\":\"Group\",\"action\":\"rename\",\"newName\":\"Next\"}")]
     [InlineData("20", "ManagePlcExternalSources", "{\"softwarePath\":\"PLC\",\"action\":\"renameGroup\",\"name\":\"Group\",\"newName\":\"Next\"}")]
     public async Task Missing_api_is_rejected_before_worker_state_or_native_lookup(string release, string name, string json)

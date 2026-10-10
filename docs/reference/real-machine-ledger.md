@@ -149,7 +149,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 | releaseKey | family | state | L5 | entries |
 |---|---|---|---|---|
-| 14sp1 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice |
+| 14sp1 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 14sp1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 14sp1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
 | 14sp1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
@@ -160,15 +160,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 14sp1 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, WritePlcSclSourceFile |
 | 14sp1 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
-| 14sp1 | F08 | current | NOT RUN | CreatePlcBlockGroup, CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, DeletePlcBlock, DeletePlcTagTable, DeletePlcType, ListPlcSystemGroups, ManagePlcBlockProtection, ManagePlcUserGroup, MovePlcBlockToGroup |
-| 14sp1 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference, SetPlcProgram |
-| 14sp1 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, GetPlcCrossReferences, ManagePlcExternalSources |
+| 14sp1 | F08 | current | NOT RUN | CreatePlcBlockGroup, CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, DeletePlcBlock, DeletePlcTagTable, DeletePlcType, ManagePlcUserGroup, MovePlcBlockToGroup |
+| 14sp1 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference |
+| 14sp1 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 14sp1 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
-| 14sp1 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceServiceObjects, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
-| 14sp1 | F20 | current | NOT RUN | AttachDeviceNodeToSubnet, ConnectDeviceNodesToProfinetSubnet, EnsureSubnet, GetDeviceItemNetworkInfo, GetProjectTopology, ListDeviceItemChannels, ListIoSystems, ListNetworkDomains, ListTransferAreas, ManageIoSystem, ManageNetworkDomain, ManagePortInterconnection, ManageTransferArea, PlanHardwareNetworkConfiguration, ProbeHardwareHmiConnectionOwnerCandidates, ProbeHardwareHmiConnectionWhitelistedServices, SetDeviceItemChannel |
+| 14sp1 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
+| 14sp1 | F20 | current | NOT RUN | AttachDeviceNodeToSubnet, ConnectDeviceNodesToProfinetSubnet, EnsureSubnet, GetDeviceItemNetworkInfo, GetProjectTopology, ListDeviceItemChannels, ListIoSystems, ManageIoSystem, ManagePortInterconnection, PlanHardwareNetworkConfiguration, ProbeHardwareHmiConnectionOwnerCandidates, ProbeHardwareHmiConnectionWhitelistedServices, SetDeviceItemChannel |
 | 14sp1 | F21 | current | NOT RUN | BuildDeviceAmlDocument, ExportDeviceAml, ImportDeviceAml |
 | 14sp1 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
-| 15.1 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice |
+| 15.1 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 15.1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 15.1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
 | 15.1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
@@ -180,14 +180,14 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, WritePlcSclSourceFile |
 | 15.1 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
 | 15.1 | F08 | current | NOT RUN | CreatePlcBlockGroup, CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, DeletePlcBlock, DeletePlcTagTable, DeletePlcType, ListPlcSystemGroups, ManagePlcBlockProtection, ManagePlcUserGroup, MovePlcBlockToGroup |
-| 15.1 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference, SetPlcProgram |
-| 15.1 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, GetPlcCrossReferences, ManagePlcExternalSources |
+| 15.1 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference |
+| 15.1 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 15.1 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
-| 15.1 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceServiceObjects, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
-| 15.1 | F20 | current | NOT RUN | AttachDeviceNodeToSubnet, ConnectDeviceNodesToProfinetSubnet, EnsureSubnet, GetDeviceItemNetworkInfo, GetProjectTopology, ListDeviceItemChannels, ListIoSystems, ListNetworkDomains, ListTransferAreas, ManageIoSystem, ManageNetworkDomain, ManagePortInterconnection, ManageTransferArea, PlanHardwareNetworkConfiguration, ProbeHardwareHmiConnectionOwnerCandidates, ProbeHardwareHmiConnectionWhitelistedServices, SetDeviceItemChannel |
+| 15.1 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
+| 15.1 | F20 | current | NOT RUN | AttachDeviceNodeToSubnet, ConnectDeviceNodesToProfinetSubnet, EnsureSubnet, GetDeviceItemNetworkInfo, GetProjectTopology, ListDeviceItemChannels, ListIoSystems, ListTransferAreas, ManageIoSystem, ManagePortInterconnection, ManageTransferArea, PlanHardwareNetworkConfiguration, ProbeHardwareHmiConnectionOwnerCandidates, ProbeHardwareHmiConnectionWhitelistedServices, SetDeviceItemChannel |
 | 15.1 | F21 | current | NOT RUN | BuildDeviceAmlDocument, ExportDeviceAml, ImportDeviceAml |
 | 15.1 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
-| 16 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice |
+| 16 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 16 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 16 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
 | 16 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
@@ -199,14 +199,14 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, WritePlcSclSourceFile |
 | 16 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
 | 16 | F08 | current | NOT RUN | CreatePlcBlockGroup, CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, DeletePlcBlock, DeletePlcTagTable, DeletePlcType, ListPlcSystemGroups, ManagePlcBlockProtection, ManagePlcUserGroup, MovePlcBlockToGroup |
-| 16 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference, SetPlcProgram |
-| 16 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, GetPlcCrossReferences, ManagePlcExternalSources |
+| 16 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference |
+| 16 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 16 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
-| 16 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceServiceObjects, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
+| 16 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
 | 16 | F20 | current | NOT RUN | AttachDeviceNodeToSubnet, ConnectDeviceNodesToProfinetSubnet, EnsureSubnet, GetDeviceItemNetworkInfo, GetProjectTopology, ListDeviceItemChannels, ListIoSystems, ListNetworkDomains, ListTransferAreas, ManageIoSystem, ManageNetworkDomain, ManagePortInterconnection, ManageTransferArea, PlanHardwareNetworkConfiguration, ProbeHardwareHmiConnectionOwnerCandidates, ProbeHardwareHmiConnectionWhitelistedServices, SetDeviceItemChannel |
 | 16 | F21 | current | NOT RUN | BuildDeviceAmlDocument, ExportDeviceAml, ImportDeviceAml |
 | 16 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
-| 17 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice |
+| 17 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 17 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 17 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
 | 17 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
@@ -218,10 +218,10 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, WritePlcSclSourceFile |
 | 17 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
 | 17 | F08 | current | NOT RUN | CreatePlcBlockGroup, CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, DeletePlcBlock, DeletePlcTagTable, DeletePlcType, ListPlcSystemGroups, ManagePlcBlockProtection, ManagePlcUserGroup, MovePlcBlockToGroup |
-| 17 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference, SetPlcProgram |
-| 17 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, GetPlcCrossReferences, ManagePlcExternalSources |
+| 17 | F09 | current | NOT RUN | BuildAndImportPlcArtifact, CreatePlcInstanceDb, DescribePlcBlockLogic, GetPlcBlockEditCapabilities, GetPlcTagTableConstants, ImportPlcBlockVerified, ImportPlcTagTablesFromDirectory, ManagePlcTagDefinition, RepairAndReimportPlcBlock, SeedProjectFromReference |
+| 17 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 17 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
-| 17 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceServiceObjects, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
+| 17 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
 | 17 | F20 | current | NOT RUN | AttachDeviceNodeToSubnet, ConnectDeviceNodesToProfinetSubnet, EnsureSubnet, GetDeviceItemNetworkInfo, GetProjectTopology, ListDeviceItemChannels, ListIoSystems, ListNetworkDomains, ListTransferAreas, ManageIoSystem, ManageNetworkDomain, ManagePortInterconnection, ManageTransferArea, PlanHardwareNetworkConfiguration, ProbeHardwareHmiConnectionOwnerCandidates, ProbeHardwareHmiConnectionWhitelistedServices, SetDeviceItemChannel |
 | 17 | F21 | current | NOT RUN | BuildDeviceAmlDocument, ExportDeviceAml, ImportDeviceAml |
 | 17 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |

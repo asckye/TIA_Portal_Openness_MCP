@@ -67,10 +67,10 @@ public sealed class HardwareFamilyAdmissionTests
     }
 
     [Theory]
-    [InlineData("14sp1", "ListTransferAreas", "{\"devicePath\":[\"PLC\"],\"itemPath\":[]}")]
-    [InlineData("15.1", "ListNetworkDomains", "{\"subnetName\":\"PN\"}")]
-    [InlineData("16", "ExchangeSystemDiagnosticsSettings", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"action\":\"export\",\"filePath\":\"fixture.xml\"}")]
-    [InlineData("17", "CreateHardwareCatalogDevice", "{\"keyword\":\"Fixture\",\"deviceName\":\"PLC\"}")]
+    [InlineData("14sp1", "ManageHardwareUtilities", "{\"action\":\"normalizeTypeIdentifier\",\"typeIdentifier\":\"Fixture\"}")]
+    [InlineData("15.1", "ManageTransferArea", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"action\":\"create\",\"positionNumber\":1}")]
+    [InlineData("15.1", "ListTransferAreas", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"extendedPositionNumber\":1}")]
+    [InlineData("17", "ManageHardwareUtilities", "{\"action\":\"exportCardReaderPsc\",\"devicePath\":[\"PLC\"],\"filePath\":\"fixture.psc\",\"password\":\"fixture\"}")]
     [InlineData("19", "ManageDeviceServiceObjects", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"family\":\"webApplications\"}")]
     [InlineData("20", "ManageDeviceServiceObjects", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"family\":\"telecontrolDataPoints\"}")]
     public async Task Missing_api_refuses_before_ReadState(string release, string toolName, string json)

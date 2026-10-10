@@ -42,6 +42,14 @@ P8-03b 给旧版接入注册目录、原有 Foundation 调用边界、导出句�
 Unified 八个离线工具仅 V19+；Render/Compare 的旧版原生块路径模式在任何工作前返回 `UNSUPPORTED_CAPABILITY`，文件模式可用。
 详细选择、基线增量及逐版 VM 步骤见 `bin-build/refactor/P8-03b.result.md`（本地工作记录）。
 
+## 维护者决定：旧版注册规则（2026-10-09，P8-03x）
+
+V14 SP1–V19 只注册至少一个已实现动作能在该版 API 上执行的工具；整项功能缺 API 时不发布始终拒绝的目录项。
+部分动作缺 API 的工具继续注册，并在原生调用前保持 `UNSUPPORTED_CAPABILITY`。判定依据是逐动作能力表、
+旧版适配器的重载/属性写入分支与宿主格式门禁；族级 yes/partial 不代替逐工具决定。
+统一表为 `PortedFamilies.ToolReleases`，注册、发现、用法、桥接、被动诊断与标准包规划共用其生成目录。
+F01–F03 保持已有格式分段；F08/F09/F11/F17/F18–F21 的本次调整仅删除无可用动作的旧版目录项，V20/V21 不变。
+
 ## 1. 能力族清单
 
 操作缩写：R=READ、W=WRITE、F=FILE、Off=OFFLINE、On=ONLINE、OnW=ONLINE-WRITE、X=EXECUTE、S=SESSION。执行位置：host=Foundation 主机内（net10），worker=引擎 worker 内（net48）。
@@ -324,7 +332,7 @@ P8-02 在样板族上应确定并留下的框架（其余批次照抄）：
 | 项 | 建议 |
 |---|---|
 | 工具声明来源 | 把 `[McpServerTool]` 签名与描述从引擎类中拆出，放进不引用 Siemens 的共享声明（宿主可反射），V20/V21 契约逐字节不变；目录生成不再依赖引擎 `--write-tool-catalog`（I12） |
-| 宿主契约 | 按 `src/FoundationHost/*Contract.cs` 现有写法：参数校验、预检、审批分类、回复到 V4 信封的映射；版本可用性按 `FoundationTools.Available` 一类的显式表，不按名称推断 |
+| 宿主契约 | 按 `src/FoundationHost/*Contract.cs` 现有写法：参数校验、预检、审批分类、回复到 V4 信封的映射；B4 起逐工具审查所有动作与格式、旧版重载/属性写入及宿主拒绝，交叉核对官方逐工具 API 分析并解释差异；至少一项动作可运行才在 `PortedFamilies.ToolReleases` 中注册；部分动作在原生调用前拒绝，不按整族或名称推断 |
 | 适配器 | `src/Adapters/Native/Hardware/<Family>.cs`（native）+ `<Family>Policy.cs`（纯逻辑）+ shared-native 原语；版本差异用 `src/Shared/TiaFeatures.props` 特性符号；新文件逐个列入 `Adapter.Sources.props` |
 | 契约 DTO | `src/Adapters.Contracts` 类型化 DTO，加 golden JSON；不得在适配器使用 JSON 库 |
 | worker 分发 | `PlcFoundationEngine` 单一外观 + `WorkerOperations.Names` 白名单 + 按类型逐个判断 `RequiresSessionReset` 的写法无法扩展到约 400 个操作：建议按族注册操作模块（`adapter.<family>.<op>`）、统一回复接口（只读标记与会话重置位），一次改好 |
@@ -360,14 +368,14 @@ F19 原生比较：核心加被内联的三个共享调用点为 V20 32、V21 34
 |---|---|---|
 | G1 V20/V21 契约零差异 | 同一构建捕获两次（`Snapshot-ToolContracts.py`），比对 `manifest/contracts/v4/baseline/20.json`、`21.json` | 逐字节一致（tools、inputSchema、descriptionSha256、liteTools、behaviorCapabilities）；不手改哈希 |
 | G2 V20/V21 响应零差异 | `Snapshot-ToolResponses.py`（sdk-only-fixture）比对 `responses/20.json`、`21.json` | 已迁工具的直接拒绝、桥接拒绝、`GetToolUsage` 摘要与离线行为调用逐字节一致（V20 当前 2044 次调用，420 个独有工具全部有调用） |
-| G3 旧版契约增量 | 14sp1–19 基线新增被启用的工具记录与响应调用；P8-02-followup2 另授权修正两个完整名单诊断的成功响应 | 原工具契约和其他响应记录不变；新增与授权诊断变化逐条评审 |
+| G3 旧版契约增量 | 14sp1–19 逐工具按至少一个动作可运行注册；缺全部 API 的工具移除，不保留始终拒绝项；部分动作仍在原生调用前拒绝 | 逐版列出新增/移除记录；其余记录不变，目录派生的 InitializeEnvironment、RunCapabilitySelfTest、FindTools、ListToolCategories、GetToolUsage 摘要变化逐条评审；V20/V21 逐字节不变 |
 | G4 实现归属与删除 | `ToolExecution` 所有者变更；引擎中该族声明、服务、Portal partial 删除；`EngineCatalog` 所有权检查通过 | 引擎源码不再包含该族工具名的实现 |
 | G5 原生调用清单守恒 | 用 `NativeCallWeaver` 的 inventory/verify：该族 Siemens 成员引用多重集“原引擎 = 新适配器”（V20/V21）；旧版适配器只增该族成员 | 与 `src/Adapters/README.md` Studio 迁移相同的逐站点比较，无未解释差异 |
 | G6 单元与夹具 | Policy 纯逻辑测试（net10）、DTO golden JSON（`TiaMcp.Adapters.Contracts.Tests`）、worker 白名单/分发、两类主机一致性用例（P6-65）、每个版本差异分支至少一例 | `Test-DotnetSuites.py` 最低数只升不降（`tests/test-suites.json`） |
 | G7 八版编译与边界 | 8 个 `Adapter.<key>.csproj` 逐版编译；`Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`；`Check-AdapterBoundary.py` | 全部通过；V21 新增程序集引用须有精确强名称 |
 | G8 示例与用法 | `reference/tool-examples` 补启用版本的示例并生成嵌入目录 | 八版检索与功能检查通过 |
 | G9 V20/V21 真机复验（L5） | 迁移前在同一测试工程录制该族脚本（读取、dryRun 预览、一次确认写、典型拒绝）；迁移后重放，规范化易变字段后比较 `data`/`error`/`meta.outcome` | 无未评审差异；记入真机台账 |
-| G10 旧版启用验收（L5） | 只对第 2 节 yes/partial 的版本开启；在该版 VM 跑同一脚本，partial 动作确认在原生调用前拒绝；同步更新 `openness-coverage.md` 与 `reference/version-feature-matrix.json` | 每个启用版本一条台账；未验收版本保持 `current / NOT RUN` |
+| G10 旧版启用验收（L5） | 按逐工具实现决定注册：至少一个动作可用；无可用动作不注册，桥接/批次返回本版未注册拒绝；在该版 VM 验证可用动作与 partial 动作的原生调用前拒绝；同步更新 `openness-coverage.md` 与 `reference/version-feature-matrix.json` | 每个启用版本一条台账；注册、发现、用法和被动诊断名单一致；未验收版本保持 `current / NOT RUN` |
 | G11 发布链 | `build-multi-version -Test`、`branch-gate`、`run-release-build -Tier package`（VM 测试包） | 通过 |
 
 按批次的补充：B1 证明执行位置变化不改响应（G2）；B8 增加会话生命周期夹具（绑定、租约、重启后重新绑定）与凭据不回显检查；B9 以 PLCSIM Advanced 实例为在线目标，逐个确认 ONLINE-WRITE 审批，物理 PLC 只在维护者授权后；B10/B11 在台账中记录 VM 已安装的可选产品与许可证，服务缺失时须给出类型化前置条件拒绝。

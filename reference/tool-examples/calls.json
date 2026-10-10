@@ -10,7 +10,7 @@
     "20": "20",
     "21": "21"
   },
-  "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device.",
+  "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device. Ported examples are offered only for tools registered on the selected release, using PortedFamilies.ToolReleases; partial tools keep their action and format refusals.",
   "profiles": {
     "plc-foundation": {
       "CreateHardwareDevice": {

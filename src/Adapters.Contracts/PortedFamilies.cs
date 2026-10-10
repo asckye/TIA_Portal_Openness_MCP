@@ -83,6 +83,21 @@ namespace TiaMcp.Adapters.Contracts
             ["BuildUnifiedHmiThemeDesign"] = new[] { "19", "20", "21" },
             ["ManageUnifiedCwcPackage"] = new[] { "19", "20", "21" },
             ["RunHmiActionScriptRecipeSafetySelfTest"] = new[] { "19", "20", "21" },
+            // Register a port only where at least one implemented action can run.
+            // Keep partial tools listed; HardwareCapabilities / PlcSoftwareCapabilities
+            // still refuse their unavailable actions before any worker/native call.
+            ["ManagePlcBlockProtection"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ListPlcSystemGroups"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["CreatePlcInstanceDb"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["SetPlcProgram"] = new[] { "18", "19", "20", "21" },
+            ["GetPlcCrossReferences"] = new[] { "18", "19", "20", "21" },
+            ["CreateHardwareCatalogDevice"] = new[] { "18", "19", "20", "21" },
+            ["ManageDeviceServiceObjects"] = new[] { "18", "19", "20", "21" },
+            ["ExchangeSystemDiagnosticsSettings"] = new[] { "17", "18", "19", "20", "21" },
+            ["ListNetworkDomains"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ManageNetworkDomain"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ListTransferAreas"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ManageTransferArea"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
             ["ListCommunicationConnections"] = new[] { "21" },
             ["ManageCommunicationConnection"] = new[] { "21" }
         };

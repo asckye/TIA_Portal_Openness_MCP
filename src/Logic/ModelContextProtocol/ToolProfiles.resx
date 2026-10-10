@@ -916,18 +916,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "CreateHardwareCatalogDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -1337,18 +1325,6 @@
     },
     {
       "releaseKey": "15.1",
-      "entry": "CreateHardwareCatalogDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "15.1",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -1758,18 +1734,6 @@
     },
     {
       "releaseKey": "16",
-      "entry": "CreateHardwareCatalogDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -2179,18 +2143,6 @@
     },
     {
       "releaseKey": "17",
-      "entry": "CreateHardwareCatalogDevice",
-      "family": "P6-DEVICE",
-      "example": {
-        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
-        "deviceName": "Device_1",
-        "family": "S7-1500",
-        "mode": "preview",
-        "confirm": false
-      }
-    },
-    {
-      "releaseKey": "17",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -5064,18 +5016,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "ManagePlcBlockProtection",
-      "family": "F08",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "Main",
-        "action": "read",
-        "confirmProtectionChange": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "ManagePlcUserGroup",
       "family": "F08",
       "example": {
@@ -5098,25 +5038,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "ListPlcSystemGroups",
-      "family": "F08",
-      "example": {
-        "softwarePath": "PLC_1"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "CreatePlcInstanceDb",
-      "family": "F09",
-      "example": {
-        "softwarePath": "PLC_1",
-        "fbPath": "FB_Motor",
-        "name": "Example_1",
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "ManagePlcTagDefinition",
       "family": "F09",
       "example": {
@@ -5127,16 +5048,6 @@
         "action": "read",
         "dataType": "Bool",
         "addressOrValue": "%M0.0",
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "SetPlcProgram",
-      "family": "F09",
-      "example": {
-        "softwarePath": "PLC_1",
-        "confirmUpdate": false,
         "dryRun": true
       }
     },
@@ -5279,17 +5190,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "GetPlcCrossReferences",
-      "family": "F11",
-      "example": {
-        "softwarePath": "PLC_1",
-        "objectPath": "Main",
-        "objectKind": "Block",
-        "filter": "AllObjects"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "CompileDevice",
       "family": "F17",
       "example": {
@@ -5319,15 +5219,6 @@
     {
       "releaseKey": "14sp1",
       "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "CreateHardwareCatalogDevice",
       "family": "F18",
       "example": {
         "keyword": "1513",
@@ -5456,39 +5347,11 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "ManageDeviceServiceObjects",
-      "family": "F18",
-      "example": {
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ],
-        "family": "webApplications",
-        "confirmChange": false,
-        "dryRun": true,
-        "action": "read"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "ManageHardwareUtilities",
       "family": "F18",
       "example": {
         "dryRun": true,
         "action": "list"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "ExchangeSystemDiagnosticsSettings",
-      "family": "F18",
-      "example": {
-        "action": "export",
-        "filePath": "C:\\Examples\\exports\\Main.xml",
-        "confirmImport": false,
-        "dryRun": true
       }
     },
     {
@@ -5511,60 +5374,6 @@
         "action": "create",
         "name": "ExampleIO",
         "subnetName": "PN_IE_1",
-        "confirmDelete": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "ListNetworkDomains",
-      "family": "F20",
-      "example": {
-        "subnetName": "PN_IE_1"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "ManageNetworkDomain",
-      "family": "F20",
-      "example": {
-        "subnetName": "PN_IE_1",
-        "kind": "sync",
-        "action": "create",
-        "name": "ExampleSyncDomain",
-        "confirmDelete": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "ListTransferAreas",
-      "family": "F20",
-      "example": {
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ]
-      }
-    },
-    {
-      "releaseKey": "14sp1",
-      "entry": "ManageTransferArea",
-      "family": "F20",
-      "example": {
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ],
-        "action": "create",
-        "kind": "standard",
-        "name": "ExampleTransfer",
-        "type": "IN",
-        "positionNumber": 0,
         "confirmDelete": false,
         "dryRun": true
       }
@@ -6309,16 +6118,6 @@
     },
     {
       "releaseKey": "15.1",
-      "entry": "SetPlcProgram",
-      "family": "F09",
-      "example": {
-        "softwarePath": "PLC_1",
-        "confirmUpdate": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "15.1",
       "entry": "GetPlcTagTableConstants",
       "family": "F09",
       "example": {
@@ -6456,17 +6255,6 @@
     },
     {
       "releaseKey": "15.1",
-      "entry": "GetPlcCrossReferences",
-      "family": "F11",
-      "example": {
-        "softwarePath": "PLC_1",
-        "objectPath": "Main",
-        "objectKind": "Block",
-        "filter": "AllObjects"
-      }
-    },
-    {
-      "releaseKey": "15.1",
       "entry": "CompileDevice",
       "family": "F17",
       "example": {
@@ -6496,15 +6284,6 @@
     {
       "releaseKey": "15.1",
       "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "15.1",
-      "entry": "CreateHardwareCatalogDevice",
       "family": "F18",
       "example": {
         "keyword": "1513",
@@ -6633,39 +6412,11 @@
     },
     {
       "releaseKey": "15.1",
-      "entry": "ManageDeviceServiceObjects",
-      "family": "F18",
-      "example": {
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ],
-        "family": "webApplications",
-        "confirmChange": false,
-        "dryRun": true,
-        "action": "read"
-      }
-    },
-    {
-      "releaseKey": "15.1",
       "entry": "ManageHardwareUtilities",
       "family": "F18",
       "example": {
         "dryRun": true,
         "action": "list"
-      }
-    },
-    {
-      "releaseKey": "15.1",
-      "entry": "ExchangeSystemDiagnosticsSettings",
-      "family": "F18",
-      "example": {
-        "action": "export",
-        "filePath": "C:\\Examples\\exports\\Main.xml",
-        "confirmImport": false,
-        "dryRun": true
       }
     },
     {
@@ -6688,27 +6439,6 @@
         "action": "create",
         "name": "ExampleIO",
         "subnetName": "PN_IE_1",
-        "confirmDelete": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "15.1",
-      "entry": "ListNetworkDomains",
-      "family": "F20",
-      "example": {
-        "subnetName": "PN_IE_1"
-      }
-    },
-    {
-      "releaseKey": "15.1",
-      "entry": "ManageNetworkDomain",
-      "family": "F20",
-      "example": {
-        "subnetName": "PN_IE_1",
-        "kind": "sync",
-        "action": "create",
-        "name": "ExampleSyncDomain",
         "confirmDelete": false,
         "dryRun": true
       }
@@ -7486,16 +7216,6 @@
     },
     {
       "releaseKey": "16",
-      "entry": "SetPlcProgram",
-      "family": "F09",
-      "example": {
-        "softwarePath": "PLC_1",
-        "confirmUpdate": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "GetPlcTagTableConstants",
       "family": "F09",
       "example": {
@@ -7633,17 +7353,6 @@
     },
     {
       "releaseKey": "16",
-      "entry": "GetPlcCrossReferences",
-      "family": "F11",
-      "example": {
-        "softwarePath": "PLC_1",
-        "objectPath": "Main",
-        "objectKind": "Block",
-        "filter": "AllObjects"
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "CompileDevice",
       "family": "F17",
       "example": {
@@ -7673,15 +7382,6 @@
     {
       "releaseKey": "16",
       "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "16",
-      "entry": "CreateHardwareCatalogDevice",
       "family": "F18",
       "example": {
         "keyword": "1513",
@@ -7810,39 +7510,11 @@
     },
     {
       "releaseKey": "16",
-      "entry": "ManageDeviceServiceObjects",
-      "family": "F18",
-      "example": {
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ],
-        "family": "webApplications",
-        "confirmChange": false,
-        "dryRun": true,
-        "action": "read"
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "ManageHardwareUtilities",
       "family": "F18",
       "example": {
         "dryRun": true,
         "action": "list"
-      }
-    },
-    {
-      "releaseKey": "16",
-      "entry": "ExchangeSystemDiagnosticsSettings",
-      "family": "F18",
-      "example": {
-        "action": "export",
-        "filePath": "C:\\Examples\\exports\\Main.xml",
-        "confirmImport": false,
-        "dryRun": true
       }
     },
     {
@@ -8663,16 +8335,6 @@
     },
     {
       "releaseKey": "17",
-      "entry": "SetPlcProgram",
-      "family": "F09",
-      "example": {
-        "softwarePath": "PLC_1",
-        "confirmUpdate": false,
-        "dryRun": true
-      }
-    },
-    {
-      "releaseKey": "17",
       "entry": "GetPlcTagTableConstants",
       "family": "F09",
       "example": {
@@ -8810,17 +8472,6 @@
     },
     {
       "releaseKey": "17",
-      "entry": "GetPlcCrossReferences",
-      "family": "F11",
-      "example": {
-        "softwarePath": "PLC_1",
-        "objectPath": "Main",
-        "objectKind": "Block",
-        "filter": "AllObjects"
-      }
-    },
-    {
-      "releaseKey": "17",
       "entry": "CompileDevice",
       "family": "F17",
       "example": {
@@ -8850,15 +8501,6 @@
     {
       "releaseKey": "17",
       "entry": "CreateGsdDevice",
-      "family": "F18",
-      "example": {
-        "keyword": "1513",
-        "deviceName": "PLC_2"
-      }
-    },
-    {
-      "releaseKey": "17",
-      "entry": "CreateHardwareCatalogDevice",
       "family": "F18",
       "example": {
         "keyword": "1513",
@@ -8983,23 +8625,6 @@
         "devicePath": [
           "&lt;exact device name from GetProjectTree&gt;"
         ]
-      }
-    },
-    {
-      "releaseKey": "17",
-      "entry": "ManageDeviceServiceObjects",
-      "family": "F18",
-      "example": {
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ],
-        "family": "webApplications",
-        "confirmChange": false,
-        "dryRun": true,
-        "action": "read"
       }
     },
     {
@@ -28891,19 +28516,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "CreateHardwareCatalogDevice",
-        "currentName": "CreateHardwareCatalogDevice",
-        "sourceName": "AddHardwareCatalogDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "AnalyzeGlobalLibraryPackage",
         "currentName": "AnalyzeGlobalLibraryPackage",
         "sourceName": "AnalyzeGlobalLibraryPackage",
@@ -29460,21 +29072,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "CreatePlcInstanceDb",
-        "currentName": "CreatePlcInstanceDb",
-        "sourceName": "CreatePlcInstanceDb",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "fbPath": "FB_Motor",
-          "name": "Example_1",
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "CreatePlcTag",
         "currentName": "CreatePlcTag",
         "sourceName": "CreatePlcTag",
@@ -29726,21 +29323,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ExchangeSystemDiagnosticsSettings",
-        "currentName": "ExchangeSystemDiagnosticsSettings",
-        "sourceName": "ExchangeSystemDiagnosticsSettings",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "action": "export",
-          "filePath": "C:\\Examples\\exports\\Main.xml",
-          "confirmImport": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -29966,21 +29548,6 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "GetPlcCrossReferences",
-        "currentName": "GetPlcCrossReferences",
-        "sourceName": "GetCrossReferences",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "objectPath": "Main",
-          "objectKind": "Block",
-          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -30463,27 +30030,6 @@
           "plc-foundation"
         ],
         "arguments": {},
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageDeviceServiceObjects",
-        "currentName": "ManageDeviceServiceObjects",
-        "sourceName": "ManageDeviceServiceObjects",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "family": "webApplications",
-          "confirmChange": false,
-          "dryRun": true,
-          "action": "read"
-        },
         "envelopeVersion": 4
       },
       {
@@ -31098,39 +30644,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageNetworkDomain",
-        "currentName": "ManageNetworkDomain",
-        "sourceName": "ManageNetworkDomain",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "subnetName": "PN_IE_1",
-          "kind": "sync",
-          "action": "create",
-          "name": "ExampleSyncDomain",
-          "confirmDelete": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManagePlcBlockProtection",
-        "currentName": "ManagePlcBlockProtection",
-        "sourceName": "ManagePlcBlockProtection",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "Main",
-          "action": "read",
-          "confirmProtectionChange": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -31214,30 +30727,6 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageTransferArea",
-        "currentName": "ManageTransferArea",
-        "sourceName": "ManageTransferArea",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "action": "create",
-          "kind": "standard",
-          "name": "ExampleTransfer",
-          "type": "IN",
-          "positionNumber": 0,
-          "confirmDelete": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -31560,18 +31049,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ListNetworkDomains",
-        "currentName": "ListNetworkDomains",
-        "sourceName": "ReadNetworkDomains",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "subnetName": "PN_IE_1"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "GetOpennessCompatibility",
         "currentName": "GetOpennessCompatibility",
         "sourceName": "ReadOpennessCompatibility",
@@ -31623,18 +31100,6 @@
         "arguments": {
           "plc": "PLC_1",
           "table": "默认变量表"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ListPlcSystemGroups",
-        "currentName": "ListPlcSystemGroups",
-        "sourceName": "ReadPlcSystemGroups",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -31692,23 +31157,6 @@
                 "query": "threading"
               }
             }
-          ]
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ListTransferAreas",
-        "currentName": "ListTransferAreas",
-        "sourceName": "ReadTransferAreas",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
           ]
         },
         "envelopeVersion": 4
@@ -32017,20 +31465,6 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "SetPlcProgram",
-        "currentName": "SetPlcProgram",
-        "sourceName": "UpdatePlcProgram",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -32190,19 +31624,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "CreateHardwareCatalogDevice",
-        "currentName": "CreateHardwareCatalogDevice",
-        "sourceName": "AddHardwareCatalogDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "AnalyzeGlobalLibraryPackage",
         "currentName": "AnalyzeGlobalLibraryPackage",
         "sourceName": "AnalyzeGlobalLibraryPackage",
@@ -33025,21 +32446,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ExchangeSystemDiagnosticsSettings",
-        "currentName": "ExchangeSystemDiagnosticsSettings",
-        "sourceName": "ExchangeSystemDiagnosticsSettings",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "action": "export",
-          "filePath": "C:\\Examples\\exports\\Main.xml",
-          "confirmImport": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -33265,21 +32671,6 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "GetPlcCrossReferences",
-        "currentName": "GetPlcCrossReferences",
-        "sourceName": "GetCrossReferences",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "objectPath": "Main",
-          "objectKind": "Block",
-          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -33774,27 +33165,6 @@
           "plc-foundation"
         ],
         "arguments": {},
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageDeviceServiceObjects",
-        "currentName": "ManageDeviceServiceObjects",
-        "sourceName": "ManageDeviceServiceObjects",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "family": "webApplications",
-          "confirmChange": false,
-          "dryRun": true,
-          "action": "read"
-        },
         "envelopeVersion": 4
       },
       {
@@ -34409,23 +33779,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageNetworkDomain",
-        "currentName": "ManageNetworkDomain",
-        "sourceName": "ManageNetworkDomain",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "subnetName": "PN_IE_1",
-          "kind": "sync",
-          "action": "create",
-          "name": "ExampleSyncDomain",
-          "confirmDelete": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManagePlcBlockProtection",
         "currentName": "ManagePlcBlockProtection",
         "sourceName": "ManagePlcBlockProtection",
@@ -34867,18 +34220,6 @@
         ],
         "arguments": {
           "take": 100
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ListNetworkDomains",
-        "currentName": "ListNetworkDomains",
-        "sourceName": "ReadNetworkDomains",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "subnetName": "PN_IE_1"
         },
         "envelopeVersion": 4
       },
@@ -35328,20 +34669,6 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "SetPlcProgram",
-        "currentName": "SetPlcProgram",
-        "sourceName": "UpdatePlcProgram",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -35501,19 +34828,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "CreateHardwareCatalogDevice",
-        "currentName": "CreateHardwareCatalogDevice",
-        "sourceName": "AddHardwareCatalogDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "AnalyzeGlobalLibraryPackage",
         "currentName": "AnalyzeGlobalLibraryPackage",
         "sourceName": "AnalyzeGlobalLibraryPackage",
@@ -36336,21 +35650,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ExchangeSystemDiagnosticsSettings",
-        "currentName": "ExchangeSystemDiagnosticsSettings",
-        "sourceName": "ExchangeSystemDiagnosticsSettings",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "action": "export",
-          "filePath": "C:\\Examples\\exports\\Main.xml",
-          "confirmImport": false,
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -36608,21 +35907,6 @@
         ],
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "GetPlcCrossReferences",
-        "currentName": "GetPlcCrossReferences",
-        "sourceName": "GetCrossReferences",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "objectPath": "Main",
-          "objectKind": "Block",
-          "filter": "AllObjects"
         },
         "envelopeVersion": 4
       },
@@ -37117,27 +36401,6 @@
           "plc-foundation"
         ],
         "arguments": {},
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageDeviceServiceObjects",
-        "currentName": "ManageDeviceServiceObjects",
-        "sourceName": "ManageDeviceServiceObjects",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "family": "webApplications",
-          "confirmChange": false,
-          "dryRun": true,
-          "action": "read"
-        },
         "envelopeVersion": 4
       },
       {
@@ -38671,20 +37934,6 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "SetPlcProgram",
-        "currentName": "SetPlcProgram",
-        "sourceName": "UpdatePlcProgram",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -38844,19 +38093,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "CreateHardwareCatalogDevice",
-        "currentName": "CreateHardwareCatalogDevice",
-        "sourceName": "AddHardwareCatalogDeviceWithProbe",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "keyword": "1513",
-          "deviceName": "PLC_2"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "AnalyzeGlobalLibraryPackage",
         "currentName": "AnalyzeGlobalLibraryPackage",
         "sourceName": "AnalyzeGlobalLibraryPackage",
@@ -39955,21 +39191,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "GetPlcCrossReferences",
-        "currentName": "GetPlcCrossReferences",
-        "sourceName": "GetCrossReferences",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "objectPath": "Main",
-          "objectKind": "Block",
-          "filter": "AllObjects"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "GetDeviceInfo",
         "currentName": "GetDeviceInfo",
         "sourceName": "GetDeviceInfo",
@@ -40460,27 +39681,6 @@
           "plc-foundation"
         ],
         "arguments": {},
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ManageDeviceServiceObjects",
-        "currentName": "ManageDeviceServiceObjects",
-        "sourceName": "ManageDeviceServiceObjects",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "family": "webApplications",
-          "confirmChange": false,
-          "dryRun": true,
-          "action": "read"
-        },
         "envelopeVersion": 4
       },
       {
@@ -42014,20 +41214,6 @@
           "attributes": {
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
-          "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "SetPlcProgram",
-        "currentName": "SetPlcProgram",
-        "sourceName": "UpdatePlcProgram",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "confirmUpdate": false,
           "dryRun": true
         },
         "envelopeVersion": 4

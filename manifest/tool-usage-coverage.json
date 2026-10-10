@@ -1,9 +1,9 @@
 {
   "basis": "Actual STDIO MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and all pinned source hashes checked. Allowlisted in-memory call examples executed; target-bound native example operations NOT executed. HTTP/network services were not used.",
-  "catalogSha256": "ccb7691a3b3b842123f56333d65a565583923e2c938bf6458be746ec5f312ee0",
+  "catalogSha256": "94b0d3bd1cb5746aa6b64033f9a8a51ba64a980b3a154bc0e47ef5a9e67cabae",
   "uniqueTools": 511,
   "documents": 89,
-  "versionToolPairs": 2162,
+  "versionToolPairs": 2134,
   "offlineCallExecutions": 115,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,11 +48,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 188,
-      "checkedToolCount": 188,
+      "registeredToolCount": 176,
+      "checkedToolCount": 176,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 78,
+      "operationExampleCount": 53,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -427,32 +427,7 @@
           "operations": []
         },
         {
-          "toolName": "CreateHardwareCatalogDevice",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "CreatePlcBlockGroup",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "CreatePlcInstanceDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -616,30 +591,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
           "operations": []
-        },
-        {
-          "toolName": "ExchangeSystemDiagnosticsSettings",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ExportDeviceAml",
@@ -970,18 +921,6 @@
           "operations": []
         },
         {
-          "toolName": "GetPlcCrossReferences",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "GetPlcTagTableConstants",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1267,20 +1206,6 @@
           "operations": []
         },
         {
-          "toolName": "ListNetworkDomains",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/networks-and-drivecliq/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "ListPlcBlocks",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1311,18 +1236,6 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "ListPlcSystemGroups",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -1405,79 +1318,6 @@
           "relationship": "no-direct-official-example",
           "documents": [],
           "operations": []
-        },
-        {
-          "toolName": "ListTransferAreas",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/networks-and-drivecliq/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "ManageDeviceServiceObjects",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setDefault",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setServiceGroupName",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "createService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "deleteService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ManageDeviceUserGroup",
@@ -1660,69 +1500,6 @@
           ]
         },
         {
-          "toolName": "ManageNetworkDomain",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/networks-and-drivecliq/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "addParticipant",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
-          "toolName": "ManagePlcBlockProtection",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "protect",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "unprotect",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
           "toolName": "ManagePlcExternalSources",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1895,56 +1672,6 @@
             },
             {
               "operation": "remove",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
-          "toolName": "ManageTransferArea",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/networks-and-drivecliq/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "createMappingRule",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "updateMappingRule",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "deleteMappingRule",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "createReceiver",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -2246,18 +1973,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "SetPlcProgram",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -2326,11 +2041,11 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 189,
-      "checkedToolCount": 189,
+      "registeredToolCount": 182,
+      "checkedToolCount": 182,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 78,
+      "operationExampleCount": 63,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -2705,19 +2420,6 @@
           "operations": []
         },
         {
-          "toolName": "CreateHardwareCatalogDevice",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "CreatePlcBlockGroup",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2894,30 +2596,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
           "operations": []
-        },
-        {
-          "toolName": "ExchangeSystemDiagnosticsSettings",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ExportDeviceAml",
@@ -3248,18 +2926,6 @@
           "operations": []
         },
         {
-          "toolName": "GetPlcCrossReferences",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "GetPlcTagTableConstants",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3545,20 +3211,6 @@
           "operations": []
         },
         {
-          "toolName": "ListNetworkDomains",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/networks-and-drivecliq/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "ListPlcBlocks",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3709,65 +3361,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
           "operations": []
-        },
-        {
-          "toolName": "ManageDeviceServiceObjects",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setDefault",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setServiceGroupName",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "createService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "deleteService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ManageDeviceUserGroup",
@@ -3944,41 +3537,6 @@
             },
             {
               "operation": "exportTemplate",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
-          "toolName": "ManageNetworkDomain",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/networks-and-drivecliq/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/NetworkSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/NetworkSnippets.cs",
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "addParticipant",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -4536,18 +4094,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "SetPlcProgram",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -4616,11 +4162,11 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 191,
-      "checkedToolCount": 191,
+      "registeredToolCount": 186,
+      "checkedToolCount": 186,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 78,
+      "operationExampleCount": 67,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -4995,19 +4541,6 @@
           "operations": []
         },
         {
-          "toolName": "CreateHardwareCatalogDevice",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "CreatePlcBlockGroup",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5184,30 +4717,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
           "operations": []
-        },
-        {
-          "toolName": "ExchangeSystemDiagnosticsSettings",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ExportDeviceAml",
@@ -5549,18 +5058,6 @@
         },
         {
           "toolName": "GetPlcBlockInfo",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "GetPlcCrossReferences",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -6021,65 +5518,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
           "operations": []
-        },
-        {
-          "toolName": "ManageDeviceServiceObjects",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setDefault",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setServiceGroupName",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "createService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "deleteService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ManageDeviceUserGroup",
@@ -6848,18 +6286,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "SetPlcProgram",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -6928,11 +6354,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 191,
-      "checkedToolCount": 191,
+      "registeredToolCount": 187,
+      "checkedToolCount": 187,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 78,
+      "operationExampleCount": 69,
       "programmingExampleCount": 25,
       "callSequenceCount": 34,
       "offlineBuilderExamplesExecuted": 0,
@@ -7295,19 +6721,6 @@
         },
         {
           "toolName": "CreateGsdDevice",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "CreateHardwareCatalogDevice",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -7872,18 +7285,6 @@
           "operations": []
         },
         {
-          "toolName": "GetPlcCrossReferences",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
-          ],
-          "operations": []
-        },
-        {
           "toolName": "GetPlcTagTableConstants",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8333,65 +7734,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
           "operations": []
-        },
-        {
-          "toolName": "ManageDeviceServiceObjects",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/devices-and-hardware/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
-            "guides/skills/hardware-and-modules/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setDefault",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "export",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "import",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "setServiceGroupName",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "createService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "deleteService",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
         },
         {
           "toolName": "ManageDeviceUserGroup",
@@ -9160,18 +8502,6 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
             "guides/skills/hardware-and-modules/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "SetPlcProgram",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/blocks/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },

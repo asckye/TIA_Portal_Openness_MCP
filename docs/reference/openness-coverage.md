@@ -67,9 +67,9 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 | Traverse technology-object user groups | N | N | N | N | N | I | I | I |
 | Export technology-object XML | B | B | I | I | I | I | I | I |
 | Watch-table listing and XML exchange | N | P | P | P | P | P | I | I |
-| Hardware catalog search | N | N | N | N | B | I | I | I |
+| Hardware catalog search / exact catalog device creation | N | N | N | N | P | I | I | I |
 | Create a device with its initial item | B | B | B | B | B | I | I | I |
-| Network interface/connection engineering | B | B | B | B | B | B | P | P |
+| Network interface/connection engineering | P | P | P | P | P | P | P | P |
 | CAx device exchange | B | B | B | B | B | B | I | I |
 | Project/global library engineering | B | B | B | B | B | B | P | P |
 | Version Control Interface through MCP | N | N | B | B | B | B | I | I |
@@ -86,6 +86,8 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 | PLC upload/download | ? | B | B | B | B | B | P | P |
 
 `BuildPlcSymbolManifestFromPath` is an offline bounded extractor for native PLC tag-table and GlobalDB XML snapshots. Empty tag tables produce a valid file result with zero symbols; tag comments are ignored; user constants retain their raw value; system constants are omitted with an explicit warning. It does not certify the complete XML schema, import behavior, or program semantics.
+
+The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/system groups/instance DB creation start at V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads, Classic HMI compile and PLC-only reference seeding keep usable old-release paths. The narrower Foundation catalog search remains V19+; catalog device creation makes the V18 workflow partial.
 
 All eight-release native acceptance entries remain **NOT RUN**. The compiled
 adapters and functional/transport tests are separate evidence. Neither a build nor

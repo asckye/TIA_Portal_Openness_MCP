@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedDate": "2026-10-03",
   "reviewBaseline": "c5379c1",
-  "workingTreeReview": "Includes external-source creation/generation, the compile execution fix and per-release flat declaration formats. Catalog-derived tool lists were refreshed after the successful final Build-Release and Build-MultiVersion -Test.",
+  "workingTreeReview": "Includes external-source creation/generation, the compile execution fix and per-release flat declaration formats. Catalog-derived tool lists were refreshed after the successful final Build-Release and Build-MultiVersion -Test. P8-03x (2026-10-09 maintainer decision): ported registration requires at least one implemented usable action; PortedFamilies.ToolReleases is authoritative and partial tools keep action refusals before native calls.",
   "scope": "Functional review of selected engineering workflows and major version migration families; not an exhaustive API completeness claim.",
   "implementationMeaning": {
     "implemented": "An advertised implementation exists for the explicitly described scope; this is not native acceptance.",
@@ -1585,25 +1585,28 @@
     {
       "id": "hardware-catalog",
       "title": "Hardware catalog search",
-      "scope": "The inspected catalog type begins in V18; its MCP route is admitted from V19. The V18 operation contract remains to be reviewed.",
+      "scope": "CreateHardwareCatalogDevice uses the catalog API from V18. The narrower Foundation SearchHardwareCatalog/EnsureDeviceExists routes remain admitted from V19. Catalog device creation is not registered below V18.",
       "implementation": {
         "14sp1": "unavailable",
         "15.1": "unavailable",
         "16": "unavailable",
         "17": "unavailable",
-        "18": "pending",
+        "18": "partial",
         "19": "implemented",
         "20": "implemented",
         "21": "implemented"
       },
       "tools": [
-        "SearchHardwareCatalog"
+        "SearchHardwareCatalog",
+        "CreateHardwareCatalogDevice"
       ],
       "sdkIdentifiers": [
         "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
       ],
       "sourceFiles": [
-        "src/Adapters/Native/Hardware/PlcHardwareCatalog.cs",
+        "src/Adapters.Contracts/PortedFamilies.cs",
+        "src/Adapters.Contracts/HardwareCapabilities.cs",
+        "src/Adapters/Native/Hardware/HardwareDevices.cs",
         "src/Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs"
       ],
       "nextStep": "Compare V18 search/provider signatures with V19 and expose only the supported search contract.",
@@ -1773,14 +1776,14 @@
     {
       "id": "network-engineering",
       "title": "Network interface and connection engineering",
-      "scope": "An interface API exists in every SDK; foundation hosts have no dedicated network engineering routes. Full-engine action/version breadth is not fully audited here.",
+      "scope": "Ported subnet/IO-system/node/topology routes run on all eight APIs; domains start at V16 and transfer areas at V15.1. Whole tools lacking API are unregistered. Communication connections remain V21 only. Partial tools retain position, multicast and service action refusals before native calls.",
       "implementation": {
-        "14sp1": "pending",
-        "15.1": "pending",
-        "16": "pending",
-        "17": "pending",
-        "18": "pending",
-        "19": "pending",
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
         "20": "partial",
         "21": "partial"
       },
@@ -1788,14 +1791,21 @@
         "ReadHardwareFeatures",
         "ReadNetworkDomains",
         "ManageNetworkDomain",
-        "GetProjectTopology"
+        "GetProjectTopology",
+        "ListNetworkDomains",
+        "ListTransferAreas",
+        "ManageTransferArea",
+        "ListCommunicationConnections",
+        "ManageCommunicationConnection"
       ],
       "sdkIdentifiers": [
         "T:Siemens.Engineering.HW.Features.NetworkInterface"
       ],
       "sourceFiles": [
-        "src/FoundationHost/FoundationTools.cs",
-        "src/Engine/Siemens/ToolVersionPolicy.cs"
+        "src/Adapters.Contracts/PortedFamilies.cs",
+        "src/Adapters.Contracts/HardwareCapabilities.cs",
+        "src/Adapters/Native/Hardware/HardwareNetwork.cs",
+        "src/Adapters/Native/Hardware/HardwareNetworkLegacy.cs"
       ],
       "nextStep": "Split interface addressing, subnets, IO systems, domains and communication connections into exact API-supported subfeatures.",
       "sdkEvidence": {
@@ -3249,22 +3259,22 @@
   ],
   "catalogEvidence": {
     "source": "manifest/version-tools.json",
-    "sha256": "bdf791d517bab4e05c801cce8dddf2dccf67c39c5afe2363ab89ab3e7e6e22c4",
+    "sha256": "92b1a5517670cf1ce3168a01eafafb2a3877c024f5232bb228575547e5fd83f1",
     "releaseToolCounts": {
-      "14sp1": 57,
-      "15.1": 58,
-      "16": 60,
-      "17": 60,
-      "18": 60,
-      "19": 62,
-      "20": 477,
-      "21": 488
+      "14sp1": 176,
+      "15.1": 182,
+      "16": 186,
+      "17": 187,
+      "18": 191,
+      "19": 201,
+      "20": 500,
+      "21": 511
     },
-    "versionToolPairs": 1322,
-    "uniqueToolNames": 496,
+    "versionToolPairs": 2134,
+    "uniqueToolNames": 511,
     "groupCounts": {
-      "shared-subset": 436,
-      "all-releases": 49,
+      "all-releases": 176,
+      "shared-subset": 324,
       "release-only": 11
     },
     "nativeAcceptance": "NOT RUN; these are advertised runtime tool catalogs, not native acceptance."
@@ -3277,8 +3287,7 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
-          "CreateHardwareCatalogDevice"
+          "CreateGsdDevice"
         ]
       },
       {
@@ -3431,8 +3440,6 @@
           "DeletePlcBlock",
           "DeletePlcTagTable",
           "DeletePlcType",
-          "ListPlcSystemGroups",
-          "ManagePlcBlockProtection",
           "ManagePlcUserGroup",
           "MovePlcBlockToGroup"
         ]
@@ -3443,7 +3450,6 @@
         "l5": "NOT RUN",
         "entries": [
           "BuildAndImportPlcArtifact",
-          "CreatePlcInstanceDb",
           "DescribePlcBlockLogic",
           "GetPlcBlockEditCapabilities",
           "GetPlcTagTableConstants",
@@ -3451,8 +3457,7 @@
           "ImportPlcTagTablesFromDirectory",
           "ManagePlcTagDefinition",
           "RepairAndReimportPlcBlock",
-          "SeedProjectFromReference",
-          "SetPlcProgram"
+          "SeedProjectFromReference"
         ]
       },
       {
@@ -3461,7 +3466,6 @@
         "l5": "NOT RUN",
         "entries": [
           "GeneratePlcSourceFromBlocks",
-          "GetPlcCrossReferences",
           "ManagePlcExternalSources"
         ]
       },
@@ -3481,8 +3485,6 @@
         "entries": [
           "CreateDevice",
           "CreateGsdDevice",
-          "CreateHardwareCatalogDevice",
-          "ExchangeSystemDiagnosticsSettings",
           "GetDeviceAttributes",
           "GetDeviceInfo",
           "GetDeviceItemInfo",
@@ -3490,7 +3492,6 @@
           "GetDevicePlugLocations",
           "GetHardwareFeatures",
           "ListDevices",
-          "ManageDeviceServiceObjects",
           "ManageDeviceUserGroup",
           "ManageHardwareObject",
           "ManageHardwareUtilities",
@@ -3512,12 +3513,8 @@
           "GetProjectTopology",
           "ListDeviceItemChannels",
           "ListIoSystems",
-          "ListNetworkDomains",
-          "ListTransferAreas",
           "ManageIoSystem",
-          "ManageNetworkDomain",
           "ManagePortInterconnection",
-          "ManageTransferArea",
           "PlanHardwareNetworkConfiguration",
           "ProbeHardwareHmiConnectionOwnerCandidates",
           "ProbeHardwareHmiConnectionWhitelistedServices",
@@ -3554,8 +3551,7 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
-          "CreateHardwareCatalogDevice"
+          "CreateGsdDevice"
         ]
       },
       {
@@ -3728,8 +3724,7 @@
           "ImportPlcTagTablesFromDirectory",
           "ManagePlcTagDefinition",
           "RepairAndReimportPlcBlock",
-          "SeedProjectFromReference",
-          "SetPlcProgram"
+          "SeedProjectFromReference"
         ]
       },
       {
@@ -3738,7 +3733,6 @@
         "l5": "NOT RUN",
         "entries": [
           "GeneratePlcSourceFromBlocks",
-          "GetPlcCrossReferences",
           "ManagePlcExternalSources"
         ]
       },
@@ -3758,8 +3752,6 @@
         "entries": [
           "CreateDevice",
           "CreateGsdDevice",
-          "CreateHardwareCatalogDevice",
-          "ExchangeSystemDiagnosticsSettings",
           "GetDeviceAttributes",
           "GetDeviceInfo",
           "GetDeviceItemInfo",
@@ -3767,7 +3759,6 @@
           "GetDevicePlugLocations",
           "GetHardwareFeatures",
           "ListDevices",
-          "ManageDeviceServiceObjects",
           "ManageDeviceUserGroup",
           "ManageHardwareObject",
           "ManageHardwareUtilities",
@@ -3789,10 +3780,8 @@
           "GetProjectTopology",
           "ListDeviceItemChannels",
           "ListIoSystems",
-          "ListNetworkDomains",
           "ListTransferAreas",
           "ManageIoSystem",
-          "ManageNetworkDomain",
           "ManagePortInterconnection",
           "ManageTransferArea",
           "PlanHardwareNetworkConfiguration",
@@ -3831,8 +3820,7 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
-          "CreateHardwareCatalogDevice"
+          "CreateGsdDevice"
         ]
       },
       {
@@ -4005,8 +3993,7 @@
           "ImportPlcTagTablesFromDirectory",
           "ManagePlcTagDefinition",
           "RepairAndReimportPlcBlock",
-          "SeedProjectFromReference",
-          "SetPlcProgram"
+          "SeedProjectFromReference"
         ]
       },
       {
@@ -4015,7 +4002,6 @@
         "l5": "NOT RUN",
         "entries": [
           "GeneratePlcSourceFromBlocks",
-          "GetPlcCrossReferences",
           "ManagePlcExternalSources"
         ]
       },
@@ -4035,8 +4021,6 @@
         "entries": [
           "CreateDevice",
           "CreateGsdDevice",
-          "CreateHardwareCatalogDevice",
-          "ExchangeSystemDiagnosticsSettings",
           "GetDeviceAttributes",
           "GetDeviceInfo",
           "GetDeviceItemInfo",
@@ -4044,7 +4028,6 @@
           "GetDevicePlugLocations",
           "GetHardwareFeatures",
           "ListDevices",
-          "ManageDeviceServiceObjects",
           "ManageDeviceUserGroup",
           "ManageHardwareObject",
           "ManageHardwareUtilities",
@@ -4108,8 +4091,7 @@
         "l5": "NOT RUN",
         "entries": [
           "CreateDevice",
-          "CreateGsdDevice",
-          "CreateHardwareCatalogDevice"
+          "CreateGsdDevice"
         ]
       },
       {
@@ -4282,8 +4264,7 @@
           "ImportPlcTagTablesFromDirectory",
           "ManagePlcTagDefinition",
           "RepairAndReimportPlcBlock",
-          "SeedProjectFromReference",
-          "SetPlcProgram"
+          "SeedProjectFromReference"
         ]
       },
       {
@@ -4292,7 +4273,6 @@
         "l5": "NOT RUN",
         "entries": [
           "GeneratePlcSourceFromBlocks",
-          "GetPlcCrossReferences",
           "ManagePlcExternalSources"
         ]
       },
@@ -4312,7 +4292,6 @@
         "entries": [
           "CreateDevice",
           "CreateGsdDevice",
-          "CreateHardwareCatalogDevice",
           "ExchangeSystemDiagnosticsSettings",
           "GetDeviceAttributes",
           "GetDeviceInfo",
@@ -4321,7 +4300,6 @@
           "GetDevicePlugLocations",
           "GetHardwareFeatures",
           "ListDevices",
-          "ManageDeviceServiceObjects",
           "ManageDeviceUserGroup",
           "ManageHardwareObject",
           "ManageHardwareUtilities",

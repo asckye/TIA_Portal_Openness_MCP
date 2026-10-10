@@ -3,8 +3,7 @@
     {
       "entries": [
         "CreateDevice",
-        "CreateGsdDevice",
-        "CreateHardwareCatalogDevice"
+        "CreateGsdDevice"
       ],
       "family": "P6-DEVICE",
       "l5": "NOT RUN",
@@ -157,8 +156,6 @@
         "DeletePlcBlock",
         "DeletePlcTagTable",
         "DeletePlcType",
-        "ListPlcSystemGroups",
-        "ManagePlcBlockProtection",
         "ManagePlcUserGroup",
         "MovePlcBlockToGroup"
       ],
@@ -169,7 +166,6 @@
     {
       "entries": [
         "BuildAndImportPlcArtifact",
-        "CreatePlcInstanceDb",
         "DescribePlcBlockLogic",
         "GetPlcBlockEditCapabilities",
         "GetPlcTagTableConstants",
@@ -177,8 +173,7 @@
         "ImportPlcTagTablesFromDirectory",
         "ManagePlcTagDefinition",
         "RepairAndReimportPlcBlock",
-        "SeedProjectFromReference",
-        "SetPlcProgram"
+        "SeedProjectFromReference"
       ],
       "family": "F09",
       "l5": "NOT RUN",
@@ -187,7 +182,6 @@
     {
       "entries": [
         "GeneratePlcSourceFromBlocks",
-        "GetPlcCrossReferences",
         "ManagePlcExternalSources"
       ],
       "family": "F11",
@@ -207,8 +201,6 @@
       "entries": [
         "CreateDevice",
         "CreateGsdDevice",
-        "CreateHardwareCatalogDevice",
-        "ExchangeSystemDiagnosticsSettings",
         "GetDeviceAttributes",
         "GetDeviceInfo",
         "GetDeviceItemInfo",
@@ -216,7 +208,6 @@
         "GetDevicePlugLocations",
         "GetHardwareFeatures",
         "ListDevices",
-        "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
         "ManageHardwareObject",
         "ManageHardwareUtilities",
@@ -238,12 +229,8 @@
         "GetProjectTopology",
         "ListDeviceItemChannels",
         "ListIoSystems",
-        "ListNetworkDomains",
-        "ListTransferAreas",
         "ManageIoSystem",
-        "ManageNetworkDomain",
         "ManagePortInterconnection",
-        "ManageTransferArea",
         "PlanHardwareNetworkConfiguration",
         "ProbeHardwareHmiConnectionOwnerCandidates",
         "ProbeHardwareHmiConnectionWhitelistedServices",
@@ -7193,34 +7180,6 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "e96179d4d82d0f0e0c61cb6e5e3f5f295c8ea28af4a55edbe96dcdf807cb65cb",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "deviceName": {
-            "description": "deviceName: name in project tree, e.g. 'HMI_KTP700_1'",
-            "type": "string"
-          },
-          "keyword": {
-            "description": "keyword: MLFB/order number/device/family text, e.g. 'KTP700 Basic PN', '6AV2123-2GB03', 'S7-1211C DC/DC/DC'",
-            "type": "string"
-          },
-          "preferredText": {
-            "default": "",
-            "description": "preferredText: optional ranking hint, e.g. 'PN 17.0.0.0 landscape', '6AV2 123-2GB03-0AX0'",
-            "type": "string"
-          }
-        },
-        "required": [
-          "keyword",
-          "deviceName"
-        ],
-        "type": "object"
-      },
-      "name": "CreateHardwareCatalogDevice",
-      "outputSchema": null
-    },
-    {
       "descriptionSha256": "da18614d0ec69402f40565dfd663c6b9afd8494b4ad5b31ec050365dc8a3ef5b",
       "inputSchema": {
         "additionalProperties": false,
@@ -7241,54 +7200,6 @@
         "type": "object"
       },
       "name": "CreatePlcBlockGroup",
-      "outputSchema": null
-    },
-    {
-      "descriptionSha256": "b370d631ad028eb2f48f21e74d85ca2c85bd00c8677c2d7d52cd3cc209a13389",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "autoNumber": {
-            "default": true,
-            "description": "autoNumber: true lets TIA assign the block number.",
-            "type": "boolean"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "fbPath": {
-            "description": "fbPath: 'Group/Name' of the function block the instance DB is created for.",
-            "type": "string"
-          },
-          "groupPath": {
-            "default": "",
-            "description": "groupPath: group path inside the software, e.g. 'Group/Subgroup' ('' = root).",
-            "type": "string"
-          },
-          "name": {
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "number": {
-            "default": 0,
-            "description": "number: block number when autoNumber is false.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "fbPath",
-          "name"
-        ],
-        "type": "object"
-      },
-      "name": "CreatePlcInstanceDb",
       "outputSchema": null
     },
     {
@@ -8588,55 +8499,6 @@
         "type": "object"
       },
       "name": "EnsureSubnet",
-      "outputSchema": null
-    },
-    {
-      "descriptionSha256": "61e54105f2d0cedd093165a8ec68702ef6e901f3213179694787d127adbd6d29",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "description": "action: the operation to perform - export | import.",
-            "enum": [
-              "export",
-              "import"
-            ],
-            "type": "string"
-          },
-          "confirmImport": {
-            "default": false,
-            "description": "confirmImport: must be true together with dryRun=false to import (imports replace project data).",
-            "type": "boolean"
-          },
-          "devicePath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "filePath": {
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
-            "type": "string"
-          },
-          "itemPath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "action",
-          "filePath"
-        ],
-        "type": "object"
-      },
-      "name": "ExchangeSystemDiagnosticsSettings",
       "outputSchema": null
     },
     {
@@ -10568,71 +10430,6 @@
         ],
         "type": "object"
       }
-    },
-    {
-      "descriptionSha256": "3576cc684f4f2995cada90ec1bbcbce8e59be487009b8be312293c5ef32ede4a",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "filter": {
-            "default": "AllObjects",
-            "description": "filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)",
-            "examples": [
-              "AllObjects"
-            ],
-            "type": "string"
-          },
-          "objectKind": {
-            "default": "Block",
-            "description": "objectKind: Block | Type | Tag | SystemConstant",
-            "enum": [
-              "Block",
-              "Type",
-              "Tag",
-              "SystemConstant"
-            ],
-            "examples": [
-              "Block"
-            ],
-            "type": "string"
-          },
-          "objectPath": {
-            "description": "objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope",
-            "examples": [
-              "Main"
-            ],
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: path in the project structure to the PLC software",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          },
-          "unitKind": {
-            "default": "unit",
-            "description": "unitKind: unit | safety. Empty unitName selects PLC root.",
-            "enum": [
-              "unit",
-              "safety"
-            ],
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: exact software/safety unit; empty selects PLC root.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "objectPath"
-        ],
-        "type": "object"
-      },
-      "name": "GetPlcCrossReferences",
-      "outputSchema": null
     },
     {
       "descriptionSha256": "4c5d0949c2ef35ef159ec27cc197a369b735637a6f90a78aad6a3debf78e2091",
@@ -13620,36 +13417,6 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "b22a89529aa0e0bb8e2461d8150e39e4d08fc996ba832f566cf19d2604d65a2a",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "minimum": 1,
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "subnetName": {
-            "description": "subnetName: subnet name, e.g. 'PN/IE_1'.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "subnetName"
-        ],
-        "type": "object"
-      },
-      "name": "ListNetworkDomains",
-      "outputSchema": null
-    },
-    {
       "descriptionSha256": "1b8b9b262e11f058ddc4801dec94c57bb1328a794f69faa1a0251b063c9985e1",
       "inputSchema": {
         "additionalProperties": false,
@@ -14054,48 +13821,6 @@
         ],
         "type": "object"
       }
-    },
-    {
-      "descriptionSha256": "0749363664efba5708d92ddd02e45123e324949a31924254144fa2ec6418d6fa",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "includeBlocks": {
-            "default": true,
-            "description": "includeBlocks: true also returns the blocks of each chart / group.",
-            "type": "boolean"
-          },
-          "maxDepth": {
-            "default": 4,
-            "description": "maxDepth: how deep to walk the tree.",
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "unitKind": {
-            "default": "unit",
-            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
-            "enum": [
-              "unit",
-              "safety"
-            ],
-            "type": "string"
-          },
-          "unitName": {
-            "default": "",
-            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ListPlcSystemGroups",
-      "outputSchema": null
     },
     {
       "descriptionSha256": "967a8ab708d801007ab94cc489ae0e83c16f3fd69a4c072dcda0ceaf2330f8a8",
@@ -15157,148 +14882,6 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "ee75cb356a0303a912bed5332c0bab6ec9c400ae07bec6c9185274b672cb920b",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "devicePath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "extendedPositionNumber": {
-            "default": -1,
-            "description": "extendedPositionNumber: extended position number within the slot (-1 = not given).",
-            "type": "integer"
-          },
-          "itemPath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "minimum": 1,
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "positionNumber": {
-            "default": -1,
-            "description": "positionNumber: slot / position number of the module or item (-1 = not given).",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "devicePath",
-          "itemPath"
-        ],
-        "type": "object"
-      },
-      "name": "ListTransferAreas",
-      "outputSchema": null
-    },
-    {
-      "descriptionSha256": "e013cfe871838858a4134deaed76c51b85c192fab2bb788457476c41bb245425",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "default": "read",
-            "description": "read | setDefault | update | delete | export | import | setServiceGroupName | createService | deleteService. ",
-            "enum": [
-              "read",
-              "setDefault",
-              "update",
-              "delete",
-              "export",
-              "import",
-              "setServiceGroupName",
-              "createService",
-              "deleteService"
-            ],
-            "type": "string"
-          },
-          "confirmChange": {
-            "default": false,
-            "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
-            "type": "boolean"
-          },
-          "devicePath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "family": {
-            "description": "family: webApplications | telecontrolDataPoints | certificateServices.",
-            "enum": [
-              "webApplications",
-              "telecontrolDataPoints",
-              "certificateServices"
-            ],
-            "type": "string"
-          },
-          "filePath": {
-            "default": "",
-            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
-            "type": "string"
-          },
-          "itemPath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "properties": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "minLength": 0,
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object"
-          }
-        },
-        "required": [
-          "devicePath",
-          "itemPath",
-          "family"
-        ],
-        "type": "object"
-      },
-      "name": "ManageDeviceServiceObjects",
-      "outputSchema": null
-    },
-    {
       "descriptionSha256": "63716019855531b43636de7684470fe35deaa44f91e8568416372437bf1f7d6a",
       "inputSchema": {
         "additionalProperties": false,
@@ -15749,161 +15332,6 @@
         ],
         "type": "object"
       }
-    },
-    {
-      "descriptionSha256": "f83d8c31ee2f24faecb7b0b57713ed926f2d8fa95db7305c509be5b46c369a05",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "description": "action: the operation to perform - create | delete | update | addParticipant.",
-            "enum": [
-              "create",
-              "delete",
-              "update",
-              "addParticipant"
-            ],
-            "type": "string"
-          },
-          "attributes": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "minLength": 0,
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object"
-          },
-          "confirmDelete": {
-            "default": false,
-            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
-            "type": "boolean"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "kind: sync | mrp.",
-            "enum": [
-              "sync",
-              "mrp"
-            ],
-            "type": "string"
-          },
-          "name": {
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "participantDevicePath": {
-            "description": "participantDevicePath: array naming the station to add to the domain.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "participantItemPath": {
-            "description": "participantItemPath: array of device-item names of the participant's interface.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "properties": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "minLength": 0,
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object"
-          },
-          "subnetName": {
-            "description": "subnetName: subnet name, e.g. 'PN/IE_1'.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "subnetName",
-          "kind",
-          "action",
-          "name"
-        ],
-        "type": "object"
-      },
-      "name": "ManageNetworkDomain",
-      "outputSchema": null
-    },
-    {
-      "descriptionSha256": "ad38e696ee8383b2bd7e92122564e43cf1c12f982774ca26afc1f78419bd7a3f",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "description": "action: the operation to perform - read | protect | unprotect.",
-            "enum": [
-              "read",
-              "protect",
-              "unprotect"
-            ],
-            "type": "string"
-          },
-          "blockPath": {
-            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
-            "type": "string"
-          },
-          "confirmProtectionChange": {
-            "default": false,
-            "description": "confirmProtectionChange: must be true together with dryRun=false to change the protection.",
-            "type": "boolean"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "password": {
-            "default": "",
-            "description": "password: password when the object is protected; never logged.",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "blockPath",
-          "action"
-        ],
-        "type": "object"
-      },
-      "name": "ManagePlcBlockProtection",
-      "outputSchema": null
     },
     {
       "descriptionSha256": "70f9fdd87262511a5d3fe525c532031d5861fbc7235510c2b1ac6f3cf44b881b",
@@ -16438,200 +15866,6 @@
         ],
         "type": "object"
       }
-    },
-    {
-      "descriptionSha256": "4eac8d28a466b517b74fcc9a7bafd643c65132f0d7a999d397cd53343695074c",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "description": "create | delete | update | createMappingRule | updateMappingRule | deleteMappingRule | createReceiver. ",
-            "enum": [
-              "create",
-              "delete",
-              "update",
-              "createMappingRule",
-              "updateMappingRule",
-              "deleteMappingRule",
-              "createReceiver"
-            ],
-            "type": "string"
-          },
-          "attributes": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "minLength": 0,
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object"
-          },
-          "confirmDelete": {
-            "default": false,
-            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
-            "type": "boolean"
-          },
-          "devicePath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "extendedPositionNumber": {
-            "default": -1,
-            "description": "extendedPositionNumber: extended position number within the slot (-1 = not given).",
-            "type": "integer"
-          },
-          "itemPath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "kind": {
-            "default": "standard",
-            "description": "kind: standard | multicast.",
-            "enum": [
-              "standard",
-              "multicast"
-            ],
-            "type": "string"
-          },
-          "length": {
-            "default": -1,
-            "description": "length: length in bytes.",
-            "type": "integer"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "partnerDevicePath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "partnerItemPath": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "positionNumber": {
-            "default": -1,
-            "description": "positionNumber: slot / position number of the module or item (-1 = not given).",
-            "type": "integer"
-          },
-          "properties": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "minLength": 0,
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object"
-          },
-          "ruleIndex": {
-            "default": -1,
-            "description": "ruleIndex: 0-based index of the mapping rule.",
-            "type": "integer"
-          },
-          "senderName": {
-            "default": "",
-            "description": "senderName: exact name of the sending transfer area.",
-            "type": "string"
-          },
-          "targetDevicePath": {
-            "description": "targetDevicePath: array naming the target station.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "targetItemPath": {
-            "description": "targetItemPath: array of device-item names on the target.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "type": {
-            "default": "",
-            "description": "type: None | MS | CD | F_PS | TM | IN | OUT | MSI | MSO | MSO_LOCAL | RECORD_WRITE_STO | RECORD_WRITE_PUB | RECORD_READ_STO | RECORD_READ_PUB | MSI_MSO | IN_OUT | LOCAL_RECORD_STO | LOCAL_RECORD_PUB | SUB_MSI | SUB_MSO | SUB_LOCAL_RECORD_STO_READ | SUB_LOCAL_RECORD_PUB_READ | PROFISAFE_IN12_OUT6 | PROFISAFE_IN6_OUT12 | F_Proxy_CD | DDX | ISOC_STATUS_CONTROL | ISOCHRON_IN | ISOCHRON_OUT | F_CD.",
-            "enum": [
-              "None",
-              "MS",
-              "CD",
-              "F_PS",
-              "TM",
-              "IN",
-              "OUT",
-              "MSI",
-              "MSO",
-              "MSO_LOCAL",
-              "RECORD_WRITE_STO",
-              "RECORD_WRITE_PUB",
-              "RECORD_READ_STO",
-              "RECORD_READ_PUB",
-              "MSI_MSO",
-              "IN_OUT",
-              "LOCAL_RECORD_STO",
-              "LOCAL_RECORD_PUB",
-              "SUB_MSI",
-              "SUB_MSO",
-              "SUB_LOCAL_RECORD_STO_READ",
-              "SUB_LOCAL_RECORD_PUB_READ",
-              "PROFISAFE_IN12_OUT6",
-              "PROFISAFE_IN6_OUT12",
-              "F_Proxy_CD",
-              "DDX",
-              "ISOC_STATUS_CONTROL",
-              "ISOCHRON_IN",
-              "ISOCHRON_OUT",
-              "F_CD",
-              ""
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "devicePath",
-          "itemPath",
-          "action"
-        ],
-        "type": "object"
-      },
-      "name": "ManageTransferArea",
-      "outputSchema": null
     },
     {
       "descriptionSha256": "c4214b5ff316b2712cf100d423e16385220a63291e4f61c08f953e67ca2acf35",
@@ -19227,34 +18461,6 @@
         "type": "object"
       },
       "name": "SetPlcCpuSettings",
-      "outputSchema": null
-    },
-    {
-      "descriptionSha256": "66540a57fc27fdd2e37231e372db4293751d14a21fd1e6d84c95ba53ea19d978",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "confirmUpdate": {
-            "default": false,
-            "description": "confirmUpdate: must be true together with dryRun=false to update the program.",
-            "type": "boolean"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "SetPlcProgram",
       "outputSchema": null
     },
     {
