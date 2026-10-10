@@ -88,6 +88,7 @@ public sealed class WorkerRobustnessTests
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly McpServerTool engine;
         private readonly McpServerTool shared;
+        internal readonly string SpillsDirectory = Path.Combine(AppContext.BaseDirectory, "worker-fixture-spills", Guid.NewGuid().ToString("N"));
         internal Scope(string mode, string release = "21")
         {
             Environment.SetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT", mode);
@@ -95,8 +96,12 @@ public sealed class WorkerRobustnessTests
             string exe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../WorkerChannel/TiaMcp.EngineWorker.FaultFixture/bin/Release/net10.0/TiaMcp.EngineWorker.FaultFixture.exe"));
             Assert.True(File.Exists(exe), exe);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
+            // A successful 16/32 MiB spill includes serialization and a durable disk flush.
+            // Keep the short deadline for injected faults, not as a performance gate for CI disks.
+            string budget = mode is "oversized" or "oversized-delayed" ? "30" : "0.8";
             Worker = new Client(new Options { ReleaseKey = release, EngineWorkerExe = exe, WorkerExe = exe, ApiDirectory = "", BundleRoot = AppContext.BaseDirectory,
-                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":0.8,\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe));
+                NativeEnabled = true, BundledWorker = false, WorkerTimeoutConfig = "{\"default\":" + budget + ",\"compile\":0.8,\"firstAttach\":1.2}" }, Client.Hash(exe), SpillsDirectory)
+                { StatusTimeoutForTest = TimeSpan.FromSeconds(30) };
             Engine.EngineHostConfiguration.ReleaseKey = release; Engine.EngineHostConfiguration.Worker = Worker;
             var catalog = new Catalog();
             Host.ConfigureToolBridge(catalog, new Engine.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
@@ -120,9 +125,31 @@ public sealed class WorkerRobustnessTests
         }
         internal readonly List<JsonObject> Progress = new();
         internal bool FailProgress;
+        internal string FailureDetails(CallToolResult? result = null)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var process = (System.Diagnostics.Process?)typeof(Client).GetField("process", flags)!.GetValue(Worker);
+            var channel = (ChannelClient?)typeof(Client).GetField("channel", flags)!.GetValue(Worker);
+            var stderr = (Queue<string>)typeof(Client).GetField("diagnostics", flags)!.GetValue(Worker)!;
+            var details = new JsonObject { ["result"] = result?.StructuredContent?.DeepClone(), ["worker"] = Worker.Snapshot(),
+                ["faultReason"] = channel?.LastFault?.ToString(), ["workerExited"] = process?.HasExited,
+                ["workerExitCode"] = process?.HasExited == true ? process.ExitCode : null,
+                ["statusTimeoutSeconds"] = Worker.StatusTimeoutForTest?.TotalSeconds,
+                ["spillDirectory"] = SpillsDirectory, ["spillDirectoryExists"] = Directory.Exists(SpillsDirectory) };
+            lock (stderr) details["stderrTail"] = new JsonArray(stderr.Select(line => (JsonNode?)JsonValue.Create(line)).ToArray());
+            try
+            {
+                details["spillFiles"] = new JsonArray((Directory.Exists(SpillsDirectory) ? Directory.GetFiles(SpillsDirectory) : Array.Empty<string>())
+                    .Select(path => (JsonNode)new JsonObject { ["path"] = path, ["byteLength"] = new FileInfo(path).Length,
+                        ["attributes"] = File.GetAttributes(path).ToString() }).ToArray());
+            }
+            catch (IOException error) { details["spillStateError"] = error.ToString(); }
+            return details.ToJsonString();
+        }
         public void Dispose()
         {
             Worker.Dispose(); lifetime.Dispose(); Journal.ConfigureOutput(null);
+            if (Directory.Exists(SpillsDirectory)) Directory.Delete(SpillsDirectory, true);
             Environment.SetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT", previousFault);
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", previousData);
         }
@@ -199,12 +226,27 @@ public sealed class WorkerRobustnessTests
     public async Task Oversized_reply_is_a_readable_export_handle(bool shared)
     {
         using var scope = new Scope("oversized"); var result = await scope.Call(shared);
-        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString()); Assert.False(scope.Worker.Faulted);
+        AssertReadableExport(scope, result);
+    }
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline(bool shared)
+    {
+        using var scope = new Scope("oversized-delayed");
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var result = await scope.Call(shared);
+        AssertReadableExport(scope, result);
+        Assert.True(clock.Elapsed >= TimeSpan.FromMilliseconds(1200), scope.FailureDetails(result));
+    }
+    private static void AssertReadableExport(Scope scope, CallToolResult result)
+    {
+        Assert.True((bool?)result.StructuredContent?["ok"], scope.FailureDetails(result));
+        Assert.False(scope.Worker.Faulted, scope.FailureDetails(result));
         string id = (string)result.StructuredContent!["data"]!["export"]!["id"]!;
         var entry = TiaMcpServer.ModelContextProtocol.ExportStore.Get(id);
         Assert.NotNull(entry); Assert.Contains(new string('x', 1000), entry.Content);
         Assert.True(entry.Content.Length > ChannelLimits.ResponseBytes);
         Assert.Equal(20000, TiaMcpServer.ModelContextProtocol.ExportStore.Slice(id, 0, 20000).Returned);
+        Assert.Empty(Directory.GetFiles(scope.SpillsDirectory));
     }
     [Theory, InlineData(false), InlineData(true)]
     public async Task Progress_requires_a_token_and_preserves_it(bool enabled)

@@ -9,7 +9,7 @@ using TiaMcp.PlcWorker;
 
 namespace TiaMcp.FoundationHost;
 
-internal sealed class EngineWorkerClient(HostOptions options, string workerHash) : IEngineWorker, IEngineWorkerProgress, IFoundationSessionWorker, IFoundationWorkerResult, TiaMcpServer.ModelContextProtocol.IHostToolServices
+internal sealed class EngineWorkerClient(HostOptions options, string workerHash, string? spillsDirectoryForTest = null) : IEngineWorker, IEngineWorkerProgress, IFoundationSessionWorker, IFoundationWorkerResult, TiaMcpServer.ModelContextProtocol.IHostToolServices
 {
     public async Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
     {
@@ -24,9 +24,11 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
     }
     private static readonly AsyncLocal<EngineWorkerClient?> Held = new();
     private readonly SemaphoreSlim serial = new(1, 1);
+    private string SpillsDirectory => spillsDirectoryForTest ?? TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
     private readonly WorkerTimeoutPolicy timeouts = new(options.EngineTimeoutSeconds, options.WorkerTimeoutConfig,
         Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS"));
-    private TimeSpan timeout => timeouts.For("status");
+    internal TimeSpan? StatusTimeoutForTest { get; init; }
+    private TimeSpan timeout => StatusTimeoutForTest ?? timeouts.For("status");
     private Process? process;
     private ChannelClient? channel;
     private bool faulted;
@@ -116,7 +118,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
                 WorkerClient.BindingChangeFor(operation, arguments), WorkerOperations.IsReadOnly(operation)
                     || (bool?)arguments["dryRun"] == true || (string?)arguments["mode"] == "preview", timeouts.For(operation, firstAttach), CancellationToken.None,
                 firstAttach: firstAttach, correlationId: correlation).ConfigureAwait(false);
-            wire = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, wire, out _);
+            wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
             var result = JsonNode.Parse(wire);
             foundationOutcome.AcceptResult(operation, arguments, result);
             if (foundationOutcome.Poisoned) priorUnknownRequestId ??= correlation;
@@ -174,7 +176,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
                 string correlation = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
                 var wire = await channel!.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false,
                     timeouts.For("Disconnect"), CancellationToken.None, correlationId: correlation).ConfigureAwait(false);
-                wire = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, wire, out _);
+                wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
                 disconnectAcknowledgement = (JsonObject)DisconnectContract.Validate(JsonNode.Parse(wire), true, attachedProcessId, attachedProcessId.HasValue).DeepClone();
             }
             catch (Exception) /* swallow(teardown): failed acknowledgement cannot release a lease or claim clean recovery */ { return TerminateForDisconnect(); }
@@ -259,7 +261,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
                 if (options.TiaPortalLocation != null) { start.ArgumentList.Add("--tia-portal-location"); start.ArgumentList.Add(options.TiaPortalLocation); }
                 if (options.WithUi) start.ArgumentList.Add("--with-ui");
                 start.Environment["TIA_MCP_ENGINE_NONCE"] = nonce;
-                start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory;
+                start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Engine worker did not start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
@@ -292,7 +294,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash)
             sent = true;
             string wire = await channel!.CallAsync("engine.invoke", json, preview ? BindingChange.None : BindingChange.MayAdvance,
                 preview || name == "GetSessionState", timeouts.For(name), CancellationToken.None).ConfigureAwait(false);
-            wire = WorkerReplySpill.Read(TiaOpenness.Shared.DataLocations.Current.WorkerSpillsDirectory, wire, out bool spilled);
+            wire = WorkerReplySpill.Read(SpillsDirectory, wire, out bool spilled);
             var reply = JsonNode.Parse(wire)!.AsObject();
             lock (stateSync) { status = (JsonObject)reply.DeepClone(); status.Remove("result"); binding = reply["binding"]?.DeepClone(); }
             string? nativeFault = (string?)reply["nativeFault"];

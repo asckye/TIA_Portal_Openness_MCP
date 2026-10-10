@@ -15,6 +15,15 @@ var identity = new ChannelIdentity(release, Hash(exe), Hash(Path.Combine(Path.Ge
     Environment.ProcessId, Environment.GetEnvironmentVariable("TIA_MCP_ENGINE_NONCE")!);
 bool bound = false;
 long epoch = 0;
+string Spill(string raw, string? mode)
+{
+    string directory = Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY")!;
+    Console.Error.WriteLine($"spill-start: directory={directory}, byteLength={System.Text.Encoding.UTF8.GetByteCount(raw)}");
+    if (mode == "oversized-delayed") Thread.Sleep(1200);
+    string descriptor = WorkerReplySpill.Write(directory, raw);
+    Console.Error.WriteLine("spill-ready: " + descriptor);
+    return descriptor;
+}
 JsonObject Status() => new() { ["releaseKey"] = release, ["diagnosticsDirectory"] = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY"), ["readiness"] = new JsonObject { ["ready"] = true },
     ["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(BehaviorCapabilities).Assembly, release),
     ["binding"] = bound ? new JsonObject { ["projectPath"] = "C:/fixture.ap" + release } : null,
@@ -37,13 +46,13 @@ var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandard
     if (mode == "tia-lost" && request.Method.StartsWith("adapter."))
         return ChannelResponse.Error(new ChannelFailure("Fixture TIA process lost.", -32603, ChannelOutcome.Unknown,
             "{\"exceptionType\":\"PortalProcessLost\"}"));
-    string padding = mode == "oversized" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
+    string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
     if (request.Method.StartsWith("adapter.")) {
         string raw = request.Method == "adapter.ReadBlocks" ? new JsonArray(new JsonObject { ["Name"] = padding }).ToJsonString()
             : new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = bound, ["ProcessId"] = bound ? 123 : null,
                 ["ProjectFile"] = bound ? "C:/fixture.ap" + release : null, ["OwnsProject"] = false, ["IsLocalSession"] = false,
                 ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" }.ToJsonString();
-        return ChannelResponse.WithSpill(raw, () => WorkerReplySpill.Write(Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY")!, raw));
+        return ChannelResponse.WithSpill(raw, () => Spill(raw, mode));
     }
     var status = Status();
     string name = (string)args["name"]!, id = (string)args["requestId"]!;
@@ -59,7 +68,7 @@ var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandard
     status["nativeCallIssued"] = true;
     if (mode == "tia-lost") status["nativeFault"] = "Fixture TIA process lost.";
     string wire = status.ToJsonString();
-    return ChannelResponse.WithSpill(wire, () => WorkerReplySpill.Write(Environment.GetEnvironmentVariable("TIA_MCP_WORKER_SPILLS_DIRECTORY")!, wire));
+    return ChannelResponse.WithSpill(wire, () => Spill(wire, mode));
 }, ChannelProfile.Engine);
 server.Run();
 return 0;

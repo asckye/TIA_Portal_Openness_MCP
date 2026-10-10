@@ -87,7 +87,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12400,
+    "minimumPassed": 12402,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -95,12 +95,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 11252,
+        "minimumPassed": 11254,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 11252,
+        "minimumPassed": 11254,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -108,17 +108,17 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12400,
+    "minimumPassed": 12402,
     "maximumSkipped": 1,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 8708,
+        "minimumPassed": 8710,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 8708,
+        "minimumPassed": 8710,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -263,7 +263,7 @@
   },
   "worker-robustness": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 42,
+    "minimumPassed": 44,
     "maximumSkipped": 0,
     "arguments": [
       "--filter",
