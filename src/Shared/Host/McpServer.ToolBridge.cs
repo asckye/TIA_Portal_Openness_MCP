@@ -45,7 +45,15 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string VersionToolProblem(string name)
             => TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine
                 ? Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name)
-                : CatalogView.Find(name) == null ? "Tool is not registered in this release." : "";
+                : SessionCatalog() is { } catalog && catalog.Find(name) == null ? "Tool is not registered in this release." : "";
+
+        // Old-release registration is a per-session catalog fact. Building a registry happens before any MCP session
+        // exists; only calls inside a session can be refused as unregistered.
+#if TIA_ENGINE_HOST
+        private static IToolCatalogView? SessionCatalog() => TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull?.Catalog;
+#else
+        private static IToolCatalogView? SessionCatalog() => CatalogView;
+#endif
 
         internal static string VersionCallProblem(string name, Func<string, string?> argument)
         {

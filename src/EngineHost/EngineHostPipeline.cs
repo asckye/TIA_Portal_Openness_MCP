@@ -45,6 +45,7 @@ namespace TiaMcp.FoundationHost
         private static readonly AsyncLocal<EngineSessionContext?> Session = new();
         internal static EngineSessionContext Current => Session.Value is { Ended: false } context ? context
             : throw new InvalidOperationException("The MCP engine session is unavailable; initialize a new session.");
+        internal static EngineSessionContext? CurrentOrNull => Session.Value is { Ended: false } context ? context : null;
         internal static IEngineWorker Worker { get => Current.Worker; set => Session.Value = new EngineSessionContext(value); }
         internal static Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession> StagingOwner { get => Current.StagingOwner!; set => Current.StagingOwner = value; }
         internal static IDisposable Enter(EngineSessionContext context)
