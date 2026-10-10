@@ -441,7 +441,7 @@ lane `{tool, actor, requestId, sinceUtc}`、绑定 `{processId, projectFile, bin
 | Studio 会话实现 | `src/Adapters/Native/Studio/{OpennessSession,PlcNavigator,HmiNavigator,EngineeringExtensions,StudioAdapter}.cs`、`src/Adapters/Policy/StudioThreadGuard.cs`、`Adapter.Sources.props:75-81` 对应条目 | `OpennessVersionControl.cs` 按 F33 迁入 Foundation 适配器，不随之删除 |
 | Studio 契约 | `src/Adapters.Contracts/Studio/{Dto,Enums}.cs`、`StudioInterfaces.cs` 的 `IStudioSession`、`AdapterCapabilities.StudioSession`；`ChannelProfile.Studio`（`src/WorkerChannel/ChannelClient.cs:82`、`157`，`ChannelCodec.cs:17`、`107`、`121`） | VCI DTO 视 F33 需要保留 |
 | 布局与发布 | `BundleLayout` 的工作台桥接与适配器路径函数（`BundleLayout.cs:370-404`）；`scripts/operations/delivery-files.json:232` 的桥接条目；`manifest/multi-version-build.json` 的 `studioReleaseKeys` 与桥接适配器文件；`build-tools/release` 的 build-studio 步骤 | 发布链改动按 release-workflow 重新生成清单，不手改哈希 |
-| 测试 | `tests/Studio/TiaOpenness.Core.Tests` 中桥接与适配器测试、`tests/Studio/Test-BridgeSmoke.py`、`AdapterSourceClosureTests` 中的 Studio 检查、`StudioContractTests`、`StudioGoldenSamples` | 由面板与假宿主测试替代 |
+| 测试 | `tests/Studio/TiaOpenness.Core.Tests` 中桥接与适配器测试、`tests/Studio/Test-BridgeSmoke.cs`、`AdapterSourceClosureTests` 中的 Studio 检查、`StudioContractTests`、`StudioGoldenSamples` | 由面板与假宿主测试替代 |
 
 `TiaOpenness.Contracts` 的 DTO 被视图模型使用，迁移时改为 Gui 内部视图记录后再删（或保留为纯界面模型，视实现方便）。`--mock` 演示模式改为连接一个离线夹具宿主，或者删除（决定 6）。
 

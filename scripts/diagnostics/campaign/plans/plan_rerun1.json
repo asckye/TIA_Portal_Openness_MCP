@@ -1,0 +1,1162 @@
+[
+{
+"tool": "GetDeviceInfo",
+"args": {
+"devicePath": "MCP_PLC"
+},
+"expect": "ok",
+"note": "plain",
+"keys": []
+},
+{
+"tool": "ListIoSystems",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+]
+},
+"expect": "ok",
+"note": "arrays for *Json",
+"keys": [
+"bridgeNormalizedArguments"
+]
+},
+{
+"tool": "ManageProjectLanguage",
+"args": {
+"action": "read",
+"culture": "",
+"dryRun": true
+},
+"expect": "ok",
+"note": "casing + string bool",
+"keys": [
+"bridgeNormalizedArguments"
+]
+},
+{
+"tool": "GetDevicePlugLocations",
+"args": {
+"deviceItemPath": "MCP_PLC/导轨_0",
+"plugOnDevice": false
+},
+"expect": "ok",
+"note": "Typed boolean false",
+"keys": []
+},
+{
+"tool": "ListPlcSoftwareUnits",
+"args": {
+"softwarePath": "MCP_PLC",
+"offset": 0,
+"limit": 5
+},
+"expect": "ok",
+"note": "string numbers + empty keyword",
+"keys": []
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Start",
+"kind": "tag",
+"action": "update",
+"properties": {
+"Comment": "启动按钮"
+},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"commentAfter"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Start",
+"kind": "tag",
+"action": "update",
+"properties": {
+"Comment": "启动",
+"ExternalVisible": true
+},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"commentAfter",
+"after"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Start",
+"kind": "tag",
+"action": "update",
+"properties": {
+"Comment": {
+"en-US": "start"
+}
+},
+"dryRun": true
+},
+"note": "V4 schema rejection: Comment is a string, multilingual objects are rejected",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_K2",
+"kind": "constant",
+"action": "create",
+"dataType": "Int",
+"addressOrValue": "7",
+"properties": {
+"Comment": "常量"
+},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"commentAfter"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_K2",
+"kind": "constant",
+"action": "delete",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ExportPlcBlocks",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_blocks",
+"regexName": "^MCP_",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"exportedBlocks"
+]
+},
+{
+"tool": "ExportPlcTypes",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_types",
+"regexName": "^MCP_",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_FC.xml",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"exportedFile"
+]
+},
+{
+"tool": "ExportPlcType",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_UDT.xml",
+"typePath": "MCP_T/MCP_UDT",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DeletePlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ImportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G",
+"importPath": "${EXPORT_ROOT}\\mcp47_FC.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ImportPlcType",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_T",
+"importPath": "${EXPORT_ROOT}\\mcp47_UDT.xml"
+},
+"note": "exists -> TIA decides",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcCrossReferences",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_G/MCP_FB",
+"objectKind": "Block",
+"filter": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"items"
+]
+},
+{
+"tool": "GetPlcCrossReferences",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_G/MCP_FB",
+"objectKind": "Block",
+"filter": "Bogus"
+},
+"note": "reason lists the enum",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "CreatePlcInstanceDb",
+"args": {
+"softwarePath": "MCP_PLC",
+"fbPath": "MCP_G/MCP_FB",
+"name": "MCP_FB_DB2",
+"groupPath": "MCP_G",
+"autoNumber": true,
+"number": 0,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "DeletePlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FB_DB2",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "GeneratePlcLoadableFile",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPaths": [
+"MCP_G/MCP_FC"
+],
+"objectKind": "blocks",
+"targetOption": "Normal",
+"filePath": "${EXPORT_ROOT}\\mcp47_FC.loadable",
+"dryRun": true
+},
+"note": "lists None/Plc/PlcSim",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "GeneratePlcLoadableFile",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPaths": [
+"MCP_G/MCP_FC"
+],
+"objectKind": "blocks",
+"targetOption": "PlcSim",
+"filePath": "${EXPORT_ROOT}\\mcp47_FC.loadable",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportAlarmClasses",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_alarmclasses.dat"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"state",
+"errorCount"
+]
+},
+{
+"tool": "ImportAlarmClasses",
+"args": {
+"softwarePath": "MCP_PLC",
+"importPath": "${EXPORT_ROOT}\\mcp47_alarmclasses.dat"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"state",
+"errorCount"
+]
+},
+{
+"tool": "ExportAlarmClasses",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_alarmclasses.xlsx"
+},
+"note": ".DAT gate",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "ExportAlarmTextLists",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_textlists.xlsx"
+},
+"note": "no text lists on this PLC",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportAlarmInstanceTexts",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp47_instancetexts.xlsx",
+"includeInfoText": true,
+"includeAdditionalTexts": true,
+"includeAlarmClass": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"state",
+"fileExists"
+]
+},
+{
+"tool": "ImportAlarmTextLists",
+"args": {
+"softwarePath": "MCP_PLC",
+"importPath": "${EXPORT_ROOT}\\nope.xlsx"
+},
+"note": "file missing -> honest error",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExchangePlcSupervisions",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp47_prodiag.xlsx",
+"importOptions": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"nativeState"
+]
+},
+{
+"tool": "ListCommunicationConnections",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records",
+"expectedCount"
+]
+},
+{
+"tool": "ManageCommunicationConnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"action": "create",
+"connectionType": "HmiConnection",
+"connectionName": "MCP_HMI_Conn",
+"localInterfaceItemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+],
+"localNodeName": "",
+"partnerDevicePath": [
+"MCP_TP700"
+],
+"partnerItemPath": [
+"HMI_RT_1"
+],
+"partnerInterfaceItemPath": [
+"MCP_TP700.IE_CP_1",
+"PROFINET Interface_1"
+],
+"partnerNodeName": "",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListCommunicationConnections",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ExchangeSystemDiagnosticsSettings",
+"args": {
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp47_sysdiag.dat",
+"devicePath": [],
+"itemPath": [],
+"confirmImport": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ExchangeSystemDiagnosticsSettings",
+"args": {
+"action": "import",
+"filePath": "${EXPORT_ROOT}\\mcp47_sysdiag.dat",
+"devicePath": [],
+"itemPath": [],
+"confirmImport": true,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ConnectDeviceNodesToProfinetSubnet",
+"args": {
+"firstRootPath": "MCP_PLC",
+"secondRootPath": "MCP_TP700",
+"subnetName": "MCP_PN"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"subnetName"
+]
+},
+{
+"tool": "PlugDeviceItem",
+"args": {
+"deviceItemPath": "MCP_PLC/导轨_0",
+"orderNumber": "6ES7 521-1BH00-0AB0",
+"version": "V2.2",
+"positionNumber": 2,
+"name": "MCP_DI",
+"dryRun": false,
+"plugOnDevice": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"result"
+]
+},
+{
+"tool": "GetDeviceItemIoAddresses",
+"args": {
+"deviceItemPath": "MCP_PLC/MCP_DI/MCP_DI"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"addresses"
+]
+},
+{
+"tool": "SetDeviceItemIoAddress",
+"args": {
+"deviceItemPath": "MCP_PLC/MCP_DI/MCP_DI",
+"ioType": "Input",
+"startAddress": 20,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "SetDeviceAddress",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI",
+"MCP_DI"
+],
+"ioType": "Input",
+"startAddress": 20,
+"properties": {
+"StartAddress": 30
+},
+"attributes": {},
+"softwarePath": "",
+"processImageObName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListDeviceItemChannels",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI",
+"MCP_DI"
+],
+"channelType": "",
+"channelIoType": "",
+"channelNumber": -1,
+"attributeNames": [],
+"offset": 0,
+"limit": 20,
+"includeLinkedTags": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "SetDeviceItemChannel",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI",
+"MCP_DI"
+],
+"channelType": "Digital",
+"channelIoType": "Input",
+"channelNumber": 0,
+"attributes": {
+"InputDelay": "3.2"
+},
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageHardwareObject",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"action": "deleteItem",
+"itemPath": [
+"MCP_DI"
+],
+"destinationDevicePath": [],
+"destinationItemPath": [],
+"position": 0,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ManagePortInterconnection",
+"args": {
+"devicePath": [
+"MCP_TP700"
+],
+"itemPath": [
+"MCP_TP700",
+"MCP_TP700.IE_CP_1",
+"PROFINET Interface_1",
+"Port_1"
+],
+"action": "read",
+"partnerDevicePath": [],
+"partnerItemPath": [],
+"dryRun": true
+},
+"note": "head item -> Items fallback",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePortInterconnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1",
+"端口_1"
+],
+"action": "connect",
+"partnerDevicePath": [
+"MCP_TP700"
+],
+"partnerItemPath": [
+"MCP_TP700.IE_CP_1",
+"PROFINET Interface_1",
+"Port_1"
+],
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePortInterconnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1",
+"端口_1"
+],
+"action": "disconnect",
+"partnerDevicePath": [],
+"partnerItemPath": [],
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetDeviceAttributes",
+"args": {
+"devicePath": "MCP_PLC",
+"nameFilter": "Ip|Name|Cycle"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"count",
+"totalAttributes"
+]
+},
+{
+"tool": "ListHmiTagTables",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListHmiTags",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListHmiTags",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "NoSuchTable"
+},
+"note": "",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "DescribeHmiTagTable",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags",
+"maxMembers": 10
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribeHmiTag",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags",
+"tagName": "MCP_Run",
+"maxMembers": 10
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportHmiTagTable",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags",
+"exportPath": "${EXPORT_ROOT}\\mcp47_hmitags.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ImportHmiScreen",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "MCP_ScreenFolder",
+"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\Classic_HMI_Minimal_Package_Screen.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ListHmiScreens",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribeHmiScreen",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"maxMembers": 10
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribeHmiScreenItem",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"itemName": "Btn",
+"maxMembers": 10
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportHmiScreen",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"exportPath": "${EXPORT_ROOT}\\mcp47_screen.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetHmiScreenSnapshot",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenPath": "/MCP_ScreenFolder/MCP_Screen",
+"maxDepth": 3,
+"maxNodes": 200
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"apiCallSuccess"
+]
+},
+{
+"tool": "ImportHmiScreensFromDirectory",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "MCP_ScreenFolder",
+"dir": "${EXPORT_ROOT}\\mcp46_hmi",
+"regexName": "Classic_HMI_Minimal_Package_Screen",
+"overwrite": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageSivarcScreenLayout",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp47_layout.yml",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "CompileHmiDiagnostics",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"errorCount"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "open",
+"libraryName": "MCP_GL",
+"filePath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ProbeGlobalLibrary",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"maxItems": 20
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"warnings"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "list",
+"libraryName": "",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"actualCount"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "close",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportOpcUaInterface",
+"args": {
+"softwarePath": "MCP_PLC",
+"importPath": "${EXPORT_ROOT}\\nope_opcua.xml",
+"interfaceType": "server"
+},
+"note": "missing file -> honest error, no interface created",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "GetPlcOpcUaConfiguration",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "RunOnlineMonitoringSafetySelfTest",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": [
+"ok"
+]
+},
+{
+"tool": "InvokeObject",
+"args": {
+"objectKind": "Device",
+"objectPath": "MCP_PLC",
+"methodName": "GetAttributeInfos",
+"args": [],
+"softwarePath": "",
+"allowWrite": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "InvokeService",
+"args": {
+"objectKind": "Software",
+"objectPath": "",
+"serviceTypeSuffix": "PlcChecksumProvider",
+"methodName": "GetAttributeInfos",
+"args": [],
+"softwarePath": "MCP_PLC",
+"allowWrite": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageDccChart",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"chartName": "MCP_C47",
+"action": "create",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"createdName"
+]
+},
+{
+"tool": "GetDccObject",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"objectPath": [
+{
+"property": "Charts",
+"name": "MCP_C47"
+}
+],
+"offset": 0,
+"limit": 10
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManageDccChart",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"chartName": "MCP_C47",
+"action": "delete",
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "CreateDevice",
+"args": {
+"orderNumber": "OrderNumber:6AV2 128-3GB06-0AXx/20.0.0.0",
+"version": "",
+"deviceName": "MCP_UCP_OLD"
+},
+"note": "crash 8 guard",
+"expect": "error",
+"keys": []
+},
+{
+"tool": "CreateHardwareCatalogDevice",
+"args": {
+"keyword": "MTP700 Unified",
+"deviceName": "MCP_UCP2",
+"preferredText": "21.0.0.0"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"attempts"
+]
+},
+{
+"tool": "ManageHardwareObject",
+"args": {
+"devicePath": [
+"MCP_UCP2"
+],
+"action": "deleteDevice",
+"itemPath": [],
+"destinationDevicePath": [],
+"destinationItemPath": [],
+"position": 0,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

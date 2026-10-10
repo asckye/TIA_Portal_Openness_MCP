@@ -1,0 +1,923 @@
+[
+{
+"tool": "ManageSafetyGlobalSettings",
+"args": {
+"action": "read",
+"properties": {},
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManagePlcSafety",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "read",
+"runtimeGroup": "",
+"properties": {},
+"dryRun": true,
+"password": "",
+"confirmSafetyChange": false,
+"mainSafetyBlockPath": "",
+"mainSafetyInstanceDbPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before",
+"settings"
+]
+},
+{
+"tool": "GetSafetyBlockSignatures",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "",
+"includeProgramSignatures": true,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records",
+"programSignatures"
+]
+},
+{
+"tool": "ExportSafetyPrintout",
+"args": {
+"softwarePath": "MCP_PLC",
+"filePath": "${EXPORT_ROOT}\\mcp46_safety.pdf",
+"printer": "MicrosoftPrintToPdf",
+"option": "Compact",
+"documentLayout": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListSafetyActivationTests",
+"args": {
+"groupPath": [],
+"name": "",
+"includeSafetyFunctions": true,
+"includeConditions": false,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "GetLibraryOverview",
+"args": {
+"libraryName": "",
+"includeTypes": true,
+"includeMasterCopies": true,
+"maxDepth": 3,
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": [
+"header"
+]
+},
+{
+"tool": "ManageLibraryFolder",
+"args": {
+"folderKind": "masterCopies",
+"folderPath": "MCP_MC",
+"action": "create",
+"libraryName": "",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageLibraryFolder",
+"args": {
+"folderKind": "types",
+"folderPath": "MCP_Types",
+"action": "create",
+"libraryName": "",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "CreateLibraryMasterCopy",
+"args": {
+"sourceKind": "block",
+"sourcePath": "MCP_G/MCP_FB",
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_MC",
+"libraryName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "CreateLibraryMasterCopy",
+"args": {
+"sourceKind": "type",
+"sourcePath": "MCP_T/MCP_UDT",
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_MC",
+"libraryName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "CreateLibraryMasterCopy",
+"args": {
+"sourceKind": "device",
+"sourcePath": "[\"MCP_TP700\"]",
+"softwarePath": "",
+"folderPath": "MCP_MC",
+"libraryName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageLibraryMasterCopy",
+"args": {
+"sourcePath": "MCP_MC/MCP_FB",
+"action": "read",
+"libraryName": "",
+"destinationLibraryName": "",
+"destinationPath": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManageLibraryMasterCopy",
+"args": {
+"sourcePath": "MCP_MC/MCP_FB",
+"action": "copy",
+"libraryName": "",
+"destinationLibraryName": "",
+"destinationPath": "MCP_MC",
+"dryRun": false
+},
+"note": "copy into the same folder -> conflict expected",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcSoftwareUnit",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "createFromMasterCopy",
+"name": "MCP_Unit2",
+"relatedUnit": "",
+"relationType": "",
+"properties": {},
+"dryRun": true,
+"unitKind": "unit",
+"comments": {},
+"libraryName": "",
+"masterCopyPath": "MCP_MC/MCP_FB",
+"copyMode": ""
+},
+"note": "a block master copy is not a unit",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcAlarmTextList",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "createFromMasterCopy",
+"name": "",
+"libraryName": "",
+"masterCopyPath": "MCP_MC/MCP_FB",
+"copyMode": "",
+"confirmDelete": false,
+"offset": 0,
+"limit": 20,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetLibraryOverview",
+"args": {
+"libraryName": "",
+"includeTypes": true,
+"includeMasterCopies": true,
+"maxDepth": 3,
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": [
+"masterCopies"
+]
+},
+{
+"tool": "GetLibraryType",
+"args": {
+"libraryName": "",
+"typePath": "",
+"guid": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportLibraryTypeDocuments",
+"args": {
+"filePath": "${EXPORT_ROOT}\\mcp46_blockdocs",
+"folderPath": "MCP_Types",
+"libraryName": "",
+"importOptions": "None",
+"typePath": "",
+"targetSoftwarePath": "",
+"targetGroupKind": "",
+"targetGroupPath": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "CheckLibraryUpdates",
+"args": {
+"libraryName": "",
+"updateCheckMode": "ReportOutOfDateAndUpToDate",
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": [
+"messages"
+]
+},
+{
+"tool": "CompareLibraries",
+"args": {
+"leftLibraryName": "",
+"rightLibraryName": "",
+"includeIdentical": false,
+"maxDepth": 3,
+"offset": 0,
+"limit": 20
+},
+"note": "project library with itself",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "list",
+"libraryName": "",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "infos",
+"libraryName": "",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "create",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_gl",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "list",
+"libraryName": "",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "GetLibraryOverview",
+"args": {
+"libraryName": "MCP_GL",
+"includeTypes": true,
+"includeMasterCopies": true,
+"maxDepth": 2,
+"maxItems": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"header"
+]
+},
+{
+"tool": "ManageLibraryFolder",
+"args": {
+"folderKind": "masterCopies",
+"folderPath": "GL_MC",
+"action": "create",
+"libraryName": "MCP_GL",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageLibraryMasterCopy",
+"args": {
+"sourcePath": "MCP_MC/MCP_FB",
+"action": "copy",
+"libraryName": "",
+"destinationLibraryName": "MCP_GL",
+"destinationPath": "GL_MC",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "CompareLibraries",
+"args": {
+"leftLibraryName": "",
+"rightLibraryName": "MCP_GL",
+"includeIdentical": false,
+"maxDepth": 3,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "CompareLibraryObjects",
+"args": {
+"kind": "masterCopy",
+"leftPath": "MCP_MC/MCP_FB",
+"rightPath": "GL_MC/MCP_FB",
+"leftLibraryName": "",
+"rightLibraryName": "MCP_GL",
+"leftVersion": "",
+"rightVersion": "",
+"includeIdentical": false,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ProbeGlobalLibrary",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "AnalyzeGlobalLibraryPackage",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportMasterCopyFromGlobalLibrary",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"masterCopyName": "MCP_FB",
+"hmiSoftwarePath": "HMI_RT_1",
+"screenName": "",
+"importedItemName": "",
+"left": 0,
+"top": 0
+},
+"note": "HMI-oriented helper; block master copy",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "save",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "archive",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_gl",
+"openMode": "",
+"upgrade": false,
+"archiveName": "MCP_GL_archive",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "close",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "open",
+"libraryName": "",
+"filePath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "close",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "",
+"upgrade": false,
+"archiveName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "CheckLibraryUpdates",
+"args": {
+"libraryName": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetLibraryType",
+"args": {
+"typePath": "Nope",
+"libraryName": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageLibraryTypeVersion",
+"args": {
+"typePath": "Nope",
+"version": "1.0.0",
+"action": "read",
+"libraryName": "",
+"newVersion": "",
+"dependenciesMode": "",
+"author": "",
+"comment": "",
+"targetSoftwarePath": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageLibraryMasterCopy",
+"args": {
+"sourcePath": "MCP_MC/MCP_FB",
+"action": "delete",
+"libraryName": "",
+"destinationLibraryName": "",
+"destinationPath": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ManageLibraryFolder",
+"args": {
+"folderKind": "types",
+"folderPath": "MCP_Types",
+"action": "delete",
+"libraryName": "",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetProjectProtection",
+"args": {},
+"note": "",
+"expect": "any",
+"keys": [
+"umacAvailable"
+]
+},
+{
+"tool": "GetProjectUserManagement",
+"args": {
+"category": "users",
+"name": "",
+"devicePath": [],
+"itemPath": [],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePasswordPolicy",
+"args": {
+"action": "read",
+"target": "",
+"properties": {},
+"confirmChange": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManageSyslogServers",
+"args": {
+"scope": "project",
+"action": "read",
+"name": "",
+"properties": {},
+"attributes": {},
+"devicePath": [],
+"itemPath": [],
+"serverAddress": "",
+"serverPort": 0,
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageSyslogServers",
+"args": {
+"scope": "plc",
+"action": "read",
+"name": "",
+"properties": {},
+"attributes": {},
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"serverAddress": "",
+"serverPort": 0,
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManagePlcCertificate",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"action": "list",
+"certificateId": "",
+"filePath": "",
+"usage": "",
+"properties": {},
+"assignment": "",
+"dryRun": true,
+"assignmentItemPath": [],
+"subjectAlternativeNames": [],
+"password": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageUmcUsers",
+"args": {
+"kind": "user",
+"action": "read",
+"name": "",
+"newName": "",
+"roleName": "",
+"serverUserName": "",
+"serverPassword": "",
+"confirmChange": false,
+"dryRun": true,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageProjectUserManagement",
+"args": {
+"action": "createUser",
+"name": "mcp",
+"password": "Mcp!2345678",
+"roleName": "",
+"rightName": "",
+"comment": "",
+"group": "",
+"devicePath": [],
+"itemPath": [],
+"confirmChange": false,
+"dryRun": true
+},
+"note": "unprotected project -> refusal expected",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListVersionControlWorkspaces",
+"args": {},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "CreateVersionControlWorkspace",
+"args": {
+"workspaceName": "MCP_WS",
+"folderPath": "${EXPORT_ROOT}\\mcp46_vci"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ConnectProjectToWorkspace",
+"args": {
+"workspaceName": "MCP_WS",
+"dryRun": true,
+"deviceFilter": "",
+"maxObjects": 200,
+"walkTrace": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "ConnectProjectToWorkspace",
+"args": {
+"workspaceName": "MCP_WS",
+"dryRun": false,
+"deviceFilter": "MCP_PLC",
+"maxObjects": 200,
+"walkTrace": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "SynchronizeVersionControlWorkspace",
+"args": {
+"direction": "ProjectToWorkspace",
+"workspaceName": "MCP_WS",
+"dryRun": false,
+"changedOnly": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "GetVersionControlStatus",
+"args": {
+"workspaceName": "MCP_WS",
+"changedOnly": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "SynchronizeVersionControlWorkspace",
+"args": {
+"direction": "WorkspaceToProject",
+"workspaceName": "MCP_WS",
+"dryRun": true,
+"changedOnly": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPortalInfo",
+"args": {
+"includeProcesses": true,
+"includeSessions": true,
+"includeProducts": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"processes"
+]
+},
+{
+"tool": "ListPortalProcessProjects",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "EnsureOpennessUserGroup",
+"args": {},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

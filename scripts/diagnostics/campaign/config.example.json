@@ -1,0 +1,4 @@
+{
+  "bundleRoot": "C:/path/to/extracted-bundle",
+  "run": "acceptance-v21"
+}

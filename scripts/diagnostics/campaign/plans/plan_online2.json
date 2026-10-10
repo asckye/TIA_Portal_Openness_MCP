@@ -1,0 +1,299 @@
+[
+{
+"tool": "ManagePlcSimAdvancedInstance",
+"args": {
+"instanceName": "MCP_SIM",
+"action": "powerOn",
+"cpuType": "",
+"timeoutMs": 90000,
+"confirmInstanceChange": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"stateAfter"
+]
+},
+{
+"tool": "ListPlcSimAdvancedInstances",
+"args": {
+"includeState": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"instances"
+]
+},
+{
+"tool": "SetPlcWatchTableModifyValue",
+"args": {
+"softwarePath": "MCP_PLC",
+"tableName": "MCP_WT",
+"address": "%M0.0",
+"modifyValue": "TRUE",
+"trigger": "OnceOnlyAtStart"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after",
+"refusedAttributes",
+"readbackVerified",
+"entryCreated"
+]
+},
+{
+"tool": "SetPlcWatchTableModifyValue",
+"args": {
+"softwarePath": "MCP_PLC",
+"tableName": "MCP_WT",
+"address": "\"MCP_Start\"",
+"modifyValue": "FALSE",
+"trigger": "Permanent"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after",
+"refusedAttributes",
+"readbackVerified",
+"entryCreated"
+]
+},
+{
+"tool": "ExportPlcWatchTable",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp49_wt.xml",
+"watchTableName": "MCP_WT"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_TO",
+"importPath": "${EXPORT_ROOT}\\mcp48_pid.xml"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListTechnologyObjects",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"*"
+]
+},
+{
+"tool": "ExportTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"toName": "MCP_TO/MCP_PID",
+"exportPath": "${EXPORT_ROOT}\\mcp49_pid_folder.xml"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"exportPath"
+]
+},
+{
+"tool": "ExportTechnologyObjectsToDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportDir": "${EXPORT_ROOT}\\mcp49_to",
+"regexName": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_TO/MCP_PID",
+"action": "delete",
+"typeIdentifier": "",
+"version": "",
+"parameter": "",
+"value": null,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ScanAccessibleDevices",
+"args": {
+"pgPcInterface": "Siemens PLCSIM Virtual Ethernet Adapter",
+"softwarePath": "MCP_PLC",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"devices"
+]
+},
+{
+"tool": "DownloadPlc",
+"args": {
+"softwarePath": "MCP_PLC",
+"consistentBlocksOnly": true,
+"keepActualValues": true,
+"startAfterDownload": true,
+"stopBeforeDownload": true,
+"password": "",
+"pgPcInterface": "Siemens PLCSIM Virtual Ethernet Adapter",
+"targetIpAddress": "192.168.0.1",
+"userManagementMode": "",
+"promptAnswers": {},
+"moduleAccessPassword": "",
+"blockBindingPassword": "",
+"masterSecretPassword": "",
+"rhTarget": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"pgPcRoute",
+"targetAddress",
+"targetAddressSource",
+"downloadState"
+]
+},
+{
+"tool": "ConnectOnlinePlc",
+"args": {
+"softwarePath": "MCP_PLC",
+"ipAddress": "192.168.0.1",
+"password": "",
+"userName": "",
+"userType": "",
+"rhTarget": "",
+"pgPcInterface": "Siemens PLCSIM Virtual Ethernet Adapter"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetOnlineState",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "UploadStationFromPlc",
+"args": {
+"targetIpAddress": "02-C0-A8-00-F1-00",
+"pgPcInterface": "Siemens PLCSIM Virtual Ethernet Adapter",
+"password": "",
+"promptAnswers": {},
+"confirmUpload": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"targetAddress",
+"targetAddressSource",
+"addressCreation",
+"knownTargetAddresses"
+]
+},
+{
+"tool": "GetPlcBlockFingerprints",
+"args": {
+"softwarePath": "MCP_PLC",
+"targetIpAddress": "192.168.0.1",
+"pgPcInterface": "Siemens PLCSIM Virtual Ethernet Adapter",
+"password": "",
+"offset": 0,
+"limit": 20,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"candidateRoutes",
+"selectedRoute"
+]
+},
+{
+"tool": "DisconnectOnlinePlc",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "WritePlcSimAdvancedTags",
+"args": {
+"instanceName": "MCP_SIM",
+"values": [
+{
+"name": "\"MCP_Start\"",
+"value": true
+}
+],
+"confirmWrite": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "RunPlcSimAdvancedTestScenario",
+"args": {
+"scenario": {
+"instance": "MCP_SIM",
+"mode": "default",
+"stopOnFailure": true,
+"steps": [
+{
+"write": {
+"\"MCP_Start\"": false
+}
+},
+{
+"assert": {
+"\"MCP_Start\"": false
+}
+}
+]
+},
+"confirmRun": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+}
+]

@@ -1,0 +1,358 @@
+[
+{
+"tool": "CreatePlcBlockGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G/Sub2"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CreatePlcTypeGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_T",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "tags",
+"groupPath": "MCP_Tags",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "watchTables",
+"groupPath": "MCP_W",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "externalSources",
+"groupPath": "MCP_X",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "technology",
+"groupPath": "MCP_TO",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "udt",
+"spec": {
+"name": "MCP_UDT",
+"members": [
+{
+"name": "Run",
+"datatype": "Bool",
+"commentZhCn": "运行"
+},
+{
+"name": "Speed",
+"datatype": "Real"
+}
+]
+},
+"typeGroupPath": "MCP_T",
+"tagFolderPath": "",
+"blockGroupPath": "",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "tagtable",
+"spec": {
+"tableName": "MCP_Table",
+"tags": [
+{
+"name": "MCP_Start",
+"dataTypeName": "Bool",
+"logicalAddress": "%I0.0"
+},
+{
+"name": "MCP_Speed",
+"dataTypeName": "Int",
+"logicalAddress": "%IW10"
+}
+]
+},
+"typeGroupPath": "",
+"tagFolderPath": "MCP_Tags",
+"blockGroupPath": "",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "globaldb",
+"spec": {
+"dbName": "MCP_DB",
+"dbNumber": 500,
+"staticMembers": [
+{
+"name": "Counter",
+"datatype": "Int",
+"startValue": "5"
+},
+{
+"name": "Motor",
+"datatype": "\"MCP_UDT\""
+}
+]
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "fc",
+"spec": {
+"blockName": "MCP_FC",
+"blockNumber": 500,
+"inputs": [
+{
+"name": "IN_A",
+"datatype": "Int"
+},
+{
+"name": "IN_B",
+"datatype": "Int"
+}
+],
+"outputs": [
+{
+"name": "OUT_Sum",
+"datatype": "Int"
+}
+],
+"structuredText": {
+"operations": [
+{
+"op": "line",
+"items": [
+{
+"sym": "#OUT_Sum"
+},
+{
+"token": ":="
+},
+{
+"sym": "#IN_A"
+},
+{
+"token": "+"
+},
+{
+"sym": "#IN_B"
+}
+]
+}
+]
+}
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "fb",
+"spec": {
+"blockName": "MCP_FB",
+"blockNumber": 500,
+"inputs": [
+{
+"name": "Enable",
+"datatype": "Bool"
+}
+],
+"outputs": [
+{
+"name": "Busy",
+"datatype": "Bool"
+}
+],
+"statics": [
+{
+"name": "Count",
+"datatype": "Int"
+}
+],
+"structuredText": {
+"operations": [
+{
+"op": "assign",
+"target": "#Busy",
+"source": "#Enable"
+},
+{
+"op": "if",
+"condition": "#Enable"
+},
+{
+"op": "line",
+"items": [
+{
+"sym": "#Count"
+},
+{
+"token": ":="
+},
+{
+"sym": "#Count"
+},
+{
+"token": "+"
+},
+{
+"lit": "1"
+}
+],
+"indent": 1
+},
+{
+"op": "endif"
+}
+]
+}
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CreatePlcInstanceDb",
+"args": {
+"softwarePath": "MCP_PLC",
+"fbPath": "MCP_G/MCP_FB",
+"name": "MCP_FB_DB",
+"groupPath": "MCP_G",
+"autoNumber": true,
+"number": 1,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "WritePlcSclSourceFile",
+"args": {
+"sclContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Document>\n  <Engineering version=\"V21\" />\n  <SW.WatchAndForceTables.PlcWatchTable ID=\"0\">\n    <AttributeList><Name>MCP_WT</Name></AttributeList>\n    <ObjectList>\n      <SW.WatchAndForceTables.PlcWatchTableEntry ID=\"1\" CompositionName=\"Entries\">\n        <AttributeList><Address>%I0.0</Address><DisplayFormat>Bool</DisplayFormat><ModifyTrigger>Permanent</ModifyTrigger><MonitorTrigger>Permanent</MonitorTrigger><Name>MCP_Start</Name></AttributeList>\n      </SW.WatchAndForceTables.PlcWatchTableEntry>\n    </ObjectList>\n  </SW.WatchAndForceTables.PlcWatchTable>\n</Document>\n",
+"outputPath": "${EXPORT_ROOT}\\mcp46_wt.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ImportPlcWatchTableOffline",
+"args": {
+"softwarePath": "MCP_PLC",
+"filePath": "${EXPORT_ROOT}\\mcp46_wt.xml",
+"groupPath": "MCP_W",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CompilePlcDiagnostics",
+"args": {
+"softwarePath": "MCP_PLC",
+"password": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"errorCount",
+"warningCount"
+]
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

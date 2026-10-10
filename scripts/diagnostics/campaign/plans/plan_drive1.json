@@ -1,0 +1,364 @@
+[
+{
+"tool": "ListDriveObjects",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"includeTelegrams": true,
+"includeFunctions": true,
+"includeTechnologyExtensions": true,
+"includeDcc": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "GetDriveParameters",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"driveObjectIndex": 0,
+"source": "read",
+"names": [
+"r2",
+"p1082"
+],
+"numbers": [],
+"includeBits": false,
+"includeEnumValues": false,
+"offset": 0,
+"limit": 10,
+"includeValue": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageDriveTelegrams",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"driveObjectIndex": 0,
+"action": "read",
+"telegramType": "",
+"telegramNumber": 0,
+"inputSize": 0,
+"outputSize": 0,
+"direction": "",
+"size": 0,
+"keepOriginalAddress": false,
+"softwarePath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageDriveFunctions",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"driveObjectIndex": 0,
+"action": "read",
+"value": null,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageDriveSecurity",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"driveObjectIndex": 0,
+"action": "read",
+"password": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageTechnologyExtensions",
+"args": {
+"action": "read",
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"driveObjectIndex": 0,
+"identifier": "",
+"filePath": "",
+"confirmUninstallInUse": false,
+"includeParameters": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageDriveHardwareModule",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1",
+"MCP_MM"
+],
+"action": "read",
+"typeIdentifier": "",
+"positionNumber": -1,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManageDriveSafetyAcceptanceTest",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"action": "read",
+"identifier": "",
+"active": false,
+"filePath": "",
+"fileOperation": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageStartdriveParameter",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"parameter": "p1082",
+"action": "read",
+"value": null,
+"dryRun": true,
+"driveObjectIndex": 0
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListDccCharts",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"driveObjectIndex": -1,
+"chartPath": "",
+"maxDepth": 2,
+"includeBlocks": true,
+"includePins": false,
+"includeLibraries": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageDccChart",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"chartName": "MCP_Chart",
+"action": "create",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"createdName"
+]
+},
+{
+"tool": "ManageDccBlock",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"chartPath": "MCP_Chart",
+"blockName": "",
+"action": "create",
+"blockType": "ADD",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"createdName"
+]
+},
+{
+"tool": "GetDccObject",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"objectPath": [
+{
+"property": "Charts",
+"name": "MCP_Chart"
+},
+{
+"property": "Blocks",
+"name": "add_1"
+}
+],
+"offset": 0,
+"limit": 20,
+"driveObjectIndex": -1
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageDccPin",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"chartPath": "MCP_Chart",
+"blockName": "add_1",
+"pinName": "X1",
+"action": "update",
+"properties": {
+"Value": 2.5
+},
+"dryRun": false
+},
+"note": "2.7.45: Single refusal; 2.7.46 converts",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageDccBlock",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"chartPath": "MCP_Chart",
+"blockName": "add_1",
+"action": "update",
+"sequenceIndex": 0,
+"dryRun": false
+},
+"note": "2.7.45 refuses sequenceIndex-only",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageDccChart",
+"args": {
+"devicePath": [
+"MCP_S120"
+],
+"itemPath": [
+"驱动轴_1"
+],
+"driveObjectNumber": 0,
+"chartName": "MCP_Chart",
+"action": "delete",
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

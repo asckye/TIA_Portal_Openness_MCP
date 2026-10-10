@@ -287,7 +287,7 @@
   },
   "source-contracts": {
     "project": "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj",
-    "minimumPassed": 124,
+    "minimumPassed": 148,
     "maximumSkipped": 0,
     "arguments": []
   },

@@ -45,6 +45,7 @@
     <Project Path="tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
+    <Project Path="scripts/diagnostics/TiaMcp.DiagnosticClients/TiaMcp.DiagnosticClients.csproj" />
     <Project Path="src/Updater/TiaMcp.Updater.csproj" />
     <Project Path="build-tools/release/TiaMcp.ReleaseTool.csproj" />
     <Project Path="build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />

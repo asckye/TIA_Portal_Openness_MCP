@@ -1,0 +1,608 @@
+[
+{
+"tool": "ManageClassicHmiFolder",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderKind": "tags",
+"folderPath": "",
+"action": "create",
+"newName": "MCP_TagFolder",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageClassicHmiFolder",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderKind": "screens",
+"folderPath": "",
+"action": "create",
+"newName": "MCP_ScreenFolder",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageClassicHmiFolder",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderKind": "screens",
+"folderPath": "MCP_ScreenFolder",
+"action": "read",
+"newName": "",
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ImportHmiTagTable",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "MCP_TagFolder",
+"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\Classic_HMI_Minimal_Package_TagTable.xml"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ImportHmiScreen",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "MCP_ScreenFolder",
+"importPath": "${EXPORT_ROOT}\\mcp46_hmi\\Classic_HMI_Minimal_Package_Screen.xml"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ListHmiTagTables",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListHmiTags",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListHmiTags",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "NoSuchTable"
+},
+"note": "should be NotFound",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListHmiScreens",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribeHmiScreen",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DescribeHmiScreenItem",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"itemName": "Btn",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DescribeHmiTagTable",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DescribeHmiTag",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags",
+"tagName": "MCP_Run",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetHmiScreenSnapshot",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenPath": "/MCP_ScreenFolder/MCP_Screen",
+"maxDepth": 3,
+"maxNodes": 200
+},
+"note": "",
+"expect": "any",
+"keys": [
+"apiCallSuccess",
+"dataComplete"
+]
+},
+{
+"tool": "ExportHmiScreen",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"exportPath": "${EXPORT_ROOT}\\mcp46_hmi\\MCP_Screen_export.xml"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportHmiTagTable",
+"args": {
+"softwarePath": "HMI_RT_1",
+"tagTableName": "MCP_HmiTags",
+"exportPath": "${EXPORT_ROOT}\\mcp46_hmi\\MCP_HmiTags_export.xml"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportHmiProgram",
+"args": {
+"softwarePath": "HMI_RT_1",
+"exportDir": "${EXPORT_ROOT}\\mcp46_hmi\\program",
+"exportScreens": true,
+"exportTagTables": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"exported",
+"failed"
+]
+},
+{
+"tool": "ImportHmiScreensFromDirectory",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "MCP_ScreenFolder",
+"dir": "${EXPORT_ROOT}\\mcp46_hmi\\program",
+"regexName": "MCP_Screen",
+"overwrite": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportHmiTagTablesFromDirectory",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "MCP_TagFolder",
+"dir": "${EXPORT_ROOT}\\mcp46_hmi\\program",
+"regexName": "MCP_HmiTags",
+"overwrite": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageClassicHmiScreenObject",
+"args": {
+"softwarePath": "HMI_RT_1",
+"objectKind": "popup",
+"objectPath": "",
+"action": "read",
+"filePath": "",
+"importOptions": "None",
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManageClassicHmiScreenObject",
+"args": {
+"softwarePath": "HMI_RT_1",
+"objectKind": "template",
+"objectPath": "",
+"action": "read",
+"filePath": "",
+"importOptions": "None",
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManageClassicHmiScreenObject",
+"args": {
+"softwarePath": "HMI_RT_1",
+"objectKind": "slidein",
+"objectPath": "",
+"action": "read",
+"filePath": "",
+"importOptions": "None",
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManageClassicHmiScreenObject",
+"args": {
+"softwarePath": "HMI_RT_1",
+"objectKind": "overview",
+"objectPath": "",
+"action": "read",
+"filePath": "",
+"importOptions": "None",
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManageClassicHmiScreenObject",
+"args": {
+"softwarePath": "HMI_RT_1",
+"objectKind": "globalElements",
+"objectPath": "",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp46_hmi\\global.xml",
+"importOptions": "None",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ManageClassicHmiScreenObject",
+"args": {
+"softwarePath": "HMI_RT_1",
+"objectKind": "template",
+"objectPath": "",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp46_hmi\\templates.xml",
+"importOptions": "None",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ManageClassicHmiCycle",
+"args": {
+"softwarePath": "HMI_RT_1",
+"action": "export",
+"cycleName": "100 ms",
+"filePath": "${EXPORT_ROOT}\\mcp46_hmi\\cycle.xml",
+"importOptions": "None",
+"attributes": {},
+"offset": 0,
+"limit": 20,
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ManageClassicHmiCycle",
+"args": {
+"softwarePath": "HMI_RT_1",
+"action": "read",
+"cycleName": "100 ms",
+"filePath": "",
+"importOptions": "None",
+"attributes": {},
+"offset": 0,
+"limit": 20,
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManageClassicHmiTextGraphicList",
+"args": {
+"softwarePath": "HMI_RT_1",
+"listKind": "text",
+"action": "create",
+"listName": "MCP_TextList",
+"compositionName": "",
+"entryName": "",
+"typeName": "",
+"filePath": "",
+"importOptions": "None",
+"attributes": {},
+"offset": 0,
+"limit": 20,
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "V4 rejects this unadvertised action",
+"expect": "error",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageClassicHmiTextGraphicList",
+"args": {
+"softwarePath": "HMI_RT_1",
+"listKind": "text",
+"action": "read",
+"listName": "MCP_TextList",
+"compositionName": "",
+"entryName": "",
+"typeName": "",
+"filePath": "",
+"importOptions": "None",
+"attributes": {},
+"offset": 0,
+"limit": 20,
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows",
+"compositions"
+]
+},
+{
+"tool": "ManageClassicHmiTextGraphicList",
+"args": {
+"softwarePath": "HMI_RT_1",
+"listKind": "text",
+"action": "export",
+"listName": "MCP_TextList",
+"compositionName": "",
+"entryName": "",
+"typeName": "",
+"filePath": "${EXPORT_ROOT}\\mcp46_hmi\\textlist.xml",
+"importOptions": "None",
+"attributes": {},
+"offset": 0,
+"limit": 20,
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ManageClassicHmiTextGraphicList",
+"args": {
+"softwarePath": "HMI_RT_1",
+"listKind": "text",
+"action": "delete",
+"listName": "MCP_TextList",
+"compositionName": "",
+"entryName": "",
+"typeName": "",
+"filePath": "",
+"importOptions": "None",
+"attributes": {},
+"offset": 0,
+"limit": 20,
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageClassicHmiScript",
+"args": {
+"softwarePath": "HMI_RT_1",
+"scriptPath": "MCP_Scripts",
+"action": "createFolder",
+"filePath": "",
+"importOptions": "None",
+"attributes": {},
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListClassicHmiScripts",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderPath": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows",
+"folders"
+]
+},
+{
+"tool": "ManageSivarcScreenLayout",
+"args": {
+"softwarePath": "HMI_RT_1",
+"screenName": "MCP_Screen",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp46_hmi\\layout.yml",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageCommunicationConnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"action": "create",
+"connectionType": "HmiConnection",
+"connectionName": "MCP_HMI_Conn",
+"localInterfaceItemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+],
+"localNodeName": "",
+"partnerDevicePath": [
+"MCP_TP700"
+],
+"partnerItemPath": [
+"HMI_RT_1"
+],
+"partnerInterfaceItemPath": [
+"MCP_TP700.IE_CP_1",
+"PROFINET Interface_1"
+],
+"partnerNodeName": "",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "engine 2.7.45 still lacks CommunicationManagement",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListHmiConnections",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CompileHmiDiagnostics",
+"args": {
+"softwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"errorCount",
+"errors"
+]
+},
+{
+"tool": "ManageClassicHmiFolder",
+"args": {
+"softwarePath": "HMI_RT_1",
+"folderKind": "screens",
+"folderPath": "MCP_ScreenFolder2",
+"action": "delete",
+"newName": "",
+"confirmDelete": true,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

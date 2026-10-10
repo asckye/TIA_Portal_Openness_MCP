@@ -21,3 +21,7 @@ reference/tool-examples/** linguist-documentation
 # Standard inventories and SCL golden bytes must survive Windows/Linux checkout.
 templates/standards/tiamcp.basic/** text eol=lf
 tests/Generation/**/Golden/** text eol=lf
+
+# Campaign plan data is compared against the Python LF generation oracle.
+scripts/diagnostics/campaign/plans/*.json text eol=lf
+scripts/diagnostics/campaign/ledger-history.json text eol=lf

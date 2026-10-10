@@ -24,11 +24,10 @@ def main():
         setattr(args, key, getattr(args, key).resolve())
     args.output.mkdir(parents=True, exist_ok=False)
     steps = []
-    for source in sorted((ROOT / 'scripts/diagnostics/campaign/plans').glob('*.py')):
+    for source in sorted((ROOT / 'scripts/diagnostics/campaign/plans').glob('plan_*.json')):
         copy = args.output / source.name
         copy.write_bytes(source.read_bytes())
-        subprocess.run([sys.executable, str(copy)], check=True, capture_output=True)
-        plan = json.loads(copy.with_suffix('.json').read_text(encoding='utf-8'))
+        plan = json.loads(copy.read_text(encoding='utf-8'))
         for index, step in enumerate(plan):
             # These exact fixtures retain the unsupported-action and wrong-type
             # rejection coverage; native failure expectations are not exemptions.

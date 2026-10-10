@@ -1,0 +1,641 @@
+[
+{
+"tool": "GetDeviceItemNetworkInfo",
+"args": {
+"deviceItemPath": "MCP_PLC/MCP_PLC/PROFINET 接口_1"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetDeviceItemTree",
+"args": {
+"deviceItemPath": "MCP_PLC/导轨_0",
+"maxDepth": 2
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetDevicePlugLocations",
+"args": {
+"deviceItemPath": "MCP_PLC/导轨_0",
+"plugOnDevice": false
+},
+"note": "Typed boolean false",
+"expect": "any",
+"keys": [
+"free",
+"occupied"
+]
+},
+{
+"tool": "PlugDeviceItem",
+"args": {
+"deviceItemPath": "MCP_PLC/导轨_0",
+"orderNumber": "6ES7 521-1BH00-0AB0",
+"version": "V2.2",
+"positionNumber": 2,
+"name": "MCP_DI",
+"dryRun": false,
+"plugOnDevice": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"result"
+]
+},
+{
+"tool": "GetDeviceItemTree",
+"args": {
+"deviceItemPath": "MCP_PLC/导轨_0",
+"maxDepth": 2
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetDeviceItemIoAddresses",
+"args": {
+"deviceItemPath": "MCP_PLC/MCP_DI"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"addresses"
+]
+},
+{
+"tool": "SetDeviceItemIoAddress",
+"args": {
+"deviceItemPath": "MCP_PLC/MCP_DI",
+"ioType": "Input",
+"startAddress": 20,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "SetDeviceAddress",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI"
+],
+"ioType": "Input",
+"startAddress": 20,
+"properties": {
+"StartAddress": 30
+},
+"attributes": {},
+"softwarePath": "",
+"processImageObName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListDeviceItemChannels",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI"
+],
+"channelType": "",
+"channelIoType": "",
+"channelNumber": -1,
+"attributeNames": [],
+"offset": 0,
+"limit": 20,
+"includeLinkedTags": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "SetDeviceItemChannel",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI"
+],
+"channelType": "Digital",
+"channelIoType": "Input",
+"channelNumber": 0,
+"attributes": {
+"InputDelay": "3.2"
+},
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetDeviceItemAttribute",
+"args": {
+"deviceItemPath": "MCP_PLC/MCP_DI",
+"attributeName": "Comment",
+"value": "MCP DI"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetDeviceAddressing",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_DI"
+],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManageHardwareObject",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"action": "copyItem",
+"itemPath": [
+"MCP_DI"
+],
+"destinationDevicePath": [
+"MCP_PLC"
+],
+"destinationItemPath": [],
+"position": 3,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageHardwareObject",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"action": "moveItem",
+"itemPath": [
+"MCP_DI"
+],
+"destinationDevicePath": [
+"MCP_PLC"
+],
+"destinationItemPath": [],
+"position": 4,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "EnsureSubnet",
+"args": {
+"anchorDeviceItemPath": "MCP_PLC/MCP_PLC/PROFINET 接口_1",
+"subnetType": "PROFINET",
+"subnetName": "MCP_PN"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"subnetName",
+"nodePath"
+]
+},
+{
+"tool": "ConnectDeviceNodesToProfinetSubnet",
+"args": {
+"firstRootPath": "MCP_PLC",
+"secondRootPath": "MCP_TP700",
+"subnetName": "MCP_PN"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"subnetName",
+"detail"
+]
+},
+{
+"tool": "AttachDeviceNodeToSubnet",
+"args": {
+"deviceItemPath": "MCP_S120",
+"interfaceIndex": 0,
+"subnetName": "MCP_PN",
+"anchorDeviceItemPath": "MCP_PLC/MCP_PLC/PROFINET 接口_1"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetProjectTopology",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListIoSystems",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+]
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageIoSystem",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+],
+"action": "create",
+"name": "MCP_IO",
+"subnetName": "MCP_PN",
+"ioSystemName": "",
+"properties": {},
+"attributes": {},
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListIoSystems",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+]
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ListNetworkDomains",
+"args": {
+"subnetName": "MCP_PN"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageNetworkDomain",
+"args": {
+"subnetName": "MCP_PN",
+"kind": "sync",
+"action": "create",
+"name": "MCP_Sync",
+"properties": {},
+"attributes": {},
+"participantDevicePath": [],
+"participantItemPath": [],
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListNetworkDomains",
+"args": {
+"subnetName": "MCP_PN"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageNetworkDomain",
+"args": {
+"subnetName": "MCP_PN",
+"kind": "sync",
+"action": "delete",
+"name": "MCP_Sync",
+"properties": {},
+"attributes": {},
+"participantDevicePath": [],
+"participantItemPath": [],
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListTransferAreas",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+]
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePortInterconnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1",
+"端口_1"
+],
+"action": "read",
+"partnerDevicePath": [],
+"partnerItemPath": [],
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePortInterconnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1",
+"端口_1"
+],
+"action": "connect",
+"partnerDevicePath": [
+"MCP_TP700"
+],
+"partnerItemPath": [
+"MCP_TP700",
+"MCP_TP700.IE_CP_1",
+"端口_1"
+],
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePortInterconnection",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1",
+"端口_1"
+],
+"action": "disconnect",
+"partnerDevicePath": [],
+"partnerItemPath": [],
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListCommunicationConnections",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageDeviceServiceObjects",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"family": "webApplications",
+"action": "read",
+"name": "",
+"properties": {},
+"filePath": "",
+"confirmChange": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageSyslogServers",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"action": "read",
+"name": "",
+"properties": {},
+"dryRun": true,
+"scope": "plc"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ExchangeSystemDiagnosticsSettings",
+"args": {
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp46_sysdiag.xml",
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"confirmImport": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "BuildDeviceAmlDocument",
+"args": {
+"spec": {
+"projectName": "P",
+"devices": [
+{
+"name": "MCP_AML_PLC",
+"typeIdentifier": "OrderNumber:6ES7 515-2FM02-0AB0/V2.9",
+"deviceItems": [
+{
+"name": "Rail_0",
+"typeIdentifier": "OrderNumber:6ES7 590-1AB60-0AA0",
+"positionNumber": 0,
+"deviceItems": [
+{
+"name": "PLC_1",
+"typeIdentifier": "OrderNumber:6ES7 515-2FM02-0AB0/V2.9",
+"positionNumber": 1
+}
+]
+}
+]
+}
+]
+},
+"outputPath": "${EXPORT_ROOT}\\mcp46_built.aml",
+"referenceAmlPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageHardwareObject",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"action": "deleteItem",
+"itemPath": [
+"MCP_DI"
+],
+"destinationDevicePath": [],
+"destinationItemPath": [],
+"position": 0,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ManageIoSystem",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC",
+"PROFINET 接口_1"
+],
+"action": "delete",
+"name": "",
+"subnetName": "",
+"ioSystemName": "MCP_IO",
+"properties": {},
+"attributes": {},
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

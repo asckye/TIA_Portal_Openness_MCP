@@ -1,0 +1,931 @@
+[
+{
+"tool": "GetSoftwareInfo",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetSoftwareTree",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListPlcBlocks",
+"args": {
+"softwarePath": "MCP_PLC",
+"regexName": ""
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetPlcBlockHierarchy",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListPlcTagTables",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListPlcTypes",
+"args": {
+"softwarePath": "MCP_PLC",
+"regexName": ""
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListPlcWatchTables",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListPlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListPlcSystemGroups",
+"args": {
+"softwarePath": "MCP_PLC",
+"unitName": "",
+"includeBlocks": true,
+"maxDepth": 3
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"systemBlockGroups"
+]
+},
+{
+"tool": "GetPlcChecksums",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"supported",
+"software",
+"textLists"
+]
+},
+{
+"tool": "ListPlcSoftwareUnits",
+"args": {
+"softwarePath": "MCP_PLC",
+"unitName": "",
+"includeContents": false,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CreatePlcBlockGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G/Sub"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CreatePlcTypeGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_T",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "tags",
+"groupPath": "MCP_Tags",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "watchTables",
+"groupPath": "MCP_W",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "externalSources",
+"groupPath": "MCP_X",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "technology",
+"groupPath": "MCP_TO",
+"action": "create",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcUserGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"family": "blocks",
+"groupPath": "MCP_G/Sub",
+"action": "rename",
+"newName": "Sub2",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "udt",
+"spec": {
+"name": "MCP_UDT",
+"members": [
+{
+"name": "Run",
+"datatype": "Bool",
+"commentZhCn": "运行"
+},
+{
+"name": "Speed",
+"datatype": "Real"
+}
+]
+},
+"typeGroupPath": "MCP_T",
+"tagFolderPath": "",
+"blockGroupPath": "",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified",
+"importedPath"
+]
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "tagtable",
+"spec": {
+"tableName": "MCP_Table",
+"tags": [
+{
+"name": "MCP_Start",
+"dataTypeName": "Bool",
+"logicalAddress": "%I0.0"
+},
+{
+"name": "MCP_Speed",
+"dataTypeName": "Int",
+"logicalAddress": "%IW10"
+}
+]
+},
+"typeGroupPath": "",
+"tagFolderPath": "MCP_Tags",
+"blockGroupPath": "",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "globaldb",
+"spec": {
+"dbName": "MCP_DB",
+"dbNumber": 500,
+"staticMembers": [
+{
+"name": "Counter",
+"datatype": "Int",
+"startValue": "5"
+},
+{
+"name": "Motor",
+"datatype": "\"MCP_UDT\""
+}
+]
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "fc",
+"spec": {
+"blockName": "MCP_FC",
+"blockNumber": 500,
+"inputs": [
+{
+"name": "IN_A",
+"datatype": "Int"
+},
+{
+"name": "IN_B",
+"datatype": "Int"
+}
+],
+"outputs": [
+{
+"name": "OUT_Sum",
+"datatype": "Int"
+}
+],
+"structuredText": {
+"operations": [
+{
+"op": "assign",
+"target": "#OUT_Sum",
+"source": "#IN_A + #IN_B"
+}
+]
+}
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "fb",
+"spec": {
+"blockName": "MCP_FB",
+"blockNumber": 500,
+"inputs": [
+{
+"name": "Enable",
+"datatype": "Bool"
+}
+],
+"outputs": [
+{
+"name": "Busy",
+"datatype": "Bool"
+}
+],
+"statics": [
+{
+"name": "Count",
+"datatype": "Int"
+}
+],
+"structuredText": {
+"operations": [
+{
+"op": "assign",
+"target": "#Busy",
+"source": "#Enable"
+}
+]
+}
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": true,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified",
+"compile"
+]
+},
+{
+"tool": "CreatePlcInstanceDb",
+"args": {
+"softwarePath": "MCP_PLC",
+"fbPath": "MCP_G/MCP_FB",
+"name": "MCP_FB_DB",
+"groupPath": "MCP_G",
+"autoNumber": true,
+"number": 0,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "CompilePlcDiagnostics",
+"args": {
+"softwarePath": "MCP_PLC",
+"password": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"errorCount",
+"warningCount"
+]
+},
+{
+"tool": "CompilePlcSoftware",
+"args": {
+"softwarePath": "MCP_PLC",
+"password": ""
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetPlcBlockInfo",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetPlcTypeInfo",
+"args": {
+"softwarePath": "MCP_PLC",
+"typePath": "MCP_T/MCP_UDT"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetPlcCrossReferences",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_G/MCP_DB",
+"objectKind": "Block",
+"filter": ""
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribePlcBlockLogic",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC"
+},
+"note": "SCL block - LAD describer may refuse",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Stop",
+"kind": "tag",
+"action": "create",
+"dataType": "Bool",
+"addressOrValue": "%I0.1",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Stop",
+"kind": "tag",
+"action": "update",
+"properties": {
+"ExternalVisible": false
+},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Stop",
+"kind": "tag",
+"action": "update",
+"properties": {
+"Comment": "停止按钮"
+},
+"dryRun": false
+},
+"note": "2.7.45 refuses (MultilingualText) - fixed in 2.7.46",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_K",
+"kind": "constant",
+"action": "create",
+"dataType": "Int",
+"addressOrValue": "42",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "GetPlcTagTableConstants",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"unitName": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_K",
+"kind": "constant",
+"action": "read",
+"properties": {},
+"dryRun": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_K",
+"kind": "constant",
+"action": "delete",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ExportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_FC.xml",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportPlcBlockDocuments",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FB",
+"exportPath": "${EXPORT_ROOT}\\mcp46_docs",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"files"
+]
+},
+{
+"tool": "ExportPlcBlocks",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_blocks",
+"regexName": "^MCP_",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportPlcBlocksDocuments",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_blockdocs",
+"regexName": "^MCP_",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportPlcType",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_UDT.xml",
+"typePath": "MCP_T/MCP_UDT",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportPlcTypes",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_types",
+"regexName": "^MCP_",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExportPlcTagTable",
+"args": {
+"softwarePath": "MCP_PLC",
+"tagTableName": "MCP_Table",
+"exportPath": "${EXPORT_ROOT}\\mcp46_tags.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GeneratePlcSourceFromBlocks",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPaths": [
+"MCP_G/MCP_FC"
+],
+"filePath": "${EXPORT_ROOT}\\mcp46_FC.scl",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"sha256"
+]
+},
+{
+"tool": "GeneratePlcLoadableFile",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPaths": [
+"MCP_G/MCP_FC"
+],
+"objectKind": "blocks",
+"targetOption": "Normal",
+"filePath": "${EXPORT_ROOT}\\mcp46_FC.loadable",
+"dryRun": true
+},
+"note": "preview only; enum name may differ",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcObjectFingerprints",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectKind": "block",
+"objectPath": "MCP_G/MCP_FC",
+"unitName": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"fingerprints"
+]
+},
+{
+"tool": "GetPlcObjectFingerprints",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectKind": "type",
+"objectPath": "MCP_T/MCP_UDT",
+"unitName": ""
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetPlcChecksums",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"software"
+]
+},
+{
+"tool": "DeletePlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ImportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G",
+"importPath": "${EXPORT_ROOT}\\mcp46_FC.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ImportPlcBlocksFromDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G/Sub2",
+"dir": "${EXPORT_ROOT}\\mcp46_blocks",
+"regexName": "MCP_FC",
+"overwrite": true
+},
+"note": "same block into another group -> TIA decides",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportPlcBlockDocuments",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G",
+"importPath": "${EXPORT_ROOT}\\mcp46_docs",
+"fileNameWithoutExtension": "MCP_FB",
+"importOption": "Override"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ImportPlcBlocksDocuments",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G",
+"importPath": "${EXPORT_ROOT}\\mcp46_blockdocs",
+"regexName": "",
+"importOption": "Override"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DeletePlcType",
+"args": {
+"softwarePath": "MCP_PLC",
+"typePath": "MCP_T/MCP_UDT",
+"dryRun": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"crossReferences"
+]
+},
+{
+"tool": "ImportPlcType",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_T",
+"importPath": "${EXPORT_ROOT}\\mcp46_UDT.xml"
+},
+"note": "exists -> TIA decides",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportPlcTagTable",
+"args": {
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_Tags",
+"importPath": "${EXPORT_ROOT}\\mcp46_tags.xml"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportPlcTagTablesFromDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_Tags",
+"dir": "${EXPORT_ROOT}",
+"regexName": "mcp46_tags",
+"overwrite": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "MovePlcBlockToGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockName": "MCP_FC",
+"targetGroupPath": "MCP_G/Sub2",
+"autoCreateGroup": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"method"
+]
+},
+{
+"tool": "RepairAndReimportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"importPath": "${EXPORT_ROOT}\\mcp46_FC.xml",
+"groupPath": "MCP_G",
+"compileAfter": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportPlcProgramFromDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"sourceDir": "${EXPORT_ROOT}\\mcp46_blocks",
+"typeGroupPath": "MCP_T",
+"tagFolderPath": "MCP_Tags",
+"technologyFolderPath": "",
+"blockGroupPath": "MCP_G",
+"regexName": "",
+"compileAfter": false,
+"stopOnImportFailure": false,
+"dryRun": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"plan"
+]
+},
+{
+"tool": "CompilePlcDiagnostics",
+"args": {
+"softwarePath": "MCP_PLC",
+"password": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"errorCount",
+"warningCount"
+]
+}
+]

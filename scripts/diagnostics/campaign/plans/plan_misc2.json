@@ -1,0 +1,641 @@
+[
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "create",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_gl",
+"openMode": "ReadWrite",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "list",
+"libraryName": "",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "GetLibraryOverview",
+"args": {
+"libraryName": "MCP_GL",
+"includeTypes": true,
+"includeMasterCopies": true,
+"maxDepth": 2,
+"maxItems": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"header"
+]
+},
+{
+"tool": "ManageLibraryFolder",
+"args": {
+"folderKind": "masterCopies",
+"folderPath": "GL_MC",
+"action": "create",
+"libraryName": "MCP_GL",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageLibraryFolder",
+"args": {
+"folderKind": "types",
+"folderPath": "GL_T",
+"action": "create",
+"libraryName": "MCP_GL",
+"newName": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "CreateLibraryMasterCopy",
+"args": {
+"sourceKind": "block",
+"sourcePath": "MCP_G/MCP_FB",
+"softwarePath": "MCP_PLC",
+"folderPath": "GL_MC",
+"libraryName": "MCP_GL",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageLibraryMasterCopy",
+"args": {
+"sourcePath": "MCP_MC/MCP_UDT",
+"action": "copy",
+"libraryName": "",
+"destinationLibraryName": "MCP_GL",
+"destinationPath": "GL_MC",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageLibraryMasterCopy",
+"args": {
+"sourcePath": "GL_MC/MCP_FB",
+"action": "compare",
+"libraryName": "MCP_GL",
+"destinationLibraryName": "",
+"destinationPath": "MCP_MC/MCP_UDT",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "CompareLibraries",
+"args": {
+"leftLibraryName": "",
+"rightLibraryName": "MCP_GL",
+"includeIdentical": true,
+"maxDepth": 3,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "ImportLibraryTypeDocuments",
+"args": {
+"filePath": "${EXPORT_ROOT}\\mcp46_blockdocs\\MCP_FB.s7dcl",
+"folderPath": "GL_T",
+"libraryName": "MCP_GL",
+"importOptions": "None",
+"typePath": "",
+"targetSoftwarePath": "",
+"targetGroupKind": "",
+"targetGroupPath": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after",
+"created"
+]
+},
+{
+"tool": "GetLibraryOverview",
+"args": {
+"libraryName": "MCP_GL",
+"includeTypes": true,
+"includeMasterCopies": true,
+"maxDepth": 3,
+"maxItems": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"types"
+]
+},
+{
+"tool": "GetLibraryType",
+"args": {
+"libraryName": "MCP_GL",
+"typePath": "GL_T/MCP_FB",
+"guid": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"type",
+"versions"
+]
+},
+{
+"tool": "ManageLibraryTypeVersion",
+"args": {
+"typePath": "GL_T/MCP_FB",
+"version": "",
+"action": "read",
+"libraryName": "MCP_GL",
+"newVersion": "",
+"dependenciesMode": "",
+"author": "",
+"comment": "",
+"targetSoftwarePath": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManageLibraryTypeVersion",
+"args": {
+"typePath": "GL_T/MCP_FB",
+"version": "",
+"action": "findInstances",
+"libraryName": "MCP_GL",
+"newVersion": "",
+"dependenciesMode": "",
+"author": "",
+"comment": "",
+"targetSoftwarePath": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"instances"
+]
+},
+{
+"tool": "CompareLibraryObjects",
+"args": {
+"kind": "type",
+"leftPath": "GL_T/MCP_FB",
+"rightPath": "GL_T/MCP_FB",
+"leftLibraryName": "MCP_GL",
+"rightLibraryName": "MCP_GL",
+"leftVersion": "",
+"rightVersion": "",
+"includeIdentical": true,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageLibraryType",
+"args": {
+"typePath": "GL_T/MCP_FB",
+"action": "update",
+"libraryName": "MCP_GL",
+"properties": {
+"DoNotUse": true
+},
+"targetLibraryName": "",
+"scopeSoftwarePaths": [],
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "CheckLibraryUpdates",
+"args": {
+"libraryName": "MCP_GL"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "CheckLibraryUpdates",
+"args": {
+"libraryName": "MCP_GL",
+"updateCheckMode": "ReportOutOfDateAndUpToDate",
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": [
+"messages"
+]
+},
+{
+"tool": "ManageLibraryType",
+"args": {
+"typePath": "GL_T/MCP_FB",
+"action": "delete",
+"libraryName": "MCP_GL",
+"properties": {},
+"targetLibraryName": "",
+"scopeSoftwarePaths": [],
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verifiedAbsent"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "save",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "archive",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_gl",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "MCP_GL_archive",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"created"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "saveAs",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_gl2",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "close",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "open",
+"libraryName": "MCP_GL",
+"filePath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ProbeGlobalLibrary",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportMasterCopyFromGlobalLibrary",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL\\MCP_GL.al21",
+"masterCopyName": "MCP_FB",
+"hmiSoftwarePath": "HMI_RT_1",
+"screenName": "",
+"importedItemName": "",
+"left": 0,
+"top": 0
+},
+"note": "HMI-oriented helper; block master copy",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "close",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "retrieve",
+"libraryName": "MCP_GL",
+"filePath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL_archive.zal21",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_gl3",
+"openMode": "ReadWrite",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageGlobalLibrary",
+"args": {
+"action": "close",
+"libraryName": "MCP_GL",
+"filePath": "",
+"destinationDirectory": "",
+"openMode": "ReadOnly",
+"upgrade": false,
+"archiveName": "",
+"archiveMode": "Compressed",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportPlcBlocksDocuments",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_vci",
+"regexName": "^MCP_FC$",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CreateVersionControlWorkspace",
+"args": {
+"workspaceName": "MCP_WS",
+"folderPath": "${EXPORT_ROOT}\\mcp46_vci"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListVersionControlWorkspaces",
+"args": {},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ConnectProjectToWorkspace",
+"args": {
+"workspaceName": "MCP_WS",
+"dryRun": true,
+"deviceFilter": "",
+"maxObjects": 200,
+"walkTrace": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary",
+"mapped"
+]
+},
+{
+"tool": "ConnectProjectToWorkspace",
+"args": {
+"workspaceName": "MCP_WS",
+"dryRun": false,
+"deviceFilter": "MCP_PLC",
+"maxObjects": 200,
+"walkTrace": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "SynchronizeVersionControlWorkspace",
+"args": {
+"direction": "ProjectToWorkspace",
+"workspaceName": "MCP_WS",
+"dryRun": false,
+"changedOnly": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "GetVersionControlStatus",
+"args": {
+"workspaceName": "MCP_WS",
+"changedOnly": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "SynchronizeVersionControlWorkspace",
+"args": {
+"direction": "WorkspaceToProject",
+"workspaceName": "MCP_WS",
+"dryRun": true,
+"changedOnly": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcCertificate",
+"args": {
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"action": "list",
+"certificateId": "",
+"filePath": "",
+"usage": "",
+"properties": {},
+"assignment": "",
+"dryRun": true,
+"assignmentItemPath": [],
+"subjectAlternativeNames": [],
+"password": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageSyslogServers",
+"args": {
+"scope": "plc",
+"action": "read",
+"name": "",
+"properties": {},
+"attributes": {},
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [
+"MCP_PLC"
+],
+"serverAddress": "",
+"serverPort": 0,
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

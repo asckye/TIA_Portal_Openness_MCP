@@ -137,7 +137,7 @@ child exit, handled errors followed by another call, late progress, and disposal
 Run the offline bridge smoke after `dotnet run --project build-tools/release -- build-studio` with local SDK files:
 
 ```powershell
-python tests/Studio/Test-BridgeSmoke.py --bridge src/Studio/Gui/bin/Release/net10.0-windows/bridge/TiaOpenness.Bridge.exe --public-api-root <local-sdk-root>
+dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge src/Studio/Gui/bin/Release/net10.0-windows/bridge/TiaOpenness.Bridge.exe --public-api-root <local-sdk-root>
 ```
 
 It checks hello identity, `session.state`, `ping`, `doctor.run`, and clean EOF for

@@ -1,6 +1,6 @@
 {
-  "enginePath": "C:\\path\\to\\TIA_Portal_Openness_MCP\\runtime\\v21\\TiaMcp.Engine.V21.exe",
-  "tiaMajorVersion": 21,
+  "bundleRoot": "C:/path/to/extracted-bundle",
+  "releaseKey": "21",
   "projectFolder": "C:\\path\\to\\YourProject",
   "workspaceFolder": "C:\\path\\to\\your-git-worktree",
   "workspaceName": "git",

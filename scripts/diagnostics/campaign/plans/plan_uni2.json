@@ -1,0 +1,846 @@
+[
+{
+"tool": "EnsureUnifiedHmiButtonEventHandler",
+"args": {
+"hmiSoftwarePath": "HMI_RT_2",
+"screenName": "MCP_UScreen",
+"buttonName": "Btn",
+"eventType": "Tapped"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"action"
+]
+},
+{
+"tool": "BuildUnifiedHmiButtonActionScript",
+"args": {
+"actionKind": "set-bit",
+"eventType": "Tapped",
+"targetTag": "MCP_Run",
+"targetScreen": "",
+"targetPopup": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"script"
+]
+},
+{
+"tool": "EnsureUnifiedHmiButtonAction",
+"args": {
+"hmiSoftwarePath": "HMI_RT_2",
+"screenName": "MCP_UScreen",
+"buttonName": "Btn",
+"eventType": "Tapped",
+"actionKind": "set-bit",
+"targetTag": "MCP_Run",
+"syntaxCheck": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "GetUnifiedHmiButtonEvent",
+"args": {
+"softwarePath": "HMI_RT_2",
+"screenPath": "/MCP_UScreen",
+"buttonName": "Btn",
+"eventType": "Tapped"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"script",
+"token"
+]
+},
+{
+"tool": "DescribeUnifiedHmiButtonEventScript",
+"args": {
+"hmiSoftwarePath": "HMI_RT_2",
+"screenName": "MCP_UScreen",
+"buttonName": "Btn",
+"eventType": "Tapped",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetUnifiedHmiButtonEventScriptCode",
+"args": {
+"hmiSoftwarePath": "HMI_RT_2",
+"screenName": "MCP_UScreen",
+"buttonName": "Btn",
+"eventType": "Tapped",
+"scriptCode": "export function Btn_OnTapped(item, x, y, modifiers, trigger) {\n  Tags(\"MCP_Run\").Write(1);\n}",
+"globalDefinitionAreaScriptCode": "",
+"async": false,
+"syntaxCheck": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedObjectEvents",
+"args": {
+"softwarePath": "HMI_RT_2",
+"objectPath": [
+{
+"property": "Screens",
+"name": "MCP_UScreen"
+},
+{
+"property": "ScreenItems",
+"name": "Btn"
+}
+],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageUnifiedEvent",
+"args": {
+"softwarePath": "HMI_RT_2",
+"objectPath": [
+{
+"property": "Screens",
+"name": "MCP_UScreen"
+},
+{
+"property": "ScreenItems",
+"name": "Btn"
+}
+],
+"eventType": "Down",
+"action": "create",
+"propertyName": "",
+"scriptProperties": {
+"ScriptCode": "export function Btn_OnDown(item, x, y, modifiers, trigger) {}"
+},
+"expectedToken": "",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "DeleteUnifiedHmiButtonEvent",
+"args": {
+"softwarePath": "HMI_RT_2",
+"screenPath": "/MCP_UScreen",
+"buttonName": "Btn",
+"eventType": "Down",
+"dryRun": false,
+"expectedToken": "",
+"onlyIfEmpty": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageUnifiedDynamization",
+"args": {
+"softwarePath": "HMI_RT_2",
+"objectPath": [
+{
+"property": "Screens",
+"name": "MCP_UScreen"
+},
+{
+"property": "ScreenItems",
+"name": "Rect"
+}
+],
+"propertyName": "Visibility",
+"action": "create",
+"dynamizationKind": "TagDynamization",
+"properties": {
+"Tag": "MCP_Run"
+},
+"mappingEntries": [],
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "DeleteUnifiedHmiDynamization",
+"args": {
+"softwarePath": "HMI_RT_2",
+"screenPath": "/MCP_UScreen",
+"itemName": "Rect",
+"propertyName": "Visibility",
+"dryRun": false,
+"expectedToken": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "BuildUnifiedHmiThemeDesign",
+"args": {
+"theme": {
+"palette": {
+"Background": "0xFF202020",
+"Text": "0xFFFFFFFF"
+}
+}
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ApplyUnifiedHmiTheme",
+"args": {
+"hmiSoftwarePath": "HMI_RT_2",
+"screenName": "MCP_UScreen",
+"theme": {
+"palette": {
+"Background": "0xFF202020",
+"Text": "0xFFFFFFFF"
+}
+}
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListUnifiedEngineeringObjects",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "alarmClasses",
+"name": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageUnifiedEngineeringObject",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "alarmClasses",
+"name": "MCP_AlarmClass",
+"action": "create",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageUnifiedEngineeringObject",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "alarmClasses",
+"name": "MCP_AlarmClass",
+"action": "update",
+"properties": {
+"Priority": 5
+},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageUnifiedEngineeringObject",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "alarmClasses",
+"name": "MCP_AlarmClass",
+"action": "delete",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedAlarmCommon",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "alarmClasses",
+"name": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "GetUnifiedAuditSettings",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "alarmAuditClasses",
+"name": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageUnifiedEngineeringObject",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "textLists",
+"name": "MCP_TL",
+"action": "create",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageUnifiedListEntries",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "textLists",
+"listName": "MCP_TL",
+"action": "create",
+"entryKey": "",
+"entry": {
+"Value": 1,
+"Text": "One"
+},
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageUnifiedListEntries",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "textLists",
+"listName": "MCP_TL",
+"action": "read",
+"entryKey": "",
+"entry": {},
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ExportUnifiedEngineeringList",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "textLists",
+"name": "MCP_TL",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_uni",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"files"
+]
+},
+{
+"tool": "ImportUnifiedEngineeringList",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "textLists",
+"filePath": "${EXPORT_ROOT}\\mcp46_uni\\MCP_TL.xlsx",
+"expectedNames": [
+"MCP_TL"
+],
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExchangeUnifiedTags",
+"args": {
+"softwarePath": "HMI_RT_2",
+"action": "export",
+"directory": "${EXPORT_ROOT}\\mcp46_uni",
+"tagTable": "MCP_UTags",
+"fileName": "tags",
+"expectedTagNames": [],
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"files"
+]
+},
+{
+"tool": "ExchangeUnifiedTags",
+"args": {
+"softwarePath": "HMI_RT_2",
+"action": "import",
+"directory": "${EXPORT_ROOT}\\mcp46_uni",
+"tagTable": "MCP_UTags",
+"fileName": "tags",
+"expectedTagNames": [
+"MCP_Run",
+"MCP_Speed"
+],
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageUnifiedLoggingTag",
+"args": {
+"softwarePath": "HMI_RT_2",
+"tagPath": [
+{
+"property": "TagTables",
+"name": "MCP_UTags"
+},
+{
+"property": "Tags",
+"name": "MCP_Speed"
+}
+],
+"action": "read",
+"name": "",
+"properties": {},
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageUnifiedEngineeringObject",
+"args": {
+"softwarePath": "HMI_RT_2",
+"category": "dataLogs",
+"name": "MCP_Log",
+"action": "create",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageUnifiedLoggingTag",
+"args": {
+"softwarePath": "HMI_RT_2",
+"tagPath": [
+{
+"property": "TagTables",
+"name": "MCP_UTags"
+},
+{
+"property": "Tags",
+"name": "MCP_Speed"
+}
+],
+"action": "create",
+"name": "MCP_LogTag",
+"properties": {
+"DataLog": "MCP_Log"
+},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "SetUnifiedLogDuration",
+"args": {
+"softwarePath": "HMI_RT_2",
+"durationPath": [
+{
+"property": "DataLogs",
+"name": "MCP_Log"
+}
+],
+"kind": "log",
+"days": 7,
+"hours": 0,
+"minutes": 0,
+"seconds": 0,
+"hundredNanoseconds": 0,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedRuntimeSettings",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"fields": []
+},
+"note": "",
+"expect": "any",
+"keys": [
+"settings",
+"token"
+]
+},
+{
+"tool": "SetUnifiedRuntimeSettings",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"changes": {
+"StartScreen": "MCP_UScreen"
+},
+"dryRun": false,
+"expectedToken": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListUnifiedGlobalScripts",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"cursor": "",
+"pageSize": 20,
+"budgetMs": 5000
+},
+"note": "",
+"expect": "any",
+"keys": [
+"names"
+]
+},
+{
+"tool": "ExchangeUnifiedScriptModules",
+"args": {
+"softwarePath": "HMI_RT_2",
+"action": "export",
+"directory": "${EXPORT_ROOT}\\mcp46_uni",
+"moduleName": "",
+"fileName": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedGlobalScript",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"moduleName": "Nope",
+"cursor": "",
+"pageSize": 20,
+"budgetMs": 5000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetUnifiedGlobalScript",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"moduleName": "Nope",
+"scriptCode": "",
+"dryRun": true,
+"expectedToken": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListUnifiedLibraryFolderEntries",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"folderPath": "",
+"cursor": "",
+"pageSize": 20,
+"budgetMs": 5000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedLibraryType",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"typePath": "Nope",
+"version": "",
+"cursor": "",
+"pageSize": 20,
+"budgetMs": 5000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedFaceplateInstance",
+"args": {
+"softwarePath": "HMI_RT_2",
+"expectedProject": "项目1",
+"screenPath": "/MCP_UScreen",
+"itemName": "Btn",
+"typePath": "",
+"version": "",
+"cursor": "",
+"pageSize": 20,
+"budgetMs": 5000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ReleaseUnifiedReadCursor",
+"args": {
+"cursor": "nope"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageUnifiedPlantNode",
+"args": {
+"plantPath": "MCP_Plant",
+"action": "create",
+"plantObjectType": "",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "GetUnifiedPlantObject",
+"args": {
+"plantPath": "MCP_Plant",
+"objectPath": [],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetUnifiedPlantObject",
+"args": {
+"plantPath": "MCP_Plant",
+"objectPath": [],
+"properties": {
+"Comment": "c"
+},
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageUnifiedPlantNode",
+"args": {
+"plantPath": "MCP_Plant",
+"action": "delete",
+"plantObjectType": "",
+"properties": {},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageUnifiedOpcUaAlarmType",
+"args": {
+"softwarePath": "HMI_RT_2",
+"name": "MCP_OpcAlarm",
+"nodeId": "ns=2;s=Alarm",
+"connection": "MCP_Conn",
+"action": "create",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportUnifiedOpcUaAlarms",
+"args": {
+"softwarePath": "HMI_RT_2",
+"connectionName": "MCP_Conn",
+"action": "read",
+"xmlPath": "",
+"displayName": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetUnifiedHmiRuntimeState",
+"args": {
+"hmiSoftwarePath": "HMI_RT_2",
+"screenName": "MCP_StartStop",
+"tagTableName": "MCP_SS",
+"plcName": "MCP_PLC",
+"connectionName": "MCP_Conn"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"created"
+]
+},
+{
+"tool": "BuildUnifiedHmiTemplateApplyDesign",
+"args": {
+"templateFile": "${EXPORT_ROOT}\\nope.json",
+"fallbackWidth": 800,
+"fallbackHeight": 480
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "BuildUnifiedHmiTemplateApplyDesignManifest",
+"args": {
+"templateDirectory": "${EXPORT_ROOT}\\mcp46_uni",
+"fallbackWidth": 800,
+"fallbackHeight": 480
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "AnalyzeUnifiedHmiTemplateLayout",
+"args": {
+"templateDirectory": "${EXPORT_ROOT}\\mcp46_uni"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "AnalyzeHmiTemplateReference",
+"args": {
+"templateDirectory": "${EXPORT_ROOT}\\mcp46_uni",
+"referenceProjectPath": "${EXPORT_ROOT}\\MCP46",
+"referenceGlobalLibraryPath": "${EXPORT_ROOT}\\MCP46_Library"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "PlanGlobalLibraryTemplateReuse",
+"args": {
+"libraryPath": "${EXPORT_ROOT}\\mcp46_gl\\MCP_GL"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "CompileHmiDiagnostics",
+"args": {
+"softwarePath": "HMI_RT_2"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"errorCount",
+"warningCount"
+]
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+}
+]

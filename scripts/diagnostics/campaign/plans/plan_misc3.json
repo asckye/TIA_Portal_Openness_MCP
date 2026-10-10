@@ -1,0 +1,726 @@
+[
+{
+"tool": "InitializeEnvironment",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": [
+"recommendedNextTool"
+]
+},
+{
+"tool": "GetEnvironmentDiagnostics",
+"args": {
+"fix": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"ok"
+]
+},
+{
+"tool": "GetToolUsage",
+"args": {
+"query": "workflow"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListToolCategories",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "FindTools",
+"args": {
+"query": "alarm",
+"limit": 5,
+"category": "",
+"domain": ""
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "RunCapabilitySelfTest",
+"args": {
+"connectIfNeeded": false,
+"includeProjectTree": false,
+"inspectPortalProcesses": true,
+"expectedPlcSoftwarePath": "MCP_PLC",
+"expectedHmiSoftwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"ok"
+]
+},
+{
+"tool": "ValidateAutomationContext",
+"args": {
+"expectedPlcSoftwarePath": "MCP_PLC",
+"expectedHmiSoftwarePath": "HMI_RT_1"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"ok"
+]
+},
+{
+"tool": "RunHmiActionScriptRecipeSafetySelfTest",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "RunOnlineMonitoringSafetySelfTest",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetProjectInfo",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetProjectSettings",
+"args": {
+"folderPath": "",
+"customIdentityKey": "",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ManageProjectLanguage",
+"args": {
+"action": "read",
+"culture": "",
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before",
+"languages"
+]
+},
+{
+"tool": "ManageProjectLanguage",
+"args": {
+"action": "activate",
+"culture": "en-US",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageProjectLanguage",
+"args": {
+"action": "setEditing",
+"culture": "en-US",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcTagDefinition",
+"args": {
+"softwarePath": "MCP_PLC",
+"tablePath": "MCP_Tags/MCP_Table",
+"name": "MCP_Start",
+"kind": "tag",
+"action": "update",
+"properties": {
+"Comment": "启动"
+},
+"dryRun": false
+},
+"note": "2.7.45 refuses; 2.7.46 writes",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageProjectLanguage",
+"args": {
+"action": "setEditing",
+"culture": "zh-CN",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageProjectLanguage",
+"args": {
+"action": "deactivate",
+"culture": "en-US",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManageProjectCompilationSettings",
+"args": {
+"action": "read",
+"properties": {},
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManageProjectCompilationSettings",
+"args": {
+"action": "update",
+"properties": {
+"IsSimulationDuringBlockCompilationEnabled": true
+},
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ExportProjectTexts",
+"args": {
+"filePath": "${EXPORT_ROOT}\\mcp46_texts.xlsx",
+"sourceCulture": "zh-CN",
+"targetCulture": "en-US",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "ImportProjectTexts",
+"args": {
+"filePath": "${EXPORT_ROOT}\\mcp46_texts.xlsx",
+"updateSourceLanguage": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetObjectIdentifier",
+"args": {
+"kind": "plcBlock",
+"devicePath": [],
+"itemPath": [],
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_G/MCP_FB",
+"identifier": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"identifier"
+]
+},
+{
+"tool": "GetObjectIdentifier",
+"args": {
+"kind": "device",
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [],
+"softwarePath": "",
+"objectPath": "",
+"identifier": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"identifier"
+]
+},
+{
+"tool": "ShowObjectInEditor",
+"args": {
+"kind": "plcBlock",
+"devicePath": [],
+"itemPath": [],
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_G/MCP_FB",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageMultiuserSession",
+"args": {
+"action": "read",
+"serverName": "",
+"projectName": "",
+"protocol": "",
+"host": "",
+"port": 0,
+"commitComment": "",
+"offset": 0,
+"limit": 20,
+"confirmChange": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"servers"
+]
+},
+{
+"tool": "CompareProjects",
+"args": {
+"kind": "software",
+"softwarePath": "MCP_PLC",
+"devicePath": [],
+"itemPath": [],
+"targetProjectName": "",
+"targetSoftwarePath": "MCP_PLC",
+"targetDevicePath": [],
+"targetItemPath": [],
+"targetLibraryName": "",
+"includeIdentical": false,
+"maxDepth": 3,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "CompareProjects",
+"args": {
+"kind": "device",
+"softwarePath": "",
+"devicePath": [
+"MCP_PLC"
+],
+"itemPath": [],
+"targetProjectName": "",
+"targetSoftwarePath": "",
+"targetDevicePath": [
+"MCP_S120"
+],
+"targetItemPath": [],
+"targetLibraryName": "",
+"includeIdentical": false,
+"maxDepth": 2,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "RunToolTransaction",
+"args": {
+"calls": [
+{
+"name": "CreatePlcBlockGroup",
+"arguments": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_TX"
+}
+},
+{
+"name": "ManagePlcUserGroup",
+"arguments": {
+"softwarePath": "MCP_PLC",
+"family": "blocks",
+"groupPath": "MCP_TX",
+"action": "deleteEmpty",
+"newName": "",
+"dryRun": false
+}
+}
+],
+"text": "MCP transaction",
+"confirmChange": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"results",
+"committed"
+]
+},
+{
+"tool": "DescribeObject",
+"args": {
+"objectKind": "Project",
+"objectPath": "",
+"softwarePath": "",
+"maxMembers": 20
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribeObject",
+"args": {
+"objectKind": "Device",
+"objectPath": "MCP_PLC",
+"softwarePath": "",
+"maxMembers": 20
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "DescribeObjectProperty",
+"args": {
+"objectKind": "Software",
+"objectPath": "",
+"propertyPath": "BlockGroup",
+"softwarePath": "MCP_PLC",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DescribeService",
+"args": {
+"objectKind": "Software",
+"objectPath": "",
+"serviceTypeSuffix": "PlcUnitProvider",
+"softwarePath": "MCP_PLC",
+"maxMembers": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetObjectProperty",
+"args": {
+"objectKind": "Device",
+"objectPath": "MCP_PLC",
+"propertyPath": "Name",
+"softwarePath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListObjectChildren",
+"args": {
+"objectKind": "Project",
+"objectPath": "",
+"collectionProperty": "Devices",
+"softwarePath": "",
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "InvokeService",
+"args": {
+"objectKind": "Software",
+"objectPath": "",
+"serviceTypeSuffix": "PlcChecksumProvider",
+"methodName": "GetAttributeInfos",
+"args": [],
+"softwarePath": "MCP_PLC",
+"allowWrite": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "InvokeObject",
+"args": {
+"objectKind": "Device",
+"objectPath": "MCP_PLC",
+"methodName": "GetAttributeInfos",
+"args": [],
+"softwarePath": "",
+"allowWrite": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListExportHandles",
+"args": {
+"tool": "",
+"limit": 10
+},
+"expect": "ok",
+"note": "",
+"keys": []
+},
+{
+"tool": "ClearExportHandles",
+"args": {
+"olderThanHours": 0
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ListExportHandles",
+"args": {
+"tool": "",
+"limit": 10
+},
+"expect": "ok",
+"note": "",
+"keys": []
+},
+{
+"tool": "ExportPlcBlocksDocuments",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_docs_all",
+"regexName": "^MCP_",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ExtractPlcBlockMetrics",
+"args": {
+"path": "${EXPORT_ROOT}\\mcp46_docs_all",
+"recursive": true,
+"extensions": [],
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "GeneratePlcDocumentation",
+"args": {
+"directory": "${EXPORT_ROOT}\\mcp46_docs_all",
+"outputPath": "${EXPORT_ROOT}\\mcp46_docs_all\\handbook.md",
+"title": "MCP",
+"recursive": true,
+"extensions": [],
+"mermaidDirection": "TD"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+},
+{
+"tool": "RenderPlcBlockDocument",
+"args": {
+"filePath": "${EXPORT_ROOT}\\mcp46_docs_all\\MCP_FC.s7dcl",
+"softwarePath": "",
+"blockPath": "",
+"mermaidDirection": "TD",
+"outputPath": "",
+"maxChars": 4000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ScanPlcSourceAnnotations",
+"args": {
+"directory": "${EXPORT_ROOT}\\mcp46_docs_all",
+"recursive": true,
+"extensions": [],
+"markers": [],
+"offset": 0,
+"limit": 20,
+"csvPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ComparePlcBlockDocuments",
+"args": {
+"leftFilePath": "${EXPORT_ROOT}\\mcp46_docs_all\\MCP_FC.s7dcl",
+"rightFilePath": "${EXPORT_ROOT}\\mcp46_vci\\MCP_FC.s7dcl",
+"softwarePath": "",
+"leftBlockPath": "",
+"rightBlockPath": "",
+"offset": 0,
+"limit": 20,
+"contextLines": 2
+},
+"note": "",
+"expect": "any",
+"keys": [
+"summary"
+]
+},
+{
+"tool": "AnalyzePlcSclSource",
+"args": {
+"sourceText": "FUNCTION \"F\" : Void\nBEGIN\n IF #a THEN\n END_IF;\nEND_FUNCTION",
+"filePath": "",
+"rules": {},
+"limit": 20
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"findings"
+]
+},
+{
+"tool": "RunOfflineReleaseValidationSuite",
+"args": {
+"workspaceRoot": "${EXPORT_ROOT}\\mcp46_release",
+"reportDirectory": "${EXPORT_ROOT}\\mcp46_release\\reports"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"ok",
+"reportPath"
+]
+},
+{
+"tool": "RunHmiTemplatePlcSyncPrecheckSuite",
+"args": {
+"templateDirectory": "${EXPORT_ROOT}\\mcp46_release",
+"plcXmlPath": "${EXPORT_ROOT}\\mcp46_blocks",
+"reportDirectory": "${EXPORT_ROOT}\\mcp46_release\\reports",
+"mappingFilePath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GenerateErrorReport",
+"args": {
+"errorCode": "MCP-TEST",
+"summary": "test",
+"detail": "detail",
+"recommendedNextActions": "none",
+"severity": "info",
+"outputDirectory": "${EXPORT_ROOT}\\mcp46_release\\reports"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"files"
+]
+},
+{
+"tool": "GenerateAcceptanceReport",
+"args": {
+"outputDirectory": "${EXPORT_ROOT}\\mcp46_release\\reports",
+"connectIfNeeded": false,
+"includeProjectTree": true,
+"inspectPortalProcesses": true,
+"title": "MCP acceptance"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"files"
+]
+},
+{
+"tool": "ListPlcSimAdvancedInstances",
+"args": {
+"includeState": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records",
+"apiAvailable"
+]
+},
+{
+"tool": "SaveProject",
+"args": {},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ArchiveSavedProject",
+"args": {
+"archivePath": "${EXPORT_ROOT}\\mcp46_project.zap21",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"file"
+]
+}
+]

@@ -61,7 +61,7 @@ internal static class CommandLine
     internal static readonly string[] Commands =
     [
         "release", "build-release", "build-multi-version", "run-release-build", "branch-gate", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
-        "build-studio", "build-configurator", "build-plc-workers", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
+        "build-studio", "build-configurator", "build-plc-workers", "build-solutions", "publish-vci-watch", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
         "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls"
     ];
 }

@@ -149,12 +149,12 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 | `dotnet run --project build-tools/release -- check-ratchet -Kind mcp-text` | MCP 中文字面量基线 |
 | `dotnet run --project build-tools/release -- check-ratchet -Kind envelopes` | 手写响应信封基线 |
 | `dotnet run --project build-tools/release -- check-dead-tool-references` | 工具描述死引用与重名注册 |
-| `dotnet run --project build-tools/release -- test-suites -Suite source-contracts` | 成员定位、Python 兼容向量、诊断只读、导入安全/选择、prompt 注册、补充读取与版本目录接线；至少 125 项、零跳过 |
+| `dotnet run --project build-tools/release -- test-suites -Suite source-contracts` | 成员定位、Python 兼容向量、诊断只读、导入安全/选择、prompt 注册、补充读取与版本目录接线、C# 诊断客户端合成夹具及 token 脱敏；至少 148 项、零跳过 |
 | `python scripts/checks/Test-DomainTools.py --source-only` | 所有已迁移领域的工具注册与回归夹具清单一致 |
 
 该 job 还执行 `python scripts/generate/Generate-ToolUsage.py --check`；静态检查自检统一使用
 `dotnet run --project build-tools/release -- check-repository -SelfTest`，也在 `offline-tests` job 运行。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
-`check-script-tool-calls`、`Check-ScriptToolCalls.py --self-test`、`Check-ScriptToolCalls.py`、`scripts/mcp_results.py` 和 `Test-ScriptClients.py`，
+`check-script-tool-calls`、`Check-ScriptToolCalls.py --self-test` 和 `Check-ScriptToolCalls.py`；V4 解码和诊断客户端断言已进入 `source-contracts`，
 `validate.yml` 不重复执行。
 
 按成员验证的引擎检查使用 [EngineSources.cs](../../build-tools/common/TiaMcp.BuildCommon/EngineSources.cs)，
@@ -537,20 +537,35 @@ HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义
 
 ## V4 脚本调用与 campaign 输入
 
-CI 使用 `check-script-tool-calls` 检查 C# 与 JSON 计划，并暂时保留 `Check-ScriptToolCalls.py` 检查 Python、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。`mcp_results.py` 与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
+CI 使用 `check-script-tool-calls` 检查 C# 与 JSON 计划，并暂时保留 `Check-ScriptToolCalls.py` 检查 Python、shell 和 JSON 计划中的工具调用；注册工具名来自引擎注册和版本目录。历史映射、冻结的 v3.3.0 写入守卫清单和精确的未知工具负例具有显式例外。C# 客户端复用 `McpResults`；尚未迁移的 Python 检查暂用 `mcp_results.py`。两者与 TiaMcp.Engine.Harness 的 `DeveloperChecks` 读取 V4 `ok/data/error/meta`，批次读取 `data.items`；3.x 的 `message/meta.success` 不能作为成功结果。
 
 ```powershell
 python scripts/checks/Check-ScriptToolCalls.py --self-test
 python scripts/checks/Check-ScriptToolCalls.py
-python scripts/mcp_results.py
-python scripts/checks/Test-ScriptClients.py
+dotnet run --project build-tools/release -- test-suites -Suite source-contracts
 python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe --public-api <V21-net48-SDK> --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --major 21 --output bin-build/campaign-inputs
 ```
 
-最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 校验全部 campaign 输入，不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
+最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 读取已生成的 `plan_*.json` 并校验全部 campaign 输入，不再执行计划生成器，也不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
 
 沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`TiaMcp.Engine.Harness.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
 
 原生安全自测的合成夹具使用 `offline_fixtures.py` 在 `bin-build` 下创建唯一目录并继承 worktree 权限，使子进程可读取输入。清理前核对目录父路径；live 分支的入口和执行范围不变。
 
 独立 publish 还要求包内 `buildCacheEnabled=false`；使用 `run-release-build -Tier full -NoBuildCache` 生成待发布候选。缓存启用的 full 包可用于分支验收及 quick baseline，不能直接发布。
+
+## C# 诊断客户端与 VCI 看门狗
+
+Probe、Sweep 和 campaign 使用 .NET 10 file-based app；[campaign 说明](../../scripts/diagnostics/campaign/README.md)列出子命令和路径变量。Probe/campaign 读取 `TIA_MCP_URL/TIA_MCP_TOKEN` 或 `~/.claude.json` 的 `tia-portal-vm`，绕过代理，输出、错误和 ledger 均脱敏。只在明确的真机验收中执行这些客户端的连接/调用模式。
+
+Sweep 和 vci-watch 启动所选包的 `runtime/v<key>/TiaMcp.FoundationHost.exe --bundle-root <bundle> --release-key <key> --transport stdio --profile full --logging 0`，由宿主解析随包 worker 和目录。vci-watch 限于 V20/V21，发布与计划任务说明见 [README](../../scripts/operations/vci-watch/README.md)。离线测试只用合成响应，不注册任务、不创建用户 Git 提交。
+
+```powershell
+dotnet run --project build-tools/release -- build-solutions -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config>
+dotnet run --project build-tools/release -- publish-vci-watch -NuGetConfig <offline-nuget.config>
+dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge <Bridge.exe> --public-api-root <SDK-root>
+```
+
+`Test-BridgeSmoke.cs` 只验证 hello、未绑定的 session.state/ping/doctor.run 和退出，不创建原生会话。`Test-Ecosystem.py` 保留在生态测试部分：它需要伴随 Python 的 pytest 与上游源码优先级，默认不配置 live 端点，命令仍为 `bin-build/ecosystem-python/Scripts/python.exe -X utf8 scripts/checks/Test-Ecosystem.py`。其运行环境与开发工具的 Python 迁移分别维护。
+
+历史 `ledger` 渲染与旧 Python 输出逐字节一致（UTF-8 无 BOM、LF）；使用 `--output <file>`。现行 `real-machine-ledger.md` 含 L5 输入和 `Generate-Phase6Plan` 能力块，历史表生成器拒绝覆盖它，能力块仍须保留。`vm_ledger.json` 是冻结数据，不再扫描机器会话记录。

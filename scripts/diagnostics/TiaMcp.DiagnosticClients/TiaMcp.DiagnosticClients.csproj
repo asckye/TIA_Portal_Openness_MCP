@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
+    <Compile Include="../../operations/vci-watch/WatchOperations.cs" Link="WatchOperations.cs" />
+    <Compile Include="../../operations/vci-watch/WindowsProcesses.cs" Link="WindowsProcesses.cs" />
+  </ItemGroup>
+</Project>

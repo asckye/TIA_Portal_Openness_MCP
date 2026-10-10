@@ -69,8 +69,6 @@ jobs:
           python scripts/checks/Check-ScriptToolCalls.py --self-test
           python scripts/checks/Check-ScriptToolCalls.py
           dotnet run --project build-tools/release -- check-script-tool-calls
-          python scripts/mcp_results.py
-          python scripts/checks/Test-ScriptClients.py
       - name: Descriptions must not name unregistered tools
         run: dotnet run --project build-tools/release -- check-dead-tool-references
       - name: Repository, layout, exception, comment, MCP text and response-envelope contracts

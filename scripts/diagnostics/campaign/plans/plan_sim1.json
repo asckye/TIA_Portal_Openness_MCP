@@ -1,0 +1,572 @@
+[
+{
+"tool": "ListPlcSimAdvancedInstances",
+"args": {
+"includeState": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"records",
+"instances"
+]
+},
+{
+"tool": "ProbePlcMonitorOnlineCapabilities",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "PlanOnlineReadOnlyMonitoring",
+"args": {
+"softwarePath": "MCP_PLC",
+"tagPaths": [
+"MCP_Start"
+],
+"mode": "watch"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "PlanOnlineReadOnlyDataProvider",
+"args": {
+"provider": "s7-readonly",
+"endpoint": "192.168.0.1",
+"tagPaths": [
+"M0.0"
+],
+"options": {}
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcWatchTableCurrentValuesReadOnly",
+"args": {
+"softwarePath": "MCP_PLC",
+"watchTableName": "MCP_WT",
+"maxEntries": 10
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "TraceTagCause",
+"args": {
+"softwarePath": "MCP_PLC",
+"tag": "MCP_Start",
+"blockScope": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"writers"
+]
+},
+{
+"tool": "CheckDownloadReadiness",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"ready",
+"checks"
+]
+},
+{
+"tool": "ListTransferRoutes",
+"args": {
+"softwarePath": "MCP_PLC",
+"maxItems": 50
+},
+"note": "",
+"expect": "any",
+"keys": [
+"modes"
+]
+},
+{
+"tool": "GetOnlineState",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"state"
+]
+},
+{
+"tool": "ScanAccessibleDevices",
+"args": {
+"pgPcInterface": "PLCSIM",
+"softwarePath": "MCP_PLC",
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"records"
+]
+},
+{
+"tool": "ListPlcSimAdvancedInstances",
+"args": {
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"instance"
+]
+},
+{
+"tool": "ManagePlcSimAdvancedInstance",
+"args": {
+"instanceName": "MCP_SIM",
+"action": "register",
+"cpuType": "CPU1500_Unspecified",
+"timeoutMs": 30000,
+"confirmInstanceChange": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"instance"
+]
+},
+{
+"tool": "ManagePlcSimAdvancedInstance",
+"args": {
+"instanceName": "MCP_SIM",
+"action": "powerOn",
+"cpuType": "",
+"timeoutMs": 60000,
+"confirmInstanceChange": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"instance"
+]
+},
+{
+"tool": "ListPlcSimAdvancedInstances",
+"args": {
+"includeState": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"records",
+"instances"
+]
+},
+{
+"tool": "GetPlcSimAdvancedTags",
+"args": {
+"instanceName": "MCP_SIM",
+"names": [],
+"areaFilter": "",
+"nameContains": "",
+"offset": 0,
+"limit": 10,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DownloadPlcToFolder",
+"args": {
+"softwarePath": "MCP_PLC",
+"destinationDirectory": "${EXPORT_ROOT}\\mcp46_card",
+"targetForSoftware": "",
+"overwriteOnMemoryCard": false,
+"keepActualValues": false,
+"promptAnswers": {},
+"confirmDownload": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcDataBlockSnapshot",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_DB",
+"action": "read",
+"filePath": "",
+"confirmValueChange": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetPlcWatchTableModifyValue",
+"args": {
+"softwarePath": "MCP_PLC",
+"tableName": "MCP_WT",
+"address": "%I0.0",
+"modifyValue": "TRUE",
+"trigger": "OnceOnlyAtStart"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DisconnectOnlinePlcs",
+"args": {},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DisconnectOnlinePlc",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcWebDiagnostics",
+"args": {
+"host": "192.168.0.1",
+"username": "",
+"password": "",
+"ignoreCertificateErrors": true,
+"timeoutMs": 3000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ProbeS7CpuIdentity",
+"args": {
+"ip": "192.168.0.1",
+"rack": 0,
+"slot": 1
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcRunStateS7",
+"args": {
+"ip": "192.168.0.1",
+"rack": 0,
+"slot": 1,
+"maxDiagEntries": 5,
+"expectModuleContains": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcLiveValuesS7",
+"args": {
+"ip": "192.168.0.1",
+"items": [
+"M0.0"
+],
+"rack": 0,
+"slot": 1,
+"expectModuleContains": "",
+"devicePath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcLiveValuesOpcUa",
+"args": {
+"endpointUrl": "opc.tcp://192.168.0.1:4840",
+"nodeIds": [
+"ns=3;s=\"MCP_DB\".\"Counter\""
+],
+"timeoutMs": 3000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedRuntimeTags",
+"args": {
+"tags": [
+"MCP_Run"
+],
+"pipeName": "",
+"timeoutMs": 3000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetUnifiedRuntimeAlarms",
+"args": {
+"systemNames": [],
+"filter": "",
+"languageId": 1033,
+"pipeName": "",
+"timeoutMs": 3000,
+"maxAlarms": 10
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "InvokeUnifiedOpenPipe",
+"args": {
+"request": {
+"message": "BrowseTags",
+"params": {}
+},
+"pipeName": "",
+"timeoutMs": 3000,
+"confirmWrite": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "WriteUnifiedRuntimeTags",
+"args": {
+"writes": [
+{
+"name": "MCP_Run",
+"value": true
+}
+],
+"pipeName": "",
+"timeoutMs": 3000,
+"confirmWrite": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "WritePlcWebVars",
+"args": {
+"host": "192.168.0.1",
+"username": "",
+"password": "",
+"writes": [
+{
+"name": "\"MCP_DB\".Counter",
+"value": 1
+}
+],
+"ignoreCertificateErrors": true,
+"timeoutMs": 3000,
+"confirmWrite": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SetPlcWebOperatingMode",
+"args": {
+"host": "192.168.0.1",
+"username": "",
+"password": "",
+"mode": "RUN",
+"ignoreCertificateErrors": true,
+"timeoutMs": 3000,
+"confirmModeChange": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "GetPlcWebVars",
+"args": {
+"host": "192.168.0.1",
+"username": "",
+"password": "",
+"vars": [
+"\"MCP_DB\".Counter"
+],
+"ignoreCertificateErrors": true,
+"timeoutMs": 3000
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "SamplePlcLiveValuesS7",
+"args": {
+"ip": "192.168.0.1",
+"items": [
+"M0.0"
+],
+"intervalMs": 500,
+"durationMs": 1000,
+"maxSamples": 3,
+"rack": 0,
+"slot": 1,
+"expectModuleContains": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "MonitorPlcWatchTableS7",
+"args": {
+"softwarePath": "MCP_PLC",
+"watchTableName": "MCP_WT",
+"ip": "192.168.0.1",
+"rack": 0,
+"slot": 1,
+"expectModuleContains": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "TraceTagCauseLive",
+"args": {
+"softwarePath": "MCP_PLC",
+"tag": "MCP_Start",
+"ip": "192.168.0.1",
+"rack": 0,
+"slot": 1,
+"blockScope": "",
+"expectModuleContains": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "WritePlcSimAdvancedTags",
+"args": {
+"instanceName": "MCP_SIM",
+"values": [
+{
+"name": "\"MCP_Start\"",
+"value": true
+}
+],
+"confirmWrite": false,
+"dryRun": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "RunPlcSimAdvancedTestScenario",
+"args": {
+"scenario": {
+"instance": "MCP_SIM",
+"mode": "default",
+"stopOnFailure": true,
+"steps": [
+{
+"write": {
+"\"MCP_Start\"": true
+}
+},
+{
+"assert": {
+"\"MCP_Start\"": true
+}
+}
+]
+},
+"confirmRun": false,
+"dryRun": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcSimAdvancedInstance",
+"args": {
+"instanceName": "MCP_SIM",
+"action": "powerOff",
+"cpuType": "",
+"timeoutMs": 60000,
+"confirmInstanceChange": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcSimAdvancedInstance",
+"args": {
+"instanceName": "MCP_SIM",
+"action": "unregister",
+"cpuType": "",
+"timeoutMs": 30000,
+"confirmInstanceChange": true,
+"dryRun": false,
+"apiPath": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListPlcSimAdvancedInstances",
+"args": {
+"includeState": true,
+"apiPath": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"records",
+"instances"
+]
+}
+]

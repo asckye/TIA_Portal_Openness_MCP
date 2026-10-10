@@ -1,0 +1,829 @@
+[
+{
+"tool": "BuildAndImportPlcArtifact",
+"args": {
+"softwarePath": "MCP_PLC",
+"kind": "fc",
+"spec": {
+"blockName": "MCP_FC",
+"blockNumber": 500,
+"inputs": [
+{
+"name": "IN_A",
+"datatype": "Int"
+},
+{
+"name": "IN_B",
+"datatype": "Int"
+}
+],
+"outputs": [
+{
+"name": "OUT_Sum",
+"datatype": "Int"
+}
+],
+"structuredText": {
+"operations": [
+{
+"op": "line",
+"items": [
+{
+"sym": "#OUT_Sum"
+},
+{
+"token": ":="
+},
+{
+"sym": "#IN_A"
+},
+{
+"token": "+"
+},
+{
+"sym": "#IN_B"
+}
+]
+}
+]
+}
+},
+"typeGroupPath": "",
+"tagFolderPath": "",
+"blockGroupPath": "MCP_G",
+"compileAfter": true,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ManagePlcBlockProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "read",
+"password": "",
+"confirmProtectionChange": false,
+"dryRun": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManagePlcBlockProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "protect",
+"password": "Mcp12345",
+"confirmProtectionChange": true,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcBlockProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "unprotect",
+"password": "Mcp12345",
+"confirmProtectionChange": true,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcBlockWriteProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "read",
+"password": "",
+"newPassword": "",
+"confirmProtectionChange": false,
+"dryRun": true,
+"unitName": "",
+"unitKind": "unit"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManagePlcBlockWriteProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "define",
+"password": "Mcp12345",
+"newPassword": "",
+"confirmProtectionChange": true,
+"dryRun": false,
+"unitName": "",
+"unitKind": "unit"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcBlockWriteProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "protect",
+"password": "Mcp12345",
+"newPassword": "",
+"confirmProtectionChange": true,
+"dryRun": false,
+"unitName": "",
+"unitKind": "unit"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcBlockWriteProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "change",
+"password": "Mcp12345",
+"newPassword": "Mcp54321",
+"confirmProtectionChange": true,
+"dryRun": false,
+"unitName": "",
+"unitKind": "unit"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcBlockWriteProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "unprotect",
+"password": "Mcp54321",
+"newPassword": "",
+"confirmProtectionChange": true,
+"dryRun": false,
+"unitName": "",
+"unitKind": "unit"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcBlockWriteProtection",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"action": "remove",
+"password": "Mcp54321",
+"newPassword": "",
+"confirmProtectionChange": true,
+"dryRun": false,
+"unitName": "",
+"unitKind": "unit"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ExportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/MCP_FC",
+"exportPath": "${EXPORT_ROOT}\\mcp46_blocks",
+"preservePath": false
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "MovePlcBlockToGroup",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockName": "MCP_FC",
+"targetGroupPath": "MCP_G/Sub2",
+"autoCreateGroup": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"method"
+]
+},
+{
+"tool": "GetPlcBlockInfo",
+"args": {
+"softwarePath": "MCP_PLC",
+"blockPath": "MCP_G/Sub2/MCP_FC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ImportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"groupPath": "MCP_G",
+"importPath": "${EXPORT_ROOT}\\mcp46_blocks\\MCP_FC.xml"
+},
+"note": "same name in another group - TIA decides",
+"expect": "any",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "RepairAndReimportPlcBlock",
+"args": {
+"softwarePath": "MCP_PLC",
+"importPath": "${EXPORT_ROOT}\\mcp46_blocks\\MCP_FC.xml",
+"groupPath": "MCP_G/Sub2",
+"compileAfter": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"compile"
+]
+},
+{
+"tool": "ImportPlcProgramFromDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"sourceDir": "${EXPORT_ROOT}\\mcp46_blocks",
+"typeGroupPath": "MCP_T",
+"tagFolderPath": "MCP_Tags",
+"technologyFolderPath": "",
+"blockGroupPath": "MCP_G/Sub2",
+"regexName": "",
+"compileAfter": true,
+"stopOnImportFailure": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"imported",
+"failed"
+]
+},
+{
+"tool": "ManagePlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "createFromFile",
+"name": "mcp46_FC.scl",
+"unitName": "",
+"unitKind": "unit",
+"groupPath": "MCP_X",
+"filePath": "${EXPORT_ROOT}\\mcp46_FC.scl",
+"libraryName": "",
+"masterCopyPath": "",
+"copyMode": "",
+"targetKind": "",
+"targetGroupPath": "",
+"newName": "",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ManagePlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "read",
+"name": "mcp46_FC.scl",
+"unitName": "",
+"unitKind": "unit",
+"groupPath": "MCP_X",
+"filePath": "",
+"libraryName": "",
+"masterCopyPath": "",
+"copyMode": "",
+"targetKind": "",
+"targetGroupPath": "",
+"newName": "",
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ManagePlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "generateBlocks",
+"name": "mcp46_FC.scl",
+"unitName": "",
+"unitKind": "unit",
+"groupPath": "MCP_X",
+"filePath": "",
+"libraryName": "",
+"masterCopyPath": "",
+"copyMode": "",
+"generateOption": "KeepOnError",
+"targetKind": "",
+"targetGroupPath": "",
+"newName": "",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"generated"
+]
+},
+{
+"tool": "GenerateBlocksFromExternalSource",
+"args": {
+"softwarePath": "MCP_PLC",
+"externalSourceName": "mcp46_FC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "createGroup",
+"name": "",
+"unitName": "",
+"unitKind": "unit",
+"groupPath": "MCP_X/Sub",
+"filePath": "",
+"libraryName": "",
+"masterCopyPath": "",
+"copyMode": "",
+"targetKind": "",
+"targetGroupPath": "",
+"newName": "",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "renameGroup",
+"name": "",
+"unitName": "",
+"unitKind": "unit",
+"groupPath": "MCP_X/Sub",
+"filePath": "",
+"libraryName": "",
+"masterCopyPath": "",
+"copyMode": "",
+"targetKind": "",
+"targetGroupPath": "",
+"newName": "Sub3",
+"confirmDelete": false,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcExternalSources",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "deleteGroup",
+"name": "",
+"unitName": "",
+"unitKind": "unit",
+"groupPath": "MCP_X/Sub3",
+"filePath": "",
+"libraryName": "",
+"masterCopyPath": "",
+"copyMode": "",
+"targetKind": "",
+"targetGroupPath": "",
+"newName": "",
+"confirmDelete": true,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "DeletePlcExternalSource",
+"args": {
+"softwarePath": "MCP_PLC",
+"externalSourceName": "mcp46_FC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManagePlcSupervision",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "read",
+"blockPath": "",
+"providerKind": "settings",
+"compositionName": "",
+"entryName": "",
+"typeName": "",
+"filePath": "",
+"attributes": {},
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"attributes",
+"compositions"
+]
+},
+{
+"tool": "ManagePlcSupervision",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "read",
+"blockPath": "MCP_G/MCP_FB",
+"providerKind": "supervision",
+"compositionName": "",
+"entryName": "",
+"typeName": "",
+"filePath": "",
+"attributes": {},
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"attributes",
+"compositions"
+]
+},
+{
+"tool": "ExchangePlcSupervisions",
+"args": {
+"softwarePath": "MCP_PLC",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp46_prodiag.xlsx",
+"importOptions": "None",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"nativeState"
+]
+},
+{
+"tool": "WritePlcSclSourceFile",
+"args": {
+"sclContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Document>\n  <Engineering version=\"V21\" />\n  <SW.WatchAndForceTables.PlcWatchTable ID=\"0\">\n    <AttributeList>\n      <Name>MCP_WT</Name>\n    </AttributeList>\n    <ObjectList>\n      <SW.WatchAndForceTables.PlcWatchTableEntry ID=\"1\" CompositionName=\"Entries\">\n        <AttributeList>\n          <Address>%I0.0</Address>\n          <DisplayFormat>Bool</DisplayFormat>\n          <ModifyTrigger>Permanent</ModifyTrigger>\n          <MonitorTrigger>Permanent</MonitorTrigger>\n          <Name>MCP_Start</Name>\n        </AttributeList>\n      </SW.WatchAndForceTables.PlcWatchTableEntry>\n    </ObjectList>\n  </SW.WatchAndForceTables.PlcWatchTable>\n</Document>\n",
+"outputPath": "${EXPORT_ROOT}\\mcp46_wt.xml"
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"path"
+]
+},
+{
+"tool": "ImportPlcWatchTableOffline",
+"args": {
+"softwarePath": "MCP_PLC",
+"filePath": "${EXPORT_ROOT}\\mcp46_wt.xml",
+"groupPath": "MCP_W",
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after",
+"imported"
+]
+},
+{
+"tool": "ListPlcWatchTables",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManagePlcTableEntries",
+"args": {
+"softwarePath": "MCP_PLC",
+"tableKind": "watch",
+"tablePath": "MCP_W/MCP_WT",
+"action": "read",
+"entryIndex": -1,
+"confirmDelete": false,
+"dryRun": true,
+"offset": 0,
+"limit": 20
+},
+"note": "",
+"expect": "any",
+"keys": [
+"rows"
+]
+},
+{
+"tool": "ExportPlcWatchTable",
+"args": {
+"softwarePath": "MCP_PLC",
+"watchTableName": "MCP_WT",
+"exportPath": "${EXPORT_ROOT}\\mcp46_wt_export.xml"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportPlcWatchTablesToDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"dir": "${EXPORT_ROOT}\\mcp46_wt",
+"regexName": ""
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListPlcForceTables",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ManageTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"action": "create",
+"typeIdentifier": "TO_PositioningAxis",
+"version": "6.0",
+"parameter": "",
+"value": null,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": [
+"after"
+]
+},
+{
+"tool": "ListTechnologyObjects",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "GetTechnologyObjectTree",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "ManageTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"action": "read",
+"typeIdentifier": "",
+"version": "",
+"parameter": "",
+"value": null,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "GetMotionAxisConfiguration",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"includeParameters": true,
+"offset": 0,
+"limit": 30
+},
+"note": "",
+"expect": "any",
+"keys": [
+"values",
+"parameters"
+]
+},
+{
+"tool": "ManageMotionAxis",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"action": "read",
+"aspect": "",
+"name": "",
+"properties": {},
+"sensorIndex": -1,
+"confirmDelete": false,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ConfigureMotionHardwareConnection",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"interfaceKind": "actor",
+"action": "read",
+"connectOption": "",
+"sensorIndex": 0,
+"dryRun": true
+},
+"note": "",
+"expect": "any",
+"keys": [
+"before"
+]
+},
+{
+"tool": "ExchangeMotionCamData",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"action": "export",
+"filePath": "${EXPORT_ROOT}\\mcp46_cam.txt",
+"format": "PointList",
+"separator": "Comma",
+"pointCount": 100,
+"dryRun": true
+},
+"note": "axis, not a cam",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"toName": "MCP_Axis",
+"exportPath": "${EXPORT_ROOT}\\mcp46_axis.xml"
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ExportTechnologyObjectsToDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"exportDir": "${EXPORT_ROOT}\\mcp46_to",
+"regexName": ""
+},
+"note": "",
+"expect": "any",
+"keys": [
+"exported"
+]
+},
+{
+"tool": "ManageTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"objectPath": "MCP_Axis",
+"action": "delete",
+"typeIdentifier": "",
+"version": "",
+"parameter": "",
+"value": null,
+"dryRun": false
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ImportTechnologyObject",
+"args": {
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_TO",
+"importPath": "${EXPORT_ROOT}\\mcp46_axis.xml"
+},
+"note": "",
+"expect": "any",
+"keys": [
+"verified"
+]
+},
+{
+"tool": "ImportTechnologyObjectsFromDirectory",
+"args": {
+"softwarePath": "MCP_PLC",
+"folderPath": "MCP_TO",
+"dir": "${EXPORT_ROOT}\\mcp46_to",
+"regexName": "",
+"overwrite": true
+},
+"note": "",
+"expect": "any",
+"keys": []
+},
+{
+"tool": "ListTechnologyObjects",
+"args": {
+"softwarePath": "MCP_PLC"
+},
+"note": "",
+"expect": "ok",
+"keys": []
+},
+{
+"tool": "CompilePlcDiagnostics",
+"args": {
+"softwarePath": "MCP_PLC",
+"password": ""
+},
+"note": "",
+"expect": "ok",
+"keys": [
+"errorCount",
+"warningCount"
+]
+}
+]
