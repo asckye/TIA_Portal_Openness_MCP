@@ -1,0 +1,93 @@
+<Project>
+  <PropertyGroup><_CheckAllOriginalTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildProjectDirectory)'))</_CheckAllOriginalTargets></PropertyGroup>
+  <Import Project="$(_CheckAllOriginalTargets)" Condition="'$(_CheckAllOriginalTargets)' != ''" />
+  <PropertyGroup Condition="'$(CheckAllVariant)' != ''">
+    <!-- Restore is dispatched once per discovered build node. Keep this local,
+         rather than changing the global-property identity only for Restore. -->
+    <RestoreRecursive>false</RestoreRecursive>
+    <_CheckAllLegacyOutputPath>$(OutputPath)</_CheckAllLegacyOutputPath>
+    <_CheckAllOriginalLockPath Condition="'$(NuGetLockFilePath)' != ''">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(NuGetLockFilePath)'))))</_CheckAllOriginalLockPath>
+    <_CheckAllOriginalLockPath Condition="'$(_CheckAllOriginalLockPath)' == ''">$(MSBuildProjectDirectory)/packages.lock.json</_CheckAllOriginalLockPath>
+    <NuGetLockFilePath>$(BaseIntermediateOutputPath)packages.lock.json</NuGetLockFilePath>
+    <OutputPath>$(MSBuildProjectDirectory)/bin/check-all/$(CheckAllVariant)/$(_CheckAllPropertyHash)/$(Configuration)/$(TargetFramework)/</OutputPath>
+    <IntermediateOutputPath Condition="!$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('_wpftmp'))">$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/</IntermediateOutputPath>
+    <!-- MSBuild's incremental input check treats editorconfig paths over
+         MAX_PATH as missing, even when Roslyn successfully writes them. -->
+    <GeneratedMSBuildEditorConfigFile Condition="'$(GeneratedMSBuildEditorConfigFile)' == '' and $([System.String]::Copy('$(IntermediateOutputPath)$(MSBuildProjectName).GeneratedMSBuildEditorConfig.editorconfig').Length) &gt; 259">$(IntermediateOutputPath)check-all.editorconfig</GeneratedMSBuildEditorConfigFile>
+    <OutDir>$(OutputPath)</OutDir>
+    <TargetDir>$(OutputPath)</TargetDir>
+    <TargetPath>$(TargetDir)$(TargetFileName)</TargetPath>
+    <ProjectDepsFilePath>$(TargetDir)$(AssemblyName).deps.json</ProjectDepsFilePath>
+    <ProjectRuntimeConfigFilePath>$(TargetDir)$(AssemblyName).runtimeconfig.json</ProjectRuntimeConfigFilePath>
+  </PropertyGroup>
+  <Target Name="SeedCheckRestoreLock" BeforeTargets="_GenerateRestoreGraphProjectEntry" Condition="'$(CheckAllVariant)' != '' and Exists('$(_CheckAllOriginalLockPath)') and !Exists('$(NuGetLockFilePath)')">
+    <Copy SourceFiles="$(_CheckAllOriginalLockPath)" DestinationFiles="$(NuGetLockFilePath)" />
+  </Target>
+  <PropertyGroup><_CheckRuntimeDependsOn Condition="'$(IsCrossTargetingBuild)' == 'true'">_ComputeTargetFrameworkItems</_CheckRuntimeDependsOn></PropertyGroup>
+  <Target Name="GetCheckRuntime" DependsOnTargets="$(_CheckRuntimeDependsOn)" Returns="@(CheckRuntime)">
+    <ItemGroup Condition="'$(IsCrossTargetingBuild)' != 'true'">
+      <CheckRuntime Include="$(MSBuildProjectFullPath)">
+        <Variant>$(CheckAllVariant)</Variant>
+        <Source>$(TargetDir)</Source>
+        <Assembly>$(TargetPath)</Assembly>
+        <Destination>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(_CheckAllLegacyOutputPath)'))))</Destination>
+      </CheckRuntime>
+    </ItemGroup>
+    <MSBuild Projects="@(_InnerBuildProjects)" Targets="GetCheckRuntime" BuildInParallel="$(BuildInParallel)" Condition="'$(IsCrossTargetingBuild)' == 'true'">
+      <Output TaskParameter="TargetOutputs" ItemName="CheckRuntime" />
+    </MSBuild>
+  </Target>
+  <UsingTask TaskName="TiaMcp.ReleaseTool.VerifyCheckBuildIdentity" AssemblyFile="$(MSBuildThisFileDirectory)../../bin-build/check-all/TiaMcp.CheckBuild.dll" />
+  <UsingTask TaskName="TiaMcp.ReleaseTool.CollectCheckBuildNode" AssemblyFile="$(MSBuildThisFileDirectory)../../bin-build/check-all/TiaMcp.CheckBuild.dll" />
+  <UsingTask TaskName="TiaMcp.ReleaseTool.AssignCheckBuildNodes" AssemblyFile="$(MSBuildThisFileDirectory)../../bin-build/check-all/TiaMcp.CheckBuild.dll" />
+  <Target Name="AssignCheckNegotiationIdentities" BeforeTargets="_GetProjectReferenceTargetFrameworkProperties">
+    <AssignCheckBuildNodes Projects="@(_MSBuildProjectReferenceExistent)" ReferenceSettings="true" Negotiation="true" RemoveProperties="$(_GlobalPropertiesToRemoveFromProjectReferences)">
+      <Output TaskParameter="Nodes" ItemName="_CheckNegotiationNodes" />
+    </AssignCheckBuildNodes>
+    <ItemGroup><_MSBuildProjectReferenceExistent Remove="@(_MSBuildProjectReferenceExistent)" /><_MSBuildProjectReferenceExistent Include="@(_CheckNegotiationNodes)" /></ItemGroup>
+  </Target>
+  <Target Name="AssignCheckReferenceIdentities" AfterTargets="PrepareProjectReferences">
+    <AssignCheckBuildNodes Projects="@(_MSBuildProjectReferenceExistent)" ReferenceSettings="true" RemoveProperties="$(_GlobalPropertiesToRemoveFromProjectReferences)">
+      <Output TaskParameter="Nodes" ItemName="_CheckReferenceNodes" />
+    </AssignCheckBuildNodes>
+    <ItemGroup><_MSBuildProjectReferenceExistent Remove="@(_MSBuildProjectReferenceExistent)" /><_MSBuildProjectReferenceExistent Include="@(_CheckReferenceNodes)" /></ItemGroup>
+  </Target>
+  <Target Name="AssignCheckInnerIdentities" AfterTargets="_ComputeTargetFrameworkItems">
+    <AssignCheckBuildNodes Projects="@(_InnerBuildProjects)"><Output TaskParameter="Nodes" ItemName="_CheckInnerNodes" /></AssignCheckBuildNodes>
+    <ItemGroup><_InnerBuildProjects Remove="@(_InnerBuildProjects)" /><_InnerBuildProjects Include="@(_CheckInnerNodes)" /></ItemGroup>
+  </Target>
+  <PropertyGroup>
+    <_CheckBuildGraphDependsOn Condition="'$(IsCrossTargetingBuild)' == 'true'">_ComputeTargetFrameworkItems</_CheckBuildGraphDependsOn>
+    <_CheckBuildGraphDependsOn Condition="'$(IsCrossTargetingBuild)' != 'true'">PrepareCheckBuildGraph;PrepareProjectReferences</_CheckBuildGraphDependsOn>
+  </PropertyGroup>
+  <Target Name="PrepareCheckBuildGraph">
+    <!-- Reference negotiation is safe before Restore. Package dependency
+         resolution runs here only when this evaluation already has assets. -->
+    <PropertyGroup><_CleaningWithoutRebuilding>true</_CleaningWithoutRebuilding></PropertyGroup>
+  </Target>
+  <Target Name="GetCheckBuildGraph" DependsOnTargets="$(_CheckBuildGraphDependsOn)" Returns="@(_CheckBuildNodes)">
+    <CollectCheckBuildNode Project="$(MSBuildProjectFullPath)">
+      <Output TaskParameter="Node" ItemName="_CheckBuildNodes" />
+    </CollectCheckBuildNode>
+    <MSBuild Projects="@(_InnerBuildProjects)" Targets="GetCheckBuildGraph" BuildInParallel="$(BuildInParallel)"
+             Condition="'$(IsCrossTargetingBuild)' == 'true'">
+      <Output TaskParameter="TargetOutputs" ItemName="_CheckBuildNodes" />
+    </MSBuild>
+    <!-- Match ResolveProjectReferences, including target-time reference metadata.
+         Static ProjectGraph evaluation cannot see those metadata updates. -->
+    <MSBuild Projects="@(_MSBuildProjectReferenceExistent)" Targets="GetCheckBuildGraph" BuildInParallel="$(BuildInParallel)"
+             Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration);%(_MSBuildProjectReferenceExistent.SetPlatform);%(_MSBuildProjectReferenceExistent.SetTargetFramework)"
+             RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove)$(_GlobalPropertiesToRemoveFromProjectReferences)"
+             Condition="'$(IsCrossTargetingBuild)' != 'true' and '%(_MSBuildProjectReferenceExistent.BuildReference)' == 'true' and '$(BuildProjectReferences)' == 'true'">
+      <Output TaskParameter="TargetOutputs" ItemName="_CheckBuildNodes" />
+    </MSBuild>
+  </Target>
+  <Target Name="VerifyCheckOutputIdentity" BeforeTargets="PrepareForBuild" Condition="'$(CheckAllVariant)' != ''">
+    <PropertyGroup><_CheckVerifyNodeId Condition="!$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('_wpftmp'))">$(CheckAllNodeId)</_CheckVerifyNodeId></PropertyGroup>
+    <VerifyCheckBuildIdentity Project="$(MSBuildProjectFullPath)" Directory="$(IntermediateOutputPath)" NodeId="$(_CheckVerifyNodeId)" />
+  </Target>
+  <Target Name="StageCheckPrerequisite" DependsOnTargets="Build">
+    <ItemGroup><_CheckPrerequisiteFiles Include="$(TargetDir)**/*" /></ItemGroup>
+    <Copy SourceFiles="@(_CheckPrerequisiteFiles)" DestinationFiles="@(_CheckPrerequisiteFiles->'$(MSBuildProjectDirectory)/$(_CheckAllLegacyOutputPath)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

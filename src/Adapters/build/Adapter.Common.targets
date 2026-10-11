@@ -18,7 +18,8 @@
     <Error Condition="'%(_AdapterIdentity.Identity)' != '%(_AdapterIdentity.ExpectedIdentity)'" Text="Wrong adapter API identity at %(_AdapterIdentity.OriginalItemSpec): %(_AdapterIdentity.Identity). Expected %(_AdapterIdentity.ExpectedIdentity)" />
     <Message Importance="high" Text="Adapter $(AdapterReleaseKey): $(TargetFramework); @(_AdapterIdentity); PLC foundation; native acceptance NOT RUN." />
   </Target>
-  <Target Name="InstrumentAdapterNativeBoundaries" AfterTargets="CoreCompile" Condition="'$(DesignTimeBuild)' != 'true'">
+  <Target Name="InstrumentAdapterNativeBoundaries" AfterTargets="CoreCompile" Condition="'$(DesignTimeBuild)' != 'true'"
+          Inputs="@(IntermediateAssembly);$(NativeCallWeaverPath)" Outputs="$(IntermediateOutputPath)native-call-coverage.json">
     <Error Condition="!Exists('$(NativeCallWeaverPath)')" Text="Native call weaver missing. Build the repository weaver first or provide NativeCallWeaverPath. Uninstrumented adapter output is refused." />
     <Exec Command="dotnet &quot;$(NativeCallWeaverPath)&quot; weave &quot;@(IntermediateAssembly)&quot; &quot;$(IntermediateOutputPath)native-call-coverage.json&quot;" />
     <Exec Command="dotnet &quot;$(NativeCallWeaverPath)&quot; verify &quot;@(IntermediateAssembly)&quot;" />

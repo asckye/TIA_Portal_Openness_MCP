@@ -183,6 +183,11 @@ internal static class DotnetSuites
         var catalog = LoadCatalog(options.Get("Catalog", Path.Combine(root, "tests/test-suites.json")), root);
         var unknown = names.Where(name => !catalog.ContainsKey(name)).Distinct().Order(PythonStringComparer.Instance).ToArray();
         if (unknown.Length != 0) throw new ReleaseException("Unknown suites: " + string.Join(", ", unknown), 64);
+        if (options.Has("Shards") || options.Has("MaxParallelism") || options.Has("NoBuild") || options.Has("ProveEquivalence"))
+        {
+            var fast = FastSuites.Run(root, options, catalog);
+            return fast with { StandardOutput = output + fast.StandardOutput };
+        }
         var arguments = options.All("DotnetArg").Concat(options.Has("NoRestore") ? new[] { "--no-restore" } : []).ToArray();
         var success = true;
         // The engine variants share build outputs and must never run concurrently here.

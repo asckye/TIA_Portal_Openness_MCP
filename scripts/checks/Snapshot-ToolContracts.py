@@ -648,7 +648,7 @@ def catalog_rosters(root):
     return rosters
 
 
-def verified_contracts(directory, root):
+def verified_contracts(directory, root, parameters=None):
     exact_release_files(directory)
     snapshots = load_snapshots(directory)
     rosters = catalog_rosters(root)
@@ -657,7 +657,7 @@ def verified_contracts(directory, root):
     expected = {release: [{**{key: r[key] for key in ('family', 'state', 'l5')},
         'entries': sorted({e['entry'] for e in catalog['behaviorEntries'] if e['releaseKey'] == release and e['family'] == r['family']})}
         for r in catalog['behaviorPolicies'] if r['releaseKey'] == release] for release in RELEASES}
-    contracts = current_parameters(root)
+    contracts = parameters if parameters is not None else current_parameters(root)
     source_engine = {name for (profile, name) in contracts if profile == 'full-engine'}
     policy = (root / 'src/EngineHost/SharedToolCatalog.cs').read_text('utf-8')
     removed = set(re.findall(r'"(\w+)"', policy.split('Removed =', 1)[1].split('};', 1)[0]))
@@ -792,12 +792,13 @@ def candidate_parameters(root):
 
 def check_current_schemas(snapshot, contracts, root=Path(__file__).resolve().parents[2]):
     candidate_fields = candidate_parameters(root)
+    foundation_names = foundation_registered_names(root, contracts) | FOUNDATION_UNAVAILABLE_BELOW_20
     by_name = {tool['name']: tool for tool in snapshot['tools']}
     for row in snapshot['behaviorCapabilities']:
         if row['state'] != 'current': continue
         for entry in row['entries']:
             properties = by_name[entry]['inputSchema']['properties']
-            profile = 'plc-foundation' if entry in foundation_registered_names(root, contracts) | FOUNDATION_UNAVAILABLE_BELOW_20 else snapshot['profile']
+            profile = 'plc-foundation' if entry in foundation_names else snapshot['profile']
             if (profile, entry) not in contracts: continue
             allowed = contracts[(profile, entry)]
             if set(properties) - set(allowed):
@@ -847,7 +848,7 @@ def self_test(args):
             source['formatVersion'] = FORMAT_VERSION
             (scratch / path.name).write_text(json.dumps(source, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
                                              encoding='utf-8', newline='\n')
-        verified_contracts(scratch, root)
+        verified_contracts(scratch, root, contracts)
         baseline21 = json.loads((root / 'manifest/contracts/v4/baseline/21.json').read_text(encoding='utf-8'))
         baseline21['formatVersion'] = FORMAT_VERSION
         for field in ('behaviorCapabilities', 'outputSchema'):
@@ -855,7 +856,7 @@ def self_test(args):
             if field == 'outputSchema': current['tools'][0].pop(field)
             else: current[field][0]['state'] = 'safe-v4'
             (scratch / '21.json').write_text(json.dumps(current), encoding='utf-8')
-            try: verified_contracts(scratch, root)
+            try: verified_contracts(scratch, root, contracts)
             except ValueError: count += 1
             else: raise AssertionError('Invalid capability/output snapshot accepted')
             (scratch / '21.json').write_text(json.dumps(baseline21, ensure_ascii=False, sort_keys=True, indent=2) + '\n',

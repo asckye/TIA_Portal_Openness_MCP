@@ -23,6 +23,7 @@ internal static partial class ReleaseCommands
         "release" => Release(options),
         "run-release-build" => RunReleaseBuild(options),
         "branch-gate" => BranchGate(options),
+        "check-all" => CheckAll(options),
         "build-tool" => BuildTool(options),
         "cache-info" => CacheInfo(options),
         "cache-clear" => CacheClear(options),
@@ -42,10 +43,8 @@ internal static partial class ReleaseCommands
         _ => throw new ReleaseException($"Unknown release command '{command}'.", 64)
     };
 
-    private static int Preflight(Options options)
-    {
-        var checks = new List<(string Name, string Exe, string[] Args)>
-        {
+    private static List<(string Name, string Exe, string[] Args)> PreflightChecks() =>
+        [
             ("repository, links, shipped-document links, CHANGELOG version", "check-repository", ["-NoBinaries"]),
             ("repository check self-tests", "check-repository", ["-SelfTest"]),
             ("dead tool references (descriptions and current docs)", "check-dead-tool-references", []),
@@ -61,9 +60,32 @@ internal static partial class ReleaseCommands
             ("release documentation rules", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "release", "-DocumentationOnly"]),
             ("release tool test suite", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false"]),
             ("parallel pipeline behavior", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Pipeline"])
-        };
+        ];
+
+    private static int Preflight(Options options)
+    {
+        var checks = PreflightChecks();
 
         if (options.Get("Tier") == "package") checks = checks.Where(check => check.Name is "repository, links, shipped-document links, CHANGELOG version" or "dead tool references (descriptions and current docs)" or "strict bundle rules" or "release documentation rules").ToList();
+        if (options.Has("MaxParallelism") || options.Has("NoBuild"))
+        {
+            var logRoot = Path.Combine(Root, "bin-build/preflight-" + Guid.NewGuid().ToString("N"));
+            var jobs = checks.Select((check, index) => new CheckJob("preflight-" + index, () =>
+            {
+                var arguments = AddOfflineNuGetConfig(check.Exe, check.Args).ToList();
+                if (options.Has("NoBuild") && check.Args.FirstOrDefault() == "test") arguments.AddRange(["--no-build", "--no-restore"]);
+                if (options.Has("NoBuild") && check.Args.Contains("-SelfTest") && check.Exe != "test-suites") arguments.Add("-NoBuild");
+                var environment = FastSuites.EnvironmentFor(Path.Combine(logRoot, "isolation", index.ToString()));
+                if (check.Name == "release tool test suite" && options.Has("NoBuild"))
+                    return FastSuites.Run(Root, Options.Parse(["-Suite", "release-tool", "-NoBuild", "-Shards", options.Get("Shards", "8"), "-MaxParallelism", GetMaxParallelism(options).ToString(), "-ResultsDirectory", Path.Combine(logRoot, "release-tool")], new HashSet<string> { "NoBuild" }), DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root));
+                var command = check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal)
+                    ? new[] { typeof(ReleaseCommands).Assembly.Location, check.Exe }.Concat(arguments) : arguments;
+                return ProcessRunner.Run(check.Exe == "test-suites" || check.Exe.StartsWith("check-", StringComparison.Ordinal) ? Dotnet : check.Exe, command, Root, environment);
+            }, [], Exclusive: check.Name == "release tool test suite")).ToArray();
+            var rows = CheckScheduler.Run(jobs, GetMaxParallelism(options), logRoot);
+            Console.WriteLine($"PREFLIGHT: {rows.Count(row => row.Status == "passed")} passed, {rows.Count(row => row.Status != "passed")} failed; {logRoot}");
+            return rows.All(row => row.Status == "passed") ? 0 : 1;
+        }
         var failures = new List<(string Name, CommandResult Result)>();
         foreach (var check in checks)
         {
@@ -530,7 +552,7 @@ internal static partial class ReleaseCommands
     private static int ValidateBundle(Options options)
     {
         if (options.Has("SelfTest"))
-            return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=BundleParity"], Root, "Bundle validation tests");
+            return RunChild(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", .. options.Has("NoBuild") ? new[] { "--no-build", "--no-restore" } : [], "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=BundleParity"], Root, "Bundle validation tests");
         var root = Path.GetFullPath(options.Get("BundleRoot", Root));
         if (!Directory.Exists(root)) throw new ReleaseException($"Bundle root does not exist: {root}");
         var package = options.Has("PackageMode") || !File.Exists(Path.Combine(root, "Version.props"));

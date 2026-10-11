@@ -24,6 +24,44 @@
 该开关让真实 planner 的 Basic/plain 八版夹具把实际 UTF-8 字节写入源码 Golden 目录；
 其他确定性、哈希和语义断言仍执行。移除开关，审查每个 diff，再正常运行同一套件验证；默认运行不写文件。
 
+本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录和工具用法，再构建两个 solution 的项目、八版 PLC worker、
+V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用 `--no-build --no-restore`。
+SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
+
+```powershell
+dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <ecosystem-python/Scripts/python.exe> -MaxParallelism 16 -BuildParallelism 16 -StabilityCores 8 -StabilityParallelism 2 -Shards 8 -OutputDirectory bin-build/check-all/run-1
+```
+
+`-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，并复用构建缓存；
+`-Cold` 先清理已列入构建图的输出，记录冷构建耗时。暖运行不加 `-Clean`，在同一 worktree 内保留 `obj` 和 `bin` 做增量构建，
+不恢复或重写缓存输出。构建复用 SDK 的引用准备目标收集实际节点及全局属性，包含目标执行时修改的引用属性、框架协商和 NuGet 加入的传递引用。
+每轮 Restore 后重新求值，节点与属性集合稳定后才开始一次编译；失败或四轮后仍不稳定立即停止。节点标识在求值前按项目路径及实际全局属性字典计算，区分显式全局值与项目的同值默认值，也区分同目录中的不同项目。
+每个项目/属性组合使用固定的 obj/bin 目录，适配器显式关闭的 Directory.Build 导入也由本入口统一启用；编译前另核对节点标识和完整 SHA-256 收据，冲突立即失败。
+较长项目名的生成 editorconfig 使用同一中间目录内的短文件名，避免 Windows 增量检查把超过 MAX_PATH 的输入误判为缺失而重复编译。
+构建或生成失败立即停止全集并写出失败报告，不能继续使用旧输出。运行时按 MSBuild 返回的实际路径复制到原发现布局，文件内容不变时不重写；注册套件用对应变体的准确 TargetPath 执行。
+release CLI 保留已经启动的普通目录副本，避免覆盖外层启动器持有的 DLL；检查命令使用私有 driver，release-tool 套件使用准确的变体程序集。
+Studio 测试从原开发目录运行，沿用 bundle 定位器；bridge 载荷来自对应的隔离编译变体。
+`-BuildParallelism` 单独控制 MSBuild 并发，沙箱中可设为 1。`-BuildOnly` 只测生成与构建，用于无改动、单文件改动诊断，不能替代全集验收。
+每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和五分钟门槛。
+低于五分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
+
+构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部 15 项并展开到该图，避免嵌套调度；汇总在依赖结束后执行，失败的分片仍产生汇总。
+压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多两个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。四组诊断曾触发原句柄界限，因此上限保持两组。
+读取 Windows 物理核拓扑，优先预留较高性能等级的完整物理核，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。cpu-plan.json 记录实际分配，不把非空闲诊断当作性能验收。
+客户端启动后先等待父进程分配 job，再启动实际命令，job 限制覆盖宿主、worker 和立即启动的子孙进程。50 轮、内存和句柄增长限值保持；结果及失败前的 process-samples.json 记录实际 affinity 与样本。worker deadline 和配置页面检查独占普通队列，隔离的压测队列继续运行。
+`-MaxParallelism` 或 `-CpuParallelism` 显式指定普通队列进程上限，受剩余 CPU 数约束，不受旧校准文件压低。未指定时使用本机核心数，只有标记 representativeIdleMeasurement=true 的本机 cpu-budget.json 才覆盖默认值。
+cpu-plan.json 记录核掩码、队列容量、依赖、预测成本及 companion Python；check-costs.json 保存实测整项成本用于最长耗时优先调度。`-CompanionPython` 优先于 TIA_MCP_PLC_TOOLS_PYTHON；未指定时查询 worktree 或 SDK 所属仓库的 TiaMcp_Output/ecosystem-python 环境，传给所有隔离子进程，保留 PDF 和伴随命令检查。
+每个进程在系统临时目录下使用独立的短 TEMP，数据及配置位于该 TEMP 内，避免 Git 与安装目录检查误认源码 checkout；Harness 使用独立引擎副本和套件结果目录。
+`bin-build/check-timings` 保存套件的用例耗时历史，先用单进程 TRX 初始化，再用执行边界的实际耗时更新（含旧 theory 的 producer 时间）。
+计划按耗时从长到短分配到最轻的分片，目标为 55 秒执行加约 5 秒启动；可序列化 theory 可逐例拆分，延迟枚举的旧 CheckTheory 保留完整 producer。
+未知用例继续使用确定性分片键，不省略执行；分片计划及预测耗时保存在套件结果目录。`process-load.json` 和每项计时记录同期本轮及其他进程 CPU 增量、不可读取进程数；一秒采样可能漏记很短的进程。
+合并后仍检查原套件最低通过数、最高跳过数和失败数。
+
+首次等价验证可加 `-ProveEquivalence`，执行原有单进程测试后比较完整测试身份多重集合及结果；此验证运行计入耗时。
+之后可用 `-SequentialBaselineDirectory <directory>` 复用各套件的 `<suite>.trx` 证据，每次仍执行全部分片及比较。
+`-BaselineReport <report.json>` 提供逐检查旧计时；未提供时只使用任务给出的四个套件旧计时，其余标为未测量。
+管道或 HTTP 检查在沙箱失败时保留失败证据，由审查者在沙箱外复跑，不降低门槛。
+
 审查链显式使用 `run-release-build -Tier package|quick|full`；命令、缓存与 baseline 规则见
 [发布流程](release-workflow.md#packagequick-测试包与-full-发布候选包)。package 是 VM 测试包入口：
 只做源码预检、构建、打包、strict 验包、重定位和产品 smoke。quick 按最具体的源码所有权追加检查；full 运行全部检查。

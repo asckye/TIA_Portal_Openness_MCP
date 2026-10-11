@@ -182,6 +182,14 @@ internal static partial class ReleaseCommands
         string logs = Path.Combine(Root, "bin-build/release-compile");
         Directory.CreateDirectory(logs);
         string weaver = Path.Combine(Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll");
+        if (options.Has("NoBuild"))
+        {
+            foreach (var path in new[] { weaver, "src/Engine/bin-v20/Release/net48/TiaMcp.Engine.V20.exe", "src/Engine/bin/Release/net48/TiaMcp.Engine.V21.exe",
+                "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe", "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe" })
+                RequireFile(Path.IsPathRooted(path) ? path : Path.Combine(Root, path), "CompileOnly -NoBuild requires the completed check-all build graph");
+            Console.WriteLine("PASS production compilation outputs from the completed build graph");
+            return 0;
+        }
         void Build(string name, string project, string? api = null)
         {
             var args = new List<string> { "build", project, "-c", "Release", "--disable-build-servers", "-m:1", "-nodeReuse:false",

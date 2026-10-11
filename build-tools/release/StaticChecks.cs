@@ -14,7 +14,7 @@ internal static partial class ReleaseCommands
             try
             {
                 Console.SetOut(output); Console.SetError(error);
-                var code = StaticCheck(command, Options.Parse(arguments, new HashSet<string>(["SelfTest", "NoBinaries", "PackageMode", "UpdateBaseline", "AllowGrowth", "Fix"], StringComparer.OrdinalIgnoreCase)));
+                var code = StaticCheck(command, Options.Parse(arguments, new HashSet<string>(["SelfTest", "NoBinaries", "PackageMode", "UpdateBaseline", "AllowGrowth", "Fix", "NoBuild"], StringComparer.OrdinalIgnoreCase)));
                 return new CommandResult(code, output.ToString(), error.ToString());
             }
             catch (ReleaseException ex) { return new CommandResult(ex.ExitCode, output.ToString(), error + ex.Message); }
@@ -27,7 +27,7 @@ internal static partial class ReleaseCommands
         {
             // The test project references this running tool. Rebuilding its Windows
             // apphost would try to replace the executable currently holding the gate.
-            var result = ProcessRunner.Run(Dotnet, AddOfflineNuGetConfig(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=StaticChecks"]), Root);
+            var result = ProcessRunner.Run(Dotnet, AddOfflineNuGetConfig(Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", .. options.Has("NoBuild") ? new[] { "--no-build", "--no-restore" } : [], "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=StaticChecks"]), Root);
             Console.Write(result.StandardOutput); Console.Error.Write(result.StandardError);
             return result.ExitCode;
         }

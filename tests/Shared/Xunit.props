@@ -10,5 +10,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)CheckSuite.cs" Link="Shared/CheckSuite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CheckTheory.cs" Link="Shared/CheckTheory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XunitDefaults.cs" Link="Shared/XunitDefaults.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ShardFramework.cs" Link="Shared/ShardFramework.cs" />
+    <AssemblyAttribute Include="Xunit.TestFrameworkAttribute">
+      <_Parameter1>TiaMcp.Engine.Tests.Shared.ShardFramework</_Parameter1>
+      <_Parameter2>$(AssemblyName)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

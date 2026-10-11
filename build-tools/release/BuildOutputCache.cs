@@ -58,14 +58,9 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
 
     private static int IndexOf(byte[] haystack, byte[] needle, int start)
     {
-        for (var i = start; i <= haystack.Length - needle.Length; i++)
-        {
-            if (haystack[i] != needle[0]) continue;
-            var match = true;
-            for (var j = 1; j < needle.Length && match; j++) match = haystack[i + j] == needle[j];
-            if (match) return i;
-        }
-        return -1;
+        if (start > haystack.Length) return -1;
+        var index = haystack.AsSpan(start).IndexOf(needle);
+        return index < 0 ? -1 : start + index;
     }
 
     internal bool Restore(string key, string output) => Restore(key, new Dictionary<string, string> { [""] = output });
@@ -118,7 +113,8 @@ internal sealed class BuildOutputCache(string directory, string unit, long maxBy
                     {
                         var target = Path.Combine(outputs[output.Path], row.Path);
                         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                        File.Copy(Path.Combine(payload, output.Path, row.Path), target, true);
+                        if (!File.Exists(target) || ReleaseRecords.HashFile(target) != row.Sha256)
+                            File.Copy(Path.Combine(payload, output.Path, row.Path), target, true);
                         if (ReleaseRecords.HashFile(target) != row.Sha256) throw new IOException("Cache copy hash mismatch");
                     }
                 }

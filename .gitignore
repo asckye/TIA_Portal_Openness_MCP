@@ -9,6 +9,7 @@
 **/bin/Debug/
 **/bin-v20/Debug/
 **/bin/Release/
+**/bin/check-all/
 **/bin-v20/Release/
 TiaMcp_Output/
 *.user

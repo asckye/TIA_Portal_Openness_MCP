@@ -9,7 +9,7 @@ internal static class Program
         "DryRun", "SkipBuild", "NoReuse", "EarlyGatesOnly", "DocumentationOnly", "SelfTest", "NoPush", "NoTag", "NoWait",
         "KillStrayEngine", "Resume", "NoRestore", "PrepareOnly", "CompleteOnly", "Offline", "Test", "Strict", "NoBinaries",
         "SkipSourceHashes", "PackageMode", "UseReferenceAssemblyPackage", "Rebuild", "FunctionsOnly", "PassThru", "SkipFullEngines",
-        "DraftOnly", "DeleteDraft", "NoBuildCache", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check"
+        "DraftOnly", "DeleteDraft", "NoBuildCache", "CompileOnly", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "Clean", "Cold", "ProveEquivalence", "BuildOnly"
     };
 
     public static int Main(string[] args)
@@ -18,6 +18,7 @@ internal static class Program
         // tools folder to the user's persistent PATH until cmd.exe can no longer resolve dotnet.
         Environment.SetEnvironmentVariable("DOTNET_ADD_GLOBAL_TOOLS_TO_PATH", "false");
         Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "1");
+        if (args is ["--check-process"] && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_CHILD") == "1") return CheckAffinity.Child();
         if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
         {
             PrintUsage();
@@ -35,6 +36,20 @@ internal static class Program
         try
         {
             var options = Options.Parse(args[1..], BooleanOptions);
+            if ((command.Equals("check-all", StringComparison.OrdinalIgnoreCase) || command.Equals("test-suites", StringComparison.OrdinalIgnoreCase) &&
+                (options.Has("Shards") || options.Has("MaxParallelism"))) && Environment.GetEnvironmentVariable("TIA_MCP_CHECK_RUNNER") != "1")
+            {
+                // The traversal also compiles this tool. Execute a private copy so
+                // Windows never locks the build outputs being refreshed.
+                var directory = Path.Combine(Environment.CurrentDirectory, "bin-build/check-runners", Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(directory);
+                foreach (var path in Directory.EnumerateFiles(Path.GetDirectoryName(typeof(Program).Assembly.Location)!))
+                    File.Copy(path, Path.Combine(directory, Path.GetFileName(path)));
+                var result = ProcessRunner.Run(Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet",
+                    [Path.Combine(directory, "TiaMcp.ReleaseTool.dll"), .. args], Environment.CurrentDirectory,
+                    new Dictionary<string, string?> { ["TIA_MCP_CHECK_RUNNER"] = "1" }, forwardOutput: true);
+                return result.ExitCode;
+            }
             return ReleaseCommands.Run(command.ToLowerInvariant(), options);
         }
         catch (ReleaseException ex)
@@ -60,7 +75,7 @@ internal static class CommandLine
 {
     internal static readonly string[] Commands =
     [
-        "release", "build-release", "build-multi-version", "run-release-build", "branch-gate", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
+        "release", "build-release", "build-multi-version", "run-release-build", "branch-gate", "check-all", "build-tool", "cache-info", "cache-clear", "preflight", "prerequisites", "publish",
         "build-studio", "build-configurator", "build-plc-workers", "build-solutions", "publish-vci-watch", "prepare-delivery", "get-bundled-dotnet", "validate-bundle", "test-suites", "host-parity",
         "check-ratchet", "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references", "check-tia-features", "check-script-tool-calls",
         "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list"
@@ -107,6 +122,7 @@ internal sealed class Options
     internal string Get(string name, string fallback) => Get(name) ?? fallback;
     internal bool Has(string name) => values.ContainsKey(name) && !string.Equals(Get(name), "false", StringComparison.OrdinalIgnoreCase);
     internal IReadOnlyList<string> All(string name) => values.TryGetValue(name, out var list) ? list : [];
+    internal IEnumerable<string> Arguments() => values.SelectMany(pair => pair.Value.SelectMany(value => new[] { "-" + pair.Key + "=" + value }));
 }
 
 internal sealed class ReleaseException(string message, int exitCode = 1) : Exception(message)
@@ -118,18 +134,38 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
-    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null)
+    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false)
     {
+        var commandArguments = arguments.ToArray();
+        var affinity = CheckAffinity.Current;
+        string? childInput = null;
+        if (affinity != null)
+        {
+            var childEnvironment = environment == null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
+            childEnvironment["DOTNET_PROCESSOR_COUNT"] = System.Numerics.BitOperations.PopCount(affinity.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            childInput = System.Text.Json.JsonSerializer.Serialize(new CheckChild(executable, commandArguments, workingDirectory,
+                childEnvironment, standardInput));
+            executable = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
+            commandArguments = [typeof(Program).Assembly.Location, "--check-process"];
+        }
         var start = new ProcessStartInfo(executable)
         {
             WorkingDirectory = workingDirectory,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            RedirectStandardInput = standardInput is not null,
+            RedirectStandardInput = standardInput is not null || childInput != null,
             CreateNoWindow = true
         };
-        foreach (var argument in arguments) start.ArgumentList.Add(argument);
+        foreach (var argument in commandArguments) start.ArgumentList.Add(argument);
+        if (affinity is { } cpuMask)
+        {
+            start.Environment["TIA_MCP_CHECK_CHILD"] = "1";
+            // Convey the actual CPU budget before CLR startup as well as imposing
+            // the job limit. Otherwise runtime thread/GC sizing can use all cores.
+            start.Environment["DOTNET_PROCESSOR_COUNT"] = System.Numerics.BitOperations.PopCount(cpuMask).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+        foreach (var key in new[] { "TIA_MCP_TEST_SHARD_COUNT", "TIA_MCP_TEST_SHARD_INDEX", "TIA_MCP_TEST_SHARD_ASSEMBLY", "TIA_MCP_TEST_SHARD_PLAN", "TIA_MCP_TEST_CASE_TIMINGS" }) start.Environment.Remove(key);
         if (environment is not null)
             foreach (var (key, value) in environment)
                 if (value is null) start.Environment.Remove(key); else start.Environment[key] = value;
@@ -137,11 +173,32 @@ internal static class ProcessRunner
         using var process = new Process { StartInfo = start };
         try { process.Start(); }
         catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
-        var stdout = process.StandardOutput.ReadToEndAsync();
-        var stderr = process.StandardError.ReadToEndAsync();
-        if (standardInput is not null)
+        CheckLoad.Current?.Register(process.Id);
+        using var affinityJob = affinity is { } mask ? CheckAffinity.Assign(process, mask) : null;
+        StreamWriter? logWriter = null;
+        if (logPath != null)
         {
-            process.StandardInput.Write(standardInput);
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(logPath))!);
+            logWriter = new StreamWriter(new FileStream(logPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)) { AutoFlush = true };
+        }
+        using var ownedLog = logWriter;
+        var logLock = new object();
+        async Task<string> Read(StreamReader reader, TextWriter target)
+        {
+            var content = new System.Text.StringBuilder();
+            while (await reader.ReadLineAsync() is { } line)
+            {
+                content.AppendLine(line);
+                if (logWriter != null) lock (logLock) logWriter.WriteLine(line);
+                if (forwardOutput) target.WriteLine(line);
+            }
+            return content.ToString();
+        }
+        var stdout = logPath != null || forwardOutput ? Read(process.StandardOutput, Console.Out) : process.StandardOutput.ReadToEndAsync();
+        var stderr = logPath != null || forwardOutput ? Read(process.StandardError, Console.Error) : process.StandardError.ReadToEndAsync();
+        if (standardInput is not null || childInput != null)
+        {
+            if (childInput != null) process.StandardInput.WriteLine(childInput); else process.StandardInput.Write(standardInput);
             process.StandardInput.Close();
         }
         if (timeoutMilliseconds is { } timeout && !process.WaitForExit(timeout))
@@ -153,11 +210,6 @@ internal static class ProcessRunner
         process.WaitForExit();
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
-        if (logPath is not null)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(logPath))!);
-            File.WriteAllText(logPath, output + error);
-        }
         return new CommandResult(process.ExitCode, output, error);
     }
 

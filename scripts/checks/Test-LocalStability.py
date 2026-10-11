@@ -70,6 +70,7 @@ def process_sample(process):
     kernel.CloseHandle.argtypes = [wintypes.HANDLE]
     kernel.GetProcessHandleCount.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
     kernel.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    kernel.GetProcessAffinityMask.argtypes = [wintypes.HANDLE, ctypes.POINTER(ctypes.c_size_t), ctypes.POINTER(ctypes.c_size_t)]
     psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
     handle = kernel.OpenProcess(0x410, False, process.pid)
     if not handle:
@@ -84,8 +85,11 @@ def process_sample(process):
             raise ctypes.WinError(ctypes.get_last_error())
         if not kernel.GetProcessHandleCount(handle, ctypes.byref(handles)):
             raise ctypes.WinError(ctypes.get_last_error())
+        affinity, system_affinity = ctypes.c_size_t(), ctypes.c_size_t()
+        if not kernel.GetProcessAffinityMask(handle, ctypes.byref(affinity), ctypes.byref(system_affinity)):
+            raise ctypes.WinError(ctypes.get_last_error())
         return {'privateBytes': counters.PrivateUsage, 'workingSetBytes': counters.WorkingSetSize,
-                'handleCount': handles.value}
+                'handleCount': handles.value, 'processorAffinity': format(affinity.value, 'X')}
     finally:
         kernel.CloseHandle(handle)
 
@@ -332,6 +336,8 @@ def run_profile(args, transport, profile, run_dir):
                         worker_samples.append(process_sample(worker_process))
                     print(f'PASS V{args.major} {transport} {profile}: {batch + 1}/{args.rounds} rounds', flush=True)
         sample = process_sample(owned[0])
+        # Preserve the same samples even when an unchanged bound fails below.
+        (run_dir / 'process-samples.json').write_text(json.dumps({'host': samples, 'worker': worker_samples}, indent=2) + '\n', encoding='utf-8')
         require(sample['privateBytes'] < args.max_private_mib * 1024 * 1024, 'Host exceeded private memory bound')
         require(max(s['privateBytes'] for s in samples) < args.max_private_mib * 1024 * 1024, 'Sampled private memory exceeded bound')
         # Concurrent HTTP dispatch (P6-58) lets the thread pool grow, more so on a loaded machine, and that growth
@@ -427,6 +433,7 @@ def main():
     parser.add_argument('--major', type=int, choices=(20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--transports', nargs='+', choices=('stdio', 'http'), default=('stdio', 'http'))
+    parser.add_argument('--profiles', nargs='+', choices=('full', 'lite'), default=('full', 'lite'))
     parser.add_argument('--concurrency', type=int, default=8)
     parser.add_argument('--full-tool-count', type=int, default=None, help="Defaults to the engine's own roster from the first run")
     parser.add_argument('--lite-tool-count', type=int, default=None)
@@ -448,7 +455,7 @@ def main():
     report.update(resources.engine_fixture_evidence(args.engine_worker, args.exe))
     try:
         for transport in args.transports:
-            for profile in ('full', 'lite'):
+            for profile in args.profiles:
                 report['runs'].append(run_profile(args, transport, profile, args.output / f'{transport}-{profile}'))
         report['status'] = 'passed'
         print(f"COMPLETE: V{args.major} {sum(r['measuredToolCalls'] + r['warmupToolCalls'] + r['recoveryToolCalls'] for r in report['runs'])} local tool calls passed; no TIA connection attempted", flush=True)

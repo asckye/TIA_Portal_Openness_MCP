@@ -33,6 +33,8 @@ internal static class FoundationHostChecks
 
     internal static int Suites(string suite) => Process("dotnet", "run --project " + Quote(Path.Combine(Root, "build-tools", "release"))
         + " -c Release --no-build -- test-suites -Suite " + suite
+        + (Environment.GetEnvironmentVariable("TIA_MCP_CHECK_NO_BUILD") == "1"
+            ? " -NoBuild -Shards 1 -MaxParallelism 1 -ResultsDirectory " + Quote(Path.Combine(Root, "bin-build", "harness-suites-" + Guid.NewGuid().ToString("N"))) : "")
         + " -DotnetArg=--disable-build-servers -DotnetArg=-m:1 -DotnetArg=-nodeReuse:false"
         + " -DotnetArg=-p:UseSharedCompilation=false -DotnetArg=-p:NuGetAudit=false");
 

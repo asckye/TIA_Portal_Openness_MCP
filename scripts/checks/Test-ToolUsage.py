@@ -66,6 +66,8 @@ def main():
     parser.add_argument('--public-api-root', type=Path, required=True)
     parser.add_argument('--evidence', type=Path, required=True, help='New worktree directory for this run')
     parser.add_argument('--coverage-output', type=Path, required=True)
+    parser.add_argument('--releases', nargs='+', choices=('14sp1', '15.1', '16', '17', '18', '19', '20', '21'),
+                        default=('14sp1', '15.1', '16', '17', '18', '19', '20', '21'))
     args = parser.parse_args()
     if args.coverage_output.resolve() == (ROOT / 'manifest/tool-usage-coverage.json').resolve():
         raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')
@@ -79,7 +81,7 @@ def main():
     evidence.relative_to(ROOT)
     evidence.mkdir(parents=True, exist_ok=False)
     records = []
-    for release in snapshots.RELEASES:
+    for release in args.releases:
         case = evidence / release
         case.mkdir()
         env = {'TEMP': str(case), 'TMP': str(case), 'TIA_MCP_DATA_DIRECTORY': str(case / 'data'),
@@ -113,7 +115,11 @@ def main():
             (case / 'tool-usage.json').write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
             print(f'PASS V{release}: {record["checkedToolCount"]} tools, '
                   f'{record["operationExampleCount"]} operations, all reference hashes and offline examples', flush=True)
-    coverage(records, args.coverage_output)
+    if set(args.releases) == set(snapshots.RELEASES):
+        coverage(records, args.coverage_output)
+    else:
+        args.coverage_output.parent.mkdir(parents=True, exist_ok=True)
+        args.coverage_output.write_text(json.dumps(records, indent=2) + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':

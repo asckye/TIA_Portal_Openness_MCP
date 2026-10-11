@@ -1,0 +1,19 @@
+<Project>
+  <!-- Preserve each project's ordinary imports, then isolate only build variants.
+       Passing this import globally also covers nested Directory.Build.props files. -->
+  <PropertyGroup><_CheckAllOriginalProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildProjectDirectory)'))</_CheckAllOriginalProps></PropertyGroup>
+  <Import Project="$(_CheckAllOriginalProps)" Condition="'$(_CheckAllOriginalProps)' != ''" />
+  <PropertyGroup Condition="'$(CheckAllVariant)' != ''">
+    <_CheckAllPropertyHash>$(CheckAllNodeId)</_CheckAllPropertyHash>
+    <!-- The ID includes the project path, so colocated projects remain separate
+         without repeating long project names in the intermediate directory. -->
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)/obj/check-all/$(CheckAllVariant)/$(_CheckAllPropertyHash)/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildProjectDirectory)/obj/**;$(MSBuildProjectDirectory)/obj-v20/**;$(MSBuildProjectDirectory)/bin/**;$(MSBuildProjectDirectory)/bin-v20/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('_wpftmp'))">
+    <!-- WPF deletes its temporary assembly after markup compilation. It must
+         never share the parent project's intermediate assembly directory. -->
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)wpf-temp/$(Configuration)/</IntermediateOutputPath>
+  </PropertyGroup>
+</Project>
