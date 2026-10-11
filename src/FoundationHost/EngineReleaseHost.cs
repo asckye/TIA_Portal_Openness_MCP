@@ -114,7 +114,7 @@ internal static class EngineReleaseHost
 
     private static async Task RunHttp(HostOptions options, HostFileLogger logger, EngineHostPipeline probe, OperatorEndpoint? operatorEndpoint, CancellationToken stoppingToken)
     {
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
+        var builder = WebApplication.CreateBuilder(HttpHostOptions.Create());
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
         builder.Logging.AddProvider(logger);

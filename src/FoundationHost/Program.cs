@@ -51,7 +51,7 @@ if (options.Transport == "operator")
 }
 if (options.Transport == "http")
 {
-    var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
+    var builder = WebApplication.CreateBuilder(TiaMcp.FoundationHost.HttpHostOptions.Create());
     builder.Logging.ClearProviders();
     builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
     builder.Logging.AddProvider(fileLogger);
