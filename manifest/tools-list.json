@@ -1,20 +1,20 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-11T10:45:40.6308092+00:00",
+  "generatedAt": "2026-10-11T13:50:48.8195761+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "e13d0d31cd18b642524eb021b8d8fa618aa15e9d932dff49bf0ef11fd0559d72",
+  "workerSha256": "a363ed2111280035fc2336af77f85634f9581c3056afae89b074276b46a33543",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2552,
+    "parameters": 2556,
     "parametersUndocumented": 853,
     "parametersFromVocabulary": 702,
     "toolsWithUndocumentedParameters": 205,
     "toolsWithEnumHints": 158,
     "enumHints": 242,
-    "defaultHints": 1395,
+    "defaultHints": 1399,
     "examplesCurated": 516,
     "recipes": 36
   },
@@ -2015,8 +2015,11 @@
       "operationInferred": true,
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
-      "parameters": [],
-      "description": "[read-only Foundation readiness] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change. Examples: GetToolUsage(toolName: \"InitializeEnvironment\"), optionally operation or language.",
+      "parameters": [
+        "offset",
+        "limit"
+      ],
+      "description": "[read-only Foundation readiness] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change. Structural checks cover the entire registered catalog; registeredTools contains one bounded page. Retrieve the full roster using offset/limit and meta.paging.nextOffset. Examples: GetToolUsage(toolName: \"InitializeEnvironment\"), optionally operation or language.",
       "example": "{}"
     },
     {
@@ -4922,11 +4925,13 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
+        "offset",
+        "limit",
         "connectIfNeeded",
         "includeProjectTree",
         "inspectPortalProcesses"
       ],
-      "description": "[passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported. Examples: GetToolUsage(toolName: \"RunCapabilitySelfTest\"), optionally operation or language.",
+      "description": "[passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported. Structural checks cover the entire registered catalog; registeredTools contains one bounded page. Retrieve the full roster using offset/limit and meta.paging.nextOffset. Examples: GetToolUsage(toolName: \"RunCapabilitySelfTest\"), optionally operation or language.",
       "example": "{\"connectIfNeeded\":false,\"includeProjectTree\":false,\"inspectPortalProcesses\":false}"
     },
     {
