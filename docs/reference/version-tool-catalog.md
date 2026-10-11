@@ -255,7 +255,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ValidateStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `WritePlcSclSourceFile` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (258)
+## Shared by some releases (257)
 
 | Tool | Release keys |
 |---|---|
@@ -331,7 +331,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `GenerateOpcUaModelledInterface` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `GeneratePlcLoadableFile` | 20, 21 |
 | `GenerateSivarc` | 20, 21 |
-| `GetClassicHmiGlobalization` | 20, 21 |
 | `GetDccObject` | 20, 21 |
 | `GetDriveParameters` | 20, 21 |
 | `GetObjectIdentifier` | 20, 21 |
@@ -518,10 +517,11 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `WritePlcWebVars` | 20, 21 |
 | `WriteUnifiedRuntimeTags` | 20, 21 |
 
-## One release only (11)
+## One release only (12)
 
 | Tool | Release keys |
 |---|---|
+| `GetClassicHmiGlobalization` | 21 |
 | `ListCommunicationConnections` | 21 |
 | `ListSafetyActivationTests` | 21 |
 | `ManageClassicHmiGraphic` | 21 |

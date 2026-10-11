@@ -19892,18 +19892,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "GetClassicHmiGlobalization",
-        "currentName": "GetClassicHmiGlobalization",
-        "sourceName": "ReadClassicHmiGlobalization",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "GetClassicHmiScreenTree",
         "currentName": "GetClassicHmiScreenTree",
         "sourceName": "ReadClassicHmiScreenTree",
@@ -68883,18 +68871,6 @@
           ],
           "generationOptions": "None",
           "dryRun": true
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "GetClassicHmiGlobalization",
-        "currentName": "GetClassicHmiGlobalization",
-        "sourceName": "ReadClassicHmiGlobalization",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "HMI_RT_1"
         },
         "envelopeVersion": 4
       },

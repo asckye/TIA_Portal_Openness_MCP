@@ -121,7 +121,7 @@ internal sealed class CatalogData
         Removed = CatalogJson.Set(CatalogJson.Matches(policy.Split("Removed =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
         Bridge = CatalogJson.Set(CatalogJson.Matches(policy.Split("Bridge =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
         var extras = Definitions.Where(p => p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport").Select(p => HostMap.GetValueOrDefault(p.Key, p.Key));
-        foreach (var key in new[] { "20", "21" }) { Rosters[key].ExceptWith(Removed); Rosters[key].UnionWith(Rosters["19"]); Rosters[key].UnionWith(extras); }
+        foreach (var key in new[] { "20", "21" }) { Rosters[key].ExceptWith(Removed); Rosters[key].UnionWith(Rosters["19"]); Rosters[key].UnionWith(extras); Rosters[key].ExceptWith(PortedFamilies.Withheld(Families, key)); }
         foreach (var roster in Rosters.Values) roster.UnionWith(HostOnly.Keys);
     }
 

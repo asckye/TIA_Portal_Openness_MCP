@@ -70,7 +70,7 @@ internal static class ClassicHmiFoldersShapeChecks
         Method(wincc,script+"VBScriptUserFolder","Delete",Type.EmptyTypes,"Void"); Method(wincc,script+"VBScriptUserFolderComposition","Create",new[]{text},"VBScriptUserFolder"); Method(wincc,script+"VBScriptUserFolderComposition","Find",new[]{text},"VBScriptUserFolder");
         Property(wincc,script+"VBScript","Name","String"); Method(wincc,script+"VBScript","Export",new[]{file,exportOptions},"Void"); Method(wincc,script+"VBScript","Delete",Type.EmptyTypes,"Void"); Method(wincc,script+"VBScriptComposition","Find",new[]{text},"VBScript");
         // ---- multilingual graphics (V21) ----
-        if(v20) { Console.WriteLine("CAPABILITY GraphicsProvider absent on V20 (ManageClassicHmiGraphic is not registered there)"); check(wincc.GetType(glob+"GraphicsProvider")==null,"V20 has no GraphicsProvider"); }
+        if(v20) { Console.WriteLine("CAPABILITY GraphicsProvider absent on V20 (ManageClassicHmiGraphic and GetClassicHmiGlobalization are not registered there)"); check(wincc.GetType(glob+"GraphicsProvider")==null,"V20 has no GraphicsProvider"); }
         else
         {
             check(engineeringService.IsAssignableFrom(T(wincc,glob+"GraphicsProvider")),"GraphicsProvider is an IEngineeringService"); Property(wincc,glob+"GraphicsProvider","Graphics","MultiLingualGraphicComposition");

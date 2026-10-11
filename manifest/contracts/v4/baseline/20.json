@@ -20282,36 +20282,6 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "5c6537023ac93fc5ce4aaa7eaa5fe0a1de87b458e2d63d8913b027a81d626bf8",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "limit": {
-            "default": 100,
-            "description": "limit: maximum number of items to return (paging).",
-            "minimum": 1,
-            "type": "integer"
-          },
-          "offset": {
-            "default": 0,
-            "description": "offset: index of the first item to return (paging), 0 = beginning.",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "GetClassicHmiGlobalization",
-      "outputSchema": null
-    },
-    {
       "descriptionSha256": "0e44c74a022e8cec5d615b6cfcd45bc986f202c617b959f0c75d9256df0ce514",
       "inputSchema": {
         "additionalProperties": false,

@@ -1221,7 +1221,7 @@ def capture(args, exe, harness, profile, isolated):
                     arguments = dict(arguments, outputDirectory=str(args.report_directory / name))
                 hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest',
                                                         'ManageSivarcScreenLayout',
-                                                        'ManageClassicHmiGraphic',
+                                                        'ManageClassicHmiGraphic', 'GetClassicHmiGlobalization',
                                                         'ListCommunicationConnections', 'ManageCommunicationConnection')
                                                or domain == 'SafetyValidation')
                 version_action = args.major == 20 and (

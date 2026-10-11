@@ -14,8 +14,7 @@ public sealed class HmiPortTests
     [Theory, MemberData(nameof(ReleasesAndTools))]
     public void Registration_and_graphics_refusal_follow_the_official_release(string release, string tool, string family)
     {
-        bool expected = tool == "ManageClassicHmiGraphic" ? release == "21"
-            : tool == "GetClassicHmiGlobalization" ? release is "20" or "21" : true;
+        bool expected = tool is "ManageClassicHmiGraphic" or "GetClassicHmiGlobalization" ? release == "21" : true;
         Assert.Equal(expected, PortedFamilies.Available(release, tool));
         Assert.Equal(family, PortedFamilies.ForTool(tool).Name);
         bool missingGraphics = (tool is "ManageClassicHmiGraphic" or "GetClassicHmiGlobalization") && release != "21";

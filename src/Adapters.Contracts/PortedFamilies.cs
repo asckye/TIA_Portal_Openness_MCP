@@ -124,7 +124,7 @@ namespace TiaMcp.Adapters.Contracts
             ["ManageClassicHmiScript"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["ManageClassicHmiCycle"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["ManageClassicHmiTextGraphicList"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
-            ["GetClassicHmiGlobalization"] = new[] { "20", "21" },
+            ["GetClassicHmiGlobalization"] = new[] { "21" },
             ["ListClassicHmiFaceplates"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["ExportPlcBlockDocuments"] = new[] { "20", "21" },
             ["ExportPlcBlocksDocuments"] = new[] { "20", "21" },

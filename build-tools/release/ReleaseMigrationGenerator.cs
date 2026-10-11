@@ -56,7 +56,8 @@ internal static class ReleaseMigrationGenerator
         {
             var oldTools = oldDocs[key]["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!); var newTools = newDocs[key]["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!);
             var targets = oldTools.Keys.ToDictionary(n => n, n => mapping[n]); var retired = targets.Where(p => key is "20" or "21" && removed.Contains(p.Value)).ToDictionary();
-            foreach (var old in retired.Keys) targets.Remove(old);
+            var withheld = key is "20" or "21" ? targets.Where(p => PortedFamilies.Withheld(families, key).Contains(p.Value)).ToDictionary() : [];
+            foreach (var old in retired.Keys.Concat(withheld.Keys)) targets.Remove(old);
             foreach (var p in targets) Require(newTools.ContainsKey(p.Value), key + ": archived tool maps to missing V4 tool: " + p.Key);
             // A port extends the old-release roster only through the reviewed per-tool table.
             foreach (var name in PortedFamilies.Additions(families, key)) Require(newTools.ContainsKey(name), "Reviewed port absent from V4 baseline: " + key + "/" + name);
@@ -66,12 +67,13 @@ internal static class ReleaseMigrationGenerator
             var renamed = targets.Count(p => p.Key != p.Value && !mergedNames.Contains(p.Key)); var unchanged = targets.Count(p => p.Key == p.Value);
             lines.AddRange([$"### Release {key}", "", $"3.x catalog: **{oldTools.Count} tools**; V4 baseline: **{newTools.Count} tools**. Unchanged names: {unchanged}; renamed names: {renamed}; merged legacy entries: {merged.Values.Sum(v => v.Length)}; V4-only tools: {additions.Length}.", "", "| Change | 3.x name(s) | V4 name |", "|---|---|---|"]);
             foreach (var old in Sorted(targets.Keys)) lines.Add($"| {(mergedNames.Contains(old) ? "Merge" : old == targets[old] ? "Unchanged" : "Rename")} | {Code(old)} | {Code(targets[old])} |");
-            if (retired.Count > 0) foreach (var old in Sorted(retired.Keys)) lines.Add($"| Removed duplicate lifecycle (P7-04) | {Code(old)} | {Code(retired[old])} retired; use the shared Foundation session |");
-            else lines.Add("| Removed without replacement | None | — |");
+            foreach (var old in Sorted(retired.Keys)) lines.Add($"| Removed duplicate lifecycle (P7-04) | {Code(old)} | {Code(retired[old])} retired; use the shared Foundation session |");
+            foreach (var old in Sorted(withheld.Keys)) lines.Add($"| Removed: no API on this release | {Code(old)} | {Code(withheld[old])} is not listed on {key} |");
+            if (retired.Count == 0 && withheld.Count == 0) lines.Add("| Removed without replacement | None | — |");
             foreach (var name in additions) lines.Add($"| Added in 4.0 | — | {Code(name)} |");
             lines.AddRange(["", "#### Parameter changes", "", "| 3.x input | V4 input |", "|---|---|"]);
             var rows = new List<(string Name, string Old, string New)>(); var required = new HashSet<(string Name, string Parameter)>();
-            foreach (var old in Sorted(oldTools.Keys)) { if (retired.ContainsKey(old) || mergedNames.Contains(old)) continue; var (changes, needed) = ParameterChanges(oldTools[old], newTools[targets[old]]); rows.AddRange(changes.Select(p => (old, p.Old, p.New))); foreach (var n in needed) required.Add((targets[old], n)); }
+            foreach (var old in Sorted(oldTools.Keys)) { if (retired.ContainsKey(old) || withheld.ContainsKey(old) || mergedNames.Contains(old)) continue; var (changes, needed) = ParameterChanges(oldTools[old], newTools[targets[old]]); rows.AddRange(changes.Select(p => (old, p.Old, p.New))); foreach (var n in needed) required.Add((targets[old], n)); }
             foreach (var name in additions) foreach (var n in Strings(newTools[name]["inputSchema"]!["required"])) required.Add((name, n));
             if (rows.Count == 0) lines.Add("| None | None |"); else foreach (var row in rows) lines.Add($"| {(row.Old != "—" ? Code(row.Name) + ": " : "")}{Cell(row.Old)} | {Cell(row.New)} |");
             if (merged.Count > 0)

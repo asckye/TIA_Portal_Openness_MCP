@@ -1742,7 +1742,7 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 505,
+      "toolCount": 504,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1902,7 +1902,6 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
-        "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
         "GetDccObject",
         "GetDeviceAddressing",
@@ -2776,8 +2775,8 @@
   },
   "groupCounts": {
     "all-releases": 247,
-    "shared-subset": 258,
-    "release-only": 11
+    "shared-subset": 257,
+    "release-only": 12
   },
   "tools": [
     {
@@ -4791,10 +4790,9 @@
     {
       "name": "GetClassicHmiGlobalization",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

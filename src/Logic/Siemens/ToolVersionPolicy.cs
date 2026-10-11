@@ -22,7 +22,8 @@ namespace TiaMcpServer.Siemens
                 ["ManagePlcBlockWriteProtection"] = "PlcBlockWriteProtectionProvider",
                 ["ManageDriveSafetyAcceptanceTest"] = "SafetyAcceptanceTestProvider",
                 ["ManageSivarcScreenLayout"] = "SiVArc LayoutData",
-                ["ManageClassicHmiGraphic"] = "GraphicsProvider"
+                ["ManageClassicHmiGraphic"] = "GraphicsProvider",
+                ["GetClassicHmiGlobalization"] = "GraphicsProvider"
             };
 
         internal static string ToolProblem(string versionKey, string name)

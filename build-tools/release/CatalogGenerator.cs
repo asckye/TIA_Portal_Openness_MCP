@@ -16,6 +16,13 @@ internal static class CatalogGenerator
             if (!data.HostOnly.ContainsKey(name)) foreach (var key in Strings(entry!["releases"])) tools[key][name] = new JsonObject { ["name"] = name, ["inputSchema"] = new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray("inputPath", "outputPath"), ["properties"] = new JsonObject { ["inputPath"] = new JsonObject { ["type"] = "string" }, ["outputPath"] = new JsonObject { ["type"] = "string" } } } };
         foreach (var key in Keys.Take(6)) foreach (var current in data.Ported[key]) { var old = tools["21"].Select(p => p.Key).First(n => data.Renames[n] == current); tools[key][old] = Copy(tools["21"][old]!); }
         var currentNames = data.Mapping;
+        // A ported tool without any supported action on a modern release is not listed there, even if the 3.x archive had it
+        // (maintainer 2026-10-11: one registration rule for all eight releases).
+        foreach (var key in new[] { "20", "21" })
+        {
+            var withheld = PortedFamilies.Withheld(data.Families, key);
+            foreach (var old in tools[key].Select(p => p.Key).Where(n => currentNames.TryGetValue(n, out var current) && withheld.Contains(current)).ToList()) tools[key].Remove(old);
+        }
         var only21 = Set(Matches(Source(root, "src/Logic/Siemens/ToolVersionPolicy.cs").Split("internal static string ToolProblem", 2)[0], "\\[\"([^\"]+)\"\\]\\s*="));
         Require(Set(tools["20"].Select(p => p.Key)).SetEquals(currentNames.Keys.Where(n => !only21.Contains(n) && !only21.Contains(currentNames[n]))), "V20 admission policy differs");
         Require(Set(Strings(Read(root, "manifest/history/contracts-v3/baseline/20.json")["liteTools"])).SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");

@@ -107,8 +107,15 @@ public sealed class GeneratorTests
     public void PortedFamiliesPreserveActionSwitchesAndToolReleaseDecisions(string kind)
     {
         const string row = "new Family(\"family\", \"prefix\", new[] { \"20\", \"21\" }, new[] { \"Tool\" }, new Dictionary<string, string[]> { [\"write\"] = new[] { \"21\" } })";
-        if (kind == "partial") { var parsed = PortedFamilies.Parse(row); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "20")); return; }
-        if (kind == "override") { var parsed = PortedFamilies.Parse(row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = new[] { \"21\" }\n};"); Assert.Empty(PortedFamilies.Additions(parsed, "20")); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "21")); return; }
+        if (kind == "partial") { var parsed = PortedFamilies.Parse(row); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "20")); Assert.Empty(PortedFamilies.Withheld(parsed, "20")); return; }
+        if (kind == "override")
+        {
+            var parsed = PortedFamilies.Parse(row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = new[] { \"21\" }\n};");
+            Assert.Empty(PortedFamilies.Additions(parsed, "20")); Assert.Contains("Tool", PortedFamilies.Additions(parsed, "21"));
+            // A tool without any supported action on a release is withheld there, modern releases included.
+            Assert.Contains("Tool", PortedFamilies.Withheld(parsed, "20")); Assert.Empty(PortedFamilies.Withheld(parsed, "21"));
+            return;
+        }
         Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(kind == "duplicate" ? row + row : kind == "unparsed" ? row + "new Family(other, prefix, releases, tools)" : row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Other\"] = new[] { \"21\" }\n};"));
     }
     [Theory]

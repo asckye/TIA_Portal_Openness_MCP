@@ -3,7 +3,7 @@
   "catalogSha256": "6de80409a0be69de0ce0e88159cf0965354f51b9667291f9a5e4ca3839cc945a",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 2722,
+  "versionToolPairs": 2721,
   "offlineCallExecutions": 115,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -21791,8 +21791,8 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 505,
-      "checkedToolCount": 505,
+      "registeredToolCount": 504,
+      "checkedToolCount": 504,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 504,
@@ -23410,13 +23410,6 @@
         },
         {
           "toolName": "GenerateSivarc",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "GetClassicHmiGlobalization",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],

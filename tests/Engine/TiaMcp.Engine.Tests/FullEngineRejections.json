@@ -5458,32 +5458,6 @@
         }
       },
       {
-        "name": "GetClassicHmiGlobalization",
-        "parameters": {
-          "softwarePath": {
-            "type": "string",
-            "default": null
-          },
-          "offset": {
-            "type": "int",
-            "default": "0",
-            "value": 0
-          },
-          "limit": {
-            "type": "int",
-            "default": "100",
-            "value": 100
-          }
-        },
-        "arguments": {
-          "softwarePath": "HMI_RT_1"
-        },
-        "renamedFrom": [
-          "ReadClassicHmiGlobalization"
-        ],
-        "typedParameters": {}
-      },
-      {
         "name": "GetClassicHmiScreenTree",
         "parameters": {
           "softwarePath": {
