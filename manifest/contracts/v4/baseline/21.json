@@ -27081,10 +27081,24 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "c882bf6362371fd8c8be70c159551dc95c37164c33b2e58ac155481b9ac47e8b",
+      "descriptionSha256": "43bc455b26d814153d1b7bb439aa74cd3d47091c76d7c965808a18cd5a11a8fe",
       "inputSchema": {
         "additionalProperties": false,
-        "properties": {},
+        "properties": {
+          "limit": {
+            "default": 50,
+            "description": "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "First registered-tool row to return, in ordinal name order.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
         "required": [],
         "type": "object"
       },
@@ -42256,7 +42270,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
+      "descriptionSha256": "1018bb7fcf7cfcd2ddcd2452e41945449ec5c135975bb5af9335bc282b1b3ef4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -42283,6 +42297,19 @@
               false
             ],
             "type": "boolean"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "First registered-tool row to return, in ordinal name order.",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [],

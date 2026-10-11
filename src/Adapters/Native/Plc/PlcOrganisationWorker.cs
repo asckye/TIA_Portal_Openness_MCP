@@ -17,7 +17,20 @@ namespace TiaMcp.Adapters
     {
         private readonly string organisationWorkerIdentity = Guid.NewGuid().ToString("N");
         public Func<SeedHmiRequest, PlcSeedHmiReply>? SeedReferenceHmiImport { get; set; }
-        public PlcSeedHmiReply SeedReferenceHmi(SeedHmiRequest request, bool dryRun = false) { Check(); if (dryRun) throw new ArgumentException("Seed imports have no preview operation."); return (SeedReferenceHmiImport ?? throw new NotSupportedException("Seed HMI imports depend on the B7 engine worker port in this release."))(request); }
+        public PlcSeedHmiReply SeedReferenceHmi(SeedHmiRequest request, bool dryRun = false)
+        {
+            Check();
+            if (dryRun) throw new ArgumentException("Seed imports have no preview operation.");
+            if (SeedReferenceHmiImport != null) return SeedReferenceHmiImport(request);
+            var reply = ExecuteHmi(new HmiRequest {
+                Operation = request.Kind == "tagTables" ? "ImportHmiTagTablesFromDirectory" : request.Kind == "screens" ? "ImportHmiScreensFromDirectory" : throw new ArgumentException("Unknown seed HMI import kind."),
+                SoftwarePath = request.SoftwarePath, FolderPath = request.FolderPath, Dir = request.Directory, Overwrite = true, DryRun = false
+            }, false);
+            if (reply.Failure != null) throw new PlcSoftwareException(reply.Failure.Code, reply.Failure.Message);
+            var batch = (HmiImportBatch)reply.Value!;
+            return new PlcSeedHmiReply { Imported = batch.Imported,
+                Failed = batch.Failed.Select(f => new PlcSeedImportFailure { Path = f.Path, Error = f.Error }).ToList(), Meta = batch.Meta };
+        }
 
         public Func<object, bool, PlcCompilerEvidence>? CollectPlcCompilerEvidence { get; set; }
         public Func<PlcSoftwareRequest, PlcVerifiedCandidate>? ValidatePlcVerifiedCandidate { get; set; }

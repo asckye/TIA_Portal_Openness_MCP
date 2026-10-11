@@ -105,16 +105,16 @@ namespace TiaMcp.Engine.Tests
 
             var portal = HmiToolFixture.Session; portal.FixtureRoot = root; portal.FixtureResetReadHealth();
             portal.FixtureResolutionError = new EngineeringObjectDisposedException();
-            var failed = HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI", exact);
+            var failed = HmiToolFixture.HmiInspectionPort.ReadHmiScreenSnapshot("HMI", exact);
             int calls = portal.FixtureResolveCalls;
             check(failed.Meta!["status"]!.ToString() == "HmiConnectionUnavailable" && failed.Meta["requiresExplicitRebind"]!.GetValue<bool>(), "software-resolution failure invalidates read session");
             portal.FixtureResolutionError = null;
-            var blocked = HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI", exact);
+            var blocked = HmiToolFixture.HmiInspectionPort.ReadHmiScreenSnapshot("HMI", exact);
             check(blocked.Meta!["status"]!.ToString() == "HmiReadSessionBlocked" && portal.FixtureResolveCalls == calls, "next request blocked before software resolution");
             check(portal.GetHmiReadHealth()["snapshotReadsBlocked"]!.GetValue<bool>() && portal.FixtureCacheClears > 0, "health records fault and clears software cache");
             portal.FixtureResetReadHealth();
             screen.ScreenItems.Add(new FaultingItem());
-            var partial = HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI", exact);
+            var partial = HmiToolFixture.HmiInspectionPort.ReadHmiScreenSnapshot("HMI", exact);
             check(!partial.Meta!["success"]!.GetValue<bool>() && partial.Meta["snapshot"] != null && partial.Meta["requiresExplicitRebind"]!.GetValue<bool>(), "nested failure propagates to tool success with partial snapshot");
             check(partial.Meta["operationId"] != null && partial.Meta["lastAttemptedPath"] != null, "operation trace returned for log correlation");
             portal.FixtureResetReadHealth(); portal.FixtureRoot = null;

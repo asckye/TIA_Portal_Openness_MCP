@@ -71,73 +71,22 @@ namespace TiaMcpServer.Siemens
         }
 
         private static object TryGetHmiTagRoot(object hmiSoftware)
-        {
-            return TryGetPropertyValue(hmiSoftware,
-                       "TagTableFolder",
-                       "TagFolder",
-                       "HmiTagTableFolder",
-                       "HmiTagFolder",
-                       "TagTableGroup",
-                       "HmiTagTableGroup")
-                   ?? hmiSoftware;
-        }
+            => TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers.TryGetHmiTagRoot(hmiSoftware);
 
         private static object? TryGetHmiTagTablesCollection(object hmiSoftware)
-        {
-            var root = TryGetHmiTagRoot(hmiSoftware);
-            return TryGetPropertyValue(root,
-                       "TagTables",
-                       "HmiTagTables",
-                       "Tables")
-                   ?? TryGetPropertyValue(hmiSoftware,
-                       "TagTables",
-                       "HmiTagTables",
-                       "Tables");
-        }
+            => TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers.TryGetHmiTagTablesCollection(hmiSoftware);
 
         private static object? TryFindHmiTagTable(object hmiSoftware, string tagTableName)
-        {
-            var root = TryGetHmiTagRoot(hmiSoftware);
-            return TryFindByNameInCollection(root, new[] { "TagTables", "HmiTagTables", "Tables" }, tagTableName)
-                   ?? TryFindByNameInCollection(hmiSoftware, new[] { "TagTables", "HmiTagTables", "Tables" }, tagTableName)
-                   ?? FindExistingByName(TryGetHmiTagTablesCollection(hmiSoftware) ?? root, tagTableName)
-                   ?? (root == null ? null : EnumerateHmiTagTablesRecursive(root).FirstOrDefault(t => string.Equals(TryGetName(t)?.Trim(), tagTableName, StringComparison.OrdinalIgnoreCase)));
-        }
+            => TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers.TryFindHmiTagTable(hmiSoftware, tagTableName);
 
         // Tag tables in nested user folders (TagUserFolder.Folders) must participate in lookup. A real classic TP700
         // import into MCP_TagFolder was missed by root-only lookup; TIA version and test date were not recorded.
         // Evidence index: docs/reference/real-machine-ledger.md.
         private static IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, int depth = 0)
-        {
-            if (depth > 32) yield break;
-            if (TryGetPropertyValue(folder, "TagTables") is IEnumerable tables)
-                foreach (var table in tables) if (table != null) yield return table;
-            if (TryGetPropertyValue(folder, "Folders") is IEnumerable folders)
-                foreach (var child in folders)
-                    if (child != null) foreach (var table in EnumerateHmiTagTablesRecursive(child, depth + 1)) yield return table;
-        }
+            => TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers.EnumerateHmiTagTablesRecursive(folder, depth);
 
         private static object? FindExistingByName(object compositionOrEnumerable, string name)
-        {
-            try
-            {
-                if (compositionOrEnumerable is IEnumerable en)
-                {
-                    foreach (var it in en)
-                    {
-                        var n = TryGetName(it);
-                        if (!string.IsNullOrWhiteSpace(n) &&
-                            string.Equals(n!.Trim(), name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            return it;
-                        }
-                    }
-                }
-            }
-            catch /* swallow(enumerate-optional): Unavailable collection enumeration preserves the missing-item fallback. */ { }
-
-            return null;
-        }
+            => TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers.FindExistingByName(compositionOrEnumerable, name);
 
         private static object? TryGetEngineeringAttribute(object target, string attributeName)
         {

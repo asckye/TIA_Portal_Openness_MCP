@@ -19,9 +19,14 @@ namespace TiaMcpServer.Siemens
     {
         private static VBScriptFolder ExactVbScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath)
         {
-            VBScriptFolder current = hmi.VBScriptFolder ?? throw new NotSupportedException("VBScriptFolder unavailable.");
-            foreach (var part in folderPath) { VBScriptUserFolderComposition folders = current.Folders; current = folders.Find(part) ?? throw new PortalException(PortalErrorCode.NotFound, "Script folder not found: " + part); }
-            return current;
+            try { return TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers.ExactVbScriptFolder(hmi, folderPath); }
+            catch (TiaMcp.Adapters.Contracts.PlcSoftwareException error)
+            { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), error.Code), error.Message); }
+        }
+        private static JsonNode? HmiValueJson(object value)
+        {
+            var rendered = TiaMcp.Adapters.Native.Hmi.HmiValueTypes.Render(value);
+            return rendered == null ? null : System.Text.Json.JsonSerializer.SerializeToNode(rendered);
         }
     }
 }

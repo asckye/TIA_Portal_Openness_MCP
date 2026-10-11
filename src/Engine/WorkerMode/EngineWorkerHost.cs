@@ -161,6 +161,14 @@ namespace TiaMcpServer.Worker
             };
             foundation.EngineeringReflectionLookupPaths = () => engineering.PlcLookupPathsSuffix;
             foundation.RenderEngineeringReflectionValue = value => JsonSerializer.Deserialize<object>(JsonSerializer.Serialize(value, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }));
+            foundation.ResolveEngineeringHmiSoftware = engineering.ResolveHmiSoftwareOrThrow;
+            foundation.HmiBindingIdentity = () => JsonSerializer.Deserialize<Dictionary<string, object?>>(engineering.GetBindingIdentity().ToJsonString());
+            foundation.WriteEngineeringHmiTrace = TiaMcpServer.Siemens.HmiReadTrace.WriteLine;
+            foundation.HmiReadFault = values => {
+                var meta = JsonSerializer.SerializeToNode(values)!.AsObject();
+                ((IHmiToolSession)engineering).RecordHmiReadFault(meta);
+                foreach (var pair in meta) values[pair.Key] = pair.Value?.DeepClone();
+            };
             foundation.ResolveEngineeringHmiScreen = (software, path) => engineering.ResolveHmiScreenOrThrow(software, path);
             foundation.ResolveEngineeringLibraryDevice = path => engineering.ExactEngineeringDevice(path);
             foundation.EngineeringLibraryOptionKind = type => engineering.OptionPackageLibraryTypeKind((global::Siemens.Engineering.Library.Types.LibraryType)type);
@@ -172,11 +180,12 @@ namespace TiaMcpServer.Worker
             foundation.PlcB5ResolvedPath = SoftwareContainerLookup.PathOf;
             foundation.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<Dictionary<string, object?>>(new OpcUaModelledNative(foundation.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
             foundation.SeedReferenceHmiImport = request => {
-                var exchange = EngineServices.Get<TiaMcpServer.Siemens.Services.HmiExchangeService>();
-                var reply = request.Kind == "tagTables" ? exchange.ImportHmiTagTablesFromDirectory(request.SoftwarePath, request.FolderPath, request.Directory)
-                    : request.Kind == "screens" ? exchange.ImportHmiScreensFromDirectory(request.SoftwarePath, request.FolderPath, request.Directory)
-                    : throw new ArgumentException("Unknown seed HMI import kind.");
-                return JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.PlcSeedHmiReply>(JsonSerializer.Serialize(reply))!;
+                var reply = foundation.ExecuteHmi(new TiaMcp.Adapters.Contracts.HmiRequest {
+                    Operation = request.Kind == "tagTables" ? "ImportHmiTagTablesFromDirectory" : request.Kind == "screens" ? "ImportHmiScreensFromDirectory" : throw new ArgumentException("Unknown seed HMI import kind."),
+                    SoftwarePath = request.SoftwarePath, FolderPath = request.FolderPath, Dir = request.Directory, Overwrite = true, DryRun = false
+                }, false);
+                if (reply.Failure != null) throw new TiaMcp.Adapters.Contracts.PlcSoftwareException(reply.Failure.Code, reply.Failure.Message);
+                return JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.PlcSeedHmiReply>(JsonSerializer.Serialize(reply.Value))!;
             };
             lifecycle = new SharedSessionLifecycle(RefreshFromEngine, RefreshFromFoundation, reason => {
                 nativeFault = reason;

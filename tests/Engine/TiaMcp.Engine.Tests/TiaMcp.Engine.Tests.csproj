@@ -107,6 +107,22 @@
     <Compile Include="../../../src/Engine/Siemens/ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiSnapshot.cs" Link="HmiSnapshot.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="Native/Hmi/HmiValues.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiSnapshot.cs" Link="Native/Hmi/HmiSnapshot.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiExactAccess.cs" Link="Native/Hmi/HmiExactAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScreenTraversal.cs" Link="Native/Hmi/HmiScreenTraversal.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiTagDeletion.cs" Link="Native/Hmi/HmiTagDeletion.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiReadSafety.cs" Link="Native/Hmi/HmiReadSafety.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiAccessPrimitives.cs" Link="Native/Hmi/HmiAccessPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiInspectionPortAdapter.cs" Link="Native/Hmi/HmiInspectionPortAdapter.cs" />
+    <Compile Include="../../../src/Shared/HmiPortService.cs" Link="Shared/HmiPortService.cs" />
+    <Compile Include="../../../src/Shared/HmiInspectionPortService.cs" Link="Shared/HmiInspectionPortService.cs" />
+    <Compile Include="../../../src/Shared/HmiInspectionPortTools.cs" Link="Shared/HmiInspectionPortTools.cs" />
+    <Compile Include="../../../src/Shared/HmiExchangeService.cs" Link="Shared/HmiExchangeService.cs" />
+    <Compile Include="../../../src/Shared/HmiExchangeTools.cs" Link="Shared/HmiExchangeTools.cs" />
+    <Compile Include="../../../src/Shared/HmiExchangeResponses.cs" Link="Shared/HmiExchangeResponses.cs" />
+    <Compile Include="../../../src/Shared/HmiTagDeletionService.cs" Link="Shared/HmiTagDeletionService.cs" />
+    <Compile Include="../../../src/Shared/HmiTagDeletionTools.cs" Link="Shared/HmiTagDeletionTools.cs" />
     <Compile Include="../../../src/Engine/Siemens/Services/HmiInspectionService.cs" Link="HmiInspectionService.cs" />
     <Compile Include="../../../src/Engine/Siemens/IHmiToolSession.cs" Link="IHmiToolSession.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs" Link="HmiInspectionTools.cs" />
@@ -128,8 +144,8 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs" Link="ProjectSecurityTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs" Link="SafetyManagementTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs" Link="SecurityDeepTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs" Link="ClassicHmiFoldersTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs" Link="MotionProDiagClassicHmiTools.cs" />
+    <Compile Include="../../../src/Shared/ClassicHmiFoldersTools.cs" Link="ClassicHmiFoldersTools.cs" />
+    <Compile Include="../../../src/Shared/MotionProDiagClassicHmiTools.cs" Link="MotionProDiagClassicHmiTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs" Link="HardwareNetworkTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs" Link="HardwareServicesTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/McpHints.cs" Link="McpHints.cs" />

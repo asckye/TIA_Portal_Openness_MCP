@@ -57,6 +57,7 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
         "TiaMcpServer.Siemens.Services.NativeExchangeService",
         "TiaMcpServer.Siemens.Services.HmiInspectionService",
+        "TiaMcpServer.Siemens.Services.HmiInspectionPortService",
         "TiaMcpServer.Siemens.Services.MigrationReadService",
         "TiaMcpServer.Siemens.Services.RuntimeSettingsService",
         "TiaMcpServer.Siemens.Services.GraphicSelectionService",

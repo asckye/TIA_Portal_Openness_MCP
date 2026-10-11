@@ -26,7 +26,7 @@ namespace TiaMcp.Adapters
 #if PLC_SAFETY
                             localSession = local ? portal!.LocalSessions.Single(s => object.Equals(s.Project, value)) : null;
 #endif
-                            lifecycle.Bound(value.Path.FullName, own, local); }, () => Check());
+                            lifecycle.Bound(value.Path.FullName, own, local); hmiReadFault = null; }, () => Check());
                 sessionCandidateAdapter.WorkerEpoch = bindingEpoch;
                 if (candidate.Action == "observe") reply.Observation = sessionCandidateAdapter.Observe();
                 else if (candidate.Action == "execute" && mode == "apply" && candidate.Check != null)

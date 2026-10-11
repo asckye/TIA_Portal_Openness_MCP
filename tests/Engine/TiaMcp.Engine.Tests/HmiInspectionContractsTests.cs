@@ -33,14 +33,15 @@ namespace TiaMcp.Engine.Tests
             var screen = new GraphicSelectionTests.Screen();
             screen.ScreenItems.Add(new BranchProbe()); hmi.Screens.Add(screen);
             branchSession.FixtureRoot = hmi;
-            catalog = new ToolCatalog(new[] { typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(GraphicSelectionTools),
+            catalog = new ToolCatalog(new[] { typeof(HmiInspectionTools), typeof(HmiInspectionPortTools), typeof(MigrationReadTools), typeof(GraphicSelectionTools),
                 typeof(GlobalScriptEditTools), typeof(ReflectionTools), typeof(UnifiedEngineeringTools), typeof(UnifiedEventsTools), typeof(UnifiedObjectServicesTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection()
                 .AddSingleton<TiaMcpServer.Siemens.Portal>().AddSingleton<SessionTools>()
                 .AddSingleton(new UnifiedObjectServicesTools(objects)).AddSingleton(new UnifiedEngineeringTools(engineering))
                 .AddSingleton(new ReflectionTools(reflection)).AddSingleton(new UnifiedEventsTools(new UnifiedEventsService()))
-                .AddSingleton(HmiToolFixture.HmiInspection).AddSingleton(new MigrationReadTools(new MigrationReadService(branchSession)))
+                .AddSingleton(HmiToolFixture.HmiInspection).AddSingleton(new HmiInspectionPortTools(HmiToolFixture.HmiInspectionPort))
+                .AddSingleton(new MigrationReadTools(new MigrationReadService(branchSession)))
                 .AddSingleton(HmiToolFixture.GraphicSelection).AddSingleton(HmiToolFixture.GlobalScriptEdit).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();

@@ -28,24 +28,36 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
         this.release = release; this.nativeSessionConfigured = nativeSessionConfigured; this.registry = registry;
         this.readinessProvider = readinessProvider;
         var properties = new JsonObject();
+        properties["offset"] = new JsonObject { ["type"] = "integer", ["default"] = 0, ["minimum"] = 0, ["description"] = "First registered-tool row to return, in ordinal name order." };
+        properties["limit"] = new JsonObject { ["type"] = "integer", ["default"] = FoundationPassiveDiagnostics.RosterPageLimit, ["minimum"] = 1, ["maximum"] = FoundationPassiveDiagnostics.RosterPageLimit, ["description"] = "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded." };
         if (name == "RunCapabilitySelfTest") foreach (var flag in Flags) properties[flag] = new JsonObject { ["type"] = "boolean", ["default"] = false, ["enum"] = new JsonArray(false), ["description"] = "Only false is supported. Native checks/attach are unavailable in this passive host contract." };
         string description = name == "Bootstrap"
             ? "[read-only Foundation readiness] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change."
             : "[passive host candidate; upstream response incompatible] Managed registration/schema/source-protocol diagnostics only. No worker call, launch, attach, group inspection/repair, filesystem or persistent settings. Installed API/SDK, permission and native readiness remain not-probed. Native flags and automation-context options are unsupported.";
-        tool = new Tool { Name = name, Description = description, InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false, ["required"] = new JsonArray() }) };
+        tool = new Tool { Name = name, Description = description + " Structural checks cover the entire registered catalog; registeredTools contains one bounded page. Retrieve the full roster using offset/limit and meta.paging.nextOffset.", InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = properties, ["additionalProperties"] = false, ["required"] = new JsonArray() }) };
     }
     public override Tool ProtocolTool => tool;
     public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        int offset = 0, limit = FoundationPassiveDiagnostics.RosterPageLimit;
         // Validate before calling even the pure registry delegate. Do not echo untrusted arguments.
         if (request.Params?.Arguments is { } arguments)
             foreach (var pair in arguments)
-                if (tool.Name != "RunCapabilitySelfTest" || !Flags.Contains(pair.Key, StringComparer.Ordinal) || pair.Value.ValueKind != JsonValueKind.False)
-                    throw new McpException("Unsupported passive diagnostic argument. Bootstrap accepts no arguments; RunCapabilitySelfTest permits only connectIfNeeded, includeProjectTree and inspectPortalProcesses set to false. Native/selfConnect and automation-context options are unsupported.", null, McpErrorCode.InvalidParams);
+            {
+                if (pair.Key is "offset" or "limit" && pair.Value.ValueKind == JsonValueKind.Number && pair.Value.TryGetInt32(out int number)
+                    && (pair.Key == "offset" ? number >= 0 : number >= 1 && number <= FoundationPassiveDiagnostics.RosterPageLimit))
+                {
+                    if (pair.Key == "offset") offset = number; else limit = number;
+                }
+                else if (tool.Name != "RunCapabilitySelfTest" || !Flags.Contains(pair.Key, StringComparer.Ordinal) || pair.Value.ValueKind != JsonValueKind.False)
+                    throw new McpException("Unsupported passive diagnostic argument. Only offset/limit paging and RunCapabilitySelfTest flags connectIfNeeded, includeProjectTree and inspectPortalProcesses set to false are supported. Native/selfConnect and automation-context options are unsupported.", null, McpErrorCode.InvalidParams);
+            }
         try
         {
-            var result = FoundationPassiveDiagnostics.Inspect(release, nativeSessionConfigured, registry());
+            var tools = registry();
+            if (offset > tools.Count) return ValueTask.FromException<CallToolResult>(new McpException("Passive diagnostic offset exceeds the registered-tool count.", null, McpErrorCode.InvalidParams));
+            var result = FoundationPassiveDiagnostics.Inspect(release, nativeSessionConfigured, tools, offset: offset, limit: limit);
             if (tool.Name == "Bootstrap") FoundationPassiveDiagnostics.AddReadiness(result, readinessProvider?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release));
             else result["recommendedNextTool"] = null;
             return ValueTask.FromResult(new CallToolResult { IsError = !result["checks"]!["passed"]!.GetValue<bool>(), Content = new List<ContentBlock> { new TextContentBlock { Text = result.ToJsonString() } } });

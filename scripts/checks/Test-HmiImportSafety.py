@@ -9,12 +9,27 @@ from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
 sources = EngineSources()
+for name in ('HmiExchangeAdapter.cs', 'HmiAccessHelpers.cs'):
+    path = ROOT / 'src/Adapters/Native/Hmi' / name
+    sources.sources[path] = path.read_text(encoding='utf-8-sig')
+# The native port uses dictionaries and a string error code. Adapt those DTO
+# spellings to this existing JSON fixture; retain every behavioural assertion.
+def fixture_source(text):
+    text = text.replace('_session.', '').replace('HmiObject', 'JsonObject').replace('HmiArray', 'JsonArray')
+    text = text.replace('HmiImportBatch', 'ResponseImportBatch').replace('HmiImportFailure', 'ImportFailure')
+    text = text.replace('PlcSoftwareException', 'PortalException')
+    text = text.replace('HmiMeta.Basic( ', 'ResponseMeta.Basic(DateTime.Now, ')
+    text = text.replace('((JsonObject)items[items.Count - 1]!.Field("evidence")!)', 'items[items.Count - 1]!["evidence"]!')
+    for code in ('InvalidState', 'NotFound', 'ImportFailed', 'InvalidParams'):
+        text = text.replace('new PortalException("' + code + '"', 'new PortalException(PortalErrorCode.' + code)
+        text = text.replace('portal.Code == "' + code + '"', 'portal.Code == PortalErrorCode.' + code)
+    return text
 # Service bodies reach the kernel through `_session.`; the compiled fixture supplies those members directly.
-screen = sources.member('ImportHmiScreen', owner='HmiExchangeService', tool=False).replace('_session.', '')
-batch = sources.member('ImportHmiScreensFromDirectory', owner='HmiExchangeService', tool=False).replace('_session.', '')
-import_item = sources.member('ImportItem', owner='HmiExchangeService')
-helper = sources.member('TryImportEngineeringObjectIntoCollection', signature='out string? importedName')
-name_reader = sources.member('BestEffortExtractFirstName')
+screen = fixture_source(sources.member('ImportHmiScreen', owner='HmiExchangeAdapter', tool=False))
+batch = fixture_source(sources.member('ImportHmiScreensFromDirectory', owner='HmiExchangeAdapter', tool=False))
+import_item = fixture_source(sources.member('ImportItem', owner='HmiExchangeAdapter'))
+helper = sources.member('TryImportEngineeringObjectIntoCollection', owner='HmiAccessHelpers', signature='out string? importedName')
+name_reader = sources.member('BestEffortExtractFirstName', owner='HmiAccessHelpers')
 assert screen.count('TryImportEngineeringObjectIntoCollection(') == 1
 assert 'GuardClassicScreenSize(sw, importPath);' in screen
 assert 'document.Save(' not in screen and 'Regex.Match(' not in screen
@@ -146,6 +161,10 @@ try:
     (work / 'Program.cs').write_text(program, encoding='utf-8', newline='\n')
     for name in ('ResponseMeta.cs', 'ResponseClock.cs'):
         shutil.copyfile(ROOT / 'src/Logic/ModelContextProtocol' / name, work / name)
+    shutil.copyfile(ROOT / 'src/Adapters.Contracts/LegacyResponseMetadata.cs', work / 'LegacyResponseMetadata.cs')
+    for name in ('NativeInputPolicy.cs', 'NativePathSelection.cs'):
+        shutil.copyfile(ROOT / 'src/Shared' / name, work / name)
+    shutil.copyfile(ROOT / 'src/Adapters.Contracts/AdapterPreconditionException.cs', work / 'AdapterPreconditionException.cs')
     (work / 'Checks.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>', encoding='utf-8')
     env = dict(os.environ, DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
     subprocess.run([os.environ.get('DOTNET', 'dotnet'), 'run', '--project', str(work / 'Checks.csproj'), '-c', 'Release', '-p:NuGetAudit=false', '-p:RestoreSources=' + str(work)], env=env, check=True)

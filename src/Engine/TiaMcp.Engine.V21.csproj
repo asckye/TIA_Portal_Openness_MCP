@@ -126,6 +126,20 @@
     <Compile Include="../Shared/EngineeringServicesPortService.cs" Link="Shared/EngineeringServicesPortService.cs" />
     <Compile Include="../Shared/SecurityToolContract.cs" Link="Shared/SecurityToolContract.cs" />
     <Compile Include="../Shared/ReflectionTools.cs" Link="Shared/ReflectionTools.cs" />
+    <Compile Include="../Shared/HmiInspectionPortService.cs" Link="Shared/HmiInspectionPortService.cs" />
+    <Compile Include="../Shared/HmiInspectionPortTools.cs" Link="Shared/HmiInspectionPortTools.cs" />
+    <Compile Include="../Shared/HmiPortService.cs" Link="Shared/HmiPortService.cs" />
+    <Compile Include="../Shared/HmiDescribeTools.cs" Link="Shared/HmiDescribeTools.cs" />
+    <Compile Include="../Shared/HmiExchangeTools.cs" Link="Shared/HmiExchangeTools.cs" />
+    <Compile Include="../Shared/HmiExchangeResponses.cs" Link="Shared/HmiExchangeResponses.cs" />
+    <Compile Include="../Shared/HmiTagDeletionTools.cs" Link="Shared/HmiTagDeletionTools.cs" />
+    <Compile Include="../Shared/ClassicHmiFoldersTools.cs" Link="Shared/ClassicHmiFoldersTools.cs" />
+    <Compile Include="../Shared/MotionProDiagClassicHmiTools.cs" Link="Shared/MotionProDiagClassicHmiTools.cs" />
+    <Compile Include="../Shared/HmiDescribeService.cs" Link="Shared/HmiDescribeService.cs" />
+    <Compile Include="../Shared/HmiExchangeService.cs" Link="Shared/HmiExchangeService.cs" />
+    <Compile Include="../Shared/HmiTagDeletionService.cs" Link="Shared/HmiTagDeletionService.cs" />
+    <Compile Include="../Shared/ClassicHmiFoldersService.cs" Link="Shared/ClassicHmiFoldersService.cs" />
+    <Compile Include="../Shared/MotionProDiagClassicHmiService.cs" Link="Shared/MotionProDiagClassicHmiService.cs" />
     <Compile Include="../Shared/ReflectionPortService.cs" Link="Shared/ReflectionPortService.cs" />
     <Compile Include="../Shared/AlarmsTools.cs" Link="Shared/AlarmsTools.cs" />
     <Compile Include="../Shared/OpcUaTools.cs" Link="Shared/OpcUaTools.cs" />

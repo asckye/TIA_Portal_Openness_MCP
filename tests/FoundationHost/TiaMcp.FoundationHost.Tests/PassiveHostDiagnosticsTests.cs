@@ -14,9 +14,37 @@ internal static class PassiveHostDiagnosticsTests
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token) { Calls++; throw new Exception("SECRET_NATIVE_CALL"); }
         public void Dispose() { }
     }
+    private sealed class RosterTool(string name) : McpServerTool
+    {
+        public override Tool ProtocolTool { get; } = new() { Name = name,
+            InputSchema = JsonSerializer.SerializeToElement(new { type = "object", properties = new { }, additionalProperties = false }) };
+        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken token = default)
+            => throw new InvalidOperationException("SECRET_ROSTER_EXECUTION");
+    }
     internal static async Task Run(IMcpServer server, Action<bool,string> check)
     {
         RequestContext<CallToolRequestParams> Request(string name, string json = "{}") => new(server) { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string,JsonElement>>(json) } };
+        async Task<JsonArray> FullRoster(McpServerTool tool, string name, JsonNode first)
+        {
+            var rows = first["data"]!["registeredTools"]!.DeepClone().AsArray();
+            var page = first;
+            int previous = 0;
+            while (page["meta"]!["paging"]!["nextOffset"] is JsonValue next)
+            {
+                int offset = next.GetValue<int>();
+                check(offset > previous && offset == rows.Count, "passive roster paging advances without missing or repeated rows");
+                var response = await tool.InvokeAsync(Request(name, JsonSerializer.Serialize(new { offset, limit = 50 })));
+                var text = ((TextContentBlock)response.Content.Single()).Text;
+                page = JsonNode.Parse(text)!;
+                check(response.IsError != true && text.Length < 65536 && !text.Contains("SECRET") && !text.Contains(Environment.CurrentDirectory), "each passive roster page remains bounded, redacted and structurally successful");
+                check((string?)page["meta"]!["paging"]!["mode"] == "offset" && (int?)page["meta"]!["paging"]!["offset"] == offset
+                    && (int?)page["meta"]!["paging"]!["total"] == (int?)first["data"]!["registeredToolCount"], "passive roster uses V4 offset paging with the full count");
+                foreach (var row in page["data"]!["registeredTools"]!.AsArray()) rows.Add(row?.DeepClone());
+                previous = offset;
+            }
+            check((bool?)page["meta"]!["paging"]!["complete"] == true && rows.Count == (int?)first["data"]!["registeredToolCount"], "passive roster final page is complete and every registered row is retrievable");
+            return rows;
+        }
         var expectedPortedOperations = new Dictionary<string, string[]>(StringComparer.Ordinal) {
             ["GetDeviceAddressing"] = new[] { "hardware-addressing.ReadHardwareAddressing", "ReadState" },
             ["GetDeviceIpAddress"] = new[] { "hardware-addressing.ReadHardwareIpAddress", "ReadState" },
@@ -43,11 +71,8 @@ internal static class PassiveHostDiagnosticsTests
                 check(result["selectedRelease"]!["key"]!.GetValue<string>() == release.Key, "exact release identity");
                 check(result["host"]!["nativeCallsDisabledByConfiguration"]!.GetValue<bool>() == !native, "configured native gate truthful");
                 check(!result["upstreamResponseCompatible"]!.GetValue<bool>() && !result["nativeCertified"]!.GetValue<bool>(), "bounded candidate is not full/native compatibility");
-                var roster = result["registeredTools"]!.AsArray();
-                var projectedRegistry = release.Key is "20" or "21"
-                    ? registry.Where(tool => !TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(family => family.Name is "F08" or "F09" or "F11" or "F17").SelectMany(family => family.Tools).Contains(tool.ProtocolTool.Name)).ToArray()
-                    : registry.ToArray();
-                check(result["registeredToolCount"]!.GetValue<int>() == projectedRegistry.Length && roster.Select(t => t!["name"]!.GetValue<string>()).Order().SequenceEqual(projectedRegistry.Select(t => t.ProtocolTool.Name).Order()), "diagnostics retain the release-specific bounded registration projection");
+                var roster = await FullRoster(tool, name, JsonNode.Parse(text)!);
+                check(result["registeredToolCount"]!.GetValue<int>() == registry.Count && roster.Select(t => t!["name"]!.GetValue<string>()).Order().SequenceEqual(registry.Select(t => t.ProtocolTool.Name).Order()), "diagnostics retain every release-specific registered tool across bounded pages");
                 foreach (var pair in expectedPortedOperations)
                 {
                     var row = roster.Single(t => (string?)t!["name"] == pair.Key)!;
@@ -72,6 +97,49 @@ internal static class PassiveHostDiagnosticsTests
                 check(text.Length < 65536 && !text.Contains("SECRET") && !text.Contains(Environment.CurrentDirectory), "bounded redacted result");
             }
             check(worker.Calls == 0, "native enabled or disabled diagnostics never call worker");
+        }
+        foreach (var release in TiaVersionCatalog.All)
+        {
+            using var engineScope = release.IsFullEngine ? EngineHostParity.EnterScope() : null;
+            var worker = new ForbiddenWorker();
+            var actual = LegacyHostToolRegistry.Create(worker, release.Key, true);
+            var large = actual.Concat(Enumerable.Range(0, 1024 - actual.Count)
+                .Select(index => (McpServerTool)new RosterTool("Roster" + index.ToString("D4") + new string('\u96ea', 118)))).ToArray();
+            foreach (var name in new[] { "Bootstrap", "RunCapabilitySelfTest" })
+            {
+                var tool = new FoundationV4Tool(new PassiveDiagnosticTool(name, release.Key, true, () => large,
+                    () => FoundationPassiveDiagnostics.Readiness(release.Key, _ => null, () => false)), release.Key);
+                string publicName = tool.ProtocolTool.Name;
+                var response = await tool.InvokeAsync(Request(publicName));
+                var text = ((TextContentBlock)response.Content.Single()).Text;
+                var body = JsonNode.Parse(text)!;
+                check(response.IsError != true && text.Length < 65536 && !text.Contains("SECRET"), "1024-tool passive report keeps the unchanged character bound");
+                check((int?)body["data"]!["registeredToolCount"] == 1024 && (bool?)body["data"]!["checks"]!["passed"] == true, "1024-tool report checks the entire registry and retains its total");
+                var roster = await FullRoster(tool, publicName, body);
+                check(roster.Select(row => (string)row!["name"]!).SequenceEqual(large.Select(row => row.ProtocolTool.Name).Order(StringComparer.Ordinal)), "1024-tool roster preserves ordinal order, unique names and every row");
+                var empty = await tool.InvokeAsync(Request(publicName, "{\"offset\":1024,\"limit\":1}"));
+                var end = empty.StructuredContent!;
+                check(empty.IsError != true && end["data"]!["registeredTools"]!.AsArray().Count == 0
+                    && (bool?)end["meta"]!["paging"]!["complete"] == true && end["meta"]!["paging"]!["nextOffset"] == null,
+                    "offset at the roster end returns a complete empty V4 page");
+                var beyond = await tool.InvokeAsync(Request(publicName, "{\"offset\":1025}"));
+                check(beyond.IsError == true && (string?)beyond.StructuredContent?["error"]?["code"] == "INVALID_ARGUMENT"
+                    && (string?)beyond.StructuredContent?["meta"]?["execution"] == "not-started", "offset beyond the roster is rejected through the V4 argument contract");
+            }
+            var largeDuplicate = large.Take(1023).Append(large[0]).ToArray();
+            check(!FoundationPassiveDiagnostics.Inspect(release.Key, true, largeDuplicate)["checks"]!["uniqueRegisteredNames"]!.GetValue<bool>(), "1024-tool duplicate outside the returned page still fails the full structural check");
+            var saved = large[^1].ProtocolTool.InputSchema;
+            large[^1].ProtocolTool.InputSchema = JsonSerializer.SerializeToElement(new { type = "object", properties = new { }, additionalProperties = true });
+            check(!FoundationPassiveDiagnostics.Inspect(release.Key, true, large)["checks"]!["objectSchemaContracts"]!.GetValue<bool>(), "1024-tool invalid schema outside the returned page still fails the full structural check");
+            var failedTool = new FoundationV4Tool(new PassiveDiagnosticTool("RunCapabilitySelfTest", release.Key, true, () => large), release.Key);
+            var failedResponse = await failedTool.InvokeAsync(Request("RunCapabilitySelfTest"));
+            var failedText = ((TextContentBlock)failedResponse.Content.Single()).Text;
+            check(failedResponse.IsError == true && failedText.Length < 65536
+                && (bool?)failedResponse.StructuredContent?["data"]?["checks"]?["objectSchemaContracts"] == false,
+                "1024-tool structural failure retains its evidence within the unchanged report bound");
+            large[^1].ProtocolTool.InputSchema = saved;
+            check(!FoundationPassiveDiagnostics.Inspect(release.Key, true, large, new HashSet<string>())["checks"]!["foundationOperationsInSourceAllowlist"]!.GetValue<bool>(), "1024-tool roster keeps the Foundation operation allowlist check");
+            check(worker.Calls == 0, "all 1024-tool diagnostic pages and structural failures avoid the worker");
         }
         var missingInstall = FoundationPassiveDiagnostics.Readiness("14sp1", _ => null, () => true);
         check(!missingInstall["ready"]!.GetValue<bool>() && missingInstall["environment"]!["tiaVersionDetected"] == null
@@ -156,6 +224,15 @@ internal static class PassiveHostDiagnosticsTests
         try { await guarded[0].InvokeAsync(Request("Bootstrap", "{\"connectIfNeeded\":false}")); check(false,"bootstrap args must fail"); }
         catch (McpException ex) { check(ex.ErrorCode == McpErrorCode.InvalidParams,"bootstrap has no arguments"); }
         check(reads == 0,"unsupported flags rejected before even registry inspection");
+        var secretRegistry = FoundationPassiveDiagnosticTools.Create("17", false, () => throw new McpException("SECRET_REGISTRY", null, McpErrorCode.InvalidParams)).First();
+        try { await secretRegistry.InvokeAsync(Request("Bootstrap")); check(false, "registry errors must be redacted"); }
+        catch (McpException ex) { check(ex.ErrorCode == McpErrorCode.InternalError && !ex.Message.Contains("SECRET"), "registry exception code and content remain private"); }
+        foreach (var tool in guarded)
+        foreach (var json in new[] { "{\"offset\":-1}", "{\"offset\":1.5}", "{\"offset\":null}", "{\"limit\":0}", "{\"limit\":51}", "{\"limit\":\"1\"}" })
+        {
+            try { await tool.InvokeAsync(Request(tool.ProtocolTool.Name, json)); check(false, "invalid passive paging must fail"); }
+            catch (McpException ex) { check(ex.ErrorCode == McpErrorCode.InvalidParams && reads == 0, "invalid paging rejected before registry inspection"); }
+        }
         var normal = LegacyHostToolRegistry.Create(new ForbiddenWorker(), "17", false).Single(t => t.ProtocolTool.Name == "RunCapabilitySelfTest");
         check((await normal.InvokeAsync(Request("RunCapabilitySelfTest", "{\"connectIfNeeded\":false,\"includeProjectTree\":false,\"inspectPortalProcesses\":false}"))).IsError != true,"explicit safe defaults accepted");
         using var cancelled = new CancellationTokenSource(); cancelled.Cancel();

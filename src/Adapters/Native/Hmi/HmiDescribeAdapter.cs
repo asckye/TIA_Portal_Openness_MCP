@@ -1,23 +1,18 @@
-using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
-using Siemens.Engineering.Cax;
-using Siemens.Engineering.Compiler;
-using Siemens.Engineering.Connection;
-using Siemens.Engineering.Download;
-using Siemens.Engineering.Download.Configurations;
 using Siemens.Engineering.Hmi;
-using Siemens.Engineering.Online;
-using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.SW.Alarm;
-using Siemens.Engineering.SW.OpcUa;
+using Siemens.Engineering.Hmi.Globalization;
+using Siemens.Engineering.Hmi.RuntimeScripting;
+using Siemens.Engineering.Hmi.Screen;
+using Siemens.Engineering.Hmi.Tag;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Plc;
+using TiaMcp.Adapters.Reflection;
+using TiaMcpServer.ModelContextProtocol;
+using static TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers;
+#if HMI_UNIFIED
 using Siemens.Engineering.HmiUnified;
-using Siemens.Engineering.HW;
-using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.Multiuser;
-using Siemens.Engineering.Safety;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.HmiUnified.HmiTags;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,23 +25,21 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Text.Json.Nodes;
 using System.Xml.Linq;
-using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Hmi
 {
-    internal sealed class HmiDescribeService
+    internal sealed class HmiDescribeAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly HmiSession _session;
 
-        public HmiDescribeService(IEngineeringSession session) => _session = session;
+        public HmiDescribeAdapter(HmiSession session) => _session = session;
 
         #region software - HmiDescribe
 
-        public (string? Name, string ProgramType, List<string> Screens)? GetHmiProgramInfo(string softwarePath)
+        public HmiProgramInfo? GetHmiProgramInfo(string softwarePath)
         {
-            _session.Logger?.LogInformation($"Getting HMI program info by path: {softwarePath}");
+
 
             if (_session.IsProjectNull())
             {
@@ -64,29 +57,31 @@ namespace TiaMcpServer.Siemens.Services
             // Classic WinCC (HmiTarget)
             if (sw is HmiTarget classic)
             {
-                return (classic.Name, "Classic", HmiScreenTraversal.ListNames(classic));
+                return new HmiProgramInfo { Name = classic.Name, ProgramType = "Classic", Screens = HmiScreenTraversal.ListNames(classic) };
             }
 
             // Unified (HmiSoftware)
+#if HMI_UNIFIED
             if (sw is HmiSoftware unified)
             {
-                return (unified.Name, "Unified", HmiScreenTraversal.ListNames(unified));
+                return new HmiProgramInfo { Name = unified.Name, ProgramType = "Unified", Screens = HmiScreenTraversal.ListNames(unified) };
             }
+#endif
 
-            return (sw.ToString(), "Unknown", new List<string>());
+            return new HmiProgramInfo { Name = sw.ToString(), ProgramType = "Unknown", Screens = new List<string>() };
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeHmiSoftware(string softwarePath, int maxMembers = 200)
+        public HmiDescribe DescribeHmiSoftware(string softwarePath, int maxMembers = 200)
         {
             if (_session.IsProjectNull())
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "Project is null",
                     ObjectKind = "Software",
                     ObjectPath = softwarePath,
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -94,13 +89,13 @@ namespace TiaMcpServer.Siemens.Services
             if (softwareContainer?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"HMI software not found: {softwarePath}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
 
             var sw = softwareContainer.Software;
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new HmiDescribe
             {
                 Message = "OK",
                 ObjectKind = "Software",
@@ -110,17 +105,17 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeHmiScreen(string softwarePath, string screenName, int maxMembers = 200)
+        public HmiDescribe DescribeHmiScreen(string softwarePath, string screenName, int maxMembers = 200)
         {
             if (_session.IsProjectNull())
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "Project is null",
                     ObjectKind = "HmiScreen",
                     ObjectPath = $"{softwarePath}:{screenName}",
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -128,7 +123,7 @@ namespace TiaMcpServer.Siemens.Services
             if (softwareContainer?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"HMI software not found: {$"{softwarePath}:{screenName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -138,12 +133,12 @@ namespace TiaMcpServer.Siemens.Services
             if (screen == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"Screen not found: {$"{softwarePath}:{screenName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new HmiDescribe
             {
                 Message = "OK",
                 ObjectKind = "HmiScreen",
@@ -153,17 +148,17 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeHmiTagTable(string softwarePath, string tagTableName, int maxMembers = 200)
+        public HmiDescribe DescribeHmiTagTable(string softwarePath, string tagTableName, int maxMembers = 200)
         {
             if (_session.IsProjectNull())
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "Project is null",
                     ObjectKind = "HmiTagTable",
                     ObjectPath = $"{softwarePath}:{tagTableName}",
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -171,7 +166,7 @@ namespace TiaMcpServer.Siemens.Services
             if (softwareContainer?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"HMI software not found: {$"{softwarePath}:{tagTableName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -181,12 +176,12 @@ namespace TiaMcpServer.Siemens.Services
             if (table == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"Tag table not found: {$"{softwarePath}:{tagTableName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new HmiDescribe
             {
                 Message = "OK",
                 ObjectKind = "HmiTagTable",
@@ -196,17 +191,17 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeHmiTag(string softwarePath, string tagTableName, string tagName, int maxMembers = 200)
+        public HmiDescribe DescribeHmiTag(string softwarePath, string tagTableName, string tagName, int maxMembers = 200)
         {
             if (_session.IsProjectNull())
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "Project is null",
                     ObjectKind = "HmiTag",
                     ObjectPath = $"{softwarePath}:{tagTableName}:{tagName}",
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -214,7 +209,7 @@ namespace TiaMcpServer.Siemens.Services
             if (sc?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"HMI software not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -224,7 +219,7 @@ namespace TiaMcpServer.Siemens.Services
             if (table == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"Tag table not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -233,7 +228,7 @@ namespace TiaMcpServer.Siemens.Services
             if (tagsComp == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"tagTable.Tags not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -259,12 +254,12 @@ namespace TiaMcpServer.Siemens.Services
             if (tagObj == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"Tag not found: {$"{softwarePath}:{tagTableName}:{tagName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new HmiDescribe
             {
                 Message = "OK",
                 ObjectKind = "HmiTag",
@@ -274,17 +269,17 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeHmiScreenItem(string softwarePath, string screenName, string itemName, int maxMembers = 200)
+        public HmiDescribe DescribeHmiScreenItem(string softwarePath, string screenName, string itemName, int maxMembers = 200)
         {
             if (_session.IsProjectNull())
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "Project is null",
                     ObjectKind = "HmiScreenItem",
                     ObjectPath = $"{softwarePath}:{screenName}:{itemName}",
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -292,7 +287,7 @@ namespace TiaMcpServer.Siemens.Services
             if (sc?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"HMI software not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -302,7 +297,7 @@ namespace TiaMcpServer.Siemens.Services
             if (screen == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"Screen not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -311,7 +306,7 @@ namespace TiaMcpServer.Siemens.Services
             if (itemsComp == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"screen.ScreenItems not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
@@ -337,12 +332,12 @@ namespace TiaMcpServer.Siemens.Services
             if (itemObj == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"Screen item not found: {$"{softwarePath}:{screenName}:{itemName}"}. Resolve the exact path first "
                     + "(GetProjectTree / ListDevices / ListHmiScreens / ListHmiTagTables).");
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new HmiDescribe
             {
                 Message = "OK",
                 ObjectKind = "HmiScreenItem",

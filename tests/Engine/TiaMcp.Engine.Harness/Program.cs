@@ -16,7 +16,7 @@ internal static partial class Program
     private static Assembly Server = null!;
     // Source captures run the host in-process. Keep the unattached adapter on
     // its own MTA thread without adopting a Portal or changing session lifecycle.
-    private sealed class SourceHardwareBridge : IDisposable
+    internal sealed class SourceHardwareBridge : IDisposable
     {
         private readonly System.Collections.Concurrent.BlockingCollection<Action> queue = new System.Collections.Concurrent.BlockingCollection<Action>();
         private readonly Thread thread;
@@ -27,7 +27,7 @@ internal static partial class Program
         private MethodInfo dispatch = null!;
         private Type request = null!;
 
-        internal SourceHardwareBridge(Assembly server, string api)
+        internal SourceHardwareBridge(Assembly server, string api, bool hmiProjectGuard = false)
         {
             bridge = FindServerType(server, "TiaMcpServer.ModelContextProtocol.HardwareAddressWorkerBridge").GetField("Call", All)!;
             previous = bridge.GetValue(null)!;
@@ -54,6 +54,13 @@ internal static partial class Program
                 var completion = new TaskCompletionSource<System.Text.Json.Nodes.JsonNode?>();
                 queue.Add(() => {
                     try {
+                        if (hmiProjectGuard && operation.EndsWith(".ExecuteHmi", StringComparison.Ordinal)) {
+                            var requestType = FindReferencedType(server, "TiaMcp.Adapters.Contracts.HmiRequest");
+                            var value = System.Text.Json.JsonSerializer.Deserialize(input["request"]!.ToJsonString(), requestType);
+                            var result = adapter.GetType().GetMethod("ExecuteHmi")!.Invoke(adapter, new[] { value, (object)(bool)input["dryRun"]! });
+                            completion.SetResult(System.Text.Json.JsonSerializer.SerializeToNode(result));
+                            return;
+                        }
                         var message = Activator.CreateInstance(request, new object[] { 0L, "adapter." + operation, input.ToJsonString(), (Action<int, string?>)((_, __) => { }), null! })!;
                         var response = dispatch.Invoke(dispatcher, new[] { message })!;
                         var failure = response.GetType().GetProperty("Failure")!.GetValue(response);
@@ -172,6 +179,12 @@ internal static partial class Program
                     return File.Exists(dependency) ? Assembly.LoadFrom(dependency) : null;
                 };
             EngineSurface.CheckHostRetirement(Server, Check);
+            if (args.Length >= 4 && args[1] == "export-engine-catalog") {
+                Server.GetType("TiaMcpServer.Cli.ToolCatalogExport", true)!.GetMethod("Write", All)!
+                    .Invoke(null, new object[] { Path.GetFullPath(args[3]) });
+                Console.WriteLine("Exported engine worker catalog: " + Path.GetFullPath(args[3]));
+                return 0;
+            }
             if (args.Length >= 2 && args[1] == "descriptor-catalog-only") {
                 ToolDescriptorChecks.Run(Server, (ok, message) => { Check(ok, message); Passed++; });
                 Console.WriteLine("COMPLETE: " + Passed + " descriptor catalog checks passed");

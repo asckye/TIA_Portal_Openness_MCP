@@ -1,24 +1,18 @@
-using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
-using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
-using Siemens.Engineering.Cax;
-using Siemens.Engineering.Compiler;
-using Siemens.Engineering.Connection;
-using Siemens.Engineering.Download;
-using Siemens.Engineering.Download.Configurations;
 using Siemens.Engineering.Hmi;
-using Siemens.Engineering.Online;
-using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.SW.Alarm;
-using Siemens.Engineering.SW.OpcUa;
+using Siemens.Engineering.Hmi.Globalization;
+using Siemens.Engineering.Hmi.RuntimeScripting;
+using Siemens.Engineering.Hmi.Screen;
+using Siemens.Engineering.Hmi.Tag;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Plc;
+using TiaMcp.Adapters.Reflection;
+using TiaMcpServer.ModelContextProtocol;
+using static TiaMcp.Adapters.Native.Hmi.HmiAccessHelpers;
+#if HMI_UNIFIED
 using Siemens.Engineering.HmiUnified;
-using Siemens.Engineering.HW;
-using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.Multiuser;
-using Siemens.Engineering.Safety;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.HmiUnified.HmiTags;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,17 +25,15 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Text.Json.Nodes;
 using System.Xml.Linq;
-using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Hmi
 {
-    internal sealed class HmiExchangeService
+    internal sealed class HmiExchangeAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly HmiSession _session;
 
-        public HmiExchangeService(IEngineeringSession session) => _session = session;
+        public HmiExchangeAdapter(HmiSession session) => _session = session;
 
         #region software - HmiExchange
 
@@ -86,7 +78,7 @@ namespace TiaMcpServer.Siemens.Services
                 : _session.TryFindHmiTagTable(sw, tagTableName);
             // An unknown table is a lookup failure, not an empty table.
             if (!string.IsNullOrWhiteSpace(tagTableName) && tagTable == null)
-                throw new PortalException(PortalErrorCode.NotFound, "HMI tag table not found: " + tagTableName + " (tables: " + string.Join(", ", GetHmiTagTables(softwarePath) ?? new List<string>()) + ").");
+                throw new PlcSoftwareException("NotFound", "HMI tag table not found: " + tagTableName + " (tables: " + string.Join(", ", GetHmiTagTables(softwarePath) ?? new List<string>()) + ").");
 
             var root = tagTable ?? tagRoot;
             return _session.TryListNamesFromCollection(root, new[] { "Tags" }, "Tags");
@@ -103,60 +95,60 @@ namespace TiaMcpServer.Siemens.Services
             return _session.TryListNamesFromCollection(connections, Array.Empty<string>(), "Connections");
         }
 
-        public JsonObject ExportHmiScreen(string softwarePath, string screenName, string exportPath)
+        public HmiObject ExportHmiScreen(string softwarePath, string screenName, string exportPath)
         {
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
+            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "Project is null");
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
+            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             var screen = HmiExactAccess.Screen(softwareContainer.Software, screenName);
-            if (screen == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI screen not found: {screenName}");
+            if (screen == null) throw new PlcSoftwareException("NotFound", $"HMI screen not found: {screenName}");
 
-            var export = EngineeringExport.Export(screen, exportPath);
+            var export = HmiFiles.Export(screen, exportPath);
             export["operationSuccess"] = export["success"]?.DeepClone();
             return export;
         }
 
-        public JsonObject ExportHmiTagTable(string softwarePath, string tagTableName, string exportPath)
+        public HmiObject ExportHmiTagTable(string softwarePath, string tagTableName, string exportPath)
         {
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
+            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "Project is null");
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
+            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             var sw = softwareContainer.Software;
             var table = _session.TryFindHmiTagTable(sw, tagTableName);
-            if (table == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI tag table not found: {tagTableName}");
+            if (table == null) throw new PlcSoftwareException("NotFound", $"HMI tag table not found: {tagTableName}");
 
-            var export = EngineeringExport.Export(table, exportPath);
+            var export = HmiFiles.Export(table, exportPath);
             export["operationSuccess"] = export["success"]?.DeepClone();
             return export;
         }
 
-        public JsonObject ExportHmiConnection(string softwarePath, string connectionName, string exportPath)
+        public HmiObject ExportHmiConnection(string softwarePath, string connectionName, string exportPath)
         {
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
+            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "Project is null");
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
+            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             var sw = softwareContainer.Software;
             var connections = TryGetPropertyValue(sw, "Connections");
-            if (connections == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI Connections collection not found on '{softwarePath}'");
+            if (connections == null) throw new PlcSoftwareException("NotFound", $"HMI Connections collection not found on '{softwarePath}'");
 
             var connection = _session.FindExistingByName(connections, connectionName);
-            if (connection == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI connection not found: {connectionName}");
+            if (connection == null) throw new PlcSoftwareException("NotFound", $"HMI connection not found: {connectionName}");
 
-            var export = EngineeringExport.Export(connection, exportPath);
+            var export = HmiFiles.Export(connection, exportPath);
             export["operationSuccess"] = export["success"]?.DeepClone();
             return export;
         }
 
-        public (List<string> Exported, List<string> Failed, JsonArray Items)? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true)
+        public HmiExportProgram? ExportHmiProgram(string softwarePath, string exportDir, bool exportScreens = true, bool exportTagTables = true)
         {
             if (_session.IsProjectNull()) return null;
 
             var exported = new List<string>();
             var failed = new List<string>();
-            var items = new JsonArray();
+            var items = new HmiArray();
 
             Directory.CreateDirectory(exportDir);
 
@@ -167,8 +159,8 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var safe = _session.MakeSafeFileName(s);
                     var outPath = Path.Combine(exportDir, $"screen_{safe}.xml");
-                    try { var result = ExportHmiScreen(softwarePath, s, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new JsonObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() }); }
-                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); items.Add(new JsonObject { ["target"] = "screen:" + s, ["evidence"] = new JsonObject { ["operationSuccess"] = false } }); }
+                    try { var result = ExportHmiScreen(softwarePath, s, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = result.DeepClone() }); }
+                    catch (PlcSoftwareException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); items.Add(new HmiObject { ["target"] = "screen:" + s, ["evidence"] = new HmiObject { ["operationSuccess"] = false } }); }
                 }
             }
 
@@ -179,20 +171,20 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     var safe = _session.MakeSafeFileName(t);
                     var outPath = Path.Combine(exportDir, $"tagtable_{safe}.xml");
-                    try { var result = ExportHmiTagTable(softwarePath, t, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new JsonObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() }); }
-                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); items.Add(new JsonObject { ["target"] = "tagtable:" + t, ["evidence"] = new JsonObject { ["operationSuccess"] = false } }); }
+                    try { var result = ExportHmiTagTable(softwarePath, t, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = result.DeepClone() }); }
+                    catch (PlcSoftwareException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); items.Add(new HmiObject { ["target"] = "tagtable:" + t, ["evidence"] = new HmiObject { ["operationSuccess"] = false } }); }
                 }
             }
 
-            return (exported, failed, items);
+            return new HmiExportProgram { Exported = exported, Failed = failed, Items = items };
         }
 
         public void ImportHmiScreen(string softwarePath, string folderPath, string importPath)
         {
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
+            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             LastImportNotes = null;
             try
@@ -216,23 +208,23 @@ namespace TiaMcpServer.Siemens.Services
                 }
 
                 if (screens == null)
-                    throw new PortalException(PortalErrorCode.NotFound, $"Screens collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
+                    throw new PlcSoftwareException("NotFound", $"Screens collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
 
                 if (_session.TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err))
                     return;
 
                 // A failed native call can already have modified the project. Its error text is not
                 // proof of rollback: never strip attributes and replay an import after failure.
-                throw new PortalException(PortalErrorCode.ImportFailed, (err ?? "ImportHmiScreen failed")
+                throw new PlcSoftwareException("ImportFailed", (err ?? "ImportHmiScreen failed")
                     + " The project may have changed. No automatic retry was attempted; inspect the project before another import.");
             }
-            catch (PortalException)
+            catch (PlcSoftwareException)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
+                throw new PlcSoftwareException("ImportFailed", ex.Message, null, ex);
             }
         }
 
@@ -245,7 +237,9 @@ namespace TiaMcpServer.Siemens.Services
         // 640x480). The size is compared with an existing screen of the device (or its display attributes) before Import.
         private void GuardClassicScreenSize(object hmiSoftware, string importPath)
         {
+#if HMI_UNIFIED
             if (hmiSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware) return;       // Unified screens scale; the crash is a classic-panel behaviour
+#endif
             int? xmlWidth = null, xmlHeight = null;
             try
             {
@@ -286,9 +280,9 @@ namespace TiaMcpServer.Siemens.Services
                 if (resolution != null) { deviceWidth = resolution.Value.width; deviceHeight = resolution.Value.height; source = "hardware catalog description"; }
             }
             if (deviceWidth == null)
-                throw new PortalException(PortalErrorCode.InvalidState, "Screen size " + xmlWidth + "x" + xmlHeight + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.");
+                throw new PlcSoftwareException("InvalidState", "Screen size " + xmlWidth + "x" + xmlHeight + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.");
             if (deviceWidth != xmlWidth || deviceHeight != xmlHeight)
-                throw new PortalException(PortalErrorCode.InvalidParams, "Screen size " + xmlWidth + "x" + xmlHeight + " in the XML does not match the panel (" + deviceWidth + "x" + deviceHeight + " from " + source
+                throw new PlcSoftwareException("InvalidParams", "Screen size " + xmlWidth + "x" + xmlHeight + " in the XML does not match the panel (" + deviceWidth + "x" + deviceHeight + " from " + source
                     + "); TIA Portal V21 exits with NonRecoverableException on such an import (real project, crash 10). Rebuild the screen with width/height " + deviceWidth + "/" + deviceHeight + ".");
         }
 
@@ -333,10 +327,10 @@ namespace TiaMcpServer.Siemens.Services
 
         public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath)
         {
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
+            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             try
             {
@@ -353,82 +347,82 @@ namespace TiaMcpServer.Siemens.Services
                 }
 
                 if (tables == null)
-                    throw new PortalException(PortalErrorCode.NotFound, $"TagTables collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
+                    throw new PlcSoftwareException("NotFound", $"TagTables collection not found. swType={sw.GetType().FullName} groupType={group.GetType().FullName}");
 
                 if (_session.TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err))
                     return;
 
-                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportHmiTagTable failed");
+                throw new PlcSoftwareException("ImportFailed", err ?? "ImportHmiTagTable failed");
             }
-            catch (PortalException)
+            catch (PlcSoftwareException)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
+                throw new PlcSoftwareException("ImportFailed", ex.Message, null, ex);
             }
         }
 
         public void ImportHmiConnection(string softwarePath, string importPath)
         {
-            if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
+            if (_session.IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
+            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             try
             {
                 var sw = softwareContainer.Software;
                 var connections = TryGetPropertyValue(sw, "Connections");
                 if (connections == null)
-                    throw new PortalException(PortalErrorCode.NotFound, $"Connections collection not found. swType={sw.GetType().FullName}");
+                    throw new PlcSoftwareException("NotFound", $"Connections collection not found. swType={sw.GetType().FullName}");
 
                 if (_session.TryImportEngineeringObjectIntoCollection(connections, importPath, out _, out var err))
                     return;
 
-                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportHmiConnection failed");
+                throw new PlcSoftwareException("ImportFailed", err ?? "ImportHmiConnection failed");
             }
-            catch (PortalException)
+            catch (PlcSoftwareException)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
+                throw new PlcSoftwareException("ImportFailed", ex.Message, null, ex);
             }
         }
 
-        private static JsonObject ImportItem(string target, bool success, Exception? exception = null, string? status = null)
+        private static HmiObject ImportItem(string target, bool success, Exception? exception = null, string? status = null)
         {
-            var evidence = new JsonObject { ["operationSuccess"] = success };
+            var evidence = new HmiObject { ["operationSuccess"] = success };
             if (status != null) evidence["status"] = status;
-            if (exception is PortalException portal && (portal.Code == PortalErrorCode.InvalidState || portal.Code == PortalErrorCode.NotFound))
+            if (exception is PlcSoftwareException portal && (portal.Code == "InvalidState" || portal.Code == "NotFound"))
                 evidence["status"] = portal.Code.ToString();
             if (exception != null) evidence["exceptionType"] = exception.GetType().Name;
-            return new JsonObject { ["target"] = target, ["evidence"] = evidence };
+            return new HmiObject { ["target"] = target, ["evidence"] = evidence };
         }
 
-        public ResponseImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
+        public HmiImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
         {
             var imported = new List<string>();
-            var failed = new List<ImportFailure>();
-            var items = new JsonArray();
+            var failed = new List<HmiImportFailure>();
+            var items = new HmiArray();
 
             try
             {
                 if (_session.IsProjectNull())
                 {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
+                    failed.Add(new HmiImportFailure { Path = dir, Error = "Project is null" });
                     items.Add(ImportItem(dir, false, status: "InvalidState"));
-                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
                 }
 
                 if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
                 {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
+                    failed.Add(new HmiImportFailure { Path = dir, Error = "Directory not found" });
                     items.Add(ImportItem(dir, false, status: "NotFound"));
-                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
                 }
 
                 Regex? regex = null;
@@ -450,43 +444,43 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     catch (Exception ex)
                     {
-                        failed.Add(new ImportFailure { Path = file, Error = ex.ToString() + " Batch stopped; later matching files were not attempted." });
+                        failed.Add(new HmiImportFailure { Path = file, Error = ex.ToString() + " Batch stopped; later matching files were not attempted." });
                         items.Add(ImportItem(file, false, ex));
-                        items[items.Count - 1]!["evidence"]!["batchStopped"] = true;
+                        ((HmiObject)items[items.Count - 1]!.Field("evidence")!)["batchStopped"] = true;
                         break;
                     }
                 }
 
-                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
             }
             catch (Exception ex)
             {
-                failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
+                failed.Add(new HmiImportFailure { Path = dir, Error = ex.ToString() });
                 items.Add(ImportItem(dir, false, ex));
-                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
             }
         }
 
-        public ResponseImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
+        public HmiImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true)
         {
             var imported = new List<string>();
-            var failed = new List<ImportFailure>();
-            var items = new JsonArray();
+            var failed = new List<HmiImportFailure>();
+            var items = new HmiArray();
 
             try
             {
                 if (_session.IsProjectNull())
                 {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Project is null" });
+                    failed.Add(new HmiImportFailure { Path = dir, Error = "Project is null" });
                     items.Add(ImportItem(dir, false, status: "InvalidState"));
-                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
                 }
 
                 if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
                 {
-                    failed.Add(new ImportFailure { Path = dir, Error = "Directory not found" });
+                    failed.Add(new HmiImportFailure { Path = dir, Error = "Directory not found" });
                     items.Add(ImportItem(dir, false, status: "NotFound"));
-                    return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
                 }
 
                 Regex? regex = null;
@@ -508,18 +502,18 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     catch (Exception ex)
                     {
-                        failed.Add(new ImportFailure { Path = file, Error = ex.ToString() });
+                        failed.Add(new HmiImportFailure { Path = file, Error = ex.ToString() });
                         items.Add(ImportItem(file, false, ex));
                     }
                 }
 
-                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
             }
             catch (Exception ex)
             {
-                failed.Add(new ImportFailure { Path = dir, Error = ex.ToString() });
+                failed.Add(new HmiImportFailure { Path = dir, Error = ex.ToString() });
                 items.Add(ImportItem(dir, false, ex));
-                return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0, ("items", items)) };
+                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
             }
         }
 

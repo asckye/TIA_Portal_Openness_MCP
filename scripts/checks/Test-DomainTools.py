@@ -1137,6 +1137,7 @@ PORTED_DOMAIN_TOOLS = {
     'Devices': {'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
     'HardwareNetwork': {'HardwareSecurityTools': ('ManageDeviceUsers',)},
     'HmiDescribe': {'PlcCompilePortTools': ('CompileHmiDiagnostics',)},
+    'HmiInspection': {'HmiInspectionPortTools': ('GetHmiScreenSnapshot', 'ListHmiScreenPaths')},
     'HardwareServices': {'PlcCompilePortTools': ('CompileDevice',), 'HardwareServicesPortTools': ('ListCommunicationConnections', 'ManageCommunicationConnection', 'ExchangeSystemDiagnosticsSettings', 'GetHardwareFeatures', 'ManageDeviceServiceObjects', 'ManageHardwareUtilities')},
     'Library': {'HmiOfflineTools': (
         'AnalyzeHmiTemplateReference', 'AnalyzeGlobalLibraryPackage',

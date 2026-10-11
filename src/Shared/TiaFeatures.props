@@ -61,4 +61,8 @@
     <DefineConstants Condition="'$(TiaReleaseKey)' == '20'">$(DefineConstants);TIA_V20</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter' and '$(TiaReleaseKey)' == '20'"><DefineConstants>$(DefineConstants);PLC_B5_V20_PLUS</DefineConstants></PropertyGroup>
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '19' Or '$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_UNIFIED</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);HMI_GRAPHICS_PROVIDER</DefineConstants>
+  </PropertyGroup>
 </Project>

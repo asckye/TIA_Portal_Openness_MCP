@@ -276,8 +276,10 @@ internal static class DomainShapeChecks
             foreach (var type in new[] { service, tools })
                 check(type.IsSealed && !typeof(IDisposable).IsAssignableFrom(type)
                     && ReferenceEquals(provider.GetService(type), provider.GetService(type)), domain.Name + " singleton lifetime: " + type.Name);
-            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
-                && ReferenceEquals(tools.GetField("_service", all)!.GetValue(toolTarget), target), domain.Name + " shares the engineering session");
+            check(service.BaseType.GetField("call", all)!.GetValue(target) is Delegate
+                && !service.GetFields(all).Any(field => field.FieldType == contract)
+                && ReferenceEquals(tools.GetField("_service", all)!.GetValue(toolTarget), target),
+                domain.Name + " shares the worker session through its registered port singleton");
             var methods = tools.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
             check(methods.Length == domain.Count, domain.Name + " tool count");
             if (domain.Name == "HmiExchange")

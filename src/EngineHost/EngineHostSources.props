@@ -1,5 +1,19 @@
 <Project>
   <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeResponses.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDescribeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiTagDeletionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ClassicHmiFoldersTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/MotionProDiagClassicHmiTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionPortTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDescribeService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiTagDeletionService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ClassicHmiFoldersService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/MotionProDiagClassicHmiService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OptionalPackageContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsResponses.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsTools.cs" />

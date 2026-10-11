@@ -183,8 +183,8 @@ namespace TiaMcp.Adapters
         {
             if (EngineeringStep != null && requiresProject) return EngineeringStep(tool, action);
             var reply = new HardwareAddressingReply();
-            var meta = reply.Meta;
-            meta["timestamp"] = DateTime.Now; meta["tool"] = tool; meta["success"] = false;
+            var meta = LegacyResponseMetadata.Step(DateTime.Now, tool);
+            reply.Meta = meta;
             try
             {
                 if (requiresProject && HardwareProjectMissing())
@@ -194,8 +194,7 @@ namespace TiaMcp.Adapters
                     return reply;
                 }
                 reply.Message = action(meta);
-                meta["success"] = !meta.TryGetValue("operationSuccess", out var verdict) || !Equals(verdict, false);
-                meta["operationSuccess"] = meta["success"];
+                LegacyResponseMetadata.Complete(meta);
             }
             catch (Exception ex)
             {

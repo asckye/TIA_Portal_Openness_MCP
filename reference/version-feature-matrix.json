@@ -3462,6 +3462,50 @@
         ]
       },
       {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
+        ]
+      },
+      {
         "family": "F35",
         "state": "current",
         "l5": "NOT RUN",
@@ -3819,6 +3863,50 @@
           "ManageLibraryTypeVersion",
           "ProbeGlobalLibrary",
           "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
         ]
       },
       {
@@ -4204,6 +4292,50 @@
           "ManageLibraryTypeVersion",
           "ProbeGlobalLibrary",
           "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
         ]
       },
       {
@@ -4602,6 +4734,50 @@
           "ManageLibraryTypeVersion",
           "ProbeGlobalLibrary",
           "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
         ]
       },
       {
@@ -5010,6 +5186,50 @@
           "ManageLibraryTypeVersion",
           "ProbeGlobalLibrary",
           "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
         ]
       },
       {
@@ -5432,6 +5652,50 @@
           "ManageLibraryTypeVersion",
           "ProbeGlobalLibrary",
           "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
         ]
       },
       {

@@ -58,8 +58,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static void Complete(JsonObject meta, bool success)
         {
-            meta["success"] = success;
-            meta["operationSuccess"] = meta["success"]?.DeepClone();
+            var completion = new System.Collections.Generic.Dictionary<string, object?>();
+            LegacyResponseMetadata.Complete(completion, success);
+            foreach (var pair in completion) meta[pair.Key] = JsonValue.Create((bool)pair.Value!);
         }
 
         // Matches the contiguous failure fields in RunOfflineAnalysisTool. Leave success,

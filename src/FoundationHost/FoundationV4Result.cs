@@ -196,6 +196,14 @@ internal static class FoundationV4Result
         if (name == "InitializeEnvironment" || name == "RunCapabilitySelfTest")
             data["behaviorCapabilities"] = BehaviorCapabilities.Table(typeof(FoundationV4Result).Assembly, release);
         Paging? paging = null;
+        if (name is "InitializeEnvironment" or "RunCapabilitySelfTest" && data["registeredToolCount"] is JsonValue count)
+        {
+            int offset = args != null && args.TryGetValue("offset", out var from) ? from.GetInt32() : 0;
+            int limit = args != null && args.TryGetValue("limit", out var size) ? size.GetInt32() : FoundationPassiveDiagnostics.RosterPageLimit;
+            int? next = data["nextOffset"]?.GetValue<int>();
+            paging = new Paging(PagingMode.Offset, offset, limit, next, null, null, count.GetValue<int>(), next == null);
+            data.Remove("nextOffset");
+        }
         if (name == "GetToolUsage" && (data["totalLines"] ?? data["totalMatches"]) is JsonValue totalValue)
         {
             int total = Math.Max(totalValue.GetValue<int>(), data["toolCount"]?.GetValue<int>() ?? 0);

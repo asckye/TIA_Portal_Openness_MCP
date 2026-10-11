@@ -137,6 +137,13 @@ internal static class MotionProDiagClassicHmiShapeChecks
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
+        string api = Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT")!;
+        int major = server.GetReferencedAssemblies().First(a => a.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)).Version!.Major;
+        api = System.IO.Path.Combine(api, "TIA_V" + major + "_PublicAPI", "V" + major, major == 21 ? "net48" : "");
+        // These assertions exercise the original unbound-project native guard.
+        // Portal admission and worker dispatch remain covered by the host suites.
+        using var nativeGuard = new Program.SourceHardwareBridge(server, api, hmiProjectGuard: true);
+        var bridgeCall = Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.HardwareAddressWorkerBridge").GetField("Call", all)!.GetValue(null);
         foreach (var domain in new[] {
             (Name: "ClassicHmiFolders", Ported: false, Field: "_classicHmiFolders", Tools: new[] {
                 "GetClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic" }),
@@ -151,6 +158,12 @@ internal static class MotionProDiagClassicHmiShapeChecks
         {
             var service = server.GetType("TiaMcpServer.Siemens.Services." + (domain.Name == "PlcProDiag" ? "PlcB5Port" : domain.Ported ? "PlcOrganisationPort" : domain.Name) + "Service", true)!;
             var toolType = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
+            var portCall = domain.Name is "ClassicHmiFolders" or "MotionProDiagClassicHmi"
+                ? service.BaseType.GetField("call", all) : null;
+            var port = provider.GetService(service);
+            var previousCall = portCall?.GetValue(port);
+            if (portCall != null) portCall.SetValue(port, bridgeCall);
+            try {
             var registered = toolType.GetMethods(all).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
                 .Select(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name).OrderBy(name => name).ToArray();
             check(registered.SequenceEqual(domain.Tools.OrderBy(name => name)), domain.Name + " registers exactly the V4 names without aliases");
@@ -170,7 +183,7 @@ internal static class MotionProDiagClassicHmiShapeChecks
                 check(method.DeclaringType == service && tool.DeclaringType == toolType && !tool.IsStatic
                     && ReferenceEquals(target, tools.Target(method)) && ReferenceEquals(tools.Target(tool), tools.Target(tool)),
                     domain.Name + " surface resolves service and tool singletons: " + name);
-                check((domain.Ported ? service.GetField("call", all)!.GetValue(target) is Delegate
+                check((portCall != null ? ReferenceEquals(portCall.GetValue(target), bridgeCall) : domain.Ported ? service.GetField("call", all)!.GetValue(target) is Delegate
                     : session != null && ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(toolType.GetField(domain.Field, all)!.GetValue(tools.Target(tool)), target),
                     domain.Name + " tool uses the service with the shared session: " + name);
@@ -199,7 +212,15 @@ internal static class MotionProDiagClassicHmiShapeChecks
                 var arguments = tool.GetParameters().Select(p => p.HasDefaultValue ? p.DefaultValue : "offline-target").ToArray();
                 var response = (CallToolResult)tools.Invoke(tool, arguments)!;
                 var body = response.StructuredContent!.AsObject();
-                check(response.IsError == true && (bool?)body["ok"] == false
+                if (major == 20 && name == "ManageClassicHmiGraphic")
+                {
+                    var catalogType = server.GetType("TiaMcpServer.ModelContextProtocol.ToolCatalog", true)!;
+                    var catalog = catalogType.GetProperty("Engine", all)!.GetValue(null)!;
+                    var catalogNames = ((System.Collections.IEnumerable)catalogType.GetProperty("All", all)!.GetValue(catalog)!).Cast<object>()
+                        .Select(entry => (string)entry.GetType().GetProperty("Key")!.GetValue(entry)!);
+                    check(!catalogNames.Contains(name, StringComparer.Ordinal), "ManageClassicHmiGraphic is not registered on V20 because GraphicsProvider is absent");
+                }
+                else check(response.IsError == true && (bool?)body["ok"] == false
                     && (string?)body["error"]?["code"] == "PROJECT_NOT_BOUND"
                     && (string?)body["meta"]?["tool"] == name
                     && (string?)body["meta"]?["outcome"] == "rejected-before-operation"
@@ -209,6 +230,8 @@ internal static class MotionProDiagClassicHmiShapeChecks
                 check(response.Content.Single() is TextContentBlock text
                     && JsonNode.DeepEquals(body, JsonNode.Parse(text.Text)), name + " text and structured envelopes agree");
             }
+            }
+            finally { if (portCall != null) portCall.SetValue(port, previousCall); }
         }
     }
 

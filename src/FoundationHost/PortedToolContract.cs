@@ -26,7 +26,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+        PortedFamilies.All.Where(family => (family.Name == "F24" || family.Name == "F25" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
         string? candidate = tool.ProtocolTool.Name switch {
@@ -97,6 +97,8 @@ internal static class PortedToolContract
         "GetLibraryOverview" or "GetLibraryType" or "ManageLibraryType" or "CheckLibraryUpdates" or "SynchronizeLibrary" or "CompareLibraryObjects" or "ManageLibraryTypeVersion" or "CreateLibraryMasterCopy" or "ManageLibraryMasterCopy" or "ImportLibraryTypeDocuments" or "ManageGlobalLibrary" or "ManageLibraryFolder" or "ProbeGlobalLibrary" or "ImportMasterCopyFromGlobalLibrary" => new[] { "libraries.ExecuteLibrary", "ReadState" },
         "RunToolTransaction" => new[] { "engineering-services.BeginEngineeringTransaction", "engineering-services.ReadEngineeringTransaction", "engineering-services.CommitEngineeringTransaction", "engineering-services.DisposeEngineeringTransaction", "ReadState" },
         "ManageProjectLanguage" or "ExportProjectTexts" or "ImportProjectTexts" or "CompareLibraries" or "CompareProjects" or "GetProjectSettings" or "GetObjectIdentifier" or "ShowObjectInEditor" or "ManageProjectCompilationSettings" => new[] { "engineering-services.ExecuteEngineeringServices", "ReadState" },
+        "GetHmiProgramInfo" or "DescribeHmiSoftware" or "DescribeHmiScreen" or "DescribeHmiTagTable" or "DescribeHmiTag" or "DescribeHmiScreenItem" or "ListHmiScreens" or "ListHmiTagTables" or "ListHmiTags" or "ListHmiConnections" or "ExportHmiScreen" or "ExportHmiTagTable" or "ExportHmiConnection" or "ExportHmiProgram" or "ImportHmiScreen" or "ImportHmiTagTable" or "ImportHmiConnection" or "ImportHmiScreensFromDirectory" or "ImportHmiTagTablesFromDirectory" or "GetHmiScreenSnapshot" or "ListHmiScreenPaths" or "DeleteHmiTag" => new[] { "hmi-generic.ExecuteHmi", "ReadState" },
+        "GetClassicHmiScreenTree" or "ManageClassicHmiScreenObject" or "ManageClassicHmiFolder" or "ManageClassicHmiGraphic" or "ListClassicHmiScripts" or "ManageClassicHmiScript" or "ManageClassicHmiCycle" or "ManageClassicHmiTextGraphicList" or "GetClassicHmiGlobalization" or "ListClassicHmiFaceplates" => new[] { "hmi-classic.ExecuteHmi", "ReadState" },
         "DescribeObject" or "DescribeObjectProperty" or "DescribeService" or "GetObjectProperty" or "ListObjectChildren" or "InvokeObject" or "InvokeService" => new[] { "openness-reflection.ExecuteOpennessReflection", "ReadState" },
         "CreatePlcBlockGroup" or "CreatePlcTypeGroup" or "DeleteEmptyPlcBlockGroup" or "DeletePlcBlock" or "DeletePlcTagTable" or "DeletePlcType" or "ManagePlcBlockProtection" or "ManagePlcUserGroup" or "MovePlcBlockToGroup" or "ListPlcSystemGroups" => new[] { "plc-organisation.ExecutePlcOrganisation", "ReadState" },
         "CreatePlcInstanceDb" or "ManagePlcTagDefinition" or "SetPlcProgram" or "GetPlcTagTableConstants" or "ImportPlcBlockVerified" or "BuildAndImportPlcArtifact" or "DescribePlcBlockLogic" or "RepairAndReimportPlcBlock" or "ImportPlcTagTablesFromDirectory" => new[] { "plc-software.ExecutePlcOrganisation", "ReadState" },
@@ -197,6 +199,8 @@ internal sealed partial class FoundationTool
         if ((family.Name is "F10" or "F14" or "F15") && PlcB5Capabilities.Unsupported(portedRelease!, new PlcB5Request {
             Operation = tool.Name, Action = actionName, UnitName = Text("unitName"), UnitKind = Text("unitKind"), InterfaceType = Text("interfaceType"), ObjectKind = Text("objectKind").Length == 0 ? "document" : Text("objectKind"), CopyMode = Text("copyMode") }) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        if (HmiCapabilities.Unsupported(portedRelease!, tool.Name) != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (PlcB4Capabilities.Unsupported(portedRelease!, b4) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (EngineeringServicesCapabilities.Unsupported(portedRelease!, tool.Name, scope,
@@ -254,6 +258,12 @@ internal sealed partial class FoundationTool
             "PlcIntegrityTools" => new PlcIntegrityTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "LibraryTools" => new LibraryTools(new LibraryPortService(call, identity)),
             "EngineeringServicesTools" => new EngineeringServicesTools(new EngineeringServicesPortService(call, identity)),
+            "HmiDescribeTools" => new HmiDescribeTools(new HmiDescribeService(call, identity)),
+            "HmiExchangeTools" => new HmiExchangeTools(new HmiExchangeService(call, identity)),
+            "HmiInspectionPortTools" => new HmiInspectionPortTools(new HmiInspectionPortService(call, identity)),
+            "HmiTagDeletionTools" => new HmiTagDeletionTools(new HmiTagDeletionService(call, identity)),
+            "ClassicHmiFoldersTools" => new ClassicHmiFoldersTools(new ClassicHmiFoldersService(call, identity)),
+            "MotionProDiagClassicHmiTools" => new MotionProDiagClassicHmiTools(new MotionProDiagClassicHmiService(call, identity)),
             "ReflectionTools" => new ReflectionTools(new ReflectionPortService(call, identity)),
             "PlcCompilePortTools" => new PlcCompilePortTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcBuildTools" => new PlcBuildTools(new PlcOrganisationPortService(call, hasProject, identity)),

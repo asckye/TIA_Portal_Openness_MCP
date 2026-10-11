@@ -236,17 +236,6 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<string>? Items { get; set; }
     }
 
-    public class ResponseExportFile : ResponseMessage
-    {
-        public string? ExportPath { get; set; }
-    }
-
-    public class ResponseBatchExport : ResponseMessage
-    {
-        public IEnumerable<string>? Exported { get; set; }
-        public IEnumerable<string>? Failed { get; set; }
-    }
-
     public class ResponseTempExport : ResponseMessage
     {
         public string? TempDir { get; set; }

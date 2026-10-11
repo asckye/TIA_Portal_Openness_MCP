@@ -66,15 +66,15 @@ namespace TiaMcp.Engine.Tests
             check(Success(HmiToolFixture.HmiInspection.DeleteEmptyUnifiedHmiScreenGroup("HMI","/Group",false))&&root.ScreenGroups.Count==0,"empty group deletion verified");
             check(!Success(HmiToolFixture.HmiInspection.DeleteEmptyUnifiedHmiScreenGroup("HMI","/",false)),"root group never deleted");
             root.Screens.Add(new Screen{Name="Main"});group.Screens.Add(screen);root.ScreenGroups.Add(group);
-            check(!Success(HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI","Main")),"ambiguous bare screen name rejected");
-            check(Success(HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI","/Group/Main")),"full nested screen path unambiguous");
-            var paths=HmiToolFixture.HmiInspection.ListHmiScreenPaths("HMI",0,1);
+            check(!Success(HmiToolFixture.HmiInspectionPort.ReadHmiScreenSnapshot("HMI","Main")),"ambiguous bare screen name rejected");
+            check(Success(HmiToolFixture.HmiInspectionPort.ReadHmiScreenSnapshot("HMI","/Group/Main")),"full nested screen path unambiguous");
+            var paths=HmiToolFixture.HmiInspectionPort.ListHmiScreenPaths("HMI",0,1);
             check(Success(paths)&&paths.Meta!["total"]!.GetValue<int>()==2&&paths.Meta["nextOffset"]!.GetValue<int>()==1,"screen paths paginate with total");
             var snapshot=HmiSnapshot.Capture(new Cycle());
             check(snapshot["incomplete"]!.GetValue<bool>()&&!snapshot["restorableBackup"]!.GetValue<bool>()&&snapshot.ToJsonString().Contains("ReadFailed"),"snapshot records failures and cycles safely");
             check(HmiSnapshot.Capture(root,1,2)["incomplete"]!.GetValue<bool>(),"snapshot limits expose incompleteness");
             HmiToolFixture.Session.FixtureRoot=null;
-            check(!Success(HmiToolFixture.HmiInspection.ListHmiScreenPaths("HMI")),"missing project remains business failure");
+            check(!Success(HmiToolFixture.HmiInspectionPort.ListHmiScreenPaths("HMI")),"missing project remains business failure");
         }
     }
 }

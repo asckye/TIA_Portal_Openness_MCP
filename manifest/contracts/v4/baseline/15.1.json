@@ -182,6 +182,50 @@
     },
     {
       "entries": [
+        "DeleteHmiTag",
+        "DescribeHmiScreen",
+        "DescribeHmiScreenItem",
+        "DescribeHmiSoftware",
+        "DescribeHmiTag",
+        "DescribeHmiTagTable",
+        "ExportHmiConnection",
+        "ExportHmiProgram",
+        "ExportHmiScreen",
+        "ExportHmiTagTable",
+        "GetHmiProgramInfo",
+        "GetHmiScreenSnapshot",
+        "ImportHmiConnection",
+        "ImportHmiScreen",
+        "ImportHmiScreensFromDirectory",
+        "ImportHmiTagTable",
+        "ImportHmiTagTablesFromDirectory",
+        "ListHmiConnections",
+        "ListHmiScreenPaths",
+        "ListHmiScreens",
+        "ListHmiTagTables",
+        "ListHmiTags"
+      ],
+      "family": "F24",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "GetClassicHmiScreenTree",
+        "ListClassicHmiFaceplates",
+        "ListClassicHmiScripts",
+        "ManageClassicHmiCycle",
+        "ManageClassicHmiFolder",
+        "ManageClassicHmiScreenObject",
+        "ManageClassicHmiScript",
+        "ManageClassicHmiTextGraphicList"
+      ],
+      "family": "F25",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
         "DescribeObject",
         "DescribeObjectProperty",
         "DescribeService",
@@ -8476,6 +8520,50 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "34f1490282be5aac9a164a159ce488ecbd997ad34883550ca8edd252439b0e6c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true with dryRun=false; references remain unchecked and may break.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true previews the exact target without deletion; false requires confirmDelete=true.",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: exact HMI software path from the project tree.",
+            "type": "string"
+          },
+          "tagName": {
+            "description": "tagName: one literal HMI variable name; no wildcard or regex search.",
+            "type": "string"
+          },
+          "tagTablePath": {
+            "description": "tagTablePath: exact /Group/Sub/Table, or empty for Unified root Tags; Classic requires a table.",
+            "enum": [
+              "exact",
+              "Group",
+              "Sub",
+              "Table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTablePath",
+          "tagName"
+        ],
+        "type": "object"
+      },
+      "name": "DeleteHmiTag",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "ffd998f143f9b86151ccd88a5d562ca185d966340f40fcae3aebb27bf993db5d",
       "inputSchema": {
         "additionalProperties": false,
@@ -8734,6 +8822,151 @@
         "type": "object"
       },
       "name": "DeletePlcType",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "a6a3cb9eb73d7cc793e7a51405bff8df1f7e44195f7c8ad810f7d3841c5aec02",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "maxMembers: max member count",
+            "type": "integer"
+          },
+          "screenName": {
+            "description": "screenName: screen name, e.g. 'Main'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: HMI software path, e.g. 'HMI_RT_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "screenName"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeHmiScreen",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "75aa36c3f2e709c67f56fa1984a72d276073152c3eaa62bd69162a688b58f8fe",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "itemName": {
+            "description": "itemName: widget name, e.g. 'BTN_Start'",
+            "type": "string"
+          },
+          "maxMembers": {
+            "default": 200,
+            "description": "maxMembers: max member count",
+            "type": "integer"
+          },
+          "screenName": {
+            "description": "screenName: screen name, e.g. 'Main'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: HMI software path, e.g. 'HMI_RT_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "screenName",
+          "itemName"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeHmiScreenItem",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "3c68b1656f2cf5f9eb65c7ca5d9bf0667942d7027f939bedca742f5c82cd310c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "maxMembers: max member count",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software (e.g. 'HMI_RT_1')",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeHmiSoftware",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "17dac10936da44a6aca988c671b81865014e9966697f1951c9a2aa16d036609c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "maxMembers: max member count",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: HMI software path, e.g. 'HMI_RT_1'",
+            "type": "string"
+          },
+          "tagName": {
+            "description": "tagName: tag name",
+            "type": "string"
+          },
+          "tagTableName": {
+            "description": "tagTableName: tag table name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTableName",
+          "tagName"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeHmiTag",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "6eee99d3295bd39025101568d16c34b64a089405aeccd8b2556ed0e8a6c5bef2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "maxMembers: max member count",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: HMI software path, e.g. 'HMI_RT_1'",
+            "type": "string"
+          },
+          "tagTableName": {
+            "description": "tagTableName: tag table name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTableName"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeHmiTagTable",
       "outputSchema": null
     },
     {
@@ -9290,6 +9523,132 @@
         "type": "object"
       },
       "name": "ExportDeviceAml",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "d340ee24c212a9a3a2f22b9b786402e24593bd9f04c983e78dcf3f375256853b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "connectionName": {
+            "description": "connectionName: the HMI connection name to export",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "connectionName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportHmiConnection",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "734fa7f217c62818815b2fb0af76eb5f4acb493d24e7b393eb696e24fe3bea0d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportDir": {
+            "description": "exportDir: directory to write exported files into",
+            "type": "string"
+          },
+          "exportScreens": {
+            "default": true,
+            "description": "exportScreens: default true",
+            "type": "boolean"
+          },
+          "exportTagTables": {
+            "default": true,
+            "description": "exportTagTables: default true",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportDir"
+        ],
+        "type": "object"
+      },
+      "name": "ExportHmiProgram",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "afc3120f41c899d3caaa594dbb4e7bfadf247d0997d6f110c05c39148e2a0fe5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)",
+            "examples": [
+              "C:\\Examples\\exports\\ExportHmiScreen.xml"
+            ],
+            "type": "string"
+          },
+          "screenName": {
+            "description": "screenName: the screen name to export",
+            "examples": [
+              "Screen_1"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "examples": [
+              "HMI_RT_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "screenName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportHmiScreen",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "fdb204bb2d571c9416cc0f96ad916ab92fd7f3e140f3f2a046c8b9bc9e05f5a4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          },
+          "tagTableName": {
+            "description": "tagTableName: the tag table name to export",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTableName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportHmiTagTable",
       "outputSchema": null
     },
     {
@@ -10726,6 +11085,46 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "cd5c99d6f34a477780ee50901bde437bf57e59898b1bb202f217d6d1785d9d8a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "kind": {
+            "default": "all",
+            "description": "kind: all | screens | popups | templates | slideins.",
+            "enum": [
+              "all",
+              "screens",
+              "popups",
+              "templates",
+              "slideins"
+            ],
+            "type": "string"
+          },
+          "maxDepth": {
+            "default": 4,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetClassicHmiScreenTree",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "d979eb5a041285af52b99c5a95abd9a252bfcd13e478d0ffe32efea3d34ccfa4",
       "inputSchema": {
         "additionalProperties": false,
@@ -11143,6 +11542,57 @@
         "type": "object"
       },
       "name": "GetHardwareFeatures",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "fd2780a922e53a8222e3c6d46e1d9f59adf376c845c6e7a34f4c3b5d26bdf648",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software (see GetProjectTree)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetHmiProgramInfo",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "9a42406a6376dc45ca54ef31338ac791e69081fe8467113521808a09a646b170",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxDepth": {
+            "default": 6,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "maxNodes": {
+            "default": 2000,
+            "description": "maxNodes: cap on nodes returned.",
+            "type": "integer"
+          },
+          "screenPath": {
+            "description": "screenPath: screen path inside the HMI, e.g. '/Group/Main'.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "screenPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetHmiScreenSnapshot",
       "outputSchema": null
     },
     {
@@ -13381,6 +13831,179 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "7ebc530f4f65a3a2aef85dc6a5e7c868af98f68828d7f952345b3dee4f60621d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "importPath": {
+            "description": "importPath: full file path of exported HMI connection XML",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportHmiConnection",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f7e7dc2e8b8d06e8b6cfec5495f344ac8f6dabdfb50992ffdff15d554e354a38",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "description": "folderPath: optional screen group path inside HMI (use empty for root)",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "importPath": {
+            "description": "importPath: full file path of exported screen XML",
+            "examples": [
+              "C:\\Temp\\Screen_1.xml"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "examples": [
+              "HMI_RT_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportHmiScreen",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "aea0c093270a17be6ec2d52126184c910157dbe301fc6c3b92a007bbc6971807",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dir": {
+            "description": "dir: directory containing exported screen XML files",
+            "type": "string"
+          },
+          "folderPath": {
+            "description": "folderPath: optional screen group path inside HMI (use empty for root)",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": true,
+            "description": "overwrite: true=Override (default)",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: optional regex filter applied to filename without extension",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "dir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportHmiScreensFromDirectory",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "475c9b8974b048a8e6ca1b37abf2ae1d8b66e15d7b712fa879b7d9b32816e0d5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "importPath": {
+            "description": "importPath: full file path of exported tag table XML",
+            "examples": [
+              "C:\\Temp\\HmiTags.xml"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "examples": [
+              "HMI_RT_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportHmiTagTable",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "8c7cc387fdbf6b546b86dfc54519094569f171a2dcc2799337e806bb56f072eb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dir": {
+            "description": "dir: directory containing exported tag table XML files",
+            "type": "string"
+          },
+          "folderPath": {
+            "description": "folderPath: optional tag table group path inside HMI (use empty for root)",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": true,
+            "description": "overwrite: true=Override (default)",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "regexName: optional regex filter applied to filename without extension",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "dir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportHmiTagTablesFromDirectory",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "19f5c8c352c6a6186f7ba7673ac53f878a8d2458bbfdd75333871c1bf65d2faf",
       "inputSchema": {
         "additionalProperties": false,
@@ -14617,10 +15240,24 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "c882bf6362371fd8c8be70c159551dc95c37164c33b2e58ac155481b9ac47e8b",
+      "descriptionSha256": "43bc455b26d814153d1b7bb439aa74cd3d47091c76d7c965808a18cd5a11a8fe",
       "inputSchema": {
         "additionalProperties": false,
-        "properties": {},
+        "properties": {
+          "limit": {
+            "default": 50,
+            "description": "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "First registered-tool row to return, in ordinal name order.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
         "required": [],
         "type": "object"
       },
@@ -15054,6 +15691,85 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "694432c2fa8207b186131d25f2fcfda4df3ac159d95c8a7145a2aa6e59346889",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "kind": {
+            "default": "faceplate",
+            "description": "kind: faceplate | vbScript | cScript | all.",
+            "enum": [
+              "faceplate",
+              "vbScript",
+              "cScript",
+              "all"
+            ],
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ListClassicHmiFaceplates",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "943d6a9a47a66028ab0f14947ec497875e6e871e223ac77fdc7ac05cb8e4e28c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListClassicHmiScripts",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "73d337faf901ce62f297b57415362f0707508f9ba8b4c4f47af083a422034f25",
       "inputSchema": {
         "additionalProperties": false,
@@ -15173,6 +15889,116 @@
         "type": "object"
       },
       "name": "ListExportHandles",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "79748790e982a6ce7d9850e661e1e5f4d511b42b66df8df79cf002e57857a5da",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiConnections",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "7ffcdac89f64b35510842d2cbc71ecada1f4e6f5c71a3bb7b3d04c33183dcf7c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiScreenPaths",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f58eb2a9013a4fe6992693c153c2f4639bc99cf0db0fadf34bd5b4900fd63361",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiScreens",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ed43f0ef2f8ccbd30b3f5cb4439bd8dfdb586456e3c897b2abc155ab69385efb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "examples": [
+              "HMI_RT_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiTagTables",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "9c9a21bf8c34625baacfc9c40ee9b434dc40777474f2e9abc8601fa03321ae20",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path in the project structure to the HMI software",
+            "type": "string"
+          },
+          "tagTableName": {
+            "default": "",
+            "description": "tagTableName: optional tag table name to list tags from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ListHmiTags",
       "outputSchema": null
     },
     {
@@ -16972,6 +17798,414 @@
         "type": "object"
       },
       "name": "ListTransferAreas",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f3e01ee47d99b7769b14bc73a7fea92f3dfab4014dc5da0012746b363e85aaec",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "read | export | import | delete | setAttributes. ",
+            "enum": [
+              "read",
+              "export",
+              "import",
+              "delete",
+              "setAttributes"
+            ],
+            "type": "string"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "cycleName": {
+            "default": "",
+            "description": "cycleName: exact cycle name.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "importOptions": {
+            "default": "None",
+            "description": "importOptions: import option name (Override replaces objects of the same name; the tool description lists the values).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageClassicHmiCycle",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "4f27c243a60755c26635892a83e97a80c5acd7046e969c63b24218350c253947",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "action: the operation to perform - read | create | delete.",
+            "enum": [
+              "read",
+              "create",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "folderKind": {
+            "description": "folderKind: screens | popups | templates | tags | scripts.",
+            "enum": [
+              "screens",
+              "popups",
+              "templates",
+              "tags",
+              "scripts"
+            ],
+            "type": "string"
+          },
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "newName": {
+            "default": "",
+            "description": "newName: the new name (rename actions).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderKind"
+        ],
+        "type": "object"
+      },
+      "name": "ManageClassicHmiFolder",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "8c2363c84051eba3e493580963ff2acfe4fa80fb29cb4196fae2afcc9fff32b8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "action: the operation to perform - read | export | import | delete.",
+            "enum": [
+              "read",
+              "export",
+              "import",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "importOptions": {
+            "default": "None",
+            "description": "importOptions: import option - None | Override.",
+            "enum": [
+              "None",
+              "Override"
+            ],
+            "type": "string"
+          },
+          "objectKind": {
+            "description": "objectKind: popup | template | slidein | overview | globalElements.",
+            "enum": [
+              "popup",
+              "template",
+              "slidein",
+              "overview",
+              "globalElements"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "default": "",
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "objectKind"
+        ],
+        "type": "object"
+      },
+      "name": "ManageClassicHmiScreenObject",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "c893d8c57b5b686987d8d12d056a437bad78bc22e474feeb69aef449080a4e6f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "read | export | import | delete | createFolder | deleteFolder | setAttributes. ",
+            "enum": [
+              "read",
+              "export",
+              "import",
+              "delete",
+              "createFolder",
+              "deleteFolder",
+              "setAttributes"
+            ],
+            "type": "string"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "importOptions": {
+            "default": "None",
+            "description": "importOptions: import option name (Override replaces objects of the same name; the tool description lists the values).",
+            "type": "string"
+          },
+          "scriptPath": {
+            "description": "scriptPath: 'Folder/Script' path of the script.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "scriptPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageClassicHmiScript",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "dd36a2c4c1315316f494bb169b9613d82e1b9dc14e69135a3de694b4b8d6b0ae",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "read | readEntries | createEntry | deleteEntry | export | import | delete | setAttributes. ",
+            "enum": [
+              "read",
+              "readEntries",
+              "createEntry",
+              "deleteEntry",
+              "export",
+              "import",
+              "delete",
+              "setAttributes"
+            ],
+            "type": "string"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "compositionName": {
+            "default": "",
+            "description": "compositionName: exact name of the composition (collection) on the object.",
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "entryName": {
+            "default": "",
+            "description": "entryName: exact name of the entry inside the composition.",
+            "type": "string"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "importOptions": {
+            "default": "None",
+            "description": "importOptions: import option name (Override replaces objects of the same name; the tool description lists the values).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "listKind": {
+            "description": "listKind: text | graphic.",
+            "enum": [
+              "text",
+              "graphic"
+            ],
+            "type": "string"
+          },
+          "listName": {
+            "default": "",
+            "description": "listName: exact list name.",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "typeName": {
+            "default": "",
+            "description": "typeName: exact type name of the entry to create.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "listKind",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageClassicHmiTextGraphicList",
       "outputSchema": null
     },
     {
@@ -21761,7 +22995,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
+      "descriptionSha256": "1018bb7fcf7cfcd2ddcd2452e41945449ec5c135975bb5af9335bc282b1b3ef4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21788,6 +23022,19 @@
               false
             ],
             "type": "boolean"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
+            "maximum": 50,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "First registered-tool row to return, in ordinal name order.",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [],

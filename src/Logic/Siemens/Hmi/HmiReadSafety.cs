@@ -8,49 +8,18 @@ namespace TiaMcpServer.Siemens
     internal static class HmiReadSafety
     {
         internal static bool ConnectionUnavailable(Exception error)
-        {
-            for (var e = error; e != null; e = e.InnerException)
-            {
-                var name = e.GetType().Name;
-                if (name == "EngineeringObjectDisposedException" || name == "ObjectDisposedException"
-                    || name == "RemotingException" || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0)
-                    return true;
-                // COM failures are not proof of a process exit, but are unsafe to retry in a graph walk.
-                if (e is System.Runtime.InteropServices.COMException) return true;
-            }
-            return false;
-        }
+            => TiaMcp.Adapters.Contracts.HmiReadPolicy.ConnectionUnavailable(error);
 
         // True when the only connection-shaped failure in the chain is an Openness "disposed object" error, which TIA also
         // raises for a proxy it released after Create/Delete (real-project observation: MrpDomain) while the session is fine.
         internal static bool DisposedObjectOnly(Exception error)
-        {
-            bool disposed = false;
-            for (var e = error; e != null; e = e.InnerException)
-            {
-                var name = e.GetType().Name;
-                if (name == "EngineeringObjectDisposedException") { disposed = true; continue; }
-                if (name == "ObjectDisposedException" || name == "RemotingException" || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0
-                    || e is System.Runtime.InteropServices.COMException) return false;
-            }
-            return disposed;
-        }
+            => TiaMcp.Adapters.Contracts.HmiReadPolicy.DisposedObjectOnly(error);
 
         internal static string? SkipReason(Type type, string property)
-        {
-            if (property == "ScriptDiagnosisOverviewText" &&
-                (type.FullName == "Siemens.Engineering.HmiUnified.UI.Controls.HmiSystemDiagnosisControl"
-                 || type.FullName == "Siemens.Engineering.HmiUnified.ModernUI.Controls.HmiSystemDiagnosisControl"))
-                return "Read quarantined: two V21 captures failed at this getter immediately before disposed-handle errors. "
-                    + "Causality is unconfirmed. Getter was not invoked; content remains unknown pending Siemens diagnosis.";
-            return null;
-        }
+            => TiaMcp.Adapters.Contracts.HmiReadPolicy.SkipReason(type, property);
 
         internal static void RequireReadable(Type type, string property)
-        {
-            var reason = SkipReason(type, property);
-            if (reason != null) throw new NotSupportedException(reason);
-        }
+            => TiaMcp.Adapters.Contracts.HmiReadPolicy.RequireReadable(type, property);
     }
 
     // Local diagnostics only: no property values, script bodies or engineering calls.
@@ -75,18 +44,22 @@ namespace TiaMcpServer.Siemens
             if (error != null) row["exception"] = error.ToString();
             try
             {
-                lock (LogGate)
-                {
-                    if (Writer != null && Writer.BaseStream.Length > 8 * 1024 * 1024)
-                    {
-                        Writer.Dispose(); Writer = null;
-                        File.WriteAllText(LogPath, "", new UTF8Encoding(false));
-                    }
-                    Writer ??= new StreamWriter(new FileStream(LogPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false)) { AutoFlush = true };
-                    Writer.WriteLine(row.ToJsonString());
-                }
+                WriteLine(LogPath, row.ToJsonString());
             }
             catch (Exception ex) { LogError = "IO_FAILED: " + ex.Message; TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaMcpServer.hmi-read", ex); }
+        }
+        internal static void WriteLine(string path, string row)
+        {
+            lock (LogGate)
+            {
+                if (Writer != null && Writer.BaseStream.Length > 8 * 1024 * 1024)
+                {
+                    Writer.Dispose(); Writer = null;
+                    File.WriteAllText(path, "", new UTF8Encoding(false));
+                }
+                Writer ??= new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), new UTF8Encoding(false)) { AutoFlush = true };
+                Writer.WriteLine(row);
+            }
         }
         internal void AddTo(JsonObject meta)
         {
