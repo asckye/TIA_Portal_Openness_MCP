@@ -544,12 +544,27 @@ public sealed class StagedGenerationTests
         using var f = new Fixture(release); var first = f.Plan(); var result = f.Apply(first);
         Assert.True((bool?)result["ok"], result.ToJsonString());
         var record = GenerationRecord.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)));
+        string? backup = first["steps"]!.AsArray().SingleOrDefault(s => (string?)s!["tool"] == "ArchiveSavedProject")?["arguments"]?["archivePath"]?.GetValue<string>();
+        Assert.Equal(backup, (string?)result["data"]!["backupPath"]);
+        Assert.Equal(backup, Assert.Single(record.Runs).BackupPath);
+        Assert.Equal(backup != null, result["data"]!.AsObject().ContainsKey("backupPath"));
+        Assert.Equal(backup != null, JsonNode.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)))!["runs"]![0]!.AsObject().ContainsKey("backupPath"));
         Assert.All(record.Objects, o => { Assert.Equal("owned", o.State); Assert.NotNull(o.Witness); });
         Assert.All(record.Objects.Where(o => o.Key.Contains("/block/")), o => Assert.Equal(release is "20" or "21" ? "plc-object-fingerprints" : "modified-date", o.Witness!.Kind));
         var second = f.Plan(); Assert.Empty(second["steps"]!.AsArray());
         Assert.Contains(second["skipped"]!.AsArray(), s => (string?)s!["reason"] == "owned-unchanged");
         Assert.NotEqual((string?)first["planId"], (string?)second["planId"]); Assert.Equal(second.ToJsonString(), f.Plan().ToJsonString());
         Assert.Equal(1, f.Approvals);
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void NewProjectRunAndRecordOmitBackupPath(string release)
+    {
+        using var f = new Fixture(release, newProject: true); var result = f.Apply();
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.False(result["data"]!.AsObject().ContainsKey("backupPath"));
+        var record = JsonNode.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)))!;
+        Assert.False(record["runs"]![0]!.AsObject().ContainsKey("backupPath"));
+        Assert.Null(Assert.Single(GenerationRecord.Parse(record.ToJsonString()).Runs).BackupPath);
     }
     [Theory, MemberData(nameof(Releases))]
     public void ManualBlockChangeConflictsAndNeverPlansAnOverwrite(string release)

@@ -11,6 +11,30 @@ namespace TiaMcp.Generation.Tests
     public sealed class GenerationRecordTests
     {
         private static GenerationRecord Record() => new GenerationRecord { Project = new GenerationRecordProject { File = "C:/Projects/Line/Line.ap21", Release = "21" } };
+        private static GenerationRecordRun Run() => new GenerationRecordRun { RunId = "fixture-run", PlanId = "fixture-plan",
+            PlanHash = "sha256:" + new string('a', 64), MachineHash = "sha256:" + new string('b', 64),
+            Package = new GenerationPlanPackage { Id = "fixture", Version = "1.0.0", Hash = "sha256:" + new string('c', 64) } };
+        [Theory]
+        [InlineData(null)]
+        [InlineData("C:/Backups/Line.zap21")]
+        public void OptionalBackupPathRoundTripsAndIsOmittedWhenAbsent(string? backupPath)
+        {
+            var record = Record(); var run = Run(); run.BackupPath = backupPath; record.Runs.Add(run);
+            record.RecordHash = GenerationRecord.Hash(record); string json = GenerationDocuments.Canonical(record);
+            Assert.Equal(backupPath != null, JsonNode.Parse(json)!["runs"]![0]!.AsObject().ContainsKey("backupPath"));
+            Assert.Equal(backupPath, Assert.Single(GenerationRecord.Parse(json).Runs).BackupPath);
+        }
+        [Fact]
+        public void RecordHashCoversBackupPathPresenceValueAndRemoval()
+        {
+            var record = Record(); var run = Run(); record.Runs.Add(run); string absent = GenerationRecord.Hash(record);
+            run.BackupPath = "C:/Backups/Line.zap21"; record.RecordHash = GenerationRecord.Hash(record);
+            Assert.NotEqual(absent, record.RecordHash);
+            run.BackupPath = "C:/Backups/Other.zap21";
+            Assert.Throws<ArgumentException>(() => GenerationRecord.Parse(GenerationDocuments.Canonical(record)));
+            run.BackupPath = null;
+            Assert.Throws<ArgumentException>(() => GenerationRecord.Parse(GenerationDocuments.Canonical(record)));
+        }
         [Fact]
         public void RecordHashExcludesOnlyItselfAndDetectsEveryEditedOwnershipField()
         {

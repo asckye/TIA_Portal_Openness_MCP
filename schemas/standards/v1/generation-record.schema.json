@@ -102,6 +102,9 @@
               "mcp",
               "workbench"
             ]
+          },
+          "backupPath": {
+            "type": "string"
           }
         },
         "required": [

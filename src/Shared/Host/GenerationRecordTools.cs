@@ -139,7 +139,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 Package = plan.Package, MachineHash = plan.MachineHash, Status = preceding.All(s => (string?)s!["status"] == "succeeded") ? "succeeded" : "partial",
                 StartedUtc = (string)run["utc"]!, EndedUtc = (string?)events.LastOrDefault(e => (string?)e["event"] == "step-end" && (string?)e["stepId"] == plan.Steps.LastOrDefault(s => s.Tool == "SaveProject")?.Id)?["utc"] ?? (string)run["utc"]!,
                 ParentRequestId = (string)run["parentRequestId"]!, ApprovalRequestId = (string?)events.FirstOrDefault(e => (string?)e["event"] == "approval")?["requestId"] ?? "",
-                Actor = (string?)run["actor"] ?? "mcp" });
+                Actor = (string?)run["actor"] ?? "mcp",
+                BackupPath = (string?)run["backupPath"] ?? (run["steps"]!.AsArray().Any(s => (string?)s!["tool"] == "ArchiveSavedProject")
+                    ? plan.Steps.Single(s => s.Tool == "ArchiveSavedProject").Arguments["archivePath"].GetString() : null) });
             record.RecordHash = GenerationRecord.Hash(record);
             var data = new JsonObject { ["recordPath"] = recordPath, ["previousRecordHash"] = previous.PreviousHash, ["previousFileHash"] = previous.Token,
                 ["recordHash"] = record.RecordHash, ["projectFile"] = project, ["release"] = release, ["runId"] = (string)run["runId"]!,

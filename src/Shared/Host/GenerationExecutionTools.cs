@@ -279,11 +279,14 @@ namespace TiaMcpServer.ModelContextProtocol
             pending.Validate();
             AuditInvocation.RecordCurrentRequest(plan.PlanHash);
             var records = Records;
-            string runId = records.Begin(new JsonObject { ["planId"] = planId, ["planHash"] = hash, ["release"] = stored.Release, ["parentRequestId"] = parentId,
+            var run = new JsonObject { ["planId"] = planId, ["planHash"] = hash, ["release"] = stored.Release, ["parentRequestId"] = parentId,
                 ["softwarePaths"] = JsonSerializer.SerializeToNode(stored.SoftwarePaths), ["actor"] = ActorScope.Actor,
                 ["project"] = stored.Project, ["steps"] = JsonSerializer.SerializeToNode(steps.Select(s => new { s.Id, s.Phase, s.Key, s.Tool, s.ArgumentDigest }), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
                 ["plan"] = JsonNode.Parse(stored.Result.CanonicalPlan),
-                ["caps"] = new JsonObject { ["maximumSteps"] = maximumSteps, ["maximumSeconds"] = maximumDuration.TotalSeconds } });
+                ["caps"] = new JsonObject { ["maximumSteps"] = maximumSteps, ["maximumSeconds"] = maximumDuration.TotalSeconds } };
+            var backup = steps.SingleOrDefault(s => s.Tool == "ArchiveSavedProject");
+            if (backup != null) run["backupPath"] = backup.Arguments["archivePath"].GetString();
+            string runId = records.Begin(run);
             ApprovalOutcome? approval = null;
             int succeeded = 0; bool dispatched = false; string status = "rejected-before-operation", stopping = "approval", activePhase = ""; JsonObject? last = null;
             var facts = new RunFacts(plan);

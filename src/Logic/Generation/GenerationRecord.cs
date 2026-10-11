@@ -54,6 +54,7 @@ namespace TiaMcp.Logic.Generation
         public string ParentRequestId { get; set; } = "";
         public string ApprovalRequestId { get; set; } = "";
         public string Actor { get; set; } = "mcp";
+        public string? BackupPath { get; set; }
     }
     public sealed class GenerationRecordObject
     {
