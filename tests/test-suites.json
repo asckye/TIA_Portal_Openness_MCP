@@ -266,7 +266,7 @@
   },
   "engine-host": {
     "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
-      "minimumPassed": 139,
+    "minimumPassed": 139,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -362,5 +362,14 @@
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
     }
+  },
+  "mcp-panel": {
+    "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+    "minimumPassed": 46,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~McpPanelTests"
+    ]
   }
 }

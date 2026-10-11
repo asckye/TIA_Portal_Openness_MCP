@@ -95,7 +95,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool HasProject => model.Session.IsConnected && model.Session.ProjectName.Length > 0;
     public bool CanConnect => !model.Busy;
     public string MappedMeta => Loc.Current.T("Pages.MappedMeta", model.VersionControl.SelectedWorkspace?.MappedObjectCount ?? 0, model.VersionControl.VcStatusItems.Count(i => i.CompareState != VcCompareState.Equal));
-    public bool CanOperate => HasProject && !model.Busy;
+    public bool CanOperate => HasProject && !model.Busy && model.Panel?.Locked != true;
     public double OperationOpacity => HasProject ? 1 : .5;
     public bool HasSelection => CanOperate && model.Engineering.Blocks.Any(b => b.Selected);
     public bool HasWorkspace => model.VersionControl.SelectedWorkspace != null;

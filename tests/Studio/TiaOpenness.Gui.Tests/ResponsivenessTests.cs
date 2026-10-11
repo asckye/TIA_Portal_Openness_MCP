@@ -164,7 +164,7 @@ public sealed class ResponsivenessTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            using var main = new MainViewModel(new FakeStudioClient(), new FakeDialogService());
+            using var main = new MainViewModel(new FakeProjectClient(), new FakeDialogService());
             using var results = new Controls.ResultPresentation(main); int notifications = 0;
             main.Activity.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(WorkbenchActivity.Log)) notifications++; };
             var rows = results.LogRows;

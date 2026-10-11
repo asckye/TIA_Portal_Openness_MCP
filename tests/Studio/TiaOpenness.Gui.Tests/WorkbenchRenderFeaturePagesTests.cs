@@ -40,7 +40,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 if (state == "approvals-empty-zh-light") journal.Replace(journal.Calls.Where(c => c.Result != Services.CallResult.Pending).ToArray());
                 var preview = new TiaMcpConfigurator.ConfigurationPreview("14sp1", @"C:\Program Files\Siemens\Automation\Portal V14",
                     "192.168.86.131", false, false, false, "", "", []);
-                var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals, diagnostics, preview);
+                var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals, diagnostics, preview);
                 try
                 {
                     window.ConfigureFeaturePages(journal, audit, new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);

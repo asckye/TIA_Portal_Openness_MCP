@@ -9,23 +9,26 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
 {
     private readonly HostRegistration registration;
     private readonly Func<CancellationToken, Task<IHostSession>> create;
-    private readonly Func<NamedPipeServerStream, int?> verify;
+    private readonly Func<Stream, int?> verify;
     private readonly Process? owner;
+    private readonly bool operatorOnly;
     private readonly CancellationTokenSource stopping = new();
     private readonly SemaphoreSlim slots = new(OperatorPipe.MaximumInstances - 1);
     private readonly object sync = new();
     private readonly HashSet<Task> connections = new();
     private readonly Task listening;
     private readonly Task? watchingOwner;
-    private NamedPipeServerStream listener;
+    private readonly IOperatorListener listener;
+    private bool ownedSessionEnded;
     internal string PipeName => registration.PipeName;
     internal Task Completion => listening;
     internal void Stop() => stopping.Cancel();
 
-    private OperatorEndpoint(HostRegistration registration, Func<CancellationToken, Task<IHostSession>> create, Func<NamedPipeServerStream, int?> verify,
-        NamedPipeServerStream listener, Process? owner)
+    internal OperatorEndpoint(HostRegistration registration, Func<CancellationToken, Task<IHostSession>> create, Func<Stream, int?> verify,
+        IOperatorListener listener, Process? owner, bool operatorOnly)
     {
         this.registration = registration; this.create = create; this.verify = verify; this.listener = listener; this.owner = owner;
+        this.operatorOnly = operatorOnly;
         listening = Listen();
         if (owner != null) watchingOwner = WatchOwner();
     }
@@ -51,7 +54,8 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         {
             pipe = OperatorPipe.CreateServer(registration.PipeName, sid, true);
             registration.Publish();
-            return new OperatorEndpoint(registration, create, p => OperatorPipe.VerifiedClient(p, sid, image), pipe, owner);
+            return new OperatorEndpoint(registration, create, p => OperatorPipe.VerifiedClient((NamedPipeServerStream)p, sid, image),
+                new PipeListener(pipe, () => OperatorPipe.CreateServer(registration.PipeName, sid, false)), owner, options.Transport == "operator");
         }
         catch (Exception error)
         {
@@ -78,12 +82,10 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
                 bool handedOff = false;
                 try
                 {
-                    await listener.WaitForConnectionAsync(stopping.Token).ConfigureAwait(false);
-                    var pipe = listener;
-                    listener = OperatorPipe.CreateServer(PipeName, LocalPipeSecurity.CurrentSid, false);
-                    var task = Serve(pipe);
-                    lock (sync) connections.Add(task);
-                    _ = task.ContinueWith(completed => { lock (sync) connections.Remove(completed); }, CancellationToken.None,
+                    var pipe = await listener.Accept(stopping.Token).ConfigureAwait(false);
+                    Task task;
+                    lock (sync) { task = Serve(pipe); connections.Add(task); }
+                    _ = task.ContinueWith(ConnectionEnded, CancellationToken.None,
                         TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     handedOff = true;
                 }
@@ -95,13 +97,26 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         { Report(error); stopping.Cancel(); }
         finally { listener.Dispose(); registration.Dispose(); }
     }
-    private async Task Serve(NamedPipeServerStream pipe)
+    private void OwnedSessionEnded()
+    {
+        // Closed/state notifications precede worker detach. Only OperatorConnection's completed shutdown reaches here.
+        lock (sync) ownedSessionEnded = true;
+    }
+    private void ConnectionEnded(Task completed)
+    {
+        lock (sync)
+        {
+            connections.Remove(completed);
+            if (operatorOnly && ownedSessionEnded && connections.Count == 0 && !stopping.IsCancellationRequested) stopping.Cancel();
+        }
+    }
+    private async Task Serve(Stream pipe)
     {
         using (pipe)
         {
             try
             {
-                var connection = new OperatorConnection(registration, create, pid => owner != null && !owner.HasExited && owner.Id == pid);
+                var connection = new OperatorConnection(registration, create, pid => owner != null && !owner.HasExited && owner.Id == pid, OwnedSessionEnded);
                 await connection.Serve(pipe, verify(pipe), stopping.Token).ConfigureAwait(false);
             }
             catch (Exception error) when (error is IOException or OperationCanceledException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception or McpException)
@@ -118,4 +133,21 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
         if (watchingOwner != null) await watchingOwner.ConfigureAwait(false);
         registration.Dispose(); owner?.Dispose(); slots.Dispose(); stopping.Dispose();
     }
+    private sealed class PipeListener(NamedPipeServerStream initial, Func<NamedPipeServerStream> create) : IOperatorListener
+    {
+        private NamedPipeServerStream listener = initial;
+        public async Task<Stream> Accept(CancellationToken token)
+        {
+            await listener.WaitForConnectionAsync(token).ConfigureAwait(false);
+            var pipe = listener;
+            try { listener = create(); return pipe; }
+            catch { pipe.Dispose(); throw; }
+        }
+        public void Dispose() => listener.Dispose();
+    }
+}
+
+internal interface IOperatorListener : IDisposable
+{
+    Task<Stream> Accept(CancellationToken token);
 }

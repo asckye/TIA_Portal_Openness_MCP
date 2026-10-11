@@ -11,12 +11,14 @@
         <StackPanel Grid.Row="1">
           <StackPanel x:Name="ProjectOptions">
             <ComboBox x:Name="ReleasePicker" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Primer.Select}" Width="110" HorizontalAlignment="Left"/>
+            <TextBlock Text="{l:Tr Session.ProcessId}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
+            <TextBox Text="{Binding Session.ProcessId,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
             <TextBlock Text="{l:Tr Project.Label}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
             <DockPanel>
               <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
               <TextBox Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}"/>
             </DockPanel>
-            <WrapPanel Margin="0,12">
+            <WrapPanel Margin="0,12" Visibility="{Binding LegacyDemoAvailable,Converter={StaticResource BoolToVisibility}}">
               <CheckBox Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Primer.Checkbox}" Margin="0,0,20,0"/>
               <CheckBox Content="{l:Tr Toolbar.Headless}" ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Session.Headless}" Style="{StaticResource Primer.Checkbox}"/>
             </WrapPanel>

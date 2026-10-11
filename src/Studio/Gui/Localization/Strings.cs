@@ -14,7 +14,27 @@ namespace TiaOpenness.Gui.Localization;
 internal static partial class Strings
 {
     /// <summary>key, English, Chinese.</summary>
-    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue];
+    internal static (string Key, string En, string Zh)[] Catalogue => [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue];
+
+    private static readonly (string Key, string En, string Zh)[] SessionCatalogue =
+    [
+        ("Session.Title", "Shared MCP session", "共享 MCP 会话"),
+        ("Session.Attached", "MCP panel session: {0}", "MCP 面板会话：{0}"),
+        ("Session.Detached", "The MCP panel detached. Select a session key to attach again.", "MCP 面板已分离。请选择会话键重新附着。"),
+        ("Session.Refresh", "Find sessions", "发现会话"),
+        ("Session.Attach", "Attach panel", "附着面板"),
+        ("Session.Create", "Create owned session", "创建自有会话"),
+        ("Session.Cancel", "Cancel panel request", "取消面板请求"),
+        ("Session.Detach", "Detach / release panel", "分离 / 释放面板"),
+        ("Session.Unverified", "client name unverified", "客户端名称未验证"),
+        ("Session.SelectHint", "Select an AI session of this release, or create a Workbench session. Start TIA manually.", "选择此版本的 AI 会话，或创建工作台会话。请手动启动 TIA。"),
+        ("Session.ReconnectHint", "Select the new session key after the AI reconnects.", "AI 重连后，请选择新的会话键。"),
+        ("Session.Working", "Updating MCP session", "更新 MCP 会话"),
+        ("Session.Locked", "Session locked", "会话已锁定"),
+        ("Session.ProcessId", "TIA process ID", "TIA 进程 ID"),
+        ("Session.Result", "V4 tool result", "V4 工具结果"),
+        ("Session.DisconnectWarning", "This ends the shared session of {0}. The AI must create a new MCP session and reconnect. Detach panel leaves the AI connected.", "这将结束 {0} 的共享会话。AI 必须创建新的 MCP 会话并重连。分离面板会保持 AI 的连接。"),
+    ];
 
     private static readonly (string Key, string En, string Zh)[] CommonCatalogue =
     [

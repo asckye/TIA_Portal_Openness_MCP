@@ -25,7 +25,7 @@ internal static class ProjectPageTestSupport
 
     internal static MainViewModel Model(bool connected = true, bool results = false, bool workspace = true)
     {
-        var client = new FakeStudioClient
+        var client = new FakeProjectClient
         {
             AttachedProject = new ProjectInfo { Name = "Conveyor_Line_04", Path = @"D:\Projects\Line04\Conveyor_Line_04.ap14" },
         };

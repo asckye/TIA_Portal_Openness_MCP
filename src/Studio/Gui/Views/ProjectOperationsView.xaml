@@ -1,4 +1,31 @@
 <UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="PageRoot" x:Class="TiaOpenness.Gui.Views.ProjectOperationsView">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12" Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}">
+      <Border Style="{StaticResource Primer.Container}">
+        <StackPanel>
+          <TextBlock Text="{l:Tr Session.Title}" FontWeight="SemiBold"/>
+          <WrapPanel Margin="0,8,0,0">
+            <ComboBox x:Name="SessionPicker" ItemsSource="{Binding Panel.Sessions}" SelectedItem="{Binding Panel.Selected}" DisplayMemberPath="DisplayName" Width="320" Style="{StaticResource Primer.Select}"/>
+            <Button Content="{l:Tr Session.Refresh}" Command="{Binding Panel.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+            <Button Content="{l:Tr Session.Attach}" Command="{Binding Panel.Attach}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+            <Button Content="{l:Tr Session.Create}" Command="{Binding Panel.Create}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+            <Button Content="{l:Tr Session.Cancel}" Command="{Binding Panel.Cancel}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+            <Button Content="{l:Tr Session.Detach}" Command="{Binding Panel.Detach}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+          </WrapPanel>
+          <TextBlock Text="{Binding Panel.Participants}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+          <TextBlock Text="{Binding Panel.Status}" TextWrapping="Wrap"/>
+          <TextBlock Text="{Binding Panel.Lane}" TextWrapping="Wrap"/>
+          <TextBlock Text="{Binding Panel.Ended}" TextWrapping="Wrap"/>
+          <CheckBox Style="{StaticResource Primer.Checkbox}" Content="{l:Tr Session.Locked}" IsChecked="{Binding Panel.Locked,Mode=OneWay}" IsHitTestVisible="False" Focusable="False"/>
+        </StackPanel>
+      </Border>
+      <Expander Header="{l:Tr Session.Result}">
+        <StackPanel>
+        <ComboBox ItemsSource="{Binding Receipts}" SelectedItem="{Binding SelectedReceipt}" DisplayMemberPath="Label" Style="{StaticResource Primer.Select}"/>
+        <TextBox Style="{StaticResource Primer.Input}" x:Name="McpEnvelopeResult" Text="{Binding LastEnvelope,Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="200" VerticalScrollBarVisibility="Auto" FontFamily="{DynamicResource Ui.FontMono}"/>
+        </StackPanel>
+      </Expander>
+    </StackPanel>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
@@ -174,4 +201,5 @@
     </Grid>
     <views:EngineeringOptionsView x:Name="Options" Grid.RowSpan="3"/>
   </Grid>
+  </DockPanel>
 </UserControl>

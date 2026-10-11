@@ -17,6 +17,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     private readonly WorkbenchActivity _activity;
     private readonly Action _ensureBridge;
     private readonly Func<string?> _selectedDeviceId;
+    private readonly bool _legacyAccess;
     private bool _vcSupported;
     private bool _vcDryRun = true;
     private bool _vcShowAll;
@@ -27,22 +28,23 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     private string _newWorkspaceFolder = string.Empty;
 
     public VersionControlViewModel(IStudioClient client, IDialogService dialogs, WorkbenchActivity activity,
-        Action ensureBridge, Func<string?> selectedDeviceId)
+        Action ensureBridge, Func<string?> selectedDeviceId, bool legacyAccess = true)
     {
         _client = client;
         _dialogs = dialogs;
         _activity = activity;
         _ensureBridge = ensureBridge;
+        _legacyAccess = legacyAccess;
         _selectedDeviceId = selectedDeviceId;
         VcStatusItems.CollectionChanged += (_, _) => Raise(nameof(HasVcItems));
         Loc.Current.LanguageChanged += OnLanguageChanged;
-        VcRefresh = new AsyncCommand(VcRefreshAsync);
+        VcRefresh = new AsyncCommand(VcRefreshAsync, () => _legacyAccess);
         VcCreate = new AsyncCommand(VcCreateAsync,
-            () => VcSupported && NewWorkspaceName.Length > 0 && NewWorkspaceFolder.Length > 0);
-        VcMap = new AsyncCommand(VcMapAsync, () => VcSupported && SelectedWorkspace is not null);
-        VcStatus = new AsyncCommand(VcStatusAsync, () => VcSupported && SelectedWorkspace is not null);
-        VcPush = new AsyncCommand(VcPushAsync, () => VcSupported && SelectedWorkspace is not null);
-        VcPull = new AsyncCommand(VcPullAsync, () => VcSupported && SelectedWorkspace is not null);
+            () => _legacyAccess && VcSupported && NewWorkspaceName.Length > 0 && NewWorkspaceFolder.Length > 0);
+        VcMap = new AsyncCommand(VcMapAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
+        VcStatus = new AsyncCommand(VcStatusAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
+        VcPush = new AsyncCommand(VcPushAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
+        VcPull = new AsyncCommand(VcPullAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
     }
 
     public ObservableCollection<WorkspaceInfo> Workspaces { get; } = [];

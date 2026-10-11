@@ -2,6 +2,8 @@
   <Import Project="../../Shared/AuditSources.props" />
   <Import Project="../../Shared/ApprovalSources.props" />
   <Import Project="../../Shared/WorkbenchControlSources.props" />
+  <Import Project="../../Shared/OperatorSources.props" />
+  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" /></ItemGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>

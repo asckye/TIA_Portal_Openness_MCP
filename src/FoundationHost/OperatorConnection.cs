@@ -4,7 +4,8 @@ using TiaOpenness.Shared;
 
 namespace TiaMcp.FoundationHost;
 
-internal sealed class OperatorConnection(HostRegistration registration, Func<CancellationToken, Task<IHostSession>> create, Func<int, bool> isOwner)
+internal sealed class OperatorConnection(HostRegistration registration, Func<CancellationToken, Task<IHostSession>> create, Func<int, bool> isOwner,
+    Action? ownedSessionEnded = null)
 {
     internal async Task Serve(Stream pipe, int? verifiedPeer, CancellationToken token)
     {
@@ -44,6 +45,14 @@ internal sealed class OperatorConnection(HostRegistration registration, Func<Can
             using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, session.Closed);
             await server.RunAsync(lifetime.Token).ConfigureAwait(false);
         }
-        finally { created?.Dispose(); membership?.Dispose(); }
+        finally
+        {
+            try { created?.Dispose(); }
+            finally
+            {
+                membership?.Dispose();
+                if (created != null) ownedSessionEnded?.Invoke();
+            }
+        }
     }
 }

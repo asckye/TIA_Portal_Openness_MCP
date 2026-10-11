@@ -37,7 +37,7 @@ internal sealed class FakeDialogService : IDialogService
     }
 }
 
-internal sealed class FakeStudioClient : IStudioClient
+internal sealed class FakeProjectClient : IProjectClient, IStudioClient
 {
     public sealed record Invocation(string Name, object?[] Arguments);
     public List<Invocation> Calls { get; } = [];

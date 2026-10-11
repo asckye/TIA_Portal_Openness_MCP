@@ -79,7 +79,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
             using var trace = new BindingTrace();
             var previousTheme = ThemeManager.Current.Theme;
             ThemeManager.Current.Theme = theme;
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             client.Blocks.Add(new BlockInfo { Name = "Protected", Path = "Group/Protected", Kind = BlockKind.FB,
                 IsConsistent = false, IsKnowHowProtected = true, ProgrammingLanguage = "SCL", Number = 2 });
             client.StatusItems.AddRange(new[]

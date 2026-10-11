@@ -78,9 +78,10 @@ public partial class MainWindow
     }
     private void OnControlChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (sender == _model.Session && e.PropertyName == nameof(SessionViewModel.ProjectName))
+        if (sender == _model.Session && (e.PropertyName == nameof(SessionViewModel.ProjectName)
+            || _model.HasMcpPanel && e.PropertyName == nameof(SessionViewModel.ProjectPath)))
         {
-            _controlProjectPath = HasProject ? _model.Session.ProjectPath : null;
+            _controlProjectPath = HasProject ? _model.Session.BoundProjectFile : null;
             ConfirmControlPrefill();
         }
         if (sender == _controlFeatures && e.PropertyName == nameof(FeaturePagesViewModel.SelectedCall)) UpdateControlDetail();
@@ -145,7 +146,8 @@ public partial class MainWindow
         return new WorkbenchSnapshot(new()
         {
             Workbench = info, Page = ControlPage, Release = _model.SelectedReleaseKey, Device = ControlDevice,
-            Session = new() { Source = WorkbenchSessionSource.WorkbenchBridge, Connected = _model.Session.IsConnected,
+            Session = new() { Source = _model.HasMcpPanel ? WorkbenchSessionSource.SharedMcpSession : WorkbenchSessionSource.WorkbenchBridge,
+                SessionKey = _model.Panel?.SessionKey, Connected = _model.Session.IsConnected,
                 Project = HasProject ? new() { Name = _model.Session.ProjectName, Path = _controlProjectPath ?? _model.Session.ProjectPath } : null },
             Busy = _model.Busy, Prefill = _prefills.Latest,
         }, new()

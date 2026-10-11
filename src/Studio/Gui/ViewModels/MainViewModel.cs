@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using TiaOpenness.Client;
@@ -12,27 +13,49 @@ namespace TiaOpenness.Gui.ViewModels;
 /// <summary>Composes the workbench and owns navigation and window-wide services.</summary>
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
-    private readonly IStudioClient _client;
+    private readonly IProjectClient _client;
+    private readonly IStudioClient _versionClient;
+    private readonly IMcpSessionClient? _mcp;
     private MainView _view = MainView.Blocks;
     private bool _isConfigurationPage;
 
-    public MainViewModel() : this(new StudioClient(), new WpfDialogService()) { }
+    public MainViewModel() : this(new McpProjectClient(new McpSessionClient()), new WpfDialogService()) { }
 
-    public MainViewModel(IStudioClient client, IDialogService dialogs)
+    public MainViewModel(IProjectClient client, IDialogService dialogs)
     {
         _client = client;
-        AtlasService = new Services.Stubs.AtlasService(client);
+        _versionClient = client as IStudioClient ?? new StudioClient();
+        AtlasService = client is McpProjectClient mcpProject ? new McpAtlasService(mcpProject) : new Services.Stubs.AtlasService(client);
         Activity = new WorkbenchActivity();
         Engineering = new EngineeringViewModel(client, dialogs, Activity);
         Session = new SessionViewModel(client, dialogs, Activity, LoadProjectAsync);
-        VersionControl = new VersionControlViewModel(client, dialogs, Activity,
-            Session.EnsureBridge, () => Engineering.SelectedDevice?.Id);
+        VersionControl = new VersionControlViewModel(_versionClient, dialogs, Activity,
+            () => { if (!_versionClient.IsRunning) _versionClient.Start(false, SelectedReleaseKey); }, () => Engineering.SelectedDevice?.Id, legacyAccess: client is IStudioClient);
+        if (client is McpProjectClient project)
+        {
+            _mcp = project.Session;
+            Panel = new McpSessionPanel(_mcp, () => SelectedReleaseKey, Activity, Session.ApplySharedStateAsync);
+            project.ResultChanged += OnMcpResult;
+        }
         Session.PropertyChanged += OnSessionChanged;
         Activity.PropertyChanged += OnActivityChanged;
         _client.Log += OnBridgeLog;
         _client.Progress += OnBridgeProgress;
     }
 
+    public McpSessionPanel? Panel { get; }
+    public bool HasMcpPanel => Panel != null;
+    public bool LegacyDemoAvailable => !HasMcpPanel;
+    public IEnumerable<McpProjectClient.Receipt> Receipts => (_client as McpProjectClient)?.Receipts ?? [];
+    private McpProjectClient.Receipt? _selectedReceipt;
+    public McpProjectClient.Receipt? SelectedReceipt
+    {
+        get => _selectedReceipt;
+        set { if (Set(ref _selectedReceipt, value)) Raise(nameof(LastEnvelope)); }
+    }
+    public string LastEnvelope => SelectedReceipt?.Json ?? (_client as McpProjectClient)?.LastEnvelope ?? "";
+    private void OnMcpResult(object? sender, EventArgs args)
+    { SelectedReceipt = (_client as McpProjectClient)?.Receipts.LastOrDefault(); Raise(nameof(LastEnvelope)); }
     public SessionViewModel Session { get; }
     public EngineeringViewModel Engineering { get; }
     public VersionControlViewModel VersionControl { get; }
@@ -100,12 +123,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         await Engineering.LoadDevicesAsync(projectName);
         // Populate VCI up front, including its unsupported state, after loading the blocks.
-        await VersionControl.VcRefreshAsync();
+        if (_client is IStudioClient) await VersionControl.VcRefreshAsync();
     }
 
     private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(SessionViewModel.IsConnected) && !Session.IsConnected)
+        if (e.PropertyName == nameof(SessionViewModel.IsConnected) && !Session.IsConnected
+            || e.PropertyName == nameof(SessionViewModel.ProjectName) && Session.ProjectName.Length == 0)
         {
             Engineering.ClearPresentation();
             VersionControl.ClearPresentation();
@@ -119,7 +143,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (e.PropertyName == nameof(WorkbenchActivity.Busy)) Raise(nameof(Busy));
     }
 
-    private void OnBridgeLog(object? sender, BridgeLogEventArgs e) => Activity.Append("bridge: " + e.Line);
+    private void OnBridgeLog(object? sender, BridgeLogEventArgs e) => Activity.Append((_client is McpProjectClient ? "MCP: " : "bridge: ") + e.Line);
     private void OnBridgeProgress(object? sender, ProgressEventArgs e) => Activity.OnProgress(e.Progress);
 
     /// <summary>Applies the initial view, then lets the session handle mock/project startup.</summary>
@@ -148,6 +172,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Engineering.Dispose();
         VersionControl.Dispose();
         Activity.Dispose();
+        if (_client is McpProjectClient project) project.ResultChanged -= OnMcpResult;
+        Panel?.Dispose();
+        _mcp?.DisposeAsync().AsTask().GetAwaiter().GetResult();
         _client.Dispose();
+        if (!ReferenceEquals(_versionClient, _client)) _versionClient.Dispose();
     }
 }

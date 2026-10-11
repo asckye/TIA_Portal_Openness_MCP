@@ -1,11 +1,19 @@
 extern alias foundationhost;
+using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Threading.Channels;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 using TiaOpenness.Shared;
 using Xunit;
 using Connection = foundationhost::TiaMcp.FoundationHost.OperatorConnection;
+using Endpoint = foundationhost::TiaMcp.FoundationHost.OperatorEndpoint;
+using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
+using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
+using Registration = foundationhost::TiaMcp.FoundationHost.HostRegistration;
 
 public sealed class OperatorProtocolTests
 {
@@ -73,6 +81,77 @@ public sealed class OperatorProtocolTests
         await panel.Tool("GetSessionState"); await panel.DisposeAsync();
         Assert.Null(registration.Find(key)); Assert.Empty(registration.List());
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(fixture.DirectoryPath, "104-1.lease")));
+    }
+
+    [Theory, InlineData("operator", false), InlineData("operator", true), InlineData("http", false)]
+    public async Task Slow_owned_session_shutdown_precedes_endpoint_exit_and_http_keeps_serving(string transport, bool holdStream)
+    {
+        using var fixture = new OperatorSessionTests.Fixture("19");
+        var options = new Options { ReleaseKey = "19", WorkerExe = fixture.Options.WorkerExe, ApiDirectory = fixture.Options.ApiDirectory,
+            BundleRoot = fixture.Options.BundleRoot, Transport = transport, OperatorOwner = Environment.ProcessId };
+        using var registration = new Registration(options, "S-1-5-21-1-2-3-1001", fixture.DirectoryPath, error => throw error);
+        using var ai = new Session("19", "fixture AI", false, [], [], () => new JsonObject(), () => { });
+        using var aiMembership = transport == "http" ? registration.Register(ai) : null;
+        string lease = Path.Combine(fixture.DirectoryPath, "slow-shutdown.lease");
+        File.WriteAllText(lease, "BUSY\n");
+        var shutdownStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var shutdownCompleted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var elapsed = new Stopwatch();
+        var session = new Session("19", "fixture", true, [], [], () => new JsonObject(), () => {
+            elapsed.Start(); shutdownStarted.TrySetResult(true);
+            Thread.Sleep(TimeSpan.FromSeconds(3));
+            File.WriteAllText(lease, "RELEASED\n"); shutdownCompleted.TrySetResult(true);
+        });
+        var listener = new MemoryListener();
+        registration.Publish();
+        var owner = Process.GetCurrentProcess();
+        // The fixture injects a trusted peer and memory streams; production Start still performs all kernel checks.
+        await using var endpoint = new Endpoint(registration, _ => Task.FromResult<foundationhost::TiaMcp.FoundationHost.IHostSession>(session),
+            _ => Environment.ProcessId, listener, owner, options.Transport == "operator");
+        using var stream = listener.Connect();
+        await OperatorProtocol.Write(stream, Handshake("create"), CancellationToken.None);
+        Assert.True((await OperatorProtocol.Read<OperatorHandshakeResult>(stream, CancellationToken.None)).Accepted);
+        var client = await McpClientFactory.CreateAsync(new StreamClientTransport(stream, stream));
+        try
+        {
+            await client.DisposeAsync(); stream.Dispose();
+            await shutdownStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(endpoint.Completion.IsCompleted); Assert.Equal("BUSY\n", File.ReadAllText(lease));
+            using var another = holdStream || transport == "http" ? listener.Connect() : null;
+            await shutdownCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(elapsed.Elapsed >= TimeSpan.FromSeconds(3)); Assert.Equal("RELEASED\n", File.ReadAllText(lease));
+            if (transport == "operator")
+            {
+                if (holdStream) { Assert.False(endpoint.Completion.IsCompleted); another!.Dispose(); }
+                await endpoint.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+                Assert.False(File.Exists(registration.FilePath));
+            }
+            else
+            {
+                Assert.False(endpoint.Completion.IsCompleted); Assert.False(owner.HasExited);
+                await OperatorProtocol.Write(another!, Handshake("list"), CancellationToken.None);
+                var listed = await OperatorProtocol.Read<OperatorHandshakeResult>(another!, CancellationToken.None);
+                Assert.True(listed.Accepted); Assert.Equal(ai.SessionKey, Assert.Single(listed.Sessions)["sessionKey"]!.GetValue<string>());
+                Assert.False(endpoint.Completion.IsCompleted);
+            }
+            Assert.False(owner.HasExited);
+        }
+        finally { endpoint.Stop(); await client.DisposeAsync(); session.Dispose(); }
+    }
+    private sealed class MemoryListener : foundationhost::TiaMcp.FoundationHost.IOperatorListener
+    {
+        private readonly Channel<Stream> pending = Channel.CreateUnbounded<Stream>();
+        internal Stream Connect()
+        {
+            var (host, client) = OperatorSessionTests.Streams();
+            Assert.True(pending.Writer.TryWrite(host)); return client;
+        }
+        public Task<Stream> Accept(CancellationToken token) => pending.Reader.ReadAsync(token).AsTask();
+        public void Dispose()
+        {
+            pending.Writer.TryComplete();
+            while (pending.Reader.TryRead(out var stream)) stream.Dispose();
+        }
     }
 
     [Fact]

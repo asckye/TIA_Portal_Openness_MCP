@@ -48,10 +48,10 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         _ => new WorkbenchPrefillArguments { Form = WorkbenchPrefillForm.BlockFilter, Mode = WorkbenchPrefillMode.Set,
             Fields = new WorkbenchBlockFilterFields { Filter = "Main" } },
     };
-    internal static (MainWindow Window, MainViewModel Model, FakeStudioClient Client) Window(bool connected = true,
+    internal static (MainWindow Window, MainViewModel Model, FakeProjectClient Client) Window(bool connected = true,
         ControlInputGuard? input = null)
     {
-        var client = new FakeStudioClient { AttachedProject = new() { Name = "Line", Path = Project } };
+        var client = new FakeProjectClient { AttachedProject = new() { Name = "Line", Path = Project } };
         var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "21" };
         if (connected) model.Session.Connect.Execute(null);
         var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());

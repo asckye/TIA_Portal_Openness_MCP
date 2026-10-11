@@ -157,7 +157,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
         {
             using var trace = new BindingPathTests.BindingTrace();
             var approvals = FeaturePageFixtures.Approvals();
-            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals);
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals);
             try
             {
                 window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), now: () => FeaturePageFixtures.Now);
@@ -184,7 +184,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
         wpf.Run(() =>
         {
             var approvals = FeaturePageFixtures.Approvals(false); var notification = new FeaturePageFixtures.Notification();
-            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals);
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals);
             window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), notification, () => FeaturePageFixtures.Now);
             try
             {
@@ -206,7 +206,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
     {
         MainWindow? window = null;
         var approvals = FeaturePageFixtures.Approvals(false);
-        wpf.Run(() => window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals));
+        wpf.Run(() => window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals));
         try
         {
             await Task.Run(() => approvals.Receive(FeaturePageFixtures.Request()));
@@ -230,7 +230,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
             audit.Events = Enumerable.Range(0, 70).Select(i => new AuditEvent(600 - i, FeaturePageFixtures.Now,
                 AuditEventType.End, "record-" + i, "done", "abc123")).ToArray();
             var environment = new FeaturePageFixtures.Environment();
-            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, diagnostics: diagnostics);
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, diagnostics: diagnostics);
             try
             {
                 window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), audit, environment);

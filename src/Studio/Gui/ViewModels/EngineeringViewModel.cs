@@ -17,7 +17,7 @@ namespace TiaOpenness.Gui.ViewModels;
 /// <summary>Owns devices, block selection and engineering operations.</summary>
 public sealed class EngineeringViewModel : ObservableObject, IDisposable
 {
-    private readonly IStudioClient _client;
+    private readonly IProjectClient _client;
     private readonly IDialogService _dialogs;
     private readonly WorkbenchActivity _activity;
     private string _outputDirectory = string.Empty;
@@ -27,7 +27,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     private bool _sourceFormat;
     private bool _suppressDeviceLoad;
 
-    public EngineeringViewModel(IStudioClient client, IDialogService dialogs, WorkbenchActivity activity)
+    public EngineeringViewModel(IProjectClient client, IDialogService dialogs, WorkbenchActivity activity)
     {
         _client = client;
         _dialogs = dialogs;
@@ -38,13 +38,14 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         Devices.CollectionChanged += (_, _) => Raise(nameof(HasDevices));
         Blocks.CollectionChanged += OnBlocksChanged;
         Loc.Current.LanguageChanged += OnLanguageChanged;
+        _activity.PropertyChanged += OnActivityChanged;
 
-        Refresh = new AsyncCommand(RefreshBlocksAsync, () => SelectedDevice is not null);
-        Export = new AsyncCommand(ExportAsync, () => SelectedDevice is not null && OutputDirectory.Length > 0);
-        Import = new AsyncCommand(ImportAsync, () => SelectedDevice is not null);
-        Compile = new AsyncCommand(CompileAsync, () => SelectedDevice is not null);
-        Inspect = new AsyncCommand(InspectAsync, () => SelectedDevice is not null);
-        Save = new AsyncCommand(SaveAsync, () => SelectedDevice is not null);
+        Refresh = new AsyncCommand(RefreshBlocksAsync, () => !_activity.Busy && SelectedDevice is not null);
+        Export = new AsyncCommand(ExportAsync, () => !_activity.Busy && SelectedDevice is not null && OutputDirectory.Length > 0);
+        Import = new AsyncCommand(ImportAsync, () => !_activity.Busy && SelectedDevice is not null);
+        Compile = new AsyncCommand(CompileAsync, () => !_activity.Busy && SelectedDevice is not null);
+        Inspect = new AsyncCommand(InspectAsync, () => !_activity.Busy && SelectedDevice is not null);
+        Save = new AsyncCommand(SaveAsync, () => !_activity.Busy && SelectedDevice is not null);
     }
 
     public ObservableCollection<DeviceInfo> Devices { get; } = [];
@@ -339,5 +340,11 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         RebuildTree();
     }
 
-    public void Dispose() => Loc.Current.LanguageChanged -= OnLanguageChanged;
+    private void OnActivityChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(WorkbenchActivity.Busy))
+            foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save }) command.RaiseCanExecuteChanged();
+    }
+    public void Dispose()
+    { Loc.Current.LanguageChanged -= OnLanguageChanged; _activity.PropertyChanged -= OnActivityChanged; }
 }

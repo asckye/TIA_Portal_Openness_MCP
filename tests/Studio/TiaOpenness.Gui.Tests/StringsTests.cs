@@ -270,7 +270,7 @@ public class StringsTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(initial, () =>
         {
-            using var model = new MainViewModel(new FakeStudioClient(), new FakeDialogService());
+            using var model = new MainViewModel(new FakeProjectClient(), new FakeDialogService());
             using var results = new ResultPresentation(model);
             model.Activity.AppendLocalized("Status.CompileResult", "Warning", 0, 2, "1.4");
             model.Activity.AppendLocalized("Log.InspectionHeader", "PLC_1");
@@ -304,7 +304,7 @@ public class StringsTests(WpfContext wpf)
         {
             var previous = ThemeManager.Current.Theme;
             ThemeManager.Current.Theme = AppTheme.Light;
-            var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false);
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false);
             try
             {
                 window.ShowConfiguration(false);

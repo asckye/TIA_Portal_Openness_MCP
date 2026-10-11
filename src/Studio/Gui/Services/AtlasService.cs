@@ -14,10 +14,10 @@ namespace TiaOpenness.Gui.Services.Stubs;
 /// <summary>Uses the connected client's existing read-only export route, then renders local files.</summary>
 public sealed class AtlasService : IAtlasService
 {
-    private readonly IStudioClient _client;
+    private readonly IProjectClient _client;
     private readonly Func<string> _reportDirectory;
 
-    public AtlasService(IStudioClient client, Func<string>? reportDirectory = null)
+    public AtlasService(IProjectClient client, Func<string>? reportDirectory = null)
     {
         _client = client;
         _reportDirectory = reportDirectory ?? (() => Path.Combine(DataLocations.Current.Root, "reports"));

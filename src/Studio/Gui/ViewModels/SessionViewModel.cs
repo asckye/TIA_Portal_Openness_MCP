@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json.Nodes;
+using System.Windows.Threading;
 using TiaOpenness.Gui.Common;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.ViewModels;
 
-/// <summary>Owns the selected release and the bridge/project session.</summary>
+/// <summary>Owns the selected release and the shared session's project presentation.</summary>
 public sealed class SessionViewModel : ObservableObject, IDisposable
 {
-    private readonly IStudioClient _client;
+    private readonly IProjectClient _client;
     private readonly IDialogService _dialogs;
     private readonly WorkbenchActivity _activity;
     private readonly Func<string, Task> _loadProject;
@@ -25,18 +27,21 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     private bool _useMock;
     private bool _headless;
     private bool _isConnected;
+    private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
+    private bool _disposed;
 
-    public SessionViewModel(IStudioClient client, IDialogService dialogs, WorkbenchActivity activity,
+    public SessionViewModel(IProjectClient client, IDialogService dialogs, WorkbenchActivity activity,
         Func<string, Task> loadProject)
     {
         _client = client;
+        _selectedReleaseKey = (client as McpProjectClient)?.Session.State?["releaseKey"]?.ToString() ?? "21";
         _dialogs = dialogs;
         _activity = activity;
         _loadProject = loadProject;
         RunDoctor = new AsyncCommand(DoctorAsync);
-        Connect = new AsyncCommand(ConnectAsync);
+        Connect = new AsyncCommand(ConnectAsync, () => !_activity.Busy);
         Disconnect = new AsyncCommand(DisconnectAsync, () => IsConnected && !_activity.Busy);
-        OpenProject = new AsyncCommand(OpenProjectAsync, () => ProjectPath.Length > 0);
+        OpenProject = new AsyncCommand(OpenProjectAsync, () => !_activity.Busy && ProjectPath.Length > 0);
         _client.Exited += OnBridgeExited;
         _activity.PropertyChanged += OnActivityChanged;
         Loc.Current.LanguageChanged += OnLanguageChanged;
@@ -50,7 +55,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         set { if (Set(ref _serviceOwnsRelease, value)) Raise(nameof(CanSelectRelease)); }
     }
 
-    public bool CanSelectRelease => !_started && !_activity.Busy && !ServiceOwnsRelease;
+    public bool CanSelectRelease => (_client is McpProjectClient ? !_client.IsRunning : !_started) && !_activity.Busy && !ServiceOwnsRelease;
 
     public string SelectedReleaseKey
     {
@@ -62,6 +67,34 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     public AsyncCommand Connect { get; }
     public AsyncCommand Disconnect { get; }
     public AsyncCommand OpenProject { get; }
+    public int ProcessId
+    {
+        get => (_client as McpProjectClient)?.ProcessId ?? 0;
+        set { if (_client is McpProjectClient project) { project.ProcessId = value; Raise(); } }
+    }
+    private string? _loadedSharedBinding;
+    public async Task ApplySharedStateAsync(JsonObject? state)
+    {
+        if (_client is not McpProjectClient project) return;
+        Raise(nameof(CanSelectRelease));
+        if (state == null || (string?)state["worker"]?["state"] == "disconnected")
+        {
+            IsConnected = false; ProjectName = ""; _loadedSharedBinding = null; SetOpennessVersion(null);
+            return;
+        }
+        ProcessId = (int?)state["binding"]?["processId"] ?? 0;
+        IsConnected = ProcessId > 0;
+        string file = (string?)state["binding"]?["projectFile"] ?? "";
+        project.ExpectedProjectFile = file;
+        SetOpennessVersion((string?)state["releaseKey"]);
+        if (file.Length == 0) { ProjectName = ""; _loadedSharedBinding = null; return; }
+        ProjectPath = file; ProjectName = System.IO.Path.GetFileNameWithoutExtension(file);
+        string binding = project.Session.SessionKey + ":" + state["binding"]?["bindingEpoch"] + ":" + file;
+        if (_loadedSharedBinding == binding) return;
+        _loadedSharedBinding = binding;
+        try { await _loadProject(ProjectName); }
+        catch (Exception error) { _activity.AppendLocalized("Log.Error", error.Message); }
+    }
 
     /// <summary>
     /// The pill beside the product name. Before a session exists there is nothing truthful to
@@ -78,6 +111,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     }
 
     public string ProjectName { get => _projectName; private set => Set(ref _projectName, value); }
+    public string BoundProjectFile => (_client as McpProjectClient)?.ExpectedProjectFile ?? ProjectPath;
 
     public bool IsConnected
     {
@@ -138,6 +172,9 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     private async Task DisconnectAsync() => await _activity.Guarded("Pages.Disconnecting", async () =>
     {
+        if (_client is McpProjectClient project && _dialogs.ShowMessage(
+                Loc.Current.T("Session.DisconnectWarning", (string?)project.Session.State?["participants"]?["mcpClient"] ?? "MCP"),
+                Loc.Current["Pages.Disconnect"], DialogButtons.OKCancel, DialogIcon.Warning) != DialogResult.OK) return;
         await _client.DisconnectAsync();
         IsConnected = false;
         ProjectName = string.Empty;
@@ -157,6 +194,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     private async Task ConnectCoreAsync(bool adoptOpenProject)
     {
         EnsureBridge();
+        if (_client is McpProjectClient project) project.ExpectedProjectFile = ProjectPath;
         var state = await _client.ConnectAsync(!Headless);
         IsConnected = true;
         SetOpennessVersion(state.OpennessVersion);
@@ -213,7 +251,8 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         _client.Start(forceMock: UseMock, opennessVersion: SelectedReleaseKey);
         _started = true;
         Raise(nameof(CanSelectRelease));
-        _activity.AppendLocalized("Log.BridgeStarted", UseMock ? "mock" : "openness");
+        if (_client is McpProjectClient project) _activity.AppendLocalized("Session.Attached", project.Session.SessionKey);
+        else _activity.AppendLocalized("Log.BridgeStarted", UseMock ? "mock" : "openness");
     }
 
     public void BrowseProject()
@@ -224,6 +263,8 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     public async Task ApplyStartupAsync(string[] args)
     {
+        if (_client is McpProjectClient && args.Any(a => string.Equals(a, "--mock", StringComparison.OrdinalIgnoreCase)))
+        { _activity.Append("--mock: select an offline operator fixture session for demonstrations."); return; }
         if (args.Any(a => string.Equals(a, "--mock", StringComparison.OrdinalIgnoreCase))) UseMock = true;
         var index = Array.FindIndex(args, a => string.Equals(a, "--project", StringComparison.OrdinalIgnoreCase));
         if (index >= 0 && index + 1 < args.Length) ProjectPath = args[index + 1];
@@ -236,8 +277,13 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     private void OnBridgeExited(object? sender, EventArgs e)
     {
+        if (!_dispatcher.CheckAccess())
+        { _dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => OnBridgeExited(sender, e))); return; }
+        if (_disposed) return;
+        if (_client is McpProjectClient && _client.IsRunning) return;
         IsConnected = false;
-        _activity.AppendLocalized("Log.BridgeExited");
+        if (_client is McpProjectClient) _activity.AppendLocalized("Session.Detached");
+        else _activity.AppendLocalized("Log.BridgeExited");
     }
 
     private void OnActivityChanged(object? sender, PropertyChangedEventArgs e)
@@ -246,6 +292,8 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         {
             Raise(nameof(CanSelectRelease));
             Disconnect.RaiseCanExecuteChanged();
+            Connect.RaiseCanExecuteChanged();
+            OpenProject.RaiseCanExecuteChanged();
         }
     }
 
@@ -257,6 +305,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         _client.Exited -= OnBridgeExited;
         _activity.PropertyChanged -= OnActivityChanged;
         Loc.Current.LanguageChanged -= OnLanguageChanged;

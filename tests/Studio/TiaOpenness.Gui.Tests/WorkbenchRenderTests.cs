@@ -45,7 +45,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     "20:50:27   Client scan · 1 detected, 11 not detected\n20:50:27   Ready · configure both sides on this page\n20:50:27   Loaded V14sp1 service config\n20:50:27   Update check · 3.3.0 is latest (api)\n", Clients());
                 var approvals = FeaturePageFixtures.Approvals(state.Pending);
                 approvals.Enabled = !state.Pending;
-                var window = new MainWindow(new MainViewModel(new FakeStudioClient(), new FakeDialogService()), false, approvals: approvals, preview: preview);
+                var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: approvals, preview: preview);
                 try
                 {
                     window.ShowConfiguration(false);

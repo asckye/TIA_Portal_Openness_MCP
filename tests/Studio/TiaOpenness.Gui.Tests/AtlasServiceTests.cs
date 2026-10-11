@@ -18,7 +18,7 @@ public sealed class AtlasServiceTests : IDisposable
     [InlineData(true)][InlineData(false)]
     public async Task Exports_selected_scope_once_and_returns_a_real_new_html_file(bool single)
     {
-        using var client = new FakeStudioClient();
+        using var client = new FakeProjectClient();
         client.ExportHandler = (device, blocks, directory, format) =>
         {
             Assert.Equal("PLC_1", device);
@@ -47,7 +47,7 @@ public sealed class AtlasServiceTests : IDisposable
     [Fact]
     public async Task Partial_export_and_cancelled_request_never_report_success()
     {
-        using var client = new FakeStudioClient();
+        using var client = new FakeProjectClient();
         var service = new AtlasService(client, () => root);
         var request = new AtlasRequest("project", "PLC_1", new[] { "Main" }, true);
         var result = await service.GenerateAsync(request, new ProgressSink(), CancellationToken.None);

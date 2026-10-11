@@ -130,7 +130,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         DiagnosticInput? activity = null;
         wpf.Run(() =>
         {
-            var model = new ViewModels.MainViewModel(new FakeStudioClient(), new FakeDialogService());
+            var model = new ViewModels.MainViewModel(new FakeProjectClient(), new FakeDialogService());
             var window = new MainWindow(model, false);
             try
             {

@@ -58,7 +58,7 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             var model = new MainViewModel(client, new FakeDialogService());
             var window = new MainWindow(model, false);
             try
@@ -80,7 +80,7 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap21" } };
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap21" } };
             var model = new MainViewModel(client, new FakeDialogService());
             var window = new MainWindow(model, false);
             try

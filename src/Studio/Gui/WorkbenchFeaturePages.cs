@@ -63,6 +63,7 @@ public partial class MainWindow
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => OnNewApproval(sender, request)); return; }
         if (_featuresDisposed) return;
         _approvalToast = request;
+        if (request.Actor == "workbench" && request.OperatorCallId != null && _model.Panel?.Attached == true) OpenDrawer("Approvals");
         UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
         if (WindowState == WindowState.Minimized)
         {

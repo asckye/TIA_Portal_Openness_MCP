@@ -24,13 +24,13 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
         Assert.True(command.CanExecute(null));
     }
 
-    private static void Call(FakeStudioClient.Invocation actual, string name, params object?[] arguments)
+    private static void Call(FakeProjectClient.Invocation actual, string name, params object?[] arguments)
     {
         Assert.Equal(name, actual.Name);
         Assert.Equivalent(arguments, actual.Arguments, strict: true);
     }
 
-    private static void SelectDevice(MainViewModel model, FakeStudioClient client)
+    private static void SelectDevice(MainViewModel model, FakeProjectClient client)
     {
         model.Engineering.SelectedDevice = client.Devices[0];
         client.Calls.Clear();
@@ -45,7 +45,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(language, () =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             var dialogs = new FakeDialogService { Result = result };
             using var model = new MainViewModel(client, dialogs);
             SelectDevice(model, client);
@@ -73,7 +73,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(language, () =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             string[] files = [@"D:\input\First.xml", @"D:\input\Second.scl"];
             var dialogs = new FakeDialogService { Result = result, Files = files };
             using var model = new MainViewModel(client, dialogs);
@@ -95,7 +95,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             var dialogs = new FakeDialogService();
             using var model = new MainViewModel(client, dialogs);
             SelectDevice(model, client);
@@ -117,7 +117,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(language, () =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             var dialogs = new FakeDialogService { Result = result };
             using var model = new MainViewModel(client, dialogs);
             Execute(model.VersionControl.VcRefresh);
@@ -142,7 +142,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient { AttachedProject = new() { Name = "Attached", Path = @"D:\Attached.ap21" } };
+            var client = new FakeProjectClient { AttachedProject = new() { Name = "Attached", Path = @"D:\Attached.ap21" } };
             using var model = new MainViewModel(client, new FakeDialogService());
             model.SelectedReleaseKey = "15.1";
             model.Session.Headless = true;
@@ -172,7 +172,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             using var model = new MainViewModel(client, new FakeDialogService());
             var engineering = model.Engineering;
             Assert.False(engineering.Export.CanExecute(null));
@@ -206,7 +206,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             using var model = new MainViewModel(client, new FakeDialogService());
             var vc = model.VersionControl;
             Assert.False(vc.VcMap.CanExecute(null));
@@ -244,7 +244,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var client = new FakeStudioClient { VcSupported = false };
+            var client = new FakeProjectClient { VcSupported = false };
             using var model = new MainViewModel(client, new FakeDialogService());
             var vc = model.VersionControl;
             Execute(vc.VcRefresh);
@@ -269,7 +269,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
         wpf.RunWithLanguage(language, () =>
         {
             var dialogs = new FakeDialogService { Files = [@"D:\Line.ap21"], Folder = @"D:\folder" };
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             using var model = new MainViewModel(client, dialogs);
             model.Session.BrowseProject();
             model.Engineering.BrowseOutput();
@@ -291,7 +291,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     [Fact]
     public async Task Shared_activity_keeps_busy_errors_progress_and_release_notifications()
     {
-        var client = new FakeStudioClient();
+        var client = new FakeProjectClient();
         MainViewModel model = wpf.Run(() => new MainViewModel(client, new FakeDialogService
             { Files = ["bad.xml"], Result = DialogResult.Yes }));
         try
@@ -336,7 +336,7 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
-            var client = new FakeStudioClient();
+            var client = new FakeProjectClient();
             using var model = new MainViewModel(client, new FakeDialogService());
             using var results = new ResultPresentation(model);
             SelectDevice(model, client);
@@ -355,9 +355,9 @@ public sealed class WorkbenchViewModelTests(WpfContext wpf)
     }
 
     [Fact]
-    public async Task Mock_startup_uses_the_real_client_and_composes_all_three_children()
+    public async Task Mock_startup_composes_all_three_presentation_children()
     {
-        MainViewModel model = wpf.Run(() => new MainViewModel(new StudioClient(), new FakeDialogService()));
+        MainViewModel model = wpf.Run(() => new MainViewModel(new FakeProjectClient(), new FakeDialogService()));
         try
         {
             await wpf.Run(() => model.ApplyStartupAsync(["--mock", "--project", @"D:\fixture\Line.ap21", "--tab", "vc"]));
