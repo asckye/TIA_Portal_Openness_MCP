@@ -76,7 +76,7 @@ internal static partial class ReleaseCommands
         Add("generate-tool-usage", () => Tool("generate-tool-usage", "generate-tool-usage"), ["generate-catalogs"]);
         Wave();
         if (!CheckAllPrerequisitesPassed(timings)) return Finish();
-        var builds = CheckAllBuildInventory(catalog);
+        var builds = CheckAllBuildInventory(catalog, api);
         Add("build-once", () => CheckAllCachedBuild(options, builds, output, dotnet, api, nuget,
             FastSuites.Positive(options, "BuildParallelism", parallelism)));
         Wave();
@@ -341,12 +341,15 @@ internal static partial class ReleaseCommands
         File.WriteAllText(Path.Combine(output, "comparison.md"), string.Join("\n", lines) + "\n");
     }
 
-    private static CheckBuild[] CheckAllBuildInventory(JsonObject catalog)
+    private static CheckBuild[] CheckAllBuildInventory(JsonObject catalog, string apiRoot)
     {
         var units = catalog.Select(pair => CheckAllBuild.Suite(pair.Value!.AsObject())).ToList();
         foreach (var solution in new[] { "TiaPortalOpenness.Offline.slnx", "TiaPortalOpenness.slnx" })
             foreach (var project in XDocument.Load(Path.Combine(Root, solution)).Descendants("Project")) units.Add(new((string)project.Attribute("Path")!, "", []));
-        foreach (var key in CatalogJson.Keys) units.Add(new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key]));
+        // Same properties as build-plc-workers: the worker references Siemens.Engineering directly (OPC UA modelled phases).
+        foreach (var key in CatalogJson.Keys)
+            units.Add(new("src/PlcWorker/TiaMcp.PlcWorker.csproj", "", ["-p:TiaReleaseKey=" + key,
+                "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, ReleaseCommands.PlcWorkerApi(key).Directory))]));
         units.Add(CheckAllBuild.Suite(CheckAllPreflightSuite(catalog)));
         foreach (var key in new[] { "20", "21" }) units.Add(new($"src/Engine/TiaMcp.Engine.V{key}.csproj", "sdk-" + key, ["-p:TiaMcpEngineWorkerSdkFixture=true"]));
         foreach (var mode in new[] { "false", "true" })

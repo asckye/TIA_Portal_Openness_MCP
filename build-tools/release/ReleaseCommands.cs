@@ -1021,6 +1021,9 @@ internal static partial class ReleaseCommands
         return 0;
     }
 
+    // PublicAPI directory and core assembly of one precise release key, shared by build-plc-workers and check-all.
+    internal static (string Directory, string Core) PlcWorkerApi(string key) => key switch { "14sp1" => ("TIA_V14SP1_PublicAPI/V14 SP1", "Siemens.Engineering"), "15.1" => ("TIA_V15.1_PublicAPI/V15.1", "Siemens.Engineering"), "16" => ("TIA_V16_PublicAPI/V16", "Siemens.Engineering"), "17" => ("TIA_V17_PublicAPI/V17", "Siemens.Engineering"), "18" => ("TIA_V18_PublicAPI/V18", "Siemens.Engineering"), "19" => ("TIA_V19_PublicAPI/V19", "Siemens.Engineering"), "20" => ("TIA_V20_PublicAPI/V20", "Siemens.Engineering"), "21" => ("TIA_V21_PublicAPI/V21/net48", "Siemens.Engineering.Base"), _ => throw new ReleaseException("Unsupported precise release key: " + key) };
+
     private static int BuildWorkers(Options options)
     {
         EnsureWindows("build-plc-workers");
@@ -1037,7 +1040,7 @@ internal static partial class ReleaseCommands
         var results = new List<object>();
         foreach (var key in keys)
         {
-            var rel = key switch { "14sp1" => ("TIA_V14SP1_PublicAPI/V14 SP1", "Siemens.Engineering"), "15.1" => ("TIA_V15.1_PublicAPI/V15.1", "Siemens.Engineering"), "16" => ("TIA_V16_PublicAPI/V16", "Siemens.Engineering"), "17" => ("TIA_V17_PublicAPI/V17", "Siemens.Engineering"), "18" => ("TIA_V18_PublicAPI/V18", "Siemens.Engineering"), "19" => ("TIA_V19_PublicAPI/V19", "Siemens.Engineering"), "20" => ("TIA_V20_PublicAPI/V20", "Siemens.Engineering"), "21" => ("TIA_V21_PublicAPI/V21/net48", "Siemens.Engineering.Base"), _ => throw new ReleaseException("Unsupported precise release key: " + key) };
+            var rel = PlcWorkerApi(key);
             var api = Path.GetFullPath(Path.Combine(apiRoot, rel.Item1));
             var props = new List<string> { $"-p:TiaReleaseKey={key}", $"-p:SiemensEngineeringDirectory={api}", $"-p:AdapterSourceRoot={source}", $"-p:WorkerSourceRoot={Path.Combine(source, "PlcWorker")}", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false" };
             if (options.Has("UseReferenceAssemblyPackage")) props.Add("-p:UseReferenceAssemblyPackage=true");
