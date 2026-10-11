@@ -27,9 +27,12 @@ public sealed class ProtocolTests
     internal static string Reply(long id=1,long before=0,long after=0,string payload="\"result\":null") => "{\"jsonrpc\":\"2.0\",\"id\":"+id+",\"bindingEpochBefore\":"+before+",\"bindingEpochAfter\":"+after+","+payload+"}";
     internal static string Request(long id=1,long epoch=0) => "{\"jsonrpc\":\"2.0\",\"id\":"+id+",\"method\":\"adapter.ReadState\",\"params\":{},\"bindingEpoch\":"+epoch+"}";
     internal static string Progress(long id=1,int sequence=1,int percent=50) => "{\"jsonrpc\":\"2.0\",\"method\":\"progress\",\"params\":{\"requestId\":"+id+",\"sequence\":"+sequence+",\"percent\":"+percent+"}}";
+    // Waits for a condition the code under test makes true; only failures pay the longer wait. A freshly started fixture
+    // process on a loaded CI runner can take longer than the protocol Budget to log its first call.
+    internal static readonly TimeSpan EventuallyBudget = TimeSpan.FromSeconds(30);
     internal static async Task Eventually(Func<bool> condition)
     {
-        var stop=DateTime.UtcNow+Budget;
+        var stop=DateTime.UtcNow+EventuallyBudget;
         while(!condition() && DateTime.UtcNow<stop) await Task.Delay(5);
         Assert.True(condition());
     }
