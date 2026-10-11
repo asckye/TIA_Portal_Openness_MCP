@@ -69,10 +69,15 @@ namespace TiaMcp.Generation.Tests
         public void ReparseDirectoryRefusesRecordPublicationAndArtifactEnumeration()
         {
             string link = Path.Combine(root, "artifacts", "staging", "gen-" + new string('d', 64)), target = DirectoryPath;
-            var start = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-            start.ArgumentList.Add("/c"); start.ArgumentList.Add("mklink"); start.ArgumentList.Add("/J"); start.ArgumentList.Add(link); start.ArgumentList.Add(target);
-            using var process = Process.Start(start)!; string output = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd(); process.WaitForExit();
-            Assert.True(process.ExitCode == 0, output);
+            if (OperatingSystem.IsWindows())
+            {
+                var start = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+                start.ArgumentList.Add("/c"); start.ArgumentList.Add("mklink"); start.ArgumentList.Add("/J"); start.ArgumentList.Add(link); start.ArgumentList.Add(target);
+                using var process = Process.Start(start)!; string output = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd(); process.WaitForExit();
+                Assert.True(process.ExitCode == 0, output);
+            }
+            else Directory.CreateSymbolicLink(link, target);
+            Assert.True((File.GetAttributes(link) & FileAttributes.ReparsePoint) != 0, "fixture link is not a reparse point");
             try
             {
                 Assert.Throws<IOException>(() => Store.Manage("list", "", true, ""));

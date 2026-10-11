@@ -30,7 +30,7 @@ def block_after(source, marker):
 
 
 class EngineSources:
-    def __init__(self, root=ROOT):
+    def __init__(self, root=ROOT, native_directory=None):
         self.directory = root / ENGINE
         self.sources = {}
         self.parsed = {}
@@ -47,6 +47,10 @@ class EngineSources:
         # inventory describes the published product, independently of its owner.
         for path in sorted((root / 'src/Shared').glob('*.cs')) + sorted((root / 'src/Shared/Host').glob('*.cs')):
             self.sources[path] = path.read_text(encoding='utf-8-sig')
+        # Same as the C# EngineSources(root, nativeDirectory): adapter sources that a moved member now lives in.
+        if native_directory is not None:
+            for path in sorted((root / native_directory).rglob('*.cs')):
+                self.sources[path] = path.read_text(encoding='utf-8-sig')
         if not self.sources:
             raise AssertionError(f'No engine sources in {self.directory}')
 

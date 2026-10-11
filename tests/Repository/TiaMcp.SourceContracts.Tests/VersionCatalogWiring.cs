@@ -61,7 +61,7 @@ public sealed partial class VersionCatalogWiring
     {
         var policy = Split(Read(Path.Combine(LOGIC, "Siemens/ToolVersionPolicy.cs")), "internal static string ToolProblem", 1)[0];
         var excluded = FindAll("\\[\"([^\"]+)\"\\]\\s*=", policy);
-        Assert.Equal(11, (excluded).Count());
+        Assert.Equal(12, (excluded).Count());
         var registered = (FindAll("McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"", Sources.AllText())).ToHashSet();
         Assert.False((excluded).ToHashSet().Except(registered).Any());
         Assert.Contains("exercise_engine", Read(Path.Combine(ROOT, "scripts/checks/Test-FoundationTransport.py")), StringComparison.Ordinal);

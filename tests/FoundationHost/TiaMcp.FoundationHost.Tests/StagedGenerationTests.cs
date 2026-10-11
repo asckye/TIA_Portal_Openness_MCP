@@ -611,7 +611,7 @@ public sealed class StagedGenerationTests
         f.Worker.Objects.Add(new PlcExternalSourceObject { Kind = "block", Name = "FB_Motor", Path = "FB_Motor", ModifiedDate = new DateTime(2026, 10, 10) });
         var plan = f.Plan(); Assert.Contains(plan["conflicts"]!.AsArray(), c => (string?)c!["key"] == "PLC1/block/FB_Motor" && (string?)c["reason"] == "unknown-outcome");
         var adopted = f.Plan(new[] { "PLC1/block/FB_Motor" }); Assert.Contains(adopted["skipped"]!.AsArray(), s => (string?)s!["key"] == "PLC1/block/FB_Motor" && (string?)s["reason"] == "adopted");
-        Assert.True((bool?)f.Apply(adopted)["ok"]);
+        var applied = f.Apply(adopted); Assert.True((bool?)applied["ok"], applied.ToJsonString());
         var record = GenerationRecord.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)));
         var item = Assert.Single(record.Objects.Where(o => o.Key == "PLC1/block/FB_Motor")); Assert.Equal("adopted", item.State); Assert.NotNull(item.Witness);
         Assert.Empty(f.Plan()["steps"]!.AsArray());
