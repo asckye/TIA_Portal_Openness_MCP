@@ -31,6 +31,12 @@ public sealed class PortedPortalAdmissionTests
         var catalog = new Catalog(release);
         var tool = tools.Single(t => t.ProtocolTool.Name == name);
         var arguments = Arguments(name, tool.ProtocolTool.InputSchema);
+        using var inputs = name is "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory" ? new TechnologyInputs() : null;
+        if (inputs != null)
+        {
+            arguments["folderPath"] = "";
+            arguments[name == "ImportTechnologyObject" ? "importPath" : "dir"] = name == "ImportTechnologyObject" ? inputs.FilePath : inputs.DirectoryPath;
+        }
         var invoker = new Engine.WorkerToolInvoker(catalog, worker, lifetime, tools);
         using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
         Assert.Null(invoker.ValidateArguments(catalog.All[name], JsonSerializer.SerializeToElement(arguments), tool.ProtocolTool.InputSchema));
@@ -47,9 +53,13 @@ public sealed class PortedPortalAdmissionTests
         Assert.NotEqual("unknown", (string?)body["meta"]?["outcome"]);
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
         Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
-        if (name is "CreatePlcBlockGroup" or "BuildAndImportPlcArtifact" or "CompileHmiDiagnostics")
+        if (name is "CreatePlcBlockGroup" or "BuildAndImportPlcArtifact" or "CompileHmiDiagnostics"
+            or "TraceTagCause" or "TraceTagCauseLive" or "MonitorPlcWatchTableS7" or "ProbePlcMonitorOnlineCapabilities"
+            or "GetPlcWatchTableCurrentValuesReadOnly" or "ExportPlcWatchTablesToDirectory" or "ExportTechnologyObjectsToDirectory"
+            or "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory")
         {
             Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal("ConnectPortal", (string?)body["error"]?["details"]?["condition"]);
         }
         if ((string?)body["error"]?["details"]?["condition"] == "ConnectPortal")
         {
@@ -73,6 +83,11 @@ public sealed class PortedPortalAdmissionTests
             Assert.Equal("McpException", (string?)body["data"]?["evidence"]?["exceptionType"]);
             Assert.Contains(body["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "APPROVAL_DISABLED");
         }
+        if (name is "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider")
+        {
+            Assert.NotEqual("ConnectPortal", (string?)body["error"]?["details"]?["condition"]);
+            Assert.Equal(0, worker.Calls);
+        }
         Assert.True(worker.Calls <= (name == "SearchInstalledGsdDevices" ? 2 : 1), "A missing portal must not dispatch a native operation: " + name);
     }
 
@@ -81,6 +96,18 @@ public sealed class PortedPortalAdmissionTests
         private readonly TiaOpenness.Shared.ApprovalSettings previous = TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         internal DisabledApproval() => new TiaOpenness.Shared.ApprovalSettings(false, 1).Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         public void Dispose() => previous.Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+    }
+
+    private sealed class TechnologyInputs : IDisposable
+    {
+        internal string DirectoryPath { get; } = Path.Combine(Path.GetTempPath(), "ported-technology-" + Guid.NewGuid().ToString("N"));
+        internal string FilePath => Path.Combine(DirectoryPath, "fixture.xml");
+        internal TechnologyInputs()
+        {
+            Directory.CreateDirectory(DirectoryPath);
+            File.WriteAllText(FilePath, "<Document><SW.TechnologicalObjects.TechnologicalInstanceDB ID=\"0\"><AttributeList><Name>Fixture</Name></AttributeList></SW.TechnologicalObjects.TechnologicalInstanceDB></Document>");
+        }
+        public void Dispose() => Directory.Delete(DirectoryPath, true);
     }
 
     [Theory]

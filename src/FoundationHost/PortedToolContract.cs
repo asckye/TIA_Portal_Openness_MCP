@@ -197,11 +197,21 @@ internal sealed partial class FoundationTool
         using var lane = await AcquireLane(token);
         ActivateLane(lane);
         var state = (tool.Name == "BuildDeviceAmlDocument" || tool.Name == "PlanHardwareNetworkConfiguration" || tool.Name == "PlanOnlineReadOnlyMonitoring" || tool.Name == "PlanOnlineReadOnlyDataProvider") ? null : await worker.Call("ReadState", new JsonObject(), token);
-        var service = new HardwareAddressingService((operation, values) => worker.Call(operation, values, token).GetAwaiter().GetResult(),
-            () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]), () => (string?)state?["ProjectFile"] ?? "");
-        Func<string, JsonObject, JsonNode?> call = (operation, input) => worker.Call(operation, input, token).GetAwaiter().GetResult();
         Func<bool> hasProject = () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]);
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
+        bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject();
+        bool portalDispatchRefused = false;
+        JsonNode? Call(string operation, JsonObject input)
+        {
+            if (missingPortal && TiaMcp.PlcWorker.WorkerOperations.RequiresPortal(operation))
+            {
+                portalDispatchRefused = true;
+                throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.PortalRequired);
+            }
+            return worker.Call(operation, input, token).GetAwaiter().GetResult();
+        }
+        Func<string, JsonObject, JsonNode?> call = Call;
+        var service = new HardwareAddressingService(call, hasProject, identity);
         object target = portedMethod!.DeclaringType!.Name switch
         {
             "PlcTechnologyTools" => new PlcTechnologyTools(new PlcOrganisationPortService(call, hasProject, identity)),
@@ -231,10 +241,9 @@ internal sealed partial class FoundationTool
             // Preserve typed refusals and offline previews. A missing session can
             // make legacy write wrappers report unknown even though no operation
             // started; use the retired engine's no-native-call projection for all ports.
-            if (state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true
-                && !hasProject() && !nativeCalls.NativeCallIssued
+            if (missingPortal && !nativeCalls.NativeCallIssued
                 && PortedToolContract.WiredOperations(tool.Name).Any(TiaMcp.PlcWorker.WorkerOperations.RequiresPortal)
-                && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
+                && (portalDispatchRefused || (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown"))
                 return McpServer.V4Result(tool.Name, result.StructuredContent?["data"] is JsonObject data ? (JsonObject)data.DeepClone() : null,
                     new Error(TiaOpenness.Shared.SessionBehavior.PortalRequired, new PreconditionFailedDetails("ConnectPortal", null)),
                     Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: true);
