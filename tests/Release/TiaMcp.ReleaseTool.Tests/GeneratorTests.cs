@@ -205,7 +205,7 @@ public sealed class GeneratorTests
     [Fact]
     public void StdioAuditReceiptsMustBeDistinctAndHashChecked()
     {
-        var path = Path.Combine(Root, "bin-build/refactor/usage-records-" + Guid.NewGuid().ToString("N") + ".json");
+        var path = Path.Combine(Path.GetTempPath(), "usage-records-" + Guid.NewGuid().ToString("N") + ".json");
         var rows = new JsonArray(Keys.Select(k => (JsonNode)new JsonObject { ["releaseKey"] = k, ["allSourceTextRetrievedAndHashChecked"] = false }).ToArray());
         try
         {
