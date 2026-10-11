@@ -11,6 +11,8 @@
 - 不编辑 `manifest/*.json` 中的哈希，不手改生成文件（`manifest/tools-list.json`、
   `src/Shared/ToolUsageData.json`、`docs/reference/tool-matrix.md` 等），除非任务要求运行对应生成器。
 - 不连接 TIA Portal、PLC、VM 或任何网络服务；不运行 live 测试分支。
+- 只能停止自己在本 worktree 中启动的进程：先核对可执行文件路径或命令行位于本 worktree 内，再按进程号停止；绝不按进程名或模糊匹配停止进程，绝不停止其他 worktree、审查者或用户的进程。
+- 不删除、跳过、过滤、放宽或重设任何功能检查、测试、断言、阈值和门禁（含套件最低通过数、最大跳过数、计时与增长上限）；认为某项检查有误或不稳定时保持原样，在报告中附证据说明，由维护者决定。
 
 ## 代码
 
