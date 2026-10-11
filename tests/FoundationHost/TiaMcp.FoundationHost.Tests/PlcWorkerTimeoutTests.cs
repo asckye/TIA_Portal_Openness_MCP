@@ -343,8 +343,8 @@ public sealed class PlcWorkerRobustnessTests
     {
         var candidates = typeof(Operations).GetFields(BindingFlags.Static | BindingFlags.NonPublic)
             .Where(field => field.IsLiteral && field.FieldType == typeof(string)).Select(field => (string)field.GetRawConstantValue()!);
-        string dispatcher = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-            "../../../../../../src/PlcWorker/FoundationWorkerDispatcher.cs")));
+        string dispatcher = File.ReadAllText(Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "src", "PlcWorker", "FoundationWorkerDispatcher.cs"));
         var direct = Regex.Matches(dispatcher, "new WorkerOperationModule\\(\"([^\"]*)\", typeof\\(PlcFoundationEngine\\), new\\[\\] \\{([^}]+)\\}")
             .SelectMany(module => Regex.Matches(module.Groups[2].Value, "\"([^\"]+)\"")
                 .Select(name => module.Groups[1].Value + "." + name.Groups[1].Value)).ToArray();
@@ -414,7 +414,7 @@ public sealed class PlcWorkerRobustnessTests
             Environment.SetEnvironmentVariable("TIA_FIXTURE_LOG", Log);
             Environment.SetEnvironmentVariable("TIA_FIXTURE_FAULT", "delay");
             Environment.SetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS", environment);
-            string exe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"));
+            string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.WorkerChannel.TransportFixture", "TiaMcp.WorkerChannel.TransportFixture.exe");
             Assert.True(File.Exists(exe), exe);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Foundation.WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true, defaultSeconds, config) { Bundled = false };
