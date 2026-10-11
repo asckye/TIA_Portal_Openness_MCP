@@ -24,13 +24,12 @@ namespace TiaMcp.Generation.Planning.Tests
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture); CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
                 var first = new PlanningFixture(release).Build(); var second = new PlanningFixture(release).Build();
-                var golden = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Golden", "plan." + release + ".json"));
-                Assert.Equal(golden, Encoding.UTF8.GetBytes(first.CanonicalPlan));
+                GoldenFiles.Verify("plan." + release + ".json", first.CanonicalPlan);
                 Assert.Equal(first.CanonicalPlan, second.CanonicalPlan); Assert.Equal(first.Plan.PlanHash, GenerationDocuments.PlanHash(first.CanonicalPlan));
                 Assert.Equal(0, first.Plan.SelfCheck.Errors); Assert.Empty(first.Plan.Conflicts); Assert.Empty(first.Plan.Unavailable);
                 foreach (var artifact in first.Artifacts) Assert.Equal(artifact.Sha256, CanonicalJson.HashBytes(Encoding.UTF8.GetBytes(artifact.Content)));
                 var call = first.Artifacts.Single(a => a.Content.StartsWith("FUNCTION \"FC_U01_Calls\"", StringComparison.Ordinal));
-                Assert.Equal(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Golden", "FC_U01_Calls.scl")), Encoding.UTF8.GetBytes(call.Content));
+                GoldenFiles.Verify("FC_U01_Calls.scl", call.Content);
             }
             finally { CultureInfo.CurrentCulture = previous; CultureInfo.CurrentUICulture = previousUi; }
         }

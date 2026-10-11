@@ -47,6 +47,7 @@ internal sealed class CatalogData
     internal readonly Dictionary<string, string> HostOnly;
     internal readonly Dictionary<string, PortedFamilies.Family> Families;
     internal readonly Dictionary<string, HashSet<string>> Ported;
+    internal readonly HashSet<string> FoundationCandidates;
     internal readonly Dictionary<string, JsonObject> Archives = [];
     internal readonly Dictionary<string, HashSet<string>> Rosters = [];
     internal readonly Dictionary<string, string> Mapping;
@@ -63,6 +64,7 @@ internal sealed class CatalogData
         Additions = CatalogJson.Read(root, "reference/tool-catalog/new-v4-tools.json").AsObject();
         Renames = CatalogJson.Read(root, "reference/tool-catalog/v3-v4-renames.json").AsObject().ToDictionary(p => p.Key, p => CatalogJson.Text(p.Value));
         Families = PortedFamilies.Load(root);
+        FoundationCandidates = PortedFamilies.FoundationCandidates(root);
         Ported = CatalogJson.Keys.ToDictionary(k => k, k => PortedFamilies.Additions(Families, k));
         foreach (var key in CatalogJson.Keys)
             Archives[key] = CatalogJson.Read(root, $"manifest/history/contracts-v3/baseline/{key}.json")["tools"]!.AsArray().ToDictionary(t => CatalogJson.Text(t!["name"]), t => t!.AsObject()).ToJsonObject();

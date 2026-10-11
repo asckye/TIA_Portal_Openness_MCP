@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-11T03:43:45.0081638+00:00",
+  "generatedAt": "2026-10-11T05:46:28.2119462+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "0661e32993b1e76f63d47e4eec7692215d712c038345a330aeba6885eccb77a7",
+  "workerSha256": "f820b9b49f0a5ffff35ca1f9008c3d2996b67e57a9a1f54d02b9e00f0a975511",
   "toolCount": 514,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {

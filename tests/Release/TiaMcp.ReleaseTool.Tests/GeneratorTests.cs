@@ -11,6 +11,32 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class GeneratorTests
 {
     private static string Root => Repository.FindRoot();
+    [Fact]
+    public void PortedDocumentCandidatesRetainModernFoundationProfiles()
+    {
+        var data = new CatalogData(Root); var resource = CatalogGenerator.Generate(Root)[CatalogGenerator.Resource];
+        var catalog = JsonNode.Parse(System.Xml.Linq.XDocument.Parse(resource).Descendants("data").Single(e => (string?)e.Attribute("name") == "Catalog").Element("value")!.Value)!;
+        Assert.Equal(new[] { "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments" }, data.FoundationCandidates.Order(StringComparer.Ordinal));
+        foreach (var key in new[] { "20", "21" })
+        {
+            var rows = catalog["releases"]![key]!.AsArray().ToDictionary(r => Text(r!["currentName"]));
+            foreach (var name in data.FoundationCandidates) Assert.Contains("plc-foundation", Strings(rows[name]!["profiles"]));
+            foreach (var name in data.Ported[key].Except(data.FoundationCandidates)) Assert.DoesNotContain("plc-foundation", Strings(rows[name]!["profiles"]));
+        }
+    }
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("malformed")]
+    [InlineData("duplicate")]
+    [InlineData("unknown")]
+    [InlineData("duplicate-declaration")]
+    public void FoundationCandidateReaderFailsClosed(string mutation)
+    {
+        const string row = "new Family(\"family\", \"prefix\", new[] { \"20\", \"21\" }, new[] { \"Tool\" })";
+        var declaration = mutation switch { "missing" => "", "malformed" => "FoundationCandidates = { Tool };", "duplicate" => "FoundationCandidates = { \"Tool\", \"Tool\" };", "unknown" => "FoundationCandidates = { \"Other\" };", _ => "FoundationCandidates = { \"Tool\" }; FoundationCandidates = { \"Tool\" };" };
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(row + declaration));
+        Assert.Contains("Tool", PortedFamilies.ParseFoundationCandidates(row + "FoundationCandidates = { \"Tool\" };"));
+    }
     [Theory]
     [InlineData("generate-catalogs")]
     [InlineData("generate-tool-usage")]

@@ -3540,6 +3540,26 @@
         ]
       },
       {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcBlockScopes"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
         "family": "F16",
         "state": "current",
         "l5": "NOT RUN",
@@ -3888,6 +3908,33 @@
           "GetTechnologyObjectTree",
           "ManageMotionAxis",
           "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcBlockScopes"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
         ]
       },
       {
@@ -4248,6 +4295,39 @@
           "ImportTechnologyObjectsFromDirectory",
           "ManageMotionAxis",
           "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcBlockScopes"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangePlcAlarmTextLists",
+          "ExportAlarmInstanceTexts",
+          "ExportAlarmTextLists",
+          "ImportAlarmTextLists",
+          "ImportPlcAlarmInstanceTexts"
+        ]
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
         ]
       },
       {
@@ -4614,6 +4694,44 @@
           "ImportTechnologyObjectsFromDirectory",
           "ManageMotionAxis",
           "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcBlockScopes"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangePlcAlarmTextLists",
+          "ExchangePlcSupervisions",
+          "ExportAlarmClasses",
+          "ExportAlarmInstanceTexts",
+          "ExportAlarmTextLists",
+          "ExportPlcProDiagInfo",
+          "ImportAlarmClasses",
+          "ImportAlarmTextLists",
+          "ImportPlcAlarmInstanceTexts",
+          "ManagePlcSupervision"
+        ]
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
         ]
       },
       {
@@ -4986,6 +5104,45 @@
           "ImportTechnologyObjectsFromDirectory",
           "ManageMotionAxis",
           "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcBlockScopes"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangePlcAlarmTextLists",
+          "ExchangePlcSupervisions",
+          "ExportAlarmClasses",
+          "ExportAlarmInstanceTexts",
+          "ExportAlarmTextLists",
+          "ExportPlcProDiagInfo",
+          "ImportAlarmClasses",
+          "ImportAlarmTextLists",
+          "ImportPlcAlarmInstanceTexts",
+          "ManagePlcAlarmTextList",
+          "ManagePlcSupervision"
+        ]
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
         ]
       },
       {
@@ -5369,6 +5526,45 @@
           "ImportTechnologyObjectsFromDirectory",
           "ManageMotionAxis",
           "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcBlockScopes"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangePlcAlarmTextLists",
+          "ExchangePlcSupervisions",
+          "ExportAlarmClasses",
+          "ExportAlarmInstanceTexts",
+          "ExportAlarmTextLists",
+          "ExportPlcProDiagInfo",
+          "ImportAlarmClasses",
+          "ImportAlarmTextLists",
+          "ImportPlcAlarmInstanceTexts",
+          "ManagePlcAlarmTextList",
+          "ManagePlcSupervision"
+        ]
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
         ]
       },
       {

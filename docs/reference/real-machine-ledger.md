@@ -168,6 +168,9 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 14sp1 | F12 | current | NOT RUN | PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, TraceTagCause, TraceTagCauseLive |
 | 14sp1 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ManageMotionAxis, ManageTechnologyObject |
+| 14sp1 | F10 | current | NOT RUN | GetPlcBlockScopes |
+| 14sp1 | F14 | current | NOT RUN | — |
+| 14sp1 | F15 | current | NOT RUN | — |
 | 14sp1 | F16 | current | NOT RUN | — |
 | 14sp1 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
 | 14sp1 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
@@ -193,6 +196,9 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 15.1 | F12 | current | NOT RUN | ExportPlcWatchTablesToDirectory, GetPlcWatchTableCurrentValuesReadOnly, ImportPlcWatchTableOffline, ListPlcForceTables, ManagePlcTableEntries, MonitorPlcWatchTableS7, PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, ProbePlcMonitorOnlineCapabilities, TraceTagCause, TraceTagCauseLive |
 | 15.1 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExchangeMotionCamData, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ManageMotionAxis, ManageTechnologyObject |
+| 15.1 | F10 | current | NOT RUN | GetPlcBlockScopes |
+| 15.1 | F14 | current | NOT RUN | — |
+| 15.1 | F15 | current | NOT RUN | ExportOpcUaInterface, GenerateOpcUaModelledInterface, GetPlcOpcUaConfiguration, ImportOpcUaInterface, ManageOpcUaInterface, SetOpcUaInterfaceEnabled |
 | 15.1 | F16 | current | NOT RUN | GetPlcChecksums, GetPlcObjectFingerprints |
 | 15.1 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
 | 15.1 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
@@ -218,6 +224,9 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 16 | F12 | current | NOT RUN | ExportPlcWatchTablesToDirectory, GetPlcWatchTableCurrentValuesReadOnly, ImportPlcWatchTableOffline, ListPlcForceTables, ManagePlcTableEntries, MonitorPlcWatchTableS7, PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, ProbePlcMonitorOnlineCapabilities, TraceTagCause, TraceTagCauseLive |
 | 16 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExchangeMotionCamData, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ImportTechnologyObject, ImportTechnologyObjectsFromDirectory, ManageMotionAxis, ManageTechnologyObject |
+| 16 | F10 | current | NOT RUN | GetPlcBlockScopes |
+| 16 | F14 | current | NOT RUN | ExchangePlcAlarmTextLists, ExportAlarmInstanceTexts, ExportAlarmTextLists, ImportAlarmTextLists, ImportPlcAlarmInstanceTexts |
+| 16 | F15 | current | NOT RUN | ExportOpcUaInterface, GenerateOpcUaModelledInterface, GetPlcOpcUaConfiguration, ImportOpcUaInterface, ManageOpcUaInterface, SetOpcUaInterfaceEnabled |
 | 16 | F16 | current | NOT RUN | GetPlcChecksums, GetPlcObjectFingerprints, ListPlcSoftwareUnits, ManagePlcSoftwareUnit, SetPlcUnitObjectAccess |
 | 16 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
 | 16 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
@@ -243,6 +252,9 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, ManagePlcExternalSources |
 | 17 | F12 | current | NOT RUN | ExportPlcWatchTablesToDirectory, GetPlcWatchTableCurrentValuesReadOnly, ImportPlcWatchTableOffline, ListPlcForceTables, ManagePlcTableEntries, MonitorPlcWatchTableS7, PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, ProbePlcMonitorOnlineCapabilities, SetPlcWatchTableModifyValue, TraceTagCause, TraceTagCauseLive |
 | 17 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExchangeMotionCamData, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ImportTechnologyObject, ImportTechnologyObjectsFromDirectory, ManageMotionAxis, ManageTechnologyObject |
+| 17 | F10 | current | NOT RUN | GetPlcBlockScopes |
+| 17 | F14 | current | NOT RUN | ExchangePlcAlarmTextLists, ExchangePlcSupervisions, ExportAlarmClasses, ExportAlarmInstanceTexts, ExportAlarmTextLists, ExportPlcProDiagInfo, ImportAlarmClasses, ImportAlarmTextLists, ImportPlcAlarmInstanceTexts, ManagePlcSupervision |
+| 17 | F15 | current | NOT RUN | ExportOpcUaInterface, GenerateOpcUaModelledInterface, GetPlcOpcUaConfiguration, ImportOpcUaInterface, ManageOpcUaInterface, SetOpcUaInterfaceEnabled |
 | 17 | F16 | current | NOT RUN | GetPlcChecksums, GetPlcObjectFingerprints, ListPlcSoftwareUnits, ManagePlcSoftwareUnit, SetPlcUnitObjectAccess |
 | 17 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
 | 17 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
@@ -268,6 +280,9 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, GetPlcCrossReferences, ManagePlcExternalSources |
 | 18 | F12 | current | NOT RUN | ExportPlcWatchTablesToDirectory, GetPlcWatchTableCurrentValuesReadOnly, ImportPlcWatchTableOffline, ListPlcForceTables, ManagePlcTableEntries, MonitorPlcWatchTableS7, PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, ProbePlcMonitorOnlineCapabilities, SetPlcWatchTableModifyValue, TraceTagCause, TraceTagCauseLive |
 | 18 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExchangeMotionCamData, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ImportTechnologyObject, ImportTechnologyObjectsFromDirectory, ManageMotionAxis, ManageTechnologyObject |
+| 18 | F10 | current | NOT RUN | GetPlcBlockScopes |
+| 18 | F14 | current | NOT RUN | ExchangePlcAlarmTextLists, ExchangePlcSupervisions, ExportAlarmClasses, ExportAlarmInstanceTexts, ExportAlarmTextLists, ExportPlcProDiagInfo, ImportAlarmClasses, ImportAlarmTextLists, ImportPlcAlarmInstanceTexts, ManagePlcAlarmTextList, ManagePlcSupervision |
+| 18 | F15 | current | NOT RUN | ExportOpcUaInterface, GenerateOpcUaModelledInterface, GetPlcOpcUaConfiguration, ImportOpcUaInterface, ManageOpcUaInterface, SetOpcUaInterfaceEnabled |
 | 18 | F16 | current | NOT RUN | GetPlcChecksums, GetPlcObjectFingerprints, ListPlcSoftwareUnits, ManagePlcSoftwareUnit, SetPlcUnitObjectAccess |
 | 18 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
 | 18 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceServiceObjects, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |
@@ -293,6 +308,9 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | F11 | current | NOT RUN | GeneratePlcSourceFromBlocks, GetPlcCrossReferences, ManagePlcExternalSources |
 | 19 | F12 | current | NOT RUN | ExportPlcWatchTablesToDirectory, GetPlcWatchTableCurrentValuesReadOnly, ImportPlcWatchTableOffline, ListPlcForceTables, ManagePlcTableEntries, MonitorPlcWatchTableS7, PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, ProbePlcMonitorOnlineCapabilities, SetPlcWatchTableModifyValue, TraceTagCause, TraceTagCauseLive |
 | 19 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExchangeMotionCamData, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ImportTechnologyObject, ImportTechnologyObjectsFromDirectory, ManageMotionAxis, ManageTechnologyObject |
+| 19 | F10 | current | NOT RUN | GetPlcBlockScopes |
+| 19 | F14 | current | NOT RUN | ExchangePlcAlarmTextLists, ExchangePlcSupervisions, ExportAlarmClasses, ExportAlarmInstanceTexts, ExportAlarmTextLists, ExportPlcProDiagInfo, ImportAlarmClasses, ImportAlarmTextLists, ImportPlcAlarmInstanceTexts, ManagePlcAlarmTextList, ManagePlcSupervision |
+| 19 | F15 | current | NOT RUN | ExportOpcUaInterface, GenerateOpcUaModelledInterface, GetPlcOpcUaConfiguration, ImportOpcUaInterface, ManageOpcUaInterface, SetOpcUaInterfaceEnabled |
 | 19 | F16 | current | NOT RUN | GetPlcChecksums, GetPlcObjectFingerprints, ListPlcSoftwareUnits, ManagePlcSoftwareUnit, SetPlcUnitObjectAccess |
 | 19 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |
 | 19 | F18 | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, ExchangeSystemDiagnosticsSettings, GetDeviceAttributes, GetDeviceInfo, GetDeviceItemInfo, GetDeviceItemTree, GetDevicePlugLocations, GetHardwareFeatures, ListDevices, ManageDeviceServiceObjects, ManageDeviceUserGroup, ManageHardwareObject, ManageHardwareUtilities, PlugDeviceItem, SearchInstalledGsdDevices, SetDeviceItemAttribute, SetPlcCpuSettings |

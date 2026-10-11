@@ -18,6 +18,12 @@
 
 ## 发布层级的检查证据
 
+规划 golden 的受跟踪再生成入口见 [golden 说明](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden/README.md)。
+先按顺序运行 `generate-catalogs`、`generate-tool-usage`，再设置 `TIA_MCP_UPDATE_GOLDEN=1`
+运行 `dotnet run --project build-tools/release -- test-suites -Suite generation-planning`。
+该开关让真实 planner 的 Basic/plain 八版夹具把实际 UTF-8 字节写入源码 Golden 目录；
+其他确定性、哈希和语义断言仍执行。移除开关，审查每个 diff，再正常运行同一套件验证；默认运行不写文件。
+
 审查链显式使用 `run-release-build -Tier package|quick|full`；命令、缓存与 baseline 规则见
 [发布流程](release-workflow.md#packagequick-测试包与-full-发布候选包)。package 是 VM 测试包入口：
 只做源码预检、构建、打包、strict 验包、重定位和产品 smoke。quick 按最具体的源码所有权追加检查；full 运行全部检查。
