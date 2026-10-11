@@ -25,11 +25,11 @@
 其他确定性、哈希和语义断言仍执行。移除开关，审查每个 diff，再正常运行同一套件验证；默认运行不写文件。
 
 本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录和工具用法，再构建两个 solution 的项目、八版 PLC worker、
-V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用 `--no-build --no-restore`。
+V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
 SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
 ```powershell
-dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <ecosystem-python/Scripts/python.exe> -MaxParallelism 16 -BuildParallelism 16 -StabilityCores 8 -StabilityParallelism 2 -Shards 8 -OutputDirectory bin-build/check-all/run-1
+dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> -NuGetConfig <offline-nuget.config> -CompanionPython <ecosystem-python/Scripts/python.exe> -MaxParallelism 16 -BuildParallelism 16 -StabilityCores 8 -StabilityParallelism 4 -Shards 8 -OutputDirectory bin-build/check-all/run-1
 ```
 
 `-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，并复用构建缓存；
@@ -40,13 +40,13 @@ dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> 
 较长项目名的生成 editorconfig 使用同一中间目录内的短文件名，避免 Windows 增量检查把超过 MAX_PATH 的输入误判为缺失而重复编译。
 构建或生成失败立即停止全集并写出失败报告，不能继续使用旧输出。运行时按 MSBuild 返回的实际路径复制到原发现布局，文件内容不变时不重写；注册套件用对应变体的准确 TargetPath 执行。
 release CLI 保留已经启动的普通目录副本，避免覆盖外层启动器持有的 DLL；检查命令使用私有 driver，release-tool 套件使用准确的变体程序集。
-Studio 测试从原开发目录运行，沿用 bundle 定位器；bridge 载荷来自对应的隔离编译变体。
+Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。新增 suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建清单按源码和构建属性的输入哈希缓存，测试结果不缓存。
 `-BuildParallelism` 单独控制 MSBuild 并发，沙箱中可设为 1。`-BuildOnly` 只测生成与构建，用于无改动、单文件改动诊断，不能替代全集验收。
 每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和五分钟门槛。
 低于五分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 
 构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部 15 项并展开到该图，避免嵌套调度；汇总在依赖结束后执行，失败的分片仍产生汇总。
-压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多两个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。四组诊断曾触发原句柄界限，因此上限保持两组。
+压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多四个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。HTTP 夹具使用独立临时工作目录，避免 ASP.NET 配置文件监视器扫描整个 worktree；原句柄和内存界限保持不变。
 读取 Windows 物理核拓扑，优先预留较高性能等级的完整物理核，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。cpu-plan.json 记录实际分配，不把非空闲诊断当作性能验收。
 客户端启动后先等待父进程分配 job，再启动实际命令，job 限制覆盖宿主、worker 和立即启动的子孙进程。50 轮、内存和句柄增长限值保持；结果及失败前的 process-samples.json 记录实际 affinity 与样本。worker deadline 和配置页面检查独占普通队列，隔离的压测队列继续运行。
 `-MaxParallelism` 或 `-CpuParallelism` 显式指定普通队列进程上限，受剩余 CPU 数约束，不受旧校准文件压低。未指定时使用本机核心数，只有标记 representativeIdleMeasurement=true 的本机 cpu-budget.json 才覆盖默认值。

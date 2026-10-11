@@ -81,24 +81,44 @@ internal static class FastSuites
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
+        if (unit.Project.StartsWith("tests/Studio/", StringComparison.Ordinal)) environment["TIA_MCP_BUNDLE_ROOT"] = root;
         environment["TIA_MCP_TEST_SHARD_COUNT"] = count.ToString(); environment["TIA_MCP_TEST_SHARD_INDEX"] = index.ToString();
         environment["TIA_MCP_TEST_SHARD_ASSEMBLY"] = Path.GetFileNameWithoutExtension(unit.Project);
         environment["TIA_MCP_TEST_SHARD_PLAN"] = plan;
         environment["TIA_MCP_TEST_CASE_TIMINGS"] = Path.Combine(directory, "case-timings.tsv");
         File.Delete(environment["TIA_MCP_TEST_CASE_TIMINGS"]!);
         var trx = Path.Combine(directory, name + ".trx"); File.Delete(trx);
-        var args = new List<string> { "test", Path.Combine(root, unit.Project), "-c", "Release", "--no-build", "--no-restore", "--nologo", "--disable-build-servers", "-m:1", "-nodeReuse:false" };
-        args.AddRange(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()));
-        // The traversal stages each root variant to its established test layout.
-        // Do not re-evaluate the isolated build under a different property set.
-        if (CheckAllBuild.TestAssembly(root, unit) is { } assembly) args.Add("-p:TargetPath=" + assembly);
-        if (api != null) args.Add("-p:TiaPublicApiRoot=" + api);
-        if (extra != null) args.AddRange(extra);
-        args.AddRange(["--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", directory]);
+        environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
+        var assembly = CheckAllBuild.TestAssembly(root, unit);
+        List<string> args;
+        if (assembly != null && (extra == null || extra.Length == 0))
+            args = VstestArguments(assembly, suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()), name, directory);
+        else
+        {
+            args = ["test", Path.Combine(root, unit.Project), "-c", "Release", "--no-build", "--no-restore", "--nologo", "--disable-build-servers", "-m:1", "-nodeReuse:false"];
+            args.AddRange(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>()));
+            if (assembly != null) args.Add("-p:TargetPath=" + assembly);
+            if (api != null) args.Add("-p:TiaPublicApiRoot=" + api);
+            if (extra != null) args.AddRange(extra);
+            args.AddRange(["--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", directory]);
+        }
         var result = ProcessRunner.Run(dotnet, args, root, environment);
         if (!File.Exists(trx)) return result with { ExitCode = 1, StandardError = result.StandardError + "\nMissing shard TRX: " + trx };
         var errors = DotnetSuites.ReadTrx(trx).Errors;
         if (errors.Count > 0) return result with { ExitCode = 1, StandardError = result.StandardError + "\n" + string.Join("\n", errors) };
+        return result;
+    }
+
+    internal static List<string> VstestArguments(string assembly, IEnumerable<string> arguments, string name, string directory)
+    {
+        var source = arguments.ToArray();
+        var result = new List<string> { "vstest", assembly, "--logger:trx;LogFileName=" + name + ".trx", "--ResultsDirectory:" + directory };
+        for (int i = 0; i < source.Length; i++)
+        {
+            if (source[i].StartsWith("-p:", StringComparison.Ordinal)) continue; // Already represented by the exact built variant.
+            if (source[i] == "--filter" && i + 1 < source.Length) result.Add("--TestCaseFilter:" + source[++i]);
+            else throw new ReleaseException("Unsupported registered VSTest argument: " + source[i]);
+        }
         return result;
     }
 

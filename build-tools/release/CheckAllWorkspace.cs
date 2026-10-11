@@ -100,11 +100,37 @@ internal static partial class ReleaseCommands
         if (result.ExitCode == 0)
             foreach (var name in new[] { "Test-StaticCheckParity", "Test-MatchPlcName" })
             {
-                var script = ProcessRunner.Run(dotnet, ["build", Path.Combine(Root, "scripts/checks/" + name + ".cs"), "-c", "Release",
-                    "-o", Path.Combine(Root, "bin-build/check-scripts", name), "-p:RestoreConfigFile=" + nuget, "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:UseAppHost=false"], Root,
-                    logPath: Path.Combine(output, "build", name + ".log"));
+                var script = CheckAllScriptBuild(name, output, dotnet, nuget);
                 result = new(result.ExitCode == 0 ? script.ExitCode : result.ExitCode, result.StandardOutput + script.StandardOutput, result.StandardError + script.StandardError);
             }
+        return result;
+    }
+
+    internal static string CheckAllScriptInputKey(string root, string name, string nuget, string sdkVersion)
+    {
+        var inputs = Directory.EnumerateFiles(Path.Combine(root, "build-tools/common"), "*", SearchOption.AllDirectories)
+            .Where(file => !file.Split(Path.DirectorySeparatorChar).Any(part => part is "obj" or "bin"))
+            .Concat(new[] { Path.Combine(root, "scripts/checks/" + name + ".cs"), nuget, Path.Combine(root, "Version.props") })
+            .Concat(new[] { "Directory.Build.props", "Directory.Build.targets", "global.json" }.Select(file => Path.Combine(root, file)).Where(File.Exists));
+        return CheckAllLayout.InputKey(inputs.Select(file => new KeyValuePair<string, string>(file, ReleaseRecords.HashFile(file))),
+            [name, sdkVersion, "Release;UseAppHost=false;UseSharedCompilation=false;NuGetAudit=false"]);
+    }
+
+    private static CommandResult CheckAllScriptBuild(string name, string output, string dotnet, string nuget)
+    {
+        var destination = Path.Combine(Root, "bin-build/check-scripts", name);
+        var sdk = ProcessRunner.Run(dotnet, ["--version"], Root); ProcessRunner.RequireSuccess(sdk, "File app SDK version");
+        var key = CheckAllScriptInputKey(Root, name, nuget, sdk.StandardOutput);
+        var cache = new BuildOutputCache(Path.Combine(Root, "bin-build/check-script-cache"), name);
+        if (cache.Restore(key, destination))
+        {
+            File.WriteAllText(Path.Combine(output, "build", name + ".log"), "Identical file-app inputs and verified outputs: cache hit " + key + "\n");
+            return new(0, name + ": verified file-app cache hit\n", "");
+        }
+        var result = ProcessRunner.Run(dotnet, ["build", Path.Combine(Root, "scripts/checks/" + name + ".cs"), "-c", "Release",
+            "-o", destination, "-p:RestoreConfigFile=" + nuget, "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:UseAppHost=false"], Root,
+            logPath: Path.Combine(output, "build", name + ".log"));
+        if (result.ExitCode == 0) cache.Populate(key, destination);
         return result;
     }
 
@@ -131,6 +157,7 @@ internal static partial class ReleaseCommands
                     var shared = unit.Properties.Any(p => p == "-p:TiaSharedAdapterPaths=true");
                     var bridge = Path.Combine(root, "src/Studio/Bridge/bin/Release", shared ? "shared-adapter" : "", "net48");
                     CopyRuntime(bridge, Path.Combine(destination, "bridge"));
+                    CopyRuntime(bridge, Path.Combine(row[2], "bridge"));
                     if (!File.Exists(Path.Combine(bridge, "Newtonsoft.Json.dll"))) File.Delete(Path.Combine(destination, "bridge/Newtonsoft.Json.dll"));
                 }
             }

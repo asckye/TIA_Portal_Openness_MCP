@@ -13,6 +13,7 @@ using ModelContextProtocol.Server;
 
 if (args is ["--help"]) { Console.WriteLine(HostOptions.WorkerTimeoutHelp); return 0; }
 
+using var stabilityTelemetry = LocalStabilityTelemetry.Start();
 HostOptions options;
 Console.OutputEncoding = new UTF8Encoding(false);
 Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });

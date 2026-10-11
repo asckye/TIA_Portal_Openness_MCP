@@ -48,7 +48,7 @@ public sealed class WorkerRobustnessTests
         {
             Environment.SetEnvironmentVariable("TIA_FIXTURE_LOG", log);
             Environment.SetEnvironmentVariable("TIA_FIXTURE_FAULT", "");
-            string exe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe"));
+            string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.WorkerChannel.TransportFixture", "TiaMcp.WorkerChannel.TransportFixture.exe");
             Assert.True(File.Exists(exe), exe);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter.19.dll"), "offline fixture identity");
             using var worker = new Foundation.WorkerClient("19", exe, Path.GetDirectoryName(exe)!, true) { Bundled = false };
@@ -93,7 +93,7 @@ public sealed class WorkerRobustnessTests
         {
             Environment.SetEnvironmentVariable("TIA_MCP_ENGINE_WORKER_FAULT", mode);
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(AppContext.BaseDirectory, "worker-fixture-data"));
-            string exe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../WorkerChannel/TiaMcp.EngineWorker.FaultFixture/bin/Release/net10.0/TiaMcp.EngineWorker.FaultFixture.exe"));
+            string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.EngineWorker.FaultFixture", "TiaMcp.EngineWorker.FaultFixture.exe");
             Assert.True(File.Exists(exe), exe);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             // A successful 16/32 MiB spill includes serialization and a durable disk flush.

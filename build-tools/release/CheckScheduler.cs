@@ -41,7 +41,11 @@ internal static class CheckScheduler
                     File.WriteAllText(Path.Combine(logs, job.Name + ".log"), row.Error + "\n");
                 }
             }
-            foreach (var job in pending.ToArray())
+            // Ready inputs of an idle reserved lane must not wait behind the
+            // general backlog while their dedicated CPUs sit unused.
+            bool FeedsIdleLane(CheckJob input) => pending.Any(next => next.Lane != input.Lane &&
+                next.Dependencies.Contains(input.Name, StringComparer.Ordinal) && !running.Values.Any(active => active.Lane == next.Lane));
+            foreach (var job in pending.OrderByDescending(FeedsIdleLane).ThenByDescending(job => priorities[job.Name]).ToArray())
             {
                 if (!job.Dependencies.All(done.ContainsKey)) continue;
                 var lane = running.Values.Where(row => row.Lane == job.Lane).ToArray();

@@ -524,6 +524,7 @@ internal static partial class ReleaseCommands
             if (!File.Exists(path)) throw new IOException("Build input missing: " + path);
             inputs[name] = normalizeText ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(NormalizeCacheText(File.ReadAllText(path), root)))) : ReleaseRecords.HashFile(path);
         }
+        string? evaluatedSdkRoot = null;
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var outputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Output(string path)
@@ -542,6 +543,7 @@ internal static partial class ReleaseCommands
             ProcessRunner.RequireSuccess(probe, "Evaluate build cache inputs");
             using var doc = JsonDocument.Parse(probe.StandardOutput);
             var values = doc.RootElement.GetProperty("Properties");
+            evaluatedSdkRoot ??= Directory.GetParent(values.GetProperty("MSBuildSDKsPath").GetString()!)!.FullName;
             var frameworks = values.GetProperty("TargetFrameworks").GetString();
             if (values.GetProperty("TargetFramework").GetString() == "" && !string.IsNullOrWhiteSpace(frameworks))
             {
@@ -639,9 +641,9 @@ internal static partial class ReleaseCommands
         if (properties.FirstOrDefault(prop => prop.StartsWith("-p:SiemensEngineeringDirectory=", StringComparison.OrdinalIgnoreCase)) is { } api)
             foreach (var path in Directory.EnumerateFiles(api[(api.IndexOf('=') + 1)..], "*", SearchOption.AllDirectories)) Add(path);
         foreach (var config in arguments.Where(arg => arg.StartsWith("-p:RestoreConfigFile=", StringComparison.OrdinalIgnoreCase))) Add(config[(config.IndexOf('=') + 1)..]);
-        var compiler = ProcessRunner.Run(dotnet, ["msbuild", project, "-nologo", .. properties, "-getProperty:MSBuildSDKsPath"], root, environment);
-        ProcessRunner.RequireSuccess(compiler, "Locate SDK compiler");
-        var sdkRoot = Directory.GetParent(compiler.StandardOutput.Trim())!.FullName;
+        // The first input evaluation already reports the selected SDK. Avoid
+        // a second identical MSBuild evaluation just to read that property.
+        var sdkRoot = evaluatedSdkRoot ?? throw new IOException("SDK compiler location missing");
         foreach (var path in Directory.EnumerateFiles(sdkRoot, "*.dll", SearchOption.TopDirectoryOnly)) Add(path);
         foreach (var path in Directory.EnumerateFiles(Path.Combine(sdkRoot, "Roslyn"), "*", SearchOption.AllDirectories)) Add(path);
         var framework = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Reference Assemblies/Microsoft/Framework/.NETFramework/v4.8");

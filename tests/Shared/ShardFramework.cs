@@ -42,6 +42,7 @@ namespace TiaMcp.Engine.Tests.Shared
     internal sealed class ShardExecutor : XunitTestFrameworkExecutor
     {
         private readonly string assembly;
+        private readonly DateTime created = DateTime.UtcNow;
         internal ShardExecutor(AssemblyName name, ISourceInformationProvider source, IMessageSink sink)
             : base(name, source, sink) { assembly = name.Name!; }
 
@@ -69,7 +70,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 {
                     string cls = test.TestMethod.TestClass.Class.Name;
                     string costKey = TestShard.CostKey(cls, test.TestMethod.Method.Name, test.DisplayName, test is XunitTheoryTestCase);
-                    if (plan.TryGetValue(costKey, out int planned))
+                    if (plan.TryGetValue(costKey, out int planned) || plan.TryGetValue("C:" + cls, out planned))
                     {
                         if (planned < 0 || planned >= count) throw new InvalidOperationException("Cost shard outside shard count.");
                         return planned == index;
@@ -82,7 +83,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 });
             }
             string? timings = Environment.GetEnvironmentVariable("TIA_MCP_TEST_CASE_TIMINGS");
-            base.RunTestCases(cases, timings == null ? sink : new CostSink(sink, timings), options);
+            base.RunTestCases(cases, timings == null ? sink : new CostSink(sink, timings, created), options);
         }
     }
 
@@ -91,12 +92,28 @@ namespace TiaMcp.Engine.Tests.Shared
         private readonly IMessageSink inner;
         private readonly string path;
         private readonly Dictionary<string, Stopwatch> clocks = new Dictionary<string, Stopwatch>();
-        internal CostSink(IMessageSink inner, string path) { this.inner = inner; this.path = path; }
+        private readonly DateTime frameworkCreated;
+        private DateTime executionStarted;
+        private double caseSeconds;
+        private double constructorSeconds;
+        private Stopwatch? constructor;
+        internal CostSink(IMessageSink inner, string path, DateTime created) { this.inner = inner; this.path = path; frameworkCreated = created; }
         public bool OnMessage(IMessageSinkMessage message)
         {
+            if (message is ITestClassConstructionStarting) constructor = Stopwatch.StartNew();
+            if (message is ITestClassConstructionFinished && constructor != null) { constructorSeconds += constructor.Elapsed.TotalSeconds; constructor = null; }
+            if (message is ITestAssemblyStarting) executionStarted = DateTime.UtcNow;
+            if (message is ITestAssemblyFinished && Environment.GetEnvironmentVariable("TIA_MCP_TEST_PHASE_TIMINGS") is string phases)
+            {
+                using (var process = Process.GetCurrentProcess())
+                    File.WriteAllText(phases, "{\"pid\":" + process.Id + ",\"processStartUtc\":\"" + process.StartTime.ToUniversalTime().ToString("O") +
+                        "\",\"frameworkCreatedUtc\":\"" + frameworkCreated.ToString("O") + "\",\"executionStartUtc\":\"" + executionStarted.ToString("O") +
+                        "\",\"executionEndUtc\":\"" + DateTime.UtcNow.ToString("O") + "\",\"caseSeconds\":" + caseSeconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + ",\"constructorSeconds\":" + constructorSeconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "}");
+            }
             if (message is ITestCaseStarting start) clocks[start.TestCase.UniqueID] = Stopwatch.StartNew();
             if (message is ITestCaseFinished end && clocks.TryGetValue(end.TestCase.UniqueID, out var timer))
             {
+                caseSeconds += timer.Elapsed.TotalSeconds;
                 var test = end.TestCase;
                 string key = TestShard.CostKey(test.TestMethod.TestClass.Class.Name, test.TestMethod.Method.Name, test.DisplayName, test is XunitTheoryTestCase);
                 File.AppendAllText(path, Convert.ToBase64String(Encoding.UTF8.GetBytes(key)) + "\t" + timer.Elapsed.TotalSeconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "\n");

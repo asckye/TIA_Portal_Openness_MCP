@@ -33,4 +33,14 @@
       <HintPath>$(NuGetPackageRoot)/microsoft.bcl.asyncinterfaces/10.0.12/lib/net462/Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Target Name="CopyIsolatedEngineRuntimeForTests" AfterTargets="Build" Condition="'$(CheckAllVariant)' != ''">
+    <MSBuild Projects="@(_MSBuildProjectReferenceExistent)" Targets="GetCheckRuntime"
+             Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration);%(_MSBuildProjectReferenceExistent.SetPlatform);%(_MSBuildProjectReferenceExistent.SetTargetFramework)"
+             RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove)$(_GlobalPropertiesToRemoveFromProjectReferences)"
+             Condition="'%(_MSBuildProjectReferenceExistent.Filename)' == 'TiaMcp.Engine.V$(EngineRelease)'">
+      <Output TaskParameter="TargetOutputs" ItemName="_EngineRuntime" />
+    </MSBuild>
+    <ItemGroup><_EngineTestFiles Include="%(_EngineRuntime.Source)TiaMcp.Engine.V$(EngineRelease).exe;%(_EngineRuntime.Source)TiaMcp.Engine.V$(EngineRelease).exe.config;%(_EngineRuntime.Source)TiaMcp.Adapter.$(EngineRelease).dll" /></ItemGroup>
+    <Copy SourceFiles="@(_EngineTestFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -20,6 +20,7 @@ import statistics
 import time
 import urllib.error
 from types import SimpleNamespace
+from stability_process_diagnostics import snapshot as process_diagnostics
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -89,7 +90,9 @@ def process_sample(process):
         if not kernel.GetProcessAffinityMask(handle, ctypes.byref(affinity), ctypes.byref(system_affinity)):
             raise ctypes.WinError(ctypes.get_last_error())
         return {'privateBytes': counters.PrivateUsage, 'workingSetBytes': counters.WorkingSetSize,
-                'handleCount': handles.value, 'processorAffinity': format(affinity.value, 'X')}
+                'handleCount': handles.value, 'processorAffinity': format(affinity.value, 'X'),
+                'pid': process.pid, 'sampledAtUtc': datetime.now(timezone.utc).isoformat(),
+                **process_diagnostics(process.pid, handles.value)}
     finally:
         kernel.CloseHandle(handle)
 
@@ -205,7 +208,8 @@ def run_profile(args, transport, profile, run_dir):
             evidence_directory=run_dir, engine_worker=args.engine_worker, engine_catalog=args.engine_catalog,
             env_overrides={'TIA_MCP_DATA_DIRECTORY': str(data.resolve()),
                            'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
-                           'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics)}) as (rpc, http, logs):
+                           'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics),
+                           'TIA_MCP_TEST_STABILITY_TELEMETRY': str((run_dir / 'runtime-telemetry.jsonl').resolve())}) as (rpc, http, logs):
         hello = rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {},
                     'clientInfo': {'name': 'local-stability', 'version': '1'}})
         require('result' in hello, 'Initialization failed')
@@ -337,7 +341,12 @@ def run_profile(args, transport, profile, run_dir):
                     print(f'PASS V{args.major} {transport} {profile}: {batch + 1}/{args.rounds} rounds', flush=True)
         sample = process_sample(owned[0])
         # Preserve the same samples even when an unchanged bound fails below.
-        (run_dir / 'process-samples.json').write_text(json.dumps({'host': samples, 'worker': worker_samples}, indent=2) + '\n', encoding='utf-8')
+        telemetry_path = run_dir / 'runtime-telemetry.jsonl'
+        telemetry = [json.loads(line) for line in telemetry_path.read_text(encoding='utf-8').splitlines()] if telemetry_path.is_file() else []
+        for observed in samples:
+            matching = [row for row in telemetry if row['pid'] == observed['pid'] and row['atUtc'] <= observed['sampledAtUtc']]
+            if matching: observed['runtimeState'] = matching[-1]
+        (run_dir / 'process-samples.json').write_text(json.dumps({'host': samples, 'worker': worker_samples, 'hostPid': owned[0].pid, 'workerPid': worker_pid, 'clientPid': os.getpid()}, indent=2) + '\n', encoding='utf-8')
         require(sample['privateBytes'] < args.max_private_mib * 1024 * 1024, 'Host exceeded private memory bound')
         require(max(s['privateBytes'] for s in samples) < args.max_private_mib * 1024 * 1024, 'Sampled private memory exceeded bound')
         # Concurrent HTTP dispatch (P6-58) lets the thread pool grow, more so on a loaded machine, and that growth

@@ -10,7 +10,16 @@
     <ProjectReference Include="Fixture/Fixture.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <Target Name="CopyFixture" AfterTargets="Build">
-    <ItemGroup><FixtureFiles Include="Fixture/bin/$(Configuration)/net10.0/PromptTest.*.dll" /></ItemGroup>
+    <MSBuild Projects="@(_MSBuildProjectReferenceExistent)" Targets="GetCheckRuntime"
+             Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration);%(_MSBuildProjectReferenceExistent.SetPlatform);%(_MSBuildProjectReferenceExistent.SetTargetFramework)"
+             RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove)$(_GlobalPropertiesToRemoveFromProjectReferences)"
+             Condition="'$(CheckAllVariant)' != '' and '%(_MSBuildProjectReferenceExistent.Filename)' == 'Fixture'">
+      <Output TaskParameter="TargetOutputs" ItemName="_FixtureRuntime" />
+    </MSBuild>
+    <ItemGroup>
+      <FixtureFiles Include="Fixture/bin/$(Configuration)/net10.0/PromptTest.*.dll" Condition="'$(CheckAllVariant)' == ''" />
+      <FixtureFiles Include="%(_FixtureRuntime.Source)PromptTest.*.dll" Condition="'$(CheckAllVariant)' != ''" />
+    </ItemGroup>
     <Copy SourceFiles="@(FixtureFiles)" DestinationFolder="$(OutDir)fixtures" />
   </Target>
 </Project>

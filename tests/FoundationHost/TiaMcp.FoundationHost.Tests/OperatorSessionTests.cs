@@ -214,8 +214,9 @@ public sealed class OperatorSessionTests
                     ["dryRun"] = new JsonObject { ["present"] = false, ["default"] = false }, ["execution"] = "worker" }),
                 ["liteTools"] = new JsonArray(), ["serverInstructions"] = "Offline operator fixture." }.ToJsonString());
             Options = new Options { ReleaseKey = release, WorkerExe = exe, ApiDirectory = AppContext.BaseDirectory, BundledWorker = false,
-                BundleRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../..")), NativeEnabled = true,
+                BundleRoot = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), NativeEnabled = true,
                 EngineWorkerExe = release is "20" or "21" ? exe : null, EngineCatalog = catalog, Profile = "full" };
+            BundleLayout.Initialize(AppContext.BaseDirectory, Options.BundleRoot);
         }
         internal async Task<Session> Create(bool owned = false) => Options.EngineWorkerExe == null
             ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSession(Options, owned);

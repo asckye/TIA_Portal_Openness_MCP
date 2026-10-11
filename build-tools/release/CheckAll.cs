@@ -37,13 +37,15 @@ internal static partial class ReleaseCommands
         var masks = CheckAffinity.SplitForMachine(available, stabilityCores);
         int generalCores = System.Numerics.BitOperations.PopCount(masks.General);
         parallelism = Math.Min(parallelism, generalCores);
-        int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 2), Math.Min(2, stabilityCores));
+        int stabilityParallelism = Math.Min(FastSuites.Positive(options, "StabilityParallelism", 4), Math.Min(4, stabilityCores));
         var clock = Stopwatch.StartNew();
         using var load = CheckLoad.Start(Path.Combine(output, "process-load.json"));
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(Root, "tests/test-suites.json"), Root);
         var before = TrackedBytes();
         var timings = new List<CheckTiming>();
         var jobs = new List<CheckJob>();
+        if (options.Get("BaselineReport") is { } timingBaseline)
+            SuiteCosts.ImportReport(Path.GetDirectoryName(Path.GetFullPath(timingBaseline))!, Path.Combine(Root, "bin-build/check-timings"));
         CommandResult Tool(string name, params string[] args) => Isolated(name, dotnet, [typeof(ReleaseCommands).Assembly.Location, .. args]);
         CommandResult Python(string name, string script, params string[] args)
         {
@@ -81,6 +83,8 @@ internal static partial class ReleaseCommands
             FastSuites.Positive(options, "BuildParallelism", parallelism)));
         Wave();
         if (options.Has("BuildOnly") || !CheckAllPrerequisitesPassed(timings)) return Finish();
+        Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity")));
+        Wave();
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
         string harness = Path.Combine(Root, "tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe");
         string fixture(string release) => Path.Combine(Root, $"src/Engine/bin/check-all/TiaMcp.Engine.V{release}/sdk-{release}/Release/net48/TiaMcp.Engine.V{release}.exe");
@@ -259,7 +263,7 @@ internal static partial class ReleaseCommands
         var plan = jobs.Select(job => job with
         {
             Affinity = job.Affinity ?? masks.General,
-            EstimatedSeconds = job.Name == "preflight" ? 0 : costs.GetValueOrDefault(job.Name, job.EstimatedSeconds > 0 ? job.EstimatedSeconds : CheckAllEstimatedCost(job.Name)),
+            EstimatedSeconds = CheckAllJobCost(job, costs),
             Dependencies = job.Name is "migration-drift" or "preflight-5" ? ["generate-release-migration"] : job.Dependencies
         }).ToArray();
         var priorities = CheckScheduler.CriticalCosts(plan);
@@ -306,6 +310,10 @@ internal static partial class ReleaseCommands
     }
 
     internal static bool CheckAllPrerequisitesPassed(IEnumerable<CheckTiming> timings) => timings.All(row => row.Status == "passed");
+
+    internal static double CheckAllJobCost(CheckJob job, IReadOnlyDictionary<string, double> history) =>
+        job.Name == "preflight" ? 0 : job.EstimatedSeconds > 0 ? job.EstimatedSeconds
+        : history.TryGetValue(job.Name, out var seconds) ? seconds : CheckAllEstimatedCost(job.Name);
 
     private static double CheckAllEstimatedCost(string name) => name.StartsWith("responses-", StringComparison.Ordinal) ? 60
         : name.StartsWith("usage-v", StringComparison.Ordinal) || name.StartsWith("harness-", StringComparison.Ordinal) ? 25

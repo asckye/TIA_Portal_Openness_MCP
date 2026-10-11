@@ -71,7 +71,7 @@ public sealed class BundleRootTests : IDisposable
     [Fact]
     public void Development_test_host_reads_resources_without_an_override()
     {
-        string root = BundleLayout.RequireRoot(AppContext.BaseDirectory);
+        string root = BundleLayout.RequireRoot(TiaMcp.Engine.Tests.Shared.TestPaths.RegisteredOutput(AppContext.BaseDirectory));
         Assert.Equal(RepositoryRoot(), root);
         Assert.True(Directory.Exists(BundleLayout.RequirePath(root, "templates", true)));
         Assert.True(File.Exists(BundleLayout.RequirePath(root, "reference/siemens-openness/UPSTREAM.json")));

@@ -269,7 +269,11 @@ internal static class ReleaseRecords
     internal static IReadOnlyList<ReleaseArtifact> ReadRows(JsonElement record, string property) =>
         record.GetProperty(property).EnumerateArray().Select(row => new ReleaseArtifact(GetString(row, "path"), GetString(row, "sha256"))).ToArray();
 
-    internal static string HashFile(string path) => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
+    internal static string HashFile(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexStringLower(SHA256.HashData(stream));
+    }
 
     private static int GetInt(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.TryGetInt32(out var result) ? result : 0;
     private static bool GetBool(JsonElement element, string name) => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;

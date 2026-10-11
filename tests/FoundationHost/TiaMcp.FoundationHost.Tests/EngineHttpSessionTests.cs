@@ -236,7 +236,7 @@ public sealed class EngineHttpSessionTests
         internal string DataDirectory => directory;
         internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false)
         {
-            string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../.."));
+            string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
@@ -264,7 +264,7 @@ public sealed class EngineHttpSessionTests
             using var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); int port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
             string url = "http://127.0.0.1:" + port;
             var start = new ProcessStartInfo(gracefulShutdown ? exe : Path.ChangeExtension(typeof(foundationhost::TiaMcp.FoundationHost.HostOptions).Assembly.Location, ".exe")) {
-                UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = gracefulShutdown };
+                WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = gracefulShutdown };
             if (gracefulShutdown) start.ArgumentList.Add("--foundation-http-fixture");
             foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--engine-worker", exe, "--engine-catalog", catalog, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
             if (shortTimeout)

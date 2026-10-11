@@ -245,7 +245,7 @@ def engine_transports(args, temp, counts):
                 config.mkdir(exist_ok=True)
                 (config / 'approval.settings').write_text('enabled=false\ntimeoutSeconds=1\n', encoding='utf-8')
             process = subprocess.Popen(http_command + ['--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key'],
-                                       env=env, stdout=stderr, stderr=stderr)
+                                       env=env, cwd=temp, stdout=stderr, stderr=stderr)
             try:
                 deadline = time.monotonic() + 60
                 while True:
@@ -341,7 +341,7 @@ def main():
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile))
             command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
             with (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
-                p = subprocess.Popen(command, env=env, stderr=stderr, stdout=stderr)
+                p = subprocess.Popen(command, env=env, cwd=temp, stderr=stderr, stdout=stderr)
                 try:
                     first, second = Http(url), Http(url)
                     # Hosted runners can start the host slowly; an early exit fails at once with the host log.

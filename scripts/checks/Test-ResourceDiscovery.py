@@ -83,24 +83,28 @@ def engine_fixture_evidence(worker, exe=None):
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
            *, env_overrides=None, process_observer=None, evidence_directory=None,
            engine_worker=None, engine_catalog=None):
-    require((engine_worker is None) == (engine_catalog is None), 'Both SDK worker and catalog are required')
-    inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
-                  evidence_directory=evidence_directory, engine_worker=engine_worker, engine_catalog=engine_catalog)
-    if engine_worker is not None:
-        require(public_api is not None, 'SDK worker checks require --public-api')
-        with fixture_directory('engine-protocol-sdk-') as scratch:
-            portal_root = sdk_only_installation(public_api, major, Path(scratch))
+    # HTTP configuration watchers must not observe other checks' mutable tree.
+    with fixture_directory('host-content-root-') as content_root:
+        require((engine_worker is None) == (engine_catalog is None), 'Both SDK worker and catalog are required')
+        inputs = dict(env_overrides=env_overrides, process_observer=process_observer,
+                      evidence_directory=evidence_directory, content_root=Path(content_root), engine_worker=engine_worker, engine_catalog=engine_catalog)
+        if engine_worker is not None:
+            require(public_api is not None, 'SDK worker checks require --public-api')
+            with fixture_directory('engine-protocol-sdk-') as scratch:
+                portal_root = sdk_only_installation(public_api, major, Path(scratch))
+                with _server(exe, portal_root, major, transport, profile, harness, public_api, **inputs) as value:
+                    yield value
+        else:
             with _server(exe, portal_root, major, transport, profile, harness, public_api, **inputs) as value:
                 yield value
-    else:
-        with _server(exe, portal_root, major, transport, profile, harness, public_api, **inputs) as value:
-            yield value
 
 
 @contextmanager
 def _server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
-           *, env_overrides=None, process_observer=None, evidence_directory=None,
+           *, env_overrides=None, process_observer=None, evidence_directory=None, content_root=None,
            engine_worker=None, engine_catalog=None):
+    exe = Path(exe).resolve()
+    if portal_root is not None: portal_root = Path(portal_root).resolve()
     port = 0
     if transport == 'http':
         with socket.socket() as sock:
@@ -132,7 +136,7 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
         env.update(env_overrides)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, encoding='utf-8',
-                               env=env, creationflags=subprocess.CREATE_NO_WINDOW)
+                               env=env, cwd=content_root, creationflags=subprocess.CREATE_NO_WINDOW)
     output, errors = queue.Queue(), []
 
     def drain_stdout():
