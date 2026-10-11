@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "8b22a2609234a0afda9f0d1bea5798ec86a67aedb9c4167ff28b9844c5bc7893",
+  "catalogSha256": "6444f13f599cbe3e8b4331147039a36d6110ba339afc91f821de23af13e3351c",
   "uniqueTools": 514,
   "documents": 89,
   "versionToolPairs": 2526,
