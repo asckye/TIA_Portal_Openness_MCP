@@ -230,7 +230,8 @@ internal static class FoundationPassiveDiagnostics
             var name = tool.ProtocolTool.Name;
             if (name.Length > 128) throw new InvalidOperationException();
             var definition = FoundationTools.Definitions.SingleOrDefault(d => FoundationV4Tool.Name(d.Name) == name);
-            bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name);
+            bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name);
             var operations = ported ? PortedToolContract.WiredOperations(name) : null;
             var row = new JsonObject { ["name"] = name, ["execution"] = ported && operations!.Length != 0 || definition != null && definition.ResponseMember != "ImportStaging" ? "worker-protocol" : "host-only", ["wiredOperation"] = ported ? operations!.FirstOrDefault() : definition?.ResponseMember == "ImportStaging" ? null : definition?.Operation, ["objectSchemaContractValid"] = ObjectSchema(tool.ProtocolTool.InputSchema) };
             if (ported) row["wiredOperations"] = new JsonArray(operations!.Select(operation => (JsonNode)JsonValue.Create(operation)!).ToArray());

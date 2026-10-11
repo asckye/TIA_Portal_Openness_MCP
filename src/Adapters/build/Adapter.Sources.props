@@ -4,6 +4,20 @@
   <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
   <Import Project="$(MSBuildThisFileDirectory)../../Shared/shared-native/*.props" />
   <ItemGroup>
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5LegacyDocuments.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5DocumentExchange.cs" />
+
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Adapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Alarms.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Documents.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Dynamic.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Evidence.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5OpcUa.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Supervision.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5SupervisionExchange.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5TypeDocuments.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Worker.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOpcUaModelAccess.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/BlockDocumentExport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcServices.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationAdapter.cs" />

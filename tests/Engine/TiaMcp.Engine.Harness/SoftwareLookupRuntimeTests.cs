@@ -215,11 +215,13 @@ internal static class SoftwareLookupRuntimeTests
             "EXE session PLC resolver forwards to the same kernel", sessionForwarder, kernel);
         foreach (var name in new[] { "ImportPlcTagTable", "ImportAlarmClasses", "SetOpcUaInterfaceEnabled", "DownloadToPlc", "GoOnline" })
         {
-            var writer = name == "GoOnline"
+            var moved = name is "ImportAlarmClasses" or "SetOpcUaInterfaceEnabled";
+            var writer = moved ? portal.Adapter.GetType("TiaMcp.Adapters.Native.Plc.PlcB5Adapter", true)!.GetMethod(name, BindingFlags.Public | BindingFlags.Instance)!
+                : name == "GoOnline"
                 ? portal.Method(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool) })
                 : portal.Method(name);
-            var resolver = writer.DeclaringType == kernel.DeclaringType ? kernel : sessionResolver;
-            EngineSurface.CheckIl(check, Calls(writer, resolver, 1), "EXE write path records Write through same PLC kernel: " + name, writer, resolver);
+            var resolver = moved ? nativeResolver : writer.DeclaringType == kernel.DeclaringType ? kernel : sessionResolver;
+            EngineSurface.CheckIl(check, EngineSurface.MethodFamily(writer).Any(member => Calls(member, resolver, 1)), "Native write path records Write through same PLC kernel: " + name, writer, resolver);
         }
         EngineSurface.CheckIl(check, Calls(portal.Method("GetPlcSoftware"), kernel, 0), "EXE read path records Read through same PLC kernel", kernel);
         var strict = server.GetType("TiaMcpServer.Siemens.SoftwareContainerLookup", true)!

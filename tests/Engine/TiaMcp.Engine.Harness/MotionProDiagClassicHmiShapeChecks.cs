@@ -141,19 +141,21 @@ internal static class MotionProDiagClassicHmiShapeChecks
             (Name: "ClassicHmiFolders", Ported: false, Field: "_classicHmiFolders", Tools: new[] {
                 "GetClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic" }),
             (Name: "MotionProDiagClassicHmi", Ported: false, Field: "_motionProDiagClassicHmi", Tools: new[] {
-                "ManagePlcSupervision", "ListClassicHmiScripts",
+                "ListClassicHmiScripts",
                 "ManageClassicHmiScript", "ManageClassicHmiCycle", "ManageClassicHmiTextGraphicList",
-                "GetClassicHmiGlobalization", "ListClassicHmiFaceplates", "ExportPlcProDiagInfo" }),
+                "GetClassicHmiGlobalization", "ListClassicHmiFaceplates" }),
+            (Name: "PlcProDiag", Ported: true, Field: "_service", Tools: new[] {
+                "ManagePlcSupervision", "ExportPlcProDiagInfo" }),
             (Name: "PlcMotion", Ported: true, Field: "_technology", Tools: new[] {
                 "GetMotionAxisConfiguration", "ManageMotionAxis", "ExchangeMotionCamData", "ConfigureMotionHardwareConnection" }) })
         {
-            var service = server.GetType("TiaMcpServer.Siemens.Services." + (domain.Ported ? "PlcOrganisationPort" : domain.Name) + "Service", true)!;
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + (domain.Name == "PlcProDiag" ? "PlcB5Port" : domain.Ported ? "PlcOrganisationPort" : domain.Name) + "Service", true)!;
             var toolType = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             var registered = toolType.GetMethods(all).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
                 .Select(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? m.Name).OrderBy(name => name).ToArray();
             check(registered.SequenceEqual(domain.Tools.OrderBy(name => name)), domain.Name + " registers exactly the V4 names without aliases");
             foreach (var type in new[] { service, toolType })
-                check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
+                check((type.IsSealed || domain.Name == "PlcProDiag" && type == service) && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
                     type.FullName + " is a non-disposable singleton class");
             foreach (var name in domain.Tools)
             {
@@ -182,6 +184,17 @@ internal static class MotionProDiagClassicHmiShapeChecks
                 check(tool.ReturnType == typeof(CallToolResult) && tool.GetParameters().All(p =>
                     p.Name != "targetJson" && p.Name != "propertiesJson" && p.Name != "attributesJson"),
                     name + " exposes the V4 transport and parameter names");
+                if (domain.Name == "PlcProDiag")
+                {
+                    var ownership = (IReadOnlyDictionary<string, string>)Assembly.Load("TiaMcp.Logic")
+                        .GetType("TiaMcpServer.ModelContextProtocol.ToolExecution", true)!.GetField("Table", all)!.GetValue(null)!;
+                    check(ownership[name] == "foundation", name + " executes through Foundation portal admission");
+                    check(!service.GetFields(all).Any(field => field.FieldType.Name == "IEngineeringSession"),
+                        name + " port keeps native session objects behind the worker bridge");
+                    // The retired engine MCP host cannot exercise this dispatch path. B5HostPortsTests and
+                    // PortedPortalAdmissionTests assert the actual Foundation refusal and zero worker dispatch.
+                    continue;
+                }
                 // The harness has no bound project; every write retains its default preview.
                 var arguments = tool.GetParameters().Select(p => p.HasDefaultValue ? p.DefaultValue : "offline-target").ToArray();
                 var response = (CallToolResult)tools.Invoke(tool, arguments)!;

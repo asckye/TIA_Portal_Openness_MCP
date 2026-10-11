@@ -61,6 +61,10 @@ internal static class Program
         using (var engine = new PlcFoundationEngine(releaseKey, api))
         {
             engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
+            engine.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text, int.Parse(releaseKey), null).ToJsonString())!;
+#if !OPCUA_NO_EXTENSION
+            engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
+#endif
             var dispatcher = new FoundationWorkerDispatcher(engine, typeof(Program).Assembly);
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 dispatcher.Dispatch, () => dispatcher.State.IsAttached, () => dispatcher.Detached,

@@ -21,23 +21,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public MotionProDiagClassicHmiTools(MotionProDiagClassicHmiService service) => _motionProDiagClassicHmi = service;
 
-        [McpServerTool(Name="ManagePlcSupervision"), Description("[L2][PLC-Software][WRITE] ProDiag native object access on an exact PLC or block: read provider metadata (attributes, advertised compositions), readComposition/createEntry/deleteEntry through the official IEngineeringObject composition API (typeName must be advertised by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. Openness exposes no typed supervision list; XLSX bulk exchange is ExchangePlcSupervisions. Offline PLC for real writes; deletes need confirmDelete=true. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ManagePlcSupervision(
-            string softwarePath,
-            [Description("read | readComposition | createEntry | deleteEntry | setAttributes | exportSettings | importSettings. ")] string action,
-            string blockPath="",
-            [Description("providerKind: supervision | settings.")] string providerKind="supervision",
-            [Description("compositionName: exact name of the composition (collection) on the object.")] string compositionName="",
-            [Description("entryName: exact name of the entry inside the composition.")] string entryName="",
-            [Description("typeName: exact type name of the entry to create.")] string typeName="",
-            string filePath="",
-            AttributeMap<Scalar> attributes = null!,
-            int offset=0,
-            int limit=100,
-            bool confirmDelete=false,
-            bool dryRun=true)
-            => ClassicMotionToolContract.Invoke("ManagePlcSupervision", dryRun || action == "read" || action == "readComposition", action != "read" && action != "readComposition",
-                () => _motionProDiagClassicHmi.ManagePlcSupervision(softwarePath,action,blockPath,providerKind,compositionName,entryName,typeName,filePath,ClassicMotionToolContract.Json(attributes),offset,limit,confirmDelete,dryRun));
         [McpServerTool(Name="ListClassicHmiScripts"), Description("[L2][HMI-Classic][READ] Classic (non-Unified) WinCC VB scripts under an exact script folder path: folder tree, script names and every readable attribute advertised by the object. Script source is not a typed Openness property; export it with ManageClassicHmiScript. Live pagination; Unified targets are refused.")]
         public CallToolResult ListClassicHmiScripts(string softwarePath,string folderPath="",int offset=0,int limit=100)
             => ClassicMotionToolContract.Invoke("ListClassicHmiScripts", true, false,
@@ -99,16 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int limit=100)
             => ClassicMotionToolContract.Invoke("ListClassicHmiFaceplates", true, false,
                 () => _motionProDiagClassicHmi.ReadClassicHmiFaceplates(kind,libraryName,folderPath,offset,limit));
-        [McpServerTool(Name="ExportPlcProDiagInfo"), Description("[L2][PLC-Software][READ] Native CodeBlock.ExportProDIAGInfo: writes the alarm messages of one exact ProDiag FB (blockPath under BlockGroup or a unit's BlockGroup) as CSV files into an existing directoryPath on the TIA Portal machine and hashes the new files. Refused before the call unless the block is a ProDiag FB and consistent (compile first). Default dryRun=true; no project change. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ExportPlcProDiagInfo(
-            string softwarePath,
-            string blockPath,
-            [Description("directoryPath: folder on the TIA machine that receives the files.")] string directoryPath,
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            bool dryRun=true)
-            => ClassicMotionToolContract.Invoke("ExportPlcProDiagInfo", dryRun, true,
-                () => _motionProDiagClassicHmi.ExportPlcProDiagInfo(softwarePath,blockPath,directoryPath,unitName,unitKind,dryRun));
+
 
     }
 }

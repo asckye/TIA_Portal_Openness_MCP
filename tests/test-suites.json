@@ -108,7 +108,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12822,
+    "minimumPassed": 12835,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -116,12 +116,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 11674,
+        "minimumPassed": 11687,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 11674,
+        "minimumPassed": 11687,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -129,7 +129,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12822,
+    "minimumPassed": 12835,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -137,12 +137,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 9130,
+        "minimumPassed": 9143,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 9130,
+        "minimumPassed": 9143,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -186,17 +186,17 @@
   },
   "adapter-contracts": {
     "project": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-    "minimumPassed": 707,
+    "minimumPassed": 736,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 704,
+        "minimumPassed": 733,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       },
       "macos": {
-        "minimumPassed": 704,
+        "minimumPassed": 733,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       }

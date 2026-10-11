@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -164,9 +163,9 @@ namespace AddInOpcUaInterface.Phases.Phase4
                         // Handle Software Unit data types that reference a type defined in the device (PLC)
                         if (Ctx.IsSoftwareUnit)
                         {
-                            if (dataType.StartsWith(Ctx.GetSelectedSoftwareUnit().Name))
+                            if (dataType.StartsWith(Ctx.SelectedUnitName()))
                             {
-                                dataType = dataType.Substring(Ctx.GetSelectedSoftwareUnit().Name.Length + 1);
+                                dataType = dataType.Substring(Ctx.SelectedUnitName().Length + 1);
                             }
                         }
 

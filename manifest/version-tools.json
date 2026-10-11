@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 214,
+      "toolCount": 215,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -107,6 +107,7 @@
         "GetPlcBlockEditCapabilities",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
+        "GetPlcBlockScopes",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
@@ -225,7 +226,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 230,
+      "toolCount": 237,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -291,6 +292,7 @@
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExportDeviceAml",
+        "ExportOpcUaInterface",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -304,6 +306,7 @@
         "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
         "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GetDeviceAddressing",
@@ -330,8 +333,10 @@
         "GetPlcBlockEditCapabilities",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
+        "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
+        "GetPlcOpcUaConfiguration",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
@@ -349,6 +354,7 @@
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportDeviceAml",
+        "ImportOpcUaInterface",
         "ImportPlcBlock",
         "ImportPlcBlockVerified",
         "ImportPlcBlocksFromDirectory",
@@ -395,6 +401,7 @@
         "ManageLibraryTypeVersion",
         "ManageMachineDescription",
         "ManageMotionAxis",
+        "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcExternalSources",
         "ManagePlcTableEntries",
@@ -444,6 +451,7 @@
         "SetDeviceItemAttribute",
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
@@ -461,7 +469,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 241,
+      "toolCount": 253,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -526,7 +534,11 @@
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeMotionCamData",
+        "ExchangePlcAlarmTextLists",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
         "ExportDeviceAml",
+        "ExportOpcUaInterface",
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
@@ -542,6 +554,7 @@
         "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
         "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GetDeviceAddressing",
@@ -568,8 +581,10 @@
         "GetPlcBlockEditCapabilities",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
+        "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
+        "GetPlcOpcUaConfiguration",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
@@ -586,8 +601,11 @@
         "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
+        "ImportAlarmTextLists",
         "ImportDeviceAml",
         "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface",
+        "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
         "ImportPlcBlockVerified",
         "ImportPlcBlocksFromDirectory",
@@ -639,6 +657,7 @@
         "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageNetworkDomain",
+        "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcExternalSources",
         "ManagePlcSoftwareUnit",
@@ -690,6 +709,7 @@
         "SetDeviceItemAttribute",
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcUnitObjectAccess",
         "ShowObjectInEditor",
@@ -708,7 +728,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 243,
+      "toolCount": 260,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -773,10 +793,17 @@
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeMotionCamData",
+        "ExchangePlcAlarmTextLists",
+        "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
+        "ExportAlarmClasses",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
         "ExportDeviceAml",
+        "ExportOpcUaInterface",
         "ExportPlcBlock",
         "ExportPlcBlocks",
+        "ExportPlcProDiagInfo",
         "ExportPlcTagTable",
         "ExportPlcType",
         "ExportPlcTypes",
@@ -790,6 +817,7 @@
         "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
         "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GetDeviceAddressing",
@@ -816,8 +844,10 @@
         "GetPlcBlockEditCapabilities",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
+        "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
+        "GetPlcOpcUaConfiguration",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
@@ -834,8 +864,12 @@
         "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
+        "ImportAlarmClasses",
+        "ImportAlarmTextLists",
         "ImportDeviceAml",
         "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface",
+        "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
         "ImportPlcBlockVerified",
         "ImportPlcBlocksFromDirectory",
@@ -887,9 +921,11 @@
         "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageNetworkDomain",
+        "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcExternalSources",
         "ManagePlcSoftwareUnit",
+        "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
@@ -938,6 +974,7 @@
         "SetDeviceItemAttribute",
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
@@ -957,7 +994,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 249,
+      "toolCount": 267,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1025,10 +1062,17 @@
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeMotionCamData",
+        "ExchangePlcAlarmTextLists",
+        "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
+        "ExportAlarmClasses",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
         "ExportDeviceAml",
+        "ExportOpcUaInterface",
         "ExportPlcBlock",
         "ExportPlcBlocks",
+        "ExportPlcProDiagInfo",
         "ExportPlcTagTable",
         "ExportPlcType",
         "ExportPlcTypes",
@@ -1042,6 +1086,7 @@
         "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
         "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GetDeviceAddressing",
@@ -1068,9 +1113,11 @@
         "GetPlcBlockEditCapabilities",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
+        "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcCrossReferences",
         "GetPlcObjectFingerprints",
+        "GetPlcOpcUaConfiguration",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
@@ -1087,8 +1134,12 @@
         "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
+        "ImportAlarmClasses",
+        "ImportAlarmTextLists",
         "ImportDeviceAml",
         "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface",
+        "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
         "ImportPlcBlockVerified",
         "ImportPlcBlocksFromDirectory",
@@ -1141,9 +1192,12 @@
         "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageNetworkDomain",
+        "ManageOpcUaInterface",
+        "ManagePlcAlarmTextList",
         "ManagePlcBlockProtection",
         "ManagePlcExternalSources",
         "ManagePlcSoftwareUnit",
+        "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
@@ -1192,6 +1246,7 @@
         "SetDeviceItemAttribute",
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcProgram",
         "SetPlcUnitObjectAccess",
@@ -1212,7 +1267,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 259,
+      "toolCount": 277,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1287,10 +1342,17 @@
         "DisconnectPortal",
         "EnsureSubnet",
         "ExchangeMotionCamData",
+        "ExchangePlcAlarmTextLists",
+        "ExchangePlcSupervisions",
         "ExchangeSystemDiagnosticsSettings",
+        "ExportAlarmClasses",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
         "ExportDeviceAml",
+        "ExportOpcUaInterface",
         "ExportPlcBlock",
         "ExportPlcBlocks",
+        "ExportPlcProDiagInfo",
         "ExportPlcTagTable",
         "ExportPlcType",
         "ExportPlcTypes",
@@ -1304,6 +1366,7 @@
         "GenerateAcceptanceReport",
         "GenerateBlocksFromExternalSource",
         "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GetDeviceAddressing",
@@ -1330,9 +1393,11 @@
         "GetPlcBlockEditCapabilities",
         "GetPlcBlockHierarchy",
         "GetPlcBlockInfo",
+        "GetPlcBlockScopes",
         "GetPlcChecksums",
         "GetPlcCrossReferences",
         "GetPlcObjectFingerprints",
+        "GetPlcOpcUaConfiguration",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
@@ -1349,8 +1414,12 @@
         "GetV21EcosystemCatalog",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
+        "ImportAlarmClasses",
+        "ImportAlarmTextLists",
         "ImportDeviceAml",
         "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface",
+        "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
         "ImportPlcBlockVerified",
         "ImportPlcBlocksFromDirectory",
@@ -1403,9 +1472,12 @@
         "ManageMachineDescription",
         "ManageMotionAxis",
         "ManageNetworkDomain",
+        "ManageOpcUaInterface",
+        "ManagePlcAlarmTextList",
         "ManagePlcBlockProtection",
         "ManagePlcExternalSources",
         "ManagePlcSoftwareUnit",
+        "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
@@ -1457,6 +1529,7 @@
         "SetDeviceItemAttribute",
         "SetDeviceItemChannel",
         "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcProgram",
         "SetPlcUnitObjectAccess",
@@ -2506,8 +2579,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 214,
-    "shared-subset": 289,
+    "all-releases": 215,
+    "shared-subset": 288,
     "release-only": 11
   },
   "tools": [
@@ -3956,6 +4029,10 @@
     {
       "name": "ExchangePlcAlarmTextLists",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -3965,6 +4042,9 @@
     {
       "name": "ExchangePlcSupervisions",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4013,6 +4093,9 @@
     {
       "name": "ExportAlarmClasses",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4022,6 +4105,10 @@
     {
       "name": "ExportAlarmInstanceTexts",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4031,6 +4118,10 @@
     {
       "name": "ExportAlarmTextLists",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4091,6 +4182,11 @@
     {
       "name": "ExportOpcUaInterface",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4148,6 +4244,9 @@
     {
       "name": "ExportPlcProDiagInfo",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4374,6 +4473,11 @@
     {
       "name": "GenerateOpcUaModelledInterface",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4890,10 +4994,16 @@
     {
       "name": "GetPlcBlockScopes",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -4956,6 +5066,11 @@
     {
       "name": "GetPlcOpcUaConfiguration",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5456,6 +5571,9 @@
     {
       "name": "ImportAlarmClasses",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5465,6 +5583,10 @@
     {
       "name": "ImportAlarmTextLists",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5556,6 +5678,11 @@
     {
       "name": "ImportOpcUaInterface",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5565,6 +5692,10 @@
     {
       "name": "ImportPlcAlarmInstanceTexts",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -6807,6 +6938,11 @@
     {
       "name": "ManageOpcUaInterface",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -6825,6 +6961,8 @@
     {
       "name": "ManagePlcAlarmTextList",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -6956,6 +7094,9 @@
     {
       "name": "ManagePlcSupervision",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8118,6 +8259,11 @@
     {
       "name": "SetOpcUaInterfaceEnabled",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],

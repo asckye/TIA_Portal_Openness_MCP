@@ -339,8 +339,8 @@ VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例�
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| 报警 | [AlarmsService](../../src/Engine/Siemens/Services/AlarmsService.cs) / [AlarmsTools](../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs) | 8 |
-| OPC UA | [OpcUaService](../../src/Engine/Siemens/Services/OpcUaService.cs) / [OpcUaTools](../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs) | 8 |
+| 报警 | [AlarmsService](../../src/Shared/PlcB5Services.cs) / [AlarmsTools](../../src/Shared/AlarmsTools.cs) | 8 |
+| OPC UA | [OpcUaService](../../src/Shared/PlcB5Services.cs) / [OpcUaTools](../../src/Shared/OpcUaTools.cs) | 8 |
 | 工艺对象 | [TechnologyObjectsService](../../src/Engine/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
 
 报警服务包括 `Step7Leftovers` 中的 XLSX 交换以及 `PlcBlockServices` 中的实例文本导入、文本列表管理；
@@ -369,8 +369,8 @@ OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具�
 | TestSuite | [TestSuiteService](../../src/Engine/Siemens/Services/TestSuiteService.cs) / [TestSuiteTools](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) | 4 |
 | V20Options | [V20OptionsService](../../src/Engine/Siemens/Services/V20OptionsService.cs) / [V20OptionsTools](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) | 5 |
 | OptionalEngineering | [OptionalEngineeringService](../../src/Engine/Siemens/Services/OptionalEngineeringService.cs) / [OptionalEngineeringTools](../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) | 2 |
-| SpecializedExchange | [SpecializedExchangeService](../../src/Engine/Siemens/Services/SpecializedExchangeService.cs) / [SpecializedExchangeTools](../../src/Engine/ModelContextProtocol/Tools/SpecializedExchangeTools.cs) | 1 |
-| SoftwareUnitDeep | [SoftwareUnitDeepService](../../src/Engine/Siemens/Services/SoftwareUnitDeepService.cs) / [SoftwareUnitDeepTools](../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) | 7 |
+| SpecializedExchange | [SpecializedExchangeService](../../src/Shared/PlcB5Services.cs) / [SpecializedExchangeTools](../../src/Shared/SpecializedExchangeTools.cs) | 1 |
+| SoftwareUnitDeep | [SoftwareUnitDeepService](../../src/Shared/PlcB5Services.cs) / [SoftwareUnitDeepTools](../../src/Shared/SoftwareUnitDeepTools.cs) | 7 |
 
 Motion、HMI、库及 SiVArc 生成工具已归入所属实例工具类；
 `ManagePlcSoftwareUnit` 归入 `SoftwareUnitDeepTools`。

@@ -3,9 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+#if OPCUA_NO_UNITS
+using PlcUnit = AddInOpcUaInterface.Other.NoUnit;
+#else
 using Siemens.Engineering.SW.Units;
+#endif
 namespace AddInOpcUaInterface.Other
 {
+#if OPCUA_NO_UNITS
+ internal sealed class NoUnit { public string Name => throw new NotSupportedException("PlcUnit requires V16."); }
+#endif
  internal sealed class AddInExecutionContext : IDisposable
  {
   [ThreadStatic] private static AddInExecutionContext current;
@@ -14,6 +21,7 @@ namespace AddInOpcUaInterface.Other
   public string SoftwareUnitNamespace;
   public PlcUnit Unit;
   public PlcUnit GetSelectedSoftwareUnit() => Unit;
+  public Func<string> SelectedUnitName;
   public readonly List<string> Warnings = new List<string>();
   public AddInExecutionContext() { if (current != null) throw new InvalidOperationException("Nested generation is not supported."); current = this; }
   public void Dispose() { current = null; }

@@ -127,6 +127,20 @@
     <Compile Include="../Shared/SecurityToolContract.cs" Link="Shared/SecurityToolContract.cs" />
     <Compile Include="../Shared/ReflectionTools.cs" Link="Shared/ReflectionTools.cs" />
     <Compile Include="../Shared/ReflectionPortService.cs" Link="Shared/ReflectionPortService.cs" />
+    <Compile Include="../Shared/AlarmsTools.cs" Link="Shared/AlarmsTools.cs" />
+    <Compile Include="../Shared/OpcUaTools.cs" Link="Shared/OpcUaTools.cs" />
+    <Compile Include="../Shared/EngineeringAuditTools.cs" Link="Shared/EngineeringAuditTools.cs" />
+    <Compile Include="../Shared/SoftwareUnitDeepTools.cs" Link="Shared/SoftwareUnitDeepTools.cs" />
+    <Compile Include="../Shared/SpecializedExchangeTools.cs" Link="Shared/SpecializedExchangeTools.cs" />
+    <Compile Include="../Shared/PlcProDiagTools.cs" Link="Shared/PlcProDiagTools.cs" />
+    <Compile Include="../Shared/PlcB5PortService.cs" Link="Shared/PlcB5PortService.cs" />
+    <Compile Include="../Shared/PlcB5Inputs.cs" Link="Shared/PlcB5Inputs.cs" />
+    <Compile Include="../Shared/OpcUaModelledNative.cs" Link="Shared/OpcUaModelledNative.cs" />
+    <Compile Include="../Shared/OptionalPackageContract.cs" Link="Shared/OptionalPackageContract.cs" />
+    <Compile Include="../Shared/DocumentsResponses.cs" Link="Shared/DocumentsResponses.cs" />
+    <Compile Include="../Shared/DocumentsTools.cs" Link="Shared/DocumentsTools.cs" />
+    <Compile Include="../Shared/DocumentsPortService.cs" Link="Shared/DocumentsPortService.cs" />
+    <Compile Include="../Shared/PlcB5Services.cs" Link="Shared/PlcB5Services.cs" />
     <Compile Include="../Shared/PortedToolDeclarations.cs" Link="Shared/PortedToolDeclarations.cs" />
     <Compile Include="../Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
   </ItemGroup>

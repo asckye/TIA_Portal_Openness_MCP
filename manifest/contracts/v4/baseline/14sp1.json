@@ -259,6 +259,26 @@
       "state": "current"
     },
     {
+      "entries": [
+        "GetPlcBlockScopes"
+      ],
+      "family": "F10",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [],
+      "family": "F14",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [],
+      "family": "F15",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
       "entries": [],
       "family": "F16",
       "l5": "NOT RUN",
@@ -11390,6 +11410,36 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "0532af97799fc13dee21f8ca04c20be4059b361ba85cef76ff271e3e964a92a9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "Page size 1..1000.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based page offset, at least 0.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "Exact PLC software name/path; empty selects project only where documented.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcBlockScopes",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "4c5d0949c2ef35ef159ec27cc197a369b735637a6f90a78aad6a3debf78e2091",

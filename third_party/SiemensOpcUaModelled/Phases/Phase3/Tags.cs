@@ -1,6 +1,7 @@
 // Adapted from Siemens OPC UA modelled interface, commit 317dfd06. See UPSTREAM.json and LICENSE.md.
 #nullable disable
 using System;
+using Native = TiaMcp.Adapters.Native.Plc.PlcOpcUaModelAccess;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,17 +34,17 @@ namespace AddInOpcUaInterface.Phases
         {
             var ctx = AddInExecutionContext.Current;
 
-            foreach (PlcTagTable table in tagTableGroup.TagTables)
+            foreach (PlcTagTable table in Native.Tables(tagTableGroup))
             {
-                foreach (PlcTag tag in table.Tags)
+                foreach (PlcTag tag in Native.Tags(table))
                 {
-                    string nodeId = $@"ns=2;s={tag.Name}";                                      // NodeId
+                    string nodeId = $@"ns=2;s={Native.Name(tag)}";                                      // NodeId
                     string parentNodeId = string.Empty;                                         // Parent NodeId
-                    string displayName = tag.Name;                                              // DisplayName
-                    string dataType = tag.DataTypeName;                                         // Data Type
-                    string logicalAddress = tag.LogicalAddress;                                 // Logical Address (Input, memory or output)
-                    bool externalAccessible = tag.ExternalAccessible;                           // Accessible from the OPC UA Server
-                    bool externalWritable = tag.ExternalWritable;                               // Writable. An OPC UA client can "overwrite" the value.
+                    string displayName = Native.Name(tag);                                              // DisplayName
+                    string dataType = Native.DataType(tag);                                         // Data Type
+                    string logicalAddress = Native.Address(tag);                                 // Logical Address (Input, memory or output)
+                    bool externalAccessible = Native.Accessible(tag);                           // Accessible from the OPC UA Server
+                    bool externalWritable = Native.Writable(tag);                               // Writable. An OPC UA client can "overwrite" the value.
                     int accessLevel = GetAccessLevel(externalAccessible, externalWritable);     // Access Level
 
                     dataType = dataType.Replace($@"""", string.Empty);
@@ -57,7 +58,7 @@ namespace AddInOpcUaInterface.Phases
                     else
                     {
                         // Normal Data Type
-                        dataType = tag.DataTypeName.ToUpper();
+                        dataType = Native.DataType(tag).ToUpper();
                     }
 
                     if (logicalAddress.Contains("%I"))
@@ -67,7 +68,7 @@ namespace AddInOpcUaInterface.Phases
                         // Only for the "Extend Create" case. An Access Level of 4 implies keeping the project's access level
                         if (ctx.InputsAccessLevel != 4)
                         {
-                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.InputsAccessLevel, tag.Name);
+                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.InputsAccessLevel, Native.Name(tag));
                         }
                     }
                     else if (logicalAddress.Contains("%M"))
@@ -77,7 +78,7 @@ namespace AddInOpcUaInterface.Phases
                         // Only for the "Extend Create" case. An Access Level of 4 implies keeping the project's access level
                         if (ctx.MemoryAccessLevel != 4)
                         {
-                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.MemoryAccessLevel, tag.Name);
+                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.MemoryAccessLevel, Native.Name(tag));
                         }
                     }
                     else if (logicalAddress.Contains("%Q"))
@@ -87,7 +88,7 @@ namespace AddInOpcUaInterface.Phases
                         // Only for the "Extend Create" case. An Access Level of 4 implies keeping the project's access level
                         if (ctx.OutputsAccessLevel != 4)
                         {
-                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.OutputsAccessLevel, tag.Name);
+                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.OutputsAccessLevel, Native.Name(tag));
                         }
                     }
                     else if (logicalAddress.Contains("C"))
@@ -97,7 +98,7 @@ namespace AddInOpcUaInterface.Phases
                         // Only for the "Extend Create" case. An Access Level of 4 implies keeping the project's access level
                         if (ctx.CountersAccessLevel != 4)
                         {
-                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.CountersAccessLevel, tag.Name);
+                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.CountersAccessLevel, Native.Name(tag));
                         }
                     }
                     else if (logicalAddress.Contains("T"))
@@ -107,7 +108,7 @@ namespace AddInOpcUaInterface.Phases
                         // Only for the "Extend Create" case. An Access Level of 4 implies keeping the project's access level
                         if (ctx.TimersAccessLevel != 4)
                         {
-                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.TimersAccessLevel, tag.Name);
+                            accessLevel = GetExtendedAccessLevel(accessLevel, ctx.TimersAccessLevel, Native.Name(tag));
                         }
                     }
 
@@ -146,7 +147,7 @@ namespace AddInOpcUaInterface.Phases
                     XElementTags.Add(uaTagElement);
                 }
             }
-            foreach (PlcTagTableGroup tableGroup in tagTableGroup.Groups)
+            foreach (PlcTagTableGroup tableGroup in Native.Groups(tagTableGroup))
             {
                 GetTagElements(tableGroup);
             }

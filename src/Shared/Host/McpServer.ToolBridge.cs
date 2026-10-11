@@ -267,6 +267,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
 #if TIA_ENGINE_HOST
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
                 || !TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine))
             {
                 var input = arguments ?? EmptyArguments();

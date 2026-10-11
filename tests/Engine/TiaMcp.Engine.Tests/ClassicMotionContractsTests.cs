@@ -25,6 +25,7 @@ namespace TiaMcp.Engine.Tests
         private readonly ToolCatalog catalog;
         private readonly MotionProDiagClassicHmiTools tools;
         private readonly PlcMotionTools motionTools;
+        private readonly PlcProDiagTools proDiagTools;
         private int portCalls;
         private JsonObject? lastPortArguments;
         private static readonly string[] Names = {
@@ -37,10 +38,11 @@ namespace TiaMcp.Engine.Tests
         public ClassicMotionContractsTests()
         {
             tools = new MotionProDiagClassicHmiTools(motion);
+            proDiagTools = new PlcProDiagTools(new PlcB5PortService((_, arguments) => { portCalls++; lastPortArguments = (JsonObject)arguments.DeepClone(); return new JsonObject { ["Message"] = "", ["Meta"] = new JsonObject { ["success"] = true } }; }, () => "fixture"));
             motionTools = new PlcMotionTools(new PlcOrganisationPortService((_, arguments) => { portCalls++; lastPortArguments = (JsonObject)arguments.DeepClone(); return new JsonObject { ["Message"] = "", ["Meta"] = new JsonObject { ["success"] = true } }; }, () => true, () => "fixture"));
-            catalog = new ToolCatalog(new[] { typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools), typeof(PlcMotionTools) });
+            catalog = new ToolCatalog(new[] { typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools), typeof(PlcMotionTools), typeof(PlcProDiagTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
-            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ClassicHmiFoldersTools(folders)).AddSingleton(tools).AddSingleton(motionTools).BuildServiceProvider());
+            EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ClassicHmiFoldersTools(folders)).AddSingleton(tools).AddSingleton(motionTools).AddSingleton(proDiagTools).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static ToolArguments Args(string json) => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));

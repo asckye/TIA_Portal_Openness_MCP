@@ -8,6 +8,12 @@
     <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ATTRIBUTE_DELEGATE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
+    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ALARM_TEXTS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ALARM_CLASSES;PLC_SUPERVISION</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_ALARM_LISTS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_OPC_UA</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_B5_V21;PLC_B5_V20_PLUS</DefineConstants>
+
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_INTEGRITY_PROVIDERS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_UNITS</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_MOTION_MODERN</DefineConstants>
@@ -54,4 +60,5 @@
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Engine'">
     <DefineConstants Condition="'$(TiaReleaseKey)' == '20'">$(DefineConstants);TIA_V20</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter' and '$(TiaReleaseKey)' == '20'"><DefineConstants>$(DefineConstants);PLC_B5_V20_PLUS</DefineConstants></PropertyGroup>
 </Project>

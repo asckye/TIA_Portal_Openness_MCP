@@ -118,16 +118,18 @@ internal static class TechnologyMappingShapeChecks
         })
         {
             var service = server.GetType("TiaMcpServer.Siemens.Services." + (domain.Item3 ? "PlcOrganisationPort" : domain.Item1) + "Service", true)!;
+            bool b5 = service.BaseType?.Name == "PlcB5PortService";
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Item1 + "Tools", true)!;
             var target = provider.GetService(service);
             var toolTarget = provider.GetService(tools);
             foreach (var type in new[] { service, tools })
                 check(type.IsSealed && !typeof(IDisposable).IsAssignableFrom(type)
                     && !type.GetInterfaces().Any(item => item.Name == "IAsyncDisposable"), type.Name + " is sealed and non-disposable");
-            check((domain.Item3 ? service.GetConstructors().Single().GetParameters().Length == 0
+            check((domain.Item3 || b5 ? service.GetConstructors().Single().GetParameters().Length == 0
                 : service.GetConstructors().Single().GetParameters().Single().ParameterType == sessionType)
                 && ReferenceEquals(target, provider.GetService(service)) && ReferenceEquals(toolTarget, provider.GetService(tools))
-                && (domain.Item3 ? service.GetField("call", all)!.GetValue(target) is Delegate : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
+                && (b5 ? service.BaseType!.GetField("call", all)!.GetValue(target) is Delegate
+                    : domain.Item3 ? service.GetField("call", all)!.GetValue(target) is Delegate : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                 && ReferenceEquals(tools.GetField(domain.Item3 ? "_technology" : "_service", all)!.GetValue(toolTarget), target),
                 domain.Item1 + " singletons share the engineering session");
             foreach (var name in domain.Item2.Split(' '))
@@ -143,7 +145,8 @@ internal static class TechnologyMappingShapeChecks
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
                 EngineSurface.CheckIl(check, callsService, name + " retains its domain service implementation", implementation, method);
-                check((domain.Item3 ? method : surface.Method(legacyName)).DeclaringType == (name == "ImportTechnologyObject" && !domain.Item3 ? kernel : service),
+                check((domain.Item3 || b5 ? method : surface.Method(legacyName)).DeclaringType == (b5 ? service.BaseType
+                    : name == "ImportTechnologyObject" && !domain.Item3 ? kernel : service),
                     name + " keeps its intended service or shared kernel owner");
             }
         }

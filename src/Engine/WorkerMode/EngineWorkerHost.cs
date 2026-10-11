@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -166,6 +167,10 @@ namespace TiaMcpServer.Worker
             foundation.RenderEngineeringValue = value => JsonSerializer.Deserialize<object>(EngineeringScalarProperties.Json(value)?.ToJsonString() ?? "null");
             portal.ResolvePortedEngineeringLibrary = foundation.ExactOpenEngineeringLibrary;
             foundation.EngineeringPlcOrganisationSession = new EnginePlcOrganisationSession(engineering, foundation);
+            foundation.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(EngineeringAuditLogic.DocumentPreflight(text, Engineering.TiaMajorVersion, null).ToJsonString())!;
+            foundation.PlcB5AutoOffline = (path, action) => OnlineToolPolicy.WithAutoOffline(action, path);
+            foundation.PlcB5ResolvedPath = SoftwareContainerLookup.PathOf;
+            foundation.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<Dictionary<string, object?>>(new OpcUaModelledNative(foundation.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
             foundation.SeedReferenceHmiImport = request => {
                 var exchange = EngineServices.Get<TiaMcpServer.Siemens.Services.HmiExchangeService>();
                 var reply = request.Kind == "tagTables" ? exchange.ImportHmiTagTablesFromDirectory(request.SoftwarePath, request.FolderPath, request.Directory)

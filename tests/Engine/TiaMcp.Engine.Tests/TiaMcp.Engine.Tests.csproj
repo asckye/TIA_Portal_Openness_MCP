@@ -42,10 +42,11 @@
     <Compile Include="../../../src/Shared/LibraryToolContract.cs" Link="LibraryToolContract.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs" Link="CfcTools.cs" />
+    <Compile Include="../../../src/Shared/OptionalPackageContract.cs" Link="OptionalPackageContract.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs" Link="V20OptionsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
+    <Compile Include="../../../src/Shared/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
     <Compile Include="../../../src/Shared/LibraryTools.cs" Link="LibraryTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />
@@ -174,10 +175,10 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/AlarmsTools.cs" Link="AlarmsTools.cs" />
+    <Compile Include="../../../src/Shared/AlarmsTools.cs" Link="AlarmsTools.cs" />
     <Compile Include="../../../src/Shared/EngineeringToolContract.cs" Link="EngineeringToolContract.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OpcUaTools.cs" Link="OpcUaTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs" Link="SoftwareUnitDeepTools.cs" />
+    <Compile Include="../../../src/Shared/OpcUaTools.cs" Link="OpcUaTools.cs" />
+    <Compile Include="../../../src/Shared/SoftwareUnitDeepTools.cs" Link="SoftwareUnitDeepTools.cs" />
     <Compile Include="../../../src/Shared/PlcIntegrityTools.cs" Link="PlcIntegrityTools.cs" />
     <Compile Include="../../../src/Shared/MotionProDiagClassicHmiLogic.cs" Link="Shared/MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="../../../src/Shared/RuntimeToolContract.cs" Link="RuntimeToolContract.cs" />
@@ -192,7 +193,7 @@
     <Compile Include="../../../src/Shared/Host/McpServer.ExportFailure.cs" Link="McpServer.ExportFailure.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs" Link="TechnologyObjectsTools.cs" />
     <Compile Include="../../../src/Shared/Host/EcosystemTools.cs" Link="EcosystemTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
+    <Compile Include="../../../src/Shared/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ImportStagingTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
@@ -255,5 +256,13 @@
     <Compile Include="../../../src/Shared/HardwareServicesPortService.cs" Link="Shared/HardwareServicesPortService.cs" />
     <Compile Include="../../../src/Shared/HardwareAmlTools.cs" Link="Shared/HardwareAmlTools.cs" />
     <Compile Include="../../../src/Shared/HardwareAmlService.cs" Link="Shared/HardwareAmlService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/PlcProDiagTools.cs" Link="PlcProDiagTools.cs" />
+    <Compile Include="../../../src/Shared/PlcB5PortService.cs" Link="PlcB5PortService.cs" />
+    <Compile Include="../../../src/Shared/PlcB5Inputs.cs" Link="PlcB5Inputs.cs" />
+    <Compile Include="../../../src/Shared/DocumentsPortService.cs" Link="DocumentsPortService.cs" />
+    <Compile Include="../../../src/Shared/DocumentsResponses.cs" Link="DocumentsResponses.cs" />
+    <Compile Include="../../../src/Shared/DocumentsTools.cs" Link="DocumentsTools.cs" />
   </ItemGroup>
 </Project>

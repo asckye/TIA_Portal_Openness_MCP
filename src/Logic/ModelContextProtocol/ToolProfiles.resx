@@ -470,6 +470,24 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F10",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F14",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F15",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F16",
       "state": "current",
       "l5": "NOT RUN"
@@ -572,6 +590,24 @@
     },
     {
       "releaseKey": "15.1",
+      "family": "F10",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F14",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F15",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
       "family": "F16",
       "state": "current",
       "l5": "NOT RUN"
@@ -674,6 +710,24 @@
     },
     {
       "releaseKey": "16",
+      "family": "F10",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F14",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F15",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F16",
       "state": "current",
       "l5": "NOT RUN"
@@ -776,6 +830,24 @@
     },
     {
       "releaseKey": "17",
+      "family": "F10",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F14",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F15",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F16",
       "state": "current",
       "l5": "NOT RUN"
@@ -878,6 +950,24 @@
     },
     {
       "releaseKey": "18",
+      "family": "F10",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F14",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F15",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F16",
       "state": "current",
       "l5": "NOT RUN"
@@ -975,6 +1065,24 @@
     {
       "releaseKey": "19",
       "family": "F13",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F10",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F14",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F15",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -5759,6 +5867,14 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "GetPlcBlockScopes",
+      "family": "F10",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "CompileDevice",
       "family": "F17",
       "example": {
@@ -7254,6 +7370,74 @@
         "objectPath": "Axis_1",
         "action": "read",
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcBlockScopes",
+      "family": "F10",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GenerateOpcUaModelledInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "namespaceUri": "urn:example:plc",
+        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcOpcUaConfiguration",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetOpcUaInterfaceEnabled",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "enabled": false
       }
     },
     {
@@ -8844,6 +9028,127 @@
         "objectPath": "Axis_1",
         "action": "read",
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcBlockScopes",
+      "family": "F10",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExchangePlcAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportPlcAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+        "dryRun": true,
+        "cultures": [
+          "en-US",
+          "zh-CN"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GenerateOpcUaModelledInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "namespaceUri": "urn:example:plc",
+        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcOpcUaConfiguration",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetOpcUaInterfaceEnabled",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "enabled": false
       }
     },
     {
@@ -10498,6 +10803,178 @@
         "objectPath": "Axis_1",
         "action": "read",
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcBlockScopes",
+      "family": "F10",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExchangePlcAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExchangePlcSupervisions",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportAlarmClasses",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcProDiagInfo",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "directoryPath": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportAlarmClasses",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportPlcAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+        "dryRun": true,
+        "cultures": [
+          "en-US",
+          "zh-CN"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcSupervision",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GenerateOpcUaModelledInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "namespaceUri": "urn:example:plc",
+        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcOpcUaConfiguration",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetOpcUaInterfaceEnabled",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "enabled": false
       }
     },
     {
@@ -12200,6 +12677,189 @@
         "objectPath": "Axis_1",
         "action": "read",
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcBlockScopes",
+      "family": "F10",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExchangePlcAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExchangePlcSupervisions",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportAlarmClasses",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcProDiagInfo",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "directoryPath": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportAlarmClasses",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportPlcAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+        "dryRun": true,
+        "cultures": [
+          "en-US",
+          "zh-CN"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcAlarmTextList",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcSupervision",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GenerateOpcUaModelledInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "namespaceUri": "urn:example:plc",
+        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcOpcUaConfiguration",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetOpcUaInterfaceEnabled",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "enabled": false
       }
     },
     {
@@ -14015,6 +14675,189 @@
         "objectPath": "Axis_1",
         "action": "read",
         "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcBlockScopes",
+      "family": "F10",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangePlcAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+        "confirmImport": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExchangePlcSupervisions",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "export",
+        "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportAlarmClasses",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcProDiagInfo",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "blockPath": "Main",
+        "directoryPath": "C:\\Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportAlarmClasses",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportAlarmTextLists",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportPlcAlarmInstanceTexts",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+        "dryRun": true,
+        "cultures": [
+          "en-US",
+          "zh-CN"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcAlarmTextList",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcSupervision",
+      "family": "F14",
+      "example": {
+        "softwarePath": "PLC_1",
+        "action": "read",
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GenerateOpcUaModelledInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "namespaceUri": "urn:example:plc",
+        "outputPath": "C:\\Examples\\generated\\result.xml",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcOpcUaConfiguration",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "importPath": "C:\\Examples\\exports\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageOpcUaInterface",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetOpcUaInterfaceEnabled",
+      "family": "F15",
+      "example": {
+        "softwarePath": "PLC_1",
+        "interfaceName": "Server interface_1",
+        "enabled": false
       }
     },
     {
@@ -36387,6 +37230,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockScopes",
+        "currentName": "GetPlcBlockScopes",
+        "sourceName": "ReadPlcBlockScopes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcSystemConstants",
         "currentName": "ListPlcSystemConstants",
         "sourceName": "ReadPlcSystemConstants",
@@ -38019,6 +38874,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportOpcUaInterface",
+        "currentName": "ExportOpcUaInterface",
+        "sourceName": "ExportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcTagTable",
         "currentName": "ExportPlcTagTable",
         "sourceName": "ExportPlcTagTable",
@@ -38173,6 +39042,22 @@
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateOpcUaModelledInterface",
+        "currentName": "GenerateOpcUaModelledInterface",
+        "sourceName": "GenerateOpcUaModelledInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "namespaceUri": "urn:example:plc",
+          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -38373,6 +39258,18 @@
           "objectKind": "Project",
           "objectPath": "",
           "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcOpcUaConfiguration",
+        "currentName": "GetPlcOpcUaConfiguration",
+        "sourceName": "GetOpcUaConfig",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
         },
         "envelopeVersion": 4
       },
@@ -38584,6 +39481,19 @@
           "logFilePath": "C:\\Examples\\import.log",
           "confirmImport": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportOpcUaInterface",
+        "currentName": "ImportOpcUaInterface",
+        "sourceName": "ImportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
         },
         "envelopeVersion": 4
       },
@@ -39543,6 +40453,21 @@
           "objectPath": "Axis_1",
           "action": "read",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageOpcUaInterface",
+        "currentName": "ManageOpcUaInterface",
+        "sourceName": "ManageOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -40727,6 +41652,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockScopes",
+        "currentName": "GetPlcBlockScopes",
+        "sourceName": "ReadPlcBlockScopes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcChecksums",
         "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
@@ -41152,6 +42089,20 @@
           "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetOpcUaInterfaceEnabled",
+        "currentName": "SetOpcUaInterfaceEnabled",
+        "sourceName": "SetOpcUaInterfaceEnabled",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "enabled": false
         },
         "envelopeVersion": 4
       },
@@ -42382,6 +43333,48 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangePlcAlarmTextLists",
+        "currentName": "ExchangePlcAlarmTextLists",
+        "sourceName": "ExchangePlcAlarmTextListsXlsx",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmInstanceTexts",
+        "currentName": "ExportAlarmInstanceTexts",
+        "sourceName": "ExportAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmTextLists",
+        "currentName": "ExportAlarmTextLists",
+        "sourceName": "ExportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcBlock",
         "currentName": "ExportPlcBlock",
         "sourceName": "ExportBlock",
@@ -42423,6 +43416,20 @@
         "arguments": {
           "devicePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\Device.aml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportOpcUaInterface",
+        "currentName": "ExportOpcUaInterface",
+        "sourceName": "ExportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
         },
         "envelopeVersion": 4
       },
@@ -42613,6 +43620,22 @@
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateOpcUaModelledInterface",
+        "currentName": "GenerateOpcUaModelledInterface",
+        "sourceName": "GenerateOpcUaModelledInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "namespaceUri": "urn:example:plc",
+          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -42817,6 +43840,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcOpcUaConfiguration",
+        "currentName": "GetPlcOpcUaConfiguration",
+        "sourceName": "GetOpcUaConfig",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -42978,6 +44013,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportAlarmTextLists",
+        "currentName": "ImportAlarmTextLists",
+        "sourceName": "ImportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlock",
         "currentName": "ImportPlcBlock",
         "sourceName": "ImportBlock",
@@ -43039,6 +44087,37 @@
           "masterCopyName": "FB_Motor",
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportOpcUaInterface",
+        "currentName": "ImportOpcUaInterface",
+        "sourceName": "ImportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcAlarmInstanceTexts",
+        "currentName": "ImportPlcAlarmInstanceTexts",
+        "sourceName": "ImportPlcAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -44043,6 +45122,21 @@
           "action": "create",
           "name": "ExampleSyncDomain",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageOpcUaInterface",
+        "currentName": "ManageOpcUaInterface",
+        "sourceName": "ManageOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -45266,6 +46360,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockScopes",
+        "currentName": "GetPlcBlockScopes",
+        "sourceName": "ReadPlcBlockScopes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcChecksums",
         "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
@@ -45703,6 +46809,20 @@
           "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetOpcUaInterfaceEnabled",
+        "currentName": "SetOpcUaInterfaceEnabled",
+        "sourceName": "SetOpcUaInterfaceEnabled",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "enabled": false
         },
         "envelopeVersion": 4
       },
@@ -46950,6 +48070,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangePlcAlarmTextLists",
+        "currentName": "ExchangePlcAlarmTextLists",
+        "sourceName": "ExchangePlcAlarmTextListsXlsx",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangePlcSupervisions",
+        "currentName": "ExchangePlcSupervisions",
+        "sourceName": "ExchangePlcSupervisions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeSystemDiagnosticsSettings",
         "currentName": "ExchangeSystemDiagnosticsSettings",
         "sourceName": "ExchangeSystemDiagnosticsSettings",
@@ -46961,6 +48112,45 @@
           "filePath": "C:\\Examples\\exports\\Main.xml",
           "confirmImport": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmClasses",
+        "currentName": "ExportAlarmClasses",
+        "sourceName": "ExportAlarmClasses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmInstanceTexts",
+        "currentName": "ExportAlarmInstanceTexts",
+        "sourceName": "ExportAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmTextLists",
+        "currentName": "ExportAlarmTextLists",
+        "sourceName": "ExportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -47006,6 +48196,35 @@
         "arguments": {
           "devicePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\Device.aml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportOpcUaInterface",
+        "currentName": "ExportOpcUaInterface",
+        "sourceName": "ExportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportPlcProDiagInfo",
+        "currentName": "ExportPlcProDiagInfo",
+        "sourceName": "ExportPlcProDiagInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "directoryPath": "C:\\Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -47196,6 +48415,22 @@
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateOpcUaModelledInterface",
+        "currentName": "GenerateOpcUaModelledInterface",
+        "sourceName": "GenerateOpcUaModelledInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "namespaceUri": "urn:example:plc",
+          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -47400,6 +48635,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcOpcUaConfiguration",
+        "currentName": "GetPlcOpcUaConfiguration",
+        "sourceName": "GetOpcUaConfig",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -47561,6 +48808,32 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportAlarmClasses",
+        "currentName": "ImportAlarmClasses",
+        "sourceName": "ImportAlarmClasses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportAlarmTextLists",
+        "currentName": "ImportAlarmTextLists",
+        "sourceName": "ImportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlock",
         "currentName": "ImportPlcBlock",
         "sourceName": "ImportBlock",
@@ -47622,6 +48895,37 @@
           "masterCopyName": "FB_Motor",
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportOpcUaInterface",
+        "currentName": "ImportOpcUaInterface",
+        "sourceName": "ImportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcAlarmInstanceTexts",
+        "currentName": "ImportPlcAlarmInstanceTexts",
+        "sourceName": "ImportPlcAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -48631,6 +49935,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOpcUaInterface",
+        "currentName": "ManageOpcUaInterface",
+        "sourceName": "ManageOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcBlockProtection",
         "currentName": "ManagePlcBlockProtection",
         "sourceName": "ManagePlcBlockProtection",
@@ -48673,6 +49992,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSupervision",
+        "currentName": "ManagePlcSupervision",
+        "sourceName": "ManagePlcSupervision",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "read",
+          "confirmDelete": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -49849,6 +51183,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockScopes",
+        "currentName": "GetPlcBlockScopes",
+        "sourceName": "ReadPlcBlockScopes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcChecksums",
         "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
@@ -50286,6 +51632,20 @@
           "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetOpcUaInterfaceEnabled",
+        "currentName": "SetOpcUaInterfaceEnabled",
+        "sourceName": "SetOpcUaInterfaceEnabled",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "enabled": false
         },
         "envelopeVersion": 4
       },
@@ -51586,6 +52946,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangePlcAlarmTextLists",
+        "currentName": "ExchangePlcAlarmTextLists",
+        "sourceName": "ExchangePlcAlarmTextListsXlsx",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangePlcSupervisions",
+        "currentName": "ExchangePlcSupervisions",
+        "sourceName": "ExchangePlcSupervisions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeSystemDiagnosticsSettings",
         "currentName": "ExchangeSystemDiagnosticsSettings",
         "sourceName": "ExchangeSystemDiagnosticsSettings",
@@ -51597,6 +52988,45 @@
           "filePath": "C:\\Examples\\exports\\Main.xml",
           "confirmImport": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmClasses",
+        "currentName": "ExportAlarmClasses",
+        "sourceName": "ExportAlarmClasses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmInstanceTexts",
+        "currentName": "ExportAlarmInstanceTexts",
+        "sourceName": "ExportAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmTextLists",
+        "currentName": "ExportAlarmTextLists",
+        "sourceName": "ExportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -51642,6 +53072,35 @@
         "arguments": {
           "devicePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\Device.aml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportOpcUaInterface",
+        "currentName": "ExportOpcUaInterface",
+        "sourceName": "ExportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportPlcProDiagInfo",
+        "currentName": "ExportPlcProDiagInfo",
+        "sourceName": "ExportPlcProDiagInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "directoryPath": "C:\\Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -51832,6 +53291,22 @@
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateOpcUaModelledInterface",
+        "currentName": "GenerateOpcUaModelledInterface",
+        "sourceName": "GenerateOpcUaModelledInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "namespaceUri": "urn:example:plc",
+          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -52051,6 +53526,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcOpcUaConfiguration",
+        "currentName": "GetPlcOpcUaConfiguration",
+        "sourceName": "GetOpcUaConfig",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -52212,6 +53699,32 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportAlarmClasses",
+        "currentName": "ImportAlarmClasses",
+        "sourceName": "ImportAlarmClasses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportAlarmTextLists",
+        "currentName": "ImportAlarmTextLists",
+        "sourceName": "ImportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlock",
         "currentName": "ImportPlcBlock",
         "sourceName": "ImportBlock",
@@ -52273,6 +53786,37 @@
           "masterCopyName": "FB_Motor",
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportOpcUaInterface",
+        "currentName": "ImportOpcUaInterface",
+        "sourceName": "ImportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcAlarmInstanceTexts",
+        "currentName": "ImportPlcAlarmInstanceTexts",
+        "sourceName": "ImportPlcAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -53303,6 +54847,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOpcUaInterface",
+        "currentName": "ManageOpcUaInterface",
+        "sourceName": "ManageOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcAlarmTextList",
+        "currentName": "ManagePlcAlarmTextList",
+        "sourceName": "ManagePlcAlarmTextList",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcBlockProtection",
         "currentName": "ManagePlcBlockProtection",
         "sourceName": "ManagePlcBlockProtection",
@@ -53345,6 +54919,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSupervision",
+        "currentName": "ManagePlcSupervision",
+        "sourceName": "ManagePlcSupervision",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "read",
+          "confirmDelete": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -54521,6 +56110,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockScopes",
+        "currentName": "GetPlcBlockScopes",
+        "sourceName": "ReadPlcBlockScopes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcChecksums",
         "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
@@ -54958,6 +56559,20 @@
           "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetOpcUaInterfaceEnabled",
+        "currentName": "SetOpcUaInterfaceEnabled",
+        "sourceName": "SetOpcUaInterfaceEnabled",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "enabled": false
         },
         "envelopeVersion": 4
       },
@@ -56384,6 +57999,37 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExchangePlcAlarmTextLists",
+        "currentName": "ExchangePlcAlarmTextLists",
+        "sourceName": "ExchangePlcAlarmTextListsXlsx",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
+          "confirmImport": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExchangePlcSupervisions",
+        "currentName": "ExchangePlcSupervisions",
+        "sourceName": "ExchangePlcSupervisions",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "export",
+          "filePath": "C:\\Examples\\exports\\Supervisions.xlsx",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExchangeSystemDiagnosticsSettings",
         "currentName": "ExchangeSystemDiagnosticsSettings",
         "sourceName": "ExchangeSystemDiagnosticsSettings",
@@ -56395,6 +58041,45 @@
           "filePath": "C:\\Examples\\exports\\Main.xml",
           "confirmImport": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmClasses",
+        "currentName": "ExportAlarmClasses",
+        "sourceName": "ExportAlarmClasses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmInstanceTexts",
+        "currentName": "ExportAlarmInstanceTexts",
+        "sourceName": "ExportAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmInstanceTexts.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportAlarmTextLists",
+        "currentName": "ExportAlarmTextLists",
+        "sourceName": "ExportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "exportPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4
       },
@@ -56440,6 +58125,35 @@
         "arguments": {
           "devicePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports\\Device.aml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportOpcUaInterface",
+        "currentName": "ExportOpcUaInterface",
+        "sourceName": "ExportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "exportPath": "C:\\Examples\\exports\\ExportOpcUaInterface.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportPlcProDiagInfo",
+        "currentName": "ExportPlcProDiagInfo",
+        "sourceName": "ExportPlcProDiagInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "Main",
+          "directoryPath": "C:\\Examples",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -56630,6 +58344,22 @@
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
           "severity": "error"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GenerateOpcUaModelledInterface",
+        "currentName": "GenerateOpcUaModelledInterface",
+        "sourceName": "GenerateOpcUaModelledInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "namespaceUri": "urn:example:plc",
+          "outputPath": "C:\\Examples\\generated\\result.xml",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -56849,6 +58579,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcOpcUaConfiguration",
+        "currentName": "GetPlcOpcUaConfiguration",
+        "sourceName": "GetOpcUaConfig",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -57010,6 +58752,32 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportAlarmClasses",
+        "currentName": "ImportAlarmClasses",
+        "sourceName": "ImportAlarmClasses",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmClasses.dat"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportAlarmTextLists",
+        "currentName": "ImportAlarmTextLists",
+        "sourceName": "ImportAlarmTextLists",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\ExportAlarmTextLists.xlsx"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlock",
         "currentName": "ImportPlcBlock",
         "sourceName": "ImportBlock",
@@ -57071,6 +58839,37 @@
           "masterCopyName": "FB_Motor",
           "hmiSoftwarePath": "HMI_RT_1",
           "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportOpcUaInterface",
+        "currentName": "ImportOpcUaInterface",
+        "sourceName": "ImportOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "importPath": "C:\\Examples\\exports\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ImportPlcAlarmInstanceTexts",
+        "currentName": "ImportPlcAlarmInstanceTexts",
+        "sourceName": "ImportPlcAlarmInstanceTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "filePath": "C:\\Examples\\exports\\AlarmTexts.xlsx",
+          "dryRun": true,
+          "cultures": [
+            "en-US",
+            "zh-CN"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -58101,6 +59900,36 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageOpcUaInterface",
+        "currentName": "ManageOpcUaInterface",
+        "sourceName": "ManageOpcUaInterface",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcAlarmTextList",
+        "currentName": "ManagePlcAlarmTextList",
+        "sourceName": "ManagePlcAlarmTextList",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcBlockProtection",
         "currentName": "ManagePlcBlockProtection",
         "sourceName": "ManagePlcBlockProtection",
@@ -58143,6 +59972,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcSupervision",
+        "currentName": "ManagePlcSupervision",
+        "sourceName": "ManagePlcSupervision",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "read",
+          "confirmDelete": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -59333,6 +61177,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcBlockScopes",
+        "currentName": "GetPlcBlockScopes",
+        "sourceName": "ReadPlcBlockScopes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcChecksums",
         "currentName": "GetPlcChecksums",
         "sourceName": "ReadPlcChecksums",
@@ -59792,6 +61648,20 @@
           "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetOpcUaInterfaceEnabled",
+        "currentName": "SetOpcUaInterfaceEnabled",
+        "sourceName": "SetOpcUaInterfaceEnabled",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "interfaceName": "Server interface_1",
+          "enabled": false
         },
         "envelopeVersion": 4
       },

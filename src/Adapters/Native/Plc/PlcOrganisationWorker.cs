@@ -199,7 +199,9 @@ namespace TiaMcp.Adapters
                 foreach (var device in project.Devices) Device(device, Array.Empty<string>(), "devices");
                 foreach (var group in project.DeviceGroups) Group(group, Array.Empty<string>(), "device-groups", 0);
                 foreach (var device in project.UngroupedDevicesGroup.Devices) Device(device, Array.Empty<string>(), "ungrouped");
-                return PlcReadPathPolicy.Select(values, path).Value;
+                var selected = PlcReadPathPolicy.Select(values, path);
+                engine.RememberB5Container(selected.Value, selected.ExactPath + "/" + selected.Host);
+                return selected.Value;
             }
 
             public PlcSoftware? GetPlcSoftware(string path) => engine.ReadSelection(path).Value;

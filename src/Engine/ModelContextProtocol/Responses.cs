@@ -39,19 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? Description { get; set; }
     }
 
-    public class ResponseBlockInfo : ResponseAttributes
-    {
-        public string? TypeName { get; set; }
-        public string? Name { get; set; }
-        public string? Namespace { get; set; }
-        public string? ProgrammingLanguage { get; set; }
-        public string? MemoryLayout { get; set; }
-        public bool? IsConsistent { get; set; }
-        public string? HeaderName { get; set; }
-        public DateTime? ModifiedDate { get; set; }
-        public bool? IsKnowHowProtected { get; set; }
-        public string? Description { get; set; }
-    }
+
     public class ResponseBlocksWithHierarchy : ResponseMessage
     {
         public BlockGroupInfo? Root { get; set; }
@@ -523,18 +511,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseTypeInfo>? Inconsistent { get; set; }
     }
 
-    public class ResponseExportAsDocuments : ResponseMessage
-    {
-    }
 
-    public class ResponseExportBlocksAsDocuments : ResponseMessage
-    {
-        public IEnumerable<ResponseBlockInfo>? Items { get; set; }
-    }
 
-    public class ResponseImportFromDocuments : ResponseMessage
-    {
-    }
+
+
+
 
     public class ScaffoldStep
     {
@@ -554,10 +535,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public List<ScaffoldStep> Steps { get; set; } = new List<ScaffoldStep>();
     }
 
-    public class ResponseImportBlocksFromDocuments : ResponseMessage
-    {
-        public IEnumerable<ResponseBlockInfo>? Items { get; set; }
-    }
+
 
     public class ResponseDownload : ResponseMessage
     {

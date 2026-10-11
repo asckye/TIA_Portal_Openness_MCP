@@ -202,7 +202,7 @@ namespace TiaMcpServer.Siemens.Services
                             Items = new[] { new Dictionary<string, string> { ["errorCount"] = result.ErrorCount.ToString(CultureInfo.InvariantCulture), ["warningCount"] = result.WarningCount.ToString(CultureInfo.InvariantCulture) } } };
                     }
                     bool ok = r.Entry == "ExportPlcBlockDocuments" ? documents.ExportAsDocuments(r.SoftwarePath, r.Parameters["blockPath"], r.Parameters["exportPath"], r.Parameters["preservePath"] == "true")
-                        : documents.ImportFromDocuments(r.SoftwarePath, r.Parameters["groupPath"], r.Parameters["importPath"], r.Parameters["fileNameWithoutExtension"], ImportDocumentOptions.None);
+                        : documents.ImportFromDocuments(r.SoftwarePath, r.Parameters["groupPath"], r.Parameters["importPath"], r.Parameters["fileNameWithoutExtension"], "None");
                     return new FallbackNativeResult { Success = ok, State = ok ? "completed" : "failed" };
                 }, () => FallbackOfflineState(r.SoftwarePath));
             };

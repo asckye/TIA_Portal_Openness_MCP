@@ -16,6 +16,22 @@
     <WorkerSourceRoot Condition="'$(WorkerSourceRoot)' == ''">$(MSBuildProjectDirectory)</WorkerSourceRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' == '14sp1'"><DefineConstants>$(DefineConstants);OPCUA_NO_EXTENSION</DefineConstants></PropertyGroup>
+  <PropertyGroup Condition="'$(TiaReleaseKey)' == '15.1'"><DefineConstants>$(DefineConstants);OPCUA_NO_UNITS</DefineConstants></PropertyGroup>
+  <ItemGroup Condition="'$(TiaReleaseKey)' != '14sp1'">
+    <Compile Include="../Shared/OpcUaModelledNative.cs" Link="Shared/OpcUaModelledNative.cs" />
+    <Compile Include="../../third_party/SiemensOpcUaModelled/**/*.cs" LinkBase="SiemensOpcUaModelled" />
+    <Compile Include="../Logic/Siemens/NativeFileOutput.cs" Link="NativeFileOutput.cs" />
+    <Compile Include="../Logic/Siemens/ArgumentRules.cs" Link="ArgumentRules.cs" />
+    <EmbeddedResource Include="../../third_party/SiemensOpcUaModelled/Phases/Phase1/InterfaceTemplate.xml" LogicalName="TiaMcp.OpcUa.InterfaceTemplate.xml" />
+    <Reference Include="Siemens.Engineering" Condition="'$(TiaReleaseKey)' != '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Siemens.Engineering.Base, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Base.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Siemens.Engineering.Step7, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Logic/Siemens/EngineeringAuditLogic.cs" Link="EngineeringAuditLogic.cs" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="PlcVerifiedImportBridge.cs" />
     <Compile Include="../Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />

@@ -752,6 +752,9 @@ def current_parameters(root):
     import ported_families
     for family in ported_families.families(root).values():
         for name in family['tools']:
+            if family['prefix'] == 'plc-documents' and ('plc-foundation', name) in params:
+                # Existing SIMATIC SD candidates keep their Foundation declarations.
+                continue
             params[('plc-foundation', name)] = params[('full-engine', name)]
     return params
 

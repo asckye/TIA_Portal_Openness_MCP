@@ -1,5 +1,19 @@
 <Project>
   <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OptionalPackageContract.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsResponses.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DocumentsPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/AlarmsTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OpcUaTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringAuditTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SoftwareUnitDeepTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SpecializedExchangeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcProDiagTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcB5PortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcB5Inputs.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcB5Services.cs" />
+
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationExecutionTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcOrganisationTools.cs" />

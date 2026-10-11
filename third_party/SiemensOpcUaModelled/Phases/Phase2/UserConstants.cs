@@ -1,6 +1,7 @@
 // Adapted from Siemens OPC UA modelled interface, commit 317dfd06. See UPSTREAM.json and LICENSE.md.
 #nullable disable
 using System;
+using Native = TiaMcp.Adapters.Native.Plc.PlcOpcUaModelAccess;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,20 +31,20 @@ namespace AddInOpcUaInterface.Phases
         {
             if (reset) UserConstantValues.Clear();
 
-            foreach (PlcTagTable table in tagTableGroup.TagTables)
+            foreach (PlcTagTable table in Native.Tables(tagTableGroup))
             {
-                foreach (PlcUserConstant userConstant in table.UserConstants)
+                foreach (PlcUserConstant userConstant in Native.Constants(table))
                 {
-                    string userConstantName = userConstant.Name;
+                    string userConstantName = Native.Name(userConstant);
                     // Try to parse the string into an int
-                    if (int.TryParse(userConstant.Value, out int value))
+                    if (int.TryParse(Native.Value(userConstant), out int value))
                     {
                         // Parsing was successful
                         UserConstantValues.Add(userConstantName, value);
                     }
                 }
             }
-            foreach (PlcTagTableGroup tableGroup in tagTableGroup.Groups)
+            foreach (PlcTagTableGroup tableGroup in Native.Groups(tagTableGroup))
             {
                 CollectConstants(tableGroup, false);
             }

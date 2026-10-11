@@ -1,6 +1,7 @@
 // Adapted from Siemens OPC UA modelled interface, commit 317dfd06. See UPSTREAM.json and LICENSE.md.
 #nullable disable
 using System;
+using Native = TiaMcp.Adapters.Native.Plc.PlcOpcUaModelAccess;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -44,34 +45,34 @@ namespace AddInOpcUaInterface
             XElementUserSystemDataTypes.Clear();
 
             // Iterate through all system data types and store their names in a List<string>
-            PlcSystemTypeGroupComposition sysGroupComposition = typeGroup.SystemTypeGroups;
+            IEnumerable<PlcSystemTypeGroup> sysGroupComposition = Native.SystemGroups(typeGroup);
 
             foreach (PlcSystemTypeGroup sysGroup in sysGroupComposition)
             {
-                PlcTypeComposition sysTypes = sysGroup.Types;
+                IEnumerable<PlcType> sysTypes = Native.Types(sysGroup);
                 foreach (PlcStruct plcStruct in sysTypes)
                 {
                     // Data Types defined in a Software Unit need to be preceeded by the name of the Software Unit
                     if (isSwUnit)
                     {
-                        SystemDataTypes.Add(AddInExecutionContext.Current.GetSelectedSoftwareUnit().Name + "." + plcStruct.Name);
+                        SystemDataTypes.Add(AddInExecutionContext.Current.SelectedUnitName() + "." + Native.Name(plcStruct));
                     }
-                    else { SystemDataTypes.Add(plcStruct.Name); }
+                    else { SystemDataTypes.Add(Native.Name(plcStruct)); }
                 }
             }
 
             // Iterate through all user data types and store their names in a List<string>
-            PlcTypeUserGroupComposition Groups = typeGroup.Groups;
-            PlcTypeComposition Types = typeGroup.Types;
+            IEnumerable<PlcTypeUserGroup> Groups = Native.Groups(typeGroup);
+            IEnumerable<PlcType> Types = Native.Types(typeGroup);
 
             foreach (PlcStruct plcStruct in Types)
             {
                 // Data Types defined in a Software Unit need to be preceeded by the name of the Software Unit
                 if (isSwUnit)
                 {
-                    UserDataTypes.Add(AddInExecutionContext.Current.GetSelectedSoftwareUnit().Name + "." + plcStruct.Name);
+                    UserDataTypes.Add(AddInExecutionContext.Current.SelectedUnitName() + "." + Native.Name(plcStruct));
                 }
-                else { UserDataTypes.Add(plcStruct.Name); }
+                else { UserDataTypes.Add(Native.Name(plcStruct)); }
             }
             foreach (PlcTypeUserGroup userGroup in Groups)
             {
@@ -84,11 +85,11 @@ namespace AddInOpcUaInterface
             phase = "Create XElements";
 
             // Iterate through all system data types and stores their names in a List<string>.
-            sysGroupComposition = typeGroup.SystemTypeGroups;
+            sysGroupComposition = Native.SystemGroups(typeGroup);
 
             foreach (PlcSystemTypeGroup sysGroup in sysGroupComposition)
             {
-                PlcTypeComposition sysTypes = sysGroup.Types;
+                IEnumerable<PlcType> sysTypes = Native.Types(sysGroup);
                 foreach (PlcStruct plcStruct in sysTypes)
                 {
                     NewXElement(plcStruct, "ns=1;i=3500", isSwUnit);
@@ -96,8 +97,8 @@ namespace AddInOpcUaInterface
             }
 
             // Iterate through all user data types and create a new XElement for each of them
-            Groups = typeGroup.Groups;
-            Types = typeGroup.Types;
+            Groups = Native.Groups(typeGroup);
+            Types = Native.Types(typeGroup);
 
             foreach (PlcStruct plcStruct in Types)
             {
@@ -117,8 +118,8 @@ namespace AddInOpcUaInterface
         /// <param name="phase">Indicates the current phase, distinguishing between "Collect" and "Create" phases.</param>
         private static void IterateThroughUserGroups(PlcTypeUserGroup userGroup, string phase, bool isSwUnit)
         {
-            PlcTypeUserGroupComposition Groups = userGroup.Groups;
-            PlcTypeComposition Types = userGroup.Types;
+            IEnumerable<PlcTypeUserGroup> Groups = Native.Groups(userGroup);
+            IEnumerable<PlcType> Types = Native.Types(userGroup);
 
             foreach (PlcStruct plcStruct in Types)
             {
@@ -127,9 +128,9 @@ namespace AddInOpcUaInterface
                     // Data Types defined in a Software Unit need to be preceeded by the name of the Software Unit
                     if (isSwUnit)
                     {
-                        UserDataTypes.Add(AddInExecutionContext.Current.GetSelectedSoftwareUnit().Name + "." + plcStruct.Name);
+                        UserDataTypes.Add(AddInExecutionContext.Current.SelectedUnitName() + "." + Native.Name(plcStruct));
                     }
-                    else { UserDataTypes.Add(plcStruct.Name); }
+                    else { UserDataTypes.Add(Native.Name(plcStruct)); }
                 }
                 else if (phase == "Create XElements")
                 {
@@ -155,7 +156,7 @@ namespace AddInOpcUaInterface
             #region EXPORT USER DATA TYPE FROM TIA'S PROJECT AND IMPORT IT AS AN XDOCUMENT
 
             // Check if the user data type is consistent (the project has been compiled)
-            bool isConsistent = (bool)dataType.GetAttribute("IsConsistent");
+            bool isConsistent = (bool)Native.Attribute(dataType, "IsConsistent");
             if (isConsistent == false)
             {
                 DisplayMessage.ErrorMessage("Some elements are not consistent. Please compile the project before running the Add-In.");
@@ -168,7 +169,7 @@ namespace AddInOpcUaInterface
             {
                 // Export the user/system data type as a .txt file
                 string filePath = Path.ChangeExtension(AddInExecutionContext.Current.FilePath, ".txt");
-                dataType.Export(new FileInfo(filePath), ExportOptions.None);
+                Native.Export(dataType, new FileInfo(filePath), ExportOptions.None);
 
                 // Import the file as an XDocument
                 inputElement = XElement.Load(filePath);
@@ -189,7 +190,7 @@ namespace AddInOpcUaInterface
             if (isSwUnit)
             {
                 // Data Types defined in a Software Unit need to be preceeded by the name of the Software Unit
-                dataTypeName = AddInExecutionContext.Current.GetSelectedSoftwareUnit().Name + "." + dataTypeName;
+                dataTypeName = AddInExecutionContext.Current.SelectedUnitName() + "." + dataTypeName;
             }
 
             // Access the "Sections" XElement within the "Interface" element
@@ -279,9 +280,9 @@ namespace AddInOpcUaInterface
                     // Handle Software Unit data types that reference a type defined in the device (PLC)
                     if (AddInExecutionContext.Current.IsSoftwareUnit)
                     {
-                        if (dataType.StartsWith(AddInExecutionContext.Current.GetSelectedSoftwareUnit().Name))
+                        if (dataType.StartsWith(AddInExecutionContext.Current.SelectedUnitName()))
                         {
-                            dataType = dataType.Substring(AddInExecutionContext.Current.GetSelectedSoftwareUnit().Name.Length + 1);
+                            dataType = dataType.Substring(AddInExecutionContext.Current.SelectedUnitName().Length + 1);
                         }
                     }
 

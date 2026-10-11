@@ -1,6 +1,7 @@
 // Adapted from Siemens OPC UA modelled interface, commit 317dfd06. See UPSTREAM.json and LICENSE.md.
 #nullable disable
 using System;
+using Native = TiaMcp.Adapters.Native.Plc.PlcOpcUaModelAccess;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,9 +14,7 @@ using System.Xml.Linq;
 using AddInOpcUaInterface.Other;
 using AddInOpcUaInterface.Phases.Phase4;
 using Siemens.Engineering;
-using Siemens.Engineering.Multiuser;
 using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Blocks.Interface;
 using Siemens.Engineering.SW.Types;
 
 namespace AddInOpcUaInterface.Phases
@@ -39,20 +38,20 @@ namespace AddInOpcUaInterface.Phases
         public static void GetDatablockElements(PlcBlockGroup blockGroup)
         {
             string parentFolder = "DataBlocksGlobal";
-            foreach (PlcBlock block in blockGroup.Blocks)
+            foreach (PlcBlock block in Native.Blocks(blockGroup))
             {
                 //Only process Datablocks
-                if (block.ProgrammingLanguage == ProgrammingLanguage.DB && AddInExecutionContext.Current.GlobalDBsAccessLevel != 0)
+                if (Native.Language(block) == ProgrammingLanguage.DB && AddInExecutionContext.Current.GlobalDBsAccessLevel != 0)
                 {
                     NewDataBlockElement(block, parentFolder, false);
                 }
                 //Only process failsafe Datablocks
-                if (block.ProgrammingLanguage == ProgrammingLanguage.F_DB && AddInExecutionContext.Current.SafetyGlobalDBsAccessLevel != 0)
+                if (Native.Language(block) == ProgrammingLanguage.F_DB && AddInExecutionContext.Current.SafetyGlobalDBsAccessLevel != 0)
                 {
                     NewDataBlockElement(block, parentFolder, true);
                 }
             }
-            foreach (PlcBlockUserGroup userGroup in blockGroup.Groups)
+            foreach (PlcBlockUserGroup userGroup in Native.Groups(blockGroup))
             {
                 IterateThroughBlockGroups(userGroup, parentFolder);
             }
@@ -68,7 +67,7 @@ namespace AddInOpcUaInterface.Phases
             if (AddInExecutionContext.Current.KeepFolderStructure)
             {
                 // Replicate the folder structure of the project
-                string folderName = blockGroup.Name;
+                string folderName = Native.Name(blockGroup);
                 string fullPathName = parentFolder + '.' + folderName;
                 XElement uaObjectElement =
                     new XElement(AddInExecutionContext.Current.RootNameSpace + "UAObject",
@@ -89,20 +88,20 @@ namespace AddInOpcUaInterface.Phases
                 parentFolder = fullPathName;
             }
 
-            foreach (PlcBlock block in blockGroup.Blocks)
+            foreach (PlcBlock block in Native.Blocks(blockGroup))
             {
                 //Only process Datablocks
-                if (block.ProgrammingLanguage == ProgrammingLanguage.DB && AddInExecutionContext.Current.GlobalDBsAccessLevel != 0)
+                if (Native.Language(block) == ProgrammingLanguage.DB && AddInExecutionContext.Current.GlobalDBsAccessLevel != 0)
                 {
                     NewDataBlockElement(block, parentFolder, false);
                 }
                 //Only process failsafe Datablocks
-                if (block.ProgrammingLanguage == ProgrammingLanguage.F_DB && AddInExecutionContext.Current.SafetyGlobalDBsAccessLevel != 0)
+                if (Native.Language(block) == ProgrammingLanguage.F_DB && AddInExecutionContext.Current.SafetyGlobalDBsAccessLevel != 0)
                 {
                     NewDataBlockElement(block, parentFolder, true);
                 }
             }
-            foreach (PlcBlockUserGroup userGroup in blockGroup.Groups)
+            foreach (PlcBlockUserGroup userGroup in Native.Groups(blockGroup))
             {
                 IterateThroughBlockGroups(userGroup, parentFolder);
             }
@@ -125,7 +124,7 @@ namespace AddInOpcUaInterface.Phases
             #region EXPORT DATA BLOCK FROM TIA'S PROJECT
 
             // Check if the data block is consistent (the project has been compiled)
-            bool isConsistent = (bool)block.GetAttribute("IsConsistent");
+            bool isConsistent = (bool)Native.Attribute(block, "IsConsistent");
             if (isConsistent == false)
             {
                 DisplayMessage.ErrorMessage("Some elements are not consistent. Please compile the project before running the Add-In.");
@@ -137,11 +136,11 @@ namespace AddInOpcUaInterface.Phases
             DataBlock db = (DataBlock)block;
             try
             {
-                db.Export(new FileInfo(filePath), ExportOptions.None);
+                Native.Export(db, new FileInfo(filePath), ExportOptions.None);
             }
             catch
             {
-                DisplayMessage.ErrorMessage($@"Unexpected error ocurred while exporting the .txt file of the {block.Name} Global DB.");
+                DisplayMessage.ErrorMessage($@"Unexpected error ocurred while exporting the .txt file of the {Native.Name(block)} Global DB.");
             }
             #endregion
 
@@ -155,7 +154,7 @@ namespace AddInOpcUaInterface.Phases
             }
             catch
             {
-                DisplayMessage.ErrorMessage($@"Unexpected error ocurred while importing the .txt file of the {block.Name} Global DB.");
+                DisplayMessage.ErrorMessage($@"Unexpected error ocurred while importing the .txt file of the {Native.Name(block)} Global DB.");
             }
             #endregion
 
@@ -199,7 +198,7 @@ namespace AddInOpcUaInterface.Phases
 
             #region CREATE THE DATA BLOCK GLOBAL OBJECT FOR THE SERVER INTERFACE
 
-            string blockName = block.Name;
+            string blockName = Native.Name(block);
             string nodeId = '"' + blockName + '"';
             // Creating the UAObject element
             XElement uaObjectElement =

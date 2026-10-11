@@ -42,3 +42,10 @@ def families(root):
 def additions(root, release):
     return {tool for family in families(root).values() if release in family["releases"] for tool in family["tools"]
             if release in family.get("tool_releases", {}).get(tool, family["releases"])}
+
+
+def foundation_candidates(root):
+    source = (Path(root) / "src/Adapters.Contracts/PortedFamilies.cs").read_text("utf-8-sig")
+    match = re.search(r'FoundationCandidates\s*=\s*\{([^}]+)\}', source)
+    assert match, "Missing reviewed Foundation candidate declarations"
+    return set(re.findall(r'"([^"\n]+)"', match[1]))

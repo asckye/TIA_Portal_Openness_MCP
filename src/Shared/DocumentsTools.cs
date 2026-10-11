@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,13 +23,11 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class DocumentsTools
     {
-        private readonly IEngineeringSession _session;
         private readonly DocumentsService _domain;
 
-        public DocumentsTools(DocumentsService domain, IEngineeringSession session)
+        public DocumentsTools(DocumentsService domain)
         {
             _domain = domain;
-            _session = session;
         }
 
         public ResponseExportAsDocuments ExportAsDocuments(
@@ -46,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     throw new McpException("ExportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
-                if (OnlineToolPolicy.WithAutoOffline(() => _domain.ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath), softwarePath))
+                if (_domain.ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath))
                 {
                     return new ResponseExportAsDocuments
                     {
@@ -83,9 +79,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     throw new McpException("ExportPlcBlocksDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }
                 // First, get the list of blocks to determine total count
-                Logger?.LogInformation($"Starting export of blocks as documents from '{softwarePath}' to '{exportPath}'");
 
-                var allBlocks = await Task.Run(() => _session.GetBlocks(softwarePath, regexName));
+
+                var allBlocks = await Task.Run(() => _domain.GetBlocks(softwarePath, regexName));
                 if (allBlocks == null)
                     throw new McpException("No project is open; document export did not run.", McpErrorCode.InvalidParams);
                 var totalBlocks = allBlocks?.Count ?? 0;
@@ -148,21 +144,21 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         if (block != null)
                         {
-                            var attributes = Helper.GetAttributeList(block);
+                            var attributes = block.Attributes?.Select(a => new Attribute { Name = a.Name, Value = a.Value, AccessMode = a.AccessMode });
 
                             responseList.Add(new ResponseBlockInfo
                             {
                                 Name = block.Name,
-                                TypeName = block.GetType().Name,
+                                TypeName = block.TypeName,
                                 Namespace = block.Namespace,
-                                ProgrammingLanguage = Enum.GetName(typeof(ProgrammingLanguage), block.ProgrammingLanguage),
-                                MemoryLayout = Enum.GetName(typeof(MemoryLayout), block.MemoryLayout),
+                                ProgrammingLanguage = block.ProgrammingLanguage,
+                                MemoryLayout = block.MemoryLayout,
                                 IsConsistent = block.IsConsistent,
                                 HeaderName = block.HeaderName,
                                 ModifiedDate = block.ModifiedDate,
                                 IsKnowHowProtected = block.IsKnowHowProtected,
                                 Attributes = attributes,
-                                Description = block.ToString()
+                                Description = block.Description
                             });
                         }
                         processedCount++;
@@ -181,7 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
 
                     var duration = (DateTime.Now - startTime).TotalSeconds;
-                    Logger?.LogInformation($"Document export completed: {processedCount} blocks exported in {duration:F2} seconds");
+
 
                     // Surface per-block skip/failure reasons so a "matched N but exported 0" is never silent.
                     var failures = _domain.LastExportAsDocumentsFailures;
@@ -246,7 +242,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
 
-                Logger?.LogError(ex, $"Failed exporting documents to '{exportPath}'");
                 throw new McpException($"Unexpected error exporting documents to '{exportPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
@@ -256,7 +251,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
             [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
             [Description("fileNameWithoutExtension: name of the block file without extension") ] string fileNameWithoutExtension,
-            [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
+            [Description("importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {
             try
             {
@@ -274,7 +269,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var missingIds = GetResMissingEnUsIds(importPath, fileNameWithoutExtension);
                     if (missingIds != null && missingIds.Count > 0)
                     {
-                        Logger?.LogWarning($".s7res for '{fileNameWithoutExtension}' missing en-US tags for {missingIds.Count} items: {string.Join(", ", missingIds)}");
+
                         warnings.Add(new JsonObject
                         {
                             ["name"] = fileNameWithoutExtension,
@@ -286,7 +281,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     // Never silently swallow: a pre-check that cannot run must say so,
                     // otherwise "no warnings" is indistinguishable from "check crashed".
-                    Logger?.LogWarning(ex, "Failed to evaluate .s7res warnings");
+
                     warnings.Add(new JsonObject
                     {
                         ["name"] = fileNameWithoutExtension,
@@ -294,10 +289,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     });
                 }
 
-                if (EngineeringGroupOperations.Parts(fileNameWithoutExtension).Length != 1 || fileNameWithoutExtension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                if (fileNameWithoutExtension.Replace('\\', '/').Split('/').Length != 1 || fileNameWithoutExtension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                     throw new ArgumentException("fileNameWithoutExtension must be one safe document basename.");
                 var formatPreflight = EngineeringAuditLogic.DocumentPreflight(File.ReadAllText(Path.Combine(importPath, fileNameWithoutExtension + ".s7dcl")), Engineering.TiaMajorVersion, null);
-                var ok = OnlineToolPolicy.WithAutoOffline(() => _domain.ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, option), softwarePath);
+                var ok = _domain.ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, option);
                 if (ok)
                 {
                     // Read-back verification: confirm the block is actually present after import.
@@ -347,7 +342,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("groupPath: optional path within the PLC program where the blocks should be placed (empty for root)")] string groupPath,
             [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
             [Description("regexName: name or regular expression to select block files (empty for all)")] string regexName = "",
-            [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
+            [Description("importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {
             var startTime = DateTime.Now;
             var progressToken = context?.Params?.ProgressToken;
@@ -436,20 +431,20 @@ namespace TiaMcpServer.ModelContextProtocol
                         {
                             if (block != null)
                             {
-                                var attributes = Helper.GetAttributeList(block);
+                                var attributes = block.Attributes?.Select(a => new Attribute { Name = a.Name, Value = a.Value, AccessMode = a.AccessMode });
                                 responseList.Add(new ResponseBlockInfo
                                 {
                                     Name = block.Name,
-                                    TypeName = block.GetType().Name,
+                                    TypeName = block.TypeName,
                                     Namespace = block.Namespace,
-                                    ProgrammingLanguage = Enum.GetName(typeof(ProgrammingLanguage), block.ProgrammingLanguage),
-                                    MemoryLayout = Enum.GetName(typeof(MemoryLayout), block.MemoryLayout),
+                                    ProgrammingLanguage = block.ProgrammingLanguage,
+                                    MemoryLayout = block.MemoryLayout,
                                     IsConsistent = block.IsConsistent,
                                     HeaderName = block.HeaderName,
                                     ModifiedDate = block.ModifiedDate,
                                     IsKnowHowProtected = block.IsKnowHowProtected,
                                     Attributes = attributes,
-                                    Description = block.ToString()
+                                    Description = block.Description
                                 });
                             }
                             processed++;
@@ -482,7 +477,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 var duration = (DateTime.Now - startTime).TotalSeconds;
-                Logger?.LogInformation($"Document import completed: {processed} blocks imported in {duration:F2} seconds");
+
 
                 var failArr = new JsonArray();
                 foreach (var f in failures.Take(50)) failArr.Add(f);
@@ -541,38 +536,40 @@ namespace TiaMcpServer.ModelContextProtocol
                     catch { /* swallow(teardown): Progress notification failure must not replace the original export or import error. */ }
                 }
 
-                Logger?.LogError(ex, $"Failed importing documents from '{importPath}'");
                 throw new McpException($"Unexpected error importing documents from '{importPath}': {ex.Message}. If import was attempted, the project may have changed; do not retry automatically.", ex, McpErrorCode.InternalError);
             }
         }
 
-        private static ImportDocumentOptions ParseImportDocumentOption(string option)
+        [Flags]
+        private enum DocumentImportOption { None = 0, Override = 1, SkipInactiveCultures = 2, ActivateInactiveCultures = 4 }
+
+        private static string ParseImportDocumentOption(string option)
         {
-            if (string.IsNullOrWhiteSpace(option)) return ImportDocumentOptions.Override;
+            if (string.IsNullOrWhiteSpace(option)) return "Override";
 
             var normalized = option.Trim();
 
             // Primary: accept exact enum names (case-insensitive)
-            if (Enum.TryParse<ImportDocumentOptions>(normalized, ignoreCase: true, out var parsed))
+            if (Enum.TryParse(normalized, ignoreCase: true, out DocumentImportOption parsed))
             {
-                return parsed;
+                return parsed.ToString();
             }
 
             // Aliases and common misspellings
             switch (normalized.ToLowerInvariant())
             {
-                case "override": return ImportDocumentOptions.Override;
-                case "none": return ImportDocumentOptions.None;
+                case "override": return "Override";
+                case "none": return "None";
                 case "skipinactiveculture":
                 case "skipinactivecultures":
                 case "skipinactive":
                 case "skipinactivecult":
-                    return ImportDocumentOptions.SkipInactiveCultures;
+                    return "SkipInactiveCultures";
                 case "activeinactiveculture":
                 case "activateinactivecultures":
                 case "activeinactivecultures":
                 case "activateinactive":
-                    return ImportDocumentOptions.ActivateInactiveCultures;
+                    return "ActivateInactiveCultures";
                 default:
                     throw new McpException($"Invalid importOption '{option}'. Allowed: None, Override, SkipInactiveCultures, ActivateInactiveCultures", McpErrorCode.InvalidParams);
             }
@@ -610,7 +607,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
             [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
             [Description("fileNameWithoutExtension: name of the block file without extension") ] string fileNameWithoutExtension,
-            [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
+            [Description("importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {
             return PlcExchangeContract.Run("ImportPlcBlockDocuments", () => ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, importOption), write: true, current: true);
         }
@@ -623,7 +620,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("groupPath: optional path within the PLC program where the blocks should be placed (empty for root)")] string groupPath,
             [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
             [Description("regexName: name or regular expression to select block files (empty for all)")] string regexName = "",
-            [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
+            [Description("importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {
             return await PlcExchangeContract.RunAsync("ImportPlcBlocksDocuments", () => ImportBlocksFromDocuments(server, context, softwarePath, groupPath, importPath, regexName, importOption), write: true, current: true);
         }

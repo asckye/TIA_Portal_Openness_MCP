@@ -290,6 +290,45 @@
     },
     {
       "entries": [
+        "GetPlcBlockScopes"
+      ],
+      "family": "F10",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ExchangePlcAlarmTextLists",
+        "ExchangePlcSupervisions",
+        "ExportAlarmClasses",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
+        "ExportPlcProDiagInfo",
+        "ImportAlarmClasses",
+        "ImportAlarmTextLists",
+        "ImportPlcAlarmInstanceTexts",
+        "ManagePlcAlarmTextList",
+        "ManagePlcSupervision"
+      ],
+      "family": "F14",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ExportOpcUaInterface",
+        "GenerateOpcUaModelledInterface",
+        "GetPlcOpcUaConfiguration",
+        "ImportOpcUaInterface",
+        "ManageOpcUaInterface",
+        "SetOpcUaInterfaceEnabled"
+      ],
+      "family": "F15",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
         "ListPlcSoftwareUnits",
@@ -10090,6 +10129,128 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "4e54d2f6d735e19d3cda743b7445bc0207a22216dbb6a6a1d53a382ecb3f4289",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - export | import.",
+            "enum": [
+              "export",
+              "import"
+            ],
+            "type": "string"
+          },
+          "confirmImport": {
+            "default": false,
+            "description": "confirmImport: must be true together with dryRun=false to import (imports replace project data).",
+            "type": "boolean"
+          },
+          "cultures": {
+            "description": "cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "importOption": {
+            "default": "None",
+            "description": "importOption: import option - None | Override.",
+            "enum": [
+              "None",
+              "Override"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "textListNames": {
+            "description": "textListNames: Array of text list names ('[]' = all).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "action",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "ExchangePlcAlarmTextLists",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "99f517ae56b34d96e1a6581aa4914942a46a992c02226fa1e71393153191d6ce",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - export | import | importSettings.",
+            "enum": [
+              "export",
+              "import",
+              "importSettings"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: absolute XLSX file for native ProDiag supervision exchange; new output or existing import file.",
+            "type": "string"
+          },
+          "importOptions": {
+            "default": "None",
+            "description": "importOptions: import option name (Override replaces objects of the same name; the tool description lists the values).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "action",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "ExchangePlcSupervisions",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "61e54105f2d0cedd093165a8ec68702ef6e901f3213179694787d127adbd6d29",
       "inputSchema": {
         "additionalProperties": false,
@@ -10139,6 +10300,90 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "01e356be0e726c5bf10354c5cfef75643f478cea7ff8460131aeb0a89188ff97",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: new absolute DAT file in an existing directory, e.g. 'C:\\Temp\\AlarmClasses.dat'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportAlarmClasses",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "d878e6c5cda0dd2574b8a866ff9c2e52662cb05131327881a25f8935436b4624",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: full file path for the XLSX output",
+            "type": "string"
+          },
+          "includeAdditionalTexts": {
+            "default": true,
+            "description": "includeAdditionalTexts: include Additional Texts columns (default: true)",
+            "type": "boolean"
+          },
+          "includeAlarmClass": {
+            "default": true,
+            "description": "includeAlarmClass: include the Alarm Class column (default: true)",
+            "type": "boolean"
+          },
+          "includeInfoText": {
+            "default": true,
+            "description": "includeInfoText: include the Info Text column (default: true)",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportAlarmInstanceTexts",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "8c63a0b0037e5284521a30d9fb72138887f0f64c0eed9020b2c824579ff02a01",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: full file path for the XLSX output, e.g. 'C:\\Temp\\AlarmTexts.xlsx'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportAlarmTextLists",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "3f76a1fc596faf80d2a158599a92c096866101b4c48523fa682bb15e8493860f",
       "inputSchema": {
         "additionalProperties": false,
@@ -10159,6 +10404,39 @@
         "type": "object"
       },
       "name": "ExportDeviceAml",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "7d808b69681d8615070b3af68f61c334e167fcad6ea2a2858328c74f2d4b341c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportPath": {
+            "description": "exportPath: full file path for the XML output, e.g. 'C:\\Temp\\OpcUa_Interface.xml'",
+            "type": "string"
+          },
+          "interfaceName": {
+            "description": "interfaceName: exact name of the interface to export",
+            "type": "string"
+          },
+          "interfaceType": {
+            "default": "ServerInterface",
+            "description": "interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "interfaceName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportOpcUaInterface",
       "outputSchema": null
     },
     {
@@ -10494,6 +10772,53 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "db81cece2d122f8b9b843d417ce6a274787be8faaadd56ae007736da4887db0d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "type": "string"
+          },
+          "directoryPath": {
+            "description": "directoryPath: folder on the TIA machine that receives the files.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "unitKind": {
+            "default": "unit",
+            "description": "unitKind: which unit collection unitName refers to - unit | safety.",
+            "enum": [
+              "unit",
+              "safety"
+            ],
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "unitName: software unit name when the object lives in a unit ('' = the PLC program itself).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath",
+          "directoryPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcProDiagInfo",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "86ba7802b603e27b7da200c0a434f9410bbc6aa1051848c78ba0b0dc480b3618",
@@ -11743,6 +12068,68 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "a90e9393a542a2ea06bd860781d01a441d183df6bd53d19cc951e6f7cbf5d5db",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accessLevels": {
+            "additionalProperties": {
+              "maximum": 2147483647,
+              "minimum": -2147483648,
+              "type": "integer"
+            },
+            "description": "Area-to-level map; see tool description; safety permits only 0 or 1.",
+            "type": "object"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "true previews without executing the requested write/action; false executes.",
+            "type": "boolean"
+          },
+          "interfaceName": {
+            "description": "Name for the generated OPC UA interface, 1..128 characters.",
+            "type": "string"
+          },
+          "keepEmptyDataBlocks": {
+            "default": false,
+            "description": "Retain data blocks without accessible variables.",
+            "type": "boolean"
+          },
+          "keepFolderStructure": {
+            "default": false,
+            "description": "Include project folders in the generated address space.",
+            "type": "boolean"
+          },
+          "namespaceUri": {
+            "description": "Absolute OPC UA namespace URI, for example urn:company:machine.",
+            "type": "string"
+          },
+          "outputPath": {
+            "description": "New absolute output file; existing files are refused.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact PLC software path in the bound project.",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Optional exact software unit name; empty selects the PLC scope.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "interfaceName",
+          "namespaceUri",
+          "outputPath"
+        ],
+        "type": "object"
+      },
+      "name": "GenerateOpcUaModelledInterface",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "f46db8764c09172434a22e90ffa6597f4ae9c5a452ecab960e16a88c836e7663",
       "inputSchema": {
         "additionalProperties": false,
@@ -12775,6 +13162,36 @@
       }
     },
     {
+      "descriptionSha256": "0532af97799fc13dee21f8ca04c20be4059b361ba85cef76ff271e3e964a92a9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "Page size 1..1000.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based page offset, at least 0.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "Exact PLC software name/path; empty selects project only where documented.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcBlockScopes",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "8980e7e025d2d88616dff9524bec656ad1c3b9846cad99433d272c315caa43a7",
       "inputSchema": {
         "additionalProperties": false,
@@ -12901,6 +13318,24 @@
         "type": "object"
       },
       "name": "GetPlcObjectFingerprints",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "887148d81cf5743dbc075a38c8ec9ad4bbf06ed2709d95538300982adb876d3d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcOpcUaConfiguration",
       "outputSchema": null
     },
     {
@@ -14453,6 +14888,52 @@
       }
     },
     {
+      "descriptionSha256": "be20405bbb73a5117b8365f69d86e94fd2fcda3d5412473dccb58758960b4da9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "importPath": {
+            "description": "importPath: existing absolute DAT file written by ExportAlarmClasses",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportAlarmClasses",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "1851c620317db6d5859f72f5e2f696b274d866861a3e5c4f8de0cfd176d78657",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "importPath": {
+            "description": "importPath: full file path to the XLSX file",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportAlarmTextLists",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "7158c6029b9e40c5de65427c30e1040eace10b49ba9145e2bd5fcf32cff5302f",
       "inputSchema": {
         "additionalProperties": false,
@@ -14541,6 +15022,70 @@
         "type": "object"
       },
       "name": "ImportMasterCopyFromGlobalLibrary",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "19f5c8c352c6a6186f7ba7673ac53f878a8d2458bbfdd75333871c1bf65d2faf",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "importPath": {
+            "description": "importPath: full file path to the XML file",
+            "type": "string"
+          },
+          "interfaceType": {
+            "default": "ServerInterface",
+            "description": "interfaceType: 'ServerInterface' (default) or 'ReferenceNamespace'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportOpcUaInterface",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "6ad098a27b964af943d8369228b37f93b14a400df1bebaa98c48e93e21d7467b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "cultures": {
+            "description": "cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "filePath",
+          "cultures"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcAlarmInstanceTexts",
       "outputSchema": null
     },
     {
@@ -19573,6 +20118,136 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "aea64e32a25d4a33f98944620fa8f5de47db56b7eb1eaf8992d4f35fad67fac3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "read | delete. action: read (default) or delete",
+            "enum": [
+              "read",
+              "delete"
+            ],
+            "examples": [
+              "read"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false deletes",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "interfaceName": {
+            "description": "interfaceName: exact name as shown in GetPlcOpcUaConfiguration",
+            "examples": [
+              "Server interface_1"
+            ],
+            "type": "string"
+          },
+          "interfaceType": {
+            "default": "ServerInterface",
+            "description": "interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "interfaceName"
+        ],
+        "type": "object"
+      },
+      "name": "ManageOpcUaInterface",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "531c062838923dd99671c4bc2a1f96e0bc35d3b47d6c00c23b5be40b66033957",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "action: read | createFromMasterCopy | delete.",
+            "enum": [
+              "read",
+              "createFromMasterCopy",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete.",
+            "type": "boolean"
+          },
+          "copyMode": {
+            "default": "",
+            "description": "copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.",
+            "enum": [
+              "ThrowIfExists",
+              "Rename",
+              "Replace",
+              ""
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: for createFromMasterCopy - global library name ('' = the project library).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum lists to return.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "masterCopyPath": {
+            "default": "",
+            "description": "masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "description": "name: exact alarm text list name (delete) or the name to give the copy (createFromMasterCopy).",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: first list to return (paging).",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "description": "softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcAlarmTextList",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "ad38e696ee8383b2bd7e92122564e43cf1c12f982774ca26afc1f78419bd7a3f",
       "inputSchema": {
         "additionalProperties": false,
@@ -19872,6 +20547,114 @@
         "type": "object"
       },
       "name": "ManagePlcSoftwareUnit",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "25c679bebcd64c01afe47a23d550e84eadbb103d02f7116b97792c080eec8fe3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "read | readComposition | createEntry | deleteEntry | setAttributes | exportSettings | importSettings. ",
+            "enum": [
+              "read",
+              "readComposition",
+              "createEntry",
+              "deleteEntry",
+              "setAttributes",
+              "exportSettings",
+              "importSettings"
+            ],
+            "type": "string"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "blockPath": {
+            "default": "",
+            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "type": "string"
+          },
+          "compositionName": {
+            "default": "",
+            "description": "compositionName: exact name of the composition (collection) on the object.",
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "entryName": {
+            "default": "",
+            "description": "entryName: exact name of the entry inside the composition.",
+            "type": "string"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "providerKind": {
+            "default": "supervision",
+            "description": "providerKind: supervision | settings.",
+            "enum": [
+              "supervision",
+              "settings"
+            ],
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "typeName": {
+            "default": "",
+            "description": "typeName: exact type name of the entry to create.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcSupervision",
       "outputSchema": null
     },
     {
@@ -23842,6 +24625,39 @@
         "type": "object"
       },
       "name": "SetDeviceItemIoAddress",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "21e70a177ee87072798882aecc2941fac079e1122300cb32b853c83578be1326",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "enabled: true to enable, false to disable",
+            "type": "boolean"
+          },
+          "interfaceName": {
+            "description": "interfaceName: exact name of the interface as shown in GetPlcOpcUaConfiguration",
+            "type": "string"
+          },
+          "interfaceType": {
+            "default": "ServerInterface",
+            "description": "interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "interfaceName",
+          "enabled"
+        ],
+        "type": "object"
+      },
+      "name": "SetOpcUaInterfaceEnabled",
       "outputSchema": null
     },
     {

@@ -21,6 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static readonly string[] ToolTypeNames = {
             "AddressesTools",
             "AlarmsTools",
+            "PlcProDiagTools",
             "CertificateManagementTools",
             "CfcTools",
             "ClassicHmiFoldersTools",
@@ -111,6 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
         };
         internal static readonly string[] ServiceTypeNames = {
             "AlarmsService",
+            "PlcB5PortService",
             "CertificateManagementService",
             "CfcService",
             "ClassicHmiFoldersService",

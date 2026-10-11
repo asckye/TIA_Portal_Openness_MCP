@@ -35,7 +35,8 @@ namespace TiaMcp.FoundationHost
             foreach (var implementation in shared)
             {
                 var tool = implementation.ProtocolTool;
-                if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.Name) && all.TryGetValue(tool.Name, out var declared))
+                if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.Name)
+                    && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(tool.Name) && all.TryGetValue(tool.Name, out var declared))
                 {
                     var ported = new ToolDescriptor(declared.Name, declared.RawDescription, tool, declared.Classification,
                         declared.Signature, declared.Parameters, declared.DryRun, declared.CandidateFamily, "foundation");

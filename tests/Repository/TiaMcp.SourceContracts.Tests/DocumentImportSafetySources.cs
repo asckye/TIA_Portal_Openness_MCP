@@ -9,7 +9,7 @@ public sealed class DocumentImportSafetySources
     private static readonly string ROOT = Repository.FindRoot(AppContext.BaseDirectory);
     private static readonly string SRC = Path.Combine(ROOT, "src/Engine");
     private static readonly string LOGIC = Path.Combine(ROOT, "src/Logic");
-    private static readonly EngineSources Sources = new(ROOT);
+    private static readonly EngineSources Sources = new(ROOT, "src/Adapters/Native/Plc");
     private static string Read(string path) => Repository.ReadSource(path);
     private static bool Has(string source, string value) => source.Contains(value, StringComparison.Ordinal);
     private static int Count(string source, string value) => Regex.Matches(source, Regex.Escape(value)).Count;
@@ -18,8 +18,8 @@ public sealed class DocumentImportSafetySources
         var index = source.IndexOf(value, start, StringComparison.Ordinal);
         Assert.True(index >= 0, "Missing source fragment: " + value); return index;
     }
-    private static readonly string SINGLE = Sources.Member("ImportFromDocuments", signature: "bool ImportFromDocuments");
-    private static readonly string BATCH = Sources.Member("ImportBlocksFromDocuments", signature: "IEnumerable<PlcBlock>");
+    private static readonly string SINGLE = Sources.Member("ImportFromDocuments", signature: "bool ImportFromDocuments", owner: "PlcB5Adapter");
+    private static readonly string BATCH = Sources.Member("ImportBlocksFromDocuments", signature: "IEnumerable<PlcBlock>", owner: "PlcB5Adapter");
     private static readonly string MCP = Sources.Member("ImportBlocksFromDocuments", signature: "Task<ResponseImportBlocksFromDocuments>");
     private static readonly string V4_MCP = Sources.Member("ImportBlocksFromDocumentsV4", tool: true);
     private static readonly string PRIMITIVES = Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcDocumentPrimitives.cs"));
@@ -67,7 +67,7 @@ public sealed class DocumentImportSafetySources
     public void MissingGroupRejectedBeforeNativeCall()
     {
         Assert.Contains("string.IsNullOrWhiteSpace(groupPath) ? Documents.BlockGroup(plcSoftware)", BATCH, StringComparison.Ordinal);
-        var gate = Find(BATCH, "?? throw new PortalException(PortalErrorCode.NotFound");
+        var gate = Find(BATCH, "?? throw new PortalException(\"NotFound\"");
         Assert.True(gate < Find(BATCH, "Documents.Import(Documents.Blocks(group), dir, name, option)"));
         Assert.DoesNotContain("Documents.Import(Documents.Blocks(Documents.BlockGroup(plcSoftware))", BATCH, StringComparison.Ordinal);
         Assert.DoesNotContain("catch", BATCH[..gate], StringComparison.Ordinal);
@@ -122,7 +122,7 @@ public sealed class DocumentImportSafetySources
     [Fact]
     public void PostNativeReportingKeepsEvidence()
     {
-        Assert.True(Find(MCP, "var failures = _domain.LastImportFromDocumentsFailures.ToList()") < Find(MCP, "Helper.GetAttributeList(block)"));
+        Assert.True(Find(MCP, "var failures = _domain.LastImportFromDocumentsFailures.ToList()") < Find(MCP, "block.Attributes?.Select"));
         Assert.Contains("Block metadata readback failed after import:", MCP, StringComparison.Ordinal);
         Assert.Contains("Progress notification failed after import:", MCP, StringComparison.Ordinal);
         Assert.Contains("[\"responseReportingFailed\"] = responseReportingFailed", MCP, StringComparison.Ordinal);

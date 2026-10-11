@@ -26,7 +26,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+        PortedFamilies.All.Where(family => (family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
         string? candidate = tool.ProtocolTool.Name switch {
@@ -42,6 +42,9 @@ internal static class PortedToolContract
     // also part of the wiring. Pure builders do not read session state.
     internal static string[] WiredOperations(string tool) => tool switch
     {
+        "ExportPlcBlockDocuments" or "ExportPlcBlocksDocuments" or "GetPlcBlockScopes" or "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments" or "ManagePlcBlockDocuments" or "ManagePlcDocuments" => new[] { "plc-documents.ExecutePlcB5", "ReadState" },
+        "ExchangePlcAlarmTextLists" or "ExchangePlcSupervisions" or "ExportAlarmClasses" or "ExportAlarmInstanceTexts" or "ExportAlarmTextLists" or "ExportPlcProDiagInfo" or "ImportAlarmClasses" or "ImportAlarmTextLists" or "ImportPlcAlarmInstanceTexts" or "ManagePlcAlarmTextList" or "ManagePlcSupervision" => new[] { "plc-alarms.ExecutePlcB5", "ReadState" },
+        "ExportOpcUaInterface" or "GenerateOpcUaModelledInterface" or "GetOpcUaAccessControl" or "GetPlcOpcUaConfiguration" or "ImportOpcUaInterface" or "ManageOpcUaAccessControl" or "ManageOpcUaInterface" or "SetOpcUaInterfaceEnabled" => new[] { "plc-opcua.ExecutePlcB5", "ReadState" },
         "ConfigureMotionHardwareConnection" or "ExchangeMotionCamData" or "ExportTechnologyObjectsToDirectory" or "GetMotionAxisConfiguration" or "GetTechnologyObjectTree" or "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory" or "ManageMotionAxis" or "ManageTechnologyObject" => new[] { "plc-technology.ExecutePlcOrganisation", "ReadState" },
         "ExportPlcWatchTablesToDirectory" or "GetPlcWatchTableCurrentValuesReadOnly" or "ImportPlcWatchTableOffline" or "ListPlcForceTables" or "ManagePlcTableEntries" or "MonitorPlcWatchTableS7" or "ProbePlcMonitorOnlineCapabilities" or "SetPlcWatchTableModifyValue" or "TraceTagCause" or "TraceTagCauseLive" => new[] { "plc-watch.ExecutePlcOrganisation", "ReadState" },
         "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider" => Array.Empty<string>(),
@@ -111,6 +114,11 @@ internal static class PortedToolContract
         foreach (var method in PortedToolDeclarations.Methods(release))
         {
             string name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+            // The four SIMATIC SD candidate entries already belong to Foundation.
+            // Retain their admitted schemas and policies while the raw engine
+            // callbacks use the new document port.
+            if (PortedFamilies.ForTool(name).Name == "F10" && FoundationTools.Definitions.Any(d =>
+                FoundationTools.Available(d, release) && FoundationV4Tool.Name(d.Name) == name)) continue;
             if (Families(release).Any(family => family.Tools.Contains(name, StringComparer.Ordinal))) yield return new FoundationTool(worker, release, method, name);
         }
     }
@@ -186,6 +194,9 @@ internal sealed partial class FoundationTool
         if (tool.Name == "ManagePlcSoftwareUnit" && arguments.TryGetValue("properties", out var properties)
             && properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty("NamespacePreset", out _))
             b4.Properties["NamespacePreset"] = new HardwareScalar();
+        if ((family.Name is "F10" or "F14" or "F15") && PlcB5Capabilities.Unsupported(portedRelease!, new PlcB5Request {
+            Operation = tool.Name, Action = actionName, UnitName = Text("unitName"), UnitKind = Text("unitKind"), InterfaceType = Text("interfaceType"), ObjectKind = Text("objectKind").Length == 0 ? "document" : Text("objectKind"), CopyMode = Text("copyMode") }) != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (PlcB4Capabilities.Unsupported(portedRelease!, b4) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (EngineeringServicesCapabilities.Unsupported(portedRelease!, tool.Name, scope,
@@ -229,6 +240,13 @@ internal sealed partial class FoundationTool
         var service = new HardwareAddressingService(call, hasProject, identity);
         object target = portedMethod!.DeclaringType!.Name switch
         {
+            "DocumentsTools" => new DocumentsTools(new DocumentsService(call, identity)),
+            "AlarmsTools" => new AlarmsTools(new AlarmsService(call, identity)),
+            "OpcUaTools" => new OpcUaTools(new OpcUaService(call, identity)),
+            "EngineeringAuditTools" => new EngineeringAuditTools(new EngineeringAuditService(call, identity)),
+            "SoftwareUnitDeepTools" => new SoftwareUnitDeepTools(new SoftwareUnitDeepService(call, identity)),
+            "SpecializedExchangeTools" => new SpecializedExchangeTools(new SpecializedExchangeService(call, identity)),
+            "PlcProDiagTools" => new PlcProDiagTools(new PlcB5PortService(call, identity)),
             "PlcTechnologyTools" => new PlcTechnologyTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcMotionTools" => new PlcMotionTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcWatchTools" => new PlcWatchTools(new PlcOrganisationPortService(call, hasProject, identity)),

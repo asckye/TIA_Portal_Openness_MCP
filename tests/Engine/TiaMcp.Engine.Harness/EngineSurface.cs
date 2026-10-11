@@ -17,12 +17,11 @@ internal sealed class EngineSurface
     // engine-decomposition.md: Portal remains the session; add the registered domain services here as they move.
     // Do not scan arbitrary Siemens helpers or SDK types as services.
     private static readonly string[] serviceTypeNames = {
+        "TiaMcpServer.Siemens.Services.PlcB5PortService",
         "TiaMcpServer.Siemens.Services.CfcService",
         "TiaMcpServer.Siemens.Services.TestSuiteService",
         "TiaMcpServer.Siemens.Services.V20OptionsService",
         "TiaMcpServer.Siemens.Services.OptionalEngineeringService",
-        "TiaMcpServer.Siemens.Services.SpecializedExchangeService",
-        "TiaMcpServer.Siemens.Services.SoftwareUnitDeepService",
         "TiaMcpServer.Siemens.Services.DccService",
         "TiaMcpServer.Siemens.Services.TeamcenterService",
         "TiaMcpServer.Siemens.Services.StartdriveService",
@@ -37,8 +36,6 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.SivarcService",
         "TiaMcpServer.Siemens.Services.ClassicHmiFoldersService",
         "TiaMcpServer.Siemens.Services.MotionProDiagClassicHmiService",
-        "TiaMcpServer.Siemens.Services.AlarmsService",
-        "TiaMcpServer.Siemens.Services.OpcUaService",
         "TiaMcpServer.Siemens.Services.TechnologyObjectsService",
         "TiaMcpServer.Siemens.Services.DevicesService",
         "TiaMcpServer.Siemens.Services.HardwareManagementService",
@@ -55,7 +52,6 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.PlcSoftwareService",
         "TiaMcpServer.Siemens.Services.ReflectionPortService",
         "TiaMcpServer.Siemens.Services.EngineeringServicesPortService",
-        "TiaMcpServer.Siemens.Services.EngineeringAuditService",
         "TiaMcpServer.Siemens.Services.TypesService",
         "TiaMcpServer.Siemens.Services.DocumentsService",
         "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
@@ -243,7 +239,7 @@ internal sealed class EngineSurface
 
     private static T Unique<T>(IEnumerable<T> candidates, string name, IEnumerable<Type> searched) where T : MemberInfo
     {
-        var matches = candidates.ToArray();
+        var matches = candidates.GroupBy(member => (member.Module, member.MetadataToken)).Select(group => group.First()).ToArray();
         if (matches.Length == 1) return matches[0];
         if (matches.Length == 0)
             throw new MissingMemberException("EngineSurface could not find " + name + ". Searched: " + string.Join(", ", searched.Select(type => type.FullName)));

@@ -51,10 +51,7 @@ namespace TiaMcpServer.Siemens
 
         private static JsonArray DocumentMessages(DocumentResultMessageComposition? messages)
             => messages == null ? new JsonArray() : new JsonArray(EngineeringGroupOperations.Items(messages).Cast<DocumentResultMessage>().Select(m => (JsonNode)m.Message).ToArray());
-        private static JsonObject DocumentExportRow(DocumentExportResult result)
-            => new JsonObject { ["state"] = result.State.ToString(), ["exportedDocuments"] = new JsonArray((result.ExportedDocuments ?? Enumerable.Empty<FileInfo>()).Select(f => (JsonNode)SoftwareUnitDeepLogic.FileRow(f)).ToArray()), ["messages"] = DocumentMessages(result.Messages) };
-        private static JsonObject DocumentImportRow(DocumentImportResult result, JsonArray imported)
-            => new JsonObject { ["state"] = result.State.ToString(), ["imported"] = imported, ["messages"] = DocumentMessages(result.Messages) };
+
 
     }
 }

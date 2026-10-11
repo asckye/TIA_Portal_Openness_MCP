@@ -70,6 +70,22 @@ internal static class DomainShapeChecks
                     type.FullName + " is sealed and non-disposable");
             var methods = tools.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
             check(methods.Length == domain.Count, domain.Name + " tool count");
+            if (service.BaseType?.Name == "PlcB5PortService")
+            {
+                var instance = provider.GetService(tools);
+                var port = provider.GetService(service);
+                check(service.BaseType.GetField("call", all)!.GetValue(port) is Delegate
+                    && !service.GetFields(all).Any(field => field.FieldType == contract), domain.Name + " uses the typed B5 worker bridge without a native session");
+                check(ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(instance), port), domain.Name + " shares its registered port singleton");
+                foreach (var tool in methods)
+                {
+                    var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                    check(tool.ReturnType.Name == "CallToolResult" && surface.Tool(name) == tool
+                        && ReferenceEquals(surface.Target(tool), instance), name + " preserves its Shared V4 declaration and singleton");
+                    check(portal.GetMethods(all).All(method => method.Name != name), name + " has no engine family implementation");
+                }
+                continue;
+            }
             foreach (var tool in methods)
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
@@ -192,7 +208,7 @@ internal static class DomainShapeChecks
         }
         foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility", "ExactSiVArcRoot",
             "ExactMasterCopy", "ExactLibraryType", "ExactTypeVersion", "MultilingualJson", "RequireUnitProvider", "ExactUnit",
-            "OptionalUnit", "BlockRootOf", "TypeRootOf", "ExactObjectUnder", "DocumentMessages", "DocumentExportRow", "DocumentImportRow",
+            "OptionalUnit", "BlockRootOf", "TypeRootOf", "ExactObjectUnder", "DocumentMessages",
             "AvailablePlcPathsSuffix", "GetAllPlcSoftware", "ReadPlcConsistency", "RecoverableAuditError",
             "ReadReflectedString", "EnumerateReflectedProperty" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,

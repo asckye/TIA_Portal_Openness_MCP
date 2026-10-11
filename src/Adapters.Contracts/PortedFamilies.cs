@@ -58,6 +58,15 @@ namespace TiaMcp.Adapters.Contracts
             new Family("F13", "plc-technology",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "ConfigureMotionHardwareConnection", "ExchangeMotionCamData", "ExportTechnologyObjectsToDirectory", "GetMotionAxisConfiguration", "GetTechnologyObjectTree", "ImportTechnologyObject", "ImportTechnologyObjectsFromDirectory", "ManageMotionAxis", "ManageTechnologyObject" }),
+            new Family("F10", "plc-documents",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "GetPlcBlockScopes", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments", "ManagePlcBlockDocuments", "ManagePlcDocuments" }),
+            new Family("F14", "plc-alarms",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "ExchangePlcAlarmTextLists", "ExchangePlcSupervisions", "ExportAlarmClasses", "ExportAlarmInstanceTexts", "ExportAlarmTextLists", "ExportPlcProDiagInfo", "ImportAlarmClasses", "ImportAlarmTextLists", "ImportPlcAlarmInstanceTexts", "ManagePlcAlarmTextList", "ManagePlcSupervision" }),
+            new Family("F15", "plc-opcua",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "ExportOpcUaInterface", "GenerateOpcUaModelledInterface", "GetOpcUaAccessControl", "GetPlcOpcUaConfiguration", "ImportOpcUaInterface", "ManageOpcUaAccessControl", "ManageOpcUaInterface", "SetOpcUaInterfaceEnabled" }),
             new Family("F16", "plc-integrity",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "ListPlcSoftwareUnits", "ManagePlcSoftwareUnit", "SetPlcUnitObjectAccess", "GetPlcChecksums", "GetPlcObjectFingerprints", "ManagePlcBlockWriteProtection" }),
@@ -79,6 +88,32 @@ namespace TiaMcp.Adapters.Contracts
         };
 
         public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
+            ["ExportPlcBlockDocuments"] = new[] { "20", "21" },
+            ["ExportPlcBlocksDocuments"] = new[] { "20", "21" },
+            ["GetPlcBlockScopes"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ImportPlcBlockDocuments"] = new[] { "20", "21" },
+            ["ImportPlcBlocksDocuments"] = new[] { "20", "21" },
+            ["ManagePlcBlockDocuments"] = new[] { "20", "21" },
+            ["ManagePlcDocuments"] = new[] { "20", "21" },
+            ["ExchangePlcAlarmTextLists"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ExchangePlcSupervisions"] = new[] { "17", "18", "19", "20", "21" },
+            ["ExportAlarmClasses"] = new[] { "17", "18", "19", "20", "21" },
+            ["ExportAlarmInstanceTexts"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ExportAlarmTextLists"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ExportPlcProDiagInfo"] = new[] { "17", "18", "19", "20", "21" },
+            ["ImportAlarmClasses"] = new[] { "17", "18", "19", "20", "21" },
+            ["ImportAlarmTextLists"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ImportPlcAlarmInstanceTexts"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ManagePlcAlarmTextList"] = new[] { "18", "19", "20", "21" },
+            ["ManagePlcSupervision"] = new[] { "17", "18", "19", "20", "21" },
+            ["ExportOpcUaInterface"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GenerateOpcUaModelledInterface"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["GetOpcUaAccessControl"] = new[] { "20", "21" },
+            ["GetPlcOpcUaConfiguration"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ImportOpcUaInterface"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ManageOpcUaAccessControl"] = new[] { "20", "21" },
+            ["ManageOpcUaInterface"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["SetOpcUaInterfaceEnabled"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
             ["ConfigureMotionHardwareConnection"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["ExchangeMotionCamData"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
             ["ExportTechnologyObjectsToDirectory"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
@@ -155,6 +190,12 @@ namespace TiaMcp.Adapters.Contracts
 
         public static Family ForTool(string tool) => All.Single(f => f.Tools.Contains(tool, StringComparer.Ordinal));
         public static bool Contains(string tool) => All.Any(f => f.Tools.Contains(tool, StringComparer.Ordinal));
+        // These ports retain the existing Foundation candidate declaration.
+        // The relocated raw engine callbacks are not their product contract.
+        public static readonly string[] FoundationCandidates = {
+            "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"
+        };
+        public static bool UsesFoundationCandidate(string tool) => FoundationCandidates.Contains(tool, StringComparer.Ordinal);
         public static bool Available(string release, string tool) => ForTool(tool).Available(release)
             && (!ToolReleases.TryGetValue(tool, out var releases) || releases.Contains(release, StringComparer.Ordinal));
     }

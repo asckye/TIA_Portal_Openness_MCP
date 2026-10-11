@@ -8582,7 +8582,7 @@
           "importOption": {
             "type": "string",
             "default": "\"Override\"",
-            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+            "description": "importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
             "value": "Override"
           }
         },
@@ -8686,7 +8686,7 @@
           "importOption": {
             "type": "string",
             "default": "\"Override\"",
-            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+            "description": "importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
             "value": "Override"
           }
         },
@@ -27794,7 +27794,7 @@
           "importOption": {
             "type": "string",
             "default": "\"Override\"",
-            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+            "description": "importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
             "value": "Override"
           }
         },
@@ -27898,7 +27898,7 @@
           "importOption": {
             "type": "string",
             "default": "\"Override\"",
-            "description": "importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
+            "description": "importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)",
             "value": "Override"
           }
         },

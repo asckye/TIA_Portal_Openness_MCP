@@ -61,8 +61,6 @@ namespace TiaMcpServer.Siemens
         object IEngineeringSession.ExactObjectUnder(object root, string objectPath, string collection, string label)
             => ExactObjectUnder(root, objectPath, collection, label);
         JsonArray IEngineeringSession.DocumentMessages(DocumentResultMessageComposition? messages) => DocumentMessages(messages);
-        JsonObject IEngineeringSession.DocumentExportRow(DocumentExportResult result) => DocumentExportRow(result);
-        JsonObject IEngineeringSession.DocumentImportRow(DocumentImportResult result, JsonArray imported) => DocumentImportRow(result, imported);
 
         DeviceItem IEngineeringSession.ExactDriveItem(string devicePathJson, string itemPathJson) => ExactDriveItem(devicePathJson, itemPathJson);
         DriveObjectContainer IEngineeringSession.ExactDriveContainer(DeviceItem item) => ExactDriveContainer(item);

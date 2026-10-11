@@ -60,8 +60,6 @@ namespace TiaMcpServer.Siemens
         PlcTypeGroup TypeRootOf(PlcSoftware plc, PlcUnitBase? unit);
         object ExactObjectUnder(object root, string objectPath, string collection, string label);
         JsonArray DocumentMessages(DocumentResultMessageComposition? messages);
-        JsonObject DocumentExportRow(DocumentExportResult result);
-        JsonObject DocumentImportRow(DocumentImportResult result, JsonArray imported);
 
         DeviceItem ExactDriveItem(string devicePathJson, string itemPathJson);
         DriveObjectContainer ExactDriveContainer(DeviceItem item);
