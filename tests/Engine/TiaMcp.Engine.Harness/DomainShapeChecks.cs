@@ -57,13 +57,13 @@ internal static class DomainShapeChecks
         var domains = new[] {
             (Name: "TestSuite", Count: 4), (Name: "V20Options", Count: 5),
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
-            (Name: "SoftwareUnitDeep", Count: 2),
+            (Name: "SoftwareUnitDeep", Count: 1),
             (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11),
             (Name: "Library", Count: 14), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
         };
         foreach (var domain in domains)
         {
-            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + (domain.Name == "Library" ? "PortService" : "Service"), true)!;
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             foreach (var type in new[] { service, tools })
                 check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
@@ -145,9 +145,11 @@ internal static class DomainShapeChecks
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic
                     && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(toolTarget, surface.Target(tool)),
                     domain.Name + " singleton ownership: " + name);
-                check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                check((domain.Name == "Library" ? service.GetField("call", all)!.GetValue(target) is Delegate
+                        && !service.GetFields(all).Any(f => f.FieldType == contract)
+                        : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(toolTarget), target),
-                    domain.Name + " tool uses its service with the shared session: " + name);
+                    domain.Name + (domain.Name == "Library" ? " tool uses its typed worker service: " : " tool uses its service with the shared session: ") + name);
                 var il = implementation.GetMethodBody()!.GetILAsByteArray()!;
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
@@ -164,6 +166,28 @@ internal static class DomainShapeChecks
                 var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
                 check(forwarder == null && ReferenceEquals(surface.Target(tool), provider.GetService(tool.DeclaringType!)),
                     name + " resolves directly without a static CLI forwarder");
+            }
+        }
+        foreach (var family in new[] { (Name: "EngineeringServices", Count: 10), (Name: "Reflection", Count: 7) })
+        {
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + family.Name + "PortService", true)!;
+            var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + family.Name + "Tools", true)!;
+            var instance = provider.GetService(tools);
+            var native = provider.GetService(service);
+            var declarations = tools.GetMethods(all).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
+            check(declarations.Length == family.Count, family.Name + " ported declaration count");
+            check(service.IsSealed && !service.GetFields(all).Any(f => f.FieldType == contract), family.Name + " bridge owns no engineering session");
+            check(service.GetField("call", all)!.GetValue(native) is Delegate, family.Name + " uses a typed worker bridge");
+            foreach (var tool in declarations)
+            {
+                var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                check(surface.Tool(name) == tool && !tool.IsStatic, name + " has one Shared declaration");
+                check(tool.ReturnType.Name == "CallToolResult", name + " preserves the V4 envelope boundary");
+                check(ReferenceEquals(surface.Target(tool), instance), name + " preserves singleton ownership");
+                check(ReferenceEquals(tools.GetFields(all).Single(f => f.FieldType == service).GetValue(instance), native), name + " uses its typed service");
+                check(portal.GetMethods(all).All(m => m.Name != name) && server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null, name + " has no engine family implementation or static alias");
+                foreach (var parameter in tool.GetParameters())
+                    check(!parameter.Name!.EndsWith("Json", StringComparison.Ordinal), name + " retains typed input: " + parameter.Name);
             }
         }
         foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility", "ExactSiVArcRoot",
@@ -229,7 +253,7 @@ internal static class DomainShapeChecks
         check(EngineSurface.PortedTools(server, "21").Contains("CompileHmiDiagnostics"), "HMI compile is owned by the Foundation port");
         foreach (var domain in new[] { (Name: "HmiExchange", Count: 13), (Name: "HmiDescribe", Count: 6), (Name: "HmiTagDeletion", Count: 1) })
         {
-            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + (domain.Name == "Library" ? "PortService" : "Service"), true)!;
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             var target = provider.GetService(service)!;
             var toolTarget = provider.GetService(tools)!;

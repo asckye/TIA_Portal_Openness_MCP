@@ -90,6 +90,7 @@ namespace TiaMcpServer.Worker
                 error => { _ = PortalFailureClassifier.IsPortalProcessLost(error); });
             portal = (Portal)EngineServices.Get(typeof(Portal));
             var engineering = (IEngineeringSession)portal;
+            portal.EngineeringTransactionActive = () => foundation.HasEngineeringTransaction;
             foundation.AcquireEngineeringEditAccess = engineering.AcquireHmiEditAccess;
             foundation.EngineeringProjectMissing = engineering.IsProjectNull;
             foundation.ResolveEngineeringBlock = (software, block) => engineering.GetBlock(software, block);
@@ -134,6 +135,36 @@ namespace TiaMcpServer.Worker
                         || (bool?)step.Meta["mayHaveChanged"] == true && ((bool?)step.Meta["operationSuccess"] == false || (bool?)step.Meta["writeOutcomeUnknown"] == true)
                 };
             };
+            foundation.EngineeringServicesStep = (tool, requiresProject, action) => {
+                var step = engineering.RunHmiStepTool(tool, meta => {
+                    var values = meta.ToDictionary(p => p.Key, p => (object?)p.Value);
+                    try { return action(values); }
+                    catch (TiaMcp.Adapters.Contracts.HardwareAddressingException failure)
+                    { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), failure.Status), failure.Message); }
+                    catch (TiaMcp.Adapters.Contracts.PlcSoftwareException failure)
+                    { throw new PortalException((PortalErrorCode)Enum.Parse(typeof(PortalErrorCode), failure.Code), failure.Message, failure.Candidates, failure.InnerException); }
+                    finally { foreach (var pair in values) meta[pair.Key] = pair.Value is JsonNode node ? node.DeepClone() : JsonSerializer.SerializeToNode(pair.Value); }
+                }, requiresProject: requiresProject);
+                return new TiaMcp.Adapters.Contracts.HardwareAddressingReply {
+                    Message = step.Message, Meta = step.Meta.ToDictionary(p => p.Key, p =>
+                        p.Value is JsonValue value && value.TryGetValue<bool>(out var flag) ? (object?)flag : p.Value),
+                    RequiresSessionReset = (bool?)step.Meta["connectionUnavailable"] == true
+                        || (bool?)step.Meta["mayHaveChanged"] == true && ((bool?)step.Meta["operationSuccess"] == false || (bool?)step.Meta["writeOutcomeUnknown"] == true)
+                };
+            };
+            foundation.UpdateEngineeringReflectionLookupPaths = paths => ((Portal)engineering).SetReflectionLookupPaths(paths);
+            foundation.ResolveEngineeringUnifiedScripts = (path, software, collection) => UnifiedScriptAccess.Resolve(engineering.ResolveHmiSoftwareOrThrow, path, software, collection);
+            foundation.EngineeringReflectionFailure = error => new TiaMcp.Adapters.Contracts.PlcSoftwareFailure {
+                Code = error is TiaMcp.Adapters.Contracts.PlcSoftwareException native ? native.Code : error is PortalException failure ? failure.Code.ToString() : error.GetType().Name,
+                Message = error.Message, Candidates = ((error as PortalException)?.Candidates ?? (error as TiaMcp.Adapters.Contracts.PlcSoftwareException)?.Candidates)?.ToArray()
+            };
+            foundation.EngineeringReflectionLookupPaths = () => engineering.PlcLookupPathsSuffix;
+            foundation.RenderEngineeringReflectionValue = value => JsonSerializer.Deserialize<object>(JsonSerializer.Serialize(value, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }));
+            foundation.ResolveEngineeringHmiScreen = (software, path) => engineering.ResolveHmiScreenOrThrow(software, path);
+            foundation.ResolveEngineeringLibraryDevice = path => engineering.ExactEngineeringDevice(path);
+            foundation.EngineeringLibraryOptionKind = type => engineering.OptionPackageLibraryTypeKind((global::Siemens.Engineering.Library.Types.LibraryType)type);
+            foundation.RenderEngineeringValue = value => JsonSerializer.Deserialize<object>(EngineeringScalarProperties.Json(value)?.ToJsonString() ?? "null");
+            portal.ResolvePortedEngineeringLibrary = foundation.ExactOpenEngineeringLibrary;
             foundation.EngineeringPlcOrganisationSession = new EnginePlcOrganisationSession(engineering, foundation);
             foundation.SeedReferenceHmiImport = request => {
                 var exchange = EngineServices.Get<TiaMcpServer.Siemens.Services.HmiExchangeService>();

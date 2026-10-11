@@ -52,11 +52,5 @@ namespace TiaMcpServer.ModelContextProtocol
             string updatePathsMode="",
             bool dryRun=true)
             => _softwareUnitDeep.ManagePlcDocuments(softwarePath,action,objectKind,name,unitName,unitKind,groupPath,directoryPath,importOption,libraryName,masterCopyPath,copyMode,typePath,version,updatePathsMode,dryRun);
-        [McpServerTool(Name="ManageProjectCompilationSettings"), Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult ManageProjectCompilationSettingsV4([Description("read | update. ")] string action="read", AttributeMap<Scalar> properties = null!, bool dryRun=true)
-            => EngineeringToolContract.Run("ManageProjectCompilationSettings", !dryRun && action != "read" && action != "list", () => ManageProjectCompilationSettings(action, EngineeringToolContract.Json(properties), dryRun));
-
-        public ResponseMessage ManageProjectCompilationSettings(string action="read", string propertiesJson="{}", bool dryRun=true)
-            => _softwareUnitDeep.ManageProjectCompilationSettings(action,propertiesJson,dryRun);
     }
 }

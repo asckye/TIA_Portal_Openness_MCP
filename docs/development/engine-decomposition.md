@@ -193,10 +193,11 @@ P3-18 删除迁移期嵌套 `*ToolSupport` 和 HMI 编译转发。目录枚举�
 辅助类仍在引擎程序集，工具直接调用其实现。TiaMcp.Engine.Harness 通过显式辅助类型清单定位黄金响应的执行器。
 
 最后的会话余项分布到 `Portal.HmiOperation.cs`（响应钩子）、`Portal.Diagnostics.cs`（门户诊断）、
-`Portal.SessionResolvers.cs`（硬件实用程序解析）、`Portal.ObjectIdentity.cs`（对象标识与编辑器）和
-`Portal.Transactions.cs`（事务与环境独占访问）。原 Base 校验拆为 `HardwareUtilityRules`、`DeviceServiceObjectRules`、
+`Portal.SessionResolvers.cs`（硬件实用程序解析），对象标识与编辑器已迁至
+`Adapters/Native/Engineering/EngineeringServices.cs`，事务与环境独占访问已迁至
+`Adapters/Native/Engineering/EngineeringTransaction.cs`。原 Base 校验拆为 `HardwareUtilityRules`、`DeviceServiceObjectRules`、
 `ObjectIdentityRules`、`ToolTransactionRules`、`EngineeringCredentialRules`；原 Step7 校验拆为 Logic 中的
-`ExternalSourceRules`、`PlcTableRules`、`AlarmTextListRules`、`ProDiagExportRules`。成员不跨程序集迁移。
+`ExternalSourceRules`、`PlcTableRules`、`AlarmTextListRules`、`ProDiagExportRules`。P8-03f 将工程服务的原生实现移至 adapter。
 
 `Compare-NativeCallOrder.py` 包含这些工具辅助类，并对其反射、接口、对象分派与枚举输入点一并比较有序清单。
 删除的辅助层不再参与调用；保留实现中的原生调用、参数与线程归属不变。
@@ -315,7 +316,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| 库 | [LibraryService](../../src/Engine/Siemens/Services/LibraryService.cs) / [LibraryTools](../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs) | 12 |
+| 库 | [LibraryPortService](../../src/Shared/LibraryPortService.cs) / [LibraryTools](../../src/Shared/LibraryTools.cs)，原生实现 [LibraryService](../../src/Adapters/Native/Libraries/LibraryService.cs) | 14 |
 | VCI | [VersionControlService](../../src/Engine/Siemens/Services/VersionControlService.cs) / [VersionControlTools](../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs) | 5 |
 | SiVArc | [SivarcService](../../src/Engine/Siemens/Services/SivarcService.cs) / [SivarcTools](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
 

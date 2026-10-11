@@ -1,72 +1,43 @@
-using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
-using Microsoft.Extensions.Logging;
-using Siemens.Engineering;
-using Siemens.Engineering.Cax;
-using Siemens.Engineering.Compiler;
-using Siemens.Engineering.Connection;
-using Siemens.Engineering.Download;
-using Siemens.Engineering.Download.Configurations;
-using Siemens.Engineering.Hmi;
-using Siemens.Engineering.Online;
-using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.SW.Alarm;
-using Siemens.Engineering.SW.OpcUa;
-using Siemens.Engineering.HmiUnified;
-using Siemens.Engineering.HW;
-using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.Multiuser;
-using Siemens.Engineering.Safety;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Types;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Security;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json.Nodes;
-using System.Xml.Linq;
-using TiaMcpServer.ModelContextProtocol;
+using System.Security;
+using TiaMcp.Adapters.Contracts;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Reflection
 {
-    internal sealed class ReflectionService
+    internal sealed class OpennessReflection
     {
-        private readonly IEngineeringSession _session;
+        private readonly ReflectionSession _session;
 
-        public ReflectionService(IEngineeringSession session) => _session = session;
+        public OpennessReflection(ReflectionSession session) => _session = session;
 
         private static object? GetPropertyPathValue(object root, string propertyPath)
         {
             var read = PropertyPathReader.Read(root, propertyPath);
-            if (!read.Success) throw new PortalException(PortalErrorCode.InvalidParams,
+            if (!read.Success) throw new PlcSoftwareException("InvalidParams",
                 $"{read.Status}: segment='{read.Segment}', type='{read.ResolvedType}'. {read.Error}");
             return read.Value;
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeObject(string objectKind, string objectPath, string softwarePath = "", int maxMembers = 200)
+        public OpennessObservation DescribeObject(string objectKind, string objectPath, string softwarePath = "", int maxMembers = 200)
         {
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ResponseMeta.Unstamped(true),
+                Meta = ReflectionSession.Meta(true),
                 ObjectKind = objectKind,
                 ObjectPath = objectPath,
                 TypeName = o.GetType().FullName ?? o.GetType().Name,
@@ -74,13 +45,13 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "", int maxMembers = 200)
+        public OpennessObservation DescribeObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "", int maxMembers = 200)
         {
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
@@ -89,21 +60,21 @@ namespace TiaMcpServer.Siemens.Services
             var v = GetPropertyPathValue(o, propertyPath);
             if (v == null)
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new OpennessObservation
                 {
                     Message = "Property value is null",
-                    Meta = ResponseMeta.Unstamped(true, ("status", "Value"), ("valueIsNull", true)),
+                    Meta = ReflectionSession.Meta(true, ("status", "Value"), ("valueIsNull", true)),
                     ObjectKind = objectKind,
                     ObjectPath = $"{objectPath}.{propertyPath}",
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ResponseMeta.Unstamped(true),
+                Meta = ReflectionSession.Meta(true),
                 ObjectKind = objectKind,
                 ObjectPath = $"{objectPath}.{propertyPath}",
                 TypeName = v.GetType().FullName ?? v.GetType().Name,
@@ -111,11 +82,11 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectValue GetObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "")
+        public OpennessObservation GetObjectProperty(string objectKind, string objectPath, string propertyPath, string softwarePath = "")
         {
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             var read = PropertyPathReader.Read(o, propertyPath);
-            if (!read.Success) return new ModelContextProtocol.ResponseObjectValue {
+            if (!read.Success) return new OpennessObservation {
                 Message = read.Status + (o == null ? _session.PlcLookupPathsSuffix ?? string.Empty : string.Empty), ObjectKind = objectKind, ObjectPath = objectPath, Meta = read.Metadata() };
             var v = read.Value;
             var vt = v?.GetType();
@@ -123,7 +94,7 @@ namespace TiaMcpServer.Siemens.Services
             object? outValue = v;
             if (v != null && v.GetType().Name == "MultilingualText")
             {
-                outValue = UnifiedMultilingualText.Read(v);
+                outValue = ReflectionSession.Multilingual(v);
             }
             else if (v is IEnumerable enumerable && v is not string)
             {
@@ -137,7 +108,7 @@ namespace TiaMcpServer.Siemens.Services
                 outValue = items;
             }
 
-            return new ModelContextProtocol.ResponseObjectValue
+            return new OpennessObservation
             {
                 Message = "OK",
                 Meta = read.Metadata(),
@@ -148,13 +119,13 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectChildren ListObjectChildren(string objectKind, string objectPath, string collectionProperty, string softwarePath = "", int limit = 200)
+        public OpennessObservation ListObjectChildren(string objectKind, string objectPath, string collectionProperty, string softwarePath = "", int limit = 200)
         {
             var o = _session.ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
@@ -163,10 +134,10 @@ namespace TiaMcpServer.Siemens.Services
             var v = GetPropertyPathValue(o, collectionProperty);
             if (v is not IEnumerable enumerable || v is string)
             {
-                return new ModelContextProtocol.ResponseObjectChildren
+                return new OpennessObservation
                 {
                     Message = "Collection not found or not enumerable",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     Collection = collectionProperty,
@@ -182,10 +153,10 @@ namespace TiaMcpServer.Siemens.Services
                 if (items.Count >= Math.Max(1, Math.Min(2000, limit))) break;
             }
 
-            return new ModelContextProtocol.ResponseObjectChildren
+            return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ResponseMeta.Unstamped(true),
+                Meta = ReflectionSession.Meta(true),
                 ObjectKind = objectKind,
                 ObjectPath = objectPath,
                 Collection = collectionProperty,
@@ -193,15 +164,15 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        private ModelContextProtocol.ResponseObjectValue InvokeOnInstance(object instance, string resultKind, string resultPath, string methodName, JsonArray? args, bool allowWrite)
+        private OpennessObservation InvokeOnInstance(object instance, string resultKind, string resultPath, string methodName, HardwareScalar[]? args, bool allowWrite)
         {
             var hardDenyReason = GetHardDeniedReflectionReason(instance, resultKind, resultPath, methodName);
             if (!string.IsNullOrWhiteSpace(hardDenyReason))
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = hardDenyReason,
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -216,10 +187,10 @@ namespace TiaMcpServer.Siemens.Services
 
             if (!allowWrite && !safe.Contains(methodName))
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = "Method not allowed (read-only mode)",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -231,17 +202,7 @@ namespace TiaMcpServer.Siemens.Services
                 foreach (var a in args)
                 {
                     if (a == null) { argValues.Add(null); continue; }
-                    if (a is JsonValue jv)
-                    {
-                        if (jv.TryGetValue<string>(out var s)) { argValues.Add(s); continue; }
-                        if (jv.TryGetValue<int>(out var i)) { argValues.Add(i); continue; }
-                        if (jv.TryGetValue<long>(out var l)) { argValues.Add(l); continue; }
-                        if (jv.TryGetValue<double>(out var d)) { argValues.Add(d); continue; }
-                        if (jv.TryGetValue<bool>(out var b)) { argValues.Add(b); continue; }
-                        argValues.Add(jv.ToString());
-                        continue;
-                    }
-                    argValues.Add(a.ToString());
+                    argValues.Add(ReflectionSession.Argument(a));
                 }
             }
 
@@ -256,10 +217,10 @@ namespace TiaMcpServer.Siemens.Services
                 MethodInfo? mi = methods.FirstOrDefault(m => m.GetParameters().Length == argValues.Count);
                 if (mi == null)
                 {
-                    return new ModelContextProtocol.ResponseObjectValue
+                    return new OpennessObservation
                     {
                         Message = "Method not found (signature mismatch)",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "NOT_FOUND")),
                         ObjectKind = resultKind,
                         ObjectPath = resultPath
                     };
@@ -282,7 +243,7 @@ namespace TiaMcpServer.Siemens.Services
                     // Convert enum parameters by name (PlcProtectionAccessLevel, ImportOptions, ...) and SecureString parameters from a
                     // plain string (SetPassword / Protect / LoginToSafetyOfflineProgram) - the bridge could reach neither before.
                     if (pt.IsEnum && av is string enumName) { converted[i] = Enum.Parse(pt, enumName, true); continue; }
-                    if (pt == typeof(SecureString) && av is string secret) { converted[i] = ProjectSecurityLogic.Secure(secret); continue; }
+                    if (pt == typeof(SecureString) && av is string secret) { converted[i] = ReflectionSession.Secure(secret); continue; }
                     if (pt == typeof(object)
                         && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase)
                         && i == 1
@@ -314,10 +275,10 @@ namespace TiaMcpServer.Siemens.Services
                     outValue = items;
                 }
 
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = "OK",
-                    Meta = ResponseMeta.Unstamped(true, ("invocationAttempted", true)),
+                    Meta = ReflectionSession.Meta(true, ("invocationAttempted", true)),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath,
                     ValueType = result?.GetType().FullName ?? (result == null ? null : result.GetType().Name),
@@ -326,10 +287,10 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (TargetInvocationException tie)
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = tie.InnerException?.Message ?? tie.Message,
-                    Meta = ResponseMeta.Unstamped(false, ("invocationAttempted", invocationAttempted),
+                    Meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted),
                         ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
@@ -337,10 +298,10 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = ex.Message,
-                    Meta = ResponseMeta.Unstamped(false, ("invocationAttempted", invocationAttempted),
+                    Meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted),
                         ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
@@ -351,7 +312,7 @@ namespace TiaMcpServer.Siemens.Services
         private static string? GetHardDeniedReflectionReason(object instance, string resultKind, string resultPath, string methodName)
         {
             var instanceType = instance.GetType().FullName ?? instance.GetType().Name;
-            var crossReferenceRefusal = CrossReferenceGuardLogic.ReflectionRefusal(instanceType, methodName);
+            var crossReferenceRefusal = ReflectionSession.ReflectionRefusal(instanceType, methodName);
             if (crossReferenceRefusal != null) return crossReferenceRefusal;
             var haystack = string.Join(" ", instanceType, resultKind ?? "", resultPath ?? "", methodName ?? "");
 
@@ -398,14 +359,14 @@ namespace TiaMcpServer.Siemens.Services
             return null;
         }
 
-        public ModelContextProtocol.ResponseObjectValue InvokeObject(string objectKind, string objectPath, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
+        public OpennessObservation InvokeObject(string objectKind, string objectPath, string methodName, HardwareScalar[]? args = null, string softwarePath = "", bool allowWrite = false)
         {
             _session.DenyCrossReferenceReflection(null, methodName);
-            var o = _session.ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? PlcAccess.Write : PlcAccess.Read);
+            var o = _session.ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? true : false);
             if (o == null)
             {
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
@@ -413,19 +374,19 @@ namespace TiaMcpServer.Siemens.Services
             return InvokeOnInstance(o, objectKind, objectPath, methodName, args, allowWrite);
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers = 200)
+        public OpennessObservation DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers = 200)
         {
             _session.DenyCrossReferenceReflection(serviceTypeSuffix, null);
             if ((serviceTypeSuffix ?? string.Empty).IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new OpennessObservation
                 {
                     Message = "Denied by safety policy: force-related services are not exposed through this MCP server.",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -433,7 +394,7 @@ namespace TiaMcpServer.Siemens.Services
             if (o == null)
             {
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
@@ -442,14 +403,14 @@ namespace TiaMcpServer.Siemens.Services
             var st = _session.FindTypeBySuffix(serviceTypeSuffix!);
             if (st == null)
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new OpennessObservation
                 {
                     Message = "Service type not found",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "NOT_FOUND")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     TypeName = null,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
@@ -457,21 +418,21 @@ namespace TiaMcpServer.Siemens.Services
             var svc = _session.TryGetService(o, st);
             if (svc == null)
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new OpennessObservation
                 {
                     Message = "GetService failed (service not available for this object)",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath,
                     TypeName = st.FullName ?? st.Name,
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new OpennessObservation
             {
                 Message = "OK",
-                Meta = ResponseMeta.Unstamped(true),
+                Meta = ReflectionSession.Meta(true),
                 ObjectKind = "Service",
                 ObjectPath = $"{objectKind}:{objectPath}::{serviceTypeSuffix}",
                 TypeName = svc.GetType().FullName ?? svc.GetType().Name,
@@ -479,25 +440,25 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ModelContextProtocol.ResponseObjectValue InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
+        public OpennessObservation InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, HardwareScalar[]? args = null, string softwarePath = "", bool allowWrite = false)
         {
             _session.DenyCrossReferenceReflection(serviceTypeSuffix, methodName);
             if ((serviceTypeSuffix ?? string.Empty).IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = "Denied by safety policy: force-related services are not exposed through this MCP server.",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "ACCESS_DENIED")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "ACCESS_DENIED")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath
                 };
             }
 
-            var o = _session.ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? PlcAccess.Write : PlcAccess.Read);
+            var o = _session.ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? true : false);
             if (o == null)
             {
                 // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
-                throw new PortalException(PortalErrorCode.NotFound,
+                throw new PlcSoftwareException("NotFound",
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
@@ -506,10 +467,10 @@ namespace TiaMcpServer.Siemens.Services
             var st = _session.FindTypeBySuffix(serviceTypeSuffix!);
             if (st == null)
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = "Service type not found",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "NOT_FOUND")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "NOT_FOUND")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath
                 };
@@ -519,10 +480,10 @@ namespace TiaMcpServer.Siemens.Services
             var svc = _session.TryGetService(o, st);
             if (svc == null)
             {
-                return new ModelContextProtocol.ResponseObjectValue
+                return new OpennessObservation
                 {
                     Message = "GetService failed (service not available for this object)",
-                    Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
+                    Meta = ReflectionSession.Meta(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY")),
                     ObjectKind = objectKind,
                     ObjectPath = objectPath
                 };

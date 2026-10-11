@@ -70,7 +70,7 @@ namespace TiaMcp.Engine.Tests
         private readonly ToolCatalog catalog;
         private static readonly string[] Names = {
             "ManagePlcCertificate", "GetProjectUserManagement", "ManageProjectUserManagement", "GetProjectProtection",
-            "ManageMultiuserSession", "CompareLibraries", "CompareProjects", "GetProjectSettings", "ManagePlcSafety",
+            "ManageProjectLanguage", "ExportProjectTexts", "ImportProjectTexts", "GetObjectIdentifier", "ShowObjectInEditor", "RunToolTransaction", "ManageProjectCompilationSettings", "ManageMultiuserSession", "CompareLibraries", "CompareProjects", "GetProjectSettings", "ManagePlcSafety",
             "ManageSafetyGlobalSettings", "GetSafetyBlockSignatures", "ExportSafetyPrintout", "ListSafetyActivationTests",
             "ManageSafetyActivationTest", "ManageSafetyActivationTestGroup", "ManageSafetyFunction", "ManageSafetyFunctionCondition",
             "ManageSyslogServers", "ManagePasswordPolicy", "ManageUmcUsers"
@@ -80,10 +80,10 @@ namespace TiaMcp.Engine.Tests
         {
             SecurityServiceFixture.Calls = 0;
             SecurityServiceFixture.Response = new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["operationSuccess"] = true } };
-            catalog = new ToolCatalog(new[] { typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools) });
+            catalog = new ToolCatalog(new[] { typeof(EngineeringServicesTools), typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection()
-                .AddSingleton<CertificateManagementService>().AddSingleton<ProjectSecurityService>().AddSingleton<SafetyManagementService>()
+                .AddSingleton<EngineeringServicesPortService>().AddSingleton<CertificateManagementService>().AddSingleton<ProjectSecurityService>().AddSingleton<SafetyManagementService>()
                 .AddSingleton<SafetyValidationService>().AddSingleton<SecurityDeepService>().AddEngine(false, catalog).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();

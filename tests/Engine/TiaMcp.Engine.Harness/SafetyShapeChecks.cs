@@ -108,7 +108,8 @@ internal static class SafetyShapeChecks
     {
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var surface = EngineSurface.For(server);
-        var service = server.GetType("TiaMcpServer.Siemens.Services." + domain + "Service", true)!;
+        bool ported = domain == "EngineeringServices";
+        var service = server.GetType("TiaMcpServer.Siemens.Services." + domain + (ported ? "PortService" : "Service"), true)!;
         var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
         foreach (var type in new[] { service, tools })
             check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
@@ -130,9 +131,11 @@ internal static class SafetyShapeChecks
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
                 && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
                 domain + " surface resolves the service and tool singletons: " + name);
-            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+            check((ported ? service.GetField("call", all)!.GetValue(target) is Delegate
+                    && !service.GetFields(all).Any(f => f.FieldType.Name == "IEngineeringSession")
+                    : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                 && ReferenceEquals(tools.GetField("_service", all)!.GetValue(surface.Target(tool)), target),
-                domain + " tool uses the service with the shared session: " + name);
+                domain + (ported ? " tool uses the typed worker service: " : " tool uses the service with the shared session: ") + name);
             bool callsService = EngineSurface.MethodFamily(tool).Any(member => {
                 var il = member.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>();
                 return Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>

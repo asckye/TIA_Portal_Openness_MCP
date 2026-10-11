@@ -273,7 +273,8 @@ namespace TiaMcp.Engine.Tests
             var stems = new[] { "SessionTools", "ProjectSessionTools", "DiagnosticsTools", "EngineeringDiagnosticsTools", "McpServer.Doctor", "McpServer.Maintenance", "McpServer.Worker" };
             var source = string.Join("\n", stems.Select(stem => File.ReadAllText(Path.Combine(directory!.FullName, stem == "EngineeringDiagnosticsTools" || stem.StartsWith("McpServer.") ? "src/Shared/Host" : "src/Engine/ModelContextProtocol/Tools", stem + ".cs"))));
             source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/HostMetaTools.cs"));
-            var names = Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value).ToArray();
+            source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/EngineeringServicesTools.cs"));
+            var names = Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value).Where(name => !TiaMcp.Adapters.Contracts.PortedFamilies.All.Single(f => f.Name == "F06").Tools.Contains(name) || new[] { "GetObjectIdentifier", "ShowObjectInEditor", "RunToolTransaction" }.Contains(name)).ToArray();
             Assert.Equal(31, names.Length);
             Assert.Equal(31, names.Distinct().Count());
             var generated = ToolUsageCatalog.ProfileEntries(McpServer.ReleaseKey, engineSource: true).ToDictionary(row => (string)row!["name"]!);

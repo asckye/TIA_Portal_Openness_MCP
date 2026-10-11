@@ -27,9 +27,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class LibraryTools
     {
-        private readonly LibraryService _library;
+        private readonly LibraryPortService _library;
 
-        public LibraryTools(LibraryService library) => _library = library;
+        public LibraryTools(LibraryPortService library) => _library = library;
 
         [McpServerTool(Name="GetLibraryOverview"), Description("[L2][Library][READ] Official library overview: empty libraryName = project library, otherwise an exact already-open global library. Header (GlobalLibrary Author/Comment per culture/Copyright/Family/Version/Path/CreationTime/LastModified(By)/IsModified/IsWriteProtected/Size, HistoryEntries, UsedProducts), the Types folder tree (LibraryTypeFolder Status, each LibraryType with Guid/Namespace/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion/Status/version summary) and the master copy tree (MasterCopy Author/CreationDate/ContentDescriptions). Bounded by maxDepth/maxItems; no modification. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult GetLibraryOverviewV4(

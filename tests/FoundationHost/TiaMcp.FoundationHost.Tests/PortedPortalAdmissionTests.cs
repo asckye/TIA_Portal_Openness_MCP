@@ -110,10 +110,13 @@ public sealed class PortedPortalAdmissionTests
         public void Dispose() => Directory.Delete(DirectoryPath, true);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Port_dispatch_takes_the_shared_worker_lane_before_journaling(bool cancel)
+    public static IEnumerable<object[]> LaneCases =>
+        from name in PortedFamilies.All.Where(f => f.Name is "F06" or "F23" or "F35" or "F07").SelectMany(f => f.Tools).Prepend("CreatePlcBlockGroup")
+        from cancel in new[] { false, true }
+        select new object[] { name, cancel };
+
+    [Theory, MemberData(nameof(LaneCases))]
+    public async Task Port_dispatch_takes_the_shared_worker_lane_before_journaling(string name, bool cancel)
     {
         using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "21");
@@ -121,7 +124,7 @@ public sealed class PortedPortalAdmissionTests
         using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = new Catalog("21") });
         using var held = await worker.Acquire(CancellationToken.None);
         using var cancellation = new CancellationTokenSource();
-        var pending = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("CreatePlcBlockGroup", cancellation.Token);
+        var pending = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(name, cancellation.Token);
         Assert.False(pending.IsCompleted);
         Assert.Equal(2, worker.Acquires);
         if (cancel)
@@ -181,6 +184,7 @@ public sealed class PortedPortalAdmissionTests
 
     private static JsonNode? Sample(JsonElement schema)
     {
+        if (schema.ValueKind != JsonValueKind.Object) return new JsonObject();
         if (schema.TryGetProperty("enum", out var values)) return JsonNode.Parse(values[0].GetRawText());
         if (schema.TryGetProperty("anyOf", out var options)) return Sample(options[0]);
         if (!schema.TryGetProperty("type", out var type)) return new JsonObject();
@@ -213,6 +217,8 @@ public sealed class PortedPortalAdmissionTests
         "ManageIoSystem" or "ManageNetworkDomain" or "ManageTransferArea" => "{\"action\":\"create\"}",
         "SetDeviceItemChannel" => "{\"channelType\":\"Digital\",\"channelIoType\":\"Input\",\"attributes\":{\"ChannelAddress\":0}}",
         "ManageCommunicationConnection" => "{\"action\":\"delete\"}",
+        "SynchronizeLibrary" => "{\"action\":\"updateLibrary\",\"selection\":[{\"folder\":\"\"}]}",
+        "RunToolTransaction" => "{\"calls\":[{\"name\":\"CreatePlcTypeGroup\",\"arguments\":{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\"}}],\"confirmChange\":true}",
         _ => "{}" })!.AsObject();
 
     private sealed class Catalog : Host.IToolCatalogView

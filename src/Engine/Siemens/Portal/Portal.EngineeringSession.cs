@@ -215,17 +215,13 @@ namespace TiaMcpServer.Siemens
         string? IEngineeringSession.PlcLookupPathsSuffix => _plcLookupPathsSuffix;
         PlcSoftware IEngineeringSession.ResolvePlcForListing(string path) => ResolvePlcForListing(path);
         string IEngineeringSession.GetTreePrefix(List<bool> ancestorStates, bool isLast) => GetTreePrefix(ancestorStates, isLast);
-        object? IEngineeringSession.ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access) => ResolveObject(objectKind, objectPath, softwarePath, access);
         void IEngineeringSession.DenyCrossReferenceReflection(string? service, string? method) => DenyCrossReferenceReflection(service, method);
         void IEngineeringSession.ValidateUnitKind(string kind) => ValidateUnitKind(kind);
         IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> IEngineeringSession.PlcScopes(PlcSoftware plc) => PlcScopes(plc);
         IEnumerable<(string Path, object Value)> IEngineeringSession.ScopedObjects(object group, string collection, string prefix, int depth) => ScopedObjects(group, collection, prefix, depth);
         PlcType? IEngineeringSession.ExportType(string softwarePath, string typePath, string exportPath, bool preservePath) => ExportType(softwarePath, typePath, exportPath, preservePath);
         List<CrossReferenceEntry>? IEngineeringSession.GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind) => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried, unitName, unitKind);
-        ResponseMessage IEngineeringSession.ManageProjectLanguage(string action, string culture, bool dryRun) => ManageProjectLanguage(action, culture, dryRun);
         ResponseMessage IEngineeringSession.RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade, bool dryRun) => RetrieveProjectArchive(archivePath, destinationDirectory, upgrade, dryRun);
-        ResponseMessage IEngineeringSession.ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun) => ExportProjectTexts(filePath, sourceCulture, targetCulture, dryRun);
-        ResponseMessage IEngineeringSession.ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun) => ImportProjectTexts(filePath, updateSourceLanguage, dryRun);
         List<ModelContextProtocol.NetworkAttribute>? IEngineeringSession.GetDeviceItemNetworkInfo(string deviceItemPath) => GetDeviceItemNetworkInfo(deviceItemPath);
         string IEngineeringSession.ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName) => ProbeConnectDeviceNodesToSubnet(plcRootPath, hmiRootPath, subnetName);
         string IEngineeringSession.NormalizeAttrName(string? n) => NormalizeAttrName(n);
@@ -266,9 +262,6 @@ namespace TiaMcpServer.Siemens
         bool IEngineeringSession.CloseSession() => CloseSession();
         bool IEngineeringSession.CloseProject() => CloseProject();
         ResponseMessage IEngineeringSession.ReadPortalInfo(bool includeProcesses, bool includeSessions, bool includeProducts) => ReadPortalInfo(includeProcesses, includeSessions, includeProducts);
-        ResponseMessage IEngineeringSession.ReadObjectIdentifier(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, string identifier) => ReadObjectIdentifier(kind, devicePathJson, itemPathJson, softwarePath, objectPath, identifier);
-        ResponseMessage IEngineeringSession.ShowObjectInEditor(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, bool dryRun) => ShowObjectInEditor(kind, devicePathJson, itemPathJson, softwarePath, objectPath, dryRun);
-        IEngineeringTransaction IEngineeringSession.BeginTransaction(string text) => BeginTransaction(text);
         string? IEngineeringSession.LastConnectError => LastConnectError;
         bool IEngineeringSession.ProjectIsValid => ProjectIsValid;
         bool IEngineeringSession.IsLocalSession => IsLocalSession;

@@ -179,15 +179,15 @@ namespace TiaMcp.Adapters
             return meta;
         }
 
-        private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> action)
+        private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject = true)
         {
-            if (EngineeringStep != null) return EngineeringStep(tool, action);
+            if (EngineeringStep != null && requiresProject) return EngineeringStep(tool, action);
             var reply = new HardwareAddressingReply();
             var meta = reply.Meta;
             meta["timestamp"] = DateTime.Now; meta["tool"] = tool; meta["success"] = false;
             try
             {
-                if (HardwareProjectMissing())
+                if (requiresProject && HardwareProjectMissing())
                 {
                     meta["error"] = "Project is null"; meta["status"] = "InvalidState"; meta["operationSuccess"] = false;
                     reply.Message = "Project is null";

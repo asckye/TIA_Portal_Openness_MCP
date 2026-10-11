@@ -32,7 +32,7 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.CertificateManagementService",
         "TiaMcpServer.Siemens.Services.ProjectSecurityService",
         "TiaMcpServer.Siemens.Services.PlcTablesService",
-        "TiaMcpServer.Siemens.Services.LibraryService",
+        "TiaMcpServer.Siemens.Services.LibraryPortService",
         "TiaMcpServer.Siemens.Services.VersionControlService",
         "TiaMcpServer.Siemens.Services.SivarcService",
         "TiaMcpServer.Siemens.Services.ClassicHmiFoldersService",
@@ -53,7 +53,8 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.PlcBlocksService",
         "TiaMcpServer.Siemens.Services.PlcOrganisationPortService",
         "TiaMcpServer.Siemens.Services.PlcSoftwareService",
-        "TiaMcpServer.Siemens.Services.ReflectionService",
+        "TiaMcpServer.Siemens.Services.ReflectionPortService",
+        "TiaMcpServer.Siemens.Services.EngineeringServicesPortService",
         "TiaMcpServer.Siemens.Services.EngineeringAuditService",
         "TiaMcpServer.Siemens.Services.TypesService",
         "TiaMcpServer.Siemens.Services.DocumentsService",
@@ -249,8 +250,14 @@ internal sealed class EngineSurface
         throw new AmbiguousMatchException("EngineSurface found ambiguous " + name + ": " + string.Join("; ", matches.Select(Describe)));
     }
 
-    internal object? Target(MethodInfo method) => method.IsStatic ? null : engine.GetType("TiaMcpServer.EngineServices", true)!
-        .GetMethod("Get", All, null, new[] { typeof(Type) }, null)!.Invoke(null, new object[] { method.DeclaringType! });
+    internal object? Target(MethodInfo method)
+    {
+        if (method.IsStatic) return null;
+        var services = engine.GetType("TiaMcpServer.EngineServices", true)!;
+        var get = services.GetMethod("Get", All, null, new[] { typeof(Type) }, null);
+        if (get == null) throw new MissingMethodException(services.FullName, "Get(Type): " + string.Join("; ", services.GetMethods(All).Select(m => m.ToString())));
+        return get.Invoke(null, new object[] { method.DeclaringType! });
+    }
 
     internal object? Invoke(MethodInfo method, object?[]? arguments) => method.Invoke(Target(method), arguments);
 

@@ -26,6 +26,15 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcTechnologyTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcIntegrityPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DeclaredToolMetadata.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/LibraryTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/LibraryPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TransactionExecution.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringServicesTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringServicesPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringToolContract.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SecurityToolContract.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ReflectionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ReflectionPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PortedToolDeclarations.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressingService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressTools.cs" />

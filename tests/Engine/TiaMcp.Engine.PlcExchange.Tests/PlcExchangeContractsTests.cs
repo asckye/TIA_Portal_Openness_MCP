@@ -75,6 +75,9 @@ namespace PlcExchangeTests
         private static Dictionary<string, MethodInfo> Entries() => Owners.SelectMany(n => Type(n).GetMethods())
             .Concat(new[] { "PlcReadModifyTools", "PlcOrganisationTools" }.SelectMany(n => HostType("TiaMcpServer.ModelContextProtocol." + n).GetMethods())
                 .Where(m => PortedNames.Contains(m.GetCustomAttribute<McpServerToolAttribute>()?.Name, StringComparer.Ordinal)))
+            .Concat(HostType("TiaMcpServer.ModelContextProtocol.EngineeringServicesTools").GetMethods()
+                .Where(m => new[] { "ExportProjectTexts", "ImportProjectTexts", "CompareLibraries" }
+                    .Contains(m.GetCustomAttribute<McpServerToolAttribute>()?.Name, StringComparer.Ordinal)))
             .Concat(HostType("TiaMcpServer.ModelContextProtocol.ExportTools").GetMethods())
             .Concat(HostType("TiaMcpServer.ModelContextProtocol.PlcOfflineTools").GetMethods()
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == "WritePlcSclSourceFile"))

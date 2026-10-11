@@ -100,6 +100,12 @@ def builder_ranges(tokens, pairs):
             for lo, hi, name in method_ranges(tokens, pairs):
                 if i + 2 < lo < hi < pairs[i + 2] and name in ('RunHardwareAddressStep', 'HardwareStepMeta'):
                     ranges.append((lo, hi))
+        if namespace == 'TiaMcp.Adapters.Reflection' and token.value == 'class' and tokens[i + 1].value == 'ReflectionSession':
+            # Typed reflection evidence has one central success-field builder;
+            # the adapter boundary separately forbids MCP/JSON dependencies.
+            for lo, hi, name in method_ranges(tokens, pairs):
+                if i + 2 < lo < hi < pairs[i + 2] and name == 'Meta':
+                    ranges.append((lo, hi))
     return ranges
 
 
@@ -371,6 +377,17 @@ class SelfTests(unittest.TestCase):
         self.assertEqual(3, counts['success_assignments'])
         self.assertEqual(1, written['success_assignments'])
         self.assertEqual(3, scan_tokens(lexer.Lexer('namespace Other { ' + source + ' }').scan()[0])[1]['success_assignments'])
+
+    def test_reflection_evidence_builder_is_qualified_and_method_bounded(self):
+        source = '''class ReflectionSession {
+            private Dictionary Meta() { meta["success"] = false; return meta; }
+            private void Other() { meta["success"] = true; }
+        }'''
+        tokens = lexer.Lexer('namespace TiaMcp.Adapters.Reflection { ' + source + ' }').scan()[0]
+        counts, written = scan_tokens(tokens)
+        self.assertEqual(2, counts['success_assignments'])
+        self.assertEqual(1, written['success_assignments'])
+        self.assertEqual(2, scan_tokens(lexer.Lexer('namespace Other { ' + source + ' }').scan()[0])[1]['success_assignments'])
 
     def test_move_exclusions_and_determinism(self):
         with lexer.scratch_directory() as root:

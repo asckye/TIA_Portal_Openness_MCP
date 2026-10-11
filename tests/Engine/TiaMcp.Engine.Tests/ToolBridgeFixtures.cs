@@ -257,7 +257,7 @@ namespace TiaMcp.Engine.Tests
                 typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools),
                 typeof(DccTools), typeof(StartdriveTools), typeof(TeamcenterTools),
                 typeof(CfcTools), typeof(TestSuiteTools), typeof(V20OptionsTools), typeof(OptionalEngineeringTools), typeof(SpecializedExchangeTools),
-                typeof(ReflectionTools), typeof(UnifiedEngineeringTools), typeof(UnifiedEventsTools), typeof(UnifiedObjectServicesTools)
+                typeof(EngineeringServicesTools), typeof(ReflectionTools), typeof(UnifiedEngineeringTools), typeof(UnifiedEventsTools), typeof(UnifiedObjectServicesTools)
             }).Methods, ToolCatalog.Engine.Methods);
         }
 

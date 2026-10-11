@@ -44,7 +44,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/LibraryTools.cs" Link="LibraryTools.cs" />
+    <Compile Include="../../../src/Shared/LibraryTools.cs" Link="LibraryTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs" Link="VersionControlTools.cs" />
 
@@ -72,7 +72,9 @@
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
     <Compile Include="../../../src/Engine/Siemens/TimedAttachment.cs" Link="TimedAttachment.cs" />
     <Compile Include="../../../src/Engine/Siemens/ProjectOwnership.cs" Link="ProjectOwnership.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/TransactionExecution.cs" Link="TransactionExecution.cs" />
+    <Compile Include="../../../src/Shared/TransactionExecution.cs" Link="TransactionExecution.cs" />
+    <Compile Include="../../../src/Shared/EngineeringServicesTools.cs" Link="EngineeringServicesTools.cs" />
+    <Compile Include="../../../src/Shared/EngineeringServicesPortService.cs" Link="EngineeringServicesPortService.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringObjectAddress.cs" Link="EngineeringObjectAddress.cs" />
     <Compile Include="../../../src/Engine/Siemens/PlcTypeGroupCreation.cs" Link="PlcTypeGroupCreation.cs" />
@@ -219,7 +221,9 @@
     <PackageReference Include="Sharp7" Version="1.1.84" />
     <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
     <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ReflectionTools.cs" Link="ReflectionTools.cs" />
+    <Compile Include="../../../src/Shared/EngineeringToolContract.cs" Link="EngineeringToolContract.cs" />
+    <Compile Include="../../../src/Shared/SecurityToolContract.cs" Link="SecurityToolContract.cs" />
+    <Compile Include="../../../src/Shared/ReflectionTools.cs" Link="ReflectionTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs" Link="UnifiedEngineeringTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEventsTools.cs" Link="UnifiedEventsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs" Link="UnifiedObjectServicesTools.cs" />

@@ -17,7 +17,7 @@ internal static class SessionToolChecks
         var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
-        foreach (var domain in new[] { (Name: "Session", Count: 9), (Name: "ProjectSession", Count: 11), (Name: "Diagnostics", Count: 1) })
+        foreach (var domain in new[] { (Name: "Session", Count: 9), (Name: "ProjectSession", Count: 8), (Name: "Diagnostics", Count: 1) })
         {
             var type = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             var target = provider.GetService(type);

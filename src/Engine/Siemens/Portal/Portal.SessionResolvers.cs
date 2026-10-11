@@ -121,9 +121,9 @@ namespace TiaMcpServer.Siemens
             return current;
         }
 
+        internal Func<string, object>? ResolvePortedEngineeringLibrary { get; set; }
         private object ExactOpenEngineeringLibrary(string libraryName)
-            => string.IsNullOrEmpty(libraryName) ? _project!.ProjectLibrary
-                : EngineeringGroupOperations.Find(_portal!.GlobalLibraries, libraryName) ?? throw new InvalidOperationException("Exact open global library not found. Open it in TIA first; no implicit open or close.");
+            => ResolvePortedEngineeringLibrary?.Invoke(libraryName) ?? throw new InvalidOperationException("Library adapter is unavailable.");
 
         private object ResolveHmiSoftwareOrThrow(string hmiSoftwarePath)
         {

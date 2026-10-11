@@ -46,6 +46,8 @@ internal static class ResponseEnvelopes
             if (ns == "TiaMcpServer.ModelContextProtocol" && tokens[i + 1].Value == "ResponseMeta") ranges.Add((i + 2, pairs[i + 2]));
             if (ns == "TiaMcp.Adapters" && tokens[i + 1].Value == "PlcFoundationEngine")
                 ranges.AddRange(Methods(tokens, pairs).Where(m => i + 2 < m.Lo && m.Lo < m.Hi && m.Hi < pairs[i + 2] && (m.Name == "RunHardwareAddressStep" || m.Name == "HardwareStepMeta")).Select(m => (m.Lo, m.Hi)));
+            if (ns == "TiaMcp.Adapters.Reflection" && tokens[i + 1].Value == "ReflectionSession")
+                ranges.AddRange(Methods(tokens, pairs).Where(m => i + 2 < m.Lo && m.Lo < m.Hi && m.Hi < pairs[i + 2] && m.Name == "Meta").Select(m => (m.Lo, m.Hi)));
         }
         return ranges;
     }

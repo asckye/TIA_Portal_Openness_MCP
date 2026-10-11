@@ -3430,6 +3430,52 @@
         ]
       },
       {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
+        ]
+      },
+      {
         "family": "F08",
         "state": "current",
         "l5": "NOT RUN",
@@ -3721,6 +3767,52 @@
           "AnalyzeGlobalLibraryPackage",
           "AnalyzeHmiTemplateReference",
           "PlanGlobalLibraryTemplateReuse"
+        ]
+      },
+      {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
         ]
       },
       {
@@ -4031,6 +4123,54 @@
           "AnalyzeGlobalLibraryPackage",
           "AnalyzeHmiTemplateReference",
           "PlanGlobalLibraryTemplateReuse"
+        ]
+      },
+      {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectCompilationSettings",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ImportMasterCopyFromGlobalLibrary",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
         ]
       },
       {
@@ -4351,6 +4491,54 @@
         ]
       },
       {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectCompilationSettings",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ImportMasterCopyFromGlobalLibrary",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
+        ]
+      },
+      {
         "family": "F08",
         "state": "current",
         "l5": "NOT RUN",
@@ -4668,6 +4856,56 @@
           "AnalyzeGlobalLibraryPackage",
           "AnalyzeHmiTemplateReference",
           "PlanGlobalLibraryTemplateReuse"
+        ]
+      },
+      {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareLibraries",
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectCompilationSettings",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CompareLibraryObjects",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ImportMasterCopyFromGlobalLibrary",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
         ]
       },
       {
@@ -5001,6 +5239,56 @@
           "ManageUnifiedCwcPackage",
           "PlanGlobalLibraryTemplateReuse",
           "RunHmiActionScriptRecipeSafetySelfTest"
+        ]
+      },
+      {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareLibraries",
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectCompilationSettings",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CompareLibraryObjects",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ImportMasterCopyFromGlobalLibrary",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
         ]
       },
       {

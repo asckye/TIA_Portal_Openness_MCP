@@ -1132,6 +1132,9 @@ def plc_exchange_reply(reply, name):
 # live in the Siemens-free host types. Explicit rosters keep a missing fixture
 # or a declaration moved to the wrong type from silently disappearing.
 PORTED_DOMAIN_TOOLS = {
+    'SoftwareUnitDeep': {'EngineeringServicesTools': ('ManageProjectCompilationSettings',)},
+    'ProjectSecurity': {'EngineeringServicesTools': ('CompareLibraries', 'CompareProjects', 'GetProjectSettings')},
+    'ProjectSession': {'EngineeringServicesTools': ('GetObjectIdentifier', 'ShowObjectInEditor', 'RunToolTransaction')},
     'Devices': {'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
     'HardwareNetwork': {'HardwareSecurityTools': ('ManageDeviceUsers',)},
     'HmiDescribe': {'PlcCompilePortTools': ('CompileHmiDiagnostics',)},
@@ -1150,7 +1153,8 @@ PORTED_DOMAIN_TOOLS = {
             'CreatePlcTypeGroup', 'DeleteEmptyPlcBlockGroup', 'CreatePlcBlockGroup', 'MovePlcBlockToGroup', 'ManagePlcUserGroup'),
         'PlcReadModifyTools': ('SetPlcProgram', 'GetPlcBlockEditCapabilities', 'ImportPlcBlockVerified',
             'RepairAndReimportPlcBlock', 'DescribePlcBlockLogic')},
-    'NativeExchange': {'PlcReadModifyTools': ('CreatePlcInstanceDb', 'GeneratePlcSourceFromBlocks', 'ManagePlcTagDefinition')},
+    'NativeExchange': {'PlcReadModifyTools': ('CreatePlcInstanceDb', 'GeneratePlcSourceFromBlocks', 'ManagePlcTagDefinition'),
+        'EngineeringServicesTools': ('ManageProjectLanguage', 'ExportProjectTexts', 'ImportProjectTexts')},
     'PlcTables': {'PlcReadModifyTools': ('GetPlcTagTableConstants', 'ImportPlcTagTablesFromDirectory'),
         'PlcWatchTools': ('ExportPlcWatchTablesToDirectory', 'GetPlcWatchTableCurrentValuesReadOnly', 'ImportPlcWatchTableOffline', 'ListPlcForceTables', 'ManagePlcTableEntries', 'MonitorPlcWatchTableS7', 'PlanOnlineReadOnlyDataProvider', 'PlanOnlineReadOnlyMonitoring', 'ProbePlcMonitorOnlineCapabilities', 'SetPlcWatchTableModifyValue')},
     'Runtime': {'PlcCausalTraceTools': ('TraceTagCause', 'TraceTagCauseLive')},

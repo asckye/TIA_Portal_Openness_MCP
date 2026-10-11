@@ -166,35 +166,5 @@ namespace TiaMcpServer.Siemens.Services
                 return objectKind + " instantiated from the library type version; project not saved / compiled.";
             });
 
-        public ResponseMessage ManageProjectCompilationSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
-            => _session.RunHmiStepTool("ManageProjectCompilationSettings", meta => {
-                meta["mayHaveChanged"] = false;
-                var (writing, values) = SoftwareUnitDeepLogic.ValidateCompilationSettingsRequest(action, propertiesJson, dryRun);
-                using var access = writing ? _session.AcquireHmiEditAccess() : null;
-                var project = _session.CurrentProject as global::Siemens.Engineering.Project ?? throw new NotSupportedException("The bound project is a " + _session.CurrentProject?.GetType().Name + "; the compilation settings live on Siemens.Engineering.Project.");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-#if TIA_V20
-                meta["access"] = "Project.IsSimulationDuringBlockCompilationEnabled / IsVirtualPlcDuringBlockCompilationEnabled (V20 properties; V21 replaced them by service providers)";
-                JsonObject State() => new JsonObject { ["IsSimulationDuringBlockCompilationEnabled"] = project.IsSimulationDuringBlockCompilationEnabled, ["IsVirtualPlcDuringBlockCompilationEnabled"] = project.IsVirtualPlcDuringBlockCompilationEnabled };
-                void Write(string key, bool value) { if (key == "IsSimulationDuringBlockCompilationEnabled") project.IsSimulationDuringBlockCompilationEnabled = value; else project.IsVirtualPlcDuringBlockCompilationEnabled = value; }
-#else
-                // V21 removed the two Project properties; the SW service providers of the project are the only access.
-                PlcSimulationSettingsProvider simulation = project.GetService<PlcSimulationSettingsProvider>() ?? throw new NotSupportedException("PlcSimulationSettingsProvider unavailable on the project (V21 service replacing Project.IsSimulationDuringBlockCompilationEnabled).");
-                VirtualPlcSettingsProvider virtualPlc = project.GetService<VirtualPlcSettingsProvider>() ?? throw new NotSupportedException("VirtualPlcSettingsProvider unavailable on the project (V21 service replacing Project.IsVirtualPlcDuringBlockCompilationEnabled).");
-                meta["access"] = "Project.GetService<PlcSimulationSettingsProvider>() / GetService<VirtualPlcSettingsProvider>() (V21: the Project properties were removed)";
-                JsonObject State() => new JsonObject { ["IsSimulationDuringBlockCompilationEnabled"] = simulation.IsSimulationDuringBlockCompilationEnabled, ["IsVirtualPlcDuringBlockCompilationEnabled"] = virtualPlc.IsVirtualPlcDuringBlockCompilationEnabled };
-                void Write(string key, bool value) { if (key == "IsSimulationDuringBlockCompilationEnabled") simulation.IsSimulationDuringBlockCompilationEnabled = value; else virtualPlc.IsVirtualPlcDuringBlockCompilationEnabled = value; }
-#endif
-                meta["before"] = State();
-                if (action == "read") return "Project simulation / virtual PLC compilation settings read.";
-                meta["requested"] = new JsonObject(values.Select(p => new KeyValuePair<string, JsonNode?>(p.Key, JsonValue.Create(p.Value))));
-                if (!writing) return "Compilation settings update preview; no changes.";
-                meta["mayHaveChanged"] = true;
-                foreach (var pair in values) Write(pair.Key, pair.Value);
-                meta["apiCallSuccess"] = true; meta["after"] = State();
-                foreach (var pair in values) if (meta["after"]![pair.Key]!.GetValue<bool>() != pair.Value) throw new InvalidOperationException(pair.Key + " readback differs from the requested value.");
-                return "Compilation settings written and read back; project not saved.";
-            });
-
     }
 }

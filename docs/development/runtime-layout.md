@@ -307,10 +307,11 @@ G7-5 比较了 1,921 份 Studio 重定位结果；G7-6 在 V20/V21 各完成 75 
   Step7Leftovers 列为步骤 7 的可选包，与实际内容不符，由 P2-05d 修正。
 
 P3-18 将最后三个产品余项文件按职责拆开，产品与测试均不再使用 `*Leftovers*` 文件名；注释与吞异常基线均为 0。
-会话成员分别在 `Portal.HmiOperation.cs`、`Portal.Diagnostics.cs`、`Portal.SessionResolvers.cs`、
-`Portal.ObjectIdentity.cs` 和 `Portal.Transactions.cs`。原 Base 校验按硬件实用程序、设备服务对象、对象标识、事务、凭据
+会话成员分别在 `Portal.HmiOperation.cs`、`Portal.Diagnostics.cs`、`Portal.SessionResolvers.cs`；对象标识和事务现位于
+`Adapters/Native/Engineering/EngineeringServices.cs` 与 `Adapters/Native/Engineering/EngineeringTransaction.cs`。原 Base 校验按硬件实用程序、设备服务对象、对象标识、事务、凭据
 归入引擎内的具名 `*Rules` 类；原 Step7 校验按外部源、PLC 表、报警文本列表与 ProDiag 导出归入 Logic 内的具名 `*Rules` 类。
-程序集边界不变，原生调用与反射仍由引擎织入覆盖。工具共享实现直接由具名辅助类提供，目录与注册基础设施仍在 `McpServer`；
+P8-03f 的工程服务、库和反射原生实现由 adapter 织入覆盖，其余引擎原生调用仍由引擎织入覆盖。
+工具共享实现直接由具名辅助类提供，目录与注册基础设施仍在 `McpServer`；
 不再经过迁移期嵌套 `*ToolSupport` 或 HMI 编译转发。
 
 ### 用户可见文案语言

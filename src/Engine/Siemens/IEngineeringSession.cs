@@ -174,10 +174,7 @@ namespace TiaMcpServer.Siemens
 
         PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false);
         List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind);
-        ResponseMessage ManageProjectLanguage(string action = "read", string culture = "", bool dryRun = true);
         ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade = false, bool dryRun = true);
-        ResponseMessage ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun = true);
-        ResponseMessage ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun = true);
         object? FindExistingByName(object compositionOrEnumerable, string name);
         object? TryGetEngineeringAttribute(object target, string attributeName);
         string SummarizeHmiObjectReadback(object target, params string[] names);
@@ -203,7 +200,6 @@ namespace TiaMcpServer.Siemens
         string? PlcLookupPathsSuffix { get; }
         PlcSoftware ResolvePlcForListing(string path);
         string GetTreePrefix(List<bool> ancestorStates, bool isLast);
-        object? ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access = PlcAccess.Read);
         void DenyCrossReferenceReflection(string? service, string? method);
         void ValidateUnitKind(string kind);
         IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> PlcScopes(PlcSoftware plc);
@@ -246,9 +242,6 @@ namespace TiaMcpServer.Siemens
         bool CloseSession();
         bool CloseProject();
         ResponseMessage ReadPortalInfo(bool includeProcesses, bool includeSessions, bool includeProducts);
-        ResponseMessage ReadObjectIdentifier(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, string identifier);
-        ResponseMessage ShowObjectInEditor(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, bool dryRun);
-        IEngineeringTransaction BeginTransaction(string text);
         string? LastConnectError { get; }
         bool ProjectIsValid { get; }
         bool IsLocalSession { get; }

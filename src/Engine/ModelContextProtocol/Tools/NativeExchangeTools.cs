@@ -22,16 +22,6 @@ namespace TiaMcpServer.ModelContextProtocol
             _session = session;
         }
 
-        public ResponseMessage ManageProjectLanguage(
-            [Description("action: read | activate | deactivate | setEditing | setReference.")] string action="read",
-            [Description("culture: exact language tag, e.g. 'en-US', 'zh-CN' (required for every action except read).")] string culture="",
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
-        => _session.ManageProjectLanguage(action,culture,dryRun);
-
-
-
-
-
         public ResponseMessage GeneratePlcLoadableFile(
             string softwarePath,
             [Description("objectPathsJson: JSON array of object paths.")] string objectPathsJson,
@@ -47,34 +37,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("upgrade: true opens with an upgrade to the current TIA version when the file is older.")] bool upgrade=false,
             bool dryRun=true)
         => _session.RetrieveProjectArchive(archivePath,destinationDirectory,upgrade,dryRun);
-
-        public ResponseMessage ExportProjectTexts(
-            string filePath,
-            [Description("sourceCulture: source language tag, e.g. 'en-US'.")] string sourceCulture,
-            [Description("targetCulture: target language tag, e.g. 'zh-CN'.")] string targetCulture,
-            bool dryRun=true)
-        => _session.ExportProjectTexts(filePath,sourceCulture,targetCulture,dryRun);
-
-        public ResponseMessage ImportProjectTexts(
-            string filePath,
-            [Description("updateSourceLanguage: true also writes the source-language texts.")] bool updateSourceLanguage,
-            bool dryRun=true)
-        => _session.ImportProjectTexts(filePath,updateSourceLanguage,dryRun);
-
-
-
-        [McpServerTool(Name = "ManageProjectLanguage"), Description("[L2][Project][WRITE] Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. Returns a V4 envelope; inspect outcome, execution and completeness.")]
-        public CallToolResult ManageProjectLanguageV4(
-            [Description("action: read | activate | deactivate | setEditing | setReference.")] string action="read",
-            [Description("culture: exact language tag, e.g. 'en-US', 'zh-CN' (required for every action except read).")] string culture="",
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
-        {
-            return PlcExchangeContract.Run("ManageProjectLanguage", () => ManageProjectLanguage(action, culture, dryRun), write: !dryRun && action != "read", current: false);
-        }
-
-
-
-
 
         [McpServerTool(Name = "GeneratePlcLoadableFile"), Description("[L2][PLC-Software][FILE] Native GenerateLoadable for exact blocks or units with explicit TargetOption enum name. New absolute output file; default preview. Does not download or assert compiled content completeness." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult GeneratePlcLoadableFileV4(
@@ -99,27 +61,6 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             return PlcExchangeContract.Run("RetrieveProjectArchive", () => RetrieveProjectArchive(archivePath, destinationDirectory, upgrade, dryRun), write: !dryRun, current: true);
         }
-
-        [McpServerTool(Name = "ExportProjectTexts"), Description("[L2][Project][FILE] Native project text export for explicit source/target cultures to a new absolute file. Returns API completion and file hash; default preview." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
-        public CallToolResult ExportProjectTextsV4(
-            [Description("filePath: new absolute XLSX file in an existing directory.")] string filePath,
-            [Description("sourceCulture: source language tag, e.g. 'en-US'.")] string sourceCulture,
-            [Description("targetCulture: target language tag, e.g. 'zh-CN'.")] string targetCulture,
-            bool dryRun=true)
-        {
-            return PlcExchangeContract.Run("ExportProjectTexts", () => ExportProjectTexts(filePath, sourceCulture, targetCulture, dryRun), write: !dryRun, current: true);
-        }
-
-        [McpServerTool(Name = "ImportProjectTexts"), Description("[L2][Project][WRITE] Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
-        public CallToolResult ImportProjectTextsV4(
-            [Description("filePath: existing absolute XLSX file exported by ExportProjectTexts.")] string filePath,
-            [Description("updateSourceLanguage: true also writes the source-language texts.")] bool updateSourceLanguage,
-            bool dryRun=true)
-        {
-            return PlcExchangeContract.Run("ImportProjectTexts", () => ImportProjectTexts(filePath, updateSourceLanguage, dryRun), write: !dryRun, current: true);
-        }
-
-
 
     }
 }

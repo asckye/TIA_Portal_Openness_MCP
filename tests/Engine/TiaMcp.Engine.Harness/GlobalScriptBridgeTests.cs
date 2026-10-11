@@ -26,22 +26,32 @@ internal static class GlobalScriptBridgeTests
     internal static void Run(Assembly server, Action<bool, string> check)
     {
         var portal = EngineSurface.For(server);
-        var invoke = portal.Method("InvokeOnInstance", All)!;
-        var jsonAssembly = invoke.GetParameters()[4].ParameterType.Assembly;
-        var jsonNode = jsonAssembly.GetType("System.Text.Json.Nodes.JsonNode", true)!;
-        var parse = jsonNode.GetMethods(All).Single(m => m.Name == "Parse" && m.GetParameters()[0].ParameterType == typeof(string));
-        object Json(string value) => parse.Invoke(null, new object?[] { value, null, Activator.CreateInstance(parse.GetParameters()[2].ParameterType) })!;
+        var reflection = portal.Adapter!.GetType("TiaMcp.Adapters.Reflection.OpennessReflection", true)!;
+        var sessionType = portal.Adapter.GetType("TiaMcp.Adapters.Reflection.ReflectionSession", true)!;
+        var session = Activator.CreateInstance(sessionType, All, null, new object[] {
+            (Func<string, string, string, bool, object?>)((_, __, ___, ____) => throw new InvalidOperationException("This conversion fixture must not resolve a native target.")),
+            (Func<string?>)(() => null) }, null)!;
+        var native = Activator.CreateInstance(reflection, All, null, new[] { session }, null)!;
+        var invoke = reflection.GetMethod("InvokeOnInstance", All)!;
+        var scalar = invoke.GetParameters()[4].ParameterType.GetElementType()!;
+        object Strings(string value)
+        {
+            var argument = Activator.CreateInstance(scalar)!;
+            scalar.GetProperty("Kind")!.SetValue(argument, "string");
+            scalar.GetProperty("Text")!.SetValue(argument, value);
+            var array = Array.CreateInstance(scalar, 1); array.SetValue(argument, 0); return array;
+        }
         object? Get(object value, string property) => value.GetType().GetProperty(property)!.GetValue(value);
         var target = new PathTarget();
-        var result = portal.Invoke(invoke, new object[] { target, "HmiScripts", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), true })!;
+        var result = invoke.Invoke(native, new object[] { target, "HmiScripts", "/Scripts", "Import", Strings(@"C:\NativeScripts"), true })!;
         check((string?)Get(result, "Message") == "OK" && (string?)Get(result, "Value") == Path.GetFullPath(@"C:\NativeScripts") && target.Calls == 1,
             "actual EXE converts JSON directory string to DirectoryInfo");
-        result = portal.Invoke(invoke, new object[] { target, "HmiScriptModule", "Navigation", "Export", Json("[\"C:\\\\NativeScripts\\\\Module.hmi.js\"]"), true })!;
+        result = invoke.Invoke(native, new object[] { target, "HmiScriptModule", "Navigation", "Export", Strings(@"C:\NativeScripts\Module.hmi.js"), true })!;
         check((string?)Get(result, "Message") == "OK" && (string?)Get(result, "Value") == Path.GetFullPath(@"C:\NativeScripts\Module.hmi.js") && target.Calls == 2,
             "actual EXE converts JSON file string to FileInfo");
-        result = portal.Invoke(invoke, new object[] { target, "HmiScripts", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), false })!;
+        result = invoke.Invoke(native, new object[] { target, "HmiScripts", "/Scripts", "Import", Strings(@"C:\NativeScripts"), false })!;
         check((string?)Get(result, "Message") != "OK" && target.Calls == 2, "actual EXE retains allowWrite gate for native Import");
-        result = portal.Invoke(invoke, new object[] { target, "Force", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), true })!;
+        result = invoke.Invoke(native, new object[] { target, "Force", "/Scripts", "Import", Strings(@"C:\NativeScripts"), true })!;
         check((string?)Get(result, "Message") != "OK" && target.Calls == 2, "actual EXE retains hard force deny even with allowWrite");
 
         var access = server.GetType("TiaMcpServer.Siemens.UnifiedScriptAccess", true)!;

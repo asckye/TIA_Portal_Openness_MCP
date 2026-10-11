@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 namespace TiaMcpServer.Siemens.Services
 {
-    internal sealed class LibraryService
+    internal sealed class LibraryPortService
     {
         internal int Calls;
         internal string? LastArguments;
@@ -223,7 +223,7 @@ namespace TiaMcp.Engine.Tests
     public sealed class LibrarySivarcVersionControlContractsTests : IDisposable
     {
         private static readonly string[] Names = { "AnalyzeUnifiedHmiTemplateLayout", "AnalyzeHmiTemplateReference", "PlanGlobalLibraryTemplateReuse", "AnalyzeGlobalLibraryPackage", "ImportMasterCopyFromGlobalLibrary", "ProbeGlobalLibrary", "ManageLibraryFolder", "ManageGlobalLibrary", "ImportLibraryTypeDocuments", "ManageLibraryMasterCopy", "CreateLibraryMasterCopy", "ManageLibraryTypeVersion", "CompareLibraryObjects", "SynchronizeLibrary", "CheckLibraryUpdates", "ManageLibraryType", "GetLibraryType", "GetLibraryOverview", "GenerateSivarc", "UpgradeSivarcDefinitions", "ManageSivarcScreenLayout", "ResolveSivarcExpression", "ManageSivarcBlockDefinition", "ListSivarcBlockDefinitions", "ManageSivarcTableRule", "ManageSivarcRuleContainer", "GetSivarcRuleTree", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace", "GetVersionControlStatus", "CreateVersionControlWorkspace", "ListVersionControlWorkspaces" };
-        private readonly LibraryService library = new LibraryService();
+        private readonly LibraryPortService library = new LibraryPortService();
         private readonly SivarcService sivarc = new SivarcService();
         private readonly VersionControlService vci = new VersionControlService();
         private readonly LibraryTools libraryTools;

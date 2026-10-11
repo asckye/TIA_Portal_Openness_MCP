@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,9 +25,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ReflectionTools
     {
-        private readonly ReflectionService _reflection;
+        private readonly ReflectionPortService _reflection;
 
-        public ReflectionTools(ReflectionService service) => _reflection = service;
+        public ReflectionTools(ReflectionPortService service) => _reflection = service;
 
         [McpServerTool(Name = "DescribeObjectProperty"), Description("[L2][Reflection]Describe an object's nested property via reflection (members list). propertyPath supports dotted path.")]
         public CallToolResult DescribeObjectPropertyV4(

@@ -24,7 +24,7 @@ namespace TiaMcp.Engine.Tests
     {
         private readonly UnifiedObjectServicesService objects = new UnifiedObjectServicesService();
         private readonly UnifiedEngineeringService engineering = new UnifiedEngineeringService();
-        private readonly ReflectionService reflection = new ReflectionService();
+        private readonly ReflectionPortService reflection = new ReflectionPortService();
         private readonly FakeHmiToolSession branchSession = new FakeHmiToolSession();
         private readonly ToolCatalog catalog;
         public HmiInspectionContractsTests()
@@ -347,7 +347,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 namespace TiaMcpServer.Siemens.Services
 {
-    internal sealed class ReflectionService
+    internal sealed class ReflectionPortService
     {
         internal int Calls;
         internal string? LastInput;

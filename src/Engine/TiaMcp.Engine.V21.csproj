@@ -119,6 +119,15 @@
     <Compile Include="../Shared/HmiDesignBuilder.cs" Link="Shared/HmiDesignBuilder.cs" />
     <Compile Include="../Shared/CapabilitySelfTestLogic.cs" Link="Shared/CapabilitySelfTestLogic.cs" />
     <Compile Include="../Shared/DeclaredToolMetadata.cs" Link="Shared/DeclaredToolMetadata.cs" />
+    <Compile Include="../Shared/LibraryTools.cs" Link="Shared/LibraryTools.cs" />
+    <Compile Include="../Shared/LibraryPortService.cs" Link="Shared/LibraryPortService.cs" />
+    <Compile Include="../Shared/TransactionExecution.cs" Link="Shared/TransactionExecution.cs" />
+    <Compile Include="../Shared/EngineeringServicesTools.cs" Link="Shared/EngineeringServicesTools.cs" />
+    <Compile Include="../Shared/EngineeringServicesPortService.cs" Link="Shared/EngineeringServicesPortService.cs" />
+    <Compile Include="../Shared/EngineeringToolContract.cs" Link="Shared/EngineeringToolContract.cs" />
+    <Compile Include="../Shared/SecurityToolContract.cs" Link="Shared/SecurityToolContract.cs" />
+    <Compile Include="../Shared/ReflectionTools.cs" Link="Shared/ReflectionTools.cs" />
+    <Compile Include="../Shared/ReflectionPortService.cs" Link="Shared/ReflectionPortService.cs" />
     <Compile Include="../Shared/PortedToolDeclarations.cs" Link="Shared/PortedToolDeclarations.cs" />
     <Compile Include="../Shared/HardwareToolContract.cs" Link="Shared/HardwareToolContract.cs" />
   </ItemGroup>

@@ -725,6 +725,7 @@ for task, stems in MIGRATION_GROUPS.items():
         assert (root / path).is_file(), path
         owners[path] = task
 owners[SH + "Host/GenerationTools.cs"] = "P8-31d"
+owners[SH + "EngineeringServicesTools.cs"] = "P8-03f"
 assert set(p for p,m in source_tools.values()) <= set(owners), sorted(set(p for p,m in source_tools.values()) - set(owners))
 
 # Existing entry points and ownership roots, not permission to edit whole trees.

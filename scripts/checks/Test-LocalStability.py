@@ -231,11 +231,19 @@ def run_profile(args, transport, profile, run_dir):
                 'bridge_recursion': 'INVALID_ARGUMENT', 'bridge_bad_json': 'INVALID_ARGUMENT',
                 'bridge_bad_shape': 'INVALID_ARGUMENT', 'bridge_missing_args': 'INVALID_ARGUMENT',
                 'bridge_unknown_tool': 'TOOL_NOT_FOUND', 'reflect_suffix_refused': 'NATIVE_OPERATION_FAILED',
-                'reflect_invoke_refused': 'OUTCOME_UNKNOWN', 'reflect_object_refused': 'OUTCOME_UNKNOWN',
+                'reflect_invoke_refused': 'PRECONDITION_FAILED', 'reflect_object_refused': 'PRECONDITION_FAILED',
             }
             if label == 'unknown_tool':
                 require(value.get('_protocolCode') == -32602, label + ': wrong protocol code')
             elif label in error_codes:
+                if label in ('reflect_invoke_refused', 'reflect_object_refused'):
+                    # P8-03d-fix admission applies to the F35 Foundation ports too:
+                    # no portal means no native reflection operation was issued.
+                    require(value['meta']['outcome'] == 'rejected-before-operation'
+                            and value['meta']['execution'] == 'not-started'
+                            and value['meta']['requiresSessionReset'] is False
+                            and value['error']['details']['condition'] == 'ConnectPortal',
+                            label + ': reflection port must retain no-native-call admission evidence')
                 require(value.get('ok') is False and value['error']['code'] == error_codes[label],
                         label + ': wrong V4 error code: ' + json.dumps(value))
             elif expectation == 'xref':
@@ -243,6 +251,11 @@ def run_profile(args, transport, profile, run_dir):
                         and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
                         and value['data']['queried'] is False and value['data']['complete'] is False,
                         label + ': refusal reported as completed/empty')
+            elif expectation == 'project_refused':
+                require(value.get('ok') is False and value['error']['code'] == 'PROJECT_NOT_BOUND'
+                        and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
+                        and meta['outcome'] == 'rejected-before-operation' and meta['requiresSessionReset'] is False,
+                        label + ': engine read must retain its unbound-project refusal: ' + json.dumps(value))
             elif expectation == 'portal_refused':
                 require(value.get('ok') is False and value['error']['code'] == 'PRECONDITION_FAILED'
                         and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
@@ -266,6 +279,9 @@ def run_profile(args, transport, profile, run_dir):
         # Warm every case once before measuring the steady sequence, including JIT/error paths.
         scenario = cases(args.major, source)
         if args.engine_worker is not None:
+            # Keep an engine-owned read in the soak after F35 moves to Foundation,
+            # so host/child MCP correlation remains exercised.
+            scenario.append(('engine_worker_project_refused', 'GetProjectUserManagement', {}, 'project_refused'))
             scenario.append(('block_group_portal_refused', 'CreatePlcBlockGroup',
                              {'softwarePath': '__soak_no_plc__', 'groupPath': '__soak_missing__'}, 'portal_refused'))
             scenario.append(('build_import_portal_refused', 'BuildAndImportPlcArtifact',

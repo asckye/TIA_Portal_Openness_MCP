@@ -1,0 +1,137 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Plc;
+
+namespace TiaMcp.Adapters.Libraries
+{
+    // Pure validation/catalog helpers for the deep library family (ILibrary update check / synchronization / harmonize /
+    // clean-up, type and version details, detailed object comparison, global library infos and archiving). No Siemens dependency.
+    internal static class LibraryPolicy
+    {
+        // Siemens V20/V21, "Creating new type from document" / "Updating type
+        // from document": project library only, and basename must be unambiguous.
+        internal static void ValidateDocumentImportScope(int major, bool projectLibrary,
+            string importOptions, bool xmlExists, bool sdExists)
+        {
+            if (!projectLibrary) throw new NotSupportedException("Library document import is supported only in the project library.");
+            RequireOneOf(importOptions, ImportOptions, "importOptions");
+            if (major == 20 && importOptions != "None")
+                throw new NotSupportedException("V20 library document import supports LibraryImportOptions.None only; inactive-culture options are unsupported.");
+            if (xmlExists && sdExists)
+                throw new ArgumentException("Both .xml and .s7dcl exist with the same basename; use a directory with one unambiguous document set.");
+        }
+
+        // Enum member names of Siemens.Engineering.Library(.Types/.Compare) in the V20/V21 PublicAPI (identical in both).
+        internal static readonly string[] UpdateCheckModes = { "ReportOutOfDateOnly", "ReportOutOfDateAndUpToDate" };
+        internal static readonly string[] ForceUpdateModes = { "SetOnlyHigherUpdatedVersionAsDefault", "ForceSetAnyUpdatedVersionAsDefault", "NoDefaultVersionChange" };
+        internal static readonly string[] DeleteUnusedVersionsModes = { "AutomaticallyDelete", "DoNotDelete" };
+        internal static readonly string[] StructureConflictResolutionModes = { "UpdateStructure", "RetainStructure", "CancelIfStructureConflicts" };
+        internal static readonly string[] HarmonizeOptions = { "HarmonizeNames", "HarmonizePaths" }; // None is refused by TIA; the two flags combine
+        internal static readonly string[] CleanUpModes = { "PreserveDefaultVersionOfUnusedTypes", "DeleteUnusedTypes" };
+        internal static readonly string[] ArchivationModes = { "None", "Compressed", "DiscardRestorableData", "DiscardRestorableDataAndCompressed" };
+        internal static readonly string[] CreateOptions = { "None", "Override" };
+        internal static readonly string[] ImportOptions = { "None", "SkipInactiveCultures", "ActivateInactiveCultures" };
+        internal static readonly string[] ConsistencyStatuses = { "None", "Consistent", "DefaultVersionInconsistent", "DuplicateVersionInconsistent", "NonDefaultVersionInstantiation", "MultipleVersionsInstantiationInSameDevice" };
+        internal static readonly string[] CompareStates = { "ContainerContentsDifferent", "ContainerContentsIdentical", "ObjectsDifferent", "LeftMissing", "RightMissing", "ObjectsIdentical" };
+        internal static readonly string[] DetailStatuses = { "NotCompared", "ObjectsDifferent", "ObjectsIdentical" };
+
+        internal static readonly string[] TypeActions = { "update", "delete", "updateLibrary", "updateProject" };
+        internal static readonly string[] SyncActions = { "updateLibrary", "updateProject", "harmonizeProject", "cleanUp" };
+        internal static readonly string[] CompareKinds = { "type", "version", "masterCopy" };
+        internal static readonly string[] GlobalLibraryExtraActions = { "infos", "openInfo", "archive" };
+        internal static readonly string[] TypeEditableProperties = { "Name", "DoNotUse", "SetForUpdate" };
+
+        // User-reported V21 crash: ScriptModuleType.Name -> SetAttribute -> NonRecoverableException
+        // and TIA process exit (2026-10-01, reported repeat of 2026-09-28). This is an incident
+        // guard, not an assertion that Siemens' general library-type rename API is unsupported.
+        internal static void GuardKnownTypeWrites(int major, Type type, IEnumerable<string> properties)
+        {
+            if (major != 21 || !properties.Contains("Name", StringComparer.Ordinal)) return;
+            for (Type? current = type; current != null; current = current.BaseType)
+                if (current.FullName == "Siemens.Engineering.HmiUnified.Library.ScriptModuleType")
+                    throw new PlcSoftwareException("NativeCrashRiskBlocked",
+                        "V21 Unified ScriptModuleType.Name write blocked before any property setter: a reported native channel failure terminated TIA during this operation. " +
+                        "No rename or automatic workaround was attempted. Retain the existing type name until the affected TIA build is diagnosed; do not retry via SetAttribute.");
+        }
+
+        internal static void ValidateTypeWriteProtection(bool isWriteProtected)
+        {
+            if (isWriteProtected) throw new NotSupportedException("Library type property writes require a non-write-protected global library. No property setter was called.");
+        }
+
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => allowed.Contains(value, StringComparer.Ordinal) ? value : throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive).");
+
+        internal static Guid? ParseGuid(string guid, string parameter)
+        {
+            if (string.IsNullOrWhiteSpace(guid)) return null;
+            if (!Guid.TryParse(guid.Trim(), out var parsed)) throw new ArgumentException(parameter + " must be a GUID (any standard format).");
+            return parsed;
+        }
+
+        // A selection is a JSON array of {"type": "Folder/Sub/TypeName"} or {"folder": "Folder/Sub"}; "" or "/" as folder = the whole
+        // Types system folder. At least one entry; at most 200; no duplicates.
+        // HarmonizeProjectOptions is a flags enum; TIA throws on None, so at least one flag is required.
+        internal static string JoinHarmonizeOptions(string[] names)
+        {
+            if (names.Length == 0) throw new ArgumentException("harmonizeOptionsJson must name HarmonizeNames and/or HarmonizePaths (TIA refuses None).");
+            foreach (var name in names) RequireOneOf(name, HarmonizeOptions, "harmonizeOptionsJson");
+            return string.Join(", ", names);
+        }
+        internal static void ValidateSyncRequest(string action, string libraryName, string targetLibraryName, string[] scopes, LibrarySelection[] selection,
+            string forceUpdateMode, string deleteUnusedVersionsMode, string structureConflictResolutionMode, string cleanUpMode)
+        {
+            RequireOneOf(action, SyncActions, "action");
+            RequireOneOf(forceUpdateMode, ForceUpdateModes, "forceUpdateMode"); RequireOneOf(deleteUnusedVersionsMode, DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
+            RequireOneOf(structureConflictResolutionMode, StructureConflictResolutionModes, "structureConflictResolutionMode"); RequireOneOf(cleanUpMode, CleanUpModes, "cleanUpMode");
+            if (action == "updateLibrary")
+            {
+                if (string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal)) throw new ArgumentException("updateLibrary needs a target library different from the source (empty name = project library).");
+            }
+            if ((action == "updateProject" || action == "harmonizeProject") && scopes.Length == 0) throw new ArgumentException(action + " needs scopeSoftwarePathsJson with at least one exact PLC/HMI software path; a project-wide update without scope is refused.");
+            if (selection.Length == 0) throw new ArgumentException("selectionJson is required.");
+        }
+        internal static void ValidateTypeRequest(string action, Dictionary<string, HardwareScalar> properties, string targetLibraryName, string libraryName, string[] scopes)
+        {
+            RequireOneOf(action, TypeActions, "action");
+            if (action == "update")
+            {
+                if (properties.Count == 0) throw new ArgumentException("update needs propertiesJson with Name, DoNotUse and/or SetForUpdate.");
+                foreach (var key in properties.Select(p => p.Key)) RequireOneOf(key, TypeEditableProperties, "propertiesJson");
+                if (properties.ContainsKey("SetForUpdate") && string.IsNullOrEmpty(libraryName))
+                    throw new NotSupportedException("SetForUpdate cannot be written on project-library types (even when setting true). No property setter was called.");
+            }
+            else if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to action=update only.");
+            if (action == "updateLibrary" && string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal)) throw new ArgumentException("updateLibrary needs a target library different from the source.");
+            if (action == "updateProject" && scopes.Length == 0) throw new ArgumentException("updateProject needs scopeSoftwarePathsJson with at least one exact software path.");
+        }
+        internal static void ValidateCompareRequest(string kind, string leftPath, string rightPath, string leftVersion, string rightVersion)
+        {
+            RequireOneOf(kind, CompareKinds, "kind");
+            if (string.IsNullOrWhiteSpace(leftPath) || string.IsNullOrWhiteSpace(rightPath)) throw new ArgumentException("leftPath and rightPath are required (exact relative paths).");
+            if (kind == "version" && (string.IsNullOrWhiteSpace(leftVersion) || string.IsNullOrWhiteSpace(rightVersion))) throw new ArgumentException("kind=version needs leftVersion and rightVersion (Major.Minor.Build).");
+            if (kind != "version" && (!string.IsNullOrWhiteSpace(leftVersion) || !string.IsNullOrWhiteSpace(rightVersion))) throw new ArgumentException("leftVersion/rightVersion apply to kind=version only.");
+        }
+        internal static void ValidateArchiveName(string archiveName)
+        {
+            if (string.IsNullOrWhiteSpace(archiveName) || archiveName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || archiveName.Length > 128) throw new ArgumentException("archiveName must be a plain file name (extension optional; TIA adds .zalXX for compressed modes when none is given).");
+        }
+        internal static void ValidateBounds(int maxDepth, int maxItems)
+        {
+            if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth must be 1..16.");
+            if (maxItems < 1 || maxItems > 5000) throw new ArgumentException("maxItems must be 1..5000.");
+        }
+
+        // Real-project observation: ProjectLibrary has no Name in the PublicAPI (only MasterCopyFolder / Parent / TypeFolder), so the
+        // label is synthesized; SystemGlobalLibrary.TypeFolder is null (system libraries carry master copies only) and TIA answers
+        // UpdateCheck on such a library with a NonRecoverableException; Close / Save / SaveAs / Archive / CleanUpLibrary exist on
+        // UserGlobalLibrary only, so a system library opened through Open(GlobalLibraryInfo) cannot be closed through the API.
+        internal const string ProjectLibraryLabel = "ProjectLibrary";
+        internal static readonly string[] UserGlobalLibraryOnlyActions = { "save", "saveAs", "close", "archive" };
+        internal static string NoTypeFolderMessage(string libraryClass, string operation)
+            => libraryClass + " has no TypeFolder (system global libraries expose master copies only); " + operation + " needs a library with types. Nothing was called on TIA.";
+        internal static string UserGlobalLibraryOnlyMessage(string action, string libraryName, string libraryClass)
+            => "'" + libraryName + "' is a " + libraryClass + "; action=" + action + " exists only on UserGlobalLibrary in the Openness API (Close / Save / SaveAs / Archive / CleanUpLibrary). System and corporate libraries stay open until TIA closes them.";
+    }
+}

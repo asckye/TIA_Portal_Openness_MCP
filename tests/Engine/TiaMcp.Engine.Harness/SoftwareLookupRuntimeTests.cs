@@ -173,8 +173,15 @@ internal static class SoftwareLookupRuntimeTests
         {
             var il = source.GetMethodBody()!.GetILAsByteArray()!;
             for (int i = 0; i + 4 < il.Length; i++)
-                if ((il[i] == 0x28 || il[i] == 0x6f) && BitConverter.ToInt32(il, i + 1) == target.MetadataToken
+            {
+                if (il[i] != 0x28 && il[i] != 0x6f) continue;
+                MethodBase? called;
+                try { called = source.Module.ResolveMethod(BitConverter.ToInt32(il, i + 1)); }
+                catch (ArgumentException) { continue; }
+                if (called?.Name == target.Name && called.DeclaringType?.FullName == target.DeclaringType?.FullName
+                    && called.GetParameters().Select(p => p.ParameterType.FullName).SequenceEqual(target.GetParameters().Select(p => p.ParameterType.FullName))
                     && (access == null || (i > 0 && il[i - 1] == 0x16 + access))) return true;
+            }
             return false;
         }
         foreach (var name in new[] { "GetPlcSoftware", "ResolvePlcSoftwareFuzzy", "ExactPlcForEngineering" })
@@ -182,8 +189,12 @@ internal static class SoftwareLookupRuntimeTests
             var entry = portal.Method(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             EngineSurface.CheckIl(check, Calls(entry, kernel), "EXE PLC entry uses session kernel: " + name, entry, kernel);
         }
-        var objectResolver = portal.Method("ResolveObject", BindingFlags.Instance | BindingFlags.NonPublic);
-        EngineSurface.CheckIl(check, Calls(objectResolver, kernel), "EXE reflection software resolution uses the PLC kernel", objectResolver, kernel);
+        var adapterEngine = portal.Adapter!.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!;
+        var objectResolver = adapterEngine.GetMethod("ResolveReflectionObject", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var organisationSession = portal.Adapter.GetType("TiaMcp.Adapters.Native.Plc.IPlcOrganisationSession", false)
+            ?? Program.FindReferencedType(server, "TiaMcp.Adapters.Native.Plc.IPlcOrganisationSession");
+        var nativeResolver = organisationSession.GetMethod("ResolvePlc")!;
+        EngineSurface.CheckIl(check, Calls(objectResolver, nativeResolver), "Adapter reflection software resolution uses the typed PLC kernel", objectResolver, nativeResolver);
         var objectIl = objectResolver.GetMethodBody()!.GetILAsByteArray()!;
         bool excludesPlcFallback = false;
         for (int i = 0; i + 4 < objectIl.Length; i++)

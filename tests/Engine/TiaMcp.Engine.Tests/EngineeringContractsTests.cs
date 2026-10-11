@@ -74,10 +74,10 @@ namespace TiaMcp.Engine.Tests
         private readonly Dictionary<string, McpServerTool> tools;
         public EngineeringContractsTests()
         {
-            catalog = new ToolCatalog(new[] { typeof(AlarmsTools), typeof(OpcUaTools), typeof(SoftwareUnitDeepTools), typeof(PlcIntegrityTools), typeof(PlcTechnologyTools), typeof(TechnologyObjectsTools) });
+            catalog = new ToolCatalog(new[] { typeof(EngineeringServicesTools), typeof(AlarmsTools), typeof(OpcUaTools), typeof(SoftwareUnitDeepTools), typeof(PlcIntegrityTools), typeof(PlcTechnologyTools), typeof(TechnologyObjectsTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection()
-                .AddSingleton(new AlarmsTools(alarms)).AddSingleton(new OpcUaTools(opc))
+                .AddSingleton<EngineeringServicesPortService>().AddSingleton<EngineeringServicesTools>().AddSingleton(new AlarmsTools(alarms)).AddSingleton(new OpcUaTools(opc))
                 .AddSingleton(new SoftwareUnitDeepTools(units)).AddSingleton(IntegrityTools())
                 .AddSingleton(new PlcTechnologyTools(new PlcOrganisationPortService((_, __) => { integrityCalls++; return new JsonObject { ["Message"] = "", ["Meta"] = new JsonObject { ["success"] = true } }; }, () => true, () => "fixture")))
                 .AddSingleton(new TechnologyObjectsTools(technology)).BuildServiceProvider());
@@ -114,7 +114,7 @@ namespace TiaMcp.Engine.Tests
                 "ExchangePlcAlarmTextLists", "ImportPlcAlarmInstanceTexts", "ManagePlcAlarmTextList", "GetPlcOpcUaConfiguration",
                 "ManageOpcUaInterface", "SetOpcUaInterfaceEnabled", "ExportOpcUaInterface", "ImportOpcUaInterface", "GenerateOpcUaModelledInterface",
                 "GetOpcUaAccessControl", "ManageOpcUaAccessControl", "ListPlcSoftwareUnits", "ManagePlcDocuments", "GetPlcChecksums",
-                "GetPlcObjectFingerprints", "ManagePlcBlockWriteProtection", "ManageProjectCompilationSettings", "ManagePlcSoftwareUnit",
+                "GetPlcObjectFingerprints", "ManagePlcBlockWriteProtection", "ManageProjectCompilationSettings", "ManagePlcSoftwareUnit", "ManageProjectLanguage", "ExportProjectTexts", "ImportProjectTexts", "CompareLibraries", "CompareProjects", "GetProjectSettings", "GetObjectIdentifier", "ShowObjectInEditor", "RunToolTransaction",
                 "SetPlcUnitObjectAccess", "ListTechnologyObjects", "ExportTechnologyObject", "ExportTechnologyObjectsToDirectory",
                 "ImportTechnologyObject", "ImportTechnologyObjectsFromDirectory", "GetTechnologyObjectTree", "ManageTechnologyObject"
             };
