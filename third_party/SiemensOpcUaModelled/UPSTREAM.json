@@ -7,6 +7,7 @@
     "Unused WPF/WinForms imports removed; nullable disabled for legacy source",
     "Headless execution context and error/progress/log adapters supplied by host",
     "Template substitutions XML-escaped; minute format corrected; alias lists reset each run",
-    "Recursive user constants accumulate instead of clearing parent-group constants"
+    "Recursive user constants accumulate instead of clearing parent-group constants",
+    "Siemens member reads routed through the host facade PlcOpcUaModelAccess (native call inventory); unit name read through a host-supplied SelectedUnitName delegate; OPCUA_NO_UNITS compile branch for V15.1, which has no software units; unused System.IO.Packaging import removed"
   ]
 }
