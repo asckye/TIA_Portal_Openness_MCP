@@ -161,7 +161,7 @@ internal static class HardwareNetworkShapeChecks
     {
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var surface = EngineSurface.For(server);
-        var originalService = server.GetType("TiaMcpServer.Siemens.Services." + domain + "Service", true)!;
+        var originalService = server.GetType("TiaMcpServer.Siemens.Services." + (domain == "HardwareNetwork" ? "DeviceUserPortService" : domain == "HardwareServices" ? "HardwareSecurityPortService" : domain + "Service"), true)!;
         var originalTools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);

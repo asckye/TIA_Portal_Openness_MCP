@@ -132,7 +132,9 @@ internal static class CatalogGenerator
             var rows = releases[key]!.AsArray().ToDictionary(r => Text(r!["currentName"]), r => r!.DeepClone());
             foreach (var name in Sorted(data.HostOnly.Keys)) rows[name] = new JsonObject { ["name"] = name, ["currentName"] = name, ["sourceName"] = name,
                 ["profiles"] = key is "20" or "21" ? (data.Additions.ContainsKey(name) && name is not "DescribeStandardPackage" and not "PlanProjectGeneration" and not "ApplyGenerationPlan" ? new JsonArray("full", "plc-foundation") : new JsonArray("full", "lite", "plc-foundation")) : new JsonArray("plc-foundation"), ["arguments"] = Copy(calls[profile]![name]!["arguments"]!), ["envelopeVersion"] = 4 };
-            releases[key] = new JsonArray((key is "20" or "21" ? rows.Values.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance) : rows.Values.OrderBy(r => data.HostOnly.ContainsKey(Text(r["currentName"])) && !data.Additions.ContainsKey(Text(r["currentName"]))).ThenBy(r => Text(r["sourceName"]), PythonStringComparer.Instance)).ToArray());
+            var withheld = PortedFamilies.Withheld(data.Families, key);
+            var admitted = rows.Values.Where(row => !withheld.Contains(Text(row["currentName"])));
+            releases[key] = new JsonArray((key is "20" or "21" ? admitted.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance) : admitted.OrderBy(r => data.HostOnly.ContainsKey(Text(r["currentName"])) && !data.Additions.ContainsKey(Text(r["currentName"]))).ThenBy(r => Text(r["sourceName"]), PythonStringComparer.Instance)).ToArray());
             Require(Set(releases[key]!.AsArray().Select(r => Text(r!["currentName"]))).SetEquals(data.Rosters[key]), "Runtime roster differs: " + key);
             Require(releases[key]!.AsArray().Where(r => Strings(r!["profiles"]).Contains("lite")).All(r => r!["arguments"] is JsonObject), "Missing lite call arguments: " + key);
         }

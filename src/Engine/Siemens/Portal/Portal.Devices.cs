@@ -162,66 +162,13 @@ namespace TiaMcpServer.Siemens
 
         // ----- PUT/GET access (dependency check for S7 reads) -----
 
-        private static string NormalizeAttrName(string? n)
-            => new string((n ?? string.Empty).ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
-
-        // Locate the CPU DeviceItem + attribute controlling "Permit access with PUT/GET communication".
-        // The exact Openness attribute name varies by CPU/firmware, so match any attribute whose
-        // normalized (lowercase, alphanumeric-only) name contains "putget".
-        // NOTE: S7-1200 (e.g. 1211C V4.6) does not expose this attribute via Openness at all — neither
-        // enumerated by GetAttributeInfos() nor gettable by name — so this returns (null, null) there.
-        // Use DumpDeviceAttributes to see exactly what a given CPU exposes.
+        private static string NormalizeAttrName(string? name) => TiaMcp.Adapters.Native.Security.PutGetAccess.NormalizeAttrName(name);
         private (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device)
-        {
-            foreach (var root in device.DeviceItems)
-            {
-                foreach (var tup in TraverseDeviceItems(root, root.Name))
-                {
-                    var it = tup.Item1;
-                    string[] names;
-                    try { names = it.GetAttributeInfos().Select(x => x.Name ?? string.Empty).ToArray(); }
-                    catch { /* swallow(enumerate-optional): Skip device items whose attribute inventory is unavailable while locating PUT/GET support. */ continue; }
-                    var match = names.FirstOrDefault(n => NormalizeAttrName(n).Contains("putget"));
-                    if (!string.IsNullOrEmpty(match)) return (it, match);
-                }
-            }
-            return (null, null);
-        }
-
-        private static bool AttrValueIsEnabled(object? v)
-            => v is bool b ? b : (v?.ToString()?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false);
-
-        // Read whether a CPU permits remote PUT/GET access (precondition for ReadPlcLiveValuesS7 on DB areas).
+            => TiaMcp.Adapters.Native.Security.PutGetAccess.FindPutGetAttribute(device);
+        private static bool AttrValueIsEnabled(object? value)
+            => value is bool enabled ? enabled : (value?.ToString()?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false);
         public JsonObject GetPutGetAccess(string devicePath)
-        {
-            if (IsProjectNull()) return new JsonObject { ["found"] = false, ["message"] = "No project open." };
-            var device = GetDevice(devicePath);
-            if (device == null) return new JsonObject { ["found"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
-
-            var (item, attrName) = FindPutGetAttribute(device);
-            if (item == null || attrName == null)
-                return new JsonObject
-                {
-                    ["found"] = false,
-                    ["device"] = device.Name,
-                    ["message"] = "PUT/GET access is not exposed as an Openness attribute on this CPU/firmware " +
-                                  "(confirmed e.g. on S7-1200 1211C V4.6). Check/set it manually in TIA: " +
-                                  "CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'. " +
-                                  "Note: M/I/Q S7 reads still work when the channel is permitted; a successful M-area read implies PUT/GET is enabled."
-                };
-
-            object? val = null;
-            try { val = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): An unavailable PUT/GET value leaves the existing null readback for this CPU. */ }
-            return new JsonObject
-            {
-                ["found"] = true,
-                ["device"] = device.Name,
-                ["deviceItem"] = item.Name,
-                ["attributeName"] = attrName,
-                ["enabled"] = AttrValueIsEnabled(val),
-                ["rawValue"] = val?.ToString() ?? string.Empty
-            };
-        }
+            => new Services.HardwareSecurityPortService().GetPutGetAccess(devicePath);
 
         public string ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName)
             => IsProjectNull() ? "Project is null" : new Services.HardwareNetworkPortService(HardwareAddressWorkerBridge.Call, () => true, HardwareAddressWorkerBridge.ProjectIdentity).ProbeConnectDeviceNodesToSubnet(plcRootPath, hmiRootPath, subnetName);
@@ -746,114 +693,8 @@ namespace TiaMcpServer.Siemens
 
 
         public ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath = "PLC_1", string expectedHmiSoftwarePath = "HMI_RT_1")
-        {
-            var meta = new JsonObject
-            {
-                ["timestamp"] = DateTime.Now,
-                ["success"] = false
-            };
+            => new Services.ProjectLifecyclePortService().ValidateAutomationContext(expectedPlcSoftwarePath, expectedHmiSoftwarePath);
 
-            var problems = new JsonArray();
-            var devices = new JsonArray();
-            var software = new JsonArray();
-            meta["problems"] = problems;
-            meta["devices"] = devices;
-            meta["software"] = software;
-
-            if (IsProjectNull())
-            {
-                problems.Add("Project is null. Use ConnectPortal + AttachOpenProject/OpenProject first.");
-                return new ResponseMessage { Message = "Automation context invalid", Meta = meta };
-            }
-
-            meta["project"] = _project?.Name ?? string.Empty;
-
-            try
-            {
-                foreach (var d in _project!.Devices)
-                {
-                    var deviceInfo = new JsonObject
-                    {
-                        ["name"] = d.Name,
-                        ["type"] = d.GetType().FullName ?? d.GetType().Name
-                    };
-                    devices.Add(deviceInfo);
-
-                    foreach (var di in d.DeviceItems)
-                    {
-                        TryAddSoftwareInfo(di, software);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                problems.Add($"Device/software scan failed: {FormatExceptionDetail(ex)}");
-            }
-
-            if (devices.Count == 0)
-            {
-                problems.Add("No devices found in current project.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(expectedPlcSoftwarePath))
-            {
-                var plc = GetSoftwareContainer(expectedPlcSoftwarePath)?.Software as PlcSoftware;
-                meta["expectedPlcSoftwarePath"] = expectedPlcSoftwarePath;
-                meta["expectedPlcFound"] = plc != null;
-                if (plc == null) problems.Add($"PLC software not found at '{expectedPlcSoftwarePath}'.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(expectedHmiSoftwarePath))
-            {
-                var hmi = GetSoftwareContainer(expectedHmiSoftwarePath)?.Software;
-                meta["expectedHmiSoftwarePath"] = expectedHmiSoftwarePath;
-                meta["expectedHmiFound"] = hmi != null && hmi.GetType().FullName?.Contains("Hmi", StringComparison.OrdinalIgnoreCase) == true;
-                if (hmi == null) problems.Add($"HMI software not found at '{expectedHmiSoftwarePath}'.");
-            }
-
-            try
-            {
-                meta["projectTree"] = GetProjectTree();
-            }
-            catch (Exception ex)
-            {
-                problems.Add($"Project tree failed: {FormatExceptionDetail(ex)}");
-            }
-
-            meta["success"] = problems.Count == 0;
-            return new ResponseMessage
-            {
-                Message = problems.Count == 0 ? "Automation context OK" : "Automation context has problems",
-                Meta = meta
-            };
-
-            void TryAddSoftwareInfo(DeviceItem item, JsonArray target)
-            {
-                try
-                {
-                    var sc = item.GetService<SoftwareContainer>();
-                    if (sc?.Software != null)
-                    {
-                        target.Add(new JsonObject
-                        {
-                            ["deviceItem"] = item.Name,
-                            ["softwareName"] = TryGetName(sc.Software) ?? item.Name,
-                            ["softwareType"] = sc.Software.GetType().FullName ?? sc.Software.GetType().Name
-                        });
-                    }
-                }
-                catch /* swallow(enumerate-optional): Unavailable software services or children are skipped while retaining the remaining preflight inventory. */ { }
-
-                try
-                {
-                    foreach (var child in item.DeviceItems)
-                    {
-                        TryAddSoftwareInfo(child, target);
-                    }
-                }
-                catch /* swallow(enumerate-optional): Unavailable software services or children are skipped while retaining the remaining preflight inventory. */ { }
-            }
-        }
 
         #endregion
     }

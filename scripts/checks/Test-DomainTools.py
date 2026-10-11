@@ -1132,13 +1132,18 @@ def plc_exchange_reply(reply, name):
 # live in the Siemens-free host types. Explicit rosters keep a missing fixture
 # or a declaration moved to the wrong type from silently disappearing.
 PORTED_DOMAIN_TOOLS = {
-    'ProjectSecurity': {'EngineeringServicesTools': ('CompareLibraries', 'CompareProjects', 'GetProjectSettings')},
-    'ProjectSession': {'EngineeringServicesTools': ('GetObjectIdentifier', 'ShowObjectInEditor', 'RunToolTransaction')},
-    'Devices': {'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
+    'ProjectSecurity': {'EngineeringServicesTools': ('CompareLibraries', 'CompareProjects', 'GetProjectSettings'),
+        'ProjectProtectionTools': ('GetProjectProtection',),
+        'ProjectUserManagementTools': ('GetProjectUserManagement', 'ManageProjectUserManagement')},
+    'ProjectSession': {'EngineeringServicesTools': ('GetObjectIdentifier', 'ShowObjectInEditor', 'RunToolTransaction'),
+        'ProjectLifecycleProjectTools': ('BuildProjectScaffold', 'SaveProjectCopy')},
+    'Session': {'ProjectLifecycleSessionTools': ('ConnectIsolatedPortal', 'EnsureOpennessUserGroup', 'GetPortalInfo')},
+    'Devices': {'ProjectLifecycleDeviceTools': ('ValidateAutomationContext',), 'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
     'HardwareNetwork': {'HardwareSecurityTools': ('ManageDeviceUsers',)},
     'HmiDescribe': {'PlcCompilePortTools': ('CompileHmiDiagnostics',)},
-    'HmiInspection': {'HmiInspectionPortTools': ('GetHmiScreenSnapshot', 'ListHmiScreenPaths')},
-    'HardwareServices': {'PlcCompilePortTools': ('CompileDevice',), 'HardwareServicesPortTools': ('ListCommunicationConnections', 'ManageCommunicationConnection', 'ExchangeSystemDiagnosticsSettings', 'GetHardwareFeatures', 'ManageDeviceServiceObjects', 'ManageHardwareUtilities')},
+    'HmiInspection': {'ProjectLifecycleInspectionTools': ('ArchiveSavedProject',), 'HmiInspectionPortTools': ('GetHmiScreenSnapshot', 'ListHmiScreenPaths')},
+    'HardwareServices': {'PlcCompilePortTools': ('CompileDevice',), 'HardwareServicesTools': ('ManagePlcProtection', 'ManageWatchForceTableWebAccess', 'GetPlcPutGetAccess', 'SetPlcPutGetAccess'),
+        'HardwareServicesPortTools': ('ListCommunicationConnections', 'ManageCommunicationConnection', 'ExchangeSystemDiagnosticsSettings', 'GetHardwareFeatures', 'ManageDeviceServiceObjects', 'ManageHardwareUtilities')},
     'Library': {'HmiOfflineTools': (
         'AnalyzeHmiTemplateReference', 'AnalyzeGlobalLibraryPackage',
         'PlanGlobalLibraryTemplateReuse', 'AnalyzeUnifiedHmiTemplateLayout')},
@@ -1153,7 +1158,7 @@ PORTED_DOMAIN_TOOLS = {
             'CreatePlcTypeGroup', 'DeleteEmptyPlcBlockGroup', 'CreatePlcBlockGroup', 'MovePlcBlockToGroup', 'ManagePlcUserGroup'),
         'PlcReadModifyTools': ('SetPlcProgram', 'GetPlcBlockEditCapabilities', 'ImportPlcBlockVerified',
             'RepairAndReimportPlcBlock', 'DescribePlcBlockLogic')},
-    'NativeExchange': {'PlcReadModifyTools': ('CreatePlcInstanceDb', 'GeneratePlcSourceFromBlocks', 'ManagePlcTagDefinition'),
+    'NativeExchange': {'ProjectLifecycleExchangeTools': ('RetrieveProjectArchive',), 'PlcReadModifyTools': ('CreatePlcInstanceDb', 'GeneratePlcSourceFromBlocks', 'ManagePlcTagDefinition'),
         'EngineeringServicesTools': ('ManageProjectLanguage', 'ExportProjectTexts', 'ImportProjectTexts')},
     'PlcTables': {'PlcReadModifyTools': ('GetPlcTagTableConstants', 'ImportPlcTagTablesFromDirectory'),
         'PlcWatchTools': ('ExportPlcWatchTablesToDirectory', 'GetPlcWatchTableCurrentValuesReadOnly', 'ImportPlcWatchTableOffline', 'ListPlcForceTables', 'ManagePlcTableEntries', 'MonitorPlcWatchTableS7', 'PlanOnlineReadOnlyDataProvider', 'PlanOnlineReadOnlyMonitoring', 'ProbePlcMonitorOnlineCapabilities', 'SetPlcWatchTableModifyValue')},

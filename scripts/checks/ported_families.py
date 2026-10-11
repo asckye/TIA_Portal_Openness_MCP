@@ -19,7 +19,7 @@ def parse(source):
         assert tools and len(tools) == len(set(tools))
         assert not set(tools) & {t for f in result.values() for t in f["tools"]}, "Duplicate ported tool"
         result[name] = {"prefix": prefix, "releases": releases, "tools": tools}
-    overrides = re.search(r'\bToolReleases\s*=\s*new Dictionary<string, string\[\]>\([^;]+?\{(.*?)\n\s*\};', source, re.S)
+    overrides = re.search(r'\bToolReleases\s*=\s*new Dictionary<string, string\[\]>\([^)]*\)\s*\{(.*?)\n\s*\};', source, re.S)
     assert overrides or not re.search(r'\bToolReleases\s*=', source), "Unparsed per-tool availability overrides"
     if overrides:
         entries = re.findall(r'\["([^"\n]+)"\]\s*=\s*new\[\]\s*\{([^}]+)\}', overrides.group(1))
@@ -42,6 +42,10 @@ def families(root):
 def additions(root, release):
     return {tool for family in families(root).values() if release in family["releases"] for tool in family["tools"]
             if release in family.get("tool_releases", {}).get(tool, family["releases"])}
+
+
+def withheld(root, release):
+    return {tool for family in families(root).values() for tool in family['tools']} - additions(root, release)
 
 
 def foundation_candidates(root):

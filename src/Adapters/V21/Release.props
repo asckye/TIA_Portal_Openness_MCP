@@ -12,5 +12,6 @@
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.WinCC.dll"><ApiName>Siemens.Engineering.WinCC</ApiName><ExpectedIdentity>Siemens.Engineering.WinCC, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.WinCC.Extension.dll"><ApiName>Siemens.Engineering.WinCC.Extension</ApiName><ExpectedIdentity>Siemens.Engineering.WinCC.Extension, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.WinCCUnified.dll"><ApiName>Siemens.Engineering.WinCCUnified</ApiName><ExpectedIdentity>Siemens.Engineering.WinCCUnified, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.TeamcenterGateway.dll"><ApiName>Siemens.Engineering.TeamcenterGateway</ApiName><ExpectedIdentity>Siemens.Engineering.TeamcenterGateway, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
   </ItemGroup>
 </Project>

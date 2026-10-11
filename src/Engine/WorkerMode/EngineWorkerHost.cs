@@ -92,6 +92,7 @@ namespace TiaMcpServer.Worker
             portal = (Portal)EngineServices.Get(typeof(Portal));
             var engineering = (IEngineeringSession)portal;
             portal.EngineeringTransactionActive = () => foundation.HasEngineeringTransaction;
+            portal.VersionControlFallback = request => foundation.VersionControlFallback(request, portal.FallbackBinding, portal.FallbackUncertain);
             foundation.AcquireEngineeringEditAccess = engineering.AcquireHmiEditAccess;
             foundation.EngineeringProjectMissing = engineering.IsProjectNull;
             foundation.ResolveEngineeringBlock = (software, block) => engineering.GetBlock(software, block);
@@ -209,6 +210,38 @@ namespace TiaMcpServer.Worker
                 if (response.Failure != null) throw new InvalidOperationException(response.Failure.Message);
                 return JsonNode.Parse(response.ResultJson);
             };
+
+            foundation.ProjectClearConnectError = portal.ClearProjectLifecycleConnectError;
+            foundation.ProjectConnectionCreated = connection => { portal.AdoptProjectLifecycleConnection(connection); RefreshFromEngine(); };
+            foundation.ProjectRetrieved = project => { portal.AdoptProjectLifecycleRetrieved(project); RefreshFromEngine(); };
+            foundation.ProjectSavedAs = () => { portal.RefreshProjectLifecycleSavedAs(); RefreshFromEngine(); };
+            foundation.ProjectReleased = () => { portal.ReleaseProjectLifecycleBinding(); RefreshFromEngine(); };
+            foundation.ProjectCachedBinding = () => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(portal.GetBindingIdentity().ToJsonString())!;
+            foundation.ProjectExpectedProjectName = () => portal.ExpectedProjectName;
+            foundation.ProjectValidationTree = portal.GetProjectTree;
+            foundation.ProjectEnsureGroup = () => OpennessGroup.EnsureMembership().GetAwaiter().GetResult();
+            foundation.ProjectScaffoldOperation = request => {
+                var t = request.Text; object result;
+                switch (request.Kind)
+                {
+                    case "connect": result = EngineServices.Get<SessionTools>().Connect(); break;
+                    case "createProject": result = EngineServices.Get<ProjectSessionTools>().CreateProject(t[0], t[1]); break;
+                    case "save": result = EngineServices.Get<ProjectSessionTools>().SaveProject(); break;
+                    case "addDevice": result = EngineServices.Get<DevicesTools>().AddDeviceWithFallback(t[0], t[1], t[2], t[3]); break;
+                    case "lad": result = EngineServices.Get<DocumentsTools>().ImportFromDocuments(t[0], t[1], t[2], t[3]); break;
+                    case "sclImport": result = EngineServices.Get<PlcExternalSourcesTools>().ImportPlcExternalSource(t[0], t[1], t[2]); break;
+                    case "sclGenerate": result = EngineServices.Get<PlcExternalSourcesTools>().GenerateBlocksFromExternalSource(t[0], t[1]); break;
+                    case "compile": result = EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc(t[0]); break;
+                    case "hmiInfo": result = EngineServices.Get<HmiDescribeTools>().GetHmiProgramInfo(t[0]); break;
+                    case "hmiConnect": result = EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiConnection(t[0], t[1], t[2]); break;
+                    case "hmiScreen": result = EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen(t[0], t[1], request.Numbers[0], request.Numbers[1]); break;
+                    case "hmiDesign": result = EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson(t[0], t[1], t[2], request.Flags[0]); break;
+                    case "hmiTag": result = EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag(t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], request.Flags[0]); break;
+                    default: throw new ArgumentException("Unknown scaffold primitive.");
+                }
+                RefreshFromEngine();
+                return JsonSerializer.Deserialize<object>(JsonSerializer.Serialize(result))!;
+            };
             RefreshFromFoundation();
         }
 
@@ -232,6 +265,7 @@ namespace TiaMcpServer.Worker
                 processStartTicks = ticks; processLease = lease; ownedPortal = owns;
                 foundation!.AdoptSharedSession(tia, project, session, state, owns, ticks);
             });
+
             RefreshFromFoundation();
         }
 

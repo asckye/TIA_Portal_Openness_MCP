@@ -30,6 +30,19 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../Shared/OpennessGroup.cs" Link="Shared/OpennessGroup.cs" />
+    <PackageReference Include="Siemens.Collaboration.Net.OperatingSystem.Windows" Version="3.0.1725521661" />
+    <PackageReference Include="Siemens.Collaboration.Net.TiaPortal.Openness.Resolver" Version="1.1.1725480302" />
+    <Reference Include="Siemens.Engineering" Condition="'$(TiaReleaseKey)' == '14sp1'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <Target Name="EmbedProjectGroupRuntime" AfterTargets="ResolveAssemblyReferences" BeforeTargets="PrepareResources">
+    <ItemGroup>
+      <ProjectGroupRuntime Include="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy('%(ReferenceCopyLocalPaths.Filename)').StartsWith('Siemens.Collaboration.'))" />
+      <EmbeddedResource Include="@(ProjectGroupRuntime)" LogicalName="ProjectGroupRuntime.%(Filename)%(Extension)" />
+      <ReferenceCopyLocalPaths Remove="@(ProjectGroupRuntime)" />
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
     <Compile Include="../Logic/Siemens/EngineeringAuditLogic.cs" Link="EngineeringAuditLogic.cs" />
   </ItemGroup>
   <ItemGroup>

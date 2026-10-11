@@ -272,6 +272,8 @@ namespace TiaMcp.Engine.Tests
             Assert.NotNull(directory);
             var stems = new[] { "SessionTools", "ProjectSessionTools", "DiagnosticsTools", "EngineeringDiagnosticsTools", "McpServer.Doctor", "McpServer.Maintenance", "McpServer.Worker" };
             var source = string.Join("\n", stems.Select(stem => File.ReadAllText(Path.Combine(directory!.FullName, stem == "EngineeringDiagnosticsTools" || stem.StartsWith("McpServer.") ? "src/Shared/Host" : "src/Engine/ModelContextProtocol/Tools", stem + ".cs"))));
+            source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/ProjectLifecycleSessionTools.cs"));
+            source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/ProjectLifecycleProjectTools.cs"));
             source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/HostMetaTools.cs"));
             source += File.ReadAllText(Path.Combine(directory!.FullName, "src/Shared/EngineeringServicesTools.cs"));
             var names = Regex.Matches(source, "McpServerTool\\(Name\\s*=\\s*\"([^\"]+)\"").Cast<Match>().Select(m => m.Groups[1].Value).Where(name => !TiaMcp.Adapters.Contracts.PortedFamilies.All.Single(f => f.Name == "F06").Tools.Contains(name) || new[] { "GetObjectIdentifier", "ShowObjectInEditor", "RunToolTransaction" }.Contains(name)).ToArray();
@@ -287,7 +289,7 @@ namespace TiaMcp.Engine.Tests
             Assert.Contains("string[]? itemPath = null", source);
             Assert.Contains("ToolCall[] calls", source);
             Assert.Contains("_session.GetState()", source);
-            Assert.Contains("_session.ReadPortalInfo(includeProcesses,includeSessions,includeProducts)", source);
+            Assert.Contains("_service.ReadPortalInfo(includeProcesses,includeSessions,includeProducts)", source);
         }
     }
 }

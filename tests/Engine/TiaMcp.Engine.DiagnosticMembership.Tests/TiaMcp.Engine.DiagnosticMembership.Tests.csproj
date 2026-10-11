@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../../src/Engine/Siemens/Openness.cs" Link="Openness.cs" />
+    <Compile Include="../../../src/Shared/OpennessGroup.cs" Link="OpennessGroup.cs" />
   </ItemGroup>
 </Project>

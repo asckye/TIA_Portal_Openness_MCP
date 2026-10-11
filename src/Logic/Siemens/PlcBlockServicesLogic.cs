@@ -59,12 +59,7 @@ namespace TiaMcpServer.Siemens
         }
 
         internal static SecureString ToSecureString(string password)
-        {
-            var secure = new SecureString();
-            foreach (var c in password) secure.AppendChar(c);
-            secure.MakeReadOnly();
-            return secure;
-        }
+            => TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ToSecureString(password);
 
         // Only reports whether the policy is violated; never which characters or where.
         internal static bool ContainsInvalidPasswordCharacter(string password, IEnumerable<char> invalid)

@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <Compile Include="../../../src/Shared/ProjectUserManagementTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectProtectionTools.cs" />
+    <Compile Include="../../../src/Shared/DriveToolContract.cs" Link="DriveToolContract.cs" />
     <Compile Remove="Fixtures/PlcRender/generate.cs" />
   </ItemGroup>
   <Import Project="../../Shared/Xunit.props" />
@@ -50,7 +53,7 @@
     <Compile Include="../../../src/Shared/Host/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
     <Compile Include="../../../src/Shared/LibraryTools.cs" Link="LibraryTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs" Link="VersionControlTools.cs" />
+    <Compile Include="../../../src/Shared/VersionControlTools.cs" Link="VersionControlTools.cs" />
 
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs" Link="McpServer.BlockImportVerification.cs" />
     <Compile Include="../../../src/Shared/PlcToolContract.cs" Link="McpServer.BlockLogic.cs" />
@@ -104,7 +107,7 @@
     <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedGlobalScriptEdit.cs" Link="UnifiedGlobalScriptEdit.cs" />
     <Compile Include="../../../src/Engine/Siemens/Services/GlobalScriptEditService.cs" Link="GlobalScriptEditService.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GlobalScriptEditTools.cs" Link="GlobalScriptEditTools.cs" />
-    <Compile Include="../../../src/Engine/Siemens/ProjectArchive.cs" Link="ProjectArchive.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiSnapshot.cs" Link="HmiSnapshot.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="Native/Hmi/HmiValues.cs" />
@@ -140,14 +143,19 @@
     <Compile Include="../../../src/Shared/Host/McpServer.Batch.cs" Link="McpServer.Batch.cs" />
     <Compile Include="../../../src/Shared/Host/McpServer.Exports.cs" Link="McpServer.Exports.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolUsageTools.cs" Link="ToolUsageTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CertificateManagementTools.cs" Link="CertificateManagementTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ProjectSecurityTools.cs" Link="ProjectSecurityTools.cs" />
+    <Compile Include="../../../src/Shared/CertificateManagementTools.cs" Link="CertificateManagementTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectLifecycleSessionTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectLifecycleProjectTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectLifecycleInspectionTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectLifecycleDeviceTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectLifecycleExchangeTools.cs" />
+    <Compile Include="../../../src/Shared/ProjectSecurityTools.cs" Link="ProjectSecurityTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SafetyManagementTools.cs" Link="SafetyManagementTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SecurityDeepTools.cs" Link="SecurityDeepTools.cs" />
+    <Compile Include="../../../src/Shared/SecurityDeepTools.cs" Link="SecurityDeepTools.cs" />
     <Compile Include="../../../src/Shared/ClassicHmiFoldersTools.cs" Link="ClassicHmiFoldersTools.cs" />
     <Compile Include="../../../src/Shared/MotionProDiagClassicHmiTools.cs" Link="MotionProDiagClassicHmiTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareNetworkTools.cs" Link="HardwareNetworkTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HardwareServicesTools.cs" Link="HardwareServicesTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareSecurityTools.cs" Link="HardwareNetworkTools.cs" />
+    <Compile Include="../../../src/Shared/HardwareServicesTools.cs" Link="HardwareServicesTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/McpHints.cs" Link="McpHints.cs" />
     <!-- Shared Classic / Unified screen traversal, with no Siemens runtime dependency. -->
     <Compile Include="../../../src/Engine/Siemens/Hmi/HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
@@ -171,7 +179,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../third_party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ScaffoldOperations.cs" Link="Shared/ScaffoldOperations.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/ScaffoldOperations.cs" Link="Shared/ScaffoldOperations.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../src/Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>
@@ -187,7 +195,7 @@
   <ItemGroup>
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/DccTools.cs" Link="DccTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs" Link="StartdriveTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TeamcenterTools.cs" Link="TeamcenterTools.cs" />
+    <Compile Include="../../../src/Shared/TeamcenterTools.cs" Link="TeamcenterTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
@@ -210,7 +218,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs" Link="TechnologyObjectsTools.cs" />
     <Compile Include="../../../src/Shared/Host/EcosystemTools.cs" Link="EcosystemTools.cs" />
     <Compile Include="../../../src/Shared/EngineeringAuditTools.cs" Link="EngineeringAuditTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
+    <Compile Include="../../../src/Shared/Host/GitWorkflowTools.cs" Link="GitWorkflowTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportStagingTools.cs" Link="ImportStagingTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs" Link="ImportOrderTools.cs" />
     <Compile Include="../../../src/Shared/Host/OfflineAnalysisTools.cs" Link="OfflineAnalysisTools.cs" />

@@ -1,5 +1,33 @@
 <Project>
   <ItemGroup>
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectSecurityTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleSessionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleProjectTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleInspectionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleDeviceTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleExchangeTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecyclePortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ScaffoldOperations.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SecurityDeepTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareSecurityTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareServicesTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareSecurityPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DeviceUserPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SecurityDeepPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/Siemens/SecurityDeepLogic.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/CertificateManagementTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/CertificateManagementPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/Siemens/ProjectSecurityLogic.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectUserManagementTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectUserManagementPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectProtectionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectProtectionPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/DriveToolContract.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/VersionControlTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TeamcenterTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/VersionControlPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TeamcenterPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GitWorkflowTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeResponses.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDescribeTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeTools.cs" />

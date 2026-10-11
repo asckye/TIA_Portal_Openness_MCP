@@ -19,6 +19,32 @@
   <ItemGroup>
     <Compile Include="../Shared/Host/ToolJsonArguments.cs" Link="Host/ToolJsonArguments.cs" />
     <Compile Include="../Shared/Host/EngineeringFileNames.cs" Link="Host/EngineeringFileNames.cs" />
+    <Compile Include="../Shared/ProjectSecurityTools.cs" />
+    <Compile Include="../Shared/ProjectLifecycleSessionTools.cs" />
+    <Compile Include="../Shared/ProjectLifecycleProjectTools.cs" />
+    <Compile Include="../Shared/ProjectLifecycleInspectionTools.cs" />
+    <Compile Include="../Shared/ProjectLifecycleDeviceTools.cs" />
+    <Compile Include="../Shared/ProjectLifecycleExchangeTools.cs" />
+    <Compile Include="../Shared/ProjectLifecyclePortService.cs" />
+    <Compile Include="../Shared/ScaffoldOperations.cs" />
+    <Compile Include="../Shared/OpennessGroup.cs" />
+    <Compile Include="../Shared/ProjectUserManagementTools.cs" />
+    <Compile Include="../Shared/ProjectUserManagementPortService.cs" />
+    <Compile Include="../Shared/CertificateManagementTools.cs" />
+    <Compile Include="../Shared/CertificateManagementPortService.cs" />
+    <Compile Include="../Shared/SecurityDeepTools.cs" />
+    <Compile Include="../Shared/HardwareSecurityTools.cs" />
+    <Compile Include="../Shared/HardwareServicesTools.cs" />
+    <Compile Include="../Shared/HardwareSecurityPortService.cs" />
+    <Compile Include="../Shared/DeviceUserPortService.cs" />
+    <Compile Include="../Shared/SecurityDeepPortService.cs" />
+    <Compile Include="../Shared/ProjectProtectionTools.cs" />
+    <Compile Include="../Shared/ProjectProtectionPortService.cs" />
+    <Compile Include="../Shared/DriveToolContract.cs" Link="Shared/DriveToolContract.cs" />
+    <Compile Include="../Shared/VersionControlTools.cs" Link="Shared/VersionControlTools.cs" />
+    <Compile Include="../Shared/TeamcenterTools.cs" Link="Shared/TeamcenterTools.cs" />
+    <Compile Include="../Shared/VersionControlPortService.cs" Link="Shared/VersionControlPortService.cs" />
+    <Compile Include="../Shared/TeamcenterPortService.cs" Link="Shared/TeamcenterPortService.cs" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpEngineWorkerSdkFixture)' == 'true'">
       <_Parameter1>TiaMcpEngineWorkerSdkFixture</_Parameter1>
       <_Parameter2>true</_Parameter2>

@@ -11,14 +11,8 @@ namespace TiaMcpServer.Siemens.Services
 
         public HmiInspectionService(IHmiToolSession session) => _session = session;
 
-        public ResponseMessage ArchiveSavedProject(string archivePath,bool dryRun=true)
-            => _session.RunHmiStepTool("ArchiveSavedProject",meta=>{
-                using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
-                var result=ProjectArchive.Create(_session.CurrentProject!,archivePath,dryRun);
-                foreach(var item in result)meta[item.Key]=item.Value?.DeepClone();
-                meta["operationSuccess"]=result["success"]?.DeepClone();
-                return dryRun ? "Native project archive preview; no file written." : "Native archive operation completed; inspect success and validation. Retrieval is not tested.";
-            });
+        public ResponseMessage ArchiveSavedProject(string archivePath, bool dryRun = true)
+            => new ProjectLifecyclePortService().ArchiveSavedProject(archivePath, dryRun);
         private object ExactHmiItem(string softwarePath,string screenPath,string itemName)
         {
             var screen=HmiExactAccess.Screen(_session.ResolveHmiSoftwareOrThrow(softwarePath),screenPath);

@@ -28,7 +28,7 @@ namespace TiaMcp.Adapters
             return utility;
         }
         private static SecureString HardwareSecureString(string value)
-        { var result = new SecureString(); foreach (char c in value) result.AppendChar(c); result.MakeReadOnly(); return result; }
+        => TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ToSecureString(value);
         private static Type HardwareRequireHardwareApiType(string typeName)
             => typeof(HardwareObject).Assembly.GetType(typeName) ?? typeof(PlcSoftware).Assembly.GetType(typeName)
                ?? throw new NotSupportedException(typeName + " is not exposed by the connected TIA Portal Openness version (requires V21 or newer).");

@@ -35,7 +35,7 @@ public static class PortedFamilies
             Require(tools.Length > 0 && tools.All(seen.Add), "Duplicate ported tool");
             Require(result.TryAdd(row.Groups[1].Value, new(row.Groups[2].Value, releases, tools, new(StringComparer.Ordinal))), "Duplicate ported family");
         }
-        var overrides = Regex.Match(source, @"\bToolReleases\s*=\s*new Dictionary<string, string\[\]>\([^;]+?\{(.*?)\n\s*\};", RegexOptions.Singleline);
+        var overrides = Regex.Match(source, @"\bToolReleases\s*=\s*new Dictionary<string, string\[\]>\([^)]*\)\s*\{(.*?)\n\s*\};", RegexOptions.Singleline);
         Require(overrides.Success || !Regex.IsMatch(source, @"\bToolReleases\s*="), "Unparsed per-tool availability overrides");
         if (overrides.Success)
         {
@@ -58,4 +58,6 @@ public static class PortedFamilies
         .SelectMany(f => f.Tools.Where(t => !f.ToolReleases.GetValueOrDefault(t, f.Releases).Contains(release))).ToHashSet(StringComparer.Ordinal);
     public static HashSet<string> Additions(Dictionary<string, Family> families, string release) => families.Values
         .Where(f => f.Releases.Contains(release)).SelectMany(f => f.Tools.Where(t => f.ToolReleases.GetValueOrDefault(t, f.Releases).Contains(release))).ToHashSet(StringComparer.Ordinal);
+    public static HashSet<string> Withheld(Dictionary<string, Family> families, string release) => families.Values
+        .SelectMany(f => f.Tools).Except(Additions(families, release), StringComparer.Ordinal).ToHashSet(StringComparer.Ordinal);
 }

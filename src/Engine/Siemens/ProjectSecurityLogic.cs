@@ -68,10 +68,7 @@ namespace TiaMcpServer.Siemens
         internal static SecureString Secure(string password)
         {
             if (string.IsNullOrEmpty(password)) throw new ArgumentException("Empty password refused.");
-            var secure = new SecureString();
-            foreach (var c in password) secure.AppendChar(c);
-            secure.MakeReadOnly();
-            return secure;
+            return TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ToSecureString(password);
         }
         internal static void ValidatePage(int offset, int limit)
         {

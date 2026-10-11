@@ -26,7 +26,7 @@ internal static class HardwareContractsTests
             "SetDeviceItemAttribute", "ValidateAutomationContext", "SearchInstalledGsdDevices", "SearchHardwareCatalog",
             "GetDevicePlugLocations",
             "PlugDeviceItem", "ExportDeviceAml", "ImportDeviceAml", "BuildDeviceAmlDocument", "ManageHardwareObject" }) names[name] = name;
-        var group = new[] { "DevicesTools", "HardwareDevicesTools", "HardwareAmlTools", "HardwareManagementTools", "ModulesTools" }
+        var group = new[] { "DevicesTools", "ProjectLifecycleDeviceTools", "HardwareDevicesTools", "HardwareAmlTools", "HardwareManagementTools", "ModulesTools" }
             .Select(n => server.GetType("TiaMcpServer.ModelContextProtocol." + n, true)!)
             .SelectMany(t => t.GetMethods(All)).Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
         check(group.Length == 21, "P6-12 retains exactly 21 typed declarations across shared ports and F05");

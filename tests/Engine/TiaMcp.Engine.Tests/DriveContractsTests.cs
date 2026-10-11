@@ -22,7 +22,7 @@ namespace TiaMcp.Engine.Tests
     {
         private readonly DccService dcc = new DccService();
         private readonly StartdriveService drive = new StartdriveService();
-        private readonly TeamcenterService teamcenter = new TeamcenterService();
+        private readonly TeamcenterPortService teamcenter = new TeamcenterPortService();
         private readonly ToolCatalog catalog;
         private readonly Dictionary<string, McpServerTool> tools;
         private const string Paths = "\"devicePath\":[\"Drive\"],\"itemPath\":[\"Axis\"]";
@@ -483,7 +483,7 @@ namespace TiaMcpServer.Siemens.Services
             bool confirmOnline=false)
         { Calls++; LastArguments = new object?[] { devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex, action, resetMode, activationState, confirmOnline }; return Response; }
     }
-    internal sealed class TeamcenterService
+    internal sealed class TeamcenterPortService
     {
         internal int Calls;
         internal object?[] LastArguments = Array.Empty<object?>();

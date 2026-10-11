@@ -39,7 +39,8 @@ namespace TiaMcp.FoundationHost
                     && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(tool.Name) && all.TryGetValue(tool.Name, out var declared))
                 {
                     var ported = new ToolDescriptor(declared.Name, declared.RawDescription, tool, declared.Classification,
-                        declared.Signature, declared.Parameters, declared.DryRun, declared.CandidateFamily, "foundation");
+                        declared.Signature, declared.Parameters, declared.DryRun, declared.CandidateFamily,
+                        declared.Execution == "host" ? "host" : "foundation");
                     all[tool.Name] = ported; unavailable[tool.Name] = ported;
                     continue;
                 }

@@ -27,17 +27,7 @@ namespace TiaMcpServer.Siemens
             return Api.Global.Openness().IsUserInGroup();
         }
 
-        public static async Task<bool> IsUserInGroup()
-        {
-            if (Api.Global.Openness().IsUserInGroup())
-            {
-                // user is in group
-                return true;
-            }
-            else
-            {
-                return await Api.Global.Openness().AddUserToGroupAsync();
-            }
-        }
+        public static Task<bool> IsUserInGroup() => OpennessGroup.EnsureMembership();
+
     }
 }

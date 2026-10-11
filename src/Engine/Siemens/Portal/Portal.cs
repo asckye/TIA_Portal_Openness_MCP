@@ -266,19 +266,7 @@ namespace TiaMcpServer.Siemens
         /// 抢走，表现为间歇性的「no open project」。
         /// </summary>
         public bool ConnectIsolatedPortal()
-        {
-            if (sharedLifecycle != null && !sharedLifecycle.Executing)
-                return sharedLifecycle.Engine(() => ConnectIsolatedPortal());
-            if (_portal != null || _project != null || _session != null)
-                throw new PortalException(PortalErrorCode.InvalidState,
-                    "ConnectIsolatedPortal: this MCP session already owns a TIA connection. "
-                    + "Start a fresh MCP process before calling ConnectIsolatedPortal.");
-            LastConnectError = null;
-            _portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(TiaPortalMode.WithoutUserInterface)); RememberBoundProcess();
-            sharedPortalOwned = true;
-            _logger?.LogInformation("Started isolated headless TIA Portal instance.");
-            return true;
-        }
+        { new Services.ProjectLifecyclePortService().ConnectIsolated(); return IsConnected(); }
 
         public bool IsConnected()
         {
@@ -619,24 +607,7 @@ namespace TiaMcpServer.Siemens
             return true;
         }
 
-        public bool SaveAsProject(string path)
-        {
-            if (sharedLifecycle != null && !sharedLifecycle.Executing)
-                return sharedLifecycle.Engine(() => SaveAsProject(path));
-            _logger?.LogInformation($"Saving project as: {path}");
-
-            if (IsProjectNull())
-            {
-                return false;
-            }
-
-            var di = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
-
-            (_project as Project)?.SaveAs(di);
-            CaptureBinding();
-
-            return true;
-        }
+        public bool SaveAsProject(string path) => new Services.ProjectLifecyclePortService().SaveAsProject(path);
 
         public bool CloseProject()
         {

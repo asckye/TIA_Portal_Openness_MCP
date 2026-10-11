@@ -63,7 +63,7 @@ internal static class DomainShapeChecks
         };
         foreach (var domain in domains)
         {
-            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + (domain.Name == "Library" ? "PortService" : "Service"), true)!;
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + (domain.Name is "Library" or "VersionControl" or "Teamcenter" ? "PortService" : "Service"), true)!;
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             foreach (var type in new[] { service, tools })
                 check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
@@ -161,11 +161,12 @@ internal static class DomainShapeChecks
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic
                     && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(toolTarget, surface.Target(tool)),
                     domain.Name + " singleton ownership: " + name);
-                check((domain.Name == "Library" ? service.GetField("call", all)!.GetValue(target) is Delegate
+                bool ported = domain.Name is "Library" or "VersionControl" or "Teamcenter";
+                check((ported ? service.GetField("call", all)!.GetValue(target) is Delegate
                         && !service.GetFields(all).Any(f => f.FieldType == contract)
                         : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(toolTarget), target),
-                    domain.Name + (domain.Name == "Library" ? " tool uses its typed worker service: " : " tool uses its service with the shared session: ") + name);
+                    domain.Name + (ported ? " tool uses its typed worker service: " : " tool uses its service with the shared session: ") + name);
                 var il = implementation.GetMethodBody()!.GetILAsByteArray()!;
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
@@ -222,7 +223,7 @@ internal static class DomainShapeChecks
                 name + " stays on the kernel and is exposed through IEngineeringSession");
         check(surface.Method("ExactDriveObject", all, new[] { typeof(string), typeof(string), typeof(ushort), typeof(int) }).DeclaringType == portal
             && contract.GetMethod("ExactDriveObject") != null, "Shared drive resolution stays on the kernel");
-        var teamcenter = server.GetType("TiaMcpServer.Siemens.Services.TeamcenterService", true)!;
+        var teamcenter = server.GetType("TiaMcpServer.Siemens.Services.TeamcenterPortService", true)!;
         foreach (var name in new[] { "_teamcenterConnection", "_teamcenterConnectionLabel" })
             check(surface.Field(name, all).DeclaringType == teamcenter && portal.GetField(name, all) == null,
                 name + " is private Teamcenter service state");
@@ -234,7 +235,7 @@ internal static class DomainShapeChecks
         check(surface.Method("Family", all).DeclaringType == portal && contract.GetMethod("GetSivarcFamily") != null,
             "SiVArc families remain shared with the optional-engineering reader");
 
-        var vci = server.GetType("TiaMcpServer.Siemens.Services.VersionControlService", true)!;
+        var vci = server.GetType("TiaMcpServer.Siemens.Services.VersionControlPortService", true)!;
         var first = provider.GetService(vci)!;
         var second = Activator.CreateInstance(vci, new[] { session })!;
         foreach (var name in new[] { "_vciOwnerProject", "_vciCached", "_vciKeepAlive" })

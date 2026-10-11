@@ -767,7 +767,7 @@ namespace TiaMcpServer
 
             try
             {
-                var context = report.Capture("ValidateAutomationContext", () => EngineServices.Get<DevicesTools>().ValidateAutomationContext("", ""));
+                var context = report.Capture("ValidateAutomationContext", () => EngineServices.Get<ProjectLifecycleDeviceTools>().ValidateAutomationContext("", ""));
                 root["automationContext"] = new JsonObject
                 {
                     ["message"] = context.Message ?? "",

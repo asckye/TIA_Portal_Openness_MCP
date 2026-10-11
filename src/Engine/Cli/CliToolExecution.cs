@@ -94,7 +94,7 @@ namespace TiaMcpServer.Cli
                 // Patch uses the scaffold's existing evidence rules, including
                 // failed native steps whose post-state cannot be established.
                 Session("BuildProjectScaffold", () => verb == "gen"
-                    ? EngineServices.Get<ProjectSessionTools>().ScaffoldProject(json, dryRun)
+                    ? EngineServices.Get<ProjectLifecycleProjectTools>().ScaffoldProject(json, dryRun)
                     : McpServer.PatchProject(json, dryRun, Flag("--no-overwrite")), !dryRun,
                     resultTool: verb == "patch" ? "PatchProject" : null);
                 return;

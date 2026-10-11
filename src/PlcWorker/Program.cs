@@ -30,6 +30,16 @@ internal static class Program
         AppDomain.CurrentDomain.AssemblyResolve += (sender, request) =>
         {
             var wanted = new AssemblyName(request.Name);
+              if (wanted.Name != null && wanted.Name.StartsWith("Siemens.Collaboration.", StringComparison.Ordinal))
+              {
+                  using var resource = typeof(Program).Assembly.GetManifestResourceStream("ProjectGroupRuntime." + wanted.Name + ".dll");
+                  if (resource == null) return null;
+                  using var bytes = new MemoryStream(); resource.CopyTo(bytes);
+                  var embedded = Assembly.Load(bytes.ToArray());
+                  if (!string.Equals(wanted.FullName, embedded.FullName, StringComparison.OrdinalIgnoreCase))
+                      throw new FileLoadException("Embedded project group helper identity differs.");
+                  return embedded;
+              }
             if (wanted.Name == null || !wanted.Name.StartsWith("Siemens.Engineering", StringComparison.Ordinal)) return null;
             var file = Path.Combine(api, wanted.Name + ".dll");
             // Siemens.Engineering.Contract and Siemens.Engineering.ClientAdapter.Interfaces are not in the
@@ -69,6 +79,21 @@ internal static class Program
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 dispatcher.Dispatch, () => dispatcher.State.IsAttached, () => dispatcher.Detached,
                 () => dispatcher.SessionOutcome.RequiresReset, engine.Dispose);
+            engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.OpennessGroup.EnsureMembership().GetAwaiter().GetResult();
+            engine.ProjectConnectionCreated = connection => {
+                int processId = connection.GetCurrentProcess().Id;
+                engine.AdoptCreatedProjectLifecycleProcess(processId, session.ReserveCreatedProcess(processId));
+            };
+            engine.ProjectRetrieved = engine.AdoptProjectLifecycleRetrieved;
+            engine.ProjectSavedAs = engine.RefreshProjectLifecyclePath;
+            engine.ProjectReleased = engine.ReleaseProjectLifecycleProject;
+            engine.ProjectCachedBinding = () => {
+                var state = engine.ReadState();
+                return new System.Collections.Generic.Dictionary<string, object?> {
+                    ["identity"] = new System.Collections.Generic.Dictionary<string, object?> { ["projectPath"] = state.ProjectFile },
+                    ["instanceReserved"] = state.IsAttached, ["verifiedLive"] = false
+                };
+            };
             string HashFile(string path)
             {
                 using(var stream=File.OpenRead(path))

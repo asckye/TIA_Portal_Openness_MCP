@@ -26,7 +26,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F24" || family.Name == "F25" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+        PortedFamilies.All.Where(family => (family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
         string? candidate = tool.ProtocolTool.Name switch {
@@ -42,6 +42,24 @@ internal static class PortedToolContract
     // also part of the wiring. Pure builders do not read session state.
     internal static string[] WiredOperations(string tool) => tool switch
     {
+        "ArchiveSavedProject" => new[] { "project-lifecycle.ArchiveSavedProject", "ReadState" },
+        "BuildProjectScaffold" => new[] { "project-lifecycle.ExecuteProjectScaffoldPrimitive", "ReadState" },
+        "ConnectIsolatedPortal" => new[] { "project-lifecycle.ConnectIsolatedPortal", "ReadState" },
+        "EnsureOpennessUserGroup" => new[] { "project-lifecycle.EnsureOpennessUserGroup", "ReadState" },
+        "GetPortalInfo" => new[] { "project-lifecycle.ReadPortalInfo", "ReadState" },
+        "ManageMultiuserSession" => new[] { "project-lifecycle.ExecuteMultiuserSession", "ReadState" },
+        "RetrieveProjectArchive" => new[] { "project-lifecycle.RetrieveProjectArchive", "ReadState" },
+        "SaveProjectCopy" => new[] { "project-lifecycle.ArchiveSaveProjectCopy", "ReadState" },
+        "ValidateAutomationContext" => new[] { "project-lifecycle.ValidateAutomationContext", "ReadState" },
+        "GetProjectUserManagement" or "ManageProjectUserManagement" => new[] { "project-security.ExecuteProjectUsers", "ReadState" },
+        "ManagePlcProtection" or "GetPlcPutGetAccess" or "SetPlcPutGetAccess" or "ManageWatchForceTableWebAccess" => new[] { "project-security.ExecuteHardwareSecurity", "ReadState" },
+                "ManageDeviceUsers" => new[] { "project-security.ExecuteDeviceUsers", "ReadState" },
+                "ManagePlcCertificate" => new[] { "project-security.ExecuteCertificate", "ReadState" },
+        "ManageSyslogServers" or "ManagePasswordPolicy" or "ManageUmcUsers" => new[] { "project-security.ExecuteSecurityDeep", "ReadState" },
+        "GetProjectProtection" => new[] { "project-security.ReadProjectProtection", "ReadState" },
+        "ManagePlcGitRepository" => Array.Empty<string>(),
+        "ManageTeamcenterConnection" or "ManageTeamcenterDataset" or "ManageTeamcenterWorkflow" => new[] { "version-control.ExecuteTeamcenter", "ReadState" },
+        "ConnectProjectToWorkspace" or "CreateVersionControlWorkspace" or "GetVersionControlStatus" or "ListVersionControlWorkspaces" or "SynchronizeVersionControlWorkspace" => new[] { "version-control.ExecuteVersionControl", "ReadState" },
         "ExportPlcBlockDocuments" or "ExportPlcBlocksDocuments" or "GetPlcBlockScopes" or "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments" or "ManagePlcBlockDocuments" or "ManagePlcDocuments" => new[] { "plc-documents.ExecutePlcB5", "ReadState" },
         "ExchangePlcAlarmTextLists" or "ExchangePlcSupervisions" or "ExportAlarmClasses" or "ExportAlarmInstanceTexts" or "ExportAlarmTextLists" or "ExportPlcProDiagInfo" or "ImportAlarmClasses" or "ImportAlarmTextLists" or "ImportPlcAlarmInstanceTexts" or "ManagePlcAlarmTextList" or "ManagePlcSupervision" => new[] { "plc-alarms.ExecutePlcB5", "ReadState" },
         "ExportOpcUaInterface" or "GenerateOpcUaModelledInterface" or "GetOpcUaAccessControl" or "GetPlcOpcUaConfiguration" or "ImportOpcUaInterface" or "ManageOpcUaAccessControl" or "ManageOpcUaInterface" or "SetOpcUaInterfaceEnabled" => new[] { "plc-opcua.ExecutePlcB5", "ReadState" },
@@ -190,6 +208,10 @@ internal sealed partial class FoundationTool
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         var b4 = new PlcSoftwareRequest { Operation = tool.Name, Action = actionName };
         string Text(string name) => arguments.TryGetValue(name, out var value) ? value.GetString() ?? "" : "";
+        if (family.Name == "F07" && SecurityCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
+            tool.Name == "ManageSyslogServers" ? (Text("scope").Length == 0 ? "project" : Text("scope")) : scope,
+            Text("category"), Text("filePath")) != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         b4.Aspect = Text(tool.Name == "ConfigureMotionHardwareConnection" ? "interfaceKind" : "aspect");
         b4.Path = Text("objectPath");
         b4.GroupPath = Text(tool.Name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath");
@@ -226,7 +248,7 @@ internal sealed partial class FoundationTool
         // the same lane as the eventual request so approval cannot race a rebind.
         using var lane = await AcquireLane(token);
         ActivateLane(lane);
-        var state = (tool.Name == "BuildDeviceAmlDocument" || tool.Name == "PlanHardwareNetworkConfiguration" || tool.Name == "PlanOnlineReadOnlyMonitoring" || tool.Name == "PlanOnlineReadOnlyDataProvider") ? null : await worker.Call("ReadState", new JsonObject(), token);
+        var state = (tool.Name == "ManagePlcGitRepository" || tool.Name == "BuildDeviceAmlDocument" || tool.Name == "PlanHardwareNetworkConfiguration" || tool.Name == "PlanOnlineReadOnlyMonitoring" || tool.Name == "PlanOnlineReadOnlyDataProvider") ? null : await worker.Call("ReadState", new JsonObject(), token);
         Func<bool> hasProject = () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]);
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
         bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject();
@@ -257,6 +279,21 @@ internal sealed partial class FoundationTool
             "PlcCausalTraceTools" => new PlcCausalTraceTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "PlcIntegrityTools" => new PlcIntegrityTools(new PlcOrganisationPortService(call, hasProject, identity)),
             "LibraryTools" => new LibraryTools(new LibraryPortService(call, identity)),
+            "ProjectUserManagementTools" => new ProjectUserManagementTools(new ProjectUserManagementPortService(call, hasProject, identity)),
+            "CertificateManagementTools" => new CertificateManagementTools(new CertificateManagementPortService(call, hasProject, identity)),
+            "HardwareServicesTools" => new HardwareServicesTools(new HardwareSecurityPortService(call, hasProject, identity)),
+                "HardwareSecurityTools" => new HardwareSecurityTools(new DeviceUserPortService(call, hasProject, identity)),
+                "SecurityDeepTools" => new SecurityDeepTools(new SecurityDeepPortService(call, hasProject, identity)),
+            "ProjectSecurityTools" => new ProjectSecurityTools(new ProjectLifecyclePortService(call, hasProject, identity)),
+            "ProjectLifecycleSessionTools" => new ProjectLifecycleSessionTools(new ProjectLifecyclePortService(call, hasProject, identity)),
+            "ProjectLifecycleProjectTools" => new ProjectLifecycleProjectTools(new ProjectLifecyclePortService(call, hasProject, identity)),
+            "ProjectLifecycleInspectionTools" => new ProjectLifecycleInspectionTools(new ProjectLifecyclePortService(call, hasProject, identity)),
+            "ProjectLifecycleDeviceTools" => new ProjectLifecycleDeviceTools(new ProjectLifecyclePortService(call, hasProject, identity)),
+            "ProjectLifecycleExchangeTools" => new ProjectLifecycleExchangeTools(new ProjectLifecyclePortService(call, hasProject, identity)),
+            "ProjectProtectionTools" => new ProjectProtectionTools(new ProjectProtectionPortService(call, hasProject)),
+            "VersionControlTools" => new VersionControlTools(new VersionControlPortService(call, identity)),
+            "TeamcenterTools" => new TeamcenterTools(new TeamcenterPortService(call, identity)),
+            "GitWorkflowTools" => new GitWorkflowTools(),
             "EngineeringServicesTools" => new EngineeringServicesTools(new EngineeringServicesPortService(call, identity)),
             "HmiDescribeTools" => new HmiDescribeTools(new HmiDescribeService(call, identity)),
             "HmiExchangeTools" => new HmiExchangeTools(new HmiExchangeService(call, identity)),
@@ -283,7 +320,8 @@ internal sealed partial class FoundationTool
         try
         {
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
-            var result = (CallToolResult)portedMethod.Invoke(target, values)!;
+            var invocation = portedMethod.Invoke(target, values)!;
+            var result = invocation is Task<CallToolResult> pending ? pending.GetAwaiter().GetResult() : (CallToolResult)invocation;
             // Preserve typed refusals and offline previews. A missing session can
             // make legacy write wrappers report unknown even though no operation
             // started; use the retired engine's no-native-call projection for all ports.

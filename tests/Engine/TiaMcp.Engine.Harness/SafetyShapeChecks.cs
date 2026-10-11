@@ -108,10 +108,11 @@ internal static class SafetyShapeChecks
     {
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         var surface = EngineSurface.For(server);
-        bool ported = domain == "EngineeringServices";
-        var service = server.GetType("TiaMcpServer.Siemens.Services." + domain + (ported ? "PortService" : "Service"), true)!;
-        var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
-        foreach (var type in new[] { service, tools })
+        bool familyPorted = domain is "EngineeringServices" or "CertificateManagement" or "SecurityDeep" or "ProjectSecurity";
+        string serviceType = domain == "ProjectSecurity" ? "ProjectLifecyclePortService" : domain + (familyPorted ? "PortService" : "Service");
+        var familyService = server.GetType("TiaMcpServer.Siemens.Services." + serviceType, true)!;
+        var familyTools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
+        foreach (var type in new[] { familyService, familyTools })
             check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
                 type.FullName + " is a non-disposable singleton class");
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
@@ -120,6 +121,9 @@ internal static class SafetyShapeChecks
             domain + " resolves the registered Portal singleton");
         foreach (var name in names)
         {
+            bool ported = familyPorted || name is "GetProjectProtection" or "GetProjectUserManagement" or "ManageProjectUserManagement";
+            var service = name == "GetProjectProtection" ? server.GetType("TiaMcpServer.Siemens.Services.ProjectProtectionPortService", true)! : name is "GetProjectUserManagement" or "ManageProjectUserManagement" ? server.GetType("TiaMcpServer.Siemens.Services.ProjectUserManagementPortService", true)! : familyService;
+            var tools = name == "GetProjectProtection" ? server.GetType("TiaMcpServer.ModelContextProtocol.ProjectProtectionTools", true)! : name is "GetProjectUserManagement" or "ManageProjectUserManagement" ? server.GetType("TiaMcpServer.ModelContextProtocol.ProjectUserManagementTools", true)! : familyTools;
             string serviceName = name == "GetSafetyBlockSignatures" ? "ReadSafetyBlockSignatures"
                 : name == "ListSafetyActivationTests" ? "ReadSafetyActivationTests"
                 : name == "GetProjectUserManagement" ? "ReadProjectUserManagement"

@@ -10,8 +10,10 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     // Exercise the actual shared orchestration with an in-memory native boundary.
     public sealed class ScaffoldStep { public string? Step, Status, Detail; }
-    public sealed class ResponseScaffold
+    public sealed class ResponseScaffold : ResponseMessage
     {
+        public string? ProjectName { get; set; }
+        public string? DirectoryPath { get; set; }
         public bool Ok = true;
         public string? CompileState;
         public int? CompileErrorCount, CompileWarningCount;
@@ -43,21 +45,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 var root = JsonNode.Parse("{\"udt\":[{\"name\":\"UDT_A\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}]}],\"globalDb\":[{\"dbName\":\"DB_A\",\"dbNumber\":1,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}]}],\"tagTable\":[{\"tableName\":\"Tags\",\"tags\":[{\"name\":\"Ready\",\"dataTypeName\":\"Bool\",\"logicalAddress\":\"%M0.0\"}]}],\"sclSourceFiles\":[\"Axis.scl\"]}")!;
                 ScaffoldCalls.Clear();
                 var result = new ResponseScaffold();
-                ApplyScaffoldPlcElements(root, "PLC_1", result);
+                ApplyScaffoldPlcElements(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, "PLC_1", result);
                 check(result.Ok && result.Steps.All(s => s.Status == "ok") && ScaffoldCalls.SequenceEqual(new[] { "udt", "globaldb", "tagtable", "import:Axis.scl", "generate:Axis.scl" }), "shared scaffold imports PLC definitions and generates the imported SCL source in order: " + string.Join("; ", result.Steps.Select(s => s.Step + "=" + s.Status + ":" + s.Detail)));
                 rejectUdt = true; ScaffoldCalls.Clear(); result = new ResponseScaffold();
-                ApplyScaffoldPlcElements(root, "PLC_1", result); rejectUdt = false;
+                ApplyScaffoldPlcElements(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, "PLC_1", result); rejectUdt = false;
                 check(!result.Ok && result.Steps[0].Status == "failed" && ScaffoldCalls.Contains("generate:Axis.scl"), "shared scaffold records one failed element and processes the remaining elements");
-                result = new ResponseScaffold(); CompileScaffoldPlc("PLC_1", result);
+                result = new ResponseScaffold(); CompileScaffoldPlc(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), "PLC_1", result);
                 check(result.Ok && result.CompileErrorCount == 0 && result.CompileWarningCount == 1, "shared scaffold reports successful compile with warnings");
-                compileErrors = 2; result = new ResponseScaffold(); CompileScaffoldPlc("PLC_1", result); compileErrors = 0;
+                compileErrors = 2; result = new ResponseScaffold(); CompileScaffoldPlc(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), "PLC_1", result); compileErrors = 0;
                 check(!result.Ok && result.CompileErrorCount == 2 && result.Steps.Single().Status == "failed", "shared scaffold reports compile errors as failure");
                 root = JsonNode.Parse("{\"hmiScreens\":[{\"screenName\":\"Main\",\"width\":640,\"height\":480,\"designJson\":{}}],\"hmiTags\":[{\"tagName\":\"Run\"}]}")!;
                 result = new ResponseScaffold(); ScaffoldCalls.Clear();
-                ApplyScaffoldHmi(root, "PLC_1", "HMI_1", "missing", "Connection", result);
+                ApplyScaffoldHmi(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, "PLC_1", "HMI_1", "missing", "Connection", result);
                 check(result.Ok && ScaffoldCalls.SequenceEqual(new[] { "connection:HMI_RT_1:Connection:PLC_1", "screen:Main:640:480", "design:Main:True", "tag:Default tag table:Run:Bool:Connection:True" }), "shared scaffold resolves HMI and applies screen geometry, design, and tag defaults");
                 missingHmi = true; result = new ResponseScaffold(); ScaffoldCalls.Clear();
-                ApplyScaffoldHmi(root, "PLC_1", "HMI_1", "missing", "Connection", result); missingHmi = false;
+                ApplyScaffoldHmi(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, "PLC_1", "HMI_1", "missing", "Connection", result); missingHmi = false;
                 check(!result.Ok && result.Steps.Single().Step == "hmiResolve" && ScaffoldCalls.Count == 0, "shared scaffold leaves HMI untouched when software cannot be resolved");
             }
             finally { EngineServices.SetServiceProvider(previous); }

@@ -183,7 +183,8 @@ internal static class FoundationV4Result
     {
         string? usageName = (string?)raw?["usage"]?["toolName"];
         bool hostUsage = usageName != null && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(usageName)
-            && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(usageName).Name is "F01" or "F02" or "F03";
+            && TiaMcpServer.ModelContextProtocol.ToolExecution.Table.TryGetValue(usageName, out var execution)
+            && execution == "host";
         var data = name == "GetToolUsage" && ((string?)raw?["usage"]?["profile"] == "full-engine" || hostUsage)
             ? raw!.DeepClone().AsObject() : Object(raw);
         // Collapse the legacy wrapper while retaining all domain and candidate evidence.

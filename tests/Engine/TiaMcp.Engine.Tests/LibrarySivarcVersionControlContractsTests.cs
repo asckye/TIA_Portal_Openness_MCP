@@ -186,7 +186,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Meta = new JsonObject { ["success"] = true } };
         }
     }
-    internal sealed class VersionControlService
+    internal sealed class VersionControlPortService
     {
         internal int Calls;
         internal string? LastArguments;
@@ -225,7 +225,7 @@ namespace TiaMcp.Engine.Tests
         private static readonly string[] Names = { "AnalyzeUnifiedHmiTemplateLayout", "AnalyzeHmiTemplateReference", "PlanGlobalLibraryTemplateReuse", "AnalyzeGlobalLibraryPackage", "ImportMasterCopyFromGlobalLibrary", "ProbeGlobalLibrary", "ManageLibraryFolder", "ManageGlobalLibrary", "ImportLibraryTypeDocuments", "ManageLibraryMasterCopy", "CreateLibraryMasterCopy", "ManageLibraryTypeVersion", "CompareLibraryObjects", "SynchronizeLibrary", "CheckLibraryUpdates", "ManageLibraryType", "GetLibraryType", "GetLibraryOverview", "GenerateSivarc", "UpgradeSivarcDefinitions", "ManageSivarcScreenLayout", "ResolveSivarcExpression", "ManageSivarcBlockDefinition", "ListSivarcBlockDefinitions", "ManageSivarcTableRule", "ManageSivarcRuleContainer", "GetSivarcRuleTree", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace", "GetVersionControlStatus", "CreateVersionControlWorkspace", "ListVersionControlWorkspaces" };
         private readonly LibraryPortService library = new LibraryPortService();
         private readonly SivarcService sivarc = new SivarcService();
-        private readonly VersionControlService vci = new VersionControlService();
+        private readonly VersionControlPortService vci = new VersionControlPortService();
         private readonly LibraryTools libraryTools;
         private readonly SivarcTools sivarcTools;
         private readonly ToolCatalog catalog;

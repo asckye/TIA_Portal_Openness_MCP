@@ -25,16 +25,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public HmiInspectionTools(HmiInspectionService service) => _hmiInspection = service;
 
-        [McpServerTool(Name="ArchiveSavedProject"),Description("[L2][Project][FILE]Create a native compressed .zap20/.zap21 archive of an already saved project. Default dryRun=true. Rejects unsaved state, unsupported sessions and existing target files. Does not save, change project path, close the project, or test retrieval. Native behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult ArchiveSavedProjectV4(
-            [Description("archivePath: full path of the project archive (.zap2x) on the TIA machine.")] string archivePath,
-            bool dryRun=true)
-            => HmiInspectionContract.Run("ArchiveSavedProject", !dryRun, true, () => ArchiveSavedProject(archivePath, dryRun));
-
-        public ResponseMessage ArchiveSavedProject(
-            [Description("archivePath: full path of the project archive (.zap2x) on the TIA machine.")] string archivePath,
-            bool dryRun=true)
-        =>_hmiInspection.ArchiveSavedProject(archivePath,dryRun);
         [McpServerTool(Name="GetUnifiedHmiButtonEvent"),Description("[L2][HMI-Unified]Read an EXISTING button event's script, global definitions, Async and content token. Never creates events. screenPath is a unique name or /Group/Screen from ListHmiScreenPaths.")]
         public CallToolResult ReadUnifiedHmiButtonEventV4(
             string softwarePath,

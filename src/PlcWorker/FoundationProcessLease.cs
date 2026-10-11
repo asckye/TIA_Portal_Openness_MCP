@@ -25,6 +25,17 @@ namespace TiaMcp.PlcWorker
             this.detached = detached; this.requiresReset = requiresReset; this.disposeEngine = disposeEngine;
         }
 
+        internal long ReserveCreatedProcess(int processId)
+        {
+            if (lease != null) throw new InvalidOperationException("A TIA process lease is already reserved.");
+            using var process = Process.GetProcessById(processId);
+            if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
+            long ticks = process.StartTime.ToUniversalTime().Ticks;
+            lease = PortalProcessLease.Acquire(root(), processId, ticks);
+            lease.BeginRequest();
+            return ticks;
+        }
+
         private static int? AttachProcessId(ChannelRequest request)
         {
             if (request.Method != "adapter.Attach" && request.Method != "adapter." + WorkerOperations.SessionCandidate) return null;

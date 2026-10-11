@@ -182,7 +182,7 @@ namespace TiaMcpServer.ModelContextProtocol
 // Application service doubles only: invalid inputs must never cross this boundary.
 namespace TiaMcpServer.Siemens.Services
 {
-    internal sealed class HardwareNetworkService
+    internal sealed class DeviceUserPortService
     {
         internal int Calls;
         internal ResponseMessage Next() { Calls++; return new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = true } }; }
@@ -205,7 +205,7 @@ namespace TiaMcpServer.Siemens.Services
         public List<string> ProbeHardwareHmiConnectionWhitelistedServices(string plc, string hmi, bool deep) { Calls++; return new List<string>(); }
         public JsonObject GetProjectTopology() { Calls++; return new JsonObject { ["devices"] = new JsonArray(), ["deviceCount"] = 0 }; }
     }
-    internal sealed class HardwareServicesService
+    internal sealed class HardwareSecurityPortService
     {
         internal int Calls;
         internal ResponseMessage Next() { Calls++; return new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = true } }; }
@@ -259,8 +259,8 @@ namespace TiaMcp.Engine.Tests
             "SetPlcPutGetAccess",
             "ManageHardwareUtilities"
         };
-        private readonly HardwareNetworkService network = new HardwareNetworkService();
-        private readonly HardwareServicesService services = new HardwareServicesService();
+        private readonly DeviceUserPortService network = new DeviceUserPortService();
+        private readonly HardwareSecurityPortService services = new HardwareSecurityPortService();
         private readonly HardwareNetworkTools networkTools;
         private readonly HardwareSecurityTools securityTools;
         private readonly HardwareServicesTools serviceTools;

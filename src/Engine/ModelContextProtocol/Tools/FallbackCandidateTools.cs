@@ -16,10 +16,9 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly Portal portal;
         private readonly OnlineDownloadService download;
-        private readonly VersionControlService vci;
         private readonly DocumentsService documents;
-        public FallbackCandidateTools(Portal portal, OnlineDownloadService download, VersionControlService vci, DocumentsService documents)
-        { this.portal = portal; this.download = download; this.vci = vci; this.documents = documents; }
+        public FallbackCandidateTools(Portal portal, OnlineDownloadService download, DocumentsService documents)
+        { this.portal = portal; this.download = download; this.documents = documents; }
         private CallToolResult Run(string entry, string software, string route, string retry, bool refresh, string mode, bool confirm, string hash, string file,
             Dictionary<string, string>? parameters = null, string password = "")
         {
@@ -30,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 result = FallbackSession.Result(McpServer.ReleaseKey, entry, Meta.Correlate(InvocationJournal.CorrelationId), null,
                     new Error("Fallback candidate is not selected.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "P6-FALLBACK", "candidate")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
             else result = portal.RunFallbackCandidate(request, () => entry.Contains("VersionControl") || entry == "ConnectProjectToWorkspace"
-                ? vci.FallbackAdapter(request, portal) : download.FallbackAdapter(request, password, portal, documents), password, mode, confirm, hash, file);
+                ? (portal.VersionControlFallback ?? throw new InvalidOperationException("VCI adapter binding unavailable."))(request) : download.FallbackAdapter(request, password, portal, documents), password, mode, confirm, hash, file);
             var wire = McpResult.From(result);
             return new CallToolResult { IsError = wire.IsError, StructuredContent = JsonNode.Parse(wire.StructuredContent.GetRawText()), Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };
         }

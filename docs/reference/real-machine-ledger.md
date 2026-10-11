@@ -152,12 +152,14 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 14sp1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 14sp1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
-| 14sp1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
+| 14sp1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 14sp1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
 | 14sp1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 14sp1 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 14sp1 | P6-FALLBACK | current | NOT RUN | — |
 | 14sp1 | F00 | current | NOT RUN | — |
+| 14sp1 | F05 | current | NOT RUN | ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ValidateAutomationContext |
+| 14sp1 | F33 | current | NOT RUN | ManagePlcGitRepository |
 | 14sp1 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 14sp1 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, ValidatePlcDocumentSchemas, WritePlcSclSourceFile |
 | 14sp1 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
@@ -183,12 +185,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 15.1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 15.1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
-| 15.1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
-| 15.1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 15.1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
+| 15.1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 15.1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 15.1 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 15.1 | P6-FALLBACK | current | NOT RUN | — |
 | 15.1 | F00 | current | NOT RUN | ExportPlcWatchTable |
+| 15.1 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
+| 15.1 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, ManagePlcProtection, SetPlcPutGetAccess |
+| 15.1 | F33 | current | NOT RUN | ManagePlcGitRepository |
 | 15.1 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 15.1 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, ValidatePlcDocumentSchemas, WritePlcSclSourceFile |
 | 15.1 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
@@ -214,12 +219,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 16 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 16 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
-| 16 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
-| 16 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 16 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
+| 16 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 16 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 16 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 16 | P6-FALLBACK | current | NOT RUN | — |
 | 16 | F00 | current | NOT RUN | ExportPlcWatchTable |
+| 16 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
+| 16 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, ManageDeviceUsers, ManagePlcCertificate, ManagePlcProtection, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
+| 16 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, SynchronizeVersionControlWorkspace |
 | 16 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 16 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, ValidatePlcDocumentSchemas, WritePlcSclSourceFile |
 | 16 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, PlanGlobalLibraryTemplateReuse |
@@ -245,12 +253,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice |
 | 17 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 17 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
-| 17 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
-| 17 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 17 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
+| 17 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 17 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 17 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 17 | P6-FALLBACK | current | NOT RUN | — |
 | 17 | F00 | current | NOT RUN | ExportPlcWatchTable |
+| 17 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
+| 17 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
+| 17 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, SynchronizeVersionControlWorkspace |
 | 17 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 17 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, ValidatePlcDocumentSchemas, WritePlcSclSourceFile |
 | 17 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, ManageUnifiedCwcPackage, PlanGlobalLibraryTemplateReuse |
@@ -276,12 +287,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 18 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 18 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
-| 18 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
-| 18 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 18 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
+| 18 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 18 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 18 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 18 | P6-FALLBACK | current | NOT RUN | — |
 | 18 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
+| 18 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
+| 18 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
+| 18 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, ManageTeamcenterConnection, ManageTeamcenterDataset, ManageTeamcenterWorkflow, SynchronizeVersionControlWorkspace |
 | 18 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 18 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, ValidatePlcDocumentSchemas, WritePlcSclSourceFile |
 | 18 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, BuildClassicHmiScreen, ManageUnifiedCwcPackage, PlanGlobalLibraryTemplateReuse |
@@ -307,12 +321,15 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 19 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
 | 19 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
-| 19 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectPortal, OpenProject |
-| 19 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
+| 19 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
+| 19 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 19 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
 | 19 | P6-COMPILE | current | NOT RUN | CompileDevice, CompileHmiDiagnostics, CompilePlcDiagnostics, CompilePlcSoftware |
 | 19 | P6-FALLBACK | current | NOT RUN | — |
 | 19 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
+| 19 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
+| 19 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageSyslogServers, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
+| 19 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, ManageTeamcenterConnection, ManageTeamcenterDataset, ManageTeamcenterWorkflow, SynchronizeVersionControlWorkspace |
 | 19 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
 | 19 | F02 | current | NOT RUN | AnalyzePlcReferences, AnalyzePlcSclSource, AuditEngineeringExports, ComparePlcBlockDocuments, ExtractPlcBlockMetrics, GeneratePlcDocumentation, InstantiatePlcTemplates, PatchPlcBlockDocument, RenderPlcBlockDocument, RenderPlcVisualDiff, ScanPlcSourceAnnotations, ValidatePlcDocumentSchemas, WritePlcSclSourceFile |
 | 19 | F03 | current | NOT RUN | AnalyzeGlobalLibraryPackage, AnalyzeHmiTemplateReference, AnalyzeUnifiedHmiTemplateLayout, BuildClassicHmiScreen, BuildUnifiedHmiButtonActionScript, BuildUnifiedHmiLayoutDesign, BuildUnifiedHmiTemplateApplyDesign, BuildUnifiedHmiTemplateApplyDesignManifest, BuildUnifiedHmiThemeDesign, ManageUnifiedCwcPackage, PlanGlobalLibraryTemplateReuse, RunHmiActionScriptRecipeSafetySelfTest, RunHmiTemplatePlcSyncPrecheckSuite |

@@ -26,11 +26,20 @@ namespace TiaMcpServer.Siemens.Services
         internal static ResponseMessage Invoke(params object[] arguments)
         { Calls++; Arguments = arguments; return Response; }
     }
-    internal sealed class CertificateManagementService
+    internal sealed class CertificateManagementPortService
     {
         public ResponseMessage ManagePlcCertificate(string devicePathJson, string itemPathJson, string action, string certificateId="", string filePath="", string usage="", string propertiesJson="{}", string assignment="", bool dryRun=true, string assignmentItemPathJson="", string subjectAlternativeNamesJson="[]", string password="") => SecurityServiceFixture.Invoke(devicePathJson, itemPathJson, action, certificateId, filePath, usage, propertiesJson, assignment, dryRun, assignmentItemPathJson, subjectAlternativeNamesJson, password);
     }
-    internal sealed class ProjectSecurityService
+    internal sealed class ProjectProtectionPortService
+    {
+        public ResponseMessage ReadProjectProtection() => SecurityServiceFixture.Invoke();
+    }
+    internal sealed class ProjectUserManagementPortService
+    {
+        public ResponseMessage ReadProjectUserManagement(string category="users", string name="", string devicePathJson="[]", string itemPathJson="[]", int offset=0, int limit=100) => SecurityServiceFixture.Invoke(category, name, devicePathJson, itemPathJson, offset, limit);
+        public ResponseMessage ManageProjectUserManagement(string action, string name, string password="", string roleName="", string rightName="", string comment="", string group="", string devicePathJson="[]", string itemPathJson="[]", bool confirmChange=false, bool dryRun=true) => SecurityServiceFixture.Invoke(action, name, password, roleName, rightName, comment, group, devicePathJson, itemPathJson, confirmChange, dryRun);
+    }
+    internal sealed class ProjectLifecyclePortService
     {
         public ResponseMessage ReadProjectUserManagement(string category="users", string name="", string devicePathJson="[]", string itemPathJson="[]", int offset=0, int limit=100) => SecurityServiceFixture.Invoke(category, name, devicePathJson, itemPathJson, offset, limit);
         public ResponseMessage ManageProjectUserManagement(string action, string name, string password="", string roleName="", string rightName="", string comment="", string group="", string devicePathJson="[]", string itemPathJson="[]", bool confirmChange=false, bool dryRun=true) => SecurityServiceFixture.Invoke(action, name, password, roleName, rightName, comment, group, devicePathJson, itemPathJson, confirmChange, dryRun);
@@ -39,6 +48,36 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage CompareLibraries(string leftLibraryName="", string rightLibraryName="", bool includeIdentical=false, int maxDepth=8, int offset=0, int limit=100) => SecurityServiceFixture.Invoke(leftLibraryName, rightLibraryName, includeIdentical, maxDepth, offset, limit);
         public ResponseMessage CompareProjects(string kind, string softwarePath="", string devicePathJson="[]", string itemPathJson="[]", string targetProjectName="", string targetSoftwarePath="", string targetDevicePathJson="[]", string targetItemPathJson="[]", string targetLibraryName="", bool includeIdentical=false, int maxDepth=8, int offset=0, int limit=100) => SecurityServiceFixture.Invoke(kind, softwarePath, devicePathJson, itemPathJson, targetProjectName, targetSoftwarePath, targetDevicePathJson, targetItemPathJson, targetLibraryName, includeIdentical, maxDepth, offset, limit);
         public ResponseMessage ReadProjectSettings(string folderPath="", string customIdentityKey="", int offset=0, int limit=100) => SecurityServiceFixture.Invoke(folderPath, customIdentityKey, offset, limit);
+        public PlcBuildTools PlcBuild => EngineServices.Get<PlcBuildTools>();
+        public void ImportPlcExternalSource(string plc, string folder, string path) => EngineServices.Get<PlcExternalSourcesTools>().ImportPlcExternalSource(plc, folder, path);
+        public void GenerateBlocksFromExternalSource(string plc, string name) => EngineServices.Get<PlcExternalSourcesTools>().GenerateBlocksFromExternalSource(plc, name);
+        public (string State, int? ErrorCount, int? WarningCount) CompileAndDiagnosePlc(string plc) => EngineServices.Get<PlcBlocksTools>().CompileAndDiagnosePlc(plc);
+        public void GetHmiProgramInfo(string path) => EngineServices.Get<HmiDescribeTools>().GetHmiProgramInfo(path);
+        public void EnsureUnifiedHmiConnection(string path, string name, string plc) => EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiConnection(path, name, plc);
+        public void EnsureUnifiedHmiScreen(string path, string name, uint width, uint height) => EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiScreen(path, name, width, height);
+        public void ApplyUnifiedHmiScreenDesignJson(string path, string name, string design, bool overwrite) => EngineServices.Get<UnifiedHmiTools>().ApplyUnifiedHmiScreenDesignJson(path, name, design, overwrite);
+        public void EnsureUnifiedHmiTag(string path, string table, string name, string type, string plc, string tag, string connection, string address, bool overwrite)
+            => EngineServices.Get<UnifiedHmiTools>().EnsureUnifiedHmiTag(path, table, name, type, plc, tag, connection, address, overwrite);
+
+        internal bool HasProject => false;
+        internal bool IsLocalSession => false;
+        internal bool IsConnected => false;
+        internal bool EnsureGroup() => throw new InvalidOperationException("Windows group changes are forbidden in fixtures.");
+        internal ResponseConnect ConnectIsolated() => throw new InvalidOperationException("Native Portal creation is forbidden in fixtures.");
+        internal JsonObject GetBindingIdentity() => new JsonObject();
+        internal bool SaveAsProject(string path) => throw new InvalidOperationException("Native project Save As is forbidden in fixtures.");
+        internal ResponseMessage ArchiveSavedProject(string path, bool dryRun)
+        {
+            var response = SecurityServiceFixture.Invoke(path, dryRun);
+            return response;
+        }
+        internal ResponseMessage ReadPortalInfo(bool processes, bool sessions, bool products) => SecurityServiceFixture.Invoke(processes, sessions, products);
+        internal ResponseMessage RetrieveProjectArchive(string path, string destination, bool upgrade, bool dryRun) => SecurityServiceFixture.Invoke(path, destination, upgrade, dryRun);
+        internal ResponseMessage ValidateAutomationContext(string plc, string hmi) => SecurityServiceFixture.Invoke(plc, hmi);
+        internal T Primitive<T>(string kind, params string[] text) => throw new InvalidOperationException("Unexpected native scaffold primitive: " + kind);
+        internal ResponseDeviceProbe AddDeviceWithFallback(string mlfb, string version, string name, string family) => throw new InvalidOperationException("Unexpected native device creation.");
+        internal void ImportFromDocuments(string plc, string folder, string path, string name) => throw new InvalidOperationException("Unexpected native LAD import.");
+
     }
     internal sealed class SafetyManagementService
     {
@@ -55,7 +94,7 @@ namespace TiaMcpServer.Siemens.Services
         public ResponseMessage ManageSafetyFunction(string activationTest, string action="read", string groupPathJson="[]", string name="", string sourceName="", string propertiesJson="{}", string filePath="", string exportOptions="", string documentInfoOptions="", string importOptions="", bool confirmDelete=false, bool dryRun=true) => SecurityServiceFixture.Invoke(activationTest, action, groupPathJson, name, sourceName, propertiesJson, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun);
         public ResponseMessage ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action="read", string groupPathJson="[]", int index=-1, string deviceName="", string signalUsage="", string signalName="", string propertiesJson="{}", bool dryRun=true) => SecurityServiceFixture.Invoke(activationTest, safetyFunction, action, groupPathJson, index, deviceName, signalUsage, signalName, propertiesJson, dryRun);
     }
-    internal sealed class SecurityDeepService
+    internal sealed class SecurityDeepPortService
     {
         public ResponseMessage ManageSyslogServers(string scope="project", string action="read", string name="", string propertiesJson="{}", string attributesJson="{}", string devicePathJson="[]", string itemPathJson="[]", string serverAddress="", int serverPort=0, bool confirmDelete=false, bool dryRun=true) => SecurityServiceFixture.Invoke(scope, action, name, propertiesJson, attributesJson, devicePathJson, itemPathJson, serverAddress, serverPort, confirmDelete, dryRun);
         public ResponseMessage ManagePasswordPolicy(string action="read", string target="", string propertiesJson="{}", bool confirmChange=false, bool dryRun=true) => SecurityServiceFixture.Invoke(action, target, propertiesJson, confirmChange, dryRun);
@@ -80,11 +119,11 @@ namespace TiaMcp.Engine.Tests
         {
             SecurityServiceFixture.Calls = 0;
             SecurityServiceFixture.Response = new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["operationSuccess"] = true } };
-            catalog = new ToolCatalog(new[] { typeof(EngineeringServicesTools), typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools) });
+            catalog = new ToolCatalog(new[] { typeof(EngineeringServicesTools), typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools) });
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection()
-                .AddSingleton<EngineeringServicesPortService>().AddSingleton<CertificateManagementService>().AddSingleton<ProjectSecurityService>().AddSingleton<SafetyManagementService>()
-                .AddSingleton<SafetyValidationService>().AddSingleton<SecurityDeepService>().AddEngine(false, catalog).BuildServiceProvider());
+                .AddSingleton<EngineeringServicesPortService>().AddSingleton<CertificateManagementPortService>().AddSingleton<ProjectLifecyclePortService>().AddSingleton<ProjectProtectionPortService>().AddSingleton<ProjectUserManagementPortService>().AddSingleton<SafetyManagementService>()
+                .AddSingleton<SafetyValidationService>().AddSingleton<SecurityDeepPortService>().AddEngine(false, catalog).BuildServiceProvider());
         }
         public void Dispose() => ToolBridgeFixture.Configure();
         private static ToolArguments Args(string json) => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));
@@ -220,7 +259,7 @@ namespace TiaMcp.Engine.Tests
         [Fact]
         public void DirectBridgeAndReadBatchReturnTheSameTargetEnvelope()
         {
-            var direct = Body(new ProjectSecurityTools(new ProjectSecurityService()).GetProjectProtection());
+            var direct = Body(new ProjectProtectionTools(new ProjectProtectionPortService()).GetProjectProtection());
             var bridge = Body(McpServer.CallTool("GetProjectProtection", Args("{}")));
             var batch = Body(McpServer.ReadToolBatch(new[] { new ToolCall("GetProjectProtection", Args("{}")) }));
             var child = batch["data"]!["items"]![0]!["result"]!.AsObject();
@@ -320,10 +359,10 @@ namespace TiaMcp.Engine.Tests
             var names = DomainValidation.Read<SubjectAlternativeName[]>(json);
             var legacy = TiaMcpServer.Siemens.SecurityDeepLogic.ParseSubjectAlternativeNames(json);
             Assert.Equal(legacy.Select(n => (n.Type, n.Value)), names.Select(n => (n.Type, n.Value)));
-            Body(new CertificateManagementTools(new CertificateManagementService()).ManagePlcCertificate(new[] { "PLC" }, new[] { "CPU" }, "create", subjectAlternativeNames: names));
+            Body(new CertificateManagementTools(new CertificateManagementPortService()).ManagePlcCertificate(new[] { "PLC" }, new[] { "CPU" }, "create", subjectAlternativeNames: names));
             Assert.True(JsonNode.DeepEquals(JsonNode.Parse(json), JsonNode.Parse((string)SecurityServiceFixture.Arguments[10])));
             Assert.Equal("", SecurityServiceFixture.Arguments[9]);
-            Body(new CertificateManagementTools(new CertificateManagementService()).ManagePlcCertificate(new[] { "PLC" }, new[] { "CPU" }, "list", assignmentItemPath: Array.Empty<string>()));
+            Body(new CertificateManagementTools(new CertificateManagementPortService()).ManagePlcCertificate(new[] { "PLC" }, new[] { "CPU" }, "list", assignmentItemPath: Array.Empty<string>()));
             Assert.Equal("[]", SecurityServiceFixture.Arguments[9]);
             Assert.Equal("[]", SecurityServiceFixture.Arguments[10]);
             Assert.Equal(64, DomainValidation.Read<SubjectAlternativeName[]>(V4Json.Serialize(Enumerable.Range(0, 64).Select(i => new { type = "Dns", value = i + new string('a', 253) }))).Length);

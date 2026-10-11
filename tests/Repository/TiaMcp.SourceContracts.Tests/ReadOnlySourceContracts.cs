@@ -70,7 +70,11 @@ public sealed class ReadOnlySourceContracts
         Assert.Matches(@"catch\s*(?:/\*\s*swallow\(env-probe\):\s*[^*]+\*/\s*)?\{\s*env\.OpennessGroupOk = false;\s*\}", bootstrap);
         Contains(bootstrap, "nextTool = \"EnsureOpennessUserGroup\";");
         Contains(logic, "catch (Exception ex)", "\"fail\", ex.Message", "if (!isConnected && connectIfNeeded)", "isConnected = connect();");
-        Contains(Sources.Member("EnsureOpennessUserGroup", tool: false), "await Siemens.Openness.IsUserInGroup()");
+        Contains(Sources.Member("EnsureOpennessUserGroup", tool: false, owner: "ProjectLifecycleSessionTools"), "_service.EnsureGroup()");
+        var membership = Sources.Member("EnsureMembership", tool: false, owner: "OpennessGroup");
+        Contains(membership, "Api.Global.Openness().IsUserInGroup()", "await Api.Global.Openness().AddUserToGroupAsync()");
+        Count(membership, "Api.Global.Openness().IsUserInGroup()", 1);
+        Count(membership, "Api.Global.Openness().AddUserToGroupAsync()", 1);
         Assert.Matches(@"\A\s*\{\s*return Api\.Global\.Openness\(\)\.IsUserInGroup\(\);\s*\}\s*\z", Sources.Member("IsUserInGroupNoFix", bodyOnly: true));
     }
     [Fact]

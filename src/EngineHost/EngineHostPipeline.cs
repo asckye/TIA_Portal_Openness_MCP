@@ -159,12 +159,12 @@ namespace TiaMcp.FoundationHost
                 All = new Dictionary<string, ToolDescriptor>(StringComparer.OrdinalIgnoreCase);
                 var merged = new SharedToolCatalog(this, shared, new HashSet<string>()).All.ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
                 foreach (var method in PortedToolDeclarations.Methods(release).Where(m =>
-                    TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).Name is "F01" or "F02" or "F03"))
+                    ToolExecution.Table[m.GetCustomAttribute<McpServerToolAttribute>()!.Name!] == "host"))
                 {
                     string name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
                     DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
                     descriptor.Tool.Description += " Native behaviorPolicy=current; V4 native acceptance is pending.";
-                    merged.Add(name, descriptor);
+                    merged[name] = descriptor;
                 }
                 All = merged;
             }

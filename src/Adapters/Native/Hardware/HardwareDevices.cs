@@ -1267,7 +1267,7 @@ namespace TiaMcp.Adapters
         }
         private int HardwareMajorVersion => ReleaseKey == "14sp1" ? 14 : ReleaseKey == "15.1" ? 15 : int.Parse(ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
 
-        private static IEnumerable<(DeviceItem Item, string Path)> HardwareTraverseDeviceItems(DeviceItem root, string path)
+        internal static IEnumerable<(DeviceItem Item, string Path)> HardwareTraverseDeviceItems(DeviceItem root, string path)
         {
             yield return (root, path);
             foreach (var child in root.DeviceItems)

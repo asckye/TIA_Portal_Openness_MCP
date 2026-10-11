@@ -120,7 +120,7 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 |---|---|---|
 | `Ecosystem.cs`、`EcosystemFiles.cs` | [EcosystemTools](../../src/Shared/Host/EcosystemTools.cs) | 3 |
 | `V21Ecosystem.cs` | [V21EcosystemTools](../../src/Shared/Host/V21EcosystemTools.cs) | 4 |
-| `GitWorkflow.cs` | [GitWorkflowTools](../../src/Engine/ModelContextProtocol/Tools/GitWorkflowTools.cs) | 1 |
+| `GitWorkflow.cs` | [GitWorkflowTools](../../src/Shared/Host/GitWorkflowTools.cs) | 1 |
 | `PlcTemplates.cs` | [TemplateTools](../../src/Shared/Host/TemplateTools.cs) | 2 |
 | `QualityAudit.cs` | [QualityAuditTools](../../src/Shared/Host/QualityAuditTools.cs) | 1 |
 | `ImportOrder.cs` | [ImportOrderTools](../../src/Engine/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
@@ -319,7 +319,7 @@ CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildr
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
 | 库 | [LibraryPortService](../../src/Shared/LibraryPortService.cs) / [LibraryTools](../../src/Shared/LibraryTools.cs)，原生实现 [LibraryService](../../src/Adapters/Native/Libraries/LibraryService.cs) | 14 |
-| VCI | [VersionControlService](../../src/Engine/Siemens/Services/VersionControlService.cs) / [VersionControlTools](../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs) | 5 |
+| VCI | [VersionControlService](../../src/Adapters/Native/Vci/VersionControlAdapter.cs) / [VersionControlTools](../../src/Shared/VersionControlTools.cs) | 5 |
 | SiVArc | [SivarcService](../../src/Engine/Siemens/Services/SivarcService.cs) / [SivarcTools](../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
 
 库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 的注册工具为 `GenerateSivarc`，其实现方法保留 `GenerateSiVArc` 标识符。
@@ -398,7 +398,7 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
 | DCC | [DccService](../../src/Engine/Siemens/Services/DccService.cs) / [DccTools](../../src/Engine/ModelContextProtocol/Tools/DccTools.cs) | 8 |
-| Teamcenter | [TeamcenterService](../../src/Engine/Siemens/Services/TeamcenterService.cs) / [TeamcenterTools](../../src/Engine/ModelContextProtocol/Tools/TeamcenterTools.cs) | 3 |
+| Teamcenter | [TeamcenterService](../../src/Adapters/Native/Collaboration/TeamcenterAdapter.cs) / [TeamcenterTools](../../src/Shared/TeamcenterTools.cs) | 3 |
 | Startdrive | [StartdriveService](../../src/Engine/Siemens/Services/StartdriveService.cs) / [StartdriveTools](../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs) | 11 |
 
 这些工具没有 CLI 静态调用点，继续按约定注册为单例。Teamcenter 的 `_teamcenterConnection` 与
@@ -817,3 +817,14 @@ CLI 自检、报告命令和离线验证套件直接解析 `DiagnosticsTools` �
 TiaMcp.Engine.Harness 保留原有断言数量，原静态转发存在性断言改为无转发、实例解析和单例归属检查；指南结果仍比较完整 Meta。
 另验证容器与内核的断开状态一致、无会话宿主不回退、McpServer 无会话状态，以及 Types/HmiExchange 的注入关系。
 静态转发移除后为空的九个 partial 文件已删除；其他 partial 仍承载共享实现或支持适配器。
+
+### P8-03i：F05 会话与工程生命周期
+
+F05 的九个工具声明和 Scaffold 编排位于 `src/Shared/ProjectLifecycle*Tools.cs`、
+`src/Shared/ProjectSecurityTools.cs` 与 `src/Shared/ScaffoldOperations.cs`。
+原生诊断、自动化上下文、归档、检索及 Multiuser 实现在 `src/Adapters/Native/Session`；
+`Portal.ProjectLifecycleBinding.cs` 仅把已存在的工程句柄、缓存绑定和进程租约交回 I1 的原拥有者。
+Scaffold 继续调用各已存在能力族的原语，同一会话的 worker lane 保持串行。
+Windows Openness 用户组操作复用 `src/Shared/OpennessGroup.cs`，不在离线测试中修改用户组。
+`PortalErrorCode` 和 `PortalException` 保持原命名空间，移动到 Contracts 供共享包装及原生适配器使用。
+每版本工具准入以 `PortedFamilies.ToolReleases` 为准；编译和离线证据不代表原生验收通过。

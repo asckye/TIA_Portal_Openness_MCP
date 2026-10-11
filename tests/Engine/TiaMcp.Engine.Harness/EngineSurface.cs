@@ -23,16 +23,18 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.V20OptionsService",
         "TiaMcpServer.Siemens.Services.OptionalEngineeringService",
         "TiaMcpServer.Siemens.Services.DccService",
-        "TiaMcpServer.Siemens.Services.TeamcenterService",
+        "TiaMcpServer.Siemens.Services.TeamcenterPortService",
         "TiaMcpServer.Siemens.Services.StartdriveService",
         "TiaMcpServer.Siemens.Services.SafetyManagementService",
         "TiaMcpServer.Siemens.Services.SafetyValidationService",
-        "TiaMcpServer.Siemens.Services.SecurityDeepService",
-        "TiaMcpServer.Siemens.Services.CertificateManagementService",
-        "TiaMcpServer.Siemens.Services.ProjectSecurityService",
+        "TiaMcpServer.Siemens.Services.SecurityDeepPortService",
+        "TiaMcpServer.Siemens.Services.CertificateManagementPortService",
+        "TiaMcpServer.Siemens.Services.ProjectLifecyclePortService",
+        "TiaMcpServer.Siemens.Services.ProjectProtectionPortService",
+        "TiaMcpServer.Siemens.Services.ProjectUserManagementPortService",
         "TiaMcpServer.Siemens.Services.PlcTablesService",
         "TiaMcpServer.Siemens.Services.LibraryPortService",
-        "TiaMcpServer.Siemens.Services.VersionControlService",
+        "TiaMcpServer.Siemens.Services.VersionControlPortService",
         "TiaMcpServer.Siemens.Services.SivarcService",
         "TiaMcpServer.Siemens.Services.ClassicHmiFoldersService",
         "TiaMcpServer.Siemens.Services.MotionProDiagClassicHmiService",
@@ -44,8 +46,8 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.HardwareDevicesService",
         "TiaMcpServer.Siemens.Services.HardwareNetworkPortService",
         "TiaMcpServer.Siemens.Services.HardwareServicesPortService",
-        "TiaMcpServer.Siemens.Services.HardwareNetworkService",
-        "TiaMcpServer.Siemens.Services.HardwareServicesService",
+        "TiaMcpServer.Siemens.Services.DeviceUserPortService",
+        "TiaMcpServer.Siemens.Services.HardwareSecurityPortService",
         "TiaMcpServer.Siemens.Services.OnlineDownloadService",
         "TiaMcpServer.Siemens.Services.PlcBlocksService",
         "TiaMcpServer.Siemens.Services.PlcOrganisationPortService",
@@ -94,7 +96,14 @@ internal sealed class EngineSurface
             .SelectMany(f => (string[])f.GetType().GetProperty("Tools")!.GetValue(f)!).ToArray();
     }
 
-    internal static bool IsHostTool(Assembly engine, string name) => HostTools(engine).Contains(name, StringComparer.Ordinal);
+    internal static bool IsHostTool(Assembly engine, string name)
+    {
+        var families = Program.FindReferencedType(engine, "TiaMcp.Adapters.Contracts.PortedFamilies");
+        if (!(bool)families.GetMethod("Contains")!.Invoke(null, new object[] { name })!) return false;
+        var execution = (System.Collections.IDictionary)Program.FindReferencedType(engine,
+            "TiaMcpServer.ModelContextProtocol.ToolExecution").GetField("Table", All)!.GetValue(null)!;
+        return execution.Contains(name) && (string)execution[name]! == "host";
+    }
 
     internal static string[] PortedTools(Assembly engine, string release)
     {

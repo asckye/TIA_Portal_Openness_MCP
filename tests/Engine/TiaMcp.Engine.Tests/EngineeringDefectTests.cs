@@ -1,3 +1,5 @@
+using ProjectArchive = TiaMcp.Adapters.Native.Session.ProjectArchive;
+using TiaMcp.Adapters.Native.Hmi;
 using System;
 using System.IO;
 using System.Collections.Generic;

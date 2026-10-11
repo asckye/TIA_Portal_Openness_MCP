@@ -90,8 +90,8 @@ namespace TiaMcp.Engine.Tests
                 .AddSingleton(HmiToolFixture.RuntimeSettings)
                 .AddSingleton(HmiToolFixture.GraphicSelection)
                 .AddSingleton(HmiToolFixture.GlobalScriptEdit)
-                .AddSingleton<TiaMcpServer.Siemens.Services.HardwareNetworkService>()
-                .AddSingleton<TiaMcpServer.Siemens.Services.HardwareServicesService>()
+                .AddSingleton<TiaMcpServer.Siemens.Services.DeviceUserPortService>()
+                .AddSingleton<TiaMcpServer.Siemens.Services.HardwareSecurityPortService>()
                 .AddEngine(includeSession: false, Catalog).BuildServiceProvider());
         }
     }
@@ -253,7 +253,7 @@ namespace TiaMcp.Engine.Tests
                 typeof(SoftwareUnitDeepTools), typeof(PlcIntegrityTools), typeof(PlcWatchTools), typeof(PlcCausalTraceTools), typeof(PlcTechnologyTools), typeof(PlcMotionTools), typeof(TechnologyObjectsTools),
                 typeof(ClassicHmiFoldersTools), typeof(MotionProDiagClassicHmiTools), typeof(PlcProDiagTools),
                 typeof(HmiInspectionPortTools), typeof(HmiExchangeTools), typeof(HmiTagDeletionTools),
-                typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools),
+                typeof(CertificateManagementTools), typeof(ProjectSecurityTools), typeof(ProjectLifecycleSessionTools), typeof(ProjectLifecycleProjectTools), typeof(ProjectLifecycleInspectionTools), typeof(ProjectLifecycleDeviceTools), typeof(ProjectLifecycleExchangeTools), typeof(ProjectProtectionTools), typeof(ProjectUserManagementTools), typeof(SafetyManagementTools), typeof(SecurityDeepTools),
                 typeof(UnifiedHmiTools), typeof(UnifiedHmiGroupsTools), typeof(UnifiedScreenItemsTools), typeof(UnifiedUiModelTools),
                 typeof(LibraryTools), typeof(SivarcTools), typeof(VersionControlTools),
                 typeof(DccTools), typeof(StartdriveTools), typeof(TeamcenterTools),

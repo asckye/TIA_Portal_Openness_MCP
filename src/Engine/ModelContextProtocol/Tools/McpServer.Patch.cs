@@ -94,7 +94,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) { Step("openProject", "failed", ex.Message); resp.Ok = false; throw new McpException($"PatchProject aborted at openProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             // ---- PLC elements (per-item collect; re-import = upsert) ----
-            ScaffoldOperations.ApplyScaffoldPlcElements(root, plcName, resp);
+            ScaffoldOperations.ApplyScaffoldPlcElements(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, plcName, resp);
 
             foreach (var item in Arr("ladDocs"))
             {
@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             // ---- compile ----
-            if (B("compile", true)) ScaffoldOperations.CompileScaffoldPlc(plcName, resp);
+            if (B("compile", true)) ScaffoldOperations.CompileScaffoldPlc(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), plcName, resp);
 
             // ---- HMI connection / screens / tags (Ensure* are idempotent upserts) ----
             var hmiName = S("hmiName");
@@ -114,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var connectionName = S("connectionName", "HMI_Connection_1");
                 var hmiSoftwarePathSpec = S("hmiSoftwarePath");
-                ScaffoldOperations.ApplyScaffoldHmi(root, plcName, hmiName, hmiSoftwarePathSpec, connectionName, resp);
+                ScaffoldOperations.ApplyScaffoldHmi(new TiaMcpServer.Siemens.Services.ProjectLifecyclePortService(), root, plcName, hmiName, hmiSoftwarePathSpec, connectionName, resp);
             }
 
             // ---- save ----
