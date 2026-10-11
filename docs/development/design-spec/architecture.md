@@ -125,7 +125,7 @@ flowchart LR
 | 工具来源 | `LegacyHostToolRegistry`：Foundation 工具、已移植族契约、离线构建、工作台控制、生成、被动诊断、`GetToolUsage`；再由 `FoundationHostPorts` 包入 `EngineHostPipeline`，提供桥接、批次与导出句柄 | `EngineCatalog` 读取 `worker/tool-catalog.json`（引擎 `--write-tool-catalog` 生成），`SharedToolCatalog` 合入共享 Foundation 工具；`EngineHostPipeline` 发布 full 或 lite 目录 |
 | 单个工具的准入 | `FoundationV4Tool`（参数校验、生成写栅栏、未提供能力拒绝、会话重置、就绪检查、预检、审批、Openness 通道、复核、审计） | Foundation 工具同左；引擎工具走链接进来的引擎宿主层（`McpServer.SerializedCalls` 等，顺序见第 5.2 节）；已移植族由 `PortedToolContract.Wrap` 包装 |
 | 执行位置 | 宿主本地，或经 `WorkerClient` 发 `adapter.<操作>` 到 PLC worker | 由 `ToolExecution` 表决定：`host`（宿主本地）、`foundation`（`adapter.*` 到引擎 worker 内的 `PlcFoundationEngine`）、`worker`（`engine.invoke` 到引擎代码） |
-| worker 调用超时 | 固定 2 分钟（`WorkerClient`）；4.0 前改为与 V20/V21 相同的按类超时策略（P8-64） | `WorkerTimeoutPolicy`：默认 120 秒，worker 代次的首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖 |
+| worker 调用超时 | 共享 `WorkerTimeoutPolicy`（P8-64），预算与配置见 [4.0 发布说明](../../releases/v4.0.0.md) | `WorkerTimeoutPolicy`：默认 120 秒，worker 代次的首次附着 300 秒，编译、下载上传、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖 |
 | 线程 | STA 所属线程 | 一个 MTA 所属线程，Foundation 代码与引擎代码共用同一个 TIA 连接 |
 | 审批与审计的宿主标记 | `foundation` | 引擎工具 `engine`，共享 Foundation 工具 `foundation` |
 
@@ -416,7 +416,7 @@ stateDiagram-v2
 | 生成记录与发布工具（P8-31e5）、SafeV4 规则（e6）、审批抽屉计划视图（h1） | 未实现 | [分阶段生成设计](../design/p8-31-staged-generation.md) 第 10 节 |
 | 真机验收 | 八版 D1 行为族、旧版启用的已移植族、V20/V21 在 Foundation 宿主上的验收（P7-07）均为 `NOT RUN`，集中在阶段 8 结束后一次进行 | 交接、真机台账；[ADR 0013](../decisions/0013-release-4-0-after-phases-7-and-8.md) |
 | `TiaSharedAdapterPaths` | 默认 `false`；引擎领域的共享原语路径在真机验收前不启用 | `src/Shared/TiaSharedAdapterPaths.props` |
-| PLC worker 调用超时 | 固定 2 分钟，没有 V20/V21 那样的按类超时；旧版上的长编译或批量导入可能超时并变为结果未知。维护者 2026-10-11 决定：4.0 前改为 V20/V21 的按类超时策略（P8-64） | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |
+| PLC worker 调用超时 | P8-64 已消除：八版共用按类超时与配置覆盖；超预算仍为结果未知并锁定会话。预算见 [4.0 发布说明](../../releases/v4.0.0.md) | `src/FoundationHost/WorkerClient.cs`；[设计规范决定](README.md#决定摘要) |
 | Foundation 绑定快照生命周期 | 观测原语已有，worker 生命周期尚未接入；旧版附着仍只凭 PID | [版本框架](../unified-version-framework.md) |
 
 ## 10 详细设计文档

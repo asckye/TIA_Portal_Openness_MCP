@@ -15,6 +15,170 @@ namespace TiaMcp.WorkerChannel
             ["importExport"] = TimeSpan.FromMinutes(30), ["archive"] = TimeSpan.FromMinutes(30),
             ["libraryUpdate"] = TimeSpan.FromMinutes(30)
         };
+        // Exact PLC dispatcher operations. Coverage tests require a category for every registration.
+        public static readonly IReadOnlyDictionary<string, string> PlcFamilies = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["AddDeviceWithFallback"] = "default",
+            ["Attach"] = "default",
+            ["BindProject"] = "default",
+            ["CloseProject"] = "default",
+            ["CompileCandidate"] = "compile",
+            ["CompileSoftware"] = "compile",
+            ["CreateHardwareDeviceCandidate"] = "default",
+            ["CreateProject"] = "default",
+            ["CreateTag"] = "default",
+            ["CreateTagTable"] = "default",
+            ["CreateUserConstant"] = "default",
+            ["DeletePlcExternalSource"] = "default",
+            ["Disconnect"] = "default",
+            ["ExportAsDocuments"] = "importExport",
+            ["ExportBlock"] = "importExport",
+            ["ExportBlocks"] = "importExport",
+            ["ExportBlocksAsDocuments"] = "importExport",
+            ["ExportPlcCandidate"] = "importExport",
+            ["ExportPlcWatchTable"] = "importExport",
+            ["ExportTagTable"] = "importExport",
+            ["ExportTechnologyObject"] = "importExport",
+            ["ExportType"] = "importExport",
+            ["ExportTypes"] = "importExport",
+            ["GenerateBlocksFromExternalSource"] = "compile",
+            ["ImportBlocks"] = "importExport",
+            ["ImportBlocksFromDirectory"] = "importExport",
+            ["ImportBlocksFromDocuments"] = "importExport",
+            ["ImportFromDocuments"] = "importExport",
+            ["ImportPlcCandidate"] = "importExport",
+            ["ImportPlcExternalSource"] = "importExport",
+            ["ImportPlcProgramFromDirectory"] = "importExport",
+            ["ImportTagTables"] = "importExport",
+            ["ImportTypes"] = "importExport",
+            ["ListProjects"] = "default",
+            ["ListSystemConstants"] = "default",
+            ["ListTags"] = "default",
+            ["ListUserConstants"] = "default",
+            ["OpenProject"] = "default",
+            ["PlanPlcExternalSourceImport"] = "default",
+            ["ReadBlockHierarchy"] = "default",
+            ["ReadBlockInfo"] = "default",
+            ["ReadBlocks"] = "default",
+            ["ReadExternalSourceNames"] = "default",
+            ["ReadPortalConnectReadiness"] = "default",
+            ["ReadPortalProcessProjects"] = "default",
+            ["ReadProjectTree"] = "default",
+            ["ReadSoftwareInfo"] = "default",
+            ["ReadSoftwareTree"] = "default",
+            ["ReadState"] = "default",
+            ["ReadTagTableNames"] = "default",
+            ["ReadTechnologyObjects"] = "default",
+            ["ReadTypeInfo"] = "default",
+            ["ReadTypes"] = "default",
+            ["ReadWatchTableNames"] = "default",
+            ["SaveCloseCandidate"] = "default",
+            ["SaveProject"] = "default",
+            ["SearchHardwareCatalog"] = "default",
+            ["SessionCandidate"] = "default",
+            ["SourceCandidate"] = "compile",
+            ["engineering-services.BeginEngineeringTransaction"] = "default",
+            ["engineering-services.CommitEngineeringTransaction"] = "default",
+            ["engineering-services.DisposeEngineeringTransaction"] = "default",
+            ["engineering-services.ExecuteEngineeringServices"] = "default",
+            ["engineering-services.ReadEngineeringTransaction"] = "default",
+            ["hardware-addressing.DescribeHardwareIoChildren"] = "default",
+            ["hardware-addressing.ReadHardwareAddressing"] = "default",
+            ["hardware-addressing.ReadHardwareIoAddresses"] = "default",
+            ["hardware-addressing.ReadHardwareIpAddress"] = "default",
+            ["hardware-addressing.SetHardwareIoAddress"] = "default",
+            ["hardware-addressing.UpdateHardwareAddress"] = "default",
+            ["hardware-aml.ExportHardwareAml"] = "importExport",
+            ["hardware-aml.ImportHardwareAml"] = "importExport",
+            ["hardware-devices.HardwareCreateCatalogDevice"] = "default",
+            ["hardware-devices.HardwareCreateDevice"] = "default",
+            ["hardware-devices.HardwareCreateDeviceFallback"] = "default",
+            ["hardware-devices.HardwareCreateGsdDevice"] = "default",
+            ["hardware-devices.HardwareDescribeDeviceAt"] = "default",
+            ["hardware-devices.HardwareDescribeDevices"] = "default",
+            ["hardware-devices.HardwareDescribeItemAt"] = "default",
+            ["hardware-devices.HardwareDeviceCandidate"] = "default",
+            ["hardware-devices.HardwareExchangeSystemDiagnosticsSettings"] = "default",
+            ["hardware-devices.HardwareLegacyDumpDeviceAttributes"] = "default",
+            ["hardware-devices.HardwareLegacySearchHardwareCatalog"] = "default",
+            ["hardware-devices.HardwareLegacySearchInstalledGsdDevices"] = "default",
+            ["hardware-devices.HardwareLegacySetCpuCommonSettings"] = "default",
+            ["hardware-devices.HardwareLegacySetDeviceItemAttribute"] = "default",
+            ["hardware-devices.HardwareManageCommunicationConnection"] = "default",
+            ["hardware-devices.HardwareManageDeviceServiceObjects"] = "default",
+            ["hardware-devices.HardwareManageDeviceUserGroup"] = "default",
+            ["hardware-devices.HardwareManageHardwareObject"] = "default",
+            ["hardware-devices.HardwareManageHardwareUtilities"] = "default",
+            ["hardware-devices.HardwarePlugModule"] = "default",
+            ["hardware-devices.HardwareReadCommunicationConnections"] = "default",
+            ["hardware-devices.HardwareReadHardwareFeatures"] = "default",
+            ["hardware-devices.HardwareReadItemTree"] = "default",
+            ["hardware-devices.HardwareReadPlcNames"] = "default",
+            ["hardware-devices.HardwareReadPlugLocations"] = "default",
+            ["hardware-network.HardwareAttachDeviceNodeToSubnet"] = "default",
+            ["hardware-network.HardwareEnsureSubnet"] = "default",
+            ["hardware-network.HardwareGetDeviceItemNetworkInfo"] = "default",
+            ["hardware-network.HardwareGetProjectTopology"] = "default",
+            ["hardware-network.HardwareManageCommunicationConnection"] = "default",
+            ["hardware-network.HardwareManageIoSystem"] = "default",
+            ["hardware-network.HardwareManageNetworkDomain"] = "default",
+            ["hardware-network.HardwareManagePortInterconnection"] = "default",
+            ["hardware-network.HardwareManageTransferArea"] = "default",
+            ["hardware-network.HardwareProbeConnectDeviceNodesToSubnet"] = "default",
+            ["hardware-network.HardwareReadCommunicationConnections"] = "default",
+            ["hardware-network.HardwareReadDeviceItemChannels"] = "default",
+            ["hardware-network.HardwareReadIoSystems"] = "default",
+            ["hardware-network.HardwareReadNetworkDomains"] = "default",
+            ["hardware-network.HardwareReadTransferAreas"] = "default",
+            ["hardware-network.HardwareUpdateDeviceItemChannel"] = "default",
+            ["hardware-network.ReadHardwareOwnerCandidates"] = "default",
+            ["hardware-network.ReadHardwareWhitelistedServices"] = "default",
+            ["hmi-classic.ExecuteHmi"] = "default",
+            ["hmi-generic.ExecuteHmi"] = "default",
+            ["libraries.ExecuteLibrary"] = "default",
+            ["openness-reflection.ExecuteOpennessReflection"] = "default",
+            ["plc-alarms.ExecutePlcB5"] = "default",
+            ["plc-analysis.ExportBlockDocument"] = "default",
+            ["plc-compile.ExecutePlcOrganisation"] = "compile",
+            ["plc-documents.ExecutePlcB5"] = "default",
+            ["plc-integrity.ExecutePlcOrganisation"] = "default",
+            ["plc-opcua.ExecutePlcB5"] = "default",
+            ["plc-organisation.ExecutePlcOrganisation"] = "default",
+            ["plc-software.ExecutePlcOrganisation"] = "default",
+            ["plc-software.SeedReferenceHmi"] = "importExport",
+            ["plc-sources.ExecutePlcOrganisation"] = "default",
+            ["plc-technology.ExecutePlcOrganisation"] = "default",
+            ["plc-watch.ExecutePlcOrganisation"] = "default",
+        };
+        public TimeSpan ForPlc(string operation, System.Text.Json.Nodes.JsonObject arguments, bool firstAttach = false)
+            => budgets[firstAttach ? "firstAttach" : PlcFamily(operation, arguments)];
+        public static string PlcFamily(string operation, System.Text.Json.Nodes.JsonObject arguments)
+        {
+            string? mode = (string?)arguments["mode"];
+            var request = arguments["request"] as System.Text.Json.Nodes.JsonObject;
+            if ((bool?)arguments["dryRun"] == true || (bool?)request?["DryRun"] == true || mode == "preview"
+                || mode == null && operation.EndsWith("Candidate", StringComparison.Ordinal)) return "default";
+            if (operation == "SourceCandidate")
+            {
+                var items = arguments["candidate"]?["Check"]?["Request"]?["Items"] as System.Text.Json.Nodes.JsonArray;
+                if (items?.Any(item => (string?)item?["Action"] == "generate") == true) return "compile";
+                return items?.Any(item => (string?)item?["Action"] == "import") == true ? "importExport" : "default";
+            }
+            if (request != null)
+            {
+                string name = (string?)request["Operation"] ?? operation;
+                string action = (string?)request["Action"] ?? "";
+                if (name == "CheckLibraryUpdates") return "default";
+                if (name == "SynchronizeLibrary" || name == "ManageLibraryType" && action is "updateLibrary" or "updateProject"
+                    || name == "ManageLibraryTypeVersion" && action == "updateInstances") return "libraryUpdate";
+                if (name is "SeedProjectFromReference" or "GeneratePlcSourceFromBlocks") return "importExport";
+                if (name == "GenerateOpcUaModelledInterface") return "compile";
+                if (name == "ManagePlcExternalSources" && action == "generateBlocks") return "compile";
+                string family = Family(name);
+                return family != "default" ? family : Family(action);
+            }
+            return PlcFamilies.TryGetValue(operation, out var category) ? category : Family(operation);
+        }
         private readonly Dictionary<string, TimeSpan> budgets;
         public WorkerTimeoutPolicy(int defaultSeconds = 120, string? configJson = null, string? environmentJson = null)
         {

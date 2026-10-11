@@ -53,7 +53,7 @@
   - 协议：4.0 前由 `ToolMetadata` 生成 MCP 工具注解，197 个按工具名推断的分类逐个人工核对（MCP-02）。
   - 协议与 C#：V4 错误填写 `details.parameter`，消息文本保持不变（API-04、CS-39）。
   - 工作台（4.0 前）：高对比主题与 UI Automation 名称；焦点管理与访问键；文字对比 4.5:1，测试门槛相应提高；更小的最小窗口；风险确认默认选择取消；可见的预填标记（[工作台界面设计规范](workbench-ui.md) 第 0.4 节）。
-  - 旧版 worker：V14 SP1–V19 的 PLC worker 固定 2 分钟超时，4.0 前改为 V20/V21 的按类超时策略（[架构概览](architecture.md) 第 4、9 节；[ADR 0008](../decisions/0008-worker-timeouts-and-faults.md)）。
+  - worker 超时：P8-64 已实现，V14 SP1–V21 共用按类超时策略（[架构概览](architecture.md) 第 4、9 节；[ADR 0008](../decisions/0008-worker-timeouts-and-faults.md)）。
   - C#：4.0 前加入 `.editorconfig` 与分析器配置，列入发布源码清单，先启用最小规则集（[C# 规范](csharp-design.md) 第 13.3 节的 4.0 规则集；CS-55）；`src/Studio` 保留 `TiaOpenness` 命名空间，其余代码 4.0 后迁到 `TiaMcp`（N-07、CS-30）；新代码 SHOULD 每行不超过 120 字符，现有代码不重新排版（S-12、CS-19）。
   - 文档：改正 `--isolate-openness` 的指导（DOC-01）；工具数量由生成器写入（DOC-02）；刷新状态类文档（DOC-05）；4.0 前写出首批约 10 份 ADR（已写入 [0001–0016](../decisions/README.md)）。
 
@@ -65,7 +65,7 @@
 | P8-61 | 工作台界面 | [工作台偏差清单](deviations/workbench.md) 中“4.0 前 - P8-61”的 32 项 |
 | P8-62 | C# | [C# 偏差清单](deviations/csharp.md) 中“4.0 前 - P8-62”的 11 项，以及 CS-31 的线程安全审查 |
 | P8-63 | 文档（与 P7-11b 一起） | [文档偏差清单](deviations/docs.md) 中“4.0 前 - P8-63”的 21 项，以及 4.0 前待补写的 ADR |
-| P8-64 | 旧版 worker 超时 | V14 SP1–V19 的 PLC worker 改用按类超时策略（[架构概览](architecture.md) 第 9 节） |
+| P8-64 | 旧版 worker 超时 | 已实现：八版共用按类超时策略（[架构概览](architecture.md) 第 9 节） |
 
 ## 文件
 

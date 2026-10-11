@@ -8,6 +8,21 @@ namespace TiaMcp.WorkerChannel.Tests;
 public sealed class EngineProfileTests
 {
     [Fact]
+    public void Timeout_defaults_and_override_precedence_are_shared_by_all_worker_operations()
+    {
+        var policy = new WorkerTimeoutPolicy(7, "{\"default\":8,\"compile\":9,\"firstAttach\":10}", "{\"compile\":11}");
+        Assert.Equal(TimeSpan.FromSeconds(120), WorkerTimeoutPolicy.Defaults["default"]);
+        Assert.Equal(TimeSpan.FromSeconds(300), WorkerTimeoutPolicy.Defaults["firstAttach"]);
+        foreach (string family in new[] { "compile", "transfer", "importExport", "archive", "libraryUpdate" })
+            Assert.Equal(TimeSpan.FromMinutes(30), WorkerTimeoutPolicy.Defaults[family]);
+        Assert.Equal(TimeSpan.FromSeconds(8), policy.ForPlc("ReadState", new()));
+        Assert.Equal(TimeSpan.FromSeconds(11), policy.ForPlc("CompileSoftware", new() { ["dryRun"] = false }));
+        Assert.Equal(policy.For("CompilePlc"), policy.ForPlc("CompileSoftware", new() { ["dryRun"] = false }));
+        Assert.Equal(TimeSpan.FromSeconds(10), policy.ForPlc("Attach", new(), true));
+        Assert.Equal(TimeSpan.FromSeconds(7), new WorkerTimeoutPolicy(7).ForPlc("ReadState", new()));
+    }
+
+    [Fact]
     public void Foundation_and_engine_share_one_owner_epoch_and_correlation()
     {
         using var output = new MemoryStream();

@@ -11,6 +11,8 @@ using HostOptions = TiaMcp.FoundationHost.HostOptions;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
+if (args is ["--help"]) { Console.WriteLine(HostOptions.WorkerTimeoutHelp); return 0; }
+
 HostOptions options;
 Console.OutputEncoding = new UTF8Encoding(false);
 Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
@@ -32,7 +34,7 @@ if (options.EngineWorkerExe != null) return await EngineReleaseHost.Run(options,
 
 if (options.CatalogOnly)
 {
-    using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false) { Bundled = options.BundledWorker };
+    using var catalogWorker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, false, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig) { Bundled = options.BundledWorker };
     Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { releaseKey = options.ReleaseKey, profile = "plc-foundation", nativeAcceptance = "NOT RUN",
         behaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(FoundationV4Tool).Assembly, options.ReleaseKey),
         tools = LegacyHostToolRegistry.Create(catalogWorker, options.ReleaseKey, false, options.ApiDirectory, options.ApiDirectorySource).Select(t => t.ProtocolTool) }));

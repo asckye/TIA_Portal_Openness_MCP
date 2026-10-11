@@ -4,6 +4,10 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class HostOptions
 {
+    internal const string WorkerTimeoutHelp = "All eight releases (V14 SP1-V21) share worker timeout budgets: default 120 s, firstAttach per generation 300 s, compile/transfer/importExport/archive/libraryUpdate 1800 s. "
+        + "--worker-timeout-seconds <seconds> sets the default. --worker-timeout-config <file> reads a JSON object of category names to seconds (0, 86400]. "
+        + "TIA_MCP_WORKER_TIMEOUTS uses the same JSON and takes precedence over the file. Previews and reads use default; Disconnect keeps its bounded shutdown wait. "
+        + "Cancellation before dispatch returns CANCELLED; after dispatch the host waits for the real result.";
     public required string ReleaseKey { get; init; }
     public required string WorkerExe { get; init; }
     // False when --worker-exe replaces the bundled worker (test fixtures and development builds).

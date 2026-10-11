@@ -29,8 +29,10 @@ internal interface IFoundationSessionWorker : IFoundationWorker
     void MarkUncertain();
 }
 
-internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled) : IFoundationSessionWorker
+internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker
 {
+    private readonly WorkerTimeoutPolicy timeouts = new(defaultTimeoutSeconds, timeoutConfig,
+        Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS"));
     private readonly SemaphoreSlim serial = new(1, 1);
     private static readonly AsyncLocal<WorkerClient?> Held = new();
     internal async Task<IDisposable?> AcquireLane(CancellationToken token)
@@ -203,7 +205,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                         new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
                 }
             }
-            await channel!.ConnectAsync(TimeSpan.FromMinutes(2),token);
+            await channel!.ConnectAsync(timeouts.For("status"),token);
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw new InvalidOperationException("Disconnect ended this session; a new host session is required.");
             activeRequestId = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
@@ -213,11 +215,12 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             try
             {
                 bool attach = operation == "Attach" || operation == WorkerOperations.SessionCandidate
-                    && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
+                    && (string?)arguments["mode"] == "apply" && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
                 bool firstAttach = attach && !attachAttempted;
+                token.ThrowIfCancellationRequested();
                 if (attach) attachAttempted = true;
                 response=await channel.CallAsync("adapter."+operation,arguments.ToJsonString(),change,
-                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),TimeSpan.FromMinutes(2),token,
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true || WorkerOperations.IsDevicePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsImportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsExportPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSessionPreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSaveClosePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsSourcePreview(operation, (string?)arguments["mode"]) || WorkerOperations.IsCompilePreview(operation, (string?)arguments["mode"]),timeouts.ForPlc(operation, arguments, firstAttach),CancellationToken.None,
                     firstAttach: firstAttach);
                 sent=true;
             }
@@ -256,6 +259,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             }
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
+            if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(activeRequestId!, operation, "RETURNED_AFTER_CANCELLATION");
             return result;
         }
         catch(Exception ex)

@@ -125,7 +125,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             sent = true;
             string wire = await channel!.CallAsync("adapter." + operation, arguments.ToJsonString(),
                 WorkerClient.BindingChangeFor(operation, arguments), WorkerOperations.IsReadOnly(operation)
-                    || (bool?)arguments["dryRun"] == true || (string?)arguments["mode"] == "preview", timeouts.For(operation, firstAttach), CancellationToken.None,
+                    || (bool?)arguments["dryRun"] == true || (string?)arguments["mode"] == "preview", timeouts.ForPlc(operation, arguments, firstAttach), CancellationToken.None,
                 firstAttach: firstAttach, correlationId: correlation).ConfigureAwait(false);
             wire = WorkerReplySpill.Read(SpillsDirectory, wire, out _);
             var result = JsonNode.Parse(wire);
@@ -305,7 +305,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
             activeRequestId = id;
             sent = true;
             string wire = await channel!.CallAsync("engine.invoke", json, preview ? BindingChange.None : BindingChange.MayAdvance,
-                preview || name == "GetSessionState", timeouts.For(name), CancellationToken.None).ConfigureAwait(false);
+                preview || name == "GetSessionState", timeouts.For(preview ? "status" : name), CancellationToken.None).ConfigureAwait(false);
             wire = WorkerReplySpill.Read(SpillsDirectory, wire, out bool spilled);
             var reply = JsonNode.Parse(wire)!.AsObject();
             lock (stateSync) { status = (JsonObject)reply.DeepClone(); status.Remove("result"); binding = reply["binding"]?.DeepClone(); }

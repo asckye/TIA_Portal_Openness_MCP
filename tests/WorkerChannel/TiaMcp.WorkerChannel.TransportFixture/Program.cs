@@ -23,6 +23,7 @@ var server = new ChannelServer(Console.OpenStandardInput(), output, identity, ()
     var operation = request.Method.Substring("adapter.".Length);
     var values = JsonNode.Parse(request.ArgumentsJson)!;
     Record(new { stage = "call", pid = Environment.ProcessId, operation, request.Id, request.Method });
+    if (fault == "delay") Thread.Sleep(values["fixtureDelayMilliseconds"]?.GetValue<int>() ?? 0);
     if (fault == "broken-pipe") Environment.Exit(0);
     if (fault == "timeout" || fault == "timeout-attach" && operation == "Attach") Thread.Sleep(10000);
     if (fault == "read-failed") return ChannelResponse.Error(new ChannelFailure("Fixture read failed", -32603, ChannelOutcome.ReadFailed, "{\"inputFile\":\"生产线\"}"));
@@ -43,7 +44,7 @@ var server = new ChannelServer(Console.OpenStandardInput(), output, identity, ()
             if (attached.HasValue) epoch++;
             attached = null;
             break;
-        default: result = values; break;
+        default: result = fault == "delay" && values["fixtureReply"] != null ? values["fixtureReply"] : values; break;
     }
     return ChannelResponse.Success(result?.ToJsonString() ?? "null");
 });

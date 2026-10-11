@@ -530,8 +530,8 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 
 ### 10.5 超时与取消
 
-- V20/V21 worker 通道的超时预算：默认 120 秒，worker 代次首次附着 300 秒，编译、上下载、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖。超时会把 worker 代次标为故障，outcome 为 unknown。
-- V14 SP1–V19 的 PLC worker 现为固定 2 分钟（`WorkerClient`），长编译或批量导入可能超时并变为结果未知。维护者 2026-10-11 决定：4.0 前改为与 V20/V21 相同的按类超时策略（P8-64）。
+- 八版（V14 SP1–V21）共用 worker 通道超时策略，预算与配置见 [4.0 发布说明](../../releases/v4.0.0.md)：默认 120 秒，worker 代次首次附着 300 秒，编译、上下载、导入导出、归档和库更新 30 分钟；可用 `--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 覆盖。超时会把 worker 代次标为故障，outcome 为 unknown。
+- PLC dispatcher 的批量、候选与移植族调用共用 `WorkerTimeoutPolicy`（P8-64）；预览与读取使用默认预算，首次实际附着按 worker 代次使用首次附着预算，Disconnect 保留有界退出等待。
 - 派发前收到取消，返回 `CANCELLED`（`tool-queue`）；审批预检中取消，返回 `CANCELLED`（`approval-precheck`）；派发后宿主忽略取消，等待真实结果。
 
 > **MCP 基线**：[Cancellation](https://modelcontextprotocol.io/specification/2026-07-28/basic/utilities/cancellation#behavior-requirements) 规定，服务器收到取消后 SHOULD 停止处理且 SHOULD NOT 再发送响应，无法取消时 MAY 忽略。V4 在派发后忽略取消，这是允许的；派发前仍会返回一个 `CANCELLED` 结果（MCP-07，保留：CLI、批次和审计需要这个记录）。[Timeouts](https://modelcontextprotocol.io/specification/2026-07-28/basic/utilities/cancellation#timeouts) 允许客户端在收到进度通知时重置超时，而 V4 只在少数批量工具中发送进度（MCP-06）。2026-07-28 的 [Statelessness](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#statelessness) 要求跨请求的状态通过显式标识引用，服务器不得把连接或进程身份当作会话。V4 的恢复步骤“开启新的 MCP 会话”以及会话锁、租约、计划和句柄的作用域都依赖传输层会话（MCP-01）。

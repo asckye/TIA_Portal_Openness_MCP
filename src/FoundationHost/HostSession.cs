@@ -60,7 +60,7 @@ internal sealed class HostSession : IHostSession
     }
     internal static HostSession Legacy(HostOptions options, string instructions, bool operatorOwned = false)
     {
-        var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled) { Bundled = options.BundledWorker };
+        var worker = new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options.WorkerTimeoutConfig) { Bundled = options.BundledWorker };
         try
         {
             var tools = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory, options.ApiDirectorySource);
