@@ -1104,7 +1104,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
 
-        [McpServerTool(Name = "ManagePlcDataBlockSnapshot"), Description("[L2][PLC-Online][ONLINE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
+        [McpServerTool(Name = "ManagePlcDataBlockSnapshot"), Description("[L2][PLC-Online][ONLINE-WRITE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManagePlcDataBlockSnapshotV4(
             string softwarePath,
             string blockPath,

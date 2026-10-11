@@ -24,6 +24,21 @@
       "FILE",
       "SESSION",
       "TIA Save As switches the open project and MCP binding (P7-07b finding 48)."
+    ],
+    "GenerateBlocksFromExternalSource": [
+      "FILE",
+      "WRITE",
+      "Generates blocks and UDTs into the PLC software and may overwrite existing blocks; apply needs Workbench approval (maintainer 2026-10-11)."
+    ],
+    "ManagePlcDataBlockSnapshot": [
+      "ONLINE",
+      "ONLINE-WRITE",
+      "loadSnapshotAsActualValues and loadStartValuesAsActualValues write values into the running CPU; apply needs Workbench approval (maintainer 2026-10-11)."
+    ],
+    "RunPlcCompanionTool": [
+      "ONLINE",
+      "ONLINE-WRITE",
+      "mode=run may write files, run project tests or write PLC values; apply needs Workbench approval (maintainer 2026-10-11)."
     ]
   },
   "NEW_FOUNDATION_TOOLS": {

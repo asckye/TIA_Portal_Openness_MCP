@@ -26,13 +26,13 @@ namespace TiaMcpServer.ModelContextProtocol
             public string? RecommendedFixZh { get; set; }
         }
 
-        [McpServerTool(Name = "GetEnvironmentDiagnostics"), Description("[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready.")]
+        [McpServerTool(Name = "GetEnvironmentDiagnostics"), Description("[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. The default fix=false is a read-only diagnosis. Only fix=true ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Call this first when setup is failing or you are unsure the environment is ready.")]
         public static Task<CallToolResult> GetEnvironmentDiagnosticsV4(
-            [Description("fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.")] bool fix = true)
+            [Description("fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).")] bool fix = false)
             => SessionToolContract.RunAsync("GetEnvironmentDiagnostics", fix, false, () => Doctor(fix));
 
         public static async Task<ResponseDoctor> Doctor(
-            [Description("fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.")] bool fix = true)
+            [Description("fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).")] bool fix = false)
         {
             try
             {

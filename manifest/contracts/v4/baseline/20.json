@@ -20739,13 +20739,13 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "cc70d6b1094de46f0c1da4a1af8e1955d18f78cf874b746b973b1774811e5be4",
+      "descriptionSha256": "44e10caf307897b6bdf9110a1a9e301625ea581ed6afb3527e4dafda8e519f3b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "fix": {
-            "default": true,
-            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
+            "default": false,
+            "description": "fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).",
             "examples": [
               false
             ],
@@ -34363,7 +34363,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "6c668c06e65e74a8a0f13a7614a5ea6585018e1a7e4eef26bda07f8565cdf169",
+      "descriptionSha256": "46df34019ab4ffac7524837d799d9a055a5165f6e7b7dc73df480fbeffd1c127",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -41727,7 +41727,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "8377fbb6dc2af72da1556d347ec0bb445679a93a0a6f2e9e8ec6b885c425db39",
+      "descriptionSha256": "1c39b754fca6c4de6d25d088ee372cdc1eb930a954dcaa10bb176ed35d5a91cf",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

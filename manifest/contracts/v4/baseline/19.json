@@ -12806,13 +12806,13 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "fe72297660a92e5e64cce9a0fb578a9417641b0419faec54c09d93c3b9d7d8a5",
+      "descriptionSha256": "89ae270f3a1d589b22ec1c98ce5c4d02a4810dced0bc7fdce3009f4155cf3376",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "fix": {
-            "default": true,
-            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
+            "default": false,
+            "description": "fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).",
             "examples": [
               false
             ],

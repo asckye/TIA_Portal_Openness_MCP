@@ -165,7 +165,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return PlcExchangeContract.Run("DeletePlcExternalSource", () => DeletePlcExternalSource(softwarePath, externalSourceName), write: true, current: true);
         }
 
-        [McpServerTool(Name = "GenerateBlocksFromExternalSource"), Description("[L2][PLC-Software]Generate blocks from a PLC external source by name (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "GenerateBlocksFromExternalSource"), Description("[L2][PLC-Software][WRITE] Generate blocks from a PLC external source by name (best-effort)" + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance." + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GenerateBlocksFromExternalSourceV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("externalSourceName: name from ListPlcExternalSources")] string externalSourceName)

@@ -5819,9 +5819,9 @@
         "parameters": {
           "fix": {
             "type": "bool",
-            "default": "true",
-            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
-            "value": true
+            "default": "false",
+            "description": "fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).",
+            "value": false
           }
         },
         "arguments": {
@@ -25031,9 +25031,9 @@
         "parameters": {
           "fix": {
             "type": "bool",
-            "default": "true",
-            "description": "fix: when true (default), ensure Openness group membership (adds user, may prompt UAC). false = read-only diagnosis, no prompt.",
-            "value": true
+            "default": "false",
+            "description": "fix: false (default) = read-only diagnosis, no prompt. true = ensure Openness group membership (adds user, may prompt UAC).",
+            "value": false
           }
         },
         "arguments": {

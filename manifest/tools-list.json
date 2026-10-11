@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-11T15:20:09.2849960+00:00",
+  "generatedAt": "2026-10-11T16:02:51.7793362+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "a363ed2111280035fc2336af77f85634f9581c3056afae89b074276b46a33543",
+  "workerSha256": "56443f65210a3dbff5ff9c1ca0e1ef974261589de4fcc2f52351280bd775a6be",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -812,7 +812,7 @@
       "layer": "L2",
       "category": "plc-online",
       "domain": "PLC-Online",
-      "operation": "ONLINE",
+      "operation": "ONLINE-WRITE",
       "operationInferred": false,
       "method": "ManagePlcDataBlockSnapshotV4",
       "returnType": "CallToolResult",
@@ -824,7 +824,7 @@
         "confirmValueChange",
         "dryRun"
       ],
-      "description": "[L2][PLC-Online][ONLINE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManagePlcDataBlockSnapshot\"), optionally operation or language.",
+      "description": "[L2][PLC-Online][ONLINE-WRITE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManagePlcDataBlockSnapshot\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"action\":\"read\",\"confirmValueChange\":false,\"dryRun\":true}"
     },
     {
@@ -4810,7 +4810,7 @@
       "layer": "L2",
       "category": "runtime",
       "domain": "Simulation",
-      "operation": "ONLINE",
+      "operation": "ONLINE-WRITE",
       "operationInferred": false,
       "method": "RunPlcCompanionToolV4",
       "returnType": "Task`1",
@@ -4821,7 +4821,7 @@
         "dryRun",
         "timeoutSeconds"
       ],
-      "description": "[L2][Simulation][ONLINE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout. Examples: GetToolUsage(toolName: \"RunPlcCompanionTool\"), optionally operation or language.",
+      "description": "[L2][Simulation][ONLINE-WRITE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout. Examples: GetToolUsage(toolName: \"RunPlcCompanionTool\"), optionally operation or language.",
       "example": "{\"workingDirectory\":\"C:\\\\Examples\",\"dryRun\":true}"
     },
     {
@@ -8933,8 +8933,8 @@
       "layer": "L2",
       "category": "plc",
       "domain": "PLC-Software",
-      "operation": "FILE",
-      "operationInferred": true,
+      "operation": "WRITE",
+      "operationInferred": false,
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
@@ -9753,7 +9753,7 @@
       "parameters": [
         "fix"
       ],
-      "description": "[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready. Example: {\"fix\":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetEnvironmentDiagnostics\"), optionally operation or language.",
+      "description": "[L0][Diagnostics] One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. The default fix=false is a read-only diagnosis. Only fix=true ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Call this first when setup is failing or you are unsure the environment is ready. Example: {\"fix\":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetEnvironmentDiagnostics\"), optionally operation or language.",
       "example": "{\"fix\":false}"
     },
     {
