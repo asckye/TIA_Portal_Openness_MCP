@@ -1132,7 +1132,6 @@ def plc_exchange_reply(reply, name):
 # live in the Siemens-free host types. Explicit rosters keep a missing fixture
 # or a declaration moved to the wrong type from silently disappearing.
 PORTED_DOMAIN_TOOLS = {
-    'SoftwareUnitDeep': {'EngineeringServicesTools': ('ManageProjectCompilationSettings',)},
     'ProjectSecurity': {'EngineeringServicesTools': ('CompareLibraries', 'CompareProjects', 'GetProjectSettings')},
     'ProjectSession': {'EngineeringServicesTools': ('GetObjectIdentifier', 'ShowObjectInEditor', 'RunToolTransaction')},
     'Devices': {'HardwareDevicesTools': ('CreateDevice', 'CreateHardwareDevice', 'CreateGsdDevice', 'CreateHardwareCatalogDevice', 'ListDevices', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog', 'GetDeviceAttributes', 'SetDeviceItemAttribute', 'SetPlcCpuSettings')},
@@ -1160,7 +1159,8 @@ PORTED_DOMAIN_TOOLS = {
     'Runtime': {'PlcCausalTraceTools': ('TraceTagCause', 'TraceTagCauseLive')},
     'MotionProDiagClassicHmi': {'PlcMotionTools': ('GetMotionAxisConfiguration', 'ManageMotionAxis', 'ExchangeMotionCamData', 'ConfigureMotionHardwareConnection')},
     'TechnologyObjects': {'PlcTechnologyTools': ('ExportTechnologyObjectsToDirectory', 'ImportTechnologyObject', 'ImportTechnologyObjectsFromDirectory', 'GetTechnologyObjectTree', 'ManageTechnologyObject')},
-    'SoftwareUnitDeep': {'PlcIntegrityTools': ('ListPlcSoftwareUnits', 'ManagePlcSoftwareUnit', 'GetPlcChecksums', 'GetPlcObjectFingerprints', 'ManagePlcBlockWriteProtection')},
+    'SoftwareUnitDeep': {'EngineeringServicesTools': ('ManageProjectCompilationSettings',),
+        'PlcIntegrityTools': ('ListPlcSoftwareUnits', 'ManagePlcSoftwareUnit', 'GetPlcChecksums', 'GetPlcObjectFingerprints', 'ManagePlcBlockWriteProtection')},
     'SoftwareUnitManagement': {'PlcIntegrityTools': ('SetPlcUnitObjectAccess',)},
     'Types': {'PlcReadModifyTools': ('SeedProjectFromReference',)},
     'Diagnostics': {'HostMetaTools': (
