@@ -244,6 +244,8 @@ namespace TiaMcpServer.ModelContextProtocol
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             try
             {
+                var fenced = McpServer.GenerationFenceRefusal(ProtocolTool.Name, arguments, dispatched: true);
+                if (fenced != null) return Recorded(McpServer.FinishApproval(fenced, approval));
                 var reset = McpServer.SessionPrecheckRefusal(ProtocolTool.Name);
                 if (reset != null) return Recorded(McpServer.FinishApproval(reset, approval));
                 if (approval != null && !McpServer.ApprovalStillMatches(approval,

@@ -309,6 +309,100 @@ public sealed class OperatorSessionTests
         }
         public void Dispose() { if (prior == null) File.Delete(path); else File.WriteAllBytes(path, prior); }
     }
+    [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Attached_panel_and_ai_share_generation_fence_before_approval(string release)
+    {
+        using var fixture = new Fixture(release); var worker = new GenerationFenceWorker(release); int approvals = 0;
+        var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release, null,
+            () => new ApprovalSettings(false, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, true, null)); })).ToArray();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
+        using var session = new Session(release, "fence fixture", false, pipeline.Tools.ToArray(), pipeline.OperatorTools,
+            () => new JsonObject(), pipeline.Dispose);
+        await using var ai = await Peer.Ai(session);
+        using var registration = fixture.Register(); using var member = registration.Register(session);
+        await using var panel = await Peer.Operator(registration, session.SessionKey);
+        var args = new Dictionary<string, object?> { ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = "C:/Fixture.ap" + release };
+        using (GenerationWriteFence.Acquire(worker.SessionKey, "fixture-run"))
+        {
+            var direct = await panel.Tool("SaveProject", args, false);
+            var bridged = await ai.Tool("CallTool", new() { ["name"] = "SaveProject", ["arguments"] = args }, false);
+            foreach (var result in new[] { direct, bridged })
+            {
+                Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+                Assert.Equal("generation-run-active", (string?)result["error"]?["details"]?["condition"]);
+                Assert.Equal("fixture-run", (string?)result["data"]?["runId"]);
+            }
+            await panel.Tool("GetSessionState"); await ai.Tool("GetSessionState");
+            Assert.Equal(0, approvals); Assert.Equal(0, worker.Writes);
+        }
+        await panel.Tool("SaveProject", args); Assert.Equal(1, approvals); Assert.Equal(1, worker.Writes);
+    }
+    [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Host_shutdown_releases_active_generation_fence(string release)
+    {
+        var worker = new GenerationFenceWorker(release);
+        var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release)).ToArray();
+        var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
+        using var fence = GenerationWriteFence.Acquire(worker.SessionKey, "shutdown-run");
+        Assert.Equal("shutdown-run", GenerationWriteFence.RefusedRun(worker.SessionKey, "19", "SaveProject", "{}"));
+        pipeline.Dispose();
+        Assert.Null(GenerationWriteFence.RefusedRun(worker.SessionKey, "19", "SaveProject", "{}"));
+        Assert.True(GenerationWriteFence.Ended(worker.SessionKey));
+        Assert.Throws<InvalidOperationException>(() => GenerationWriteFence.Acquire(worker.SessionKey, "another-run"));
+    }
+    [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task A_write_approved_before_fence_acquisition_is_rechecked_before_dispatch(string release)
+    {
+        var worker = new GenerationFenceWorker(release); IDisposable? fence = null; int approvals = 0;
+        var inner = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Single(t => t.ProtocolTool.Name == "SaveProject");
+        var tool = new TiaMcp.FoundationHost.FoundationV4Tool(inner, release, null, () => new ApprovalSettings(false, 1), (pending, _, _) => {
+            approvals++; fence = GenerationWriteFence.Acquire(worker.SessionKey, "queued-run");
+            return Task.FromResult(new ApprovalOutcome(pending, true, null));
+        });
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, [tool]);
+        using var session = pipeline.EnterSession();
+        var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new CallToolRequestParams { Name = "SaveProject", Arguments = new Dictionary<string, JsonElement> {
+                ["dryRun"] = JsonSerializer.SerializeToElement(false), ["confirm"] = JsonSerializer.SerializeToElement(true),
+                ["expectedProjectFile"] = JsonSerializer.SerializeToElement("C:/Fixture.ap" + release) } } };
+        try
+        {
+            var result = await tool.InvokeAsync(request);
+            Assert.Equal("generation-run-active", (string?)result.StructuredContent?["error"]?["details"]?["condition"]);
+            Assert.Equal("queued-run", (string?)result.StructuredContent?["data"]?["runId"]);
+            Assert.Equal(1, approvals); Assert.Equal(0, worker.Writes);
+        }
+        finally { fence?.Dispose(); }
+    }
+    private sealed class GenerationFenceWorker(string release) : TiaMcp.FoundationHost.IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    {
+        internal int Writes;
+        public object SessionKey { get; } = new();
+        public bool Faulted => false;
+        public bool Poisoned => false;
+        public bool Bundled => false;
+        public bool SharedSession => true;
+        public string ApprovalIdentity => "{}";
+        public JsonNode? Binding => new JsonObject();
+        public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
+        public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => null;
+        public void MarkUncertain() => throw new Exception("fixture must not become unknown");
+        public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
+        public void ActivateLane(IDisposable? lane) { }
+        public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new EmptyLane());
+        public JsonObject Snapshot() => new JsonObject { ["readiness"] = new JsonObject { ["ready"] = true } };
+        public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
+        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token) => throw new NotSupportedException();
+        public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
+        {
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = true, ["ProcessId"] = 123, ["ProjectFile"] = "C:/Fixture.ap" + release, ["OwnsProject"] = false, ["IsLocalSession"] = false, ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" });
+            if (operation == "SaveProject") { Writes++; return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = true, ["Operation"] = "SaveProject", ["NativeCallIssued"] = true, ["ProjectFile"] = "C:/Fixture.ap" + release }); }
+            throw new NotSupportedException(operation);
+        }
+        public void Dispose() { }
+        private sealed class EmptyLane : IDisposable { public void Dispose() { } }
+    }
     private sealed class Duplex(Stream read, Stream write) : Stream
     {
         public override bool CanRead => true; public override bool CanWrite => true; public override bool CanSeek => false;

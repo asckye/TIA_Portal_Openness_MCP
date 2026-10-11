@@ -530,7 +530,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "26d8ec02c22a8e0de1a7d1840d482f2aa6d17d86bbd5ce81a553277dc87d2fed",
+      "descriptionSha256": "0bea9620e2c116e1e2fd452b1c2e8fa251de2f61f9429ee097da708e231e8035",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -544,7 +544,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact bound project file recorded by the plan.",
+            "description": "Exact existing or predicted new project file recorded by the plan.",
             "type": "string"
           },
           "phases": {
@@ -19944,13 +19944,13 @@
       }
     },
     {
-      "descriptionSha256": "0f46d8ea06a8821c995e4207213e5d482a8d43080971f1a786b3bf597d1c28a0",
+      "descriptionSha256": "70c87e665a7096af3885a737aee40d6ebe92a01f6e029ef3e91b50781c07f42a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "machine": {
             "additionalProperties": {},
-            "description": "Structured tiamcp.machine/1, existing bound project; projectIdentity must be its exact project file.",
+            "description": "Structured tiamcp.machine/1; existing mode supplies the bound project file, new mode supplies an absolute directory and project name.",
             "minProperties": 0,
             "type": "object"
           },

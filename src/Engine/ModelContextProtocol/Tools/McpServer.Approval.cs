@@ -60,11 +60,32 @@ namespace TiaMcpServer.ModelContextProtocol
             if (key != null) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
             return result;
         }
+        internal static CallToolResult? GenerationFenceRefusal(string name, string arguments, bool dispatched = false, bool? write = null)
+        {
+#if TIA_ENGINE_HOST
+            var key = TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull?.Worker.SessionKey;
+            if (key != null && (write ?? ApprovalWrite(name, arguments))
+                && GenerationWriteFence.RefusedRun(key, ReleaseKey, name, arguments, dispatched) is { } runId)
+                return V4Reject(name, new Error("A generation run is active in this session.", new PreconditionFailedDetails("generation-run-active", runId)),
+                    new JsonObject { ["runId"] = runId });
+#endif
+            return null;
+        }
+        internal static IDisposable DeferGenerationCancellation()
+        {
+            var previous = McpDispatchCancellation.Value;
+            McpDispatchCancellation.Value = CancellationToken.None;
+            return new CancellationScope(previous);
+        }
+        private sealed class CancellationScope(CancellationToken previous) : IDisposable
+        { public void Dispose() => McpDispatchCancellation.Value = previous; }
         internal static bool IsReadOnlyApprovalPreview => ApprovalPreviewDepth.Value > 0;
         internal static async Task<CallToolResult?> PrecheckBeforeApproval(string name, string arguments,
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
             if (ApprovalPreviewDepth.Value > 0) return null;
+            var fenced = GenerationFenceRefusal(name, arguments);
+            if (fenced != null) return fenced;
             var reset = SessionPrecheckRefusal(name);
             if (reset != null) return reset;
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
@@ -204,6 +225,8 @@ namespace TiaMcpServer.ModelContextProtocol
             IDisposable? targetLane = null;
             if (beforeDispatch != null) EnterTargetLane(name, arguments, ref targetLane);
             using var boundedTargetLane = targetLane;
+            var fenced = GenerationFenceRefusal(name, arguments, dispatched: true);
+            if (fenced != null) return FinishApproval(fenced, approval);
             var reset = SessionPrecheckRefusal(name);
             if (reset != null) return FinishApproval(reset, approval);
             if (approval != null && !ApprovalStillMatches(approval, arguments)) return ChangedApprovalRefusal(approval);

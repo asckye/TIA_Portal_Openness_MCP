@@ -24,8 +24,12 @@ public sealed class StagedGenerationTests
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly string Root = Path.Combine(AppContext.BaseDirectory, "staged-generation", Guid.NewGuid().ToString("N"));
+        internal readonly string Root = Path.Combine(Path.GetTempPath(), "tiamcp-staged-generation", Guid.NewGuid().ToString("N"));
         internal readonly string Release, Project;
+        internal readonly bool NewProject;
+        internal bool Created;
+        internal string? TransitionFault;
+        internal string BindingGeneration = "1";
         internal readonly Worker Worker;
         internal readonly PlanningFixture Planner;
         internal readonly Session Session;
@@ -37,10 +41,17 @@ public sealed class StagedGenerationTests
         internal Action? OnApproval, OnWrite;
         internal JsonObject? LastPlan;
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
-        internal Fixture(string release, int maximumSteps = 10000)
+        internal Fixture(string release, int maximumSteps = 10000, bool newProject = false)
         {
             Release = release; Project = "C:/Projects/Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15" : release);
+            NewProject = newProject;
+            if (newProject) Project = GenerationProjectPath.CreationFile(release, "C:/Projects", "Fixture");
             Planner = new PlanningFixture(release); Planner.Machine.Target.Project.ProjectIdentity = Project;
+            if (newProject)
+            {
+                Planner.Machine.Target.Project.Mode = "new"; Planner.Machine.Target.Project.ProjectIdentity = null;
+                Planner.Machine.Target.Project.Directory = "C:/Projects"; Planner.Machine.Target.Project.Name = "Fixture";
+            }
             Worker = new Worker(this);
             Configuration.ReleaseKey = release; Configuration.Worker = Worker;
             var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
@@ -73,6 +84,7 @@ public sealed class StagedGenerationTests
         {
             if (name == "GetSessionState") return Host.V4Result(name, new JsonObject());
             if (name == "GetOpennessWorkerStatus") return Host.V4Result(name, new JsonObject { ["worker"] = new JsonObject { ["binding"] = new JsonObject { ["identity"] = Identity() } } });
+            if (name == "GetProjectTree" && NewProject && TransitionFault != "nonempty") return Host.V4Result(name, new JsonObject { ["tree"] = "```\nFixture\n  Ungrouped devices\n\n```" });
             if (name == "GetProjectTree") return Host.V4Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "synthetic.article", ["version"] = "V1" }) });
             if (name == "GetSoftwareTree") return Host.V4Result(name, new JsonObject { ["paths"] = new JsonArray(Worker.Objects.Select(o => (JsonNode)new JsonObject { ["kind"] = o.Kind, ["name"] = o.Name, ["objectPath"] = o.Path }).ToArray()) });
             if (name.StartsWith("List", StringComparison.Ordinal))
@@ -96,6 +108,11 @@ public sealed class StagedGenerationTests
                 return result;
             }
             if (check?.Invoke() is { } rejected) return rejected;
+            if (name == "CreateProject")
+            {
+                if (TransitionFault == "rejected") return Host.V4Reject(name, new TiaMcp.Logic.V4.Error("Injected creation refusal.", new TiaMcp.Logic.V4.PreconditionFailedDetails("fixture", null)));
+                Created = true; BindingGeneration = TransitionFault == "epoch" ? "1" : "2";
+            }
             if (name == "MovePlcBlockToGroup")
             {
                 var block = Worker.Objects.Single(o => o.Name == (string)args["blockName"]!);
@@ -104,7 +121,9 @@ public sealed class StagedGenerationTests
             OnWrite?.Invoke();
             return Host.V4Result(name, new JsonObject());
         }
-        internal JsonObject Identity() => new() { ["projectPath"] = Project, ["processId"] = 123, ["processStartUtc"] = "2026-10-10T00:00:00Z", ["generation"] = "1" };
+        internal JsonObject Identity() => new() { ["projectPath"] = NewProject && !Created ? null : Created && TransitionFault == "unbound" ? "" : Created && TransitionFault == "path" ? "C:/Wrong/Wrong.ap21" : Created && TransitionFault == "normalized" ? Project.ToLowerInvariant().Replace('\\', '/') : Project,
+            ["processId"] = Created && TransitionFault == "process" ? 124 : 123,
+            ["processStartUtc"] = Created && TransitionFault == "start" ? "2026-10-10T01:00:00Z" : "2026-10-10T00:00:00Z", ["generation"] = BindingGeneration };
         private Descriptor? Ordinary(string name)
         {
             var path = new DirectoryInfo(AppContext.BaseDirectory);
@@ -356,4 +375,134 @@ public sealed class StagedGenerationTests
         Assert.True(StepReviewRules.VerifyEffect(plan, delete, effect, facts).Matches); Assert.Equal(1, attempts);
         facts.Accept(delete, effect); Assert.DoesNotContain(name, facts.Sources("PLC1"));
     }
+    [Theory, MemberData(nameof(Releases))]
+    public void ActiveRunFencesOtherWritesAndKeepsReadsAndOwnGrant(string release)
+    {
+        using var f = new Fixture(release);
+        int refusals = 0;
+        f.OnWrite = () => {
+            var blocked = Host.DispatchGenerationStep("ImportPlcExternalSource", new ToolArguments(JsonSerializer.SerializeToElement(new {
+                softwarePath = "PLC1", groupPath = "", filePath = "C:/Other.scl", dryRun = false, confirm = true,
+                expectedProjectFile = f.Project, expectedPlanHash = new string('a', 64) })), () => throw new Exception("fenced write dispatched"));
+            Assert.Equal("PRECONDITION_FAILED", (string?)blocked.StructuredContent?["error"]?["code"]);
+            Assert.Equal("generation-run-active", (string?)blocked.StructuredContent?["error"]?["details"]?["condition"]);
+            Assert.NotEmpty((string)blocked.StructuredContent!["data"]!["runId"]!); refusals++;
+            Assert.Null(Host.GenerationFenceRefusal("ListPlcExternalSources", "{\"softwarePath\":\"PLC1\"}"));
+            Assert.Null(GenerationWriteFence.RefusedRun(new object(), release, "SaveProject", "{}"));
+        };
+        var result = f.Apply(); Assert.True((bool?)result["ok"], result.ToJsonString()); Assert.True(refusals > 0);
+        Assert.Null(GenerationWriteFence.RefusedRun(f.Worker.SessionKey, release, "SaveProject", "{}"));
+        Assert.Equal(new[] { "acquire", "release" }, result["data"]!["events"]!.AsArray().OfType<JsonObject>()
+            .Where(e => (string?)e["event"] == "fence").Select(e => (string?)e["action"]));
+    }
+    public static IEnumerable<object[]> StopTypes => Releases.SelectMany(r => new[] { "success", "failed", "unknown", "throw", "diverged", "effect", "cancelled", "cap", "shutdown" }.Select(s => new object[] { r[0], s }));
+    [Theory, MemberData(nameof(StopTypes))]
+    public void FenceReleasesForEveryStopAndShutdown(string release, string stop)
+    {
+        using var f = new Fixture(release, maximumSteps: stop == "cap" ? 1 : 10000);
+        if (stop is "failed" or "unknown" or "throw") f.Failure = stop;
+        if (stop == "diverged") f.Mutation = "inputSha256";
+        if (stop == "effect") f.ExtraEffect = true;
+        if (stop == "cancelled") f.OnWrite = () => f.Cancelled = true;
+        if (stop == "shutdown") f.OnWrite = () => GenerationWriteFence.Shutdown(f.Worker.SessionKey);
+        var result = f.Apply();
+        Assert.Equal(stop switch { "success" => "succeeded", "throw" => "unknown", "effect" => "effect-diverged", "shutdown" => "cancelled", _ => stop }, (string?)result["data"]!["status"]);
+        Assert.Null(GenerationWriteFence.RefusedRun(f.Worker.SessionKey, release, "SaveProject", "{}"));
+        if (stop == "shutdown") Assert.True(GenerationWriteFence.Ended(f.Worker.SessionKey));
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void RequestCancellationFinishesTheRunningWriteAndStopsBeforeTheNext(string release)
+    {
+        using var f = new Fixture(release); using var cancellation = new CancellationTokenSource();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer, ApprovalPrecheckTests.ServerProxy>())
+            { Params = new CallToolRequestParams { Name = "ApplyGenerationPlan" } };
+        var plan = f.Plan(); f.OnWrite = () => {
+            cancellation.Cancel(); Assert.False(Host.WorkerDispatchCancellation.IsCancellationRequested);
+        };
+        using var progress = Host.UseProgressRequest(request, cancellation.Token);
+        var result = f.Session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, f.Project, null, false).StructuredContent!;
+        Assert.Equal("cancelled", (string?)result["data"]!["status"]);
+        Assert.Equal("succeeded", (string?)result["data"]!["steps"]![0]!["status"]);
+        Assert.All(result["data"]!["steps"]!.AsArray().Skip(1), row => Assert.Equal("NOT_EXECUTED", (string?)row!["status"]));
+        Assert.Equal(1, f.Approvals);
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void NewProjectRebindsWithinTheSameApprovedRun(string release)
+    {
+        using var f = new Fixture(release, newProject: true); var plan = f.Plan();
+        Assert.Equal("CreateProject", (string?)plan["steps"]![0]!["tool"]);
+        Assert.Equal("transition", (string?)plan["steps"]![0]!["review"]?["mode"]);
+        Assert.Equal(f.Project, (string?)plan["target"]!["projectIdentity"]);
+        Assert.DoesNotContain(plan["steps"]!.AsArray(), row => (string?)row!["tool"] == "ArchiveSavedProject");
+        Assert.All(plan["steps"]!.AsArray().Where(row => row!["arguments"]!["expectedProjectFile"] != null), row => Assert.Equal(f.Project, (string?)row!["arguments"]!["expectedProjectFile"]));
+        var result = f.Apply(plan); Assert.True((bool?)result["ok"], result.ToJsonString()); Assert.Equal(1, f.Approvals);
+        Assert.Equal(f.Project, (string?)result["data"]!["createdProjects"]![0]); Assert.True(f.Worker.Generations > 0);
+        Assert.Single(result["data"]!["events"]!.AsArray().Where(row => (string?)row!["event"] == "transition"));
+    }
+    public static IEnumerable<object[]> TransitionFaults => Releases.SelectMany(r => new[] { "rejected", "path", "process", "start", "epoch", "nonempty" }.Select(f => new object[] { r[0], f }));
+    [Theory, MemberData(nameof(TransitionFaults))]
+    public void NewProjectFaultStopsRetainsCreationAndCanReplanExisting(string release, string fault)
+    {
+        using var f = new Fixture(release, newProject: true); f.TransitionFault = fault; var result = f.Apply();
+        Assert.Equal(fault == "rejected" ? "rejected-before-operation" : "partial", (string?)result["meta"]!["outcome"]);
+        Assert.Equal(fault == "rejected" ? "rejected-before-operation" : "diverged", (string?)result["data"]!["status"]);
+        Assert.Equal(0, f.Worker.Writes); Assert.Equal(fault != "rejected", f.Created);
+        if (fault != "rejected")
+        {
+            Assert.Equal("transition-diverged", (string?)result["data"]!["stoppingReason"]);
+            Assert.NotEmpty(result["data"]!["createdProjects"]!.AsArray());
+            f.TransitionFault = null;
+            f.Planner.Machine.Target.Project.Mode = "existing"; f.Planner.Machine.Target.Project.ProjectIdentity = f.Project;
+            f.Planner.Machine.Target.Project.Directory = null; f.Planner.Machine.Target.Project.Name = null;
+            Assert.Equal("existing", (string?)f.Plan()["target"]!["mode"]);
+        }
+        Assert.All(result["data"]!["steps"]!.AsArray().Skip(1), row => Assert.Equal("NOT_EXECUTED", (string?)row!["status"]));
+        Assert.Null(GenerationWriteFence.RefusedRun(f.Worker.SessionKey, release, "SaveProject", "{}"));
+        if (fault == "path")
+        {
+            using var unbound = new Fixture(release, newProject: true); unbound.TransitionFault = "unbound";
+            var missing = unbound.Apply();
+            Assert.Equal("partial", (string?)missing["meta"]!["outcome"]);
+            Assert.Equal("transition-diverged", (string?)missing["data"]!["stoppingReason"]);
+            Assert.Equal(unbound.Project, (string?)missing["data"]!["createdProjects"]![0]);
+            Assert.Equal(0, unbound.Worker.Writes); Assert.True(unbound.Created);
+            Assert.All(missing["data"]!["steps"]!.AsArray().Skip(1), row => Assert.Equal("NOT_EXECUTED", (string?)row!["status"]));
+            Assert.Null(GenerationWriteFence.RefusedRun(unbound.Worker.SessionKey, release, "SaveProject", "{}"));
+        }
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void PredictedProjectFileMatchesAdapterAndMutationIdentity(string release)
+    {
+        foreach (var directory in new[] { "C:/Projects", "c:/Projects/../Other/", @"\\server\share\folder\.\child\.." })
+        {
+            string predicted = GenerationProjectPath.CreationFile(release, directory, "Fixture");
+            Assert.Equal(PlcLifecyclePolicy.CreationFile(release, directory, "Fixture"), predicted);
+            MutationIdentityPolicy.ValidateTarget(false, true, predicted, "CreateProject", release, "", directory, "Fixture", _ => throw new Exception("must be unbound"));
+        }
+        foreach (var name in new[] { "CON", "a/b", "..", "A.", "A ", "x:y" })
+            Assert.Throws<ArgumentException>(() => GenerationProjectPath.CreationFile(release, "C:/Projects", name));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void LaterNewProjectFailureRetainsTheCreatedProjectAndNewBinding(string release)
+    {
+        using var f = new Fixture(release, newProject: true); f.Failure = "failed";
+        var result = f.Apply(); Assert.Equal("partial", (string?)result["meta"]!["outcome"]);
+        Assert.Equal("failed", (string?)result["data"]!["status"]); Assert.True(f.Created);
+        Assert.Equal(f.Project, (string?)result["data"]!["createdProjects"]![0]);
+        Assert.Equal(f.Project, (string?)f.Identity()["projectPath"]);
+        Assert.Equal("succeeded", (string?)result["data"]!["steps"]![0]!["status"]);
+        Assert.Null(GenerationWriteFence.RefusedRun(f.Worker.SessionKey, release, "SaveProject", "{}"));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void NewBindingAcceptsNormalizedCaseInsensitiveProjectFile(string release)
+    {
+        using var f = new Fixture(release, newProject: true); f.TransitionFault = "normalized";
+        var result = f.Apply(); Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Equal(1, f.Approvals); Assert.True(f.Worker.Generations > 0);
+        var lineage = new GenerationRunStore(Path.Combine(f.Root, "runs")).Lineage((string)f.Identity()["projectPath"]!, release);
+        Assert.Equal((string?)result["data"]!["runId"], lineage!["runId"]);
+    }
+
 }

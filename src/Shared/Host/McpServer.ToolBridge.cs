@@ -288,6 +288,12 @@ namespace TiaMcpServer.ModelContextProtocol
             bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
             string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, "engine", ReleaseKey, name ?? "", requestId);
+            var fenced = write ? GenerationFenceRefusal(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()) : null;
+            if (fenced != null)
+            {
+                RecordCallRejection(name ?? "", arguments ?? EmptyArguments(), fenced);
+                return AuditBridgeResult(audit, fenced, disabled);
+            }
             var error = ToolInvoker.Bind(name, arguments ?? EmptyArguments(), out var call);
             if (error != null)
             {

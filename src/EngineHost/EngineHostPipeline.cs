@@ -233,7 +233,7 @@ namespace TiaMcp.FoundationHost
         {
             public void Dispose() { ImportStagingTools.RemoveHttpSession(session); session.Dispose(); }
         }
-        public void Dispose() { context.Ended = true; context.Exports.Dispose(); stagingLifetime.Dispose(); }
+        public void Dispose() { TiaOpenness.Shared.GenerationWriteFence.Shutdown(context.Worker.SessionKey); context.Ended = true; context.Exports.Dispose(); stagingLifetime.Dispose(); }
 
         public void RegisterHandlers(IMcpServerBuilder builder)
         {

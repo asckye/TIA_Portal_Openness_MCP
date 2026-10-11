@@ -18,6 +18,10 @@ namespace TiaMcp.FoundationHost;
 // Native objects and their thread remain in the existing PLC worker.
 internal static class FoundationHostPorts
 {
+    internal static ModelContextProtocol.Protocol.CallToolResult? GenerationFence(string name, string arguments, bool dispatched = false)
+        => McpServer.GenerationFenceRefusal(name, arguments, dispatched, write: true);
+    internal static IDisposable GenerationRequest(RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request, CancellationToken token)
+        => McpServer.UseProgressRequest(request, token);
     internal static ModelContextProtocol.Protocol.CallToolResult? BeforeDispatch() => McpServer.FoundationBeforeDispatch?.Invoke();
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string release,
         IReadOnlyList<McpServerTool> shared, Func<JsonObject> readiness, string? apiDirectory)

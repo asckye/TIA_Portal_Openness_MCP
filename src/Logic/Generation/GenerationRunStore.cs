@@ -67,6 +67,9 @@ namespace TiaMcp.Logic.Generation
             var completed = events.OfType<JsonObject>().LastOrDefault(e => (string?)e["event"] == "end");
             result["status"] = completed?["status"]?.DeepClone() ?? JsonValue.Create("unknown");
             result["stoppingReason"] = completed?["stoppingReason"]?.DeepClone() ?? JsonValue.Create("host-interrupted; inspect project and replan; never replay this run");
+            result["createdProjects"] = new JsonArray(events.OfType<JsonObject>().Where(e => (string?)e["event"] == "transition")
+                .Select(e => (string?)e["createdProject"]).Where(p => !string.IsNullOrEmpty(p)).Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(p => (JsonNode?)JsonValue.Create(p)).ToArray());
             result["interruptedTail"] = interrupted;
             result["events"] = events;
             return result;
@@ -79,7 +82,7 @@ namespace TiaMcp.Logic.Generation
             foreach (var file in Directory.GetFiles(root, "*.jsonl"))
             {
                 var run = Read(Path.GetFileNameWithoutExtension(file));
-                if (!string.Equals((string?)run["project"], project, StringComparison.OrdinalIgnoreCase) || (string?)run["release"] != release) continue;
+                if (!string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase) || (string?)run["release"] != release) continue;
                 // Known pre-operation refusals did not consume this plan. An interrupted intent did.
                 if (!run["steps"]!.AsArray().Any(s => (string?)s!["status"] is not ("NOT_EXECUTED" or "rejected-before-operation" or "diverged" or "cancelled" or "cap"))) continue;
                 if (latest == null || string.CompareOrdinal((string?)run["utc"], (string?)latest["utc"]) > 0) latest = run;

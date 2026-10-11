@@ -18,11 +18,42 @@ namespace TiaMcp.Logic.Generation
     // Rules consume existing current-policy results. SafeV4 candidate rules are deliberately absent.
     public static class StepReviewRules
     {
+        public const string CreateProject = "project-create/1";
         public const string Import = "external-source-import/1", Generate = "external-source-generate/1", Delete = "external-source-delete/1";
         private static readonly IReadOnlyDictionary<string, string> Tools = new Dictionary<string, string> {
             [Import] = "ImportPlcExternalSource", [Generate] = "GenerateBlocksFromExternalSource", [Delete] = "DeletePlcExternalSource" };
         public static bool Supports(GenerationPlanStepsItem step) => step.Review != null && step.Review.Mode == "tool-preview"
             && Tools.TryGetValue(step.Review.Rule, out var tool) && tool == step.Tool;
+        public static StepReviewVerdict Transition(JsonObject before, JsonObject after, string predicted, JsonObject tree)
+        {
+            var verdict = new StepReviewVerdict();
+            foreach (string field in new[] { "processId", "processStartUtc" })
+                if (before[field] == null || !JsonNode.DeepEquals(before[field], after[field])) verdict.Different(field, before[field], after[field]);
+            bool samePath = false;
+            try { samePath = string.Equals(GenerationProjectPath.Normalize(predicted), GenerationProjectPath.Normalize((string?)after["projectPath"] ?? ""), StringComparison.OrdinalIgnoreCase); }
+            catch (ArgumentException ex) { verdict.Differences.Add(new JsonObject { ["field"] = "projectPath.normalization", ["error"] = ex.Message }); }
+            if (!samePath) verdict.Different("projectPath", JsonValue.Create(predicted), after["projectPath"]);
+            if (!long.TryParse(before["generation"]?.ToString(), out var previous) || !long.TryParse(after["generation"]?.ToString(), out var current) || current <= previous)
+                verdict.Different("generation", before["generation"], after["generation"]);
+            if (!EmptyProject(tree, predicted)) verdict.Different("emptyProject", JsonValue.Create(true), tree);
+            return verdict;
+        }
+        private static bool EmptyProject(JsonObject tree, string project)
+        {
+            // Native Foundation/ported trees contain only the project header and the empty built-in group.
+            string? text = (string?)tree["tree"] ?? (string?)tree["value"];
+            if (text != null)
+            {
+                var lines = text.Split('\n').Select(l => l.Trim().TrimEnd('\r')).Where(l => l.Length > 0).ToArray();
+                if (lines.Length >= 2 && lines[0] == "```" && lines[lines.Length - 1] == "```") lines = lines.Skip(1).Take(lines.Length - 2).ToArray();
+                string name = project.Replace('\\', '/').Split('/').Last();
+                name = name.Substring(0, name.LastIndexOf('.'));
+                return lines.Length >= 1 && lines[0] == name && lines.Skip(1).All(l => l == "Ungrouped devices");
+            }
+            return tree["devices"] is JsonArray devices && devices.Count == 0
+                && (tree["deviceGroups"] == null || tree["deviceGroups"] is JsonArray groups && groups.Count == 0)
+                && (tree["ungroupedDevices"] == null || tree["ungroupedDevices"] is JsonArray ungrouped && ungrouped.Count == 0);
+        }
         public static JsonObject PreviewArguments(GenerationPlanStepsItem step)
         {
             Require(step);

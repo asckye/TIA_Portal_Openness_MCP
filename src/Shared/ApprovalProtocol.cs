@@ -167,13 +167,15 @@ namespace TiaOpenness.Shared
         private sealed class Grant
         {
             internal string Release = "", Tool = "", Digest = "";
+            internal object? SessionKey;
+            internal string? RunId;
             internal ApprovalOutcome Approval = null!;
             internal bool Used;
         }
         private static readonly AsyncLocal<Grant?> Current = new AsyncLocal<Grant?>();
 #if TIA_GENERATION_PLANNER
         internal static IDisposable Enter(ApprovalOutcome approval, TiaMcp.Logic.Generation.GenerationPlanStepsItem step,
-            JsonObject arguments, string? previewRequestId = null, string? previewHash = null)
+            JsonObject arguments, string? previewRequestId = null, string? previewHash = null, object? sessionKey = null, string? runId = null)
         {
             if (approval.Reason != null || approval.Request.Kind != "plan") throw new InvalidOperationException("A granted plan is required.");
             if (Current.Value != null) throw new InvalidOperationException("Nested generation grants are refused.");
@@ -195,10 +197,17 @@ namespace TiaOpenness.Shared
                 throw new InvalidOperationException("Final arguments or review differ from the approved step.");
             var previous = Current.Value;
             Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = step.Tool,
-                Digest = PendingApproval.Hash(PendingApproval.Canonical(arguments)), Approval = approval };
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(arguments)), Approval = approval, SessionKey = sessionKey, RunId = runId };
             return new Scope(() => Current.Value = previous);
         }
 #endif
+        internal static bool Allows(object sessionKey, string runId, string release, string tool, string arguments, bool dispatched)
+        {
+            var grant = Current.Value;
+            return grant != null && (!grant.Used || dispatched) && ReferenceEquals(grant.SessionKey, sessionKey)
+                && grant.RunId == runId && grant.Release == release && grant.Tool == tool
+                && grant.Digest == PendingApproval.Hash(PendingApproval.Canonical(JsonNode.Parse(arguments)));
+        }
         internal static ApprovalOutcome? Match(PendingApproval request)
         {
             var grant = Current.Value;
@@ -213,6 +222,38 @@ namespace TiaOpenness.Shared
             internal Scope(Action restore) { this.restore = restore; }
             public void Dispose() => restore();
         }
+    }
+    // Shared by both host boundaries and attached operator calls; never keyed by a transport or actor.
+    internal static class GenerationWriteFence
+    {
+        private sealed class State { internal string? RunId; internal bool Ended; }
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, State> Sessions = new();
+        internal static string? RefusedRun(object key, string release, string tool, string arguments, bool dispatched = false)
+        {
+            var state = Sessions.GetValue(key, _ => new State());
+            lock (state) return state.RunId is { } run && !GenerationStepApproval.Allows(key, run, release, tool, arguments, dispatched) ? run : null;
+        }
+        internal static IDisposable Acquire(object key, string runId)
+        {
+            var state = Sessions.GetValue(key, _ => new State());
+            lock (state)
+            {
+                if (state.Ended || state.RunId != null) throw new InvalidOperationException("Generation session ended or already has an active run.");
+                state.RunId = runId;
+            }
+            return new Lease(() => { lock (state) if (state.RunId == runId) state.RunId = null; });
+        }
+        internal static void Shutdown(object key)
+        {
+            var state = Sessions.GetValue(key, _ => new State());
+            lock (state) { state.Ended = true; state.RunId = null; }
+        }
+        internal static bool Ended(object key)
+        {
+            var state = Sessions.GetValue(key, _ => new State());
+            lock (state) return state.Ended;
+        }
+        private sealed class Lease(Action release) : IDisposable { public void Dispose() => release(); }
     }
     [System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
     internal sealed class ApprovalAction

@@ -62,5 +62,21 @@ namespace TiaMcp.Generation.Planning.Tests
             Assert.Contains(result.Plan.Unavailable, u => u.Phase == "plcTypes" && u.Reason.Contains("no current tool"));
             Assert.DoesNotContain(result.Plan.Steps, s => s.Phase == "plcTypes");
         }
+        [Theory, MemberData(nameof(Releases))]
+        public void NewProjectHasPredictedIdentityAndExecutableTransitionBeforeEveryOtherStep(string release)
+        {
+            var fixture = new PlanningFixture(release);
+            fixture.Machine.Target.Project.Mode = "new"; fixture.Machine.Target.Project.ProjectIdentity = null;
+            fixture.Machine.Target.Project.Directory = "C:/Projects"; fixture.Machine.Target.Project.Name = "Fixture";
+            var result = GenerationPlanner.Build(fixture.Package(), GenerationDocuments.Canonical(fixture.Machine), null, fixture.Options);
+            var create = result.Plan.Steps.First();
+            Assert.Equal("CreateProject", create.Tool); Assert.Equal("transition", create.Review!.Mode);
+            Assert.Equal(StepReviewRules.CreateProject, create.Review.Rule); Assert.Empty(create.Review.LateArguments);
+            Assert.Equal(GenerationProjectPath.CreationFile(release, "C:/Projects", "Fixture"), result.Plan.Target.ProjectIdentity);
+            Assert.Equal(result.Plan.Target.ProjectIdentity, create.Review.Expect["projectPath"].GetString());
+            Assert.All(result.Plan.Steps.Skip(1), step => Assert.Contains(create.Id, step.DependsOn));
+            Assert.DoesNotContain(result.Plan.Steps, step => step.Tool == "ArchiveSavedProject");
+            Assert.All(result.Plan.Observed.Values, inventory => { Assert.Empty(inventory.SourceNames); Assert.Empty(inventory.ObjectKeys); });
+        }
     }
 }

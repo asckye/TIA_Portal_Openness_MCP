@@ -45,6 +45,10 @@ internal sealed class GenerationTool : McpServerTool
             && !string.IsNullOrEmpty((string?)arguments["outputPath"]);
     internal bool OwnsApproval => ProtocolTool.Name == "ApplyGenerationPlan";
     public override Tool ProtocolTool => tool;
-    public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
-    { cancellationToken.ThrowIfCancellationRequested(); return inner.InvokeAsync(request, cancellationToken); }
+    public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using var progress = FoundationHostPorts.GenerationRequest(request, cancellationToken);
+        return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+    }
 }
