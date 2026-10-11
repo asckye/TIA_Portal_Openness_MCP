@@ -176,7 +176,17 @@
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageDriveSafetyAcceptanceTest is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManageDriveSafetyAcceptanceTest is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManageStartdriveParameter",

@@ -483,8 +483,8 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp46_vci",
-"regexName": "^MCP_FC$",
-"preservePath": false
+"preservePath": false,
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",

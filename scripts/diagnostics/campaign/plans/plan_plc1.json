@@ -631,8 +631,7 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp46_blocks",
-"regexName": "^MCP_",
-"preservePath": false
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",
@@ -643,8 +642,8 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp46_blockdocs",
-"regexName": "^MCP_",
-"preservePath": false
+"preservePath": false,
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",
@@ -667,8 +666,7 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp46_types",
-"regexName": "^MCP_",
-"preservePath": false
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",
@@ -800,7 +798,7 @@
 "groupPath": "MCP_G",
 "importPath": "${EXPORT_ROOT}\\mcp46_docs",
 "fileNameWithoutExtension": "MCP_FB",
-"importOption": "Override"
+"overwrite": true
 },
 "note": "",
 "expect": "ok",
@@ -814,8 +812,11 @@
 "softwarePath": "MCP_PLC",
 "groupPath": "MCP_G",
 "importPath": "${EXPORT_ROOT}\\mcp46_blockdocs",
-"regexName": "",
-"importOption": "Override"
+"overwrite": true,
+"fileNamesWithoutExtension": [
+"MCP_FB",
+"MCP_FC"
+]
 },
 "note": "",
 "expect": "ok",

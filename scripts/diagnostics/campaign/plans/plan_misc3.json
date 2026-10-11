@@ -52,9 +52,7 @@
 "args": {
 "connectIfNeeded": false,
 "includeProjectTree": false,
-"inspectPortalProcesses": true,
-"expectedPlcSoftwarePath": "MCP_PLC",
-"expectedHmiSoftwarePath": "HMI_RT_1"
+"inspectPortalProcesses": false
 },
 "note": "",
 "expect": "ok",
@@ -536,8 +534,8 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp46_docs_all",
-"regexName": "^MCP_",
-"preservePath": false
+"preservePath": false,
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",

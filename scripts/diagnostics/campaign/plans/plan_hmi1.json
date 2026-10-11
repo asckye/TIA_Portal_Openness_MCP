@@ -664,7 +664,17 @@
 "expect": "any",
 "keys": [
 "rows"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "GetClassicHmiGlobalization is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "GetClassicHmiGlobalization is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManageClassicHmiGraphic",
@@ -681,7 +691,17 @@
 "expect": "any",
 "keys": [
 "rows"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageClassicHmiGraphic is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManageClassicHmiGraphic is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ListClassicHmiFaceplates",
@@ -709,7 +729,17 @@
 },
 "note": "",
 "expect": "any",
-"keys": []
+"keys": [],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageSivarcScreenLayout is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManageSivarcScreenLayout is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ExportHmiConnection",

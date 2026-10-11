@@ -294,7 +294,17 @@
 "expect": "any",
 "keys": [
 "rows"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ListCommunicationConnections is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ListCommunicationConnections is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManageCommunicationConnection",
@@ -331,7 +341,17 @@
 "expect": "any",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageCommunicationConnection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManageCommunicationConnection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ListCommunicationConnections",
@@ -349,7 +369,17 @@
 "expect": "any",
 "keys": [
 "rows"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ListCommunicationConnections is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ListCommunicationConnections is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ProbeHardwareHmiConnectionOwnerCandidates",

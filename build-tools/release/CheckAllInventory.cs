@@ -78,6 +78,7 @@ internal static partial class ReleaseCommands
         Python("python-repository", "scripts/checks/Check-Repository.py", "--no-binaries");
         Python("python-script-self-tests", "scripts/checks/Check-ScriptToolCalls.py", "--self-test");
         Python("python-script-calls", "scripts/checks/Check-ScriptToolCalls.py");
+        Python("campaign-runner-self-tests", "scripts/checks/Test-CampaignInputs.py", "--self-test");
         Python("domain-source", "scripts/checks/Test-DomainTools.py", "--source-only");
         Python("contract-self-tests", "scripts/checks/Snapshot-ToolContracts.py", "self-test");
         Python("contract-verify", "scripts/checks/Snapshot-ToolContracts.py", "verify");
@@ -110,6 +111,7 @@ internal static partial class ReleaseCommands
     internal static string[] CheckAllHarnessModes(string release) =>
     ["example-library-only", "software-lookup-only", "engineering-api-only", "", "hmi-only", "native-diagnostics-only", "process-leases-only",
         "native-export-only", "hmi-snapshot-only", "global-script-only", "graphic-selection-only", "runtime-settings-only", "test-migration-read-assembly", "test-ecosystem-assembly",
+        "descriptor-catalog-only", "check-modes-self-test",
         .. release == "21" ? new[] { "test-download-route", "test-match-plc-name" } : []];
 
     private static string[] HarnessArguments(string mode, string key, string api) => mode switch
@@ -119,6 +121,15 @@ internal static partial class ReleaseCommands
         "example-library-only" or "process-leases-only" or "native-export-only" or "hmi-snapshot-only" or "test-match-plc-name" => [mode],
         _ => [mode, api]
     };
+
+    internal static string[] CheckAllCandidateModes() => ["device", "import", "session", "save-close", "compile", "fallback", "source", "export"];
+
+    internal static CheckBuild CheckAllCandidateBuild(string release, string mode)
+    {
+        var family = mode == "save-close" ? "CLOSE" : mode.ToUpperInvariant();
+        return new($"src/Engine/TiaMcp.Engine.V{release}.csproj", "candidate-" + mode + "-" + release,
+            ["-p:TiaMcpTestPolicy=P6-" + family + ":safe-v4"]);
+    }
 
     private static CommandResult CheckAllHarness(CommandResult result, string mode, string key)
     {

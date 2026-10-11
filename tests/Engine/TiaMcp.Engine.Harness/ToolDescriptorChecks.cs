@@ -15,8 +15,10 @@ internal static class ToolDescriptorChecks
         var executionType = Assembly.Load("TiaMcp.Logic").GetType("TiaMcpServer.ModelContextProtocol.ToolExecution", true)!;
         var execution = (IDictionary)executionType.GetField("Table", flags)!.GetValue(null)!;
         var generation = new[] { "ListStandardPackages", "ManageStandardPackage", "ValidateStandardPackage", "DescribeStandardPackage", "ManageMachineDescription" };
-        var expected = execution.Keys.Cast<string>().Except(EngineSurface.HostTools(engine)).Except(generation).OrderBy(name => name).ToArray();
-        check(complete.Keys.Cast<string>().OrderBy(name => name).SequenceEqual(expected) && execution.Count == 496,
+        var host = EngineSurface.HostTools(engine).Concat(generation).ToArray();
+        CheckCoverage(complete.Keys.Cast<string>().ToArray(), host, execution, check);
+        foreach (var name in host) check(execution.Contains(name), name + " host declaration has an explicit execution entry");
+        check(complete.Keys.Cast<string>().Intersect(host, StringComparer.Ordinal).Count() == 0,
             "complete execution table includes the host declarations excluded from the engine catalog");
         foreach (DictionaryEntry pair in complete)
         {
@@ -38,5 +40,14 @@ internal static class ToolDescriptorChecks
         }
         var lite = ((IEnumerable)catalogType.GetProperty("Lite", flags)!.GetValue(catalog)!).Cast<object>().Count();
         check(lite == ((IEnumerable)server.GetMethod("GetLiteTools", flags)!.Invoke(null, null)!).Cast<object>().Count(), "lite profile comes from release descriptors");
+    }
+
+    internal static void CheckCoverage(string[] complete, string[] host, IDictionary execution, Action<bool, string> check)
+    {
+        var expected = complete.Concat(host).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        check(expected.Distinct(StringComparer.Ordinal).Count() == expected.Length
+            && execution.Count == expected.Length
+            && execution.Keys.Cast<string>().OrderBy(name => name, StringComparer.Ordinal).SequenceEqual(expected),
+            "execution table equals the complete engine catalog plus host declarations, with no missing or extra entries");
     }
 }

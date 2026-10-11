@@ -354,7 +354,7 @@
 "groupPath": "MCP_G",
 "importPath": "${EXPORT_ROOT}\\mcp46_docs",
 "fileNameWithoutExtension": "MCP_FB",
-"importOption": "Override"
+"overwrite": true
 },
 "note": "",
 "expect": "ok",
@@ -483,7 +483,8 @@
 "tool": "DeletePlcExternalSource",
 "args": {
 "softwarePath": "MCP_PLC",
-"externalSourceName": "mcp46_FC"
+"externalSourceName": "mcp46_FC",
+"groupPath": ""
 },
 "note": "",
 "expect": "any",

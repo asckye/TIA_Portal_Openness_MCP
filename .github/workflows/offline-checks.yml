@@ -77,6 +77,7 @@ jobs:
         run: |
           python scripts/checks/Check-ScriptToolCalls.py --self-test
           python scripts/checks/Check-ScriptToolCalls.py
+          python scripts/checks/Test-CampaignInputs.py --self-test
           dotnet run --project build-tools/release -- check-script-tool-calls
       - name: Descriptions must not name unregistered tools
         run: dotnet run --project build-tools/release -- check-dead-tool-references

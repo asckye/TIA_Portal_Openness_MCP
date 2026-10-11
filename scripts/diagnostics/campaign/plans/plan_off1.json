@@ -10,7 +10,8 @@
 "datatype": "Bool"
 }
 ]
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "ok",
@@ -30,7 +31,8 @@
 "logicalAddress": "%I1.0"
 }
 ]
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "ok",
@@ -48,7 +50,8 @@
 "datatype": "Int"
 }
 ]
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "ok",
@@ -66,7 +69,8 @@
 }
 ]
 },
-"innerOnly": true
+"innerOnly": true,
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "ok",
@@ -99,7 +103,8 @@
 }
 ]
 }
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "ok",
@@ -132,7 +137,8 @@
 }
 ]
 }
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "ok",
@@ -168,7 +174,8 @@
 ]
 }
 ]
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "any",
@@ -213,7 +220,8 @@
 "titleZhCn": "调用"
 }
 ]
-}
+},
+"outputReleaseKey": "21"
 },
 "note": "",
 "expect": "any",
@@ -222,7 +230,11 @@
 {
 "tool": "BuildPlcSymbolManifestFromPath",
 "args": {
-"path": "${EXPORT_ROOT}\\mcp46_tags.xml"
+"inputRoot": "${EXPORT_ROOT}",
+"files": [
+"mcp46_tags.xml"
+],
+"expectedOrigin": "caller-owned-immutable-export-snapshot"
 },
 "note": "",
 "expect": "any",

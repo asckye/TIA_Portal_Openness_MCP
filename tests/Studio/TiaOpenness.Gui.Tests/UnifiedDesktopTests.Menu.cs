@@ -16,6 +16,7 @@ using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Themes;
 using TiaOpenness.Gui.ViewModels;
 using Xunit;
+using Stubs = TiaOpenness.Gui.Services.Stubs;
 
 namespace TiaOpenness.Gui.Tests;
 
@@ -28,6 +29,19 @@ public sealed partial class UnifiedDesktopTests
     }
 
     private static void FlushMenu() => Application.Current.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+
+    private static void ClickApprovalControl(ButtonBase button, Stubs.IApprovalService approvals, string property)
+    {
+        var changed = new System.Threading.Tasks.TaskCompletionSource<bool>(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+        void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) { if (e.PropertyName == property) changed.TrySetResult(true); }
+        approvals.PropertyChanged += OnChanged;
+        try
+        {
+            ClickControl(button);
+            WpfContext.Complete(changed.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+        }
+        finally { approvals.PropertyChanged -= OnChanged; }
+    }
 
     internal static void AssertPage(MainWindow window, bool configuration)
     {
@@ -110,12 +124,12 @@ public sealed partial class UnifiedDesktopTests
                 ClickControl((Button)window.FindName("CancelApprovalOff"));
                 Assert.True(window.Approvals.Enabled);
                 ClickControl((RadioButton)settings.FindName("ApprovalOff"));
-                ClickControl((Button)window.FindName("ConfirmApprovalOff"));
+                ClickApprovalControl((Button)window.FindName("ConfirmApprovalOff"), window.Approvals, nameof(window.Approvals.Enabled));
                 Assert.False(window.Approvals.Enabled);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
-                ClickControl((RadioButton)settings.FindName("Timeout300"));
+                ClickApprovalControl((RadioButton)settings.FindName("Timeout300"), window.Approvals, nameof(window.Approvals.TimeoutSeconds));
                 Assert.Equal(300, window.Approvals.TimeoutSeconds);
-                ClickControl((RadioButton)settings.FindName("ApprovalOn"));
+                ClickApprovalControl((RadioButton)settings.FindName("ApprovalOn"), window.Approvals, nameof(window.Approvals.Enabled));
                 Assert.True(window.Approvals.Enabled);
                 ClickControl((Button)window.FindName("ExportDiagnostics"));
                 Assert.Equal(DiagnosticState.Running, diagnostics.Progress.State);
@@ -123,6 +137,79 @@ public sealed partial class UnifiedDesktopTests
             }
             finally { window.Close(); }
         });
+    }
+
+    [Fact]
+    public void Settings_radio_selection_survives_a_later_unshown_window()
+    {
+        wpf.Run(() =>
+        {
+            var earlierApproval = new Stubs.ApprovalServiceStub { TimeoutSeconds = 300 };
+            var earlier = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: earlierApproval);
+            MainWindow? later = null;
+            try
+            {
+                var first = (TiaOpenness.Gui.Views.SettingsView)earlier.FindName("SettingsContent");
+                Assert.True(((RadioButton)first.FindName("Timeout300")).IsChecked);
+                later = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: new Stubs.ApprovalServiceStub());
+                var second = (TiaOpenness.Gui.Views.SettingsView)later.FindName("SettingsContent");
+                Assert.True(((RadioButton)second.FindName("Timeout120")).IsChecked);
+                Assert.True(((RadioButton)first.FindName("Timeout300")).IsChecked);
+                ClickApprovalControl((RadioButton)second.FindName("Timeout300"), later.Approvals, nameof(later.Approvals.TimeoutSeconds));
+                Assert.Equal(300, later.Approvals.TimeoutSeconds);
+                Assert.True(((RadioButton)first.FindName("Timeout300")).IsChecked);
+                Assert.True(((RadioButton)second.FindName("Timeout300")).IsChecked);
+            }
+            finally { later?.Close(); earlier.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Dispatcher_idle_does_not_complete_an_approval_save()
+    {
+        wpf.Run(() =>
+        {
+            using var approvals = new DelayedApprovalService();
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: approvals);
+            try
+            {
+                var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
+                ClickControl((RadioButton)settings.FindName("Timeout300"));
+                Assert.True(approvals.Entered.Wait(TimeSpan.FromSeconds(10)));
+                Assert.Equal(120, approvals.TimeoutSeconds);
+                approvals.Release.Set();
+                WpfContext.Complete(approvals.Saved.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+                Assert.Equal(300, approvals.TimeoutSeconds);
+            }
+            finally { approvals.Release.Set(); window.Close(); }
+        });
+    }
+
+    private sealed class DelayedApprovalService : Stubs.IApprovalService, IDisposable
+    {
+        private readonly Stubs.ApprovalServiceStub inner = new();
+        internal readonly System.Threading.ManualResetEventSlim Entered = new(), Release = new();
+        internal readonly System.Threading.Tasks.TaskCompletionSource<bool> Saved = new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool Enabled { get => inner.Enabled; set => inner.Enabled = value; }
+        public int TimeoutSeconds
+        {
+            get => inner.TimeoutSeconds;
+            set
+            {
+                Entered.Set();
+                if (!Release.Wait(TimeSpan.FromSeconds(10))) throw new TimeoutException("Fixture save was not released.");
+                inner.TimeoutSeconds = value; Saved.TrySetResult(true);
+            }
+        }
+        public int PendingCount => inner.PendingCount;
+        public IReadOnlyList<ApprovalRequest> Requests => inner.Requests;
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged { add => inner.PropertyChanged += value; remove => inner.PropertyChanged -= value; }
+        public event EventHandler<ApprovalRequest>? NewRequest { add => inner.NewRequest += value; remove => inner.NewRequest -= value; }
+        public bool CanDecide(string requestId) => inner.CanDecide(requestId);
+        public bool Approve(string requestId) => inner.Approve(requestId);
+        public bool Deny(string requestId) => inner.Deny(requestId);
+        public void Refresh() => inner.Refresh();
+        public void Dispose() { Entered.Dispose(); Release.Dispose(); }
     }
 
     private sealed class DialogLifetime(Window window) : IDisposable

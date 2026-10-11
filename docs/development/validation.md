@@ -600,6 +600,19 @@ python scripts/checks/Test-CampaignInputs.py --exe src/Engine/bin/Release/net48/
 
 最后一个命令用离线 STDIO 目录和引擎的实际 `InputSchema` 读取已生成的 `plan_*.json` 并校验全部 campaign 输入，不再执行计划生成器，也不派发计划中的调用；输出目录必须不存在。显式参数拒绝与原生前置条件拒绝分别统计。campaign 的历史 ledger 只作为 V3 证据，工具名索引迁移不代表 V4 VM 验收。
 
+`check-all` 在 V20/V21 生产引擎上运行 `descriptor-catalog-only`、campaign 输入检查和全部八个 `*-candidate-only current` 分支。
+审查者的 Harness 清单也包含 `descriptor-catalog-only`、`check-modes-self-test` 和两版 campaign 命令；生产模式不可用测试策略替代。
+execution 表必须与完整引擎目录及 host 声明的并集精确相等，逐项保留 ownership、名称及 SDK Tool 引用检查。
+campaign 每一步都进入 `inputs.json`；缺少工具的版本在计划中显式声明 `applicability.<release>.applicable=false` 和 `reason`，
+存在工具的版本仍校验该输入。脚本核对实际目录与生成的版本目录一致，拒绝隐藏存在的工具，并在 `result.json` 中报告
+passed、failed、explicitRejections、notApplicable、total 和逐步结果；任一失败返回非零状态。
+
+safe-v4 的八个分支使用 `check-all` 独立构建的 `candidate-<mode>-<release>` 变体，各变体仅设置对应的
+`TiaMcpTestPolicy=P6-<family>:safe-v4`（save-close 对应 CLOSE）。不将它们复制到生产输出或发布包。
+compile 与 fallback 对同名工具提供不同 schema，必须各自使用单家族变体；同时启用时仍保留 owning family 的选择优先级。
+`check-modes-self-test` 用系统临时目录验证坏 campaign 输入的退出状态、显式拒绝和适用性计数，另验证 descriptor 缺项、多项和等数量替换均失败。
+两版 `candidate-negative` 检查证明 production 引擎拒绝 safe-v4 方法选择期望。Python runner 的自测也进入 CI。
+
 沙箱中可为 `Test-WorkerIsolation.py` 与 `Test-PlcEditingMcp.py` 指定 `--transport stdio`。默认仍检查全部传输；STDIO 结果不能替代 HTTP 故障和父进程退出检查。`TiaMcp.Engine.Harness.exe <engine.exe> test-ecosystem-assembly <PublicAPI> --skip-pdf --skip-companion` 仅用于缺少本地伴随依赖时的部分证明，默认发布检查保留 PDF 与伴随命令覆盖。Git fixture 只验证状态、提交预览和无提交的历史，不执行 Git staging/commit。
 
 原生安全自测的合成夹具使用 `offline_fixtures.py` 在 `bin-build` 下创建唯一目录并继承 worktree 权限，使子进程可读取输入。清理前核对目录父路径；live 分支的入口和执行范围不变。

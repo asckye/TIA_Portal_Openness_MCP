@@ -202,6 +202,30 @@ internal static partial class ReleaseCommands
                     return result;
                 }, selected == "native-diagnostics-only" ? ["native-coverage-v" + key, "adapter-coverage-v" + key] : null);
             }
+            var campaignName = "campaign-inputs-v" + key;
+            Add(campaignName, () => Python(campaignName, "scripts/checks/Test-CampaignInputs.py", "--exe", engine(key), "--major", key,
+                "--public-api", targetApi, "--host-harness", harness, "--output", Path.Combine(output, campaignName)), ["production-catalog-v" + key]);
+            var negativeName = "candidate-negative-v" + key;
+            Add(negativeName, () =>
+            {
+                var result = Isolated(negativeName, harness, [engine(key), "device-candidate-only", targetApi, "safe-v4"]);
+                return result.ExitCode != 0 && (result.StandardOutput + result.StandardError).Contains("CreateDevice selects exactly the expected method", StringComparison.Ordinal)
+                    ? new(0, result.StandardOutput + result.StandardError + "PASS wrong candidate policy selection exits nonzero\n", "")
+                    : new(1, result.StandardOutput, result.StandardError + "Wrong candidate policy was not rejected at method selection.\n");
+            });
+            foreach (var mode in CheckAllCandidateModes())
+            foreach (var policy in new[] { "current", "safe-v4" })
+            {
+                var selectedMode = mode; var selectedPolicy = policy;
+                var name = $"candidate-v{key}-{mode}-{policy}";
+                Add(name, () =>
+                {
+                    var unit = CheckAllCandidateBuild(key, selectedMode);
+                    var source = selectedPolicy == "current" ? engine(key)
+                        : Path.Combine(Root, "src/Engine/bin/check-all", Path.GetFileNameWithoutExtension(unit.Project), unit.Variant, $"Release/net48/TiaMcp.Engine.V{key}.exe");
+                    return Isolated(name, harness, [source, selectedMode + "-candidate-only", targetApi, selectedPolicy]);
+                });
+            }
             foreach (var type in new[] { "native", "adapter" })
             {
                 var name = type + "-coverage-v" + key; var selected = type;
@@ -360,6 +384,8 @@ internal static partial class ReleaseCommands
                 "-p:SiemensEngineeringDirectory=" + Path.GetFullPath(Path.Combine(apiRoot, ReleaseCommands.PlcWorkerApi(key).Directory))]));
         units.Add(CheckAllBuild.Suite(CheckAllPreflightSuite(catalog)));
         foreach (var key in new[] { "20", "21" }) units.Add(new($"src/Engine/TiaMcp.Engine.V{key}.csproj", "sdk-" + key, ["-p:TiaMcpEngineWorkerSdkFixture=true"]));
+        foreach (var key in new[] { "20", "21" })
+        foreach (var mode in CheckAllCandidateModes()) units.Add(CheckAllCandidateBuild(key, mode));
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "src/Studio/Bridge/TiaOpenness.Bridge.csproj", "src/Studio/Gui/TiaOpenness.Gui.csproj", "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj", "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" })
             units.Add(new(project, "", ["-p:TiaSharedAdapterPaths=" + mode]));

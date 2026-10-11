@@ -190,6 +190,8 @@ internal static partial class Program
                 Console.WriteLine("COMPLETE: " + Passed + " descriptor catalog checks passed");
                 return 0;
             }
+            if (args.Length >= 2 && args[1] == "check-modes-self-test")
+                return CheckModeSelfTests.Run(Server);
             if (args.Length >= 2 && new[] { "host-build-no-tia", "packaged-start-no-tia", "http-start-no-tia" }.Contains(args[1]))
                 return FoundationHostChecks.Run(Server, args[1] == "packaged-start-no-tia");
             if (args.Length >= 2 && new[] { "concurrency-only", "staging-sessions-only" }.Contains(args[1]))
@@ -206,30 +208,7 @@ internal static partial class Program
                 return DeveloperChecks.GenerateToolsList(Server, args[2], args.Length > 3 ? args[3] : "", args.Length > 4 ? args[4] : "",
                     args.Length > 5 ? args[5] : "", args.Length > 6 ? args[6] : "");
             if(args.Length >= 5 && args[1] == "script-inputs-only") {
-                // Validate campaign fixtures with the engine's actual closed schema
-                // implementation. No tool is dispatched and no Portal is created.
-                var schemaType = FindServerType(Server, "TiaMcp.Logic.V4.Inputs.InputSchema");
-                var parse = FindServerType(Server, "TiaMcp.Logic.V4.V4Json").GetMethod("ParseInput", All)!;
-                var schemas = ((object[])Json.DeserializeObject(File.ReadAllText(args[3])))
-                    .Cast<Dictionary<string, object>>().ToDictionary(t => (string)t["name"], t =>
-                        Activator.CreateInstance(schemaType, new[] { parse.Invoke(null, new object[] { Json.Serialize(t["inputSchema"]) }) })!);
-                int rejected = 0, failed = 0;
-                foreach(var item in ((object[])Json.DeserializeObject(File.ReadAllText(args[4]))).Cast<Dictionary<string, object>>()) {
-                    if (!schemas.TryGetValue((string)item["tool"], out var schema)) {
-                        failed++;
-                        Console.WriteLine("FAIL " + item["label"] + " " + item["tool"] + ": tool is not registered");
-                        continue;
-                    }
-                    var input = parse.Invoke(null, new object[] { Json.Serialize(item["args"]) });
-                    var error = schemaType.GetMethod("Validate")!.Invoke(schema, new[] { input, "arguments" });
-                    bool negative = (bool)item["negativeInput"];
-                    if((error != null) != negative) {
-                        failed++;
-                        Console.WriteLine("FAIL " + item["label"] + " " + item["tool"] + ": " + Json.Serialize(error));
-                    } else { Passed++; if(negative) rejected++; }
-                }
-                Console.WriteLine("COMPLETE: " + Passed + " script input checks passed (" + rejected + " explicit rejections); " + failed + " failed; no dispatch");
-                return failed == 0 ? 0 : 1;
+                return ScriptInputChecks.Run(Server, args[3], args[4], args.Length > 5 ? args[5] : "");
             }
             if(args.Length >= 4 && args[1] == "device-candidate-only") {
                 string api=Path.GetFullPath(args[2]);

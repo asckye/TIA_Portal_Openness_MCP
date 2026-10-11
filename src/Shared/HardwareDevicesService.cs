@@ -67,6 +67,8 @@ namespace TiaMcpServer.Siemens.Services
             string release = HardwareContract.ReleaseKey, id = Meta.Correlate(InvocationJournal.CorrelationId);
             if (BehaviorCapabilities.Select(typeof(HardwareDevicesService).Assembly, release, "P6-DEVICE") != BehaviorPolicy.SafeV4)
                 return DeviceCreationSession.Result(release, tool, id, null, new Error("The candidate device policy is not selected.", new UnsupportedCapabilityDetails(release, "P6-DEVICE", "create")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
+            if (!hasProject())
+                return DeviceCreationSession.Result(release, tool, id, null, new Error("No project is bound.", new ProjectNotBoundDetails()), Outcome.RejectedBeforeOperation, Execution.NotStarted);
             return candidates.Run(new DeviceProxy(call), release, tool, id, typeIdentifier, deviceName, family, mode, confirm, expectedPlanHash, expectedProjectFile);
         }
         private sealed class DeviceProxy : TiaMcp.Adapters.Contracts.Candidates.IDeviceCreationAdapter, TiaMcp.Adapters.Contracts.Candidates.IDeviceCandidateBoundary

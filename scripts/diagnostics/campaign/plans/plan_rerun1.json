@@ -161,8 +161,7 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp47_blocks",
-"regexName": "^MCP_",
-"preservePath": false
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",
@@ -175,8 +174,7 @@
 "args": {
 "softwarePath": "MCP_PLC",
 "exportPath": "${EXPORT_ROOT}\\mcp47_types",
-"regexName": "^MCP_",
-"preservePath": false
+"groupPath": "MCP_G"
 },
 "note": "",
 "expect": "ok",
@@ -437,7 +435,17 @@
 "keys": [
 "records",
 "expectedCount"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ListCommunicationConnections is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ListCommunicationConnections is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManageCommunicationConnection",
@@ -474,7 +482,17 @@
 "expect": "any",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageCommunicationConnection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManageCommunicationConnection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ListCommunicationConnections",
@@ -492,7 +510,17 @@
 "expect": "any",
 "keys": [
 "records"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ListCommunicationConnections is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ListCommunicationConnections is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ExchangeSystemDiagnosticsSettings",
@@ -913,7 +941,17 @@
 "expect": "any",
 "keys": [
 "file"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageSivarcScreenLayout is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManageSivarcScreenLayout is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "CompileHmiDiagnostics",

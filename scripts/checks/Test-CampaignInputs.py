@@ -12,17 +12,75 @@ resources = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(resources)
 
 
+def applicability(step, catalogs):
+    declared = step.get('applicability', {})
+    result = {}
+    for release in ('20', '21'):
+        available = step['tool'] in catalogs[release]
+        entry = declared.get(release, {'applicable': True, 'reason': 'Tool is registered in this release.'})
+        if type(entry.get('applicable')) is not bool or not entry.get('reason'):
+            raise ValueError(f'{step["tool"]}: V{release} applicability needs a boolean and reason')
+        if entry['applicable'] != available:
+            raise ValueError(f'{step["tool"]}: V{release} applicability disagrees with the catalog')
+        result[release] = entry
+    return result
+
+
+def check_summary(summary, total, exit_code):
+    counts = [summary[key] for key in ('passed', 'failed', 'notApplicable')]
+    if any(type(value) is not int or value < 0 for value in counts) or sum(counts) != total or summary['total'] != total:
+        raise ValueError('Campaign counts do not account for every input')
+    if len(summary['results']) != total or not 0 <= summary['explicitRejections'] <= summary['passed']:
+        raise ValueError('Campaign result rows/rejections disagree with counts')
+    expected = 0 if summary['failed'] == 0 else 1
+    if exit_code != expected:
+        raise ValueError('Harness exit status disagrees with campaign failures')
+    return expected
+
+
+def self_test():
+    catalogs = {'20': {'Shared'}, '21': {'Shared', 'Modern'}}
+    assert all(e['applicable'] for e in applicability({'tool': 'Shared'}, catalogs).values())
+    modern = {'tool': 'Modern', 'applicability': {'20': {'applicable': False, 'reason': 'V21-only tool.'}}}
+    assert not applicability(modern, catalogs)['20']['applicable']
+    for step in ({'tool': 'Modern'}, {'tool': 'Unknown'}, {'tool': 'Shared', 'applicability': {'20': {'applicable': False, 'reason': 'hidden'}}}):
+        try:
+            applicability(step, catalogs)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('Invalid applicability was accepted')
+    summary = dict(passed=1, failed=1, notApplicable=1, total=3, explicitRejections=1, results=[{}, {}, {}])
+    assert check_summary(summary, 3, 1) == 1
+    for total, code in ((3, 0), (2, 1)):
+        try:
+            check_summary(summary, total, code)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('Invalid counts/exit status were accepted')
+    print('COMPLETE: 8 campaign runner self-tests passed; 0 failed')
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--exe', type=Path, required=True)
-    parser.add_argument('--public-api', type=Path, required=True)
-    parser.add_argument('--host-harness', type=Path, required=True)
-    parser.add_argument('--major', type=int, choices=(20, 21), required=True)
-    parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--self-test', action='store_true')
+    parser.add_argument('--exe', type=Path)
+    parser.add_argument('--public-api', type=Path)
+    parser.add_argument('--host-harness', type=Path)
+    parser.add_argument('--major', type=int, choices=(20, 21))
+    parser.add_argument('--output', type=Path)
     args = parser.parse_args()
+    if args.self_test:
+        return self_test()
+    if any(getattr(args, key) is None for key in ('exe', 'public_api', 'host_harness', 'major', 'output')):
+        parser.error('--exe, --public-api, --host-harness, --major and --output are required')
     for key in ('exe', 'public_api', 'host_harness', 'output'):
         setattr(args, key, getattr(args, key).resolve())
     args.output.mkdir(parents=True, exist_ok=False)
+    versions = json.loads((ROOT / 'manifest/version-tools.json').read_text(encoding='utf-8'))
+    catalogs = {key: set(versions['releases'][key]['tools']) for key in ('20', '21')}
     steps = []
     for source in sorted((ROOT / 'scripts/diagnostics/campaign/plans').glob('plan_*.json')):
         copy = args.output / source.name
@@ -34,17 +92,27 @@ def main():
             negative = step.get('expect') == 'error' and (
                 'V4 rejects this unadvertised action' in step.get('note', '') or
                 step.get('note', '').startswith('V4 schema rejection:'))
-            steps.append(dict(step, label=f'{source.name}:{index + 1}', negativeInput=negative))
+            steps.append(dict(step, label=f'{source.name}:{index + 1}', negativeInput=negative,
+                              applicability=applicability(step, catalogs)))
     with resources.server(args.exe, args.public_api, args.major, 'stdio', 'full',
                           args.host_harness, args.public_api,
                           env_overrides={'TIA_MCP_MAX_RESPONSE_CHARS': '2000000'}) as (rpc, _, _):
         tools = rpc('tools/list', 'catalog')['result']['tools']
+    if {tool['name'] for tool in tools} != catalogs[str(args.major)]:
+        raise ValueError('Actual release catalog disagrees with the generated applicability catalog')
     catalog, inputs = args.output / 'tools.json', args.output / 'inputs.json'
     catalog.write_text(json.dumps(tools), encoding='utf-8')
     inputs.write_text(json.dumps(steps), encoding='utf-8')
-    subprocess.run([str(args.host_harness), str(args.exe), 'script-inputs-only', str(args.public_api),
-                    str(catalog), str(inputs)], check=True)
+    result = args.output / 'result.json'
+    process = subprocess.run([str(args.host_harness), str(args.exe), 'script-inputs-only', str(args.public_api),
+                              str(catalog), str(inputs), str(result)], check=False)
+    summary = json.loads(result.read_text(encoding='utf-8'))
+    code = check_summary(summary, len(steps), process.returncode)
+    print(f'V{args.major}: {summary["passed"]} passed, {summary["failed"]} failed, '
+          f'{summary["notApplicable"]} not applicable, {summary["explicitRejections"]} explicit rejections; '
+          f'{summary["total"]} total')
+    return code
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

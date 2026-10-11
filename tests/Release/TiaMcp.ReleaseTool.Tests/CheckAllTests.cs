@@ -209,8 +209,25 @@ public sealed class CheckAllTests
     public void HarnessInventoryPreservesBothReleasesAndV21OnlyModes()
     {
         var v20 = ReleaseCommands.CheckAllHarnessModes("20"); var v21 = ReleaseCommands.CheckAllHarnessModes("21");
-        Assert.Equal(14, v20.Length); Assert.Equal(16, v21.Length);
-        Assert.Equal(v20, v21.Take(14)); Assert.Contains("test-download-route", v21); Assert.Contains("test-match-plc-name", v21);
+        Assert.Equal(16, v20.Length); Assert.Equal(18, v21.Length);
+        Assert.Equal(v20, v21.Take(16)); Assert.Contains("test-download-route", v21); Assert.Contains("test-match-plc-name", v21);
+        Assert.Contains("descriptor-catalog-only", v20); Assert.Contains("check-modes-self-test", v20);
+    }
+
+    [Fact]
+    public void CandidateHarnessBuildsSelectOneFamilyAndCannotOverwriteProduction()
+    {
+        var modes = ReleaseCommands.CheckAllCandidateModes(); Assert.Equal(8, modes.Length);
+        foreach (var release in new[] { "20", "21" })
+        foreach (var mode in modes)
+        {
+            var unit = ReleaseCommands.CheckAllCandidateBuild(release, mode);
+            Assert.Equal($"src/Engine/TiaMcp.Engine.V{release}.csproj", unit.Project);
+            Assert.StartsWith("candidate-", unit.Variant);
+            var policy = Assert.Single(unit.Properties);
+            Assert.DoesNotContain(",", policy);
+            Assert.Equal("-p:TiaMcpTestPolicy=P6-" + (mode == "save-close" ? "CLOSE" : mode.ToUpperInvariant()) + ":safe-v4", policy);
+        }
     }
 
     private static string[] MakeShards(string directory, params string[][] outcomes)

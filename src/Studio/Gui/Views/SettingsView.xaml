@@ -16,8 +16,8 @@
         <Grid Grid.Column="2">
           <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
             <StackPanel Orientation="Horizontal">
-              <RadioButton x:Name="ApprovalOn" Content="{l:Tr Settings.On}" GroupName="Approval" Style="{StaticResource Primer.Segment}" Click="OnApprovalClick"/>
-              <RadioButton x:Name="ApprovalOff" Content="{l:Tr Settings.Off}" GroupName="Approval" Style="{StaticResource Primer.Segment}" Click="OnApprovalClick"/>
+              <RadioButton x:Name="ApprovalOn" Content="{l:Tr Settings.On}" Style="{StaticResource Primer.Segment}" Click="OnApprovalClick"/>
+              <RadioButton x:Name="ApprovalOff" Content="{l:Tr Settings.Off}" Style="{StaticResource Primer.Segment}" Click="OnApprovalClick"/>
             </StackPanel>
           </Border>
         </Grid>
@@ -32,9 +32,9 @@
         <Grid Grid.Column="2">
           <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
             <StackPanel Orientation="Horizontal">
-              <RadioButton x:Name="Timeout60" Content="60s" Tag="60" GroupName="Timeout" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick"/>
-              <RadioButton x:Name="Timeout120" Content="120s" Tag="120" GroupName="Timeout" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick"/>
-              <RadioButton x:Name="Timeout300" Content="300s" Tag="300" GroupName="Timeout" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick"/>
+              <RadioButton x:Name="Timeout60" Content="60s" Tag="60" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick"/>
+              <RadioButton x:Name="Timeout120" Content="120s" Tag="120" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick"/>
+              <RadioButton x:Name="Timeout300" Content="300s" Tag="300" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick"/>
             </StackPanel>
           </Border>
         </Grid>
@@ -54,8 +54,8 @@
         <Grid Grid.Column="2">
           <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
             <StackPanel Orientation="Horizontal">
-              <RadioButton x:Name="English" Content="{l:Tr Settings.English}" GroupName="Language" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsEnglish,Source={x:Static l:Loc.Current}}"/>
-              <RadioButton x:Name="Chinese" Content="{l:Tr Settings.Chinese}" GroupName="Language" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsChinese,Source={x:Static l:Loc.Current}}"/>
+              <RadioButton x:Name="English" Content="{l:Tr Settings.English}" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsEnglish,Source={x:Static l:Loc.Current}}"/>
+              <RadioButton x:Name="Chinese" Content="{l:Tr Settings.Chinese}" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsChinese,Source={x:Static l:Loc.Current}}"/>
             </StackPanel>
           </Border>
         </Grid>
@@ -70,9 +70,9 @@
         <Grid Grid.Column="2">
           <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
             <StackPanel Orientation="Horizontal">
-              <RadioButton x:Name="Auto" Content="{l:Tr Settings.Auto}" GroupName="Theme" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsAuto,Source={x:Static themes:ThemeManager.Current}}"/>
-              <RadioButton x:Name="Light" Content="{l:Tr Settings.Light}" GroupName="Theme" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsLight,Source={x:Static themes:ThemeManager.Current}}"/>
-              <RadioButton x:Name="Dark" Content="{l:Tr Settings.Dark}" GroupName="Theme" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}"/>
+              <RadioButton x:Name="Auto" Content="{l:Tr Settings.Auto}" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsAuto,Source={x:Static themes:ThemeManager.Current}}"/>
+              <RadioButton x:Name="Light" Content="{l:Tr Settings.Light}" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsLight,Source={x:Static themes:ThemeManager.Current}}"/>
+              <RadioButton x:Name="Dark" Content="{l:Tr Settings.Dark}" Style="{StaticResource Primer.Segment}" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}"/>
             </StackPanel>
           </Border>
         </Grid>

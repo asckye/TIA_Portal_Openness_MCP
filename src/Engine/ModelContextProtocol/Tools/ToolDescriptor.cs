@@ -128,6 +128,12 @@ namespace TiaMcpServer.ModelContextProtocol
             => classification?.Operation is "WRITE" or "ONLINE-WRITE";
         internal static BehaviorPolicy ToolBehaviorPolicy(string entry, BehaviorPolicy fallback)
         {
+            var family = CatalogView.Find(entry, true)?.CandidateFamily;
+            if (family != null)
+            {
+                var selected = CatalogView.BehaviorCapabilities.OfType<JsonObject>().Single(row => (string?)row["family"] == family);
+                return (string?)selected["state"] == "safe-v4" ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current;
+            }
             foreach (var row in CatalogView.BehaviorCapabilities.OfType<JsonObject>())
                 if (row["entries"]!.AsArray().Any(name => (string?)name == entry))
                     return (string?)row["state"] == "safe-v4" ? BehaviorPolicy.SafeV4 : BehaviorPolicy.Current;

@@ -163,7 +163,7 @@ internal static partial class ReleaseCommands
                 // assemblies, so its ordinary output must not be overwritten.
                 if (project == "build-tools/release/TiaMcp.ReleaseTool.csproj") continue;
                 var studio = project is "src/Studio/Gui/TiaOpenness.Gui.csproj" or "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" or "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj";
-                var destination = row[1].StartsWith("sdk-", StringComparison.Ordinal)
+                var destination = row[1].StartsWith("sdk-", StringComparison.Ordinal) || row[1].StartsWith("candidate-", StringComparison.Ordinal)
                     ? Path.Combine(root, "src/Engine/bin/check-all", Path.GetFileNameWithoutExtension(project), row[1], "Release/net48") : row[3];
                 CopyRuntime(row[2], destination, studio);
                 if (studio)

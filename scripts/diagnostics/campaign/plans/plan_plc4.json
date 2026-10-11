@@ -125,7 +125,17 @@
 "expect": "ok",
 "keys": [
 "before"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManagePlcBlockWriteProtection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManagePlcBlockWriteProtection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManagePlcBlockWriteProtection",
@@ -144,7 +154,17 @@
 "expect": "ok",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManagePlcBlockWriteProtection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManagePlcBlockWriteProtection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManagePlcBlockWriteProtection",
@@ -163,7 +183,17 @@
 "expect": "ok",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManagePlcBlockWriteProtection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManagePlcBlockWriteProtection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManagePlcBlockWriteProtection",
@@ -182,7 +212,17 @@
 "expect": "ok",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManagePlcBlockWriteProtection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManagePlcBlockWriteProtection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManagePlcBlockWriteProtection",
@@ -201,7 +241,17 @@
 "expect": "ok",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManagePlcBlockWriteProtection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManagePlcBlockWriteProtection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ManagePlcBlockWriteProtection",
@@ -220,7 +270,17 @@
 "expect": "ok",
 "keys": [
 "after"
-]
+],
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManagePlcBlockWriteProtection is absent from the V20 release catalog; this plan step requires the V21 tool."
+},
+"21": {
+"applicable": true,
+"reason": "ManagePlcBlockWriteProtection is registered in V21; validate this input on V21."
+}
+}
 },
 {
 "tool": "ExportPlcBlock",
@@ -465,7 +525,8 @@
 "tool": "DeletePlcExternalSource",
 "args": {
 "softwarePath": "MCP_PLC",
-"externalSourceName": "mcp46_FC"
+"externalSourceName": "mcp46_FC",
+"groupPath": ""
 },
 "note": "",
 "expect": "any",
