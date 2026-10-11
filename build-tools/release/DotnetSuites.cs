@@ -157,6 +157,16 @@ internal static class DotnetSuites
     }
 
     internal static CommandResult RunProcess(string executable, IEnumerable<string> arguments, string root, IDictionary<string, string?>? environment) => ProcessRunner.Run(executable, arguments, root, environment);
+    // Suite arguments mix MSBuild properties (-p:...) with test-only options; a separate build takes only the properties.
+    internal static IEnumerable<string> BuildArguments(IEnumerable<string> arguments)
+    {
+        using var next = arguments.GetEnumerator();
+        while (next.MoveNext())
+        {
+            if (next.Current == "--filter") { next.MoveNext(); continue; }
+            yield return next.Current;
+        }
+    }
 
     internal static CommandResult Run(string root, Options options, IDictionary<string, string?>? environment = null, SuiteProcess? process = null)
     {

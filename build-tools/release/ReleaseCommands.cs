@@ -1328,7 +1328,7 @@ internal static partial class ReleaseCommands
                     if (!suiteCatalog.RootElement.TryGetProperty(suite, out var spec)) throw new ReleaseException("Suite is missing from tests/test-suites.json: " + suite);
                     var project = spec.GetProperty("project").GetString() ?? throw new ReleaseException("Suite project missing: " + suite);
                     var buildArgs = new List<string> { "build", project, "-c", "Release", "-v:q" };
-                    foreach (var argument in spec.GetProperty("arguments").EnumerateArray()) buildArgs.Add(argument.GetString()!);
+                    buildArgs.AddRange(DotnetSuites.BuildArguments(spec.GetProperty("arguments").EnumerateArray().Select(argument => argument.GetString()!)));
                     if (spec.TryGetProperty("publicApiRoot", out var usesApi) && usesApi.ValueKind == JsonValueKind.True)
                         buildArgs.Add("-p:TiaPublicApiRoot=" + api);
                     ProcessRunner.RequireSuccess(RunLoggedProcess(dotnet, buildArgs, logs, suite + "-build.log", nuget), "Suite build failed: " + suite);

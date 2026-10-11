@@ -17,6 +17,17 @@ public class DotnetSuitesTests
     }
 
     [Fact]
+    public void SuiteBuildsTakeOnlyTheBuildProperties()
+    {
+        Assert.Equal(new[] { "-p:EngineRelease=21" }, DotnetSuites.BuildArguments(["--filter", "FullyQualifiedName!~Operator", "-p:EngineRelease=21"]));
+        Assert.Empty(DotnetSuites.BuildArguments(["--filter", "FullyQualifiedName~WorkbenchControl"]));
+        var catalog = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.FindRoot(), "tests/test-suites.json")))!.AsObject();
+        foreach (var (name, suite) in catalog)
+            if (suite is JsonObject spec && spec["arguments"] is JsonArray arguments)
+                Assert.DoesNotContain(DotnetSuites.BuildArguments(arguments.Select(a => a!.GetValue<string>())), a => a.StartsWith("--", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void CommandsAndLegacyOptionSpellingsAreRegistered()
     {
         Assert.Contains("test-suites", CommandLine.Commands);

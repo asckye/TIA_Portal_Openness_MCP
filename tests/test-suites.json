@@ -34,7 +34,7 @@
   },
   "release-tool": {
     "project": "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj",
-    "minimumPassed": 578,
+    "minimumPassed": 579,
     "maximumSkipped": 0,
     "arguments": []
   },
