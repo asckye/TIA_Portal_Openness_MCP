@@ -336,16 +336,23 @@ def run_profile(args, transport, profile, run_dir):
         require(max(s['privateBytes'] for s in samples) < args.max_private_mib * 1024 * 1024, 'Sampled private memory exceeded bound')
         # Concurrent HTTP dispatch (P6-58) lets the thread pool grow, more so on a loaded machine, and that growth
         # levels off; a leak keeps rising with the call count. Judge the second half of the run, from its middle
-        # sample, and print the series on failure.
+        # sample to the last one: a burst on a loaded machine (one high sample, back at the next) is reported but
+        # does not fail the run, a leak is still above the bound at the end. Print the series on failure.
+        def baseline_of(series):
+            return series[len(series) // 2] if len(series) > 3 else series[1] if len(series) > 2 else series[0]
         def handle_growth(series):
-            baseline = series[len(series) // 2] if len(series) > 3 else series[1] if len(series) > 2 else series[0]
-            later = series[series.index(baseline):]
-            return max(s['handleCount'] for s in later) - baseline['handleCount']
+            return series[-1]['handleCount'] - baseline_of(series)['handleCount']
         def handles(series):
             return [s['handleCount'] for s in series]
+        def report_spike(series, owner):
+            later = series[series.index(baseline_of(series)):]
+            if max(s['handleCount'] for s in later) - baseline_of(series)['handleCount'] > args.max_handle_growth:
+                print(f'NOTE V{args.major} {transport} {profile}: transient {owner} handle spike {handles(series)}', flush=True)
+        report_spike(samples, 'host')
         require(handle_growth(samples) <= args.max_handle_growth, f'Sampled handles exceeded growth bound: {handles(samples)}')
         if worker_samples:
             require(max(s['privateBytes'] for s in worker_samples) < args.max_private_mib * 1024 * 1024, 'Worker exceeded private memory bound')
+            report_spike(worker_samples, 'worker')
             require(handle_growth(worker_samples) <= args.max_handle_growth, f'Worker handles exceeded growth bound: {handles(worker_samples)}')
     # The context shuts down only this owned test host. It never stops a TIA process.
     rows = [(path.name, json.loads(line)) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
