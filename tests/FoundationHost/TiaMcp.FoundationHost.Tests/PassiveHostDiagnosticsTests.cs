@@ -144,7 +144,7 @@ internal static class PassiveHostDiagnosticsTests
         schemaTool.InputSchema = JsonSerializer.SerializeToElement(new { type = "object", properties = new { }, additionalProperties = true });
         check(!FoundationPassiveDiagnostics.Inspect("17", false, contractRegistry)["checks"]!["objectSchemaContracts"]!.GetValue<bool>(), "permissive schema is a failed structural check");
         schemaTool.InputSchema = savedSchema;
-        try { FoundationPassiveDiagnostics.Inspect("17", false, Enumerable.Repeat(contractRegistry[0],257).ToArray()); check(false,"oversized registry rejected"); }
+        try { FoundationPassiveDiagnostics.Inspect("17", false, Enumerable.Repeat(contractRegistry[0],FoundationPassiveDiagnostics.MaxTools + 1).ToArray()); check(false,"oversized registry rejected"); }
         catch (InvalidOperationException) { check(true,"registry bounded before roster construction"); }
         int reads = 0;
         var guarded = FoundationPassiveDiagnosticTools.Create("17", true, () => { reads++; throw new Exception("SECRET_REGISTRY"); }).ToArray();
