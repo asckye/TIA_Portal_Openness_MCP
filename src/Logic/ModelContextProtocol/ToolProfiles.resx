@@ -404,6 +404,12 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F01",
       "state": "current",
       "l5": "NOT RUN"
@@ -536,6 +542,12 @@
     },
     {
       "releaseKey": "15.1",
+      "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
       "family": "F01",
       "state": "current",
       "l5": "NOT RUN"
@@ -668,6 +680,12 @@
     },
     {
       "releaseKey": "16",
+      "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F01",
       "state": "current",
       "l5": "NOT RUN"
@@ -800,6 +818,12 @@
     },
     {
       "releaseKey": "17",
+      "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
       "family": "F01",
       "state": "current",
       "l5": "NOT RUN"
@@ -932,6 +956,12 @@
     },
     {
       "releaseKey": "18",
+      "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
       "family": "F01",
       "state": "current",
       "l5": "NOT RUN"
@@ -1059,6 +1089,12 @@
     {
       "releaseKey": "18",
       "family": "F19",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F00",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -2960,6 +2996,18 @@
     },
     {
       "releaseKey": "18",
+      "entry": "CreateHardwareDevice",
+      "family": "P6-DEVICE",
+      "example": {
+        "typeIdentifier": "&lt;exact catalog TypeIdentifier&gt;",
+        "deviceName": "Device_1",
+        "family": "S7-1500",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "DeletePlcExternalSource",
       "family": "P6-SOURCE",
       "example": {
@@ -5318,6 +5366,15 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ValidatePlcDocumentSchemas",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "WritePlcSclSourceFile",
       "family": "F02",
       "example": {
@@ -5965,6 +6022,14 @@
         "softwarePath": "PLC_1",
         "blockName": "FC_Example",
         "targetGroupPath": "Examples"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListPlcSystemGroups",
+      "family": "F08",
+      "example": {
+        "softwarePath": "PLC_1"
       }
     },
     {
@@ -6640,6 +6705,18 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ExportPlcWatchTable",
+      "family": "F00",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "watchTableName": "Watch_1",
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
@@ -6994,6 +7071,15 @@
       "family": "F02",
       "example": {
         "directory": "C:\\Examples\\exports"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ValidatePlcDocumentSchemas",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
       }
     },
     {
@@ -8543,6 +8629,18 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ExportPlcWatchTable",
+      "family": "F00",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "watchTableName": "Watch_1",
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
@@ -8901,6 +8999,15 @@
     },
     {
       "releaseKey": "16",
+      "entry": "ValidatePlcDocumentSchemas",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
       "entry": "WritePlcSclSourceFile",
       "family": "F02",
       "example": {
@@ -9121,17 +9228,6 @@
       "family": "F23",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
-      }
-    },
-    {
-      "releaseKey": "16",
-      "entry": "ImportMasterCopyFromGlobalLibrary",
-      "family": "F23",
-      "example": {
-        "libraryPath": "C:\\Examples\\Library.al{extension}",
-        "masterCopyName": "FB_Motor",
-        "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview"
       }
     },
     {
@@ -10591,6 +10687,18 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ExportPlcWatchTable",
+      "family": "F00",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "watchTableName": "Watch_1",
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
@@ -10949,6 +11057,15 @@
     },
     {
       "releaseKey": "17",
+      "entry": "ValidatePlcDocumentSchemas",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
       "entry": "WritePlcSclSourceFile",
       "family": "F02",
       "example": {
@@ -10972,6 +11089,16 @@
         "templateDirectory": "C:\\Examples\\templates",
         "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
         "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageUnifiedCwcPackage",
+      "family": "F03",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "dryRun": true,
+        "action": "inspect"
       }
     },
     {
@@ -11169,17 +11296,6 @@
       "family": "F23",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
-      }
-    },
-    {
-      "releaseKey": "17",
-      "entry": "ImportMasterCopyFromGlobalLibrary",
-      "family": "F23",
-      "example": {
-        "libraryPath": "C:\\Examples\\Library.al{extension}",
-        "masterCopyName": "FB_Motor",
-        "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview"
       }
     },
     {
@@ -12713,6 +12829,39 @@
     },
     {
       "releaseKey": "18",
+      "entry": "CreateHardwareDevice",
+      "family": "F00",
+      "example": {
+        "preferredMlfb": "6ES7 513-1AM03-0AB0",
+        "preferredVersion": "V3.1",
+        "deviceName": "PLC_2",
+        "family": "S7-1500",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SearchHardwareCatalog",
+      "family": "F00",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcWatchTable",
+      "family": "F00",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "watchTableName": "Watch_1",
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
@@ -13071,6 +13220,15 @@
     },
     {
       "releaseKey": "18",
+      "entry": "ValidatePlcDocumentSchemas",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
       "entry": "WritePlcSclSourceFile",
       "family": "F02",
       "example": {
@@ -13094,6 +13252,41 @@
         "templateDirectory": "C:\\Examples\\templates",
         "referenceProjectPath": "C:\\Examples\\Example.ap{extension}",
         "referenceGlobalLibraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "BuildClassicHmiScreen",
+      "family": "F03",
+      "example": {
+        "design": {
+          "screen": {
+            "name": "Overview",
+            "width": 800,
+            "height": 480
+          },
+          "items": [
+            {
+              "type": "Text",
+              "name": "StatusText",
+              "left": 20,
+              "top": 20,
+              "width": 160,
+              "height": 40,
+              "text": "Ready"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageUnifiedCwcPackage",
+      "family": "F03",
+      "example": {
+        "directory": "C:\\Examples\\exports",
+        "dryRun": true,
+        "action": "inspect"
       }
     },
     {
@@ -13307,17 +13500,6 @@
       "family": "F23",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
-      }
-    },
-    {
-      "releaseKey": "18",
-      "entry": "ImportMasterCopyFromGlobalLibrary",
-      "family": "F23",
-      "example": {
-        "libraryPath": "C:\\Examples\\Library.al{extension}",
-        "masterCopyName": "FB_Motor",
-        "hmiSoftwarePath": "HMI_RT_1",
-        "screenName": "Overview"
       }
     },
     {
@@ -14909,6 +15091,39 @@
     },
     {
       "releaseKey": "19",
+      "entry": "CreateHardwareDevice",
+      "family": "F00",
+      "example": {
+        "preferredMlfb": "6ES7 513-1AM03-0AB0",
+        "preferredVersion": "V3.1",
+        "deviceName": "PLC_2",
+        "family": "S7-1500",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SearchHardwareCatalog",
+      "family": "F00",
+      "example": {
+        "keyword": "1513"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcWatchTable",
+      "family": "F00",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "watchTableName": "Watch_1",
+        "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
@@ -15267,6 +15482,15 @@
     },
     {
       "releaseKey": "19",
+      "entry": "ValidatePlcDocumentSchemas",
+      "family": "F02",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "WritePlcSclSourceFile",
       "family": "F02",
       "example": {
@@ -15298,6 +15522,31 @@
       "family": "F03",
       "example": {
         "templateDirectory": "C:\\Examples\\templates"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BuildClassicHmiScreen",
+      "family": "F03",
+      "example": {
+        "design": {
+          "screen": {
+            "name": "Overview",
+            "width": 800,
+            "height": 480
+          },
+          "items": [
+            {
+              "type": "Text",
+              "name": "StatusText",
+              "left": 20,
+              "top": 20,
+              "width": 160,
+              "height": 40,
+              "text": "Ready"
+            }
+          ]
+        }
       }
     },
     {
@@ -15386,6 +15635,16 @@
       "entry": "RunHmiActionScriptRecipeSafetySelfTest",
       "family": "F03",
       "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunHmiTemplatePlcSyncPrecheckSuite",
+      "family": "F03",
+      "example": {
+        "templateDirectory": "C:\\Examples\\templates",
+        "plcXmlPath": "C:\\Examples\\snapshot",
+        "reportDirectory": "C:\\Examples\\reports"
+      }
     },
     {
       "releaseKey": "19",
@@ -17656,7 +17915,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -17708,7 +17966,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "fbBlock": {
             "blockName": "FB_Ready",
             "blockNumber": 11,
@@ -17742,7 +17999,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "fcBlock": {
             "blockName": "FC_Ready",
             "blockNumber": 10,
@@ -17801,7 +18057,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "ladFcBlock": {
             "blockName": "FC_Lad",
             "blockNumber": 12,
@@ -17855,7 +18110,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "tagTable": {
             "tableName": "ExampleTags",
             "tags": [
@@ -17965,7 +18219,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -26696,7 +26949,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "flgNet": {
             "callName": "FC_Ready",
             "parameters": [
@@ -26748,7 +27000,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "fbBlock": {
             "blockName": "FB_Ready",
             "blockNumber": 11,
@@ -26782,7 +27033,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "fcBlock": {
             "blockName": "FC_Ready",
             "blockNumber": 10,
@@ -26841,7 +27091,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "ladFcBlock": {
             "blockName": "FC_Lad",
             "blockNumber": 12,
@@ -26895,7 +27144,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "tagTable": {
             "tableName": "ExampleTags",
             "tags": [
@@ -27005,7 +27253,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "outputReleaseKey": "21",
           "structuredText": {
             "operations": [
               {
@@ -35656,32 +35903,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildFlgNetCall",
-        "currentName": "BuildFlgNetCall",
-        "sourceName": "BuildFlgNetCallXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "flgNet": {
-            "callName": "FC_Ready",
-            "parameters": [
-              {
-                "name": "Ready",
-                "section": "Output",
-                "dataType": "Bool",
-                "symbolPath": [
-                  "DB_Status",
-                  "Ready"
-                ]
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "currentName": "BuildPlcGlobalDb",
         "sourceName": "BuildPlcGlobalDbXml",
@@ -35717,28 +35938,6 @@
             "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcTagTable",
-        "currentName": "BuildPlcTagTable",
-        "sourceName": "BuildPlcTagTableXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "tagTable": {
-            "tableName": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataTypeName": "Bool",
-                "logicalAddress": "%M0.0"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -35797,27 +35996,6 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildStructuredText",
-        "currentName": "BuildStructuredText",
-        "sourceName": "BuildStructuredTextXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "structuredText": {
-            "operations": [
-              {
-                "op": "assign",
-                "target": "#Ready",
-                "literalValue": "TRUE"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -35972,104 +36150,6 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -39509,6 +39589,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListPlcSystemGroups",
+        "currentName": "ListPlcSystemGroups",
+        "sourceName": "ReadPlcSystemGroups",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPlcTagTableConstants",
         "currentName": "GetPlcTagTableConstants",
         "sourceName": "ReadPlcTagTableConstants",
@@ -39979,6 +40071,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcDocumentSchemas",
+        "sourceName": "ValidatePlcXmlSchemas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidateStandardPackage",
         "currentName": "ValidateStandardPackage",
         "sourceName": "ValidateStandardPackage",
@@ -40271,32 +40376,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildFlgNetCall",
-        "currentName": "BuildFlgNetCall",
-        "sourceName": "BuildFlgNetCallXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "flgNet": {
-            "callName": "FC_Ready",
-            "parameters": [
-              {
-                "name": "Ready",
-                "section": "Output",
-                "dataType": "Bool",
-                "symbolPath": [
-                  "DB_Status",
-                  "Ready"
-                ]
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "currentName": "BuildPlcGlobalDb",
         "sourceName": "BuildPlcGlobalDbXml",
@@ -40332,28 +40411,6 @@
             "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcTagTable",
-        "currentName": "BuildPlcTagTable",
-        "sourceName": "BuildPlcTagTableXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "tagTable": {
-            "tableName": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataTypeName": "Bool",
-                "logicalAddress": "%M0.0"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -40412,27 +40469,6 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildStructuredText",
-        "currentName": "BuildStructuredText",
-        "sourceName": "BuildStructuredTextXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "structuredText": {
-            "operations": [
-              {
-                "op": "assign",
-                "target": "#Ready",
-                "literalValue": "TRUE"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -40587,104 +40623,6 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -41289,6 +41227,22 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportPlcWatchTable",
+        "currentName": "ExportPlcWatchTable",
+        "sourceName": "ExportPlcWatchTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "watchTableName": "Watch_1",
+          "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
           "dryRun": true,
           "confirm": false
         },
@@ -44913,6 +44867,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcDocumentSchemas",
+        "sourceName": "ValidatePlcXmlSchemas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidateStandardPackage",
         "currentName": "ValidateStandardPackage",
         "sourceName": "ValidateStandardPackage",
@@ -45205,32 +45172,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildFlgNetCall",
-        "currentName": "BuildFlgNetCall",
-        "sourceName": "BuildFlgNetCallXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "flgNet": {
-            "callName": "FC_Ready",
-            "parameters": [
-              {
-                "name": "Ready",
-                "section": "Output",
-                "dataType": "Bool",
-                "symbolPath": [
-                  "DB_Status",
-                  "Ready"
-                ]
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "currentName": "BuildPlcGlobalDb",
         "sourceName": "BuildPlcGlobalDbXml",
@@ -45266,28 +45207,6 @@
             "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcTagTable",
-        "currentName": "BuildPlcTagTable",
-        "sourceName": "BuildPlcTagTableXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "tagTable": {
-            "tableName": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataTypeName": "Bool",
-                "logicalAddress": "%M0.0"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -45346,27 +45265,6 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildStructuredText",
-        "currentName": "BuildStructuredText",
-        "sourceName": "BuildStructuredTextXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "structuredText": {
-            "operations": [
-              {
-                "op": "assign",
-                "target": "#Ready",
-                "literalValue": "TRUE"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -45521,104 +45419,6 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -47022,21 +46822,6 @@
           "softwarePath": "HMI_RT_1",
           "folderPath": "",
           "dir": "C:\\Examples\\exports"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "ImportMasterCopyFromGlobalLibrary",
-        "currentName": "ImportMasterCopyFromGlobalLibrary",
-        "sourceName": "ImportMasterCopyFromGlobalLibrary",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "libraryPath": "C:\\Examples\\Library.al{extension}",
-          "masterCopyName": "FB_Motor",
-          "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
         },
         "envelopeVersion": 4
       },
@@ -50080,6 +49865,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcDocumentSchemas",
+        "sourceName": "ValidatePlcXmlSchemas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidateStandardPackage",
         "currentName": "ValidateStandardPackage",
         "sourceName": "ValidateStandardPackage",
@@ -50372,32 +50170,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "BuildFlgNetCall",
-        "currentName": "BuildFlgNetCall",
-        "sourceName": "BuildFlgNetCallXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "flgNet": {
-            "callName": "FC_Ready",
-            "parameters": [
-              {
-                "name": "Ready",
-                "section": "Output",
-                "dataType": "Bool",
-                "symbolPath": [
-                  "DB_Status",
-                  "Ready"
-                ]
-              }
-            ]
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "BuildPlcGlobalDb",
         "currentName": "BuildPlcGlobalDb",
         "sourceName": "BuildPlcGlobalDbXml",
@@ -50433,28 +50205,6 @@
             "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcTagTable",
-        "currentName": "BuildPlcTagTable",
-        "sourceName": "BuildPlcTagTableXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "tagTable": {
-            "tableName": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataTypeName": "Bool",
-                "logicalAddress": "%M0.0"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -50513,27 +50263,6 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildStructuredText",
-        "currentName": "BuildStructuredText",
-        "sourceName": "BuildStructuredTextXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "structuredText": {
-            "operations": [
-              {
-                "op": "assign",
-                "target": "#Ready",
-                "literalValue": "TRUE"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -50688,104 +50417,6 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -52264,21 +51895,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ImportMasterCopyFromGlobalLibrary",
-        "currentName": "ImportMasterCopyFromGlobalLibrary",
-        "sourceName": "ImportMasterCopyFromGlobalLibrary",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "libraryPath": "C:\\Examples\\Library.al{extension}",
-          "masterCopyName": "FB_Motor",
-          "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ImportOpcUaInterface",
         "currentName": "ImportOpcUaInterface",
         "sourceName": "ImportOpcUaInterface",
@@ -53645,6 +53261,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedCwcPackage",
+        "currentName": "ManageUnifiedCwcPackage",
+        "sourceName": "ManageUnifiedCwcPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "dryRun": true,
+          "action": "inspect"
         },
         "envelopeVersion": 4
       },
@@ -55349,6 +54979,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcDocumentSchemas",
+        "sourceName": "ValidatePlcXmlSchemas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidateStandardPackage",
         "currentName": "ValidateStandardPackage",
         "sourceName": "ValidateStandardPackage",
@@ -55486,6 +55129,23 @@
           "orderNumber": "6ES7 515-2AM02-0AB0",
           "version": "V2.9",
           "deviceName": "PLC_2"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateHardwareDevice",
+        "currentName": "CreateHardwareDevice",
+        "sourceName": "AddDeviceWithFallback",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "preferredMlfb": "6ES7 513-1AM03-0AB0",
+          "preferredVersion": "V3.1",
+          "deviceName": "PLC_2",
+          "family": "S7-1500",
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },
@@ -55632,6 +55292,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildClassicHmiScreen",
+        "currentName": "BuildClassicHmiScreen",
+        "sourceName": "BuildClassicHmiScreenXml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "design": {
+            "screen": {
+              "name": "Overview",
+              "width": 800,
+              "height": 480
+            },
+            "items": [
+              {
+                "type": "Text",
+                "name": "StatusText",
+                "left": 20,
+                "top": 20,
+                "width": 160,
+                "height": 40,
+                "text": "Ready"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildDeviceAmlDocument",
         "currentName": "BuildDeviceAmlDocument",
         "sourceName": "BuildDeviceAmlDocument",
@@ -55650,32 +55339,6 @@
             ]
           },
           "outputPath": "C:\\Examples\\generated\\Example.aml"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildFlgNetCall",
-        "currentName": "BuildFlgNetCall",
-        "sourceName": "BuildFlgNetCallXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "flgNet": {
-            "callName": "FC_Ready",
-            "parameters": [
-              {
-                "name": "Ready",
-                "section": "Output",
-                "dataType": "Bool",
-                "symbolPath": [
-                  "DB_Status",
-                  "Ready"
-                ]
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -55715,28 +55378,6 @@
             "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcTagTable",
-        "currentName": "BuildPlcTagTable",
-        "sourceName": "BuildPlcTagTableXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "tagTable": {
-            "tableName": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataTypeName": "Bool",
-                "logicalAddress": "%M0.0"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -55795,27 +55436,6 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildStructuredText",
-        "currentName": "BuildStructuredText",
-        "sourceName": "BuildStructuredTextXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "structuredText": {
-            "operations": [
-              {
-                "op": "assign",
-                "target": "#Ready",
-                "literalValue": "TRUE"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -55994,104 +55614,6 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -57585,21 +57107,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ImportMasterCopyFromGlobalLibrary",
-        "currentName": "ImportMasterCopyFromGlobalLibrary",
-        "sourceName": "ImportMasterCopyFromGlobalLibrary",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "libraryPath": "C:\\Examples\\Library.al{extension}",
-          "masterCopyName": "FB_Motor",
-          "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ImportOpcUaInterface",
         "currentName": "ImportOpcUaInterface",
         "sourceName": "ImportOpcUaInterface",
@@ -59002,6 +58509,20 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedCwcPackage",
+        "currentName": "ManageUnifiedCwcPackage",
+        "sourceName": "ManageUnifiedCwcPackage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "directory": "C:\\Examples\\exports",
+          "dryRun": true,
+          "action": "inspect"
         },
         "envelopeVersion": 4
       },
@@ -60465,6 +59986,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SearchHardwareCatalog",
+        "currentName": "SearchHardwareCatalog",
+        "sourceName": "SearchHardwareCatalog",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "keyword": "1513"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SearchInstalledGsdDevices",
         "currentName": "SearchInstalledGsdDevices",
         "sourceName": "SearchInstalledGsdDevices",
@@ -60716,6 +60249,19 @@
           "softwarePath": "PLC_1",
           "confirmUpdate": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcDocumentSchemas",
+        "sourceName": "ValidatePlcXmlSchemas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
         },
         "envelopeVersion": 4
       },
@@ -61032,6 +60578,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "BuildClassicHmiScreen",
+        "currentName": "BuildClassicHmiScreen",
+        "sourceName": "BuildClassicHmiScreenXml",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "design": {
+            "screen": {
+              "name": "Overview",
+              "width": 800,
+              "height": 480
+            },
+            "items": [
+              {
+                "type": "Text",
+                "name": "StatusText",
+                "left": 20,
+                "top": 20,
+                "width": 160,
+                "height": 40,
+                "text": "Ready"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "BuildDeviceAmlDocument",
         "currentName": "BuildDeviceAmlDocument",
         "sourceName": "BuildDeviceAmlDocument",
@@ -61050,32 +60625,6 @@
             ]
           },
           "outputPath": "C:\\Examples\\generated\\Example.aml"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildFlgNetCall",
-        "currentName": "BuildFlgNetCall",
-        "sourceName": "BuildFlgNetCallXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "flgNet": {
-            "callName": "FC_Ready",
-            "parameters": [
-              {
-                "name": "Ready",
-                "section": "Output",
-                "dataType": "Bool",
-                "symbolPath": [
-                  "DB_Status",
-                  "Ready"
-                ]
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -61115,28 +60664,6 @@
             "&lt;relative tag-table XML from ExportPlcTagTable or global DB export&gt;"
           ],
           "expectedOrigin": "caller-owned-immutable-export-snapshot"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcTagTable",
-        "currentName": "BuildPlcTagTable",
-        "sourceName": "BuildPlcTagTableXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "tagTable": {
-            "tableName": "ExampleTags",
-            "tags": [
-              {
-                "name": "Ready",
-                "dataTypeName": "Bool",
-                "logicalAddress": "%M0.0"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -61195,27 +60722,6 @@
         ],
         "arguments": {
           "offlineReleaseSuiteJsonPath": "C:\\Examples\\reports\\offline-release-suite.json"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildStructuredText",
-        "currentName": "BuildStructuredText",
-        "sourceName": "BuildStructuredTextXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "structuredText": {
-            "operations": [
-              {
-                "op": "assign",
-                "target": "#Ready",
-                "literalValue": "TRUE"
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -61477,104 +60983,6 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
           "confirm": false
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFbBlock",
-        "currentName": "BuildPlcFbBlock",
-        "sourceName": "ComposePlcFbBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fbBlock": {
-            "blockName": "FB_Ready",
-            "blockNumber": 11,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcFcBlock",
-        "currentName": "BuildPlcFcBlock",
-        "sourceName": "ComposePlcFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "fcBlock": {
-            "blockName": "FC_Ready",
-            "blockNumber": 10,
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "Ready",
-                "datatype": "Bool"
-              }
-            ],
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          }
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BuildPlcLadFcBlock",
-        "currentName": "BuildPlcLadFcBlock",
-        "sourceName": "ComposePlcLadFcBlockXml",
-        "profiles": [
-          "plc-foundation"
-        ],
-        "arguments": {
-          "outputReleaseKey": "21",
-          "ladFcBlock": {
-            "blockName": "FC_Lad",
-            "blockNumber": 12,
-            "networks": [
-              {
-                "call": {
-                  "callName": "FC_Ready",
-                  "parameters": [
-                    {
-                      "name": "Ready",
-                      "section": "Output",
-                      "dataType": "Bool",
-                      "symbolPath": [
-                        "DB_Status",
-                        "Ready"
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
         },
         "envelopeVersion": 4
       },
@@ -65888,6 +65296,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunHmiTemplatePlcSyncPrecheckSuite",
+        "currentName": "RunHmiTemplatePlcSyncPrecheckSuite",
+        "sourceName": "RunHmiTemplatePlcSyncPrecheckSuite",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "templateDirectory": "C:\\Examples\\templates",
+          "plcXmlPath": "C:\\Examples\\snapshot",
+          "reportDirectory": "C:\\Examples\\reports"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunOfflineReleaseValidationSuite",
         "currentName": "RunOfflineReleaseValidationSuite",
         "sourceName": "RunOfflineReleaseValidationSuite",
@@ -66235,6 +65657,19 @@
           "softwarePath": "PLC_1",
           "confirmUpdate": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcDocumentSchemas",
+        "sourceName": "ValidatePlcXmlSchemas",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "schemaDirectory": "&lt;absolute PublicAPI Schemas folder for the selected TIA release&gt;"
         },
         "envelopeVersion": 4
       },

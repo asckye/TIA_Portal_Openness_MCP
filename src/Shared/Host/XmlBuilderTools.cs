@@ -25,10 +25,10 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class XmlBuilderTools
     {
 #if !TIA_ENGINE_PORTED
-        [McpServerTool(Name = "BuildClassicHmiScreen"), Description("[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI screen XML document from structured JSON. It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
+        [McpServerTool(Name = "BuildClassicHmiScreen"), Description("[L2][HMI-Classic]Offline-only helper: build a V18-stamped Classic/Basic WinCC HMI screen XML document from structured JSON (V18–V21 hosts; V18/V19 TP700 Comfort import acceptance NOT RUN). It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
         public CallToolResult BuildClassicHmiScreenXmlV4(
             [Description("design: ClassicScreenSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.")] ClassicScreenSpec design)
-            => OfflineContracts.Run("BuildClassicHmiScreen", () => BuildClassicHmiScreenXml(design.ToBuilderInput().ToJsonString()), writes: false, current: false);
+            => OfflineContracts.Run("BuildClassicHmiScreen", () => BuildClassicHmiScreenXml(design.ToBuilderInput().ToJsonString()), writes: false, current: HardwareContract.ReleaseKey is "18" or "19");
 #endif
 
 #if !TIA_ENGINE_PORTED

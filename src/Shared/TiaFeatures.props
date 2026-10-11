@@ -46,10 +46,10 @@
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_READ</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_ENTRIES</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SPECIAL_EXPORT</DefineConstants>
-    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_WATCH_EXPORT</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|15.1|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_EXPORT</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SAFETY</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_TECH_GROUP_READ</DefineConstants>
-    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_DOCUMENT_EXPORT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Studio' Or '$(TiaFeatureProfile)' == 'Adapter'">

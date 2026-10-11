@@ -441,7 +441,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("plcXmlPath: PLC XML file or directory exported from TIA, containing tag tables and/or GlobalDB XML.")] string plcXmlPath,
             [Description("reportDirectory: directory where reports will be written.")] string reportDirectory,
             [Description("mappingFilePath: optional explicit mapping file produced by the mapping skeleton flow.")] string mappingFilePath = "")
-            => OfflineContracts.Run("RunHmiTemplatePlcSyncPrecheckSuite", () => RunHmiTemplatePlcSyncPrecheckSuite(templateDirectory, plcXmlPath, reportDirectory, mappingFilePath), writes: true, current: false);
+            => OfflineContracts.Run("RunHmiTemplatePlcSyncPrecheckSuite", () => RunHmiTemplatePlcSyncPrecheckSuite(templateDirectory, plcXmlPath, reportDirectory, mappingFilePath), writes: true, current: HardwareContract.ReleaseKey == "19");
 #endif
 
 #if !TIA_ENGINE_PORTED

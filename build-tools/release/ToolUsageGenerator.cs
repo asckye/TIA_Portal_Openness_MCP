@@ -94,7 +94,7 @@ internal static class ToolUsageGenerator
             foreach (var asset in example["files"]?.AsArray() ?? []) { var content = Source(root, Text(asset!["path"])); asset["content"] = content; asset["contentSha256"] = Hash(Encoding.UTF8.GetBytes(content)); }
         }
         var meta = Read(root, "reference/tool-examples/metadata.json"); var calls = Read(root, "reference/tool-examples/calls.json"); var sequences = Read(root, "reference/tool-examples/sequences.json").AsArray();
-        ValidateCoverage(data.Rosters, calls); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
+        ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
         var result = new JsonObject { ["schemaVersion"] = 2, ["scope"] = "Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.",
             ["sources"] = sources, ["documents"] = documents, ["tools"] = mappings,
             ["languages"] = Copy(library["languages"]!), ["examples"] = Copy(library["examples"]!),
@@ -110,12 +110,16 @@ internal static class ToolUsageGenerator
         return x.Length.CompareTo(y.Length);
     }
     private static string[] SplitLines(string text) => text.Length == 0 ? [] : Regex.Split(text.TrimEnd('\n'), "\\r\\n|[\\n\\r\\v\\f\\x1c-\\x1e\\x85\\u2028\\u2029]");
-    internal static void ValidateCoverage(Dictionary<string, HashSet<string>> rosters, JsonNode calls)
+    internal static void ValidateCoverage(Dictionary<string, HashSet<string>> rosters, JsonNode calls, IEnumerable<string>? sharedFoundation = null)
     {
         foreach (var profile in new[] { "full-engine", "plc-foundation" })
         {
             var expected = Set((profile == "full-engine" ? Keys.Skip(6) : Keys.Take(6)).SelectMany(k => rosters[k]));
-            if (profile == "plc-foundation") expected.UnionWith(["ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"]);
+            if (profile == "plc-foundation")
+            {
+                expected.UnionWith(["ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"]);
+                expected.UnionWith(sharedFoundation ?? []);
+            }
             Require(expected.SetEquals(calls["profiles"]![profile]!.AsObject().Select(p => p.Key)), "Call example coverage differs: " + profile);
         }
     }

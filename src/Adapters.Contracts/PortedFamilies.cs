@@ -25,6 +25,10 @@ namespace TiaMcp.Adapters.Contracts
         }
 
         public static readonly IReadOnlyList<Family> All = new[] {
+            // Foundation host builders emit V21 documents; older output is P8-40 work.
+            new Family("F00", "foundation",
+                new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
+                new[] { "CreateHardwareDevice", "SearchHardwareCatalog", "ExportPlcWatchTable", "BuildPlcLadFcBlock", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildFlgNetCall", "BuildStructuredText", "BuildPlcTagTable" }),
             new Family("F01", "host-meta",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "ApplyToolBatch", "BuildReleaseDiagnosticReport", "BuildReleaseHandoffArtifacts", "BuildReleaseManifest", "BuildReleaseRunbook", "CallTool", "CheckProductUpdate", "ClearExportHandles", "DeleteExportHandle", "FindTools", "GenerateAcceptanceReport", "GenerateErrorReport", "GetEnvironmentDiagnostics", "GetExportContent", "GetNativeInvocationLog", "GetOpennessCompatibility", "GetOpennessGuidance", "GetOpennessWorkerStatus", "GetV21EcosystemCatalog", "ListExportHandles", "ListToolCategories", "PreviewToolBatch", "PreviewToolCall", "RestartOpennessWorker", "RunOfflineReleaseValidationSuite", "RunOnlineMonitoringSafetySelfTest", "RunReadOnlyToolBatch", "SaveExportContent" }),
@@ -94,6 +98,15 @@ namespace TiaMcp.Adapters.Contracts
         };
 
         public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
+            ["CreateHardwareDevice"] = new[] { "18", "19", "20", "21" },
+            ["SearchHardwareCatalog"] = new[] { "18", "19", "20", "21" },
+            ["ExportPlcWatchTable"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["BuildPlcLadFcBlock"] = new[] { "20", "21" },
+            ["BuildPlcFcBlock"] = new[] { "20", "21" },
+            ["BuildPlcFbBlock"] = new[] { "20", "21" },
+            ["BuildFlgNetCall"] = new[] { "20", "21" },
+            ["BuildStructuredText"] = new[] { "20", "21" },
+            ["BuildPlcTagTable"] = new[] { "20", "21" },
             ["GetHmiProgramInfo"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["DescribeHmiSoftware"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["DescribeHmiScreen"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
@@ -181,21 +194,21 @@ namespace TiaMcp.Adapters.Contracts
             ["ManagePlcBlockWriteProtection"] = new[] { "21" },
             ["CompareLibraryObjects"] = new[] { "18", "19", "20", "21" },
             ["ImportLibraryTypeDocuments"] = new[] { "20", "21" },
-            ["ImportMasterCopyFromGlobalLibrary"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ImportMasterCopyFromGlobalLibrary"] = new[] { "19", "20", "21" },
             ["GetObjectIdentifier"] = new[] { "20", "21" },
             ["CompareLibraries"] = new[] { "18", "19", "20", "21" },
             ["ManageProjectCompilationSettings"] = new[] { "16", "17", "18", "19", "20", "21" },
             // Format evidence is deliberately separate from managed-code availability.
             ["BuildPlcAliasAlarmLad"] = new[] { "20", "21" },
             ["DecodePlcSimaticMl"] = new[] { "20", "21" },
-            ["ValidatePlcDocumentSchemas"] = new[] { "20", "21" },
+            ["ValidatePlcDocumentSchemas"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["InspectSimaticSdCompatibility"] = new[] { "20", "21" },
             ["BuildClassicHmiMinimalPackage"] = new[] { "20", "21" },
-            ["BuildClassicHmiScreen"] = new[] { "20", "21" },
+            ["BuildClassicHmiScreen"] = new[] { "18", "19", "20", "21" },
             ["BuildClassicHmiTagTable"] = new[] { "20", "21" },
             ["RunClassicHmiOfflineValidationSuite"] = new[] { "20", "21" },
             ["RunClassicHmiTemporaryImportPreflight"] = new[] { "20", "21" },
-            ["RunHmiTemplatePlcSyncPrecheckSuite"] = new[] { "20", "21" },
+            ["RunHmiTemplatePlcSyncPrecheckSuite"] = new[] { "19", "20", "21" },
             ["ValidateClassicHmiMinimalPackageFiles"] = new[] { "20", "21" },
             ["ValidateClassicHmiMinimalPackagePlcSync"] = new[] { "20", "21" },
             ["WriteClassicHmiMinimalPackageFiles"] = new[] { "20", "21" },
@@ -205,13 +218,13 @@ namespace TiaMcp.Adapters.Contracts
             ["BuildUnifiedHmiTemplateApplyDesign"] = new[] { "19", "20", "21" },
             ["BuildUnifiedHmiTemplateApplyDesignManifest"] = new[] { "19", "20", "21" },
             ["BuildUnifiedHmiThemeDesign"] = new[] { "19", "20", "21" },
-            ["ManageUnifiedCwcPackage"] = new[] { "19", "20", "21" },
+            ["ManageUnifiedCwcPackage"] = new[] { "17", "18", "19", "20", "21" },
             ["RunHmiActionScriptRecipeSafetySelfTest"] = new[] { "19", "20", "21" },
             // Register a port only where at least one implemented action can run.
             // Keep partial tools listed; HardwareCapabilities / PlcSoftwareCapabilities
             // still refuse their unavailable actions before any worker/native call.
             ["ManagePlcBlockProtection"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
-            ["ListPlcSystemGroups"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
+            ["ListPlcSystemGroups"] = new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             ["CreatePlcInstanceDb"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },
             ["SetPlcProgram"] = new[] { "18", "19", "20", "21" },
             ["GetPlcCrossReferences"] = new[] { "18", "19", "20", "21" },
@@ -228,6 +241,7 @@ namespace TiaMcp.Adapters.Contracts
 
         public static Family ForTool(string tool) => All.Single(f => f.Tools.Contains(tool, StringComparer.Ordinal));
         public static bool Contains(string tool) => All.Any(f => f.Tools.Contains(tool, StringComparer.Ordinal));
+        public static bool IsMigratedDeclaration(string tool) => Contains(tool) && ForTool(tool).Name != "F00";
         // These ports retain the existing Foundation candidate declaration.
         // The relocated raw engine callbacks are not their product contract.
         public static readonly string[] FoundationCandidates = {

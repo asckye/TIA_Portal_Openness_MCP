@@ -47,6 +47,7 @@ internal sealed class CatalogData
     internal readonly Dictionary<string, string> HostOnly;
     internal readonly Dictionary<string, PortedFamilies.Family> Families;
     internal readonly Dictionary<string, HashSet<string>> Ported;
+    internal readonly Dictionary<string, HashSet<string>> Reviewed;
     internal readonly HashSet<string> FoundationCandidates;
     internal readonly Dictionary<string, JsonObject> Archives = [];
     internal readonly Dictionary<string, HashSet<string>> Rosters = [];
@@ -65,7 +66,8 @@ internal sealed class CatalogData
         Renames = CatalogJson.Read(root, "reference/tool-catalog/v3-v4-renames.json").AsObject().ToDictionary(p => p.Key, p => CatalogJson.Text(p.Value));
         Families = PortedFamilies.Load(root);
         FoundationCandidates = PortedFamilies.FoundationCandidates(root);
-        Ported = CatalogJson.Keys.ToDictionary(k => k, k => PortedFamilies.Additions(Families, k));
+        Reviewed = CatalogJson.Keys.ToDictionary(k => k, k => PortedFamilies.Additions(Families, k));
+        Ported = Reviewed.ToDictionary(p => p.Key, p => CatalogJson.Set(p.Value.Except(Families["F00"].Tools)));
         foreach (var key in CatalogJson.Keys)
             Archives[key] = CatalogJson.Read(root, $"manifest/history/contracts-v3/baseline/{key}.json")["tools"]!.AsArray().ToDictionary(t => CatalogJson.Text(t!["name"]), t => t!.AsObject()).ToJsonObject();
         ValidateReviewedData(Additions, Renames, CatalogJson.Set(Archives.Values.SelectMany(v => v.Select(p => p.Key))));
@@ -111,10 +113,12 @@ internal sealed class CatalogData
         foreach (var key in CatalogJson.Keys.Take(6))
         {
             var major = key == "14sp1" ? 14 : int.Parse(key.Split('.')[0], System.Globalization.CultureInfo.InvariantCulture);
-            var accepted = Definitions.Where(p => !(p.Value is "HardwareCatalog" or "DeviceAdd" && major < 19) && !(p.Value == "SpecialExport" && major < 16) && !(p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && major < 20) && !(p.Key is "GetPlcWatchTables" or "ListPlcWatchTables" && key == "14sp1")).Select(p => p.Key);
-            var registered = CatalogJson.Set(accepted.Concat(helpers).Select(n => HostMap.GetValueOrDefault(n, n)).Concat(Ported[key]));
-            foreach (var n in Ported[key]) Renames.TryAdd(n, n);
-            Resolve(historical[key].Concat(Ported[key]), registered, Renames);
+            var accepted = Definitions.Where(p => !(p.Value is "HardwareCatalog" or "DeviceAdd" && major < 18) && !(p.Value == "SpecialExport" && major < (p.Key == "ExportPlcWatchTable" ? 15 : 16)) && !(p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && major < 20) && !(p.Key is "GetPlcWatchTables" or "ListPlcWatchTables" && key == "14sp1")).Select(p => p.Key);
+            var registered = CatalogJson.Set(accepted.Concat(helpers).Select(n => HostMap.GetValueOrDefault(n, n)).Concat(Reviewed[key]));
+            var withheld = PortedFamilies.Withheld(Families, key);
+            registered.ExceptWith(withheld);
+            foreach (var n in Reviewed[key]) Renames.TryAdd(n, n);
+            Resolve(historical[key].Where(n => !withheld.Contains(Renames[n])).Concat(Reviewed[key]), registered, Renames);
             Rosters[key] = registered;
         }
         var policy = CatalogJson.Source(root, "src/EngineHost/SharedToolCatalog.cs");

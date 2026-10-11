@@ -2,11 +2,11 @@ using System.Text.Json.Nodes;
 namespace TiaMcp.FoundationHost;
 internal static class DeviceAddContract
 {
-    internal static TiaMcp.Logic.V4.Envelope ValidateCandidate(JsonNode? payload, JsonObject request)
+    internal static TiaMcp.Logic.V4.Envelope ValidateCandidate(JsonNode? payload, JsonObject request, string release = "19")
     {
         if (payload == null) throw new InvalidDataException("Missing device candidate result.");
         var result = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Envelope>(payload.ToJsonString());
-        if (result.Meta.ReleaseKey != "19" || result.Meta.Tool != "CreateHardwareDevice" || result.Meta.RequestId != (string?)request["requestId"]
+        if (release is not ("18" or "19") || result.Meta.ReleaseKey != release || result.Meta.Tool != "CreateHardwareDevice" || result.Meta.RequestId != (string?)request["requestId"]
             || result.Meta.BehaviorPolicy != TiaMcp.Logic.V4.BehaviorPolicy.SafeV4) throw new InvalidDataException("Candidate response identity mismatch.");
         bool apply = (string?)request["mode"] == "apply";
         if (!apply && result.Meta.Execution is not (TiaMcp.Logic.V4.Execution.ReadOnly or TiaMcp.Logic.V4.Execution.NotStarted)) throw new InvalidDataException("Candidate preview wrote to the project.");
@@ -27,7 +27,7 @@ internal static class DeviceAddContract
                 throw new InvalidDataException("Candidate success did not verify the planned operation.");
             var plan = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Plan>(data["plan"]!.ToJsonString());
             var arguments = plan.Operations.Single().Arguments;
-            if (plan.ReleaseKey != "19" || plan.Tool != "CreateHardwareDevice" || plan.Operations[0].Tool != plan.Tool
+            if (plan.ReleaseKey != release || plan.Tool != "CreateHardwareDevice" || plan.Operations[0].Tool != plan.Tool
                 || arguments.GetProperty("typeIdentifier").GetString() != (string?)request["typeIdentifier"]
                 || arguments.GetProperty("deviceName").GetString() != (string?)request["deviceName"]
                 || arguments.GetProperty("family").GetString() != (string?)request["family"]
@@ -50,7 +50,7 @@ internal static class DeviceAddContract
         if(Text("DeviceName").Length>128 || Text("TypeIdentifier").Length>512 || Text("ArticleNumber").Length>256 || Text("Version").Length>64 || Text("Error").Length>2048)throw new InvalidDataException("Creation scalar bound exceeded.");
         TiaMcp.Adapters.MutationIdentityPolicy.AbsoluteFile(Text("ProjectFile"));
         bool dry=request["dryRun"]?.GetValue<bool>()??true;
-        if(Text("Release") is not ("19" or "20" or "21") || r["ProcessId"] is not JsonValue p || !p.TryGetValue<int>(out var pid)||pid<=0 || string.IsNullOrWhiteSpace(Text("ProjectFile")))throw new InvalidDataException("Invalid creation session.");
+        if(Text("Release") is not ("18" or "19" or "20" or "21") || r["ProcessId"] is not JsonValue p || !p.TryGetValue<int>(out var pid)||pid<=0 || string.IsNullOrWhiteSpace(Text("ProjectFile")))throw new InvalidDataException("Invalid creation session.");
         if(Text("DeviceName")!=request["deviceName"]?.GetValue<string>() || Text("Family")!=(request["family"]?.GetValue<string>()??"S7-1500"))throw new InvalidDataException("Creation target mismatch.");
         var mlfb=request["preferredMlfb"]?.GetValue<string>()??"";var version=request["preferredVersion"]?.GetValue<string>()??"";
         if(!Text("TypeIdentifier").StartsWith("OrderNumber:",StringComparison.Ordinal) || string.IsNullOrWhiteSpace(Text("ArticleNumber")) || string.IsNullOrWhiteSpace(Text("Version")) || (mlfb.StartsWith("OrderNumber:",StringComparison.Ordinal)?Text("TypeIdentifier")!=mlfb || version!="":Text("ArticleNumber")!=mlfb || Text("Version")!=version))throw new InvalidDataException("Unreviewed catalog substitution.");

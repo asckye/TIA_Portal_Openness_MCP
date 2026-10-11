@@ -113,15 +113,21 @@ def exercise(client, key, logfile, expected_before):
         assert refused['isError'] and body == refused['structuredContent']
         assert body['meta']['outcome'] == 'rejected-before-operation' and body['meta']['execution'] == 'not-started'
         assert body['error']['code'] == 'INVALID_ARGUMENT'
-    for name in ('BuildPlcUdt', 'BuildPlcGlobalDb', 'BuildPlcTagTable', 'BuildStructuredText',
-                 'BuildFlgNetCall', 'BuildPlcFcBlock', 'BuildPlcFbBlock', 'BuildPlcLadFcBlock'):
+    for name in ('BuildPlcUdt', 'BuildPlcGlobalDb'):
         usage = tool(client, 'GetToolUsage', {'toolName': name})['data']
         built = tool(client, name, usage['example']['request']['params']['arguments'])
         assert built['data']['xml'] and not built['data']['schemaValidated'] and not built['data']['importValidated']
         assert any(w['code'] == 'CANDIDATE_ONLY' for w in built['meta']['warnings'])
+    for name in ('BuildPlcTagTable', 'BuildStructuredText', 'BuildFlgNetCall',
+                 'BuildPlcFcBlock', 'BuildPlcFbBlock', 'BuildPlcLadFcBlock'):
+        assert name not in names, (key, name, 'V21-only builder must be withheld')
+        refused = client.call('tools/call', {'name': 'GetToolUsage', 'arguments': {'toolName': name}})
+        body = json.loads(refused['content'][0]['text'])
+        assert refused['isError'] and body == refused['structuredContent']
+        assert body['error']['code'] == 'INVALID_ARGUMENT' and body['meta']['execution'] == 'not-started'
     assert {'ConnectPortal', 'DisconnectPortal', 'GetProjectTree', 'PlanArtifactImportOrder'} <= names
     assert ('ListPlcWatchTables' in names) == (key != '14sp1')
-    assert ('SearchHardwareCatalog' in names) == (key == '19')
+    assert ('SearchHardwareCatalog' in names) == (key in ('18', '19'))
     assert 'ExportAsDocuments' not in names
     tool(client, 'InitializeEnvironment')
     plan = tool(client, 'PlanArtifactImportOrder', {'artifacts': [{'id': 'FB_生产', 'dependencies': ['UDT_数据']}, {'id': 'UDT_数据'}]})['data']

@@ -14,7 +14,6 @@ namespace TiaMcp.Adapters.Contracts
             if (tool == "ManagePlcUserGroup" && family == "watchTables" && version < 15) return "Watch-table user groups require V15.1.";
             if (tool == "ManagePlcUserGroup" && family == "technology" && version < 19) return "Technological instance DB user groups require V19.";
             if (tool == "ManagePlcUserGroup" && family == "externalSources" && action == "rename" && version < 21) return "PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21.";
-            if (tool == "ListPlcSystemGroups" && version < 15) return "SystemTypeGroups requires V15.1.";
             if (tool == "CreatePlcInstanceDb" && version < 15) return "CreateInstanceDB requires V15.1.";
             if (tool == "SetPlcProgram" && version < 18) return "UpdateProgram requires V18.";
             if (tool == "GetPlcCrossReferences" && version < 18) return "CrossReferenceService requires V18.";

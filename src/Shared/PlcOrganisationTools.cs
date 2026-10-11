@@ -404,7 +404,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int maxDepth=4)
         => _blocks.ReadPlcSystemGroups(softwarePath,unitName,unitKind,includeBlocks,maxDepth);
 
-        [McpServerTool(Name = "ListPlcSystemGroups"), Description("[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). First 200 objects per group. No modification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
+        [McpServerTool(Name = "ListPlcSystemGroups"), Description("[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). V14 SP1 returns system block groups only and explicitly reports systemTypeGroups unavailable (UNSUPPORTED_CAPABILITY); unitName scopes require V16 (safety V18). First 200 objects per group. No modification." + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance.")]
         public CallToolResult ReadPlcSystemGroupsV4(
             string softwarePath,
             string unitName="",

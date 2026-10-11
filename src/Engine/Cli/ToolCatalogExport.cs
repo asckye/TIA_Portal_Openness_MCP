@@ -14,7 +14,7 @@ namespace TiaMcpServer.Cli
     {
         internal static void Write(string path)
         {
-            var tools = McpServer.GetAllTools().Where(t => !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name)).ToArray();
+            var tools = McpServer.GetAllTools().Where(t => !TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(t.ProtocolTool.Name)).ToArray();
             var catalog = new {
                 formatVersion = 1, release = McpServer.ReleaseKey,
                 workerSha256 = Worker.EngineWorkerHost.Hash(Assembly.GetExecutingAssembly().Location),
@@ -25,7 +25,7 @@ namespace TiaMcpServer.Cli
                 serverInstructions = McpGuides.ServerInstructions,
                 descriptors = tools.Select(t => Describe(McpServer.CatalogView.All[t.ProtocolTool.Name])).ToArray(),
                 unavailableTools = McpServer.CatalogView.IncludingUnavailable.Values
-                    .Where(t => !McpServer.CatalogView.All.ContainsKey(t.Name) && !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.Name))
+                    .Where(t => !McpServer.CatalogView.All.ContainsKey(t.Name) && !TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(t.Name))
                     .Select(t => new { tool = t.Tool, descriptor = Describe(t) }).ToArray()
             };
             File.WriteAllText(Path.GetFullPath(path), JsonSerializer.Serialize(catalog, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions), new UTF8Encoding(false));

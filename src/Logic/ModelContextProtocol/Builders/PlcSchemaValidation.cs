@@ -83,10 +83,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 var suffix = ns.Substring(prefix.Length);
                 string? stem = null;
                 if (Regex.IsMatch(suffix, @"^Interface/v[0-9]+$") && node.Name.LocalName == "Sections") stem = "SW.InterfaceSections_" + suffix.Split('/').Last();
-                else if (Regex.IsMatch(suffix, @"^NetworkSource/(FlgNet|SCL|STL|Graph)/v[0-9]+$"))
+                else if (Regex.IsMatch(suffix, @"^NetworkSource/(FlgNet|StructuredText|STL|Graph)/v[0-9]+$"))
                 {
                     var parts = suffix.Split('/');
-                    if (parts[1] == node.Name.LocalName) stem = "SW.PlcBlocks." + (parts[1] == "FlgNet" ? "LADFBD" : parts[1]) + "_" + parts[2];
+                    var element = parts[1] == "STL" ? "StatementList" : parts[1];
+                    var schema = parts[1] == "FlgNet" ? "LADFBD" : parts[1] == "StructuredText" ? "SCL" : parts[1];
+                    if (element == node.Name.LocalName) stem = "SW.PlcBlocks." + schema + "_" + parts[2];
                 }
                 var schemaPath = stem == null ? "" : Path.Combine(schemaRoot.FullName, stem + ".xsd");
                 if (stem == null || !resolver.Files.ContainsKey(schemaPath)) { skipped.Add(new JsonObject { ["element"] = node.Name.ToString(), ["reason"] = "Exact schema unavailable or fragment unsupported" }); continue; }

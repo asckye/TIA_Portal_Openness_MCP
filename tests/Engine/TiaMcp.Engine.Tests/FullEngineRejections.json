@@ -18904,7 +18904,7 @@
           "schemaDirectory": {
             "type": "string",
             "default": null,
-            "description": "Absolute local PublicAPI/V21/Schemas directory (or matching version); <=128 XSD files, no reparse paths."
+            "description": "Absolute local PublicAPI Schemas directory for the selected release (V14 SP1 through V21); <=128 XSD files, no reparse paths."
           }
         },
         "arguments": {
@@ -38813,7 +38813,7 @@
           "schemaDirectory": {
             "type": "string",
             "default": null,
-            "description": "Absolute local PublicAPI/V21/Schemas directory (or matching version); <=128 XSD files, no reparse paths."
+            "description": "Absolute local PublicAPI Schemas directory for the selected release (V14 SP1 through V21); <=128 XSD files, no reparse paths."
           }
         },
         "arguments": {

@@ -13,7 +13,7 @@ using Xunit;
 public sealed class B3HostPortsTests
 {
     private static readonly IReadOnlyDictionary<string, int> FirstRelease = new Dictionary<string, int> {
-        ["ManagePlcBlockProtection"] = 15, ["ListPlcSystemGroups"] = 15, ["CreatePlcInstanceDb"] = 15,
+        ["ManagePlcBlockProtection"] = 15, ["ListPlcSystemGroups"] = 14, ["CreatePlcInstanceDb"] = 15,
         ["SetPlcProgram"] = 18, ["GetPlcCrossReferences"] = 18, ["CreateHardwareCatalogDevice"] = 18,
         ["ManageDeviceServiceObjects"] = 18, ["ExchangeSystemDiagnosticsSettings"] = 17,
         ["ListNetworkDomains"] = 16, ["ManageNetworkDomain"] = 16,
@@ -155,7 +155,7 @@ public sealed class B3HostPortsTests
     {
         int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
         foreach (var branch in new[] {
-            ("ManagePlcBlockProtection", "read", "", 15), ("ListPlcSystemGroups", "", "", 15),
+            ("ManagePlcBlockProtection", "read", "", 15), ("ListPlcSystemGroups", "", "", 14),
             ("CreatePlcInstanceDb", "", "", 15), ("SetPlcProgram", "", "", 18),
             ("GetPlcCrossReferences", "", "", 18), ("ManagePlcUserGroup", "rename", "watchTables", 15),
             ("ManagePlcUserGroup", "rename", "technology", 19), ("ManagePlcUserGroup", "rename", "externalSources", 21),

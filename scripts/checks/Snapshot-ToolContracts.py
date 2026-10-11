@@ -673,6 +673,7 @@ def verified_contracts(directory, root, parameters=None):
         raise ValueError('Foundation registered source inventory differs from generated catalog: '
                          + f'missing={sorted(catalog_foundation - source_foundation)}, '
                          + f'unregistered={sorted(source_foundation - catalog_foundation)}')
+    foundation_parameters = foundation_registered_names(root, contracts) | FOUNDATION_UNAVAILABLE_BELOW_20
     for release, snapshot in snapshots.items():
         validate_contract_snapshot(snapshot, directory / (release + '.json'))
         names = unique_names([tool['name'] for tool in snapshot['tools']], f'V{release} full roster')
@@ -683,7 +684,7 @@ def verified_contracts(directory, root, parameters=None):
             raise ValueError(f'V{release}: behavior table differs from ledger-derived catalog')
         for tool in snapshot['tools']:
             validate_output(tool)
-            profile = 'plc-foundation' if tool['name'] in source_foundation | FOUNDATION_UNAVAILABLE_BELOW_20 else snapshot['profile']
+            profile = 'plc-foundation' if tool['name'] in foundation_parameters else snapshot['profile']
             parameters = contracts.get((profile, tool['name']))
             if parameters is None and tool['name'] not in source_foundation:
                 raise ValueError(f'V{release}: {tool["name"]} is absent from source registrations')
@@ -740,6 +741,7 @@ def current_parameters(root):
     text = (root / 'src/FoundationHost/FoundationTools.cs').read_text(encoding='utf-8-sig')
     wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
     renames = dict(re.findall(r'\["([^"\n]+)"\] = "([^"\n]+)"', wrapper))
+    construction_parameters = dict(re.findall(r'case "([^"\n]+)": Construction<\w+>\("([^"\n]+)"\)', wrapper))
     for line in text.splitlines():
         match = re.match(r'\s*new\("([^"\n]+)"', line)
         if not match: continue
@@ -749,11 +751,27 @@ def current_parameters(root):
         if 'Dry()' in line:
             fields.update(dryRun=True, confirm=False, expectedProjectFile='')
         params[('plc-foundation', renames.get(match[1], match[1]))] = fields
+    for path in (root / 'src/FoundationHost').glob('Offline*Tools.cs'):
+        text = path.read_text(encoding='utf-8-sig')
+        registrations = re.findall(r'new Offline\w+Tool\("([^"\n]+)",\s*"([^"\n]+)"(?:,\s*(true|false))?\)', text)
+        if not registrations:
+            continue
+        schema = (text.split('var properties =', 1)[1].split('tool = new Tool', 1)[0]
+                  if 'var properties =' in text else
+                  text.split('["properties"] = new JsonObject', 1)[1].split('public override', 1)[0])
+        fields = {name: None for name in re.findall(r'\["([^"\n]+)"\]\s*=\s*new JsonObject', schema)}
+        for name, default in re.findall(r'\["([^"\n]+)"\]\s*=\s*new JsonObject\s*\{[^\n]*?\["default"\]\s*=\s*(true|false|-?\d+|null)', schema):
+            fields[name] = json.loads(default)
+        for name, parameter, supports_inner_only in registrations:
+            declared = dict(fields, **{construction_parameters.get(name, parameter): None})
+            if supports_inner_only == 'false':
+                declared.pop('innerOnly', None)
+            params[('plc-foundation', renames.get(name, name))] = declared
     import ported_families
     for family in ported_families.families(root).values():
         for name in family['tools']:
-            if family['prefix'] == 'plc-documents' and ('plc-foundation', name) in params:
-                # Existing SIMATIC SD candidates keep their Foundation declarations.
+            if family['prefix'] in ('plc-documents', 'foundation') and ('plc-foundation', name) in params:
+                # Existing Foundation candidates/builders keep their Foundation declarations.
                 continue
             params[('plc-foundation', name)] = params[('full-engine', name)]
     return params
@@ -763,9 +781,6 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
     parameters = parameters if parameters is not None else current_parameters(root)
     names = {name for (profile, name) in parameters if profile == 'plc-foundation'}
     import ported_families
-    for family in ported_families.families(root).values():
-        enabled = set().union(*(ported_families.additions(root, key) for key in releases))
-        names.difference_update(set(family['tools']) - enabled)
     names.difference_update(FOUNDATION_UNAVAILABLE_BELOW_20)
     wrapper = (root / 'src/FoundationHost/FoundationV4Tool.cs').read_text(encoding='utf-8-sig')
     renames = dict(re.findall(r'\["([^"\n]+)"\]\s*=\s*"([^"\n]+)"', wrapper))
@@ -773,6 +788,11 @@ def foundation_registered_names(root, parameters=None, releases=RELEASES):
         text = path.read_text(encoding='utf-8-sig')
         names.update(renames.get(name, name) for name in re.findall(
             r'new\s+(?:Offline\w+Tool|PassiveDiagnosticTool|GenerationTool)\("([^"\n]+)"', text))
+    families = ported_families.families(root).values()
+    enabled = {name for family in families for name in family['tools']
+               if set(releases) & set(family.get('tool_releases', {}).get(name, family['releases']))}
+    for family in families:
+        names.difference_update(set(family['tools']) - enabled)
     for filename in ('ToolUsageTool.cs', 'ImportOrderTool.cs', 'OfflineSymbolManifestTools.cs'):
         text = (root / 'src/FoundationHost' / filename).read_text(encoding='utf-8-sig')
         names.update(renames.get(name, name) for name in re.findall(r'\bName\s*=\s*"([^"\n]+)"', text))

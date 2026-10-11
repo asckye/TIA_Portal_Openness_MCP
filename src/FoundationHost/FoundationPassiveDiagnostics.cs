@@ -229,7 +229,7 @@ internal static class FoundationPassiveDiagnostics
         {
             var name = tool.ProtocolTool.Name;
             var definition = FoundationTools.Definitions.SingleOrDefault(d => FoundationV4Tool.Name(d.Name) == name);
-            bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+            bool ported = TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name);
             var operations = ported ? PortedToolContract.WiredOperations(name) : null;
             bool engineWorker = !ported && definition == null && EngineHostConfiguration.CurrentOrNull?.Catalog?.Find(name)?.Execution == "worker";
@@ -271,6 +271,8 @@ internal static class LegacyHostToolRegistry
     {
         TiaVersionCatalog.Get(releaseKey);
         var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
+        tools.RemoveAll(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(FoundationV4Tool.Name(t.ProtocolTool.Name))
+            && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(releaseKey, FoundationV4Tool.Name(t.ProtocolTool.Name)));
         tools.Add(new ImportOrderTool());
         tools.AddRange(WorkbenchControlTools.Create(worker, releaseKey));
         tools.AddRange(GenerationTool.Create(releaseKey));

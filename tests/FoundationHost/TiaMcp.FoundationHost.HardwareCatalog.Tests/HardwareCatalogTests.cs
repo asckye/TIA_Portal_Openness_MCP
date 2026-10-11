@@ -10,7 +10,7 @@ internal static class HardwareCatalogTests
         PlcHardwareCatalogSearchResult Run(IEnumerable<PlcHardwareCatalogCandidate> rows,int limit=50)=>PlcHardwareCatalogPolicy.Search("19","  CPU  ",limit,q=> { Check(q=="CPU","trim literal query"); calls++; return rows; });
         foreach(var q in new[]{"", " ","* ?", "CPU\n",new string('x',257)}) Reject(()=>PlcHardwareCatalogPolicy.Query(q,50),"query bound");
         foreach(var n in new[]{-1,0,101,int.MaxValue}) Reject(()=>PlcHardwareCatalogPolicy.Query("CPU",n),"limit bound");
-        foreach(var release in new[]{"14sp1","15.1","16","17","18","unknown"}) Reject(()=>PlcHardwareCatalogPolicy.Search(release,"CPU",50,_=>throw new Exception("Must not query unsupported release")),"release gate");
+        foreach(var release in new[]{"14sp1","15.1","16","17","unknown"}) Reject(()=>PlcHardwareCatalogPolicy.Search(release,"CPU",50,_=>throw new Exception("Must not query unsupported release")),"release gate");
         var result=Run(new[]{Row("OrderNumber:6ES7 123/V1.0"),Row("OrderNumber:6ES7 123/V1.0"),Row("OrderNumber:6es7 123/V1.0")});
         Check(calls==1 && result.Count==2,"one query and exact ordinal dedup");
         Check(result.Items[0].TypeIdentifier=="OrderNumber:6ES7 123/V1.0","exact identifier preserved");
@@ -31,7 +31,7 @@ internal static class HardwareCatalogTests
         Reject(()=>Run(Failure()),"native exception not swallowed as success");
 
 
-        foreach(var release in new[]{"19","20","21"}) { var supported=PlcHardwareCatalogPolicy.Search(release,"CPU",1,_=>Array.Empty<PlcHardwareCatalogCandidate>()); Check(supported.Count==0,"supported documented release"); }
+        foreach(var release in new[]{"18","19","20","21"}) { var supported=PlcHardwareCatalogPolicy.Search(release,"CPU",1,_=>Array.Empty<PlcHardwareCatalogCandidate>()); Check(supported.Count==0,"supported documented release"); }
         var argsJson=System.Text.Json.Nodes.JsonNode.Parse("{\"keyword\":\"CPU\",\"limit\":50}")!.AsObject();
         var good=System.Text.Json.JsonSerializer.SerializeToNode(Run(new[]{Row("a")}))!;
         Check(TiaMcp.FoundationHost.HardwareCatalogContract.Validate(good,argsJson)["Count"]!.GetValue<int>()==1,"host preserves count");
@@ -53,8 +53,11 @@ internal static class HardwareCatalogTests
         var nativeShape=engine.SearchHardwareCatalog("CPU");
         Check(nativeShape.Items[0].TypeIdentifier=="OrderNumber: A/V1" && engine.Attached.HardwareCatalog.Calls==1,"typed adapter one query exact field mapping");
         engine.ReleaseKey="18";
+        var v18=engine.SearchHardwareCatalog("CPU");
+        Check(v18.Count==1 && engine.PortalReads==2 && engine.Attached.HardwareCatalog.Calls==2,"V18 typed catalog uses one query with the existing bounds");
+        engine.ReleaseKey="17";
         Reject(()=>engine.SearchHardwareCatalog("CPU"),"signature only release gated before portal");
-        Check(engine.PortalReads==1,"unsupported release no native access");
+        Check(engine.PortalReads==2,"unsupported release no native access");
 
 
         foreach(var target in new[]{"root","meta","row"}) {

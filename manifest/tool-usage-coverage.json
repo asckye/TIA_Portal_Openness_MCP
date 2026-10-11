@@ -1,10 +1,10 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "6de80409a0be69de0ce0e88159cf0965354f51b9667291f9a5e4ca3839cc945a",
+  "catalogSha256": "f971ccb2ab6375563119b249ef04561088ed9e03449dcd880920a3bd33a34dfe",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 2721,
-  "offlineCallExecutions": 115,
+  "versionToolPairs": 2697,
+  "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
   "callSequences": 36,
@@ -48,8 +48,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 247,
-      "checkedToolCount": 247,
+      "registeredToolCount": 243,
+      "checkedToolCount": 243,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 137,
@@ -57,14 +57,8 @@
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildStructuredText",
         "DescribeStandardPackage",
         "ListStandardPackages",
         "ManageMachineDescription",
@@ -204,27 +198,6 @@
           "operations": []
         },
         {
-          "toolName": "BuildFlgNetCall",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -232,21 +205,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcLadFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcSymbolManifestFromPath",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcTagTable",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -282,13 +241,6 @@
         },
         {
           "toolName": "BuildReleaseRunbook",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildStructuredText",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -1651,6 +1603,18 @@
           "documents": [
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ListPlcSystemGroups",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -3069,6 +3033,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidatePlcDocumentSchemas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -3091,8 +3062,8 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 269,
-      "checkedToolCount": 269,
+      "registeredToolCount": 265,
+      "checkedToolCount": 265,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 158,
@@ -3100,14 +3071,8 @@
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildStructuredText",
         "DescribeStandardPackage",
         "ListStandardPackages",
         "ManageMachineDescription",
@@ -3247,27 +3212,6 @@
           "operations": []
         },
         {
-          "toolName": "BuildFlgNetCall",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -3275,21 +3219,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcLadFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcSymbolManifestFromPath",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcTagTable",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3325,13 +3255,6 @@
         },
         {
           "toolName": "BuildReleaseRunbook",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildStructuredText",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -3919,6 +3842,18 @@
           "relationship": "related-api-patterns",
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcWatchTable",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
           ],
           "operations": []
         },
@@ -6442,6 +6377,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidatePlcDocumentSchemas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -6464,8 +6406,8 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 285,
-      "checkedToolCount": 285,
+      "registeredToolCount": 279,
+      "checkedToolCount": 279,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 174,
@@ -6473,14 +6415,8 @@
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildStructuredText",
         "DescribeStandardPackage",
         "ListStandardPackages",
         "ManageMachineDescription",
@@ -6620,27 +6556,6 @@
           "operations": []
         },
         {
-          "toolName": "BuildFlgNetCall",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -6648,21 +6563,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcLadFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcSymbolManifestFromPath",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcTagTable",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -6698,13 +6599,6 @@
         },
         {
           "toolName": "BuildReleaseRunbook",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildStructuredText",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -7977,13 +7871,6 @@
         },
         {
           "toolName": "ImportHmiTagTablesFromDirectory",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "ImportMasterCopyFromGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -10070,6 +9957,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidatePlcDocumentSchemas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -10092,23 +9986,17 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 292,
-      "checkedToolCount": 292,
+      "registeredToolCount": 287,
+      "checkedToolCount": 287,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 186,
+      "operationExampleCount": 188,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildStructuredText",
         "DescribeStandardPackage",
         "ListStandardPackages",
         "ManageMachineDescription",
@@ -10248,27 +10136,6 @@
           "operations": []
         },
         {
-          "toolName": "BuildFlgNetCall",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -10276,21 +10143,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcLadFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcSymbolManifestFromPath",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcTagTable",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -10326,13 +10179,6 @@
         },
         {
           "toolName": "BuildReleaseRunbook",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildStructuredText",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -11689,13 +11535,6 @@
         },
         {
           "toolName": "ImportHmiTagTablesFromDirectory",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "ImportMasterCopyFromGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -13356,6 +13195,24 @@
           ]
         },
         {
+          "toolName": "ManageUnifiedCwcPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "inspect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "build",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "MonitorPlcWatchTableS7",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13841,6 +13698,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidatePlcDocumentSchemas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13863,23 +13727,17 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 299,
-      "checkedToolCount": 299,
+      "registeredToolCount": 297,
+      "checkedToolCount": 297,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 198,
+      "operationExampleCount": 200,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildStructuredText",
         "DescribeStandardPackage",
         "ListStandardPackages",
         "ManageMachineDescription",
@@ -14006,6 +13864,13 @@
           "operations": []
         },
         {
+          "toolName": "BuildClassicHmiScreen",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildDeviceAmlDocument",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -14019,27 +13884,6 @@
           "operations": []
         },
         {
-          "toolName": "BuildFlgNetCall",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -14047,21 +13891,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcLadFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcSymbolManifestFromPath",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcTagTable",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -14097,13 +13927,6 @@
         },
         {
           "toolName": "BuildReleaseRunbook",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildStructuredText",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -14322,6 +14145,19 @@
         },
         {
           "toolName": "CreateHardwareCatalogDevice",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "CreateHardwareDevice",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -15509,13 +15345,6 @@
         },
         {
           "toolName": "ImportHmiTagTablesFromDirectory",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "ImportMasterCopyFromGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -17261,6 +17090,24 @@
           ]
         },
         {
+          "toolName": "ManageUnifiedCwcPackage",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "inspect",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "build",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "MonitorPlcWatchTableS7",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -17531,6 +17378,19 @@
           "operations": []
         },
         {
+          "toolName": "SearchHardwareCatalog",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/devices-and-hardware/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs",
+            "guides/skills/hardware-and-modules/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/HardwareSnippets.cs"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "SearchInstalledGsdDevices",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -17758,6 +17618,13 @@
           "operations": []
         },
         {
+          "toolName": "ValidatePlcDocumentSchemas",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ValidateStandardPackage",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -17780,8 +17647,8 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 309,
-      "checkedToolCount": 309,
+      "registeredToolCount": 306,
+      "checkedToolCount": 306,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 200,
@@ -17789,14 +17656,8 @@
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
-        "BuildStructuredText",
         "BuildUnifiedHmiButtonActionScript",
         "DescribeStandardPackage",
         "ListStandardPackages",
@@ -17931,6 +17792,13 @@
           "operations": []
         },
         {
+          "toolName": "BuildClassicHmiScreen",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "BuildDeviceAmlDocument",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -17944,27 +17812,6 @@
           "operations": []
         },
         {
-          "toolName": "BuildFlgNetCall",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFbBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcGlobalDb",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -17972,21 +17819,7 @@
           "operations": []
         },
         {
-          "toolName": "BuildPlcLadFcBlock",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "BuildPlcSymbolManifestFromPath",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildPlcTagTable",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -18022,13 +17855,6 @@
         },
         {
           "toolName": "BuildReleaseRunbook",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BuildStructuredText",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
@@ -21474,6 +21300,13 @@
           "operations": []
         },
         {
+          "toolName": "RunHmiTemplatePlcSyncPrecheckSuite",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RunOfflineReleaseValidationSuite",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -21763,6 +21596,13 @@
         },
         {
           "toolName": "TraceTagCauseLive",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ValidatePlcDocumentSchemas",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],

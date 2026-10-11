@@ -14,11 +14,11 @@ internal static class CatalogGenerator
         var data = new CatalogData(root); var tools = data.Archives.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone());
         foreach (var (name, entry) in data.Additions)
             if (!data.HostOnly.ContainsKey(name)) foreach (var key in Strings(entry!["releases"])) tools[key][name] = new JsonObject { ["name"] = name, ["inputSchema"] = new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray("inputPath", "outputPath"), ["properties"] = new JsonObject { ["inputPath"] = new JsonObject { ["type"] = "string" }, ["outputPath"] = new JsonObject { ["type"] = "string" } } } };
-        foreach (var key in Keys.Take(6)) foreach (var current in data.Ported[key]) { var old = tools["21"].Select(p => p.Key).First(n => data.Renames[n] == current); tools[key][old] = Copy(tools["21"][old]!); }
+        foreach (var key in Keys.Take(6)) foreach (var current in data.Reviewed[key]) { var old = tools["21"].Select(p => p.Key).First(n => data.Renames[n] == current); tools[key][old] = Copy(tools["21"][old]!); }
         var currentNames = data.Mapping;
-        // A ported tool without any supported action on a modern release is not listed there, even if the 3.x archive had it
+        // A tool without any supported action on a release is not listed there, even if the 3.x archive had it
         // (maintainer 2026-10-11: one registration rule for all eight releases).
-        foreach (var key in new[] { "20", "21" })
+        foreach (var key in Keys)
         {
             var withheld = PortedFamilies.Withheld(data.Families, key);
             foreach (var old in tools[key].Select(p => p.Key).Where(n => currentNames.TryGetValue(n, out var current) && withheld.Contains(current)).ToList()) tools[key].Remove(old);
@@ -93,7 +93,7 @@ internal static class CatalogGenerator
         {
             if (!record.Releases.Contains(key)) continue;
             policies.Add(new JsonObject { ["releaseKey"] = key, ["family"] = family, ["state"] = "current", ["l5"] = "NOT RUN" });
-            foreach (var name in record.Tools.Where(data.Ported[key].Contains)) entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = name, ["family"] = family, ["example"] = Copy(calls["plc-foundation"]![name]!["arguments"]!) });
+            foreach (var name in record.Tools.Where(data.Reviewed[key].Contains)) entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = name, ["family"] = family, ["example"] = Copy(calls["plc-foundation"]![name]!["arguments"]!) });
         }
         var releases = new JsonObject(); var engineReleases = new JsonObject();
         foreach (var key in Keys.Skip(6).Concat(Keys.Take(6)))
@@ -109,17 +109,21 @@ internal static class CatalogGenerator
             if (key is "20" or "21") engineReleases[key] = Copy(releases[key]!);
         }
         var shared = Set(tools["19"].Select(p => data.Renames[p.Key]).Except(data.Ported["19"]));
+        // These existing Foundation implementations retain their modern profiles
+        // even when the reviewed table withholds them from the older hosts.
+        shared.UnionWith(data.Families["F00"].Tools);
         foreach (var key in Keys.Skip(6))
         {
             var rows = releases[key]!.AsArray().Where(r => !data.Removed.Contains(Text(r!["currentName"]))).ToDictionary(r => Text(r!["currentName"]), r => r!.DeepClone());
             foreach (var entry in releases["19"]!.AsArray()) { var current = Text(entry!["currentName"]); if (data.Ported["19"].Contains(current)) continue; var row = entry.DeepClone(); row["profiles"] = new JsonArray("full", "lite", "plc-foundation"); rows[current] = row; }
             foreach (var (current, entry) in calls["plc-foundation"]!.AsObject())
                 if (!shared.Contains(current) && (!data.Ported[key].Contains(current) || data.FoundationCandidates.Contains(current))) rows[current] = new JsonObject { ["name"] = current, ["currentName"] = current, ["sourceName"] = current, ["profiles"] = new JsonArray("full", "plc-foundation"), ["arguments"] = Copy(entry!["arguments"]!), ["envelopeVersion"] = 4 };
+            foreach (var name in data.Families["F00"].Tools) rows[name]["profiles"] = new JsonArray("full", "lite", "plc-foundation");
             foreach (var row in rows.Values.Where(r => !shared.Contains(Text(r["currentName"])))) row["profiles"] = data.Bridge.Contains(Text(row["currentName"])) ? new JsonArray("full", "lite") : new JsonArray(Strings(row["profiles"]).Where(p => p != "lite").Select(s => (JsonNode?)JsonValue.Create(s)).ToArray());
             releases[key] = new JsonArray(rows.Values.OrderBy(r => Text(r["name"]), PythonStringComparer.Instance).ToArray());
             for (var i = entries.Count - 1; i >= 0; i--) if (Text(entries[i]!["releaseKey"]) == key && data.Removed.Contains(Text(entries[i]!["entry"]))) entries.RemoveAt(i);
             foreach (var entry in entries.Where(e => Text(e!["releaseKey"]) == "19").ToArray())
-                if (shared.Contains(Text(entry!["entry"])) && !entries.Any(e => Text(e!["releaseKey"]) == key && Text(e["entry"]) == Text(entry["entry"]))) { var row = entry.DeepClone(); row["releaseKey"] = key; row["example"] = Example(key, Text(entry["entry"]), Text(entry["family"])); entries.Add(row); }
+                if (Text(entry!["family"]) != "F00" && shared.Contains(Text(entry["entry"])) && !entries.Any(e => Text(e!["releaseKey"]) == key && Text(e["entry"]) == Text(entry["entry"]))) { var row = entry.DeepClone(); row["releaseKey"] = key; row["example"] = Example(key, Text(entry["entry"]), Text(entry["family"])); entries.Add(row); }
         }
         foreach (var key in Keys)
         {

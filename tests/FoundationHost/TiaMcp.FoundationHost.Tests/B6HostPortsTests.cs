@@ -20,7 +20,8 @@ public sealed class B6HostPortsTests
         string first = tool switch {
             "GetObjectIdentifier" or "ImportLibraryTypeDocuments" => "20",
             "CompareLibraries" or "CompareLibraryObjects" => "18",
-            "ManageProjectCompilationSettings" or "ImportMasterCopyFromGlobalLibrary" => "16",
+            "ManageProjectCompilationSettings" => "16",
+            "ImportMasterCopyFromGlobalLibrary" => "19",
             _ => "14sp1" };
         Assert.Equal(Array.IndexOf(Releases, release) >= Array.IndexOf(Releases, first), PortedFamilies.Available(release, tool));
     }

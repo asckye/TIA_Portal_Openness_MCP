@@ -33,7 +33,7 @@ internal static class SpecialExportTests
             foreach(var release in new[]{"15.1","16","17","18","19","20","21"})
             {
                 var watch=Run(true,release:release);
-                check(watch.Status==(release=="15.1"?"semantics-unverified":"planned") && watch.MethodEvidence=="static-sdk-signature-verified","Watch signature and per-release semantic eligibility stay separate: "+release);
+                check(watch.Status=="planned" && watch.MethodEvidence=="static-sdk-signature-verified","Watch signature and per-release semantic eligibility stay separate: "+release);
                 SpecialExportContract.Validate(Wire(watch),true);
             }
             foreach(var release in new[]{"16","17","18","19","20"})
@@ -45,7 +45,10 @@ internal static class SpecialExportTests
             Refuse(()=>Run(true,consistent:false),"Inconsistent watch-table preview refuses before export");
             Refuse(()=>Run(false,preview.PlanHash,consistent:false),"Watch consistency gates native export");
             var oldWatch=Run(true,release:"15.1");
-            Refuse(()=>Run(false,oldWatch.PlanHash,release:"15.1"),"Watch15.1 signature presence does not bypass missing manual semantics");
+            var oldExecuted=Run(false,oldWatch.PlanHash,release:"15.1",publisher:(_,_)=>null);
+            SpecialExportContract.Validate(Wire(oldExecuted),false);
+            check(oldExecuted.Status=="exported" && offline==1 && exports==0,"Watch15.1 official export semantics allow confirmed apply through the offline gate");
+            offline=0;
             Refuse(()=>Run(true,release:"14sp1"),"Known absent V14 SP1 watch API refused");
             Refuse(()=>Run(true,kind:"technology-object",consistent:false),"Inconsistent technology-object preview refuses before approval");
             Refuse(()=>Run(false,preview.PlanHash,kind:"technology-object",consistent:false),"Inconsistent technology object cannot export");

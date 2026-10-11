@@ -25,7 +25,7 @@ internal static class HardwareCatalogContract
         if(meta["scope"]?.GetValue<string>()!="installed-catalog-single-literal-query" || meta["maximumEntries"]?.GetValue<int>()!=1000 || meta["maximumResponseCharacters"]?.GetValue<int>()!=262144 || meta["order"]?.GetValue<string>()!="native-enumeration-first-seen" || meta["nativeAcceptance"]?.GetValue<string>()!="NOT RUN" || meta["boundsScope"]?.GetValue<string>()!="Client enumeration and response only; the documented synchronous Find API has no server-side result limit or cancellation parameter.")
             throw new InvalidDataException("Invalid fixed catalog bounds and scope.");
         string release=meta["releaseKey"]?.GetValue<string>()??"";
-        if((release!="19" && release!="20" && release!="21") || meta["queryCount"]?.GetValue<int>()!=1 || meta["resultLimit"]?.GetValue<int>()!=limit || meta["insertionCompatibilityChecked"]?.GetValue<bool>()!=false)
+        if((release!="18" && release!="19" && release!="20" && release!="21") || meta["queryCount"]?.GetValue<int>()!=1 || meta["resultLimit"]?.GetValue<int>()!=limit || meta["insertionCompatibilityChecked"]?.GetValue<bool>()!=false)
             throw new InvalidDataException("Invalid hardware catalog capability evidence.");
         bool truncated=meta["truncated"]?.GetValue<bool>()??throw new InvalidDataException("Missing catalog truncation flag.");
         string reason=meta["truncationReason"]?.GetValue<string>()??"";

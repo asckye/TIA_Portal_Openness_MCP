@@ -33,15 +33,20 @@ namespace TiaMcp.Adapters.Native.Plc
                 var systemBlockGroups = blockRoot.SystemBlockGroups;
 #if PLC_SOFTWARE_PROTECTION
                 var systemTypeGroups = typeRoot.SystemTypeGroups;
+#endif
                 meta["unit"] = unit == null ? null : PlcGroupOperations.Get(unit, "Name");
                 meta["systemBlockGroups"] = PlcGroupOperations.Items(systemBlockGroups).Cast<PlcSystemBlockGroup>().Select(g => SystemBlockGroupRow(g, includeBlocks, 1, maxDepth)).ToArray();
+#if PLC_SOFTWARE_PROTECTION
                 meta["systemTypeGroups"] = PlcGroupOperations.Items(systemTypeGroups).Cast<PlcSystemTypeGroup>().Select(g => {
                     var types = g.Types;
                     return new Dictionary<string, object?> { ["name"] = g.Name, ["typeCount"] = types.Count,
                         ["types"] = PlcGroupOperations.Items(types).Cast<PlcType>().Take(200).Select(t => PlcDocumentPrimitives.Name(t)).ToArray() };
                 }).ToArray();
 #else
-                throw new NotSupportedException("SystemTypeGroups requires V15.1.");
+                meta["systemTypeGroups"] = null;
+                meta["systemTypeGroupsUnavailable"] = new Dictionary<string, object?> {
+                    ["code"] = "UNSUPPORTED_CAPABILITY", ["reason"] = "SystemTypeGroups requires V15.1." };
+                meta["dataComplete"] = false;
 #endif
                 meta["apiCallSuccess"] = true;
                 meta["scope"] = "PlcBlockSystemGroup.SystemBlockGroups (PlcSystemBlockGroup Name / Blocks / Groups, recursive to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types); first 200 objects per group. No modification.";

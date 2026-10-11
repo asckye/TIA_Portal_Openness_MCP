@@ -90,7 +90,7 @@ public sealed class BehaviorCapabilityTests
             bool hostPort = TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03";
             var implementation = hostPort ? LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name)
-                : TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                : TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 ? PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == name)
                 : new FoundationTool(FoundationTools.Definitions.Single(d => FoundationV4Tool.Name(d.Name) == name), worker);
             var tool = hostPort ? implementation : new FoundationV4Tool(implementation, release);

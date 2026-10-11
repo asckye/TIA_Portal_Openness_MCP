@@ -14,7 +14,7 @@ internal static class DeviceAddTests
         PlcDeviceAddRequest Apply(){var r=Request();r.ExpectedHash=Run(r).PlanHash;r.DryRun=false;r.Confirm=true;r.ExpectedProject=r.Project;return r;}
         Reset();var result=Run(Request());Check(!result.Attempted&&!result.Executed&&calls==0&&result.PlanHash.Length==64,"preview no writes");
         foreach(var release in new[]{"19","20","21"}) {Reset();var r=Request();r.Release=release;Check(Run(r).Release==release,"exact enabled release");}
-        foreach(var release in new[]{"14sp1","15.1","16","17","18","unknown"}) {Reset();var r=Request();r.Release=release;Reject(()=>Run(r),"gate");Check(checks==0&&calls==0,"gate before access");}
+        foreach(var release in new[]{"14sp1","15.1","16","17","unknown"}) {Reset();var r=Request();r.Release=release;Reject(()=>Run(r),"gate");Check(checks==0&&calls==0,"gate before access");}
         foreach(var name in new[]{""," ","../x","a/b","a\\b","a\n","a*","a?","a:","a ",".","..",new string('x',129)}) {Reset();var r=Request();r.Name=name;Reject(()=>Run(r),"name");}
         foreach(var family in new[]{"","S7-300","WinCCUnifiedPC","s7-1500"}) {Reset();var r=Request();r.Family=family;Reject(()=>Run(r),"unsupported family");}
         foreach(var value in new[]{""," ","a\n",new string('x',257)}) {Reset();var r=Request();r.PreferredMlfb=value;Reject(()=>Run(r),"identifier bounds");}
@@ -61,7 +61,8 @@ internal static class DeviceAddTests
         engine=Engine();result=Preview(engine);engine.BoundProject.Devices.Add(new(){Name="Other",Parent=engine.BoundProject});
         var stale=Xunit.Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(()=>Execute(engine,result.PlanHash));
         Check(stale.IsArgument && stale.ParamName=="expectedPlanHash" && engine.BoundProject.Devices.Calls==0,"approval-disabled stale reviewed plan refuses before create");
-        engine=Engine();engine.ReleaseKey="18";Reject(()=>Preview(engine),"adapter release gate");Check(engine.AttachedPortal.HardwareCatalog.Calls==0,"release before query");
+        engine=Engine();engine.ReleaseKey="18";result=Preview(engine);Check(result.Release=="18" && engine.BoundProject.Devices.Calls==0,"V18 preview preserves release and issues no create");Check(Execute(engine,result.PlanHash).Executed && engine.BoundProject.Devices.Calls==1,"V18 apply performs one verified create");
+        engine=Engine();engine.ReleaseKey="17";Reject(()=>Preview(engine),"adapter release gate");Check(engine.AttachedPortal.HardwareCatalog.Calls==0,"release before query");
         engine=Engine();engine.lifecycle.IsLocalSession=false;Reject(()=>Preview(engine),"adapter local gate");
         engine=Engine();var group=new Siemens.Engineering.HW.DeviceUserGroup(){Parent=engine.BoundProject};group.Devices.Add(new(){Name="PLC_2",Parent=group});engine.BoundProject.DeviceGroups.Add(group);Reject(()=>Preview(engine),"grouped name collision");
         engine=Engine();engine.BoundProject.UngroupedDevicesGroup.Devices.Add(new(){Name="plc_2",Parent=engine.BoundProject.UngroupedDevicesGroup});Reject(()=>Preview(engine),"ungrouped name collision");
@@ -74,7 +75,7 @@ internal static class DeviceAddTests
         void BadResponse(string key,object value){var bad=response.DeepClone();bad[key]=System.Text.Json.JsonSerializer.SerializeToNode(value);try{TiaMcp.FoundationHost.DeviceAddContract.Validate(bad,requestJson);}catch(InvalidDataException){Check(true,"Host rejected "+key);return;}throw new Exception("Host accepted "+key);}
         foreach(var key in new[]{"Attempted","Executed","RequiresSessionReset"})BadResponse(key,true);
         BadResponse("Status","created-verified");BadResponse("DeviceName","different");BadResponse("TypeIdentifier","OrderNumber:different/V1");
-        BadResponse("Version","V2");BadResponse("ArticleNumber","different");BadResponse("Policy","other");BadResponse("Save","saved");BadResponse("Inventory",new[]{"PLC_2"});BadResponse("Unexpected",true);BadResponse("Release","18");BadResponse("PlanHash","bad");
+        BadResponse("Version","V2");BadResponse("ArticleNumber","different");BadResponse("Policy","other");BadResponse("Save","saved");BadResponse("Inventory",new[]{"PLC_2"});BadResponse("Unexpected",true);BadResponse("Release","17");BadResponse("PlanHash","bad");
         requestJson["preferredMlfb"]=Candidate().TypeIdentifier;requestJson["preferredVersion"]="";BadResponse("TypeIdentifier","OrderNumber:different/V1");
         Reset();rows[0].ArticleNumber="6AV2123-3GB32-0AW0";rows[0].TypeIdentifier="OrderNumber:6AV2123-3GB32-0AW0/V1";var hmi=Request();hmi.PreferredMlfb=rows[0].TypeIdentifier!;hmi.PreferredVersion="";Reject(()=>Run(hmi),"HMI identifier cannot bypass PLC family gate");
         Reset();rows[0].TypeIdentifier+="*";Reject(()=>Run(Request()),"wildcard selected identifier fails");

@@ -4027,7 +4027,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "f61dddde4286e81c3ff08fb348145842ba259f9fcc7a75d818e650c50cf48309",
+      "descriptionSha256": "49cf1da9d52f6b5fe7e7c2371f0a28757ee338bb7944a47ce7e858b3bb16945f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14553,7 +14553,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "4cdc84d9e525ea4fdd34dfbd1b748233223d9d0dfbcda40d970099ff50d5fe63",
+      "descriptionSha256": "853a607b9f2bad142183a95877632fe353add4203677be9a5ff5b6c8a2d2095b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19181,7 +19181,7 @@
       }
     },
     {
-      "descriptionSha256": "955667a1a4787809ba6855b42e61bd1f48fe7f31fb121f5237ae9a89bc01e07a",
+      "descriptionSha256": "0d7a17e9adb3cad34e4839c957c8b342614718402d907e6412d511725b2ed440",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -29083,7 +29083,7 @@
       }
     },
     {
-      "descriptionSha256": "d49b9525b5ad0d268554eb47604bee955e7fdbeb7f369720d14a120ec9a7c02f",
+      "descriptionSha256": "e744206ece710188daf9c7d2117f2c83cc4641de9f51e83ca94a4c2fc32a6f6a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38583,7 +38583,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "ead73e9e492106c1baed49c24573d1124061d3093157160000d104406ba0f9df",
+      "descriptionSha256": "6dd53465a992d6e1813660bb48d273735028d6fc5f45fcf982dab1f87ae783d7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -43229,7 +43229,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "300560b5fc5b62eeb2f5e03fbf623f97e88807b646852679ef9e3d841c59faad",
+      "descriptionSha256": "221319bae608eaf1924ec292b4ad88741420ad30fa9e5a8ffa3751abe0a2ce2f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -45839,7 +45839,7 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "d631d0a84651f92b4a46cd97de243795a64c3de24c711873022f1d766bbcd52f",
+      "descriptionSha256": "31c24467662ed8c306337cb853331d6f35210f3088a24dfeb45a90198d29b72a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -45848,7 +45848,7 @@
             "type": "string"
           },
           "schemaDirectory": {
-            "description": "Absolute local PublicAPI/V21/Schemas directory (or matching version); <=128 XSD files, no reparse paths.",
+            "description": "Absolute local PublicAPI Schemas directory for the selected release (V14 SP1 through V21); <=128 XSD files, no reparse paths.",
             "type": "string"
           }
         },

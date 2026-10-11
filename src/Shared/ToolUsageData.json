@@ -27761,7 +27761,7 @@
             }
           },
           "operations": {},
-          "validation": "Real-machine verified V19 (2026-10-07): exact 6ES7 513-1AM03-0AB0/V3.1 preview, apply (created-verified) and GetProjectTree readback with approval disabled. V14 SP1–V18 capability absent. P6-70 invalid catalog pair and duplicate/stale-plan refusals are offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "validation": "Real-machine verified V19 (2026-10-07): exact 6ES7 513-1AM03-0AB0/V3.1 preview, apply (created-verified) and GetProjectTree readback with approval disabled. V14 SP1–V17 API absent. V18 enabled by the official API re-check; native acceptance NOT RUN. P6-70 invalid catalog pair and duplicate/stale-plan refusals are offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -27840,49 +27840,6 @@
             "Read ok, error and meta.outcome/execution/completeness first. If outcome is unknown, inspect the target and reset the session when required before further writes; do not replay automatically.",
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details."
-          ]
-        },
-        "BuildFlgNetCall": {
-          "arguments": {
-            "outputReleaseKey": "21",
-            "flgNet": {
-              "callName": "FC_Ready",
-              "parameters": [
-                {
-                  "name": "Ready",
-                  "section": "Output",
-                  "dataType": "Bool",
-                  "symbolPath": [
-                    "DB_Status",
-                    "Ready"
-                  ]
-                }
-              ]
-            }
-          },
-          "parameters": {
-            "flgNet": {
-              "meaning": "Typed flgNet value with exact camelCase fields; see inputSchema."
-            },
-            "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            }
-          },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
-          "resultContract": {
-            "type": "Envelope",
-            "schemaVersion": 4,
-            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
-          },
-          "resultReading": [
-            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
-            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
           ]
         },
         "BuildPlcGlobalDb": {
@@ -27970,45 +27927,6 @@
           ],
           "note": "Tag-table and global DB exports are supported; OBs return unsupported-document-kind. Empty tables, tag comments and user constants are accepted; system constants are skipped with a warning. Inspect data.files, errors, symbols and warnings even when an outer envelope is returned; extraction is not native certification."
         },
-        "BuildPlcTagTable": {
-          "arguments": {
-            "outputReleaseKey": "21",
-            "tagTable": {
-              "tableName": "ExampleTags",
-              "tags": [
-                {
-                  "name": "Ready",
-                  "dataTypeName": "Bool",
-                  "logicalAddress": "%M0.0"
-                }
-              ]
-            }
-          },
-          "parameters": {
-            "tagTable": {
-              "meaning": "Typed tagTable value with exact camelCase fields; see inputSchema."
-            },
-            "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            }
-          },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
-          "resultContract": {
-            "type": "Envelope",
-            "schemaVersion": 4,
-            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
-          },
-          "resultReading": [
-            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
-            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
-          ]
-        },
         "BuildPlcUdt": {
           "arguments": {
             "outputReleaseKey": "21",
@@ -28030,48 +27948,6 @@
             "outputReleaseKey": {
               "exampleValue": "21",
               "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            }
-          },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
-          "resultContract": {
-            "type": "Envelope",
-            "schemaVersion": 4,
-            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
-          },
-          "resultReading": [
-            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
-            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
-          ]
-        },
-        "BuildStructuredText": {
-          "arguments": {
-            "outputReleaseKey": "21",
-            "structuredText": {
-              "operations": [
-                {
-                  "op": "assign",
-                  "target": "#Ready",
-                  "literalValue": "TRUE"
-                }
-              ]
-            }
-          },
-          "parameters": {
-            "structuredText": {
-              "meaning": "Typed structuredText value with exact camelCase fields; see inputSchema."
-            },
-            "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            },
-            "innerOnly": {
-              "exampleValue": false,
-              "meaning": "Return inner XML in StructuredText/v4 namespace context instead of the enclosing StructuredText element."
             }
           },
           "operations": {},
@@ -28246,155 +28122,6 @@
             "For an inconsistent block, review the preview, then compile with dryRun:false, confirm:true and the exact expectedProjectFile. Check compiler errors before exporting; preview does not compile.",
             "A returned compilation with errors is ok=false and COMPILE_ERRORS, outcome failed, execution completed. Details contain errorCount, warningCount and up to ten leaf errors with object paths; data retains full diagnostics and coverage flags. Resolve these errors before retrying compilation or batch overwrite. Compilation does not save or download.",
             "errorCount is max(native root count, number of leaf error messages); details retains at most ten messages. Root/subtree counts are never added."
-          ]
-        },
-        "BuildPlcFbBlock": {
-          "arguments": {
-            "outputReleaseKey": "21",
-            "fbBlock": {
-              "blockName": "FB_Ready",
-              "blockNumber": 11,
-              "inputs": [],
-              "outputs": [
-                {
-                  "name": "Ready",
-                  "datatype": "Bool"
-                }
-              ],
-              "structuredText": {
-                "operations": [
-                  {
-                    "op": "assign",
-                    "target": "#Ready",
-                    "literalValue": "TRUE"
-                  }
-                ]
-              }
-            }
-          },
-          "parameters": {
-            "fbBlock": {
-              "meaning": "Typed fbBlock value with exact camelCase fields; see inputSchema."
-            },
-            "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            }
-          },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
-          "resultContract": {
-            "type": "Envelope",
-            "schemaVersion": 4,
-            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
-          },
-          "resultReading": [
-            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
-            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
-          ]
-        },
-        "BuildPlcFcBlock": {
-          "arguments": {
-            "outputReleaseKey": "21",
-            "fcBlock": {
-              "blockName": "FC_Ready",
-              "blockNumber": 10,
-              "inputs": [],
-              "outputs": [
-                {
-                  "name": "Ready",
-                  "datatype": "Bool"
-                }
-              ],
-              "structuredText": {
-                "operations": [
-                  {
-                    "op": "assign",
-                    "target": "#Ready",
-                    "literalValue": "TRUE"
-                  }
-                ]
-              }
-            }
-          },
-          "parameters": {
-            "fcBlock": {
-              "meaning": "Typed fcBlock value with exact camelCase fields; see inputSchema."
-            },
-            "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            }
-          },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
-          "resultContract": {
-            "type": "Envelope",
-            "schemaVersion": 4,
-            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
-          },
-          "resultReading": [
-            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
-            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
-          ]
-        },
-        "BuildPlcLadFcBlock": {
-          "arguments": {
-            "outputReleaseKey": "21",
-            "ladFcBlock": {
-              "blockName": "FC_Lad",
-              "blockNumber": 12,
-              "networks": [
-                {
-                  "call": {
-                    "callName": "FC_Ready",
-                    "parameters": [
-                      {
-                        "name": "Ready",
-                        "section": "Output",
-                        "dataType": "Bool",
-                        "symbolPath": [
-                          "DB_Status",
-                          "Ready"
-                        ]
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          },
-          "parameters": {
-            "ladFcBlock": {
-              "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
-            },
-            "outputReleaseKey": {
-              "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
-            }
-          },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
-          "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
-          "resultContract": {
-            "type": "Envelope",
-            "schemaVersion": 4,
-            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
-          },
-          "resultReading": [
-            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
-            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
-            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
           ]
         },
         "ConnectPortal": {
@@ -29069,7 +28796,7 @@
             }
           },
           "operations": {},
-          "validation": "Real-machine verified V16–V19 (2026-10-07): existing compiled watch table exported; V16 fixed PLC alias/forward-slash support verified. V14 SP1/V15.1 capability is absent. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "validation": "Real-machine verified V16–V19 (2026-10-07): existing compiled watch table exported; V16 fixed PLC alias/forward-slash support verified. V14 SP1 API absent. V15.1 preview/apply enabled by the official export API re-check; native acceptance NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -30525,7 +30252,7 @@
             }
           },
           "operations": {},
-          "validation": "Real-machine verified V19 (2026-10-07): keyword=1513 returned 50 catalog rows. V14 SP1–V18 capability absent. P6-70 typed unbound-session refusal is offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "validation": "Real-machine verified V19 (2026-10-07): keyword=1513 returned 50 catalog rows. V14 SP1–V17 API absent. V18 enabled by the official API re-check; native acceptance NOT RUN. P6-70 typed unbound-session refusal is offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -33293,10 +33020,11 @@
           },
           "parameters": {
             "outputPath": {
-              "exampleValue": "C:\\Examples\\generated\\result.xml"
+              "exampleValue": "<new absolute path outside source folder using suggestedFileName GUID.zip>",
+              "requiresBinding": true
             },
             "expectedFingerprint": {
-              "exampleValue": "<fingerprint from ReadPlcBlockEditCapabilities>",
+              "exampleValue": "<packageFingerprint from this same inspect/build preview>",
               "requiresBinding": true
             }
           },
@@ -33310,7 +33038,7 @@
               }
             }
           },
-          "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
+          "validation": "WinCC Unified V17–V21 product package conventions; V17/V18 GUID ZIP installation under UserFiles\\CustomControls requires VM acceptance (NOT RUN). V16 remains uncertain and unregistered.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
           ]
@@ -35294,7 +35022,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "V14 SP1 supports systemBlockGroups; systemTypeGroups is unavailable with UNSUPPORTED_CAPABILITY evidence, never an empty success. Nonempty unitName is refused before native calls below V16 (safety below V18)."
         },
         "CreatePlcInstanceDb": {
           "arguments": {
@@ -39050,6 +38779,336 @@
           },
           "operations": {},
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN."
+        },
+        "ValidatePlcDocumentSchemas": {
+          "arguments": {
+            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "schemaDirectory": "<absolute PublicAPI Schemas folder for the selected TIA release>"
+          },
+          "parameters": {
+            "schemaDirectory": {
+              "meaning": "Use this exact release's installed PublicAPI Schemas folder (V14 SP1 through V21); no download or neighboring release substitution.",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Validates Sections, FlgNet, StructuredText (SCL), StatementList (STL), and Graph against exact local fragment schemas. V14 SP1 Interface/v2 is supported; unsuffixed network schemas remain skipped (fragmentSchemasPassed=false). Whole Document and native import are not validated."
+        },
+        "BuildClassicHmiScreen": {
+          "arguments": {
+            "design": {
+              "screen": {
+                "name": "Overview",
+                "width": 800,
+                "height": 480
+              },
+              "items": [
+                {
+                  "type": "Text",
+                  "name": "StatusText",
+                  "left": 20,
+                  "top": 20,
+                  "width": 160,
+                  "height": 40,
+                  "text": "Ready"
+                }
+              ]
+            }
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Output is stamped V18. V18/V19 require TP700 Comfort 800x480 VM import acceptance (NOT RUN); V20/V21 keep the existing builder. Match the actual panel dimensions."
+        },
+        "RunHmiTemplatePlcSyncPrecheckSuite": {
+          "arguments": {
+            "templateDirectory": "C:\\Examples\\templates",
+            "plcXmlPath": "C:\\Examples\\snapshot",
+            "reportDirectory": "C:\\Examples\\reports"
+          },
+          "parameters": {
+            "mappingFilePath": {
+              "exampleValue": "<mappingFilePath from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "V19–V21 Unified template/PLC offline precheck; native application remains separate and NOT RUN."
+        },
+        "BuildPlcLadFcBlock": {
+          "arguments": {
+            "outputReleaseKey": "21",
+            "ladFcBlock": {
+              "blockName": "FC_Lad",
+              "blockNumber": 12,
+              "networks": [
+                {
+                  "call": {
+                    "callName": "FC_Ready",
+                    "parameters": [
+                      {
+                        "name": "Ready",
+                        "section": "Output",
+                        "dataType": "Bool",
+                        "symbolPath": [
+                          "DB_Status",
+                          "Ready"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "parameters": {
+            "ladFcBlock": {
+              "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
+            },
+            "outputReleaseKey": {
+              "exampleValue": "21",
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+            }
+          },
+          "operations": {},
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "executionTest": "offline-in-memory",
+          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
+            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+          ]
+        },
+        "BuildPlcFcBlock": {
+          "arguments": {
+            "outputReleaseKey": "21",
+            "fcBlock": {
+              "blockName": "FC_Ready",
+              "blockNumber": 10,
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "Ready",
+                  "datatype": "Bool"
+                }
+              ],
+              "structuredText": {
+                "operations": [
+                  {
+                    "op": "assign",
+                    "target": "#Ready",
+                    "literalValue": "TRUE"
+                  }
+                ]
+              }
+            }
+          },
+          "parameters": {
+            "fcBlock": {
+              "meaning": "Typed fcBlock value with exact camelCase fields; see inputSchema."
+            },
+            "outputReleaseKey": {
+              "exampleValue": "21",
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+            }
+          },
+          "operations": {},
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "executionTest": "offline-in-memory",
+          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
+            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+          ]
+        },
+        "BuildPlcFbBlock": {
+          "arguments": {
+            "outputReleaseKey": "21",
+            "fbBlock": {
+              "blockName": "FB_Ready",
+              "blockNumber": 11,
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "Ready",
+                  "datatype": "Bool"
+                }
+              ],
+              "structuredText": {
+                "operations": [
+                  {
+                    "op": "assign",
+                    "target": "#Ready",
+                    "literalValue": "TRUE"
+                  }
+                ]
+              }
+            }
+          },
+          "parameters": {
+            "fbBlock": {
+              "meaning": "Typed fbBlock value with exact camelCase fields; see inputSchema."
+            },
+            "outputReleaseKey": {
+              "exampleValue": "21",
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+            }
+          },
+          "operations": {},
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "executionTest": "offline-in-memory",
+          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
+            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+          ]
+        },
+        "BuildFlgNetCall": {
+          "arguments": {
+            "outputReleaseKey": "21",
+            "flgNet": {
+              "callName": "FC_Ready",
+              "parameters": [
+                {
+                  "name": "Ready",
+                  "section": "Output",
+                  "dataType": "Bool",
+                  "symbolPath": [
+                    "DB_Status",
+                    "Ready"
+                  ]
+                }
+              ]
+            }
+          },
+          "parameters": {
+            "flgNet": {
+              "meaning": "Typed flgNet value with exact camelCase fields; see inputSchema."
+            },
+            "outputReleaseKey": {
+              "exampleValue": "21",
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+            }
+          },
+          "operations": {},
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "executionTest": "offline-in-memory",
+          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
+            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+          ]
+        },
+        "BuildStructuredText": {
+          "arguments": {
+            "outputReleaseKey": "21",
+            "structuredText": {
+              "operations": [
+                {
+                  "op": "assign",
+                  "target": "#Ready",
+                  "literalValue": "TRUE"
+                }
+              ]
+            }
+          },
+          "parameters": {
+            "structuredText": {
+              "meaning": "Typed structuredText value with exact camelCase fields; see inputSchema."
+            },
+            "outputReleaseKey": {
+              "exampleValue": "21",
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+            },
+            "innerOnly": {
+              "exampleValue": false,
+              "meaning": "Return inner XML in StructuredText/v4 namespace context instead of the enclosing StructuredText element."
+            }
+          },
+          "operations": {},
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "executionTest": "offline-in-memory",
+          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
+            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+          ]
+        },
+        "BuildPlcTagTable": {
+          "arguments": {
+            "outputReleaseKey": "21",
+            "tagTable": {
+              "tableName": "ExampleTags",
+              "tags": [
+                {
+                  "name": "Ready",
+                  "dataTypeName": "Bool",
+                  "logicalAddress": "%M0.0"
+                }
+              ]
+            }
+          },
+          "parameters": {
+            "tagTable": {
+              "meaning": "Typed tagTable value with exact camelCase fields; see inputSchema."
+            },
+            "outputReleaseKey": {
+              "exampleValue": "21",
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+            }
+          },
+          "operations": {},
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "executionTest": "offline-in-memory",
+          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Candidate output only: inspect data.outputReleaseKey and data.xml; data.schemaValidated/importValidated remain false. CANDIDATE_ONLY does not certify native import or program semantics.",
+            "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
+            "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
+          ]
         }
       },
       "full-engine": {
@@ -39109,7 +39168,7 @@
             }
           },
           "operations": {},
-          "validation": "Real-machine verified V19 (2026-10-07): exact 6ES7 513-1AM03-0AB0/V3.1 preview, apply (created-verified) and GetProjectTree readback with approval disabled. V14 SP1–V18 capability absent. P6-70 invalid catalog pair and duplicate/stale-plan refusals are offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "validation": "Real-machine verified V19 (2026-10-07): exact 6ES7 513-1AM03-0AB0/V3.1 preview, apply (created-verified) and GetProjectTree readback with approval disabled. V14 SP1–V17 API absent. V18 enabled by the official API re-check; native acceptance NOT RUN. P6-70 invalid catalog pair and duplicate/stale-plan refusals are offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -41963,7 +42022,7 @@
             }
           },
           "operations": {},
-          "validation": "Real-machine verified V16–V19 (2026-10-07): existing compiled watch table exported; V16 fixed PLC alias/forward-slash support verified. V14 SP1/V15.1 capability is absent. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "validation": "Real-machine verified V16–V19 (2026-10-07): existing compiled watch table exported; V16 fixed PLC alias/forward-slash support verified. V14 SP1 API absent. V15.1 preview/apply enabled by the official export API re-check; native acceptance NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
           "execution": {
             "arguments": {
               "dryRun": false,
@@ -49904,10 +49963,11 @@
           },
           "parameters": {
             "outputPath": {
-              "exampleValue": "C:\\Examples\\generated\\result.xml"
+              "exampleValue": "<new absolute path outside source folder using suggestedFileName GUID.zip>",
+              "requiresBinding": true
             },
             "expectedFingerprint": {
-              "exampleValue": "<fingerprint from ReadPlcBlockEditCapabilities>",
+              "exampleValue": "<packageFingerprint from this same inspect/build preview>",
               "requiresBinding": true
             }
           },
@@ -49921,7 +49981,7 @@
               }
             }
           },
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "WinCC Unified V17–V21 product package conventions; V17/V18 GUID ZIP installation under UserFiles\\CustomControls requires VM acceptance (NOT RUN). V16 remains uncertain and unregistered."
         },
         "ManageUnifiedDynamization": {
           "arguments": {
@@ -52444,7 +52504,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "V19–V21 Unified template/PLC offline precheck; native application remains separate and NOT RUN."
         },
         "RunOfflineReleaseValidationSuite": {
           "arguments": {
@@ -52746,7 +52807,7 @@
             }
           },
           "operations": {},
-          "validation": "Real-machine verified V19 (2026-10-07): keyword=1513 returned 50 catalog rows. V14 SP1–V18 capability absent. P6-70 typed unbound-session refusal is offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "validation": "Real-machine verified V19 (2026-10-07): keyword=1513 returned 50 catalog rows. V14 SP1–V17 API absent. V18 enabled by the official API re-check; native acceptance NOT RUN. P6-70 typed unbound-session refusal is offline-fixture verified; native fix retest NOT RUN. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -53830,7 +53891,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "V14 SP1 supports systemBlockGroups; systemTypeGroups is unavailable with UNSUPPORTED_CAPABILITY evidence, never an empty success. Nonempty unitName is refused before native calls below V16 (safety below V18)."
         },
         "SaveExportContent": {
           "arguments": {
@@ -53876,7 +53938,7 @@
           "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Default screen engineering format is V18; this builder does not infer the running engine version. Inspect output and validate against a native target-version export."
+          "note": "Output is stamped V18. V18/V19 require TP700 Comfort 800x480 VM import acceptance (NOT RUN); V20/V21 keep the existing builder. Match the actual panel dimensions."
         },
         "BuildClassicHmiTagTable": {
           "arguments": {
@@ -54494,11 +54556,17 @@
         "ValidatePlcDocumentSchemas": {
           "arguments": {
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "schemaDirectory": "C:\\Siemens\\PublicAPI\\V{major}\\Schemas"
+            "schemaDirectory": "<absolute PublicAPI Schemas folder for the selected TIA release>"
           },
-          "parameters": {},
+          "parameters": {
+            "schemaDirectory": {
+              "meaning": "Use this exact release's installed PublicAPI Schemas folder (V14 SP1 through V21); no download or neighboring release substitution.",
+              "requiresBinding": true
+            }
+          },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Validates Sections, FlgNet, StructuredText (SCL), StatementList (STL), and Graph against exact local fragment schemas. V14 SP1 Interface/v2 is supported; unsuffixed network schemas remain skipped (fragmentSchemasPassed=false). Whole Document and native import are not validated."
         },
         "GetUnifiedScreenBranch": {
           "arguments": {

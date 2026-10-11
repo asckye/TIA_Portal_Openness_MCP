@@ -12,6 +12,7 @@ internal static class ApiMetadataTests
             string directory=key=="14sp1" ? "TIA_V14SP1_PublicAPI/V14 SP1" : $"TIA_V{key}_PublicAPI/V{key}"+(key=="21"?"/net48":"");
             var core=Path.Combine(apiRoot,directory,key=="21"?"Siemens.Engineering.Base.dll":"Siemens.Engineering.dll");
             CheckHardwareBranches(Path.Combine(apiRoot,directory),key,check);
+            CheckSchemaFragments(Path.Combine(apiRoot,directory),key,check);
             CheckMembers(core,"Siemens.Engineering.Online.OnlineProvider",new[]{"State"},true,check);
             if(key!="14sp1") CheckMembers(core,"Siemens.Engineering.Online.RHOnlineProvider",new[]{"PrimaryState","BackupState"},true,check);
             var identity=AssemblyName.GetAssemblyName(core);
@@ -119,6 +120,9 @@ internal static class ApiMetadataTests
             using var stream=File.OpenRead(facade);
             using var pe=new PEReader(stream);
             var md=pe.GetMetadataReader();
+            var references=md.MemberReferences.Select(md.GetMemberReference).Select(m=>md.GetString(m.Name)).ToHashSet();
+            check(references.Contains("get_SystemBlockGroups"),key+" system block groups have a compiled native path");
+            check(references.Contains("get_SystemTypeGroups")== (key!="14sp1"),key+" system type groups are compiled only where the API exists");
             check(md.GetString(md.GetAssemblyDefinition().Name)=="TiaMcp.Adapter."+key,"Compiled adapter identity "+key);
             foreach(var name in new[]{"TiaVersionCatalog","TiaVersionDescriptor"})
             {
@@ -175,6 +179,41 @@ internal static class ApiMetadataTests
                 check(names.SequenceEqual(pair.Value),"Real lifecycle parameter contract "+key+"/"+pair.Key);
             }
         }
+    }
+    private static void CheckSchemaFragments(string apiDirectory,string key,Action<bool,string> check)
+    {
+        var schemas=Path.Combine(key=="21"?Path.GetDirectoryName(apiDirectory)!:apiDirectory,"Schemas");
+        var scratch=Path.Combine(Path.GetTempPath(),"p8-official-fragments-"+Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(scratch);
+        try
+        {
+            var source=Path.Combine(scratch,"fragment.xml");
+            foreach(var kind in new[]{("SW.InterfaceSections", "Interface", "Sections", ""),
+                ("SW.PlcBlocks.LADFBD", "FlgNet", "FlgNet", "<Parts/>"),
+                ("SW.PlcBlocks.SCL", "StructuredText", "StructuredText", ""),
+                ("SW.PlcBlocks.STL", "STL", "StatementList", ""),
+                ("SW.PlcBlocks.Graph", "Graph", "Graph", "")})
+            {
+                var files=Directory.GetFiles(schemas,kind.Item1+"*.xsd");
+                if(files.Length==0) files=new[]{Path.Combine(schemas,kind.Item1+".xsd")};
+                foreach(var schema in files)
+                {
+                    var match=System.Text.RegularExpressions.Regex.Match(Path.GetFileName(schema),@"_v([0-9]+)\.xsd$");
+                    var version=match.Success?match.Groups[1].Value:"1";
+                    var ns="http://www.siemens.com/automation/Openness/SW/"+(kind.Item2=="Interface"?"Interface/":"NetworkSource/"+kind.Item2+"/")+"v"+version;
+                    File.WriteAllText(source,"<Document><"+kind.Item3+" xmlns='"+ns+"'>"+kind.Item4+"</"+kind.Item3+"></Document>");
+                    var result=global::TiaMcpServer.ModelContextProtocol.PlcSchemaValidation.Validate(source,schemas);
+                    bool supported=key!="14sp1" || kind.Item2=="Interface";
+                    check(result["validatedFragments"]!.AsArray().Count==(supported?1:0),key+" exact official fragment match "+Path.GetFileName(schema));
+                    check(result["skippedFragments"]!.AsArray().Count==(supported?0:1),key+" missing/unsuffixed schemas remain explicit skips "+kind.Item3);
+                    check((bool)result["fragmentSchemasPassed"]! == (supported && kind.Item2!="Graph"),key+" official XSD validates minimal fragments and rejects incomplete Graph "+kind.Item3);
+                    File.WriteAllText(source,"<Document><"+kind.Item3+" xmlns='"+ns+"'><Unexpected/></"+kind.Item3+"></Document>");
+                    var invalid=global::TiaMcpServer.ModelContextProtocol.PlcSchemaValidation.Validate(source,schemas);
+                    check(!(bool)invalid["fragmentSchemasPassed"]! && (!supported || (int)invalid["errorCount"]!>0),key+" official XSD rejects malformed "+kind.Item3);
+                }
+            }
+        }
+        finally { Directory.Delete(scratch,true); }
     }
     private static void CheckMembers(string path,string fullName,string[] members,bool properties,Action<bool,string> check)
     {

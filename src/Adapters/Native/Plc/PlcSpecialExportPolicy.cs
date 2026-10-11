@@ -8,7 +8,7 @@ namespace TiaMcp.Adapters
 {
     internal static class PlcSpecialExportPolicy
     {
-        internal static bool Documented(string release,string kind) => release=="16" || release=="17" || release=="18" || release=="19" || release=="20" || (release=="21" && kind=="watch-table");
+        internal static bool Documented(string release,string kind) => release=="16" || release=="17" || release=="18" || release=="19" || release=="20" || ((release=="15.1" || release=="21") && kind=="watch-table");
         internal static string Hash(params string[] fields)
         {
             // Length-prefix every field, avoiding delimiter ambiguity in project/object names.

@@ -266,7 +266,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult CallToolCore(string name, ToolArguments? arguments, Func<CallToolResult?>? beforeDispatch = null)
         {
 #if TIA_ENGINE_HOST
-            if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+            if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
                 || !TiaMcp.Versioning.TiaVersionCatalog.Get(ReleaseKey).IsFullEngine))
             {

@@ -30,7 +30,9 @@ namespace TiaMcp.Adapters.Contracts
                 return "Library comparison requires V18 or later.";
             if (operation == "ImportLibraryTypeDocuments" && !EngineeringServicesCapabilities.AtLeast(release, "20"))
                 return "Library document import requires V20 or later.";
-            if ((operation == "ImportMasterCopyFromGlobalLibrary" || operation == "CreateLibraryMasterCopy" && sourceKind == "screen")
+            if (operation == "ImportMasterCopyFromGlobalLibrary" && !EngineeringServicesCapabilities.AtLeast(release, "19"))
+                return "Unified HMI master-copy import requires V19 or later.";
+            if (operation == "CreateLibraryMasterCopy" && sourceKind == "screen"
                 && !EngineeringServicesCapabilities.AtLeast(release, "16"))
                 return "Unified HMI library operations require V16 or later.";
             return null;

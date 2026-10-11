@@ -16,7 +16,7 @@ internal static class SpecialExportContract
         if(kind is not ("watch-table" or "technology-object") || Text("ExportOptions")!="None" ||
             release is not ("14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21") || (kind=="watch-table" && release=="14sp1")) throw new InvalidDataException("Invalid special export scope.");
         if(Text("Scope")!=(kind=="watch-table"?SupplementaryReadContract.WatchScope:release is "19" or "20" or "21"?SupplementaryReadContract.TechnologyScope:SupplementaryReadContract.TechnologyRootScope)) throw new InvalidDataException("Unexpected special export read scope.");
-        bool documented=release is "16" or "17" or "18" or "19" or "20" || (release=="21" && kind=="watch-table");
+        bool documented=release is "16" or "17" or "18" or "19" or "20" || ((release=="15.1" || release=="21") && kind=="watch-table");
         if(evidence!="static-sdk-signature-verified" || Text("SemanticsEvidence")!=(documented?"official-manual-source-candidate":"unverified") ||
             (dryRun ? documented ? status is not ("planned" or "inconsistent") : status!="semantics-unverified" : !documented || status is not ("exported" or "failed")) ||
             Flag("RequiresSessionReset")!=(status=="failed")) throw new InvalidDataException("Special export status/evidence conflict.");

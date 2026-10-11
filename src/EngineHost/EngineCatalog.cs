@@ -66,7 +66,7 @@ namespace TiaMcp.FoundationHost
             descriptors = descriptors.OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
             IncludingUnavailable = descriptors;
             All = root["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => descriptors[(string)t!["name"]!], StringComparer.OrdinalIgnoreCase);
-            All = All.Concat(descriptors.Where(p => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(p.Key)
+            All = All.Concat(descriptors.Where(p => TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(p.Key)
                     && TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, p.Key)))
                 .OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
             Lite = root["liteTools"]!.AsArray().Select(n => descriptors[(string)n!]).ToArray();

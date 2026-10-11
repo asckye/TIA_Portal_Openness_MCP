@@ -3366,6 +3366,12 @@
         "entries": []
       },
       {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": []
+      },
+      {
         "family": "F01",
         "state": "current",
         "l5": "NOT RUN",
@@ -3416,6 +3422,7 @@
           "RenderPlcBlockDocument",
           "RenderPlcVisualDiff",
           "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
           "WritePlcSclSourceFile"
         ]
       },
@@ -3530,6 +3537,7 @@
           "DeletePlcBlock",
           "DeletePlcTagTable",
           "DeletePlcType",
+          "ListPlcSystemGroups",
           "ManagePlcUserGroup",
           "MovePlcBlockToGroup"
         ]
@@ -3770,6 +3778,14 @@
         "entries": []
       },
       {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTable"
+        ]
+      },
+      {
         "family": "F01",
         "state": "current",
         "l5": "NOT RUN",
@@ -3820,6 +3836,7 @@
           "RenderPlcBlockDocument",
           "RenderPlcVisualDiff",
           "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
           "WritePlcSclSourceFile"
         ]
       },
@@ -4197,6 +4214,14 @@
         "entries": []
       },
       {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTable"
+        ]
+      },
+      {
         "family": "F01",
         "state": "current",
         "l5": "NOT RUN",
@@ -4247,6 +4272,7 @@
           "RenderPlcBlockDocument",
           "RenderPlcVisualDiff",
           "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
           "WritePlcSclSourceFile"
         ]
       },
@@ -4284,7 +4310,6 @@
           "CreateLibraryMasterCopy",
           "GetLibraryOverview",
           "GetLibraryType",
-          "ImportMasterCopyFromGlobalLibrary",
           "ManageGlobalLibrary",
           "ManageLibraryFolder",
           "ManageLibraryMasterCopy",
@@ -4639,6 +4664,14 @@
         "entries": []
       },
       {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTable"
+        ]
+      },
+      {
         "family": "F01",
         "state": "current",
         "l5": "NOT RUN",
@@ -4689,6 +4722,7 @@
           "RenderPlcBlockDocument",
           "RenderPlcVisualDiff",
           "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
           "WritePlcSclSourceFile"
         ]
       },
@@ -4699,6 +4733,7 @@
         "entries": [
           "AnalyzeGlobalLibraryPackage",
           "AnalyzeHmiTemplateReference",
+          "ManageUnifiedCwcPackage",
           "PlanGlobalLibraryTemplateReuse"
         ]
       },
@@ -4726,7 +4761,6 @@
           "CreateLibraryMasterCopy",
           "GetLibraryOverview",
           "GetLibraryType",
-          "ImportMasterCopyFromGlobalLibrary",
           "ManageGlobalLibrary",
           "ManageLibraryFolder",
           "ManageLibraryMasterCopy",
@@ -5010,7 +5044,8 @@
         "entries": [
           "CreateDevice",
           "CreateGsdDevice",
-          "CreateHardwareCatalogDevice"
+          "CreateHardwareCatalogDevice",
+          "CreateHardwareDevice"
         ]
       },
       {
@@ -5089,6 +5124,16 @@
         "entries": []
       },
       {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateHardwareDevice",
+          "ExportPlcWatchTable",
+          "SearchHardwareCatalog"
+        ]
+      },
+      {
         "family": "F01",
         "state": "current",
         "l5": "NOT RUN",
@@ -5139,6 +5184,7 @@
           "RenderPlcBlockDocument",
           "RenderPlcVisualDiff",
           "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
           "WritePlcSclSourceFile"
         ]
       },
@@ -5149,6 +5195,8 @@
         "entries": [
           "AnalyzeGlobalLibraryPackage",
           "AnalyzeHmiTemplateReference",
+          "BuildClassicHmiScreen",
+          "ManageUnifiedCwcPackage",
           "PlanGlobalLibraryTemplateReuse"
         ]
       },
@@ -5178,7 +5226,6 @@
           "CreateLibraryMasterCopy",
           "GetLibraryOverview",
           "GetLibraryType",
-          "ImportMasterCopyFromGlobalLibrary",
           "ManageGlobalLibrary",
           "ManageLibraryFolder",
           "ManageLibraryMasterCopy",
@@ -5547,6 +5594,16 @@
         "entries": []
       },
       {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateHardwareDevice",
+          "ExportPlcWatchTable",
+          "SearchHardwareCatalog"
+        ]
+      },
+      {
         "family": "F01",
         "state": "current",
         "l5": "NOT RUN",
@@ -5597,6 +5654,7 @@
           "RenderPlcBlockDocument",
           "RenderPlcVisualDiff",
           "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
           "WritePlcSclSourceFile"
         ]
       },
@@ -5608,6 +5666,7 @@
           "AnalyzeGlobalLibraryPackage",
           "AnalyzeHmiTemplateReference",
           "AnalyzeUnifiedHmiTemplateLayout",
+          "BuildClassicHmiScreen",
           "BuildUnifiedHmiButtonActionScript",
           "BuildUnifiedHmiLayoutDesign",
           "BuildUnifiedHmiTemplateApplyDesign",
@@ -5615,7 +5674,8 @@
           "BuildUnifiedHmiThemeDesign",
           "ManageUnifiedCwcPackage",
           "PlanGlobalLibraryTemplateReuse",
-          "RunHmiActionScriptRecipeSafetySelfTest"
+          "RunHmiActionScriptRecipeSafetySelfTest",
+          "RunHmiTemplatePlcSyncPrecheckSuite"
         ]
       },
       {

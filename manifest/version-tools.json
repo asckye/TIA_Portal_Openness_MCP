@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 247,
+      "toolCount": 243,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -18,19 +18,13 @@
         "AuditEngineeringExports",
         "BuildAndImportPlcArtifact",
         "BuildDeviceAmlDocument",
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
-        "BuildStructuredText",
         "CallTool",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
@@ -170,6 +164,7 @@
         "ListPlcBlocks",
         "ListPlcExternalSources",
         "ListPlcSystemConstants",
+        "ListPlcSystemGroups",
         "ListPlcTagTables",
         "ListPlcTags",
         "ListPlcTypes",
@@ -252,13 +247,14 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 269,
+      "toolCount": 265,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -271,19 +267,13 @@
         "AuditEngineeringExports",
         "BuildAndImportPlcArtifact",
         "BuildDeviceAmlDocument",
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
-        "BuildStructuredText",
         "CallTool",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
@@ -340,6 +330,7 @@
         "ExportPlcTagTable",
         "ExportPlcType",
         "ExportPlcTypes",
+        "ExportPlcWatchTable",
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
         "ExportTechnologyObjectsToDirectory",
@@ -527,13 +518,14 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 285,
+      "toolCount": 279,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -546,19 +538,13 @@
         "AuditEngineeringExports",
         "BuildAndImportPlcArtifact",
         "BuildDeviceAmlDocument",
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
-        "BuildStructuredText",
         "CallTool",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
@@ -685,7 +671,6 @@
         "ImportHmiScreensFromDirectory",
         "ImportHmiTagTable",
         "ImportHmiTagTablesFromDirectory",
-        "ImportMasterCopyFromGlobalLibrary",
         "ImportOpcUaInterface",
         "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
@@ -818,13 +803,14 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 292,
+      "toolCount": 287,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -837,19 +823,13 @@
         "AuditEngineeringExports",
         "BuildAndImportPlcArtifact",
         "BuildDeviceAmlDocument",
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
-        "BuildStructuredText",
         "CallTool",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
@@ -981,7 +961,6 @@
         "ImportHmiScreensFromDirectory",
         "ImportHmiTagTable",
         "ImportHmiTagTablesFromDirectory",
-        "ImportMasterCopyFromGlobalLibrary",
         "ImportOpcUaInterface",
         "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
@@ -1062,6 +1041,7 @@
         "ManageStandardPackage",
         "ManageTechnologyObject",
         "ManageTransferArea",
+        "ManageUnifiedCwcPackage",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -1116,13 +1096,14 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 299,
+      "toolCount": 297,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1134,20 +1115,15 @@
         "AttachOpenProject",
         "AuditEngineeringExports",
         "BuildAndImportPlcArtifact",
+        "BuildClassicHmiScreen",
         "BuildDeviceAmlDocument",
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
-        "BuildStructuredText",
         "CallTool",
         "CheckLibraryUpdates",
         "CheckProductUpdate",
@@ -1168,6 +1144,7 @@
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
+        "CreateHardwareDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
         "CreatePlcInstanceDb",
@@ -1283,7 +1260,6 @@
         "ImportHmiScreensFromDirectory",
         "ImportHmiTagTable",
         "ImportHmiTagTablesFromDirectory",
-        "ImportMasterCopyFromGlobalLibrary",
         "ImportOpcUaInterface",
         "ImportPlcAlarmInstanceTexts",
         "ImportPlcBlock",
@@ -1366,6 +1342,7 @@
         "ManageStandardPackage",
         "ManageTechnologyObject",
         "ManageTransferArea",
+        "ManageUnifiedCwcPackage",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -1400,6 +1377,7 @@
         "SaveExportContent",
         "SaveProject",
         "ScanPlcSourceAnnotations",
+        "SearchHardwareCatalog",
         "SearchInstalledGsdDevices",
         "SeedProjectFromReference",
         "SetDeviceAddress",
@@ -1421,13 +1399,14 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 309,
+      "toolCount": 306,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1440,20 +1419,15 @@
         "AttachOpenProject",
         "AuditEngineeringExports",
         "BuildAndImportPlcArtifact",
+        "BuildClassicHmiScreen",
         "BuildDeviceAmlDocument",
-        "BuildFlgNetCall",
-        "BuildPlcFbBlock",
-        "BuildPlcFcBlock",
         "BuildPlcGlobalDb",
-        "BuildPlcLadFcBlock",
         "BuildPlcSymbolManifestFromPath",
-        "BuildPlcTagTable",
         "BuildPlcUdt",
         "BuildReleaseDiagnosticReport",
         "BuildReleaseHandoffArtifacts",
         "BuildReleaseManifest",
         "BuildReleaseRunbook",
-        "BuildStructuredText",
         "BuildUnifiedHmiButtonActionScript",
         "BuildUnifiedHmiLayoutDesign",
         "BuildUnifiedHmiTemplateApplyDesign",
@@ -1707,6 +1681,7 @@
         "RestartOpennessWorker",
         "RunCapabilitySelfTest",
         "RunHmiActionScriptRecipeSafetySelfTest",
+        "RunHmiTemplatePlcSyncPrecheckSuite",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
         "RunReadOnlyToolBatch",
@@ -1736,6 +1711,7 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
       ]
@@ -2774,8 +2750,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 247,
-    "shared-subset": 257,
+    "all-releases": 243,
+    "shared-subset": 261,
     "release-only": 12
   },
   "tools": [
@@ -3005,6 +2981,8 @@
     {
       "name": "BuildClassicHmiScreen",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -3038,16 +3016,10 @@
     {
       "name": "BuildFlgNetCall",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
-        "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3062,31 +3034,19 @@
     {
       "name": "BuildPlcFbBlock",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
-        "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BuildPlcFcBlock",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
-        "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3107,16 +3067,10 @@
     {
       "name": "BuildPlcLadFcBlock",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
-        "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3137,16 +3091,10 @@
     {
       "name": "BuildPlcTagTable",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
-        "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3236,16 +3184,10 @@
     {
       "name": "BuildStructuredText",
       "releases": [
-        "14sp1",
-        "15.1",
-        "16",
-        "17",
-        "18",
-        "19",
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3643,6 +3585,7 @@
     {
       "name": "CreateHardwareDevice",
       "releases": [
+        "18",
         "19",
         "20",
         "21"
@@ -4556,6 +4499,7 @@
     {
       "name": "ExportPlcWatchTable",
       "releases": [
+        "15.1",
         "16",
         "17",
         "18",
@@ -5967,9 +5911,6 @@
     {
       "name": "ImportMasterCopyFromGlobalLibrary",
       "releases": [
-        "16",
-        "17",
-        "18",
         "19",
         "20",
         "21"
@@ -6614,6 +6555,7 @@
     {
       "name": "ListPlcSystemGroups",
       "releases": [
+        "14sp1",
         "15.1",
         "16",
         "17",
@@ -6622,7 +6564,7 @@
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -7810,6 +7752,8 @@
     {
       "name": "ManageUnifiedCwcPackage",
       "releases": [
+        "17",
+        "18",
         "19",
         "20",
         "21"
@@ -8395,6 +8339,7 @@
     {
       "name": "RunHmiTemplatePlcSyncPrecheckSuite",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8563,6 +8508,7 @@
     {
       "name": "SearchHardwareCatalog",
       "releases": [
+        "18",
         "19",
         "20",
         "21"
@@ -9031,10 +8977,16 @@
     {
       "name": "ValidatePlcDocumentSchemas",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

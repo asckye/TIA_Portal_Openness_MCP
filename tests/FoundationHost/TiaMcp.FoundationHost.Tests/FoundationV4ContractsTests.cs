@@ -25,8 +25,8 @@ public sealed class FoundationV4ContractsTests
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
 
     [Theory]
-    [InlineData("14sp1", 247)] [InlineData("15.1", 269)] [InlineData("16", 285)]
-    [InlineData("17", 292)] [InlineData("18", 299)] [InlineData("19", 309)]
+    [InlineData("14sp1", 243)] [InlineData("15.1", 265)] [InlineData("16", 279)]
+    [InlineData("17", 287)] [InlineData("18", 297)] [InlineData("19", 306)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
@@ -37,7 +37,8 @@ public sealed class FoundationV4ContractsTests
         Assert.Contains(roster, t => t.ProtocolTool.Name == "CallTool");
         foreach (var tool in roster)
         {
-            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.ProtocolTool.Name)) Assert.Null(tool.ProtocolTool.OutputSchema);
+            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.ProtocolTool.Name)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool.ProtocolTool.Name).Name != "F00") Assert.Null(tool.ProtocolTool.OutputSchema);
             else Assert.NotNull(tool.ProtocolTool.OutputSchema);
             Assert.DoesNotContain(tool.ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject(), p => p.Name.EndsWith("Json"));
             var result = Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"__invalid\":true}")));
