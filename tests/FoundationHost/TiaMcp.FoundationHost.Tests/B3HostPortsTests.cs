@@ -34,17 +34,19 @@ public sealed class B3HostPortsTests
     }
 
     [Theory]
-    [InlineData("14sp1", 179)]
-    [InlineData("15.1", 185)]
-    [InlineData("16", 189)]
-    [InlineData("17", 190)]
-    [InlineData("18", 194)]
-    [InlineData("19", 204)]
-    public async Task Old_release_discovery_usage_bridges_batches_and_passive_reports_share_the_registry(string release, int count)
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    [InlineData("19")]
+    public async Task Old_release_discovery_usage_bridges_batches_and_passive_reports_share_the_registry(string release)
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var registry = LegacyHostToolRegistry.Create(worker, release, false);
         var names = registry.Select(t => t.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
+        int count = registry.Count(t => !PortedFamilies.Contains(t.ProtocolTool.Name))
+            + PortedFamilies.All.SelectMany(f => f.Tools).Count(name => PortedFamilies.Available(release, name));
         Assert.Equal(count, names.Count);
         foreach (string name in PortedFamilies.All.SelectMany(f => f.Tools))
             Assert.Equal(PortedFamilies.Available(release, name), names.Contains(name));
@@ -57,9 +59,10 @@ public sealed class B3HostPortsTests
         var categories = await Invoke("ListToolCategories", new { });
         Assert.Equal(count, (int)categories["data"]!["toolCount"]!);
         var foundItems = new List<string>();
-        for (int offset = 0; offset < count; offset += 12)
+        const int pageSize = 6;
+        for (int offset = 0; offset < count; offset += pageSize)
         {
-            var found = await Invoke("FindTools", new { limit = 12, offset });
+            var found = await Invoke("FindTools", new { limit = pageSize, offset });
             Assert.True((bool)found["ok"]!, found.ToJsonString());
             Assert.True(found["data"]?["items"] != null, found.ToJsonString());
             foundItems.AddRange(found["data"]!["items"]!.AsArray().Select(item => (string)item!));

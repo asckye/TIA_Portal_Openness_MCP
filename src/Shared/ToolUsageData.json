@@ -36244,6 +36244,721 @@
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
           ]
+        },
+        "ListPlcSoftwareUnits": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {
+            "unitName": {
+              "exampleValue": "Unit_1"
+            },
+            "unitKind": {
+              "exampleValue": "all"
+            },
+            "includeContents": {
+              "exampleValue": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 50
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ManagePlcSoftwareUnit": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "action": "list",
+            "dryRun": true
+          },
+          "parameters": {
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "relatedUnit": {
+              "exampleValue": "<relatedUnit from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "relationType": {
+              "exampleValue": "SoftwareUnit"
+            },
+            "unitKind": {
+              "exampleValue": "unit"
+            },
+            "libraryName": {
+              "exampleValue": ""
+            },
+            "masterCopyPath": {
+              "exampleValue": "Examples/Example_1"
+            },
+            "copyMode": {
+              "exampleValue": "ThrowIfExists"
+            },
+            "properties": {
+              "exampleValue": {
+                "Author": "Engineer"
+              },
+              "requiresBinding": true
+            },
+            "comments": {
+              "exampleValue": {
+                "en-US": "Unit comment"
+              },
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "list": {
+              "arguments": {}
+            },
+            "read": {
+              "arguments": {
+                "action": "read"
+              }
+            },
+            "create": {
+              "arguments": {
+                "action": "create",
+                "name": "Example_1"
+              }
+            },
+            "createFromMasterCopy": {
+              "arguments": {
+                "action": "createFromMasterCopy",
+                "masterCopyPath": "Examples/Example_1",
+                "libraryName": ""
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete",
+                "name": "Example_1"
+              }
+            },
+            "update": {
+              "arguments": {
+                "action": "update",
+                "name": "Example_1",
+                "properties": {
+                  "Author": "Engineer"
+                }
+              }
+            },
+            "createRelation": {
+              "arguments": {
+                "action": "createRelation",
+                "name": "Example_1",
+                "relatedUnit": "<relatedUnit from this operation's target or user input>",
+                "relationType": "SoftwareUnit"
+              }
+            },
+            "deleteRelation": {
+              "arguments": {
+                "action": "deleteRelation",
+                "name": "Example_1",
+                "relatedUnit": "<relatedUnit from this operation's target or user input>",
+                "relationType": "SoftwareUnit"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "SetPlcUnitObjectAccess": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "unitName": "Unit_1",
+            "objectKind": "block",
+            "objectPath": "FC_Ready",
+            "access": "Published",
+            "dryRun": true
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetPlcChecksums": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcObjectFingerprints": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectKind": "block",
+            "objectPath": "Main"
+          },
+          "parameters": {
+            "unitName": {
+              "exampleValue": "Unit_1"
+            },
+            "unitKind": {
+              "exampleValue": "unit"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ExportPlcWatchTablesToDirectory": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "dir": "C:\\Examples\\exports"
+          },
+          "parameters": {
+            "regexName": {
+              "exampleValue": "<regexName from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPlcWatchTableCurrentValuesReadOnly": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "watchTableName": "Watch_1"
+          },
+          "parameters": {
+            "maxEntries": {
+              "exampleValue": 50
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ImportPlcWatchTableOffline": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "filePath": "C:\\Examples\\exports\\Watch_1.xml",
+            "dryRun": true
+          },
+          "parameters": {
+            "groupPath": {
+              "exampleValue": "Examples"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ListPlcForceTables": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ManagePlcTableEntries": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tableKind": "watch",
+            "tablePath": "MCP_W/MCP_WT",
+            "action": "createComment",
+            "confirmDelete": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "entryIndex": {
+              "exampleValue": 0
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 200
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "createComment": {
+              "arguments": {
+                "action": "createComment"
+              }
+            },
+            "deleteEntry": {
+              "arguments": {
+                "action": "deleteEntry",
+                "entryIndex": 0
+              }
+            },
+            "deleteTable": {
+              "arguments": {
+                "action": "deleteTable"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. V15.1/V16 allow only createComment; typed entry reads/deletes require V17.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "MonitorPlcWatchTableS7": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "watchTableName": "Watch_1",
+            "ip": "192.0.2.10"
+          },
+          "parameters": {
+            "rack": {
+              "exampleValue": 0
+            },
+            "slot": {
+              "exampleValue": 1
+            },
+            "expectModuleContains": {
+              "exampleValue": "<expectModuleContains from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "PlanOnlineReadOnlyDataProvider": {
+          "arguments": {
+            "provider": "opcua",
+            "endpoint": "opc.tcp://192.0.2.10:4840",
+            "tagPaths": [
+              "DB_Status.Ready"
+            ]
+          },
+          "parameters": {
+            "options": {
+              "exampleValue": {
+                "pollMs": 1000,
+                "source": "watch-table-export"
+              }
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "PlanOnlineReadOnlyMonitoring": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tagPaths": [
+              "DB_Status.Ready"
+            ]
+          },
+          "parameters": {
+            "mode": {
+              "exampleValue": "current-values"
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ProbePlcMonitorOnlineCapabilities": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "SetPlcWatchTableModifyValue": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tableName": "MCP_W/MCP_WT",
+            "address": "%M0.0",
+            "modifyValue": "TRUE",
+            "trigger": "OnceOnlyAtStart"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "TraceTagCause": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tag": "DB_Status.Ready"
+          },
+          "parameters": {
+            "blockScope": {
+              "exampleValue": "<blockScope from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "TraceTagCauseLive": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tag": "DB_Status.Ready",
+            "ip": "192.0.2.10"
+          },
+          "parameters": {
+            "rack": {
+              "exampleValue": 0
+            },
+            "slot": {
+              "exampleValue": 1
+            },
+            "blockScope": {
+              "exampleValue": "<blockScope from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "expectModuleContains": {
+              "exampleValue": "<expectModuleContains from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ConfigureMotionHardwareConnection": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectPath": "Axis_1",
+            "interfaceKind": "actor",
+            "action": "read",
+            "dryRun": true
+          },
+          "parameters": {
+            "inputBitAddress": {
+              "exampleValue": 0
+            },
+            "outputBitAddress": {
+              "exampleValue": 0
+            },
+            "connectOption": {
+              "exampleValue": "Default"
+            },
+            "sensorIndex": {
+              "exampleValue": 0
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "connect": {
+              "arguments": {
+                "action": "connect"
+              }
+            },
+            "disconnect": {
+              "arguments": {
+                "action": "disconnect"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ExchangeMotionCamData": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectPath": "Cam_1",
+            "action": "export",
+            "filePath": "C:\\Examples\\exports\\Cam_1.txt",
+            "dryRun": true,
+            "format": "MCD",
+            "separator": "Tab"
+          },
+          "parameters": {
+            "format": {
+              "exampleValue": "MCD",
+              "meaning": "MCD | Scout | PointList for text export; exact enum casing from this SDK."
+            },
+            "separator": {
+              "exampleValue": "Tab",
+              "meaning": "Comma | Tab. Pass the enum name, not a literal comma/tab character."
+            },
+            "pointCount": {
+              "exampleValue": 0
+            }
+          },
+          "operations": {
+            "export": {
+              "arguments": {}
+            },
+            "import": {
+              "arguments": {
+                "action": "import"
+              }
+            },
+            "exportBinary": {
+              "arguments": {
+                "action": "exportBinary",
+                "filePath": "C:\\Examples\\exports\\Cam_1.bin"
+              }
+            },
+            "importBinary": {
+              "arguments": {
+                "action": "importBinary",
+                "filePath": "C:\\Examples\\exports\\Cam_1.bin"
+              }
+            },
+            "exportPoints": {
+              "arguments": {
+                "action": "exportPoints",
+                "filePath": "C:\\Examples\\exports\\CamPoints.txt",
+                "pointCount": 360
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ExportTechnologyObjectsToDirectory": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "exportDir": "C:\\Examples\\exports"
+          },
+          "parameters": {
+            "regexName": {
+              "exampleValue": "<regexName from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetMotionAxisConfiguration": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectPath": "Axis_1"
+          },
+          "parameters": {
+            "includeParameters": {
+              "exampleValue": false
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetTechnologyObjectTree": {
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "parameters": {
+            "groupPath": {
+              "exampleValue": "Examples"
+            },
+            "includeParameters": {
+              "exampleValue": false
+            },
+            "includeMotionView": {
+              "exampleValue": false
+            },
+            "maxDepth": {
+              "exampleValue": 4
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ImportTechnologyObject": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "importPath": "C:\\Examples\\exports\\Main.xml"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ImportTechnologyObjectsFromDirectory": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "folderPath": "",
+            "dir": "C:\\Examples\\exports"
+          },
+          "parameters": {
+            "regexName": {
+              "exampleValue": "<regexName from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "overwrite": {
+              "exampleValue": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageMotionAxis": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectPath": "Axis_1",
+            "action": "read",
+            "confirmDelete": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "aspect": {
+              "exampleValue": "<aspect from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "target": {
+              "exampleValue": {
+                "devicePath": [
+                  "PLC_1"
+                ],
+                "itemPath": [
+                  "CPU_1"
+                ]
+              },
+              "requiresBinding": true
+            },
+            "properties": {
+              "exampleValue": {
+                "Name": "Example_1"
+              },
+              "requiresBinding": true
+            },
+            "sensorIndex": {
+              "exampleValue": 0
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "addMasterValue": {
+              "arguments": {
+                "action": "addMasterValue",
+                "name": "MasterAxis",
+                "aspect": "synchronousSetPoint"
+              }
+            },
+            "removeMasterValue": {
+              "arguments": {
+                "action": "removeMasterValue",
+                "aspect": "synchronousSetPoint",
+                "name": "MasterAxis"
+              }
+            },
+            "createMapping": {
+              "arguments": {
+                "action": "createMapping",
+                "name": "ExampleMapping",
+                "aspect": "toMapping"
+              }
+            },
+            "updateMapping": {
+              "arguments": {
+                "action": "updateMapping",
+                "name": "ExampleMapping",
+                "aspect": "toMapping"
+              }
+            },
+            "deleteMapping": {
+              "arguments": {
+                "action": "deleteMapping",
+                "aspect": "toMapping"
+              }
+            },
+            "connect": {
+              "arguments": {
+                "action": "connect",
+                "name": "ExampleMapping",
+                "target": {
+                  "devicePath": [
+                    "PLC_1"
+                  ],
+                  "itemPath": [
+                    "CPU_1"
+                  ]
+                },
+                "aspect": "actor"
+              }
+            },
+            "disconnect": {
+              "arguments": {
+                "action": "disconnect",
+                "aspect": "actor"
+              }
+            },
+            "connectIdent": {
+              "arguments": {
+                "action": "connectIdent",
+                "name": "ExampleMapping",
+                "target": {
+                  "devicePath": [
+                    "PLC_1"
+                  ],
+                  "itemPath": [
+                    "CPU_1"
+                  ]
+                }
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageTechnologyObject": {
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "objectPath": "Axis_1",
+            "action": "read",
+            "dryRun": true
+          },
+          "parameters": {
+            "typeIdentifier": {
+              "exampleValue": "<exact TypeIdentifier from SearchHardwareCatalog>",
+              "requiresBinding": true
+            },
+            "version": {
+              "exampleValue": "<version from target discovery>",
+              "requiresBinding": true
+            },
+            "parameter": {
+              "exampleValue": "<exact parameter selected from drive metadata>",
+              "requiresBinding": true
+            },
+            "value": {
+              "exampleValue": true
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "create": {
+              "arguments": {
+                "action": "create"
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete"
+              }
+            },
+            "setParameter": {
+              "arguments": {
+                "action": "setParameter",
+                "parameter": "<exact parameter selected from drive metadata>",
+                "value": true
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         }
       },
       "full-engine": {
