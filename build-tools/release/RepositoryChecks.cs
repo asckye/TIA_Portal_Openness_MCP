@@ -16,6 +16,18 @@ internal static class RepositoryChecks
         return File.Exists(path) || Directory.Exists(path) ? null : "missing link: " + target;
     }
     private static bool Within(string root, string path) => path.Equals(Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase) || path.StartsWith(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+    private static IEnumerable<string> Documents(string root)
+    {
+        // Prune excluded build folders before traversal; their temporary ACLs are not source inputs.
+        var directories = new Stack<string>();
+        directories.Push(root);
+        while (directories.TryPop(out var directory))
+        {
+            foreach (var file in Directory.EnumerateFiles(directory, "*.md")) yield return file;
+            foreach (var child in Directory.EnumerateDirectories(directory))
+                if (!Skip.Contains(Path.GetFileName(child))) directories.Push(child);
+        }
+    }
     internal static List<string> ForbiddenScripts(IEnumerable<string> names) => names.Distinct().Order(StringComparer.Ordinal).Where(p => Path.GetExtension(p).ToLowerInvariant() is ".ps1" or ".psm1" or ".bat" or ".cmd").Select(p => "Forbidden tracked script file: " + p).ToList();
     internal static List<string> ProductNames(string root, IEnumerable<string> names)
     {
@@ -99,7 +111,7 @@ internal static class RepositoryChecks
             errors.AddRange(ProductNames(root, names));
         }
         var count = 0;
-        foreach (var source in Directory.EnumerateFiles(root, "*.md", SearchOption.AllDirectories).Where(p => !Path.GetRelativePath(root, p).Split(Path.DirectorySeparatorChar).Any(Skip.Contains)))
+        foreach (var source in Documents(root))
         {
             count++;
             var text = Regex.Replace(Repository.ReadSource(source), @"^```[^\n]*\n.*?^```\s*$", "", RegexOptions.Multiline | RegexOptions.Singleline);

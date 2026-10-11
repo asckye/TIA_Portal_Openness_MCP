@@ -178,6 +178,7 @@ namespace TiaMcp.Logic.Generation
     public sealed class GenerationPlanningOptions
     {
         public string ArtifactRoot { get; set; } = "";
+        public Dictionary<string, string>? Lineage { get; set; }
         // Paths must already be known at planning time. Apply must not fill in returned identities.
         public Dictionary<string, string> SoftwarePaths { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, string> DeviceItemPaths { get; set; } = new Dictionary<string, string>();

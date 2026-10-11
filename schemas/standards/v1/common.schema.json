@@ -77,7 +77,9 @@
         "alarms",
         "hmi",
         "compile",
-        "save"
+        "cleanup",
+        "save",
+        "record"
       ]
     },
     "parameterSchema": {

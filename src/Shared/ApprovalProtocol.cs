@@ -1,3 +1,6 @@
+#if !TIA_GENERATION_PLANNER
+extern alias PlcRendering;
+#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -130,8 +133,11 @@ namespace TiaOpenness.Shared
             {
                 var plan = JsonNode.Parse(PlanJson!)!.AsObject();
                 if ((string?)plan["planHash"] != PlanHash) throw new InvalidDataException("Approval plan hash differs.");
-                plan.Remove("planHash");
-                if ("sha256:" + Hash(Canonical(plan)) != PlanHash) throw new InvalidDataException("Approval plan content differs.");
+#if TIA_GENERATION_PLANNER
+                if (TiaMcp.Logic.Generation.GenerationDocuments.PlanHash(PlanJson!) != PlanHash) throw new InvalidDataException("Approval plan content differs.");
+#else
+                if (PlcRendering::TiaMcp.Logic.Generation.GenerationDocuments.PlanHash(PlanJson!) != PlanHash) throw new InvalidDataException("Approval plan content differs.");
+#endif
             }
         }
         internal void ValidateAttribution()
@@ -162,22 +168,44 @@ namespace TiaOpenness.Shared
         {
             internal string Release = "", Tool = "", Digest = "";
             internal ApprovalOutcome Approval = null!;
+            internal bool Used;
         }
         private static readonly AsyncLocal<Grant?> Current = new AsyncLocal<Grant?>();
-        internal static IDisposable Enter(ApprovalOutcome approval, string tool, string arguments)
+#if TIA_GENERATION_PLANNER
+        internal static IDisposable Enter(ApprovalOutcome approval, TiaMcp.Logic.Generation.GenerationPlanStepsItem step,
+            JsonObject arguments, string? previewRequestId = null, string? previewHash = null)
         {
             if (approval.Reason != null || approval.Request.Kind != "plan") throw new InvalidOperationException("A granted plan is required.");
+            if (Current.Value != null) throw new InvalidOperationException("Nested generation grants are refused.");
+            var approved = JsonNode.Parse(approval.Request.PlanJson ?? throw new InvalidOperationException("Approved plan missing."))!["steps"]!.AsArray()
+                .Single(s => (string?)s!["id"] == step.Id)!;
+            var fixedArguments = arguments.DeepClone().AsObject();
+            var late = step.Review?.LateArguments ?? new System.Collections.Generic.List<string>();
+            if (late.Count != 0)
+            {
+                if (!late.SequenceEqual(new[] { "expectedPlanHash" }) || string.IsNullOrEmpty(previewRequestId) || !PendingApproval.IsHash(previewHash)
+                    || (string?)arguments["expectedPlanHash"] != previewHash || approved["arguments"]!.AsObject().ContainsKey("expectedPlanHash"))
+                    throw new InvalidOperationException("Only this step's preview hash may fill the declared late slot.");
+                fixedArguments.Remove("expectedPlanHash");
+            }
+            var declared = JsonSerializer.SerializeToNode(step, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
+            if (!JsonNode.DeepEquals(approved, declared) || PendingApproval.Canonical(fixedArguments) != PendingApproval.Canonical(approved["arguments"])
+                || TiaMcp.Logic.Generation.CanonicalJson.Hash(JsonSerializer.SerializeToElement(fixedArguments)) != step.ArgumentDigest)
+                throw new InvalidOperationException("Final arguments or review differ from the approved step.");
             var previous = Current.Value;
-            Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = tool,
-                Digest = PendingApproval.Hash(PendingApproval.Canonical(JsonNode.Parse(arguments))), Approval = approval };
+            Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = step.Tool,
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(arguments)), Approval = approval };
             return new Scope(() => Current.Value = previous);
         }
+#endif
         internal static ApprovalOutcome? Match(PendingApproval request)
         {
             var grant = Current.Value;
             if (grant == null) return null;
-            return new ApprovalOutcome(request, grant.Approval.Disabled,
-                grant.Release == request.ReleaseKey && grant.Tool == request.Tool && grant.Digest == request.InvocationArgumentsDigest ? null : "denied", true);
+            bool matches = !grant.Used && grant.Release == request.ReleaseKey && grant.Tool == request.Tool && grant.Digest == request.InvocationArgumentsDigest;
+            grant.Used = true;
+            return new ApprovalOutcome(request, grant.Approval.Disabled, matches ? null : "denied", true);
         }
         private sealed class Scope : IDisposable
         {

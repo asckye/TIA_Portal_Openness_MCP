@@ -132,6 +132,29 @@ namespace TiaMcp.Logic.Generation
                 known.Add(step.GetProperty("id").GetString()!);
                 if (CanonicalJson.Hash(step.GetProperty("arguments")) != step.GetProperty("argumentDigest").GetString()) errors.Add(new GenerationValidationError(path + "/argumentDigest", "argument-digest", "Argument digest does not match canonical arguments."));
                 if (step.GetProperty("availability").GetProperty("tool").GetString() != "present") errors.Add(new GenerationValidationError(path + "/availability/tool", "availability", "Executable steps must have a present tool; absent phases belong in unavailable."));
+                if (step.TryGetProperty("review", out var review) && review.GetProperty("mode").GetString() == "tool-preview")
+                {
+                    var late = review.GetProperty("lateArguments").EnumerateArray().Select(a => a.GetString()).ToArray();
+                    if (!late.SequenceEqual(new[] { "expectedPlanHash" }) || step.GetProperty("arguments").TryGetProperty("expectedPlanHash", out _))
+                        errors.Add(new GenerationValidationError(path + "/review/lateArguments", "late-slot", "Only expectedPlanHash from this step's preview may be late-filled."));
+                    var rule = review.GetProperty("rule").GetString();
+                    string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : "";
+                    if (tool.Length == 0 || step.GetProperty("tool").GetString() != tool) errors.Add(new GenerationValidationError(path + "/review/rule", "review-rule", "Current preview rule must match the step tool."));
+                    var expect = review.GetProperty("expect");
+                    var required = rule == StepReviewRules.Import ? new[] { "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "sourceName", "sourcesBefore" }
+                        : rule == StepReviewRules.Generate ? new[] { "softwarePath", "groupPath", "sourceName", "generationOption", "resultBasis", "objectKeysBefore" }
+                        : new[] { "softwarePath", "groupPath", "sourceName", "sourcesBefore" };
+                    if (required.Any(field => !expect.TryGetProperty(field, out _))) errors.Add(new GenerationValidationError(path + "/review/expect", "review-fields", "Every deciding field and inventory prediction must be declared."));
+                    var witness = review.GetProperty("witness");
+                    if (!witness.TryGetProperty("planHash", out var constraint) || constraint.GetString() != "sha256") errors.Add(new GenerationValidationError(path + "/review/witness", "review-witness", "The tool preview hash requires a sha256 constraint."));
+                    foreach (var field in expect.EnumerateObject())
+                        if (field.Value.ValueKind == JsonValueKind.Object && field.Value.TryGetProperty("fact", out var fact))
+                        {
+                            string reference = fact.GetString() ?? ""; int dot = reference.IndexOf('.');
+                            if (dot < 1 || reference.Substring(0, dot) == step.GetProperty("id").GetString() || !known.Contains(reference.Substring(0, dot)))
+                                errors.Add(new GenerationValidationError(path + "/review/expect/" + field.Name, "fact-reference", "A fact must reference an earlier step."));
+                        }
+                }
             }
             var artifactNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var artifact in value.GetProperty("artifacts").EnumerateArray())

@@ -12,7 +12,7 @@ namespace TiaMcp.Logic.Generation
     public static class GenerationPlanner
     {
         public static IReadOnlyList<string> Phases { get; } = Array.AsReadOnly(new[] { "project", "hardware", "network", "plcStructure", "plcTypes",
-            "plcLibrary", "plcProgram", "plcTags", "alarms", "hmi", "compile", "save" });
+            "plcLibrary", "plcProgram", "plcTags", "alarms", "hmi", "compile", "cleanup", "save", "record" });
 
         public static GenerationPlanningResult Build(StandardPackage package, string machineJson, ProjectModel? observed, GenerationPlanningOptions options,
             IEnumerable<StandardPackage>? inheritedPackages = null)
@@ -91,6 +91,11 @@ namespace TiaMcp.Logic.Generation
                         ProjectIdentity = machine.Target.Project.ProjectIdentity ?? "new:" + machine.Target.Project.Directory + "/" + machine.Target.Project.Name,
                         SoftwarePath = machine.Target.Project.SoftwarePath }, Phases = Phases.ToList() };
                 expected.ProjectIdentity = plan.Target.ProjectIdentity;
+                foreach (var station in machine.Stations.OrderBy(s => s.Id, StringComparer.Ordinal))
+                    plan.Observed[Software(station.Id)] = new GenerationPlanObserved {
+                        SourceNames = this.observed.ExternalSources.Where(s => s.Station == station.Id).Select(s => s.Name).OrderBy(s => s, StringComparer.Ordinal).ToList(),
+                        ObjectKeys = this.observed.Blocks.Where(b => b.Station == station.Id).Select(b => "block:" + ObjectPath(b.Group, b.Name))
+                            .Concat(this.observed.Types.Where(t => t.Station == station.Id).Select(t => "type:" + ObjectPath(t.Group, t.Name))).OrderBy(s => s, StringComparer.Ordinal).ToList() };
 
                 T Part<T>(string? path, T empty) where T : class => path == null ? empty : package.GetPart<T>(path);
                 void Walk(IEnumerable<MachineDescriptionTopology> nodes, MachineDescriptionTopology? unit)
@@ -170,6 +175,7 @@ namespace TiaMcp.Logic.Generation
                 plan.Unavailable = Phases.Where(unavailable.ContainsKey).Select(phase => new GenerationPlanUnavailableItem { Phase = phase, Reason = string.Join(" ", unavailable[phase]) }).ToList();
                 var orderedArtifacts = artifacts.OrderBy(a => a.Path, StringComparer.Ordinal).ToArray();
                 plan.Artifacts = orderedArtifacts.Select(a => new FileDigest { Path = a.Path, Sha256 = a.Sha256 }).ToList();
+                Reviews();
                 plan.PlanHash = GenerationDocuments.PlanHash(GenerationDocuments.Canonical(plan));
                 return new GenerationPlanningResult(plan, expected, Array.AsReadOnly(orderedArtifacts), options.ArtifactRoot);
 
@@ -505,17 +511,68 @@ namespace TiaMcp.Logic.Generation
                 var path = "staging/" + plan.PlanId + "/" + sourceName;
                 var artifact = new GenerationArtifact(path, content);
                 if (!artifacts.Any(a => a.Path == path)) artifacts.Add(artifact);
-                var source = new ProjectExternalSource { Station = model.Station, Name = sourceName, Group = group, ContentFingerprint = "sha256:" + artifact.Sha256 };
-                var sourceEntry = Add(source, phase, "externalSource", "ImportPlcExternalSource", Args(("softwarePath", Software(model.Station)), ("groupPath", group),
+                var source = new ProjectExternalSource { Station = model.Station, Name = sourceName, Group = "", ContentFingerprint = "sha256:" + artifact.Sha256 };
+                var sourceEntry = Add(source, phase, "externalSource", "ImportPlcExternalSource", Args(("softwarePath", Software(model.Station)), ("groupPath", ""),
                     ("filePath", options.ArtifactRoot.TrimEnd('/', '\\').Replace('\\', '/') + "/" + path), ("dryRun", false), ("confirm", true)), "ListPlcExternalSources");
                 var entry = Add(model, phase, namingKind, "GenerateBlocksFromExternalSource", Args(("softwarePath", Software(model.Station)), ("externalSourceName", sourceName), ("dryRun", false), ("confirm", true)), model is ProjectType ? "ListPlcTypes" : "ListPlcBlocks");
                 entry.Dependencies.Add(sourceEntry.Key);
                 if (group.Length != 0)
                 {
                     var groupEntry = Group(model.Station, model is ProjectType ? "types" : "blocks", group);
-                    sourceEntry.Dependencies.Add(groupEntry.Key);
+                    entry.Dependencies.Add(groupEntry.Key);
+                    if (model is ProjectBlock)
+                        entry.FollowUps.Add(("MovePlcBlockToGroup", Args(("softwarePath", Software(model.Station)), ("blockName", model.Name), ("groupPath", group), ("autoCreateGroup", false))));
+                    else entry.Unavailable = "External-source generation creates types at the root; no current tool can move them to the declared type group.";
                 }
                 return entry;
+            }
+
+            private static string ObjectPath(string group, string name) => group.Length == 0 ? name : group + "/" + name;
+
+            private void Reviews()
+            {
+                foreach (var step in plan.Steps)
+                {
+                    if (step.Tool == "ImportPlcExternalSource")
+                    {
+                        string file = step.Arguments["filePath"].GetString()!;
+                        var artifact = artifacts.Single(a => file.EndsWith("/" + a.Path, StringComparison.Ordinal));
+                        step.Review = new GenerationStepReview { Rule = StepReviewRules.Import,
+                            Expect = Args(("softwarePath", step.Arguments["softwarePath"]), ("groupPath", ""), ("filePath", file),
+                                ("inputSha256", artifact.Sha256), ("byteCount", Encoding.UTF8.GetByteCount(artifact.Content)),
+                                ("sourceName", step.Expect.Contains!), ("sourcesBefore", "observed+run")),
+                            Witness = new Dictionary<string, string> { ["planHash"] = "sha256" },
+                            Forbid = new Dictionary<string, List<string>> { ["sourcesBefore"] = new List<string> { step.Expect.Contains! } },
+                            Effect = Args(("sourcesAdded", new[] { step.Expect.Contains! })) };
+                    }
+                    else if (step.Tool == "GenerateBlocksFromExternalSource")
+                    {
+                        string software = step.Arguments["softwarePath"].GetString()!;
+                        string source = step.Arguments["externalSourceName"].GetString()!;
+                        var import = plan.Steps.SingleOrDefault(s => s.Tool == "ImportPlcExternalSource" && s.Expect.Contains == source && s.Arguments["softwarePath"].GetString() == software);
+                        // An existing source cannot establish this run's custody chain.
+                        if (import == null) { plan.Unavailable.Add(new GenerationPlanUnavailableItem { Phase = step.Phase, Reason = "Source " + source + " must be imported in this run; replan after inspecting the existing source." }); continue; }
+                        var generated = entries[step.Key].Object;
+                        string objectKey = (generated is ProjectType ? "type:" : "block:") + generated.Name;
+                        step.Review = new GenerationStepReview { Rule = StepReviewRules.Generate,
+                            Expect = Args(("softwarePath", software), ("groupPath", ""), ("sourceName", new { fact = import.Id + ".sourceName" }),
+                                ("generationOption", machine.Target.Release == "14sp1" ? "parameterless" : "None"),
+                                ("resultBasis", machine.Target.Release == "14sp1" ? "inventory-observation-only; native API returns void" : "native-returned-objects-with-path-readback"), ("objectKeysBefore", "observed+run")),
+                            Witness = new Dictionary<string, string> { ["planHash"] = "sha256", ["sourceIdentity"] = "capture-as-fact", ["objectsBefore.modifiedDate"] = "ignore",
+                                ["objectsBefore.isConsistent"] = "ignore", ["objectsBefore.typeName"] = "ignore", ["objectsBefore.programmingLanguage"] = "ignore" },
+                            Forbid = new Dictionary<string, List<string>> { ["objectKeysBefore"] = new List<string> { objectKey } },
+                            Effect = Args(("generated", new[] { objectKey }), ("others", "forbidden")) };
+                    }
+                }
+                var unavailable = plan.Unavailable.Select(u => u.Phase).ToHashSet(StringComparer.Ordinal);
+                bool changed;
+                do {
+                    changed = false;
+                    foreach (var step in plan.Steps.Where(s => !unavailable.Contains(s.Phase)))
+                        if (step.DependsOn.Any(id => plan.Steps.Any(s => s.Id == id && unavailable.Contains(s.Phase))))
+                        { unavailable.Add(step.Phase); plan.Unavailable.Add(new GenerationPlanUnavailableItem { Phase = step.Phase, Reason = "A source custody prerequisite is unavailable." }); changed = true; }
+                } while (changed);
+                plan.Steps.RemoveAll(s => unavailable.Contains(s.Phase));
             }
 
             private void CallBlocks()

@@ -82,12 +82,13 @@ namespace TiaMcp.Generation.Planning.Tests
         }
 
         [Fact]
-        public void PartialFailureReplanningReusesAlreadyImportedExternalSources()
+        public void PartialFailureReplanningRequiresFreshSourceCustody()
         {
             var fixture = new PlanningFixture(); var first = fixture.Build();
             fixture.Observed.ExternalSources = PlanningFixture.Copy(first.Expected).ExternalSources;
             var resumed = fixture.Build(); Assert.DoesNotContain(resumed.Plan.Steps, s => s.Tool == "ImportPlcExternalSource");
-            Assert.Contains(resumed.Plan.Steps, s => s.Tool == "GenerateBlocksFromExternalSource");
+            Assert.DoesNotContain(resumed.Plan.Steps, s => s.Tool == "GenerateBlocksFromExternalSource");
+            Assert.Contains(resumed.Plan.Unavailable, u => u.Reason.Contains("must be imported in this run", StringComparison.Ordinal));
         }
 
         [Fact]

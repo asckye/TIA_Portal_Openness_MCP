@@ -172,6 +172,72 @@
               "readback"
             ],
             "additionalProperties": false
+          },
+          "review": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "enum": [
+                  "tool-preview",
+                  "transition"
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lateArguments": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "expectedPlanHash"
+                  ]
+                },
+                "maxItems": 1,
+                "uniqueItems": true
+              },
+              "expect": {
+                "type": "object",
+                "additionalProperties": {},
+                "maxProperties": 10000
+              },
+              "witness": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "maxProperties": 10000
+              },
+              "forbid": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true,
+                  "maxItems": 10000
+                },
+                "maxProperties": 10000
+              },
+              "effect": {
+                "type": "object",
+                "additionalProperties": {},
+                "maxProperties": 10000
+              }
+            },
+            "required": [
+              "mode",
+              "rule",
+              "lateArguments",
+              "expect",
+              "witness",
+              "forbid",
+              "effect"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -297,6 +363,38 @@
         "warnings"
       ],
       "additionalProperties": false
+    },
+    "observed": {
+      "type": "object",
+      "maxProperties": 10000,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "sourceNames": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true,
+            "maxItems": 10000
+          },
+          "objectKeys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true,
+            "maxItems": 10000
+          }
+        },
+        "required": [
+          "sourceNames",
+          "objectKeys"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [
@@ -312,7 +410,8 @@
     "conflicts",
     "unavailable",
     "artifacts",
-    "selfCheck"
+    "selfCheck",
+    "observed"
   ],
   "additionalProperties": false
 }

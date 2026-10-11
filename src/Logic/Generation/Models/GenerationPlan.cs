@@ -11,6 +11,7 @@ namespace TiaMcp.Logic.Generation
         public GenerationPlanPackage Package { get; set; } = new GenerationPlanPackage();
         public string MachineHash { get; set; } = "";
         public GenerationPlanTarget Target { get; set; } = new GenerationPlanTarget();
+        public Dictionary<string, GenerationPlanObserved> Observed { get; set; } = new Dictionary<string, GenerationPlanObserved>();
         public List<string> Phases { get; set; } = new List<string>();
         public List<GenerationPlanStepsItem> Steps { get; set; } = new List<GenerationPlanStepsItem>();
         public List<GenerationPlanSkippedItem> Skipped { get; set; } = new List<GenerationPlanSkippedItem>();
@@ -47,6 +48,24 @@ namespace TiaMcp.Logic.Generation
         public string ArgumentDigest { get; set; } = "";
         public GenerationPlanStepsItemAvailability Availability { get; set; } = new GenerationPlanStepsItemAvailability();
         public GenerationPlanStepsItemExpect Expect { get; set; } = new GenerationPlanStepsItemExpect();
+        public GenerationStepReview? Review { get; set; }
+    }
+
+    public sealed class GenerationPlanObserved
+    {
+        public List<string> SourceNames { get; set; } = new List<string>();
+        public List<string> ObjectKeys { get; set; } = new List<string>();
+    }
+
+    public sealed class GenerationStepReview
+    {
+        public string Mode { get; set; } = "tool-preview";
+        public string Rule { get; set; } = "";
+        public List<string> LateArguments { get; set; } = new List<string> { "expectedPlanHash" };
+        public Dictionary<string, JsonElement> Expect { get; set; } = new Dictionary<string, JsonElement>();
+        public Dictionary<string, string> Witness { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, List<string>> Forbid { get; set; } = new Dictionary<string, List<string>>();
+        public Dictionary<string, JsonElement> Effect { get; set; } = new Dictionary<string, JsonElement>();
     }
 
     public sealed class GenerationPlanStepsItemAvailability

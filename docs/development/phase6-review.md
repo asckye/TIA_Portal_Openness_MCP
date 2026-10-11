@@ -1608,8 +1608,8 @@ pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -Sk
 | [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):41 | `if (result.Length > 4096) throw CanonicalJson.Failure("", "name-length", "Expanded text exceeds 4096 characters.");` |
 | [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):43 | `if (result.Length > 4096) throw CanonicalJson.Failure("", "name-length", "Expanded text exceeds 4096 characters.");` |
 | [Generation/GenerationNamingEngine.cs](../../src/Logic/Generation/GenerationNamingEngine.cs):105 | `if (name.Length < (rule.MinLength ?? 1) \|\| name.Length > (rule.MaxLength ?? 4096) \|\| name.Any(c => char.IsControl(c) \|\| c == '"')) return false;` |
-| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):158 | `if (steps.Count > 10000) throw CanonicalJson.Failure("/steps", "limit", "Plan exceeds 10000 steps.");` |
-| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):671 | `if (entries.Count >= options.MaximumObjects) throw CanonicalJson.Failure("/expected", "limit", "Expanded model exceeds its object budget.");` |
+| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):163 | `if (steps.Count > 10000) throw CanonicalJson.Failure("/steps", "limit", "Plan exceeds 10000 steps.");` |
+| [Generation/GenerationPlanner.cs](../../src/Logic/Generation/GenerationPlanner.cs):728 | `if (entries.Count >= options.MaximumObjects) throw CanonicalJson.Failure("/expected", "limit", "Expanded model exceeds its object budget.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):51 | `if (schemas.Count != 14) throw new InvalidOperationException("Generation schema resources are missing.");` |
 | [Generation/GenerationSchemas.cs](../../src/Logic/Generation/GenerationSchemas.cs):57 | `if (errors.Count >= 100) return;` |
 | [Generation/MachineCsv.cs](../../src/Logic/Generation/MachineCsv.cs):15 | `private const int MaximumBytes = 16 * 1024 * 1024, MaximumRows = 10001, MaximumColumns = 1024;` |

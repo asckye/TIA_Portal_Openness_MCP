@@ -19,6 +19,8 @@ public sealed class GenerationExecutionTests : IDisposable
     private string? approvalReason, failure;
     private int stopAt = 2;
     private bool changeIdentity, mismatch, incomplete, noPortal, missingTool;
+    private DateTimeOffset clock = DateTimeOffset.UtcNow;
+    private bool expireAtApproval, advanceAfterWrite, cancelBetweenSteps;
     private readonly StandardPackage package;
     public GenerationExecutionTests()
     {
@@ -60,6 +62,7 @@ public sealed class GenerationExecutionTests : IDisposable
             var delegated = GenerationStepApproval.Match(PendingApproval.Create("foundation", release, name, args.ToJsonString(), "{}", 120));
             Assert.NotNull(delegated); Assert.Null(delegated!.Reason);
             writes++;
+            if (advanceAfterWrite && writes == 1) clock = clock.AddMinutes(11);
             if (changeIdentity && writes == 1) bindingGeneration = "2";
             if (writes == stopAt && failure == "throw") throw new IOException("Injected dispatch failure");
             if (writes == stopAt && failure != null) return McpServer.V4Result(name, new JsonObject(),
@@ -71,8 +74,9 @@ public sealed class GenerationExecutionTests : IDisposable
         }, name => Descriptor(name), (pending, _, _) => {
             approvals++; pending.Validate(); Assert.Equal("plan", pending.Kind); Assert.NotNull(pending.PlanJson);
             Assert.True(pending.Operations.Length > 1);
+            if (expireAtApproval) clock = clock.AddMinutes(11);
             return Task.FromResult(new ApprovalOutcome(pending, false, approvalReason));
-        });
+        }, () => clock, () => cancelBetweenSteps && writes > 0);
     }
     private sealed class FixtureCatalog : IToolCatalogView
     {
@@ -96,6 +100,8 @@ public sealed class GenerationExecutionTests : IDisposable
     }
     private ToolDescriptor? Descriptor(string name)
     {
+        // This suite injects ordinary step outcomes; the staged suite drives the real source policies.
+        if (name == "ImportPlcExternalSource" || name == "GenerateBlocksFromExternalSource") return null;
         if (missingTool && name == "CreatePlcTag") return null;
         var baseline = JsonNode.Parse(File.ReadAllText(Path.Combine(repository, "manifest", "contracts", "v4", "baseline", EngineHostConfiguration.ReleaseKey + ".json")))!;
         var row = baseline["tools"]!.AsArray().SingleOrDefault(t => (string?)t!["name"] == name);
@@ -237,5 +243,41 @@ public sealed class GenerationExecutionTests : IDisposable
             planId: "plan", stepId: "step", runId: "run", parentRequestId: "parent");
         Assert.True(log.Verify().Passed); Assert.Equal(3, log.Verify().Count);
         var rows = log.Read(); Assert.Null(rows[0].PlanId); Assert.Equal("parent", rows[1].ParentRequestId); Assert.Equal("run", rows[2].RunId);
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void ExpiryIsCheckedAfterApprovalButNotBetweenWrites(string release)
+    {
+        advanceAfterWrite = true; var session = Session(release); var result = Apply(session, Plan(session, release));
+        Assert.Equal("succeeded", (string?)result.StructuredContent!["data"]!["status"]);
+        writes = 0; advanceAfterWrite = false; expireAtApproval = true; session = Session(release);
+        result = Apply(session, Plan(session, release)); Assert.Equal(0, writes);
+        Assert.Contains("expired", result.StructuredContent!["data"]!["stoppingReason"]!.ToString());
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void CancellationHasItsOwnStopTypeAndKeepsEarlierSteps(string release)
+    {
+        cancelBetweenSteps = true; var session = Session(release); var result = Apply(session, Plan(session, release));
+        Assert.Equal("cancelled", (string?)result.StructuredContent!["data"]!["status"]);
+        Assert.Equal("partial", (string?)result.StructuredContent!["meta"]!["outcome"]); Assert.Equal(1, writes);
+    }
+    [Fact]
+    public void StepAuditHashMeansOnlyTheToolHash()
+    {
+        var log = new AuditLog(Path.Combine(root, "step-audit"));
+        using var use = AuditInvocation.UseLog(log);
+        foreach (var hash in new string?[] { null, new string('a', 64) })
+        using (AuditInvocation.GenerationStep("plan", "step", "run", "parent", hash, Guid.NewGuid().ToString("N")))
+        using (var invocation = AuditInvocation.Begin(true, "foundation", "19", "CreatePlcTag"))
+        { invocation!.RecordRequest(new string('b', 64)); invocation.Start(); invocation.End("succeeded"); }
+        var requests = log.Read().Where(r => r.Event == "request").ToArray();
+        Assert.Null(requests[0].PlanHash); Assert.Equal(new string('a',64), requests[1].PlanHash);
+        Assert.True(log.Verify().Passed);
+    }
+    [Fact]
+    public void SuccessfulRunChangesReplanSeedAndBindingAlsoChangesPlanId()
+    {
+        var session = Session("19"); var first = Plan(session, "19"); Apply(session, first);
+        var second = Plan(session, "19"); Assert.NotEqual((string?)first["planId"], (string?)second["planId"]);
+        bindingGeneration = "2"; var third = Plan(session, "19"); Assert.NotEqual((string?)second["planId"], (string?)third["planId"]);
     }
 }

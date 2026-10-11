@@ -22,13 +22,13 @@
   },
   "generation-planning": {
     "project": "tests/Generation/TiaMcp.Generation.Planning.Tests/TiaMcp.Generation.Planning.Tests.csproj",
-    "minimumPassed": 191,
+    "minimumPassed": 216,
     "maximumSkipped": 0,
     "arguments": []
   },
   "generation-model": {
     "project": "tests/Generation/TiaMcp.Generation.Tests/TiaMcp.Generation.Tests.csproj",
-    "minimumPassed": 112,
+    "minimumPassed": 115,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -108,7 +108,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12402,
+    "minimumPassed": 12654,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -116,12 +116,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 11254,
+        "minimumPassed": 11506,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 11254,
+        "minimumPassed": 11506,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -129,7 +129,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12402,
+    "minimumPassed": 12654,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -137,12 +137,12 @@
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 8710,
+        "minimumPassed": 8962,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       },
       "macos": {
-        "minimumPassed": 8710,
+        "minimumPassed": 8962,
         "maximumSkipped": 9,
         "reason": "Eight SID/ACL/image host pipe cases require Windows; in-memory control cases run without Siemens SDKs."
       }
@@ -266,7 +266,7 @@
   },
   "engine-host": {
     "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
-    "minimumPassed": 139,
+    "minimumPassed": 157,
     "maximumSkipped": 0,
     "arguments": []
   },

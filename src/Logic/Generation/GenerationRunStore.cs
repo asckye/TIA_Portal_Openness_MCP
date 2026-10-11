@@ -71,7 +71,22 @@ namespace TiaMcp.Logic.Generation
             result["events"] = events;
             return result;
         }
-        public IDisposable Claim(string planId)
+        public System.Collections.Generic.Dictionary<string, string>? Lineage(string project, string release)
+        {
+            if (!Directory.Exists(root)) return null;
+            SafeRoot();
+            JsonObject? latest = null;
+            foreach (var file in Directory.GetFiles(root, "*.jsonl"))
+            {
+                var run = Read(Path.GetFileNameWithoutExtension(file));
+                if (!string.Equals((string?)run["project"], project, StringComparison.OrdinalIgnoreCase) || (string?)run["release"] != release) continue;
+                // Known pre-operation refusals did not consume this plan. An interrupted intent did.
+                if (!run["steps"]!.AsArray().Any(s => (string?)s!["status"] is not ("NOT_EXECUTED" or "rejected-before-operation" or "diverged" or "cancelled" or "cap"))) continue;
+                if (latest == null || string.CompareOrdinal((string?)run["utc"], (string?)latest["utc"]) > 0) latest = run;
+            }
+            return latest == null ? null : new System.Collections.Generic.Dictionary<string, string> { ["runId"] = (string)latest["runId"]!, ["status"] = (string)latest["status"]! };
+        }
+        public ClaimScope Claim(string planId)
         {
             if (!Regex.IsMatch(planId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Invalid plan identity.", "planId");
             SafeRoot();
@@ -81,11 +96,18 @@ namespace TiaMcp.Logic.Generation
             {
                 using var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
                 file.Flush(true);
-                return new ClaimScope();
+                return new ClaimScope(path);
             }
             catch (IOException ex) when (File.Exists(path)) { throw new ArgumentException("Plan was already applied; observe the project and replan.", "planId", ex); }
         }
-        private sealed class ClaimScope : IDisposable { public void Dispose() { } }
+        public sealed class ClaimScope : IDisposable
+        {
+            private readonly string path;
+            private bool consumed;
+            internal ClaimScope(string path) { this.path = path; }
+            public void Consume() { consumed = true; }
+            public void Dispose() { if (!consumed) { RejectLink(path); File.Delete(path); } }
+        }
         private string RunPath(string id)
         {
             if (!Guid.TryParseExact(id, "N", out _)) throw new ArgumentException("Invalid generation run identity.", "runId");

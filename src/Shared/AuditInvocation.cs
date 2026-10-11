@@ -16,10 +16,10 @@ namespace TiaOpenness.Shared
         private static readonly AsyncLocal<AuditLog?> LogOverride = new AsyncLocal<AuditLog?>();
         private static readonly AsyncLocal<int> PreviewDepth = new AsyncLocal<int>();
         private static readonly AsyncLocal<string[]?> Generation = new AsyncLocal<string[]?>();
-        internal static IDisposable GenerationStep(string planId, string stepId, string runId, string parentRequestId, string planHash, string requestId)
+        internal static IDisposable GenerationStep(string planId, string stepId, string runId, string parentRequestId, string? toolHash, string requestId)
         {
             var previous = Generation.Value;
-            Generation.Value = new[] { planId, stepId, runId, parentRequestId, planHash, requestId };
+            Generation.Value = new[] { planId, stepId, runId, parentRequestId, toolHash ?? "", requestId };
             return new GenerationScope(() => Generation.Value = previous);
         }
         private sealed class GenerationScope : IDisposable
@@ -98,7 +98,8 @@ namespace TiaOpenness.Shared
             try
             {
                 var generation = Generation.Value;
-                log.Append(kind, requestId, host, release, tool, outcome, planHash ?? generation?[4], actor: actor,
+                string? recordedHash = generation == null ? planHash : kind == "request" && generation[4].Length != 0 ? generation[4] : null;
+                log.Append(kind, requestId, host, release, tool, outcome, recordedHash, actor: actor,
                     planId: generation?[0], stepId: generation?[1], runId: generation?[2], parentRequestId: generation?[3]);
             }
             catch (Exception ex) { ReportFailure(ex); }

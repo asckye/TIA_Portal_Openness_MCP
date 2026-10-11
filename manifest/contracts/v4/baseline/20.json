@@ -383,13 +383,13 @@
       "outputSchema": null
     },
     {
-      "descriptionSha256": "39583bccb9fb23cd9b45f269a8df9ebadb9ad69505bc8608d803a6b8fb0379e3",
+      "descriptionSha256": "26d8ec02c22a8e0de1a7d1840d482f2aa6d17d86bbd5ce81a553277dc87d2fed",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "dryRun": {
             "default": true,
-            "description": "true previews without approval/write audit; false executes once.",
+            "description": "true previews without approval/write audit; false executes the reviewed plan.",
             "type": "boolean"
           },
           "expectedPlanHash": {
@@ -39753,7 +39753,7 @@
       }
     },
     {
-      "descriptionSha256": "31c2eb3db0ffced8b3b1bcc02a464781dcdf3a221fb773465936fe131436ffac",
+      "descriptionSha256": "0f46d8ea06a8821c995e4207213e5d482a8d43080971f1a786b3bf597d1c28a0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
