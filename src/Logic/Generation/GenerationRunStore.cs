@@ -83,11 +83,26 @@ namespace TiaMcp.Logic.Generation
             {
                 var run = Read(Path.GetFileNameWithoutExtension(file));
                 if (!string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase) || (string?)run["release"] != release) continue;
-                // Known pre-operation refusals did not consume this plan. An interrupted intent did.
-                if (!run["steps"]!.AsArray().Any(s => (string?)s!["status"] is not ("NOT_EXECUTED" or "rejected-before-operation" or "diverged" or "cancelled" or "cap"))) continue;
                 if (latest == null || string.CompareOrdinal((string?)run["utc"], (string?)latest["utc"]) > 0) latest = run;
             }
             return latest == null ? null : new System.Collections.Generic.Dictionary<string, string> { ["runId"] = (string)latest["runId"]!, ["status"] = (string)latest["status"]! };
+        }
+        public JsonObject[] ForProject(string project, string release)
+        {
+            if (!Directory.Exists(root)) return Array.Empty<JsonObject>();
+            SafeRoot();
+            return Directory.GetFiles(root, "*.jsonl").Select(file => Read(Path.GetFileNameWithoutExtension(file)))
+                .Where(run => string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase) && (string?)run["release"] == release)
+                .OrderBy(run => (string?)run["utc"], StringComparer.Ordinal).ThenBy(run => (string?)run["runId"], StringComparer.Ordinal).ToArray();
+        }
+        public JsonObject ByPlan(string planId)
+        {
+            if (!Regex.IsMatch(planId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Invalid plan identity.", "planId");
+            SafeRoot();
+            var runs = Directory.GetFiles(root, "*.jsonl").Select(file => Read(Path.GetFileNameWithoutExtension(file)))
+                .Where(run => (string?)run["planId"] == planId).OrderByDescending(run => (string?)run["utc"], StringComparer.Ordinal).ToArray();
+            if (runs.Length == 0) throw new ArgumentException("No run for this plan.", "planId");
+            return runs[0];
         }
         public ClaimScope Claim(string planId)
         {

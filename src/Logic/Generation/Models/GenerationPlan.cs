@@ -18,6 +18,8 @@ namespace TiaMcp.Logic.Generation
         public List<GenerationPlanConflictsItem> Conflicts { get; set; } = new List<GenerationPlanConflictsItem>();
         public List<GenerationPlanUnavailableItem> Unavailable { get; set; } = new List<GenerationPlanUnavailableItem>();
         public List<FileDigest> Artifacts { get; set; } = new List<FileDigest>();
+        public List<GenerationRecordObject> Objects { get; set; } = new List<GenerationRecordObject>();
+        public List<string> Adopt { get; set; } = new List<string>();
         public GenerationPlanSelfCheck SelfCheck { get; set; } = new GenerationPlanSelfCheck();
     }
 

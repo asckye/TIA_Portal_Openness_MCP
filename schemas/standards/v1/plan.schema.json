@@ -395,6 +395,19 @@
         ],
         "additionalProperties": false
       }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "generation-record.schema.json#/$defs/object"
+      }
+    },
+    "adopt": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     }
   },
   "required": [

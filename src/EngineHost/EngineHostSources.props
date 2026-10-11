@@ -16,6 +16,7 @@
 
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationExecutionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GenerationRecordTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcOrganisationTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/PlcSoftwareResponses.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionContract.cs" />

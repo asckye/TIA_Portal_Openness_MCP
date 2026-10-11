@@ -27,7 +27,7 @@ public sealed class StagedGenerationTests
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "tiamcp-staged-generation", Guid.NewGuid().ToString("N"));
         internal readonly string Release, Project;
         internal readonly bool NewProject;
-        internal bool Created;
+        internal bool Created, DeviceCreated;
         internal string? TransitionFault;
         internal string BindingGeneration = "1";
         internal readonly Worker Worker;
@@ -40,17 +40,21 @@ public sealed class StagedGenerationTests
         internal DateTimeOffset Time = DateTimeOffset.Parse("2026-10-10T00:00:00Z");
         internal Action? OnApproval, OnWrite;
         internal JsonObject? LastPlan;
+        internal readonly Dictionary<string, JsonObject> Tags = new();
+        internal readonly HashSet<string> Tables = new(), Groups = new();
+        internal bool CompileFails, RecordRace, RecordIo;
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         internal Fixture(string release, int maximumSteps = 10000, bool newProject = false)
         {
-            Release = release; Project = "C:/Projects/Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15" : release);
+            Release = release; Project = Path.Combine(Root, "project", "Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
             NewProject = newProject;
-            if (newProject) Project = GenerationProjectPath.CreationFile(release, "C:/Projects", "Fixture");
+            if (newProject) Project = GenerationProjectPath.CreationFile(release, Path.Combine(Root, "project"), "Fixture");
+            Directory.CreateDirectory(Path.GetDirectoryName(Project)!);
             Planner = new PlanningFixture(release); Planner.Machine.Target.Project.ProjectIdentity = Project;
             if (newProject)
             {
                 Planner.Machine.Target.Project.Mode = "new"; Planner.Machine.Target.Project.ProjectIdentity = null;
-                Planner.Machine.Target.Project.Directory = "C:/Projects"; Planner.Machine.Target.Project.Name = "Fixture";
+                Planner.Machine.Target.Project.Directory = Path.Combine(Root, "project"); Planner.Machine.Target.Project.Name = "Fixture";
             }
             Worker = new Worker(this);
             Configuration.ReleaseKey = release; Configuration.Worker = Worker;
@@ -60,42 +64,57 @@ public sealed class StagedGenerationTests
                         StepWaits++;
                         return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Source requested a second approval."));
                     })).ToArray();
-            var catalog = new Catalog(tools);
-            Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, tools), () => false, new HashSet<string>());
+            Catalog? catalog = null;
             Session = new Session(() => Root, Call, name => catalog.Find(name) ?? Ordinary(name), (pending, _, _) => {
                 Approvals++; pending.Validate(); OnApproval?.Invoke();
                 return Task.FromResult(new ApprovalOutcome(pending, ApprovalDisabled, ApprovalReason));
             }, () => Time, () => Cancelled, maximumSteps: maximumSteps);
+            var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", release, executionSession: Session), release, null,
+                () => new ApprovalSettings(true, 1), (pending, _, _) => { StepWaits++; return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Record requested a second approval.")); });
+            var registered = tools.Append(record).ToArray(); catalog = new Catalog(registered);
+            Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, registered), () => false, new HashSet<string>());
         }
-        internal JsonObject Plan()
+        internal JsonObject Plan(string[]? adopt = null)
         {
-            LastPlan = Session.Plan(Planner.Package(), GenerationDocuments.Canonical(Planner.Machine)).StructuredContent!["data"]!["plan"]!.AsObject();
+            LastPlan = Session.Plan(Planner.Package(), GenerationDocuments.Canonical(Planner.Machine), adopt).StructuredContent!["data"]!["plan"]!.AsObject();
             return LastPlan;
         }
-        internal JsonObject Apply(JsonObject? plan = null)
+        internal JsonObject Apply(JsonObject? plan = null, string[]? phases = null)
         {
             plan ??= LastPlan ?? Plan();
             var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer, ApprovalPrecheckTests.ServerProxy>())
                 { Params = new CallToolRequestParams { Name = "ApplyGenerationPlan", Arguments = new Dictionary<string, JsonElement>() } };
             using var progress = Host.UseProgressRequest(request, CancellationToken.None);
-            return Session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, Project, null, false).StructuredContent!.AsObject();
+            return Session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, Project, phases, false).StructuredContent!.AsObject();
         }
         private CallToolResult Call(string name, JsonObject args, Func<CallToolResult?>? check)
         {
             if (name == "GetSessionState") return Host.V4Result(name, new JsonObject());
             if (name == "GetOpennessWorkerStatus") return Host.V4Result(name, new JsonObject { ["worker"] = new JsonObject { ["binding"] = new JsonObject { ["identity"] = Identity() } } });
-            if (name == "GetProjectTree" && NewProject && TransitionFault != "nonempty") return Host.V4Result(name, new JsonObject { ["tree"] = "```\nFixture\n  Ungrouped devices\n\n```" });
-            if (name == "GetProjectTree") return Host.V4Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "synthetic.article", ["version"] = "V1" }) });
-            if (name == "GetSoftwareTree") return Host.V4Result(name, new JsonObject { ["paths"] = new JsonArray(Worker.Objects.Select(o => (JsonNode)new JsonObject { ["kind"] = o.Kind, ["name"] = o.Name, ["objectPath"] = o.Path }).ToArray()) });
+            if (name == "GetProjectTree" && NewProject && !DeviceCreated && TransitionFault != "nonempty") return Host.V4Result(name, new JsonObject { ["tree"] = "```\nFixture\n  Ungrouped devices\n\n```" });
+            if (name == "GetProjectTree") return Host.V4Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "synthetic.article", ["version"] = "V1", ["slot"] = 0 }) });
+            if (name == "GetSoftwareTree") return Host.V4Result(name, new JsonObject { ["paths"] = new JsonArray(Worker.Objects.Select(o => (JsonNode)new JsonObject { ["kind"] = o.Kind, ["name"] = o.Name, ["objectPath"] = o.Path })
+                .Concat(Groups.Select(g => (JsonNode)new JsonObject { ["kind"] = "block-group", ["name"] = g.Split('/').Last(), ["objectPath"] = g })).ToArray()) });
+            if (name is "GetPlcBlockInfo" or "GetPlcTypeInfo")
+            { var value = Worker.Objects.Single(o => o.Path == (string?)args[name == "GetPlcBlockInfo" ? "blockPath" : "typePath"]); return Host.V4Result(name, new JsonObject { ["modifiedDate"] = value.ModifiedDate.ToString("O") }); }
+            if (name == "GetPlcObjectFingerprints")
+            { var value = Worker.Objects.Single(o => o.Path == (string?)args["objectPath"]); return Host.V4Result(name, new JsonObject { ["meta"] = new JsonObject { ["records"] = new JsonArray(new JsonObject { ["id"] = "Code", ["value"] = value.ModifiedDate.ToString("O") }) } }); }
+            if (name == "ReadPlcUserConstants") return Host.V4Result(name, new JsonObject { ["items"] = new JsonArray() });
             if (name.StartsWith("List", StringComparison.Ordinal))
             {
                 if (name == "ListPlcExternalSources" && ReadFailure && Worker.Previews > 0) throw new InvalidOperationException("Injected inventory read failure.");
-                var items = name == "ListPlcExternalSources" ? Worker.Sources.Keys.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray() : Array.Empty<JsonNode?>();
+                var items = name == "ListPlcExternalSources" ? Worker.Sources.Keys.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray()
+                    : name == "ListPlcTagTables" ? Tables.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray()
+                    : name == "ListPlcTags" ? Tags.Values.Where(t => (string?)t["table"] == (string?)args["table"]).Select(t => (JsonNode?)t.DeepClone()).ToArray() : Array.Empty<JsonNode?>();
                 if (name == "ListPlcExternalSources" && Mutation == "sourcesBefore" && Worker.Previews > 0) items = items.Concat(new[] { (JsonNode?)JsonValue.Create("unexpected.scl") }).ToArray();
                 return Host.V4Result(name, new JsonObject { ["items"] = new JsonArray(items) });
             }
-            if (new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Contains(name))
+            if (new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource", "PublishGenerationRecord" }.Contains(name))
             {
+                if (name == "PublishGenerationRecord" && RecordRace && (bool?)args["dryRun"] != true)
+                { RecordRace = false; File.WriteAllText((string)args["recordPath"]!, "changed by fixture"); }
+                if (name == "PublishGenerationRecord" && RecordIo && (bool?)args["dryRun"] != true)
+                { Directory.CreateDirectory((string)args["recordPath"]!); RecordIo = false; }
                 var result = Host.DispatchGenerationStep(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), check ?? (() => null));
                 // Inject only the executor's preview, after the real current policy and host result mapping.
                 if ((bool?)args["dryRun"] == true && Mutation != null && result.StructuredContent?["data"] is JsonObject data)
@@ -108,6 +127,11 @@ public sealed class StagedGenerationTests
                 return result;
             }
             if (check?.Invoke() is { } rejected) return rejected;
+            if (name == "CompilePlcDiagnostics" && CompileFails) return Host.V4Result(name, new JsonObject { ["errorCount"] = 1 });
+            if (name == "CreateDevice") DeviceCreated = true;
+            if (name == "CreatePlcTagTable") Tables.Add((string)args["name"]!);
+            if (name == "CreatePlcTag") Tags[(string)args["name"]!] = new JsonObject { ["name"] = (string)args["name"]!, ["table"] = (string)args["table"]!, ["dataType"] = (string)args["dataType"]!, ["value"] = (string)args["address"]! };
+            if (name == "CreatePlcBlockGroup") Groups.Add((string)args["groupPath"]!);
             if (name == "CreateProject")
             {
                 if (TransitionFault == "rejected") return Host.V4Reject(name, new TiaMcp.Logic.V4.Error("Injected creation refusal.", new TiaMcp.Logic.V4.PreconditionFailedDetails("fixture", null)));
@@ -205,6 +229,15 @@ public sealed class StagedGenerationTests
                         fixture.OnWrite?.Invoke();
                     }, () => fixture.Release == "14sp1" ? Array.Empty<PlcExternalSourceObject>() : generated, ex => ex is ArgumentException);
             }
+            else if (operation == "DeletePlcExternalSource")
+            {
+                string name = (string)args["externalSourceName"]!;
+                var request = new PlcExternalSourceDeleteRequest { Release = fixture.Release, Project = fixture.Project, ProcessId = 123, Software = "PLC1", Name = name,
+                    RootIdentity = "root", DryRun = dry, Confirm = (bool?)args["confirm"] == true, ExpectedProject = expected, ExpectedHash = hash };
+                var deleted = PlcExternalSourceDeletePolicy.Run(request, () => Sources.Keys.Select(s => new PlcExternalSourceDeleteItem { Name = s, Identity = "identity:" + s, ParentVerified = true }),
+                    () => { }, _ => { }, _ => { Writes++; Sources.Remove(name); fixture.OnWrite?.Invoke(); });
+                return Task.FromResult(JsonSerializer.SerializeToNode(deleted, deleted.GetType()));
+            }
             else throw new NotSupportedException(operation);
             return Task.FromResult(JsonSerializer.SerializeToNode(result, result.GetType()));
         }
@@ -216,7 +249,7 @@ public sealed class StagedGenerationTests
     {
         using var f = new Fixture(release); var result = f.Apply();
         Assert.True((bool?)result["ok"], result.ToJsonString()); Assert.Equal(1, f.Approvals);
-        Assert.True(f.Worker.Generations > 0); Assert.Equal(f.Worker.Sources.Count * 2, f.Worker.Writes);
+        Assert.True(f.Worker.Generations > 0); Assert.Empty(f.Worker.Sources); Assert.Equal(f.Worker.Generations * 3, f.Worker.Writes);
         Assert.Contains(result["data"]!["events"]!.AsArray(), e => (string?)e!["event"] == "fact");
     }
     [Theory, MemberData(nameof(DecidingFields))]
@@ -346,7 +379,7 @@ public sealed class StagedGenerationTests
     [Theory, MemberData(nameof(Releases))]
     public void DeleteRuleUsesTheRunIdentityAndVerifiesSingleRemoval(string release)
     {
-        using var f = new Fixture(release); var result = f.Apply(); Assert.True((bool?)result["ok"]);
+        using var f = new Fixture(release); var result = f.Apply(phases: GenerationPlanner.Phases.Where(p => p is not ("cleanup" or "save" or "record")).ToArray()); Assert.True((bool?)result["ok"]);
         var plan = GenerationDocuments.Load<GenerationPlan>(f.LastPlan!.ToJsonString()); var facts = new RunFacts(plan);
         foreach (var row in result["data"]!["events"]!.AsArray().OfType<JsonObject>())
         {
@@ -503,6 +536,125 @@ public sealed class StagedGenerationTests
         Assert.Equal(1, f.Approvals); Assert.True(f.Worker.Generations > 0);
         var lineage = new GenerationRunStore(Path.Combine(f.Root, "runs")).Lineage((string)f.Identity()["projectPath"]!, release);
         Assert.Equal((string?)result["data"]!["runId"], lineage!["runId"]);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void FullRunPublishesPostSaveWitnessesAndReplansToZeroSteps(string release)
+    {
+        using var f = new Fixture(release); var first = f.Plan(); var result = f.Apply(first);
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        var record = GenerationRecord.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)));
+        Assert.All(record.Objects, o => { Assert.Equal("owned", o.State); Assert.NotNull(o.Witness); });
+        Assert.All(record.Objects.Where(o => o.Key.Contains("/block/")), o => Assert.Equal(release is "20" or "21" ? "plc-object-fingerprints" : "modified-date", o.Witness!.Kind));
+        var second = f.Plan(); Assert.Empty(second["steps"]!.AsArray());
+        Assert.Contains(second["skipped"]!.AsArray(), s => (string?)s!["reason"] == "owned-unchanged");
+        Assert.NotEqual((string?)first["planId"], (string?)second["planId"]); Assert.Equal(second.ToJsonString(), f.Plan().ToJsonString());
+        Assert.Equal(1, f.Approvals);
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void ManualBlockChangeConflictsAndNeverPlansAnOverwrite(string release)
+    {
+        using var f = new Fixture(release); Assert.True((bool?)f.Apply()["ok"]);
+        var block = f.Worker.Objects.First(); block.ModifiedDate = block.ModifiedDate.AddMinutes(1);
+        var plan = f.Plan(); string key = "PLC1/" + block.Kind + "/" + block.Name;
+        Assert.Contains(plan["conflicts"]!.AsArray(), c => (string?)c!["key"] == key && (string?)c["reason"] == "modified-after-generation");
+        Assert.DoesNotContain(plan["steps"]!.AsArray(), s => (string?)s!["key"] == key);
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void ChangedDesiredContentRequiresRegenerationAndNeverOverwrites(string release)
+    {
+        using var f = new Fixture(release); Assert.True((bool?)f.Apply()["ok"]);
+        f.Planner.Sources["sources/motor.scl"] = f.Planner.Sources["sources/motor.scl"].Replace("#Run := #Feedback;", "#Run := NOT #Feedback;");
+        var plan = f.Plan(); Assert.Contains(plan["conflicts"]!.AsArray(), c => (string?)c!["key"] == "PLC1/block/FB_Motor" && (string?)c["reason"] == "regeneration-required");
+        Assert.DoesNotContain(plan["steps"]!.AsArray(), s => (string?)s!["key"] == "PLC1/block/FB_Motor");
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void TamperedRecordFallsBackToDurableWitnessFacts(string release)
+    {
+        using var f = new Fixture(release); var result = f.Apply(); Assert.True((bool?)result["ok"]);
+        string path = GenerationRecordFile.DefaultPath(f.Project); var node = JsonNode.Parse(File.ReadAllText(path))!;
+        node["objects"]![0]!["expectedFingerprint"] = "sha256:" + new string('f', 64); File.WriteAllText(path, node.ToJsonString());
+        Assert.Throws<ArgumentException>(() => GenerationRecord.Parse(File.ReadAllText(path)));
+        Assert.Empty(f.Plan()["steps"]!.AsArray());
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void PreviousRecordRaceStopsPartialAndKeepsWitnessesForReplanning(string release)
+    {
+        using var f = new Fixture(release); f.RecordRace = true; var result = f.Apply();
+        Assert.Equal("partial", (string?)result["meta"]!["outcome"]);
+        Assert.Contains(result["data"]!["events"]!.AsArray(), e => (string?)e!["event"] == "witness");
+        Assert.Empty(f.Plan()["steps"]!.AsArray()); Assert.False(f.Worker.Uncertain);
+        var preview = f.Session.Publish(GenerationRecordFile.DefaultPath(f.Project), "", (string)result["data"]!["runId"]!, true, "").StructuredContent!["data"]!;
+        Assert.Equal("changed by fixture", File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)));
+        Assert.NotEmpty((string)preview["planHash"]!);
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void UnknownExistingObjectNeedsExplicitAdoptionAndGetsAnAdoptedWitness(string release)
+    {
+        using var f = new Fixture(release); f.Failure = "unknown"; var result = f.Apply(); Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
+        f.Failure = null; f.Worker.Uncertain = false; f.Worker.Sources.Clear();
+        f.Worker.Objects.Add(new PlcExternalSourceObject { Kind = "block", Name = "FB_Motor", Path = "FB_Motor", ModifiedDate = new DateTime(2026, 10, 10) });
+        var plan = f.Plan(); Assert.Contains(plan["conflicts"]!.AsArray(), c => (string?)c!["key"] == "PLC1/block/FB_Motor" && (string?)c["reason"] == "unknown-outcome");
+        var adopted = f.Plan(new[] { "PLC1/block/FB_Motor" }); Assert.Contains(adopted["skipped"]!.AsArray(), s => (string?)s!["key"] == "PLC1/block/FB_Motor" && (string?)s["reason"] == "adopted");
+        Assert.True((bool?)f.Apply(adopted)["ok"]);
+        var record = GenerationRecord.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)));
+        var item = Assert.Single(record.Objects.Where(o => o.Key == "PLC1/block/FB_Motor")); Assert.Equal("adopted", item.State); Assert.NotNull(item.Witness);
+        Assert.Empty(f.Plan()["steps"]!.AsArray());
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void CompileFailureRetainsSourcesAndSuccessfulCompileDeletesOnlyThisRunSources(string release)
+    {
+        using (var f = new Fixture(release))
+        {
+            f.Worker.Sources["manual.scl"] = "retained"; f.CompileFails = true; var result = f.Apply();
+            Assert.Equal("partial", (string?)result["meta"]!["outcome"]); Assert.Equal("failed", (string?)result["data"]!["status"]);
+            Assert.True(f.Worker.Sources.Count > 1);
+            Assert.All(result["data"]!["steps"]!.AsArray().Where(s => (string?)s!["phase"] is "cleanup" or "save" or "record"), s => Assert.Equal("NOT_EXECUTED", (string?)s!["status"]));
+        }
+        using (var f = new Fixture(release))
+        {
+            f.Worker.Sources["manual.scl"] = "retained"; Assert.True((bool?)f.Apply()["ok"]); Assert.Equal(new[] { "manual.scl" }, f.Worker.Sources.Keys);
+        }
+    }
+    [Theory, MemberData(nameof(Releases))]
+    public void StandalonePreviewDetectsAChangedPreviousRecordBeforeWriting(string release)
+    {
+        using var f = new Fixture(release); var result = f.Apply(); Assert.True((bool?)result["ok"]);
+        string path = GenerationRecordFile.DefaultPath(f.Project), runId = (string)result["data"]!["runId"]!;
+        var preview = f.Session.Publish(path, "", runId, true, "").StructuredContent!["data"]!;
+        File.AppendAllText(path, " "); var before = File.ReadAllBytes(path);
+        Assert.Throws<ArgumentException>(() => f.Session.Publish(path, "", runId, false, (string)preview["planHash"]!)); Assert.Equal(before, File.ReadAllBytes(path));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void PublicationFileFailureLeavesSaveSuccessfulAndRunPartialWithoutPoisoningTheWorker(string release)
+    {
+        using var f = new Fixture(release); f.RecordIo = true; var result = f.Apply();
+        Assert.Equal("partial", (string?)result["meta"]!["outcome"]); Assert.Equal("partial", (string?)result["data"]!["status"]);
+        Assert.Contains(result["data"]!["steps"]!.AsArray(), s => (string?)s!["tool"] == "SaveProject" && (string?)s["status"] == "succeeded");
+        Assert.Contains(result["data"]!["events"]!.AsArray(), e => (string?)e!["event"] == "witness");
+        var record = Assert.Single(result["data"]!["steps"]!.AsArray(), s => (string?)s!["tool"] == "PublishGenerationRecord");
+        Assert.Contains((string?)record!["result"]!["error"]!["code"], new[] { "IO_FAILED", "PARTIAL_FAILURE" });
+        Assert.False(f.Worker.Uncertain); Assert.Empty(f.Worker.Sources);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void OwnedRetainedSourceIsDeletedAndReimportedBeforeFillingAMissingBlock(string release)
+    {
+        using var f = new Fixture(release); var initial = f.Plan(); Assert.True((bool?)f.Apply(initial)["ok"]);
+        var block = f.Worker.Objects.Single(o => o.Name == "FB_Motor"); f.Worker.Objects.Remove(block);
+        var generate = initial["steps"]!.AsArray().Single(s => (string?)s!["key"] == "PLC1/block/FB_Motor");
+        string source = (string)generate!["arguments"]!["externalSourceName"]!;
+        var import = initial["steps"]!.AsArray().Single(s => (string?)s!["tool"] == "ImportPlcExternalSource" && (string?)s["expect"]!["contains"] == source);
+        f.Worker.Sources[source] = File.ReadAllText((string)import!["arguments"]!["filePath"]!);
+        string path = GenerationRecordFile.DefaultPath(f.Project); var record = GenerationRecord.Parse(File.ReadAllText(path));
+        var owned = record.Objects.Single(o => o.Key == "PLC1/externalSource/" + source); owned.Witness!.Values["present"] = JsonSerializer.SerializeToElement(true);
+        record.RecordHash = GenerationRecord.Hash(record); File.WriteAllText(path, GenerationDocuments.Canonical(record));
+        var plan = f.Plan(); var replacement = Assert.Single(plan["steps"]!.AsArray().Where(s => ((string?)s!["key"])?.EndsWith("/replace") == true));
+        Assert.Equal(StepReviewRules.Delete, (string?)replacement!["review"]!["rule"]);
+        var newImport = plan["steps"]!.AsArray().Single(s => (string?)s!["tool"] == "ImportPlcExternalSource");
+        Assert.Contains(newImport!["dependsOn"]!.AsArray(), n => (string?)n == (string?)replacement["id"]);
+        var result = f.Apply(plan); Assert.True((bool?)result["ok"], result.ToJsonString()); Assert.Empty(f.Worker.Sources); Assert.Empty(f.Plan()["steps"]!.AsArray());
     }
 
 }

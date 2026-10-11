@@ -20730,6 +20730,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -23261,6 +23274,20 @@
         ],
         "arguments": {
           "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -29835,6 +29862,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -32457,6 +32497,20 @@
         ],
         "arguments": {
           "ip": "192.0.2.10"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -35445,6 +35499,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -37084,6 +37150,19 @@
         "arguments": {
           "plcRootPath": "PLC_1",
           "hmiRootPath": "HMI_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -39769,6 +39848,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -41506,6 +41597,19 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -44421,6 +44525,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -46202,6 +46318,19 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -49229,6 +49358,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -51025,6 +51166,19 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -54141,6 +54295,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -55952,6 +56118,19 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },
@@ -59194,6 +59373,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGenerationArtifacts",
+        "currentName": "ManageGenerationArtifacts",
+        "sourceName": "ManageGenerationArtifacts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGlobalLibrary",
         "currentName": "ManageGlobalLibrary",
         "sourceName": "ManageGlobalLibrary",
@@ -61019,6 +61210,19 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "PublishGenerationRecord",
+        "currentName": "PublishGenerationRecord",
+        "sourceName": "PublishGenerationRecord",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+          "runId": "00000000000000000000000000000000"
         },
         "envelopeVersion": 4
       },

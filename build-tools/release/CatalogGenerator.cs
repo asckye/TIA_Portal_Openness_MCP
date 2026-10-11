@@ -9,7 +9,7 @@ internal static class CatalogGenerator
 {
     internal const string Resource = "src/Logic/ModelContextProtocol/ToolProfiles.resx";
     internal const string Rejections = "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json";
-    internal static Dictionary<string, string> Generate(string root, bool legacyNames = false)
+    internal static Dictionary<string, string> Generate(string root, bool legacyNames = false, Action<Dictionary<string, string>>? prepareSources = null)
     {
         var data = new CatalogData(root); var tools = data.Archives.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone());
         foreach (var (name, entry) in data.Additions)
@@ -143,6 +143,9 @@ internal static class CatalogGenerator
             rejections["releases"]![key] = rows;
         }
         var outputs = VersionOutputs(data, legacyNames); outputs[Resource] = ResourceText(runtime); outputs[Rejections] = Encode(rejections);
+        // A new host tool needs these source catalogs to compile the tools-list capturer.
+        // Publish that validated preparation first; the unchanged roster/count gate still runs below.
+        prepareSources?.Invoke(outputs);
         var package = Read(root, "manifest/package-manifest.json"); var original = Copy(package); var roster = Read(root, "manifest/tools-list.json");
         Require(Set(roster["tools"]!.AsArray().Select(t => Text(t!["name"]))).SetEquals(data.Rosters["21"]), "Regenerate tools-list before package counts");
         package["entrypoints"]!["mcpServerExe"] = "runtime/v21/TiaMcp.FoundationHost.exe"; package["entrypoints"]!["configurator"] = "TiaOpenness.exe";

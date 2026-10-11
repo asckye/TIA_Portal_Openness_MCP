@@ -17936,6 +17936,157 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "3b1de1b7fd38d1ab1c913213c3d1f2fc9d9a08305ab583a61eeada820ebf79f3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "list or cleanup.",
+            "enum": [
+              "list",
+              "cleanup"
+            ],
+            "type": "string"
+          },
+          "artifactId": {
+            "default": "",
+            "description": "Exact artifactId from list; cleanup only.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "true previews; false cleans after approval.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact tool planHash from cleanup preview.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageGenerationArtifacts",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
+    },
+    {
       "descriptionSha256": "4bcf75e5310b12f8efe6e1d35cc52b5d4e9ff5e4972dffc1168fee514f1395d3",
       "inputSchema": {
         "additionalProperties": false,
@@ -21501,6 +21652,13 @@
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "adopt": {
+            "description": "Exact existing unknown-outcome object keys personally verified for adoption; never permits overwriting.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "machine": {
             "additionalProperties": {},
             "description": "Structured tiamcp.machine/1; existing mode supplies the bound project file, new mode supplies an absolute directory and project name.",
@@ -22358,6 +22516,158 @@
       },
       "name": "ProbePlcMonitorOnlineCapabilities",
       "outputSchema": null
+    },
+    {
+      "descriptionSha256": "0f3edd7ad2117401beea4773014eab4d328fe07b85202cb7644dba85f570ab19",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "true previews; false publishes after approval.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact tool planHash returned by preview; required for apply.",
+            "type": "string"
+          },
+          "planId": {
+            "default": "",
+            "description": "Generation planId; supply this or runId, exclusively.",
+            "type": "string"
+          },
+          "recordPath": {
+            "description": "Exact .tiagen.json path beside the bound .apXX file.",
+            "type": "string"
+          },
+          "runId": {
+            "default": "",
+            "description": "Durable runId; supply this or planId, exclusively.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recordPath"
+        ],
+        "type": "object"
+      },
+      "name": "PublishGenerationRecord",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "behaviorPolicy": {
+                "enum": [
+                  "not-applicable",
+                  "current",
+                  "safe-v4"
+                ]
+              },
+              "completeness": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "execution": {
+                "enum": [
+                  "not-started",
+                  "read-only",
+                  "completed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "succeeded",
+                  "rejected-before-operation",
+                  "read-failed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "paging": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "releaseKey": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "requiresSessionReset": {
+                "type": "boolean"
+              },
+              "timestamp": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "timestamp",
+              "releaseKey",
+              "tool",
+              "requestId",
+              "outcome",
+              "execution",
+              "requiresSessionReset",
+              "behaviorPolicy",
+              "completeness",
+              "paging",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "schemaVersion": {
+            "const": 4,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "ok",
+          "data",
+          "error",
+          "meta"
+        ],
+        "type": "object"
+      }
     },
     {
       "descriptionSha256": "b0ba091f1df06b96f130fd8421c854487a2ed7d9cc2b7b80828101fbe7bd4a1b",

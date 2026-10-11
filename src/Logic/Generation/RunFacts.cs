@@ -12,6 +12,8 @@ namespace TiaMcp.Logic.Generation
         private readonly Dictionary<string, HashSet<string>> sources = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         private readonly Dictionary<string, HashSet<string>> objects = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> identities = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly HashSet<string> completed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public string[] CompletedKeys => completed.OrderBy(k => k, StringComparer.Ordinal).ToArray();
         public RunFacts(GenerationPlan plan)
         {
             foreach (var pair in plan.Observed)
@@ -39,6 +41,7 @@ namespace TiaMcp.Logic.Generation
         }
         public JsonObject Accept(GenerationPlanStepsItem step, JsonObject result)
         {
+            if (step.Op == "create") completed.Add(step.Key);
             var added = new JsonObject();
             string software = step.Arguments.TryGetValue("softwarePath", out var path) ? path.GetString()! : "";
             if (!sources.ContainsKey(software)) sources[software] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -55,7 +58,8 @@ namespace TiaMcp.Logic.Generation
             }
             else if (step.Review?.Rule == StepReviewRules.Delete)
             {
-                sources[software].Remove((string)result["sourceName"]!); Put("deleted", JsonValue.Create(true));
+                string source = (string)result["sourceName"]!;
+                sources[software].Remove(source); identities.Remove(software + "/" + source); Put("deleted", JsonValue.Create(true));
             }
             else if (step.Tool == "MovePlcBlockToGroup")
             {

@@ -107,10 +107,10 @@
     }
   },
   "capabilities": {
-    "mcpToolCount": 514,
+    "mcpToolCount": 516,
     "mcpToolLayers": {
       "L2": 426,
-      "L1": 71,
+      "L1": 73,
       "L0": 17
     },
     "hmiTemplateJsonCount": 8,

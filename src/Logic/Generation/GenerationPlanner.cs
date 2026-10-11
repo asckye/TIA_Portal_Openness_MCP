@@ -57,7 +57,7 @@ namespace TiaMcp.Logic.Generation
             string stem = segment.Split('.')[0].ToUpperInvariant();
             if (stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL" ||
                 (stem.Length == 4 && (stem.StartsWith("COM", StringComparison.Ordinal) || stem.StartsWith("LPT", StringComparison.Ordinal)) &&
-                ((stem[3] >= '1' && stem[3] <= '9') || stem[3] == '¹' || stem[3] == '²' || stem[3] == '³')))
+                ((stem[3] >= '1' && stem[3] <= '9') || stem[3] == '鹿' || stem[3] == '虏' || stem[3] == '鲁')))
                 throw new ArgumentException("Windows device names cannot identify a project.");
         }
     }
@@ -171,11 +171,38 @@ namespace TiaMcp.Logic.Generation
                 foreach (var device in OrderedDevices()) Expand(device, tagsOnly: false);
                 CallBlocks();
                 ResolveReferences();
-                var differences = ProjectModelComparison.Compare(expected, observed).ToDictionary(d => d.Key, StringComparer.OrdinalIgnoreCase);
+                var differences = ProjectModelComparison.Compare(expected, observed, options).ToDictionary(d => d.Key, StringComparer.OrdinalIgnoreCase);
+                plan.Objects = ProjectModelComparison.Describe(expected);
+                foreach (var item in plan.Objects)
+                {
+                    var entry = entries[item.Key];
+                    var source = entry.Object is ProjectExternalSource ? entry : entry.Dependencies.Select(d => entries[d]).FirstOrDefault(e => e.Object is ProjectExternalSource);
+                    if (source != null && source.Arguments.TryGetValue("filePath", out var file))
+                    {
+                        var artifact = artifacts.Single(a => file.GetString()!.EndsWith("/" + a.Path, StringComparison.Ordinal));
+                        item.Artifact = new FileDigest { Path = artifact.Path, Sha256 = artifact.Sha256 };
+                    }
+                }
+                plan.Adopt = options.Adopt.Select(k => plan.Objects.Single(o => string.Equals(o.Key, k, StringComparison.OrdinalIgnoreCase)).Key).OrderBy(k => k, StringComparer.Ordinal).ToList();
+                foreach (var source in entries.Values.Where(e => e.Object is ProjectExternalSource))
+                {
+                    var consumers = entries.Values.Where(e => e.Tool == "GenerateBlocksFromExternalSource" && e.Dependencies.Contains(source.Key)).ToArray();
+                    if (consumers.Length > 0 && consumers.All(e => differences[e.Key].Operation != "create") && differences[source.Key].Detail != "exists-identical")
+                        differences[source.Key] = new ProjectObjectDifference(source.Key, "skip", "generation-satisfied");
+                    else if (consumers.Any(e => differences[e.Key].Operation == "create") && differences[source.Key].Detail is "owned-unchanged" or "adopted")
+                    {
+                        var previous = options.Ownership.Single(o => string.Equals(o.Key, source.Key, StringComparison.OrdinalIgnoreCase));
+                        var item = plan.Objects.Single(o => o.Key == source.Key);
+                        item.State = differences[source.Key].Detail == "adopted" ? "adopted" : previous.State;
+                        item.Witness = options.Witnesses.TryGetValue(source.Key, out var witness) ? witness : previous.Witness; item.CreatedBy = previous.CreatedBy;
+                        differences[source.Key] = new ProjectObjectDifference(source.Key, "create", "replace-owned-source");
+                    }
+                }
                 foreach (var difference in differences.Values.OrderBy(d => d.Key, StringComparer.Ordinal))
                 {
-                    if (difference.Operation == "skip") plan.Skipped.Add(new GenerationPlanSkippedItem { Key = difference.Key, Reason = "exists-identical" });
-                    if (difference.Operation == "conflict") plan.Conflicts.Add(new GenerationPlanConflictsItem { Key = difference.Key, Reason = "exists-different", Detail = difference.Detail });
+                    if (difference.Operation == "skip") plan.Skipped.Add(new GenerationPlanSkippedItem { Key = difference.Key, Reason = difference.Detail });
+                    if (difference.Operation == "conflict") plan.Conflicts.Add(new GenerationPlanConflictsItem { Key = difference.Key,
+                        Reason = new[] { "unknown-outcome", "modified-after-generation", "regeneration-required" }.Contains(difference.Detail) ? difference.Detail : "exists-different", Detail = difference.Detail });
                 }
                 var unavailable = new Dictionary<string, SortedSet<string>>(StringComparer.Ordinal);
                 foreach (var entry in entries.Values.Where(e => differences[e.Key].Operation == "create"))
@@ -211,6 +238,13 @@ namespace TiaMcp.Logic.Generation
                     if (previous != entry.Key)
                         foreach (var step in steps.Values.Where(s => s.Key != entry.Key && s.Key != previous && s.DependsOn.Contains(entry.Key)))
                         { step.DependsOn.Remove(entry.Key); step.DependsOn.Add(previous); }
+                }
+                foreach (var source in selected.Where(e => e.Object is ProjectExternalSource && differences[e.Key].Detail == "replace-owned-source"))
+                {
+                    string key = source.Key + "/replace";
+                    var replace = Step(key, source.Phase, "execute", "DeletePlcExternalSource", Args(("softwarePath", source.Arguments["softwarePath"]),
+                        ("groupPath", ""), ("externalSourceName", source.Object.Name), ("dryRun", false), ("confirm", true)), "ListPlcExternalSources");
+                    replace.DependsOn = steps[source.Key].DependsOn.ToList(); steps.Add(key, replace); steps[source.Key].DependsOn.Add(key);
                 }
                 ProjectAndFinalActions(steps);
                 if (steps.Count > 10000) throw CanonicalJson.Failure("/steps", "limit", "Plan exceeds 10000 steps.");
@@ -616,6 +650,25 @@ namespace TiaMcp.Logic.Generation
                             Forbid = new Dictionary<string, List<string>> { ["objectKeysBefore"] = new List<string> { objectKey } },
                             Effect = Args(("generated", new[] { objectKey }), ("others", "forbidden")) };
                     }
+                    else if (step.Tool == "DeletePlcExternalSource" && step.Key.EndsWith("/replace", StringComparison.Ordinal))
+                    {
+                        string key = step.Key.Substring(0, step.Key.Length - "/replace".Length), source = step.Arguments["externalSourceName"].GetString()!;
+                        var owned = plan.Objects.Single(o => o.Key == key);
+                        step.Review = new GenerationStepReview { Rule = StepReviewRules.Delete,
+                            Expect = Args(("softwarePath", step.Arguments["softwarePath"]), ("groupPath", ""), ("sourceName", source), ("sourcesBefore", "observed+run"), ("ownedKey", key)),
+                            Witness = new Dictionary<string, string> { ["planHash"] = "sha256", ["targetIdentity"] = "capture-owned-source", ["ownership"] = CanonicalJson.Hash(JsonSerializer.SerializeToElement(owned)) },
+                            Effect = Args(("sourcesRemoved", new[] { source })) };
+                    }
+                    else if (step.Tool == "DeletePlcExternalSource" && step.Phase == "cleanup")
+                    {
+                        string software = step.Arguments["softwarePath"].GetString()!, source = step.Arguments["externalSourceName"].GetString()!;
+                        var import = plan.Steps.Single(s => s.Tool == "ImportPlcExternalSource" && s.Expect.Contains == source && s.Arguments["softwarePath"].GetString() == software);
+                        var generate = plan.Steps.Single(s => s.Tool == "GenerateBlocksFromExternalSource" && s.Arguments["externalSourceName"].GetString() == source && s.Arguments["softwarePath"].GetString() == software);
+                        step.Review = new GenerationStepReview { Rule = StepReviewRules.Delete,
+                            Expect = Args(("softwarePath", software), ("groupPath", ""), ("sourceName", new { fact = import.Id + ".sourceName" }), ("sourcesBefore", "observed+run")),
+                            Witness = new Dictionary<string, string> { ["planHash"] = "sha256", ["targetIdentity"] = "fact:" + generate.Id + ".sourceIdentity" },
+                            Effect = Args(("sourcesRemoved", new[] { source })) };
+                    }
                 }
                 var unavailable = plan.Unavailable.Select(u => u.Phase).ToHashSet(StringComparer.Ordinal);
                 bool changed;
@@ -824,7 +877,7 @@ namespace TiaMcp.Logic.Generation
                     steps.Add(key, Step(key, "project", "execute", "ArchiveSavedProject", Args(("archivePath", path), ("dryRun", false)), "GetSessionState"));
                     foreach (var step in steps.Values.Where(s => s.Key != key)) step.DependsOn.Add(key);
                 }
-                if (steps.Count == 0) return;
+                if (steps.Count == 0 && plan.Adopt.Count == 0) return;
                 var prerequisites = steps.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
                 foreach (var station in machine.Devices.Select(d => d.Station).Distinct().OrderBy(s => s, StringComparer.Ordinal))
                 {
@@ -832,8 +885,25 @@ namespace TiaMcp.Logic.Generation
                     var step = Step(key, "compile", "execute", "CompilePlcDiagnostics", Args(("softwarePath", Software(station)), ("dryRun", false), ("confirm", true)), "CompilePlcDiagnostics");
                     step.DependsOn = prerequisites.ToList(); steps.Add(key, step);
                 }
+                foreach (var import in steps.Values.Where(s => s.Tool == "ImportPlcExternalSource").ToArray())
+                {
+                    string software = import.Arguments["softwarePath"].GetString()!;
+                    var cleanup = Step(import.Key + "/cleanup", "cleanup", "execute", "DeletePlcExternalSource",
+                        Args(("softwarePath", software), ("groupPath", ""), ("externalSourceName", import.Expect.Contains!), ("dryRun", false), ("confirm", true)), "ListPlcExternalSources");
+                    cleanup.DependsOn = prerequisites.Concat(steps.Values.Where(s => s.Phase == "compile").Select(s => s.Key)).Distinct().ToList();
+                    steps.Add(cleanup.Key, cleanup);
+                }
                 var save = Step("project/save", "save", "execute", "SaveProject", Args(("dryRun", false), ("confirm", true)), "GetSessionState");
                 save.DependsOn = steps.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList(); steps.Add(save.Key, save);
+                if (options.RecordPath != null)
+                {
+                    var record = Step("project/record", "record", "execute", "PublishGenerationRecord", Args(("planId", plan.PlanId), ("recordPath", options.RecordPath), ("dryRun", false)), "GetGenerationRun");
+                    record.DependsOn = steps.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
+                    record.Review = new GenerationStepReview { Rule = StepReviewRules.Record,
+                        Expect = Args(("recordPath", options.RecordPath), ("previousRecordHash", options.PreviousRecordHash)),
+                        Witness = new Dictionary<string, string> { ["planHash"] = "sha256" }, Effect = Args(("recordPath", options.RecordPath)) };
+                    steps.Add(record.Key, record);
+                }
             }
         }
 

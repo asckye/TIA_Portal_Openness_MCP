@@ -14,7 +14,7 @@ internal static partial class ReleaseCommands
         var root = Path.GetFullPath(options.Get("Root", Root)); Dictionary<string, string> outputs;
         switch (command)
         {
-            case "generate-catalogs": outputs = CatalogGenerator.Generate(root); break;
+            case "generate-catalogs": outputs = CatalogGenerator.Generate(root, prepareSources: options.Has("Check") ? null : prepared => CatalogJson.Write(root, prepared, false)); break;
             case "generate-tool-usage": outputs = new() { ["src/Shared/ToolUsageData.json"] = CatalogJson.Encode(ToolUsageGenerator.Generate(root)) }; break;
             case "generate-release-migration": outputs = new() { [ReleaseMigrationGenerator.Output] = ReleaseMigrationGenerator.Render(root) }; break;
             case "audit-version-tools":

@@ -138,12 +138,12 @@ namespace TiaMcp.Logic.Generation
                     if (!late.SequenceEqual(new[] { "expectedPlanHash" }) || step.GetProperty("arguments").TryGetProperty("expectedPlanHash", out _))
                         errors.Add(new GenerationValidationError(path + "/review/lateArguments", "late-slot", "Only expectedPlanHash from this step's preview may be late-filled."));
                     var rule = review.GetProperty("rule").GetString();
-                    string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : "";
+                    string tool = rule == StepReviewRules.Import ? "ImportPlcExternalSource" : rule == StepReviewRules.Generate ? "GenerateBlocksFromExternalSource" : rule == StepReviewRules.Delete ? "DeletePlcExternalSource" : rule == StepReviewRules.Record ? "PublishGenerationRecord" : "";
                     if (tool.Length == 0 || step.GetProperty("tool").GetString() != tool) errors.Add(new GenerationValidationError(path + "/review/rule", "review-rule", "Current preview rule must match the step tool."));
                     var expect = review.GetProperty("expect");
                     var required = rule == StepReviewRules.Import ? new[] { "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "sourceName", "sourcesBefore" }
                         : rule == StepReviewRules.Generate ? new[] { "softwarePath", "groupPath", "sourceName", "generationOption", "resultBasis", "objectKeysBefore" }
-                        : new[] { "softwarePath", "groupPath", "sourceName", "sourcesBefore" };
+                        : rule == StepReviewRules.Record ? new[] { "recordPath", "previousRecordHash" } : new[] { "softwarePath", "groupPath", "sourceName", "sourcesBefore" };
                     if (required.Any(field => !expect.TryGetProperty(field, out _))) errors.Add(new GenerationValidationError(path + "/review/expect", "review-fields", "Every deciding field and inventory prediction must be declared."));
                     var witness = review.GetProperty("witness");
                     if (!witness.TryGetProperty("planHash", out var constraint) || constraint.GetString() != "sha256") errors.Add(new GenerationValidationError(path + "/review/witness", "review-witness", "The tool preview hash requires a sha256 constraint."));

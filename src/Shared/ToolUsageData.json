@@ -7577,6 +7577,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ManageGenerationArtifacts": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ManageGlobalLibrary": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -8913,6 +8920,13 @@
       "manualReferences": []
     },
     "ProbeS7CpuIdentity": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
+    "PublishGenerationRecord": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
       "documents": [],
@@ -36248,7 +36262,7 @@
             }
           },
           "operations": {},
-          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay.",
+          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
           "validation": "Offline fault injection; native acceptance NOT RUN.",
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
@@ -36262,7 +36276,7 @@
             "dryRun": true
           },
           "operations": {},
-          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay.",
+          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
           "validation": "Offline fault injection; native acceptance NOT RUN.",
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
@@ -36273,7 +36287,7 @@
             "runId": "00000000000000000000000000000000"
           },
           "operations": {},
-          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay.",
+          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
           "validation": "Offline fault injection; native acceptance NOT RUN.",
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
@@ -38358,6 +38372,45 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "PublishGenerationRecord": {
+          "arguments": {
+            "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+            "runId": "00000000000000000000000000000000"
+          },
+          "operations": {},
+          "note": "Preview after SaveProject. Supply exactly one planId/runId and the record path beside the bound .apXX. Apply uses dryRun:false and the fresh tool expectedPlanHash; ordinary approval or the generation record step grant applies. Changed previous records and reparse points refuse publication. Retain run facts on file failure and preview again.",
+          "validation": "Stateful offline witnesses and fault injection; native stability NOT RUN.",
+          "resultReading": [
+            "Inspect data.previousRecordHash, data.recordHash, data.planHash and data.record.objects. recordHash verifies canonical ownership. Missing post-write witnesses remain unknown-outcome conflicts."
+          ]
+        },
+        "ManageGenerationArtifacts": {
+          "arguments": {
+            "action": "list"
+          },
+          "operations": {
+            "list": {
+              "arguments": {
+                "action": "list",
+                "dryRun": true
+              },
+              "meaning": "List retained staging and durable run references without deleting files."
+            },
+            "cleanup": {
+              "arguments": {
+                "action": "cleanup",
+                "artifactId": "gen-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "dryRun": true
+              },
+              "meaning": "Preview one exact artifactId returned by list; apply needs the fresh expectedPlanHash and approval."
+            }
+          },
+          "note": "List retained artifacts, then preview action:cleanup with one returned artifactId. Execute with dryRun:false and exact expectedPlanHash after approval. Active/interrupted run evidence is retained. Logs, consumed claims and backups remain.",
+          "validation": "Offline retention and stale-file refusal; no native calls.",
+          "resultReading": [
+            "Inspect data.items and their run references. Only an exact reviewed framework staging directory can be cleaned."
+          ]
         }
       },
       "full-engine": {
@@ -56900,7 +56953,7 @@
             }
           },
           "operations": {},
-          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay.",
+          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
           "validation": "Offline fault injection; native acceptance NOT RUN.",
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
@@ -56914,7 +56967,7 @@
             "dryRun": true
           },
           "operations": {},
-          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay.",
+          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
           "validation": "Offline fault injection; native acceptance NOT RUN.",
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
@@ -56925,10 +56978,49 @@
             "runId": "00000000000000000000000000000000"
           },
           "operations": {},
-          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay.",
+          "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
           "validation": "Offline fault injection; native acceptance NOT RUN.",
           "resultReading": [
             "Read ok/error and meta.outcome/execution. Planning returns data.plan.planId/planHash and expectedProject. Apply returns runId and retained step evidence. GetGenerationRun survives host restarts; NOT_EXECUTED and unknown steps must not be replayed."
+          ]
+        },
+        "PublishGenerationRecord": {
+          "arguments": {
+            "recordPath": "C:/Projects/Line1/Line1.tiagen.json",
+            "runId": "00000000000000000000000000000000"
+          },
+          "operations": {},
+          "note": "Preview after SaveProject. Supply exactly one planId/runId and the record path beside the bound .apXX. Apply uses dryRun:false and the fresh tool expectedPlanHash; ordinary approval or the generation record step grant applies. Changed previous records and reparse points refuse publication. Retain run facts on file failure and preview again.",
+          "validation": "Stateful offline witnesses and fault injection; native stability NOT RUN.",
+          "resultReading": [
+            "Inspect data.previousRecordHash, data.recordHash, data.planHash and data.record.objects. recordHash verifies canonical ownership. Missing post-write witnesses remain unknown-outcome conflicts."
+          ]
+        },
+        "ManageGenerationArtifacts": {
+          "arguments": {
+            "action": "list"
+          },
+          "operations": {
+            "list": {
+              "arguments": {
+                "action": "list",
+                "dryRun": true
+              },
+              "meaning": "List retained staging and durable run references without deleting files."
+            },
+            "cleanup": {
+              "arguments": {
+                "action": "cleanup",
+                "artifactId": "gen-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "dryRun": true
+              },
+              "meaning": "Preview one exact artifactId returned by list; apply needs the fresh expectedPlanHash and approval."
+            }
+          },
+          "note": "List retained artifacts, then preview action:cleanup with one returned artifactId. Execute with dryRun:false and exact expectedPlanHash after approval. Active/interrupted run evidence is retained. Logs, consumed claims and backups remain.",
+          "validation": "Offline retention and stale-file refusal; no native calls.",
+          "resultReading": [
+            "Inspect data.items and their run references. Only an exact reviewed framework staging directory can be cleaned."
           ]
         }
       }

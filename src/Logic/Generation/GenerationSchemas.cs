@@ -48,7 +48,7 @@ namespace TiaMcp.Logic.Generation
                 using var document = JsonDocument.Parse(stream);
                 schemas.Add(name.Substring("TiaMcp.Generation.Schemas.".Length).Replace(".schema.json", ""), document.RootElement.Clone());
             }
-            if (schemas.Count != 14) throw new InvalidOperationException("Generation schema resources are missing.");
+            if (schemas.Count != 15) throw new InvalidOperationException("Generation schema resources are missing.");
             return schemas;
         }
 

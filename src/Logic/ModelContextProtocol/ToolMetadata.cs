@@ -51,6 +51,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["PlanProjectGeneration"] = new Classification("L1", "Project", "READ", false, false, false),
             ["ApplyGenerationPlan"] = new Classification("L1", "Project", "WRITE", false, false, false),
             ["GetGenerationRun"] = new Classification("L1", "Project", "READ", false, false, false),
+            ["PublishGenerationRecord"] = new Classification("L1", "Project", "FILE", false, false, false),
+            ["ManageGenerationArtifacts"] = new Classification("L1", "Project", "FILE", false, false, false),
             ["AnalyzeGlobalLibraryPackage"] = new Classification("L2", "HMI-Library", "OFFLINE", true, false, false),
             ["AnalyzeHmiTemplateReference"] = new Classification("L2", "HMI-Library", "OFFLINE", true, false, false),
             ["AnalyzePlcReferences"] = new Classification("L2", "Validation", "OFFLINE", false, false, false),

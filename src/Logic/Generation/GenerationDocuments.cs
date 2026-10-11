@@ -68,6 +68,7 @@ namespace TiaMcp.Logic.Generation
             if (type == typeof(StandardPackageManifest)) return "package";
             if (type == typeof(MachineDescription)) return "machine";
             if (type == typeof(GenerationPlan)) return "plan";
+            if (type == typeof(GenerationRecord)) return "generation-record";
             if (type == typeof(StandardCheckResult)) return "check-result";
             if (type == typeof(NamingPart)) return "naming";
             if (type == typeof(StructurePart)) return "structure";

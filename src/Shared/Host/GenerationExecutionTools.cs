@@ -16,14 +16,15 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal sealed partial class GenerationTools
     {
-        private GenerationExecutionSession ExecutionSession => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Generation;
+        private GenerationExecutionSession ExecutionSession => executionSession ?? TiaMcp.FoundationHost.EngineHostConfiguration.Current.Generation;
 
         [McpServerTool(Name = "PlanProjectGeneration"), Description("[L1][Project][READ] Expand an exact standard package and structured machine against the bound project's complete READ inventory, or plan a new project in a connected unbound portal. Session release must match. Returns deterministic tiamcp.plan/1 with deciding arguments, observed inventories, approved preview projections, forbidden objects, effect declarations and artifact hashes. Only expectedPlanHash is filled later from each tool's own matched preview. External sources use the root; generated blocks move to declared groups. No native writes. Unprovable readback conflicts; unavailable phases are skipped. Plans belong to this MCP session and binding; inspect before apply.")]
         public CallToolResult PlanProjectGeneration(
             [Description("Exact installed package id.")] string packageId,
             [Description("Exact installed SemVer version.")] string version,
-            [Description("Structured tiamcp.machine/1; existing mode supplies the bound project file, new mode supplies an absolute directory and project name.")] ToolArguments machine)
-            => Execute("PlanProjectGeneration", () => ExecutionSession.Plan(store().Effective(store().Load(packageId, version)), machine.Json.GetRawText()));
+            [Description("Structured tiamcp.machine/1; existing mode supplies the bound project file, new mode supplies an absolute directory and project name.")] ToolArguments machine,
+            [Description("Exact existing unknown-outcome object keys personally verified for adoption; never permits overwriting.")] string[]? adopt = null)
+            => Execute("PlanProjectGeneration", () => ExecutionSession.Plan(store().Effective(store().Load(packageId, version)), machine.Json.GetRawText(), adopt));
 
         [McpServerTool(Name = "ApplyGenerationPlan"), Description("[L1][Project][WRITE] Preview a stored generation plan by default. Execute with dryRun=false, exact fresh expectedPlanHash and expectedProject. One Workbench plan approval covers selected steps. Active runs fence all other session writes, including attached panel writes. Cancellation stops between steps; earlier writes remain. New projects rebind within the run only after verified process, path, epoch and empty-tree readback. Source steps use their own preview, compare approved deciding fields, inventories and witness constraints, fill only expectedPlanHash, then use existing admission/precheck/hash checks/audit/worker lane and verify effects. Stop on refusal, failure, unknown or divergence; retain completed writes and run facts, never retry. Replan to approve changes. Freshness is checked before approval and the first write; approved runs have 4-hour/10000-step caps. Optional phases must include dependencies.")]
         public CallToolResult ApplyGenerationPlan(
@@ -67,9 +68,9 @@ namespace TiaMcpServer.ModelContextProtocol
             : base("Generation evidence could not be persisted after dispatch; inspect run " + runId + ", reset the session and replan. Never replay.", inner) { RunId = runId; }
     }
 
-    internal sealed class GenerationExecutionSession
+    internal sealed partial class GenerationExecutionSession
     {
-        private sealed record Stored(GenerationPlanningResult Result, string Binding, string Project, string Release, DateTimeOffset Expires, string BoundProject);
+        private sealed record Stored(GenerationPlanningResult Result, string Binding, string Project, string Release, DateTimeOffset Expires, string BoundProject, Dictionary<string, string> SoftwarePaths);
         private readonly Dictionary<string, Stored> plans = new(StringComparer.Ordinal);
         private readonly object sync = new();
         private readonly Func<string> root;
@@ -119,9 +120,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new GenerationCallRejection(new Error("Verified process and project binding identity are required.", new PreconditionFailedDetails("generation-identity", project)));
             return (PendingApproval.Canonical(identity), project ?? "");
         }
-        internal CallToolResult Plan(StandardPackage package, string machineJson)
+        internal CallToolResult Plan(StandardPackage package, string machineJson, string[]? adopt = null)
         {
             var machine = package.ValidateMachine(machineJson);
+            new GenerationArtifacts(root()).ExpireUnreferenced(now());
             string release = McpServer.ReleaseKey;
             if (machine.Target.Release != release) throw new ArgumentException("Machine release must match the session release.", "machine.target.release");
             bool newProject = machine.Target.Project.Mode == "new";
@@ -129,12 +131,15 @@ namespace TiaMcpServer.ModelContextProtocol
             if (newProject ? before.Project.Length != 0 : machine.Target.Project.ProjectIdentity != before.Project)
                 throw new GenerationCallRejection(new Error(newProject ? "New-project planning requires a connected portal without a bound project." : "Bind the intended existing project first and supply its exact project file.", new PreconditionFailedDetails("generation-project", before.Project)));
             string project = newProject ? GenerationProjectPath.CreationFile(release, machine.Target.Project.Directory!, machine.Target.Project.Name!) : before.Project;
-            var options = new GenerationPlanningOptions { ArtifactRoot = Path.Combine(root(), "artifacts"), Lineage = Records.Lineage(project, release) };
+            var options = new GenerationPlanningOptions { ArtifactRoot = Path.Combine(root(), "artifacts"), Lineage = Records.Lineage(project, release),
+                RecordPath = GenerationRecordFile.DefaultPath(project), Adopt = (adopt ?? Array.Empty<string>()).ToList() };
             foreach (var station in machine.Stations) options.SoftwarePaths[station.Id] = machine.Target.Project.SoftwarePath ?? station.Id;
             var observed = newProject ? new ProjectModel { ProjectIdentity = project } : Observe(machine, before.Project, options);
+            LoadOwnership(project, release, observed, options);
             var result = GenerationPlanner.Build(package, machineJson, observed, options);
-            PrepareArguments(result.Plan, project);
             result.Plan.PlanId = "gen-" + Digest(CanonicalJson.Hash(JsonSerializer.SerializeToElement(new { plannerId = result.Plan.PlanId, binding = before.Binding })));
+            foreach (var record in result.Plan.Steps.Where(s => s.Tool == "PublishGenerationRecord")) record.Arguments["planId"] = JsonSerializer.SerializeToElement(result.Plan.PlanId);
+            PrepareArguments(result.Plan, project);
             if (Target(allowUnbound: newProject) != before) throw new GenerationCallRejection(new Error("Project binding changed during readback.", new PlanStaleDetails(Digest(result.Plan.PlanHash), "identity")));
             result.Plan.PlanHash = GenerationDocuments.PlanHash(GenerationDocuments.Canonical(result.Plan));
             result.StageArtifacts();
@@ -147,7 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 foreach (var id in plans.Where(p => p.Value.Expires < now()).Select(p => p.Key).ToArray()) plans.Remove(id);
                 if (plans.Count >= 32 && !plans.ContainsKey(result.Plan.PlanId)) throw new ArgumentException("Session plan limit reached; begin a new session.", "machine");
-                plans[result.Plan.PlanId] = new Stored(result, before.Binding, project, release, now().AddMinutes(10), before.Project);
+                plans[result.Plan.PlanId] = new Stored(result, before.Binding, project, release, now().AddMinutes(10), before.Project, options.SoftwarePaths);
             }
             return McpServer.V4Result("PlanProjectGeneration", new JsonObject { ["plan"] = JsonNode.Parse(result.CanonicalPlan), ["expectedProject"] = project,
                 ["expiresUtc"] = now().AddMinutes(10).ToString("O") });
@@ -193,7 +198,7 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var pair in unavailable) plan.Unavailable.Add(new GenerationPlanUnavailableItem { Phase = pair.Key, Reason = string.Join(" ", pair.Value) });
             plan.Steps.RemoveAll(s => unavailable.ContainsKey(s.Phase));
             // Final actions must not create the impression of compiling/saving an otherwise empty generation.
-            if (plan.Steps.All(s => s.Phase == "compile" || s.Phase == "save" || s.Key == "project/backup")) plan.Steps.Clear();
+            if (plan.Adopt.Count == 0 && plan.Steps.All(s => s.Phase == "compile" || s.Phase == "save" || s.Phase == "record" || s.Key == "project/backup")) plan.Steps.Clear();
         }
         private ProjectModel Observe(MachineDescription machine, string identity, GenerationPlanningOptions options)
         {
@@ -249,7 +254,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (node is JsonArray array) foreach (var item in array) foreach (var child in Walk(item)) yield return child;
         }
         private static JsonArray Items(JsonObject data) => data["items"] as JsonArray ?? throw new ArgumentException("Complete item inventory is missing.");
-        private static string Name(JsonNode? item) => item is JsonValue value ? value.GetValue<string>() : (string?)item?["name"] ?? throw new ArgumentException("Inventory name is missing.");
+        private static string Name(JsonNode? item) => item is JsonValue value ? value.GetValue<string>() : (string?)(item?["name"] ?? item?["Name"]) ?? throw new ArgumentException("Inventory name is missing.");
         private static JsonObject? Body(CallToolResult result) => (result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null")) as JsonObject;
         internal CallToolResult ReadRun(string runId) => McpServer.V4Result("GetGenerationRun", Records.Read(runId));
         internal CallToolResult Apply(string planId, string hash, string expectedProject, string[]? phases, bool preview)
@@ -275,11 +280,12 @@ namespace TiaMcpServer.ModelContextProtocol
             AuditInvocation.RecordCurrentRequest(plan.PlanHash);
             var records = Records;
             string runId = records.Begin(new JsonObject { ["planId"] = planId, ["planHash"] = hash, ["release"] = stored.Release, ["parentRequestId"] = parentId,
+                ["softwarePaths"] = JsonSerializer.SerializeToNode(stored.SoftwarePaths), ["actor"] = ActorScope.Actor,
                 ["project"] = stored.Project, ["steps"] = JsonSerializer.SerializeToNode(steps.Select(s => new { s.Id, s.Phase, s.Key, s.Tool, s.ArgumentDigest }), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
                 ["plan"] = JsonNode.Parse(stored.Result.CanonicalPlan),
                 ["caps"] = new JsonObject { ["maximumSteps"] = maximumSteps, ["maximumSeconds"] = maximumDuration.TotalSeconds } });
             ApprovalOutcome? approval = null;
-            int succeeded = 0; bool dispatched = false; string status = "rejected-before-operation", stopping = "approval"; JsonObject? last = null;
+            int succeeded = 0; bool dispatched = false; string status = "rejected-before-operation", stopping = "approval", activePhase = ""; JsonObject? last = null;
             var facts = new RunFacts(plan);
             object sessionKey = TiaMcp.FoundationHost.EngineHostConfiguration.Current.Worker.SessionKey;
             var requestCancellation = McpServer.WorkerDispatchCancellation;
@@ -289,7 +295,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 approval = wait(pending, settings, McpServer.WorkerDispatchCancellation).GetAwaiter().GetResult();
-                records.Append(runId, new JsonObject { ["event"] = "approval", ["disabled"] = approval.Disabled, ["reason"] = approval.Reason });
+                records.Append(runId, new JsonObject { ["event"] = "approval", ["disabled"] = approval.Disabled, ["reason"] = approval.Reason, ["requestId"] = pending.RequestId });
                 if (approval.Reason != null) throw new GenerationCallRejection(HostBehavior.Confirmation(approval.Reason, Digest(hash), parentId));
                 started = now();
                 if (McpServer.GenerationFenceRefusal("ApplyGenerationPlan", "{\"dryRun\":false}") is { } active)
@@ -302,6 +308,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 int count = 0;
                 foreach (var step in steps)
                 {
+                    activePhase = step.Phase;
                     if (Cancelled()) { status = "cancelled"; stopping = "cancelled-between-steps"; records.Append(runId, new JsonObject { ["event"] = "cancel", ["stepId"] = step.Id }); break; }
                     if (now() - started >= maximumDuration || count >= maximumSteps) { status = "cap"; stopping = "run-cap"; break; }
                     using var deferredCancellation = McpServer.DeferGenerationCancellation();
@@ -325,7 +332,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             records.Append(runId, new JsonObject { ["event"] = "step-end", ["stepId"] = step.Id, ["requestId"] = previewId, ["status"] = status, ["result"] = previewBody?.DeepClone() }); break;
                         }
                         var projection = StepReviewRules.Project(previewBody!["data"]!.AsObject());
-                        string software = step.Arguments["softwarePath"].GetString()!;
+                        string software = step.Arguments.TryGetValue("softwarePath", out var softwareArgument) ? softwareArgument.GetString()! : "";
                         // Import's current result omits the before inventory. Use the existing READ surface after preview.
                         if (step.Review.Rule == StepReviewRules.Import || step.Review.Rule == StepReviewRules.Delete)
                             projection["sourcesBefore"] = SourceNames(software);
@@ -361,6 +368,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         last = Body(result);
                         string outcome = (string?)last?["meta"]?["outcome"] ?? "unknown";
                         if (outcome == "succeeded" && (bool?)last?["ok"] != true) outcome = "unknown";
+                        if (outcome == "succeeded" && step.Phase == "compile" && Walk(last?["data"]).Any(o => o.Any(p =>
+                            string.Equals(p.Key, "errorCount", StringComparison.OrdinalIgnoreCase) && int.TryParse(p.Value?.ToString(), out var errors) && errors > 0))) outcome = "failed";
                         if (outcome != "rejected-before-operation") claim.Consume();
                         if (outcome == "succeeded" && step.Review?.Mode == "tool-preview")
                         {
@@ -411,13 +420,14 @@ namespace TiaMcpServer.ModelContextProtocol
                         succeeded++;
                         var accepted = facts.Accept(step, last!["data"]!.AsObject());
                         if (accepted.Count > 0) records.Append(runId, new JsonObject { ["event"] = "fact", ["stepId"] = step.Id, ["requestId"] = requestId, ["values"] = accepted });
+                        if (step.Tool == "SaveProject") PersistWitnesses(records, runId, plan);
                     }
                     catch (Exception ex)
                     {
-                        status = "unknown"; stopping = step.Id;
+                        status = step.Phase == "record" ? "partial" : "unknown"; stopping = step.Id;
                         claim.Consume();
-                        McpServer.MarkSharedSessionUncertain();
-                        records.Append(runId, new JsonObject { ["event"] = "step-end", ["stepId"] = step.Id, ["requestId"] = requestId, ["status"] = "unknown",
+                        if (step.Phase != "record") McpServer.MarkSharedSessionUncertain();
+                        records.Append(runId, new JsonObject { ["event"] = "step-end", ["stepId"] = step.Id, ["requestId"] = requestId, ["status"] = status,
                             ["error"] = ex.GetType().Name + ": " + ex.Message });
                         break;
                     }
@@ -435,6 +445,7 @@ namespace TiaMcpServer.ModelContextProtocol
             finally
             {
                 // Release even when evidence I/O or approval completion fails. Shutdown releases independently.
+                if (activePhase == "record" && succeeded > 0 && status != "succeeded") status = "partial";
                 fence?.Dispose();
                 try
                 {

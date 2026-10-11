@@ -19,13 +19,35 @@ namespace TiaMcp.Logic.Generation
         private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
         { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
-        public static IReadOnlyList<ProjectObjectDifference> Compare(ProjectModel expected, ProjectModel observed)
+        public static IReadOnlyList<ProjectObjectDifference> Compare(ProjectModel expected, ProjectModel observed, GenerationPlanningOptions? options = null)
         {
             if (!observed.Complete) throw CanonicalJson.Failure("/observed", "readback-incomplete", "Complete readback is required; absence cannot be inferred from a partial snapshot.");
             var actual = Index(observed);
             var desired = Index(expected);
-            return desired.OrderBy(p => p.Key, StringComparer.Ordinal).Select(pair => Difference(pair.Key, pair.Value, actual)).ToArray();
+            var ownership = (options?.Ownership ?? new List<GenerationRecordObject>()).ToDictionary(o => o.Key, StringComparer.OrdinalIgnoreCase);
+            var adopted = new HashSet<string>(options?.Adopt ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+            foreach (string key in adopted)
+                if (!actual.ContainsKey(key) || !desired.ContainsKey(key) || !ownership.TryGetValue(key, out var item) || item.State != "unknown")
+                    throw new ArgumentException("adopt requires an existing desired unknown-outcome object: " + key, "adopt");
+            return desired.OrderBy(p => p.Key, StringComparer.Ordinal).Select(pair =>
+            {
+                var ordinary = Difference(pair.Key, pair.Value, actual);
+                if (!actual.ContainsKey(pair.Key) || !ownership.TryGetValue(pair.Key, out var owned)) return ordinary;
+                if (adopted.Contains(pair.Key)) return new ProjectObjectDifference(pair.Key, "skip", "adopted");
+                if (owned.State == "unknown" || owned.Witness == null) return new ProjectObjectDifference(pair.Key, "conflict", "unknown-outcome");
+                if (options == null || !options.Witnesses.TryGetValue(pair.Key, out var witness) || !owned.Witness.Matches(witness))
+                    return new ProjectObjectDifference(pair.Key, "conflict", "modified-after-generation");
+                if (Fingerprint(pair.Value) != owned.ExpectedFingerprint) return new ProjectObjectDifference(pair.Key, "conflict", "regeneration-required");
+                // Ownership cannot excuse collisions with unrelated occupied resources.
+                var collision = ResourceCollision(pair.Value, actual, pair.Key);
+                return collision != null ? new ProjectObjectDifference(pair.Key, "conflict", collision) : new ProjectObjectDifference(pair.Key, "skip", "owned-unchanged");
+            }).ToArray();
         }
+
+        public static List<GenerationRecordObject> Describe(ProjectModel model) => Index(model).OrderBy(p => p.Key, StringComparer.Ordinal).Select(p =>
+            new GenerationRecordObject { Key = p.Key, ExpectedFingerprint = Fingerprint(p.Value), Path = p.Value is ProjectBlock block ? ObjectPath(block.Group, block.Name)
+                : p.Value is ProjectType type ? ObjectPath(type.Group, type.Name) : p.Value is ProjectTag tag ? ObjectPath(tag.Table, tag.Name) : p.Value.Name }).ToList();
+        private static string ObjectPath(string group, string name) => group.Length == 0 ? name : group + "/" + name;
 
         internal static Dictionary<string, ProjectObject> Index(ProjectModel model)
         {

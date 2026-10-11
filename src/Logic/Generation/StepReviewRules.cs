@@ -19,9 +19,10 @@ namespace TiaMcp.Logic.Generation
     public static class StepReviewRules
     {
         public const string CreateProject = "project-create/1";
+        public const string Record = "generation-record/1";
         public const string Import = "external-source-import/1", Generate = "external-source-generate/1", Delete = "external-source-delete/1";
         private static readonly IReadOnlyDictionary<string, string> Tools = new Dictionary<string, string> {
-            [Import] = "ImportPlcExternalSource", [Generate] = "GenerateBlocksFromExternalSource", [Delete] = "DeletePlcExternalSource" };
+            [Import] = "ImportPlcExternalSource", [Generate] = "GenerateBlocksFromExternalSource", [Delete] = "DeletePlcExternalSource", [Record] = "PublishGenerationRecord" };
         public static bool Supports(GenerationPlanStepsItem step) => step.Review != null && step.Review.Mode == "tool-preview"
             && Tools.TryGetValue(step.Review.Rule, out var tool) && tool == step.Tool;
         public static StepReviewVerdict Transition(JsonObject before, JsonObject after, string predicted, JsonObject tree)
@@ -81,14 +82,47 @@ namespace TiaMcp.Logic.Generation
             Require(step);
             var review = step.Review!;
             var verdict = new StepReviewVerdict();
+            if (review.Rule == Record)
+            {
+                foreach (var pair in review.Expect) Equal(pair.Key, JsonNode.Parse(pair.Value.GetRawText()));
+                if (!Hash(String(projection["planHash"]))) verdict.Different("planHash", JsonValue.Create("sha256"), projection["planHash"]);
+                if (!SameFile(String(projection["projectFile"]), plan.Target.ProjectIdentity)) verdict.Different("projectFile", JsonValue.Create(plan.Target.ProjectIdentity), projection["projectFile"]);
+                Equal("release", JsonValue.Create(plan.Target.Release));
+                if (projection["record"] is not JsonObject record || record["objects"] is not JsonArray records)
+                    verdict.Different("record", JsonValue.Create("ownership projection required"), projection["record"]);
+                else
+                {
+                    var declared = plan.Objects.Select(o => o.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    var newObjects = records.OfType<JsonObject>().Where(o => (string?)o["createdBy"]?["runId"] == (string?)projection["runId"]).ToArray();
+                    var wanted = facts.CompletedKeys.Where(declared.Contains).Concat(plan.Adopt).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    if (!wanted.SetEquals(newObjects.Select(o => (string?)o["key"] ?? "")) || newObjects.Any(o =>
+                        !declared.Contains((string?)o["key"] ?? "") || (string?)o["state"] is not ("owned" or "adopted") || o["witness"] == null ||
+                        (string?)o["expectedFingerprint"] != plan.Objects.Single(p => p.Key == (string?)o["key"]).ExpectedFingerprint))
+                        verdict.Different("record.objects", Strings(wanted), records);
+                }
+                return verdict;
+            }
             Equal("status", JsonValue.Create("planned")); Equal("release", JsonValue.Create(plan.Target.Release));
             if (review.Rule != Delete) Equal("operation", JsonValue.Create(step.Tool));
             Equal("executed", JsonValue.Create(false)); Equal("attempted", JsonValue.Create(false)); Equal("requiresSessionReset", JsonValue.Create(false));
             if (!SameFile(String(projection["projectFile"]), plan.Target.ProjectIdentity)) verdict.Different("projectFile", JsonValue.Create(plan.Target.ProjectIdentity), projection["projectFile"]);
             Equal("processId", JsonValue.Create(processId));
             string software = step.Arguments["softwarePath"].GetString()!;
+            bool hasOwnedKey = review.Expect.TryGetValue("ownedKey", out var ownedKey);
+            bool ownedSource = review.Rule == Delete && hasOwnedKey
+                && review.Witness.TryGetValue("targetIdentity", out var ownedConstraint) && ownedConstraint == "capture-owned-source";
+            var ownership = ownedSource ? plan.Objects.SingleOrDefault(o => o.Key == ownedKey.GetString()) : null;
+            if (ownedSource && (ownership == null || !step.Key.StartsWith(ownership.Key + "/", StringComparison.Ordinal) || ownership.State is not ("owned" or "adopted")
+                || ownership.Witness?.Kind != "external-source" || ownership.Witness.Tool != "ListPlcExternalSources"
+                || ownership.Artifact == null || !ownership.Witness.Values.TryGetValue("contentHash", out var content) || content.GetString() != ownership.Artifact.Sha256
+                || !ownership.Witness.Values.TryGetValue("present", out var present) || present.ValueKind != JsonValueKind.True
+                || !review.Witness.TryGetValue("ownership", out var proof) || proof != CanonicalJson.Hash(JsonSerializer.SerializeToElement(ownership))
+                || !ownership.Key.EndsWith("/externalSource/" + Uri.EscapeDataString(String(projection["sourceName"]) ?? ""), StringComparison.Ordinal)
+                || !plan.Observed.TryGetValue(software, out var ownedInventory) || !ownedInventory.SourceNames.Contains(String(projection["sourceName"]) ?? "", StringComparer.Ordinal)))
+                verdict.Different("source-ownership", JsonValue.Create("verified owned source artifact and observed name"), projection["sourceName"]);
             foreach (var pair in review.Expect)
             {
+                if (ownedSource && pair.Key == "ownedKey") continue;
                 var expected = JsonNode.Parse(pair.Value.GetRawText());
                 if (pair.Key == "sourcesBefore" || pair.Key == "objectKeysBefore")
                 {
@@ -113,7 +147,9 @@ namespace TiaMcp.Logic.Generation
                 verdict.Different("planHash", JsonValue.Create("sha256"), projection["planHash"]);
             foreach (var pair in review.Witness)
             {
-                if (pair.Key == "planHash") continue;
+                if (pair.Key == "planHash" || ownedSource && pair.Key == "ownership") continue;
+                if (ownedSource && pair.Key == "targetIdentity" && pair.Value == "capture-owned-source")
+                { if (string.IsNullOrWhiteSpace(String(projection["targetIdentity"]))) verdict.Different("targetIdentity", JsonValue.Create("nonempty owned-source identity"), projection["targetIdentity"]); continue; }
                 if (pair.Value == "ignore" && new[] { "objectsBefore.modifiedDate", "objectsBefore.isConsistent", "objectsBefore.typeName", "objectsBefore.programmingLanguage" }.Contains(pair.Key)) continue;
                 if (pair.Key == "sourceIdentity" && pair.Value == "capture-as-fact")
                 {
@@ -136,10 +172,10 @@ namespace TiaMcp.Logic.Generation
                     verdict.Different("forbid." + pair.Key, Strings(pair.Value), Strings(observed ?? Array.Empty<string>()));
             }
             string sourceName = String(projection["sourceName"]) ?? "";
-            if (review.Rule != Import && !facts.Imported(software, sourceName)) verdict.Different("source-custody", JsonValue.Create("imported-in-this-run"), JsonValue.Create(sourceName));
+            if (review.Rule != Import && !ownedSource && !facts.Imported(software, sourceName)) verdict.Different("source-custody", JsonValue.Create("imported-in-this-run"), JsonValue.Create(sourceName));
             if (review.Rule == Generate && (!review.Witness.ContainsKey("sourceIdentity") || !review.Forbid.ContainsKey("objectKeysBefore") || !review.Effect.ContainsKey("generated")))
                 verdict.Different("review", JsonValue.Create("identity, forbidden keys and declared generated keys required"), null);
-            if (review.Rule == Delete && (!review.Witness.ContainsKey("targetIdentity") || facts.SourceIdentity(software, sourceName) != String(projection["targetIdentity"])))
+            if (review.Rule == Delete && !ownedSource && (!review.Witness.ContainsKey("targetIdentity") || facts.SourceIdentity(software, sourceName) != String(projection["targetIdentity"])))
                 verdict.Different("targetIdentity", JsonValue.Create(facts.SourceIdentity(software, sourceName)), projection["targetIdentity"]);
             return verdict;
 
@@ -150,6 +186,12 @@ namespace TiaMcp.Logic.Generation
         public static StepReviewVerdict VerifyEffect(GenerationPlan plan, GenerationPlanStepsItem step, JsonObject data, RunFacts facts)
         {
             Require(step); var verdict = new StepReviewVerdict(); var review = step.Review!;
+            if (review.Rule == Record)
+            {
+                if (!True(data["executed"]) || !SameFile(String(data["recordPath"]), step.Arguments["recordPath"].GetString()) || String(data["recordHash"]) == null)
+                    verdict.Different("record", JsonValue.Create("atomic publication with verified recordHash"), data);
+                return verdict;
+            }
             if (!True(data["executed"])) verdict.Different("executed", JsonValue.Create(true), data["executed"]);
             string software = step.Arguments["softwarePath"].GetString()!;
             string source = step.Tool == "ImportPlcExternalSource" ? step.Expect.Contains! : step.Arguments["externalSourceName"].GetString()!;

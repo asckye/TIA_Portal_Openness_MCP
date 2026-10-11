@@ -180,5 +180,33 @@
       "20",
       "21"
     ]
+  },
+  "PublishGenerationRecord": {
+    "owner": "P8-31e",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "ManageGenerationArtifacts": {
+    "owner": "P8-31e",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
   }
 }

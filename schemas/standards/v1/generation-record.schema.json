@@ -1,0 +1,237 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "tiamcp.generation-record/1"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "release": {
+          "enum": [
+            "14sp1",
+            "15.1",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "release"
+      ]
+    },
+    "previousRecordHash": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "planId": {
+            "type": "string"
+          },
+          "planHash": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "package": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "id",
+              "version",
+              "hash"
+            ]
+          },
+          "machineHash": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "status": {
+            "type": "string"
+          },
+          "startedUtc": {
+            "type": "string"
+          },
+          "endedUtc": {
+            "type": "string"
+          },
+          "parentRequestId": {
+            "type": "string"
+          },
+          "approvalRequestId": {
+            "type": "string"
+          },
+          "actor": {
+            "enum": [
+              "mcp",
+              "workbench"
+            ]
+          }
+        },
+        "required": [
+          "runId",
+          "planId",
+          "planHash",
+          "package",
+          "machineHash",
+          "status",
+          "startedUtc",
+          "endedUtc",
+          "parentRequestId",
+          "approvalRequestId",
+          "actor"
+        ]
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/object"
+      }
+    },
+    "recordHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schema",
+    "project",
+    "runs",
+    "objects",
+    "recordHash"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "expectedFingerprint": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ]
+        },
+        "witness": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "plc-object-fingerprints",
+                "modified-date",
+                "content",
+                "path",
+                "external-source",
+                "hardware"
+              ]
+            },
+            "tool": {
+              "type": "string"
+            },
+            "values": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "tool",
+            "values"
+          ]
+        },
+        "state": {
+          "enum": [
+            "owned",
+            "unknown",
+            "adopted"
+          ]
+        },
+        "createdBy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "runId": {
+              "type": "string"
+            },
+            "stepId": {
+              "type": "string"
+            },
+            "requestId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "runId",
+            "stepId",
+            "requestId"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "path",
+        "expectedFingerprint",
+        "state",
+        "createdBy"
+      ]
+    }
+  }
+}

@@ -22,13 +22,13 @@
   },
   "generation-planning": {
     "project": "tests/Generation/TiaMcp.Generation.Planning.Tests/TiaMcp.Generation.Planning.Tests.csproj",
-    "minimumPassed": 224,
+    "minimumPassed": 256,
     "maximumSkipped": 0,
     "arguments": []
   },
   "generation-model": {
     "project": "tests/Generation/TiaMcp.Generation.Tests/TiaMcp.Generation.Tests.csproj",
-    "minimumPassed": 115,
+    "minimumPassed": 127,
     "maximumSkipped": 0,
     "arguments": []
   },
@@ -108,7 +108,7 @@
   },
   "foundation": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12835,
+    "minimumPassed": 12915,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -129,7 +129,7 @@
   },
   "foundation-api": {
     "project": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
-    "minimumPassed": 12835,
+    "minimumPassed": 12915,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",

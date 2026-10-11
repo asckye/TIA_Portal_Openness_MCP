@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "6444f13f599cbe3e8b4331147039a36d6110ba339afc91f821de23af13e3351c",
-  "uniqueTools": 514,
+  "catalogSha256": "7c8e546cf3def1bbee9268ec60e7fec034d05bae80bb1bd989b5e56f03f704fe",
+  "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 2526,
+  "versionToolPairs": 2542,
   "offlineCallExecutions": 115,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 258,
-  "noDirectVendoredExampleMappings": 256,
+  "noDirectVendoredExampleMappings": 258,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -48,11 +48,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 215,
-      "checkedToolCount": 215,
+      "registeredToolCount": 217,
+      "checkedToolCount": 217,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 108,
+      "operationExampleCount": 110,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -1594,6 +1594,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2398,6 +2416,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcBlock",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -2716,11 +2741,11 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 237,
-      "checkedToolCount": 237,
+      "registeredToolCount": 239,
+      "checkedToolCount": 239,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 129,
+      "operationExampleCount": 131,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -4442,6 +4467,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -5389,6 +5432,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcBlock",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -5714,11 +5764,11 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 253,
-      "checkedToolCount": 253,
+      "registeredToolCount": 255,
+      "checkedToolCount": 255,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 145,
+      "operationExampleCount": 147,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -7578,6 +7628,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -8632,6 +8700,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcBlock",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8967,11 +9042,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 260,
-      "checkedToolCount": 260,
+      "registeredToolCount": 262,
+      "checkedToolCount": 262,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 157,
+      "operationExampleCount": 159,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -10915,6 +10990,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -12017,6 +12110,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcBlock",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -12363,11 +12463,11 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 267,
-      "checkedToolCount": 267,
+      "registeredToolCount": 269,
+      "checkedToolCount": 269,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 169,
+      "operationExampleCount": 171,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -14419,6 +14519,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -15547,6 +15665,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcBlock",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -15905,11 +16030,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 277,
-      "checkedToolCount": 277,
+      "registeredToolCount": 279,
+      "checkedToolCount": 279,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 171,
+      "operationExampleCount": 173,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -18017,6 +18142,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -19163,6 +19306,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "RenderPlcBlock",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -19541,11 +19691,11 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 503,
-      "checkedToolCount": 503,
+      "registeredToolCount": 505,
+      "checkedToolCount": 505,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 502,
+      "operationExampleCount": 504,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
@@ -23499,6 +23649,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -26122,6 +26290,13 @@
           "operations": []
         },
         {
+          "toolName": "PublishGenerationRecord",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ReleaseUnifiedReadCursor",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -26772,11 +26947,11 @@
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 514,
-      "checkedToolCount": 514,
+      "registeredToolCount": 516,
+      "checkedToolCount": 516,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 554,
+      "operationExampleCount": 556,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 2,
@@ -30835,6 +31010,24 @@
           ]
         },
         {
+          "toolName": "ManageGenerationArtifacts",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "cleanup",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageGlobalLibrary",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -33722,6 +33915,13 @@
         },
         {
           "toolName": "ProbeS7CpuIdentity",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "PublishGenerationRecord",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],

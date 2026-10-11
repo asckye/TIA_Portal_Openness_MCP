@@ -16,8 +16,9 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly Func<StandardPackageStore> store;
         private readonly string release;
-        internal GenerationTools(string release, Func<StandardPackageStore>? store = null)
-        { this.release = release; this.store = store ?? StandardPackageStore.Create; }
+        private readonly GenerationExecutionSession? executionSession;
+        internal GenerationTools(string release, Func<StandardPackageStore>? store = null, GenerationExecutionSession? executionSession = null)
+        { this.release = release; this.store = store ?? StandardPackageStore.Create; this.executionSession = executionSession; }
 
         [McpServerTool(Name = "ListStandardPackages"), Description("[L1][Project][READ] List validated repository and user standard packages with exact id/version, canonical content hash, inventory and release targets. Repository templates/standards is read-only; user packages live under bundle data/standards. Offline on all eight releases; no Openness calls.")]
         public CallToolResult ListStandardPackages() => Run("ListStandardPackages", false, s => s.List());

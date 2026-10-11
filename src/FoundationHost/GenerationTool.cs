@@ -2,6 +2,7 @@
 extern alias enginehost;
 using GenerationTools = enginehost::TiaMcpServer.ModelContextProtocol.GenerationTools;
 using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
+using GenerationExecutionSession = enginehost::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
 #endif
 using System.Reflection;
 using System.Text.Json;
@@ -16,15 +17,16 @@ internal sealed class GenerationTool : McpServerTool
 {
     private readonly McpServerTool inner;
     private readonly Tool tool;
-    internal GenerationTool(string name, string release, Func<StandardPackageStore>? store = null)
+    internal GenerationTool(string name, string release, Func<StandardPackageStore>? store = null, GenerationExecutionSession? executionSession = null)
     {
-        var target = new GenerationTools(release, store);
+        var target = new GenerationTools(release, store, executionSession);
         var method = typeof(GenerationTools).GetMethods().Single(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == name);
         inner = DeclaredToolMetadata.Create(name, method, _ => target, out _);
         var schema = System.Text.Json.Nodes.JsonNode.Parse(inner.ProtocolTool.InputSchema.GetRawText())!.AsObject();
         if (schema["properties"]?["machine"] is System.Text.Json.Nodes.JsonObject machine) machine["type"] = "object";
         if (schema["properties"]?["action"] is System.Text.Json.Nodes.JsonObject action)
-            action["enum"] = name == "ManageStandardPackage" ? new System.Text.Json.Nodes.JsonArray("import", "export", "copy", "fork", "remove")
+            action["enum"] = name == "ManageGenerationArtifacts" ? new System.Text.Json.Nodes.JsonArray("list", "cleanup")
+                : name == "ManageStandardPackage" ? new System.Text.Json.Nodes.JsonArray("import", "export", "copy", "fork", "remove")
                 : new System.Text.Json.Nodes.JsonArray("validate", "import", "export", "exportTemplate");
         if (schema["properties"]?["format"] is System.Text.Json.Nodes.JsonObject format) format["enum"] = new System.Text.Json.Nodes.JsonArray("json", "csv");
         tool = new Tool { Name = name, Description = inner.ProtocolTool.Description, InputSchema = JsonSerializer.SerializeToElement(schema) };
@@ -39,8 +41,11 @@ internal sealed class GenerationTool : McpServerTool
         yield return new GenerationTool("PlanProjectGeneration", release);
         yield return new GenerationTool("ApplyGenerationPlan", release);
         yield return new GenerationTool("GetGenerationRun", release);
+        yield return new GenerationTool("PublishGenerationRecord", release);
+        yield return new GenerationTool("ManageGenerationArtifacts", release);
     }
-    internal bool ApprovalWrite(System.Text.Json.Nodes.JsonObject arguments) => ProtocolTool.Name == "ApplyGenerationPlan" || ProtocolTool.Name == "ManageStandardPackage"
+    internal bool ApprovalWrite(System.Text.Json.Nodes.JsonObject arguments) => ProtocolTool.Name == "ApplyGenerationPlan" || ProtocolTool.Name == "ManageStandardPackage" || ProtocolTool.Name == "PublishGenerationRecord"
+        || ProtocolTool.Name == "ManageGenerationArtifacts" && (string?)arguments["action"] == "cleanup"
         || ProtocolTool.Name == "ManageMachineDescription" && (string?)arguments["action"] != "validate"
             && !string.IsNullOrEmpty((string?)arguments["outputPath"]);
     internal bool OwnsApproval => ProtocolTool.Name == "ApplyGenerationPlan";

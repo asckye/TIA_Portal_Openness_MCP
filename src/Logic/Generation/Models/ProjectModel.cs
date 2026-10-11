@@ -179,6 +179,11 @@ namespace TiaMcp.Logic.Generation
     {
         public string ArtifactRoot { get; set; } = "";
         public Dictionary<string, string>? Lineage { get; set; }
+        public List<GenerationRecordObject> Ownership { get; set; } = new List<GenerationRecordObject>();
+        public Dictionary<string, GenerationWitness> Witnesses { get; set; } = new Dictionary<string, GenerationWitness>(StringComparer.OrdinalIgnoreCase);
+        public List<string> Adopt { get; set; } = new List<string>();
+        public string? RecordPath { get; set; }
+        public string PreviousRecordHash { get; set; } = "absent";
         // Paths must already be known at planning time. Apply must not fill in returned identities.
         public Dictionary<string, string> SoftwarePaths { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, string> DeviceItemPaths { get; set; } = new Dictionary<string, string>();
