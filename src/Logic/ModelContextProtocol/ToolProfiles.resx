@@ -422,6 +422,24 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F06",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F23",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F35",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F08",
       "state": "current",
       "l5": "NOT RUN"
@@ -506,6 +524,24 @@
     },
     {
       "releaseKey": "15.1",
+      "family": "F06",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F23",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F35",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
       "family": "F08",
       "state": "current",
       "l5": "NOT RUN"
@@ -590,6 +626,24 @@
     },
     {
       "releaseKey": "16",
+      "family": "F06",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F23",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F35",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
       "family": "F08",
       "state": "current",
       "l5": "NOT RUN"
@@ -669,6 +723,24 @@
     {
       "releaseKey": "17",
       "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F06",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F23",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F35",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -753,6 +825,24 @@
     {
       "releaseKey": "18",
       "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F06",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F23",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F35",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -837,6 +927,24 @@
     {
       "releaseKey": "19",
       "family": "F03",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F06",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F23",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F35",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -5065,6 +5173,256 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ManageProjectLanguage",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ExportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "sourceCulture": "en-US",
+        "targetCulture": "zh-CN",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ImportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "updateSourceLanguage": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CompareProjects",
+      "family": "F06",
+      "example": {
+        "kind": "software",
+        "softwarePath": "PLC_1",
+        "targetSoftwarePath": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetProjectSettings",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ShowObjectInEditor",
+      "family": "F06",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "RunToolTransaction",
+      "family": "F06",
+      "example": {
+        "text": "Ready",
+        "confirmChange": false,
+        "dryRun": true,
+        "calls": [
+          {
+            "name": "CreatePlcTypeGroup",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "groupPath": "Examples"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetLibraryOverview",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetLibraryType",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageLibraryType",
+      "family": "F23",
+      "example": {
+        "typePath": "Examples/FB_Motor",
+        "action": "update",
+        "properties": {
+          "DoNotUse": true
+        },
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CheckLibraryUpdates",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "SynchronizeLibrary",
+      "family": "F23",
+      "example": {
+        "action": "updateLibrary",
+        "selection": [
+          {
+            "folder": ""
+          }
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageLibraryTypeVersion",
+      "family": "F23",
+      "example": {
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "CreateLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourceKind": "block",
+        "sourcePath": "Examples/Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourcePath": "Examples/Example_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManageLibraryFolder",
+      "family": "F23",
+      "example": {
+        "folderKind": "types",
+        "folderPath": "",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ProbeGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DescribeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DescribeObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "DescribeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ListObjectChildren",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "collectionProperty": "Devices"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "InvokeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "InvokeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "CreatePlcBlockGroup",
       "family": "F08",
       "example": {
@@ -6198,6 +6556,256 @@
       "family": "F03",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageProjectLanguage",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "sourceCulture": "en-US",
+        "targetCulture": "zh-CN",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ImportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "updateSourceLanguage": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CompareProjects",
+      "family": "F06",
+      "example": {
+        "kind": "software",
+        "softwarePath": "PLC_1",
+        "targetSoftwarePath": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetProjectSettings",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ShowObjectInEditor",
+      "family": "F06",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunToolTransaction",
+      "family": "F06",
+      "example": {
+        "text": "Ready",
+        "confirmChange": false,
+        "dryRun": true,
+        "calls": [
+          {
+            "name": "CreatePlcTypeGroup",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "groupPath": "Examples"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetLibraryOverview",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetLibraryType",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageLibraryType",
+      "family": "F23",
+      "example": {
+        "typePath": "Examples/FB_Motor",
+        "action": "update",
+        "properties": {
+          "DoNotUse": true
+        },
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CheckLibraryUpdates",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SynchronizeLibrary",
+      "family": "F23",
+      "example": {
+        "action": "updateLibrary",
+        "selection": [
+          {
+            "folder": ""
+          }
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageLibraryTypeVersion",
+      "family": "F23",
+      "example": {
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "CreateLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourceKind": "block",
+        "sourcePath": "Examples/Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourcePath": "Examples/Example_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManageLibraryFolder",
+      "family": "F23",
+      "example": {
+        "folderKind": "types",
+        "folderPath": "",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ProbeGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DescribeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DescribeObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "DescribeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ListObjectChildren",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "collectionProperty": "Devices"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "InvokeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "InvokeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
       }
     },
     {
@@ -7498,6 +8106,276 @@
       "family": "F03",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageProjectLanguage",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "sourceCulture": "en-US",
+        "targetCulture": "zh-CN",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "updateSourceLanguage": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CompareProjects",
+      "family": "F06",
+      "example": {
+        "kind": "software",
+        "softwarePath": "PLC_1",
+        "targetSoftwarePath": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetProjectSettings",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ShowObjectInEditor",
+      "family": "F06",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageProjectCompilationSettings",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunToolTransaction",
+      "family": "F06",
+      "example": {
+        "text": "Ready",
+        "confirmChange": false,
+        "dryRun": true,
+        "calls": [
+          {
+            "name": "CreatePlcTypeGroup",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "groupPath": "Examples"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetLibraryOverview",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetLibraryType",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageLibraryType",
+      "family": "F23",
+      "example": {
+        "typePath": "Examples/FB_Motor",
+        "action": "update",
+        "properties": {
+          "DoNotUse": true
+        },
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CheckLibraryUpdates",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SynchronizeLibrary",
+      "family": "F23",
+      "example": {
+        "action": "updateLibrary",
+        "selection": [
+          {
+            "folder": ""
+          }
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageLibraryTypeVersion",
+      "family": "F23",
+      "example": {
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreateLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourceKind": "block",
+        "sourcePath": "Examples/Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourcePath": "Examples/Example_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageLibraryFolder",
+      "family": "F23",
+      "example": {
+        "folderKind": "types",
+        "folderPath": "",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ProbeGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ImportMasterCopyFromGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}",
+        "masterCopyName": "FB_Motor",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DescribeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DescribeObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "DescribeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListObjectChildren",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "collectionProperty": "Devices"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "InvokeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "InvokeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
       }
     },
     {
@@ -8870,6 +9748,276 @@
       "family": "F03",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageProjectLanguage",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "sourceCulture": "en-US",
+        "targetCulture": "zh-CN",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "updateSourceLanguage": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CompareProjects",
+      "family": "F06",
+      "example": {
+        "kind": "software",
+        "softwarePath": "PLC_1",
+        "targetSoftwarePath": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetProjectSettings",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ShowObjectInEditor",
+      "family": "F06",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageProjectCompilationSettings",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunToolTransaction",
+      "family": "F06",
+      "example": {
+        "text": "Ready",
+        "confirmChange": false,
+        "dryRun": true,
+        "calls": [
+          {
+            "name": "CreatePlcTypeGroup",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "groupPath": "Examples"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetLibraryOverview",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetLibraryType",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageLibraryType",
+      "family": "F23",
+      "example": {
+        "typePath": "Examples/FB_Motor",
+        "action": "update",
+        "properties": {
+          "DoNotUse": true
+        },
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CheckLibraryUpdates",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SynchronizeLibrary",
+      "family": "F23",
+      "example": {
+        "action": "updateLibrary",
+        "selection": [
+          {
+            "folder": ""
+          }
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageLibraryTypeVersion",
+      "family": "F23",
+      "example": {
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreateLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourceKind": "block",
+        "sourcePath": "Examples/Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourcePath": "Examples/Example_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageLibraryFolder",
+      "family": "F23",
+      "example": {
+        "folderKind": "types",
+        "folderPath": "",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ProbeGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ImportMasterCopyFromGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}",
+        "masterCopyName": "FB_Motor",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DescribeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DescribeObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "DescribeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListObjectChildren",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "collectionProperty": "Devices"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "InvokeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "InvokeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
       }
     },
     {
@@ -10265,6 +11413,292 @@
       "family": "F03",
       "example": {
         "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageProjectLanguage",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "sourceCulture": "en-US",
+        "targetCulture": "zh-CN",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "updateSourceLanguage": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompareLibraries",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompareProjects",
+      "family": "F06",
+      "example": {
+        "kind": "software",
+        "softwarePath": "PLC_1",
+        "targetSoftwarePath": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetProjectSettings",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ShowObjectInEditor",
+      "family": "F06",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageProjectCompilationSettings",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunToolTransaction",
+      "family": "F06",
+      "example": {
+        "text": "Ready",
+        "confirmChange": false,
+        "dryRun": true,
+        "calls": [
+          {
+            "name": "CreatePlcTypeGroup",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "groupPath": "Examples"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetLibraryOverview",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetLibraryType",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageLibraryType",
+      "family": "F23",
+      "example": {
+        "typePath": "Examples/FB_Motor",
+        "action": "update",
+        "properties": {
+          "DoNotUse": true
+        },
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CheckLibraryUpdates",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SynchronizeLibrary",
+      "family": "F23",
+      "example": {
+        "action": "updateLibrary",
+        "selection": [
+          {
+            "folder": ""
+          }
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CompareLibraryObjects",
+      "family": "F23",
+      "example": {
+        "kind": "type",
+        "leftPath": "Types/FB_Motor",
+        "rightPath": "Types/FB_Motor_v2"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageLibraryTypeVersion",
+      "family": "F23",
+      "example": {
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreateLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourceKind": "block",
+        "sourcePath": "Examples/Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourcePath": "Examples/Example_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageLibraryFolder",
+      "family": "F23",
+      "example": {
+        "folderKind": "types",
+        "folderPath": "",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ProbeGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ImportMasterCopyFromGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}",
+        "masterCopyName": "FB_Motor",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DescribeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DescribeObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "DescribeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListObjectChildren",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "collectionProperty": "Devices"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "InvokeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "InvokeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
       }
     },
     {
@@ -11795,6 +13229,292 @@
       "entry": "RunHmiActionScriptRecipeSafetySelfTest",
       "family": "F03",
       "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageProjectLanguage",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "sourceCulture": "en-US",
+        "targetCulture": "zh-CN",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportProjectTexts",
+      "family": "F06",
+      "example": {
+        "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+        "updateSourceLanguage": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompareLibraries",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompareProjects",
+      "family": "F06",
+      "example": {
+        "kind": "software",
+        "softwarePath": "PLC_1",
+        "targetSoftwarePath": "PLC_2"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetProjectSettings",
+      "family": "F06",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ShowObjectInEditor",
+      "family": "F06",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageProjectCompilationSettings",
+      "family": "F06",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunToolTransaction",
+      "family": "F06",
+      "example": {
+        "text": "Ready",
+        "confirmChange": false,
+        "dryRun": true,
+        "calls": [
+          {
+            "name": "CreatePlcTypeGroup",
+            "arguments": {
+              "softwarePath": "PLC_1",
+              "groupPath": "Examples"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetLibraryOverview",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetLibraryType",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageLibraryType",
+      "family": "F23",
+      "example": {
+        "typePath": "Examples/FB_Motor",
+        "action": "update",
+        "properties": {
+          "DoNotUse": true
+        },
+        "confirmDelete": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CheckLibraryUpdates",
+      "family": "F23",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SynchronizeLibrary",
+      "family": "F23",
+      "example": {
+        "action": "updateLibrary",
+        "selection": [
+          {
+            "folder": ""
+          }
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CompareLibraryObjects",
+      "family": "F23",
+      "example": {
+        "kind": "type",
+        "leftPath": "Types/FB_Motor",
+        "rightPath": "Types/FB_Motor_v2"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageLibraryTypeVersion",
+      "family": "F23",
+      "example": {
+        "typePath": "UDT_Status",
+        "version": "&lt;version from target discovery&gt;",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourceKind": "block",
+        "sourcePath": "Examples/Example_1",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageLibraryMasterCopy",
+      "family": "F23",
+      "example": {
+        "sourcePath": "Examples/Example_1",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "action": "list",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageLibraryFolder",
+      "family": "F23",
+      "example": {
+        "folderKind": "types",
+        "folderPath": "",
+        "action": "read",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ProbeGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ImportMasterCopyFromGlobalLibrary",
+      "family": "F23",
+      "example": {
+        "libraryPath": "C:\\Examples\\Library.al{extension}",
+        "masterCopyName": "FB_Motor",
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DescribeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DescribeObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DescribeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetObjectProperty",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "propertyPath": "Name"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListObjectChildren",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "collectionProperty": "Devices"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "InvokeObject",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "InvokeService",
+      "family": "F35",
+      "example": {
+        "objectKind": "Project",
+        "objectPath": "",
+        "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+        "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+      }
     },
     {
       "releaseKey": "19",
@@ -31460,6 +33180,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckLibraryUpdates",
+        "currentName": "CheckLibraryUpdates",
+        "sourceName": "CheckLibraryUpdates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -31507,6 +33237,20 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareProjects",
+        "currentName": "CompareProjects",
+        "sourceName": "CompareProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "PLC_1",
+          "targetSoftwarePath": "PLC_2"
         },
         "envelopeVersion": 4
       },
@@ -31705,6 +33449,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CreateLibraryMasterCopy",
+        "currentName": "CreateLibraryMasterCopy",
+        "sourceName": "CreateLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceKind": "block",
+          "sourcePath": "Examples/Example_1",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreatePlcBlockGroup",
         "currentName": "CreatePlcBlockGroup",
         "sourceName": "CreatePlcBlockGroup",
@@ -31896,6 +33654,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeObject",
+        "currentName": "DescribeObject",
+        "sourceName": "DescribeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeObjectProperty",
+        "currentName": "DescribeObjectProperty",
+        "sourceName": "DescribeObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeService",
+        "currentName": "DescribeService",
+        "sourceName": "DescribeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DescribeStandardPackage",
         "currentName": "DescribeStandardPackage",
         "sourceName": "DescribeStandardPackage",
@@ -32026,6 +33825,21 @@
           "exportPath": "&lt;new absolute Tags.xml file in an existing caller-selected directory&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportProjectTexts",
+        "currentName": "ExportProjectTexts",
+        "sourceName": "ExportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "sourceCulture": "en-US",
+          "targetCulture": "zh-CN",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -32330,6 +34144,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetObjectProperty",
+        "currentName": "GetObjectProperty",
+        "sourceName": "GetObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -32600,6 +34428,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportProjectTexts",
+        "currentName": "ImportProjectTexts",
+        "sourceName": "ImportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "updateSourceLanguage": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcType",
         "currentName": "ImportPlcType",
         "sourceName": "ImportType",
@@ -32639,6 +34481,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeObject",
+        "currentName": "InvokeObject",
+        "sourceName": "InvokeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeService",
+        "currentName": "InvokeService",
+        "sourceName": "InvokeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcSclSource",
         "currentName": "AnalyzePlcSclSource",
         "sourceName": "LintPlcSclSource",
@@ -32660,6 +34531,20 @@
         "arguments": {
           "tool": "ListPlcBlocks",
           "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListObjectChildren",
+        "currentName": "ListObjectChildren",
+        "sourceName": "ListObjectChildren",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "collectionProperty": "Devices"
         },
         "envelopeVersion": 4
       },
@@ -32717,6 +34602,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGlobalLibrary",
+        "currentName": "ManageGlobalLibrary",
+        "sourceName": "ManageGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageHardwareObject",
         "currentName": "ManageHardwareObject",
         "sourceName": "ManageHardwareObject",
@@ -32763,6 +34661,68 @@
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryFolder",
+        "currentName": "ManageLibraryFolder",
+        "sourceName": "ManageLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "folderKind": "types",
+          "folderPath": "",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryMasterCopy",
+        "currentName": "ManageLibraryMasterCopy",
+        "sourceName": "ManageLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourcePath": "Examples/Example_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryType",
+        "currentName": "ManageLibraryType",
+        "sourceName": "ManageLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "Examples/FB_Motor",
+          "action": "update",
+          "properties": {
+            "DoNotUse": true
+          },
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryTypeVersion",
+        "currentName": "ManageLibraryTypeVersion",
+        "sourceName": "ManageLibraryTypeVersion",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -33396,6 +35356,19 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectLanguage",
+        "currentName": "ManageProjectLanguage",
+        "sourceName": "ManageProjectLanguage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true,
           "action": "read"
         },
@@ -34234,6 +36207,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeGlobalLibrary",
+        "currentName": "ProbeGlobalLibrary",
+        "sourceName": "ProbeGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
         "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
         "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -34308,6 +36293,26 @@
         "name": "ListIoSystems",
         "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryOverview",
+        "currentName": "GetLibraryOverview",
+        "sourceName": "ReadLibraryOverview",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryType",
+        "currentName": "GetLibraryType",
+        "sourceName": "ReadLibraryType",
         "profiles": [
           "plc-foundation"
         ],
@@ -34431,6 +36436,16 @@
           "plc": "PLC_1",
           "table": "默认变量表"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectSettings",
+        "currentName": "GetProjectSettings",
+        "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -34600,6 +36615,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunToolTransaction",
+        "currentName": "RunToolTransaction",
+        "sourceName": "RunToolsInTransaction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "text": "Ready",
+          "confirmChange": false,
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveExportContent",
         "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
@@ -34710,6 +36748,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ShowObjectInEditor",
+        "currentName": "ShowObjectInEditor",
+        "sourceName": "ShowObjectInEditor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -34725,6 +36775,26 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeLibrary",
+        "currentName": "SynchronizeLibrary",
+        "sourceName": "SynchronizeLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "updateLibrary",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
         "envelopeVersion": 4
       },
@@ -35283,6 +37353,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckLibraryUpdates",
+        "currentName": "CheckLibraryUpdates",
+        "sourceName": "CheckLibraryUpdates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -35330,6 +37410,20 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareProjects",
+        "currentName": "CompareProjects",
+        "sourceName": "CompareProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "PLC_1",
+          "targetSoftwarePath": "PLC_2"
         },
         "envelopeVersion": 4
       },
@@ -35524,6 +37618,20 @@
           "firstRootPath": "PLC_1",
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateLibraryMasterCopy",
+        "currentName": "CreateLibraryMasterCopy",
+        "sourceName": "CreateLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceKind": "block",
+          "sourcePath": "Examples/Example_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -35734,6 +37842,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeObject",
+        "currentName": "DescribeObject",
+        "sourceName": "DescribeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeObjectProperty",
+        "currentName": "DescribeObjectProperty",
+        "sourceName": "DescribeObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeService",
+        "currentName": "DescribeService",
+        "sourceName": "DescribeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DescribeStandardPackage",
         "currentName": "DescribeStandardPackage",
         "sourceName": "DescribeStandardPackage",
@@ -35895,6 +38044,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportProjectTexts",
+        "currentName": "ExportProjectTexts",
+        "sourceName": "ExportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "sourceCulture": "en-US",
+          "targetCulture": "zh-CN",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -36195,6 +38359,20 @@
         ],
         "arguments": {
           "runId": "00000000000000000000000000000000"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetObjectProperty",
+        "currentName": "GetObjectProperty",
+        "sourceName": "GetObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
         },
         "envelopeVersion": 4
       },
@@ -36507,6 +38685,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportProjectTexts",
+        "currentName": "ImportProjectTexts",
+        "sourceName": "ImportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "updateSourceLanguage": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcType",
         "currentName": "ImportPlcType",
         "sourceName": "ImportType",
@@ -36546,6 +38738,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeObject",
+        "currentName": "InvokeObject",
+        "sourceName": "InvokeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeService",
+        "currentName": "InvokeService",
+        "sourceName": "InvokeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcSclSource",
         "currentName": "AnalyzePlcSclSource",
         "sourceName": "LintPlcSclSource",
@@ -36567,6 +38788,20 @@
         "arguments": {
           "tool": "ListPlcBlocks",
           "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListObjectChildren",
+        "currentName": "ListObjectChildren",
+        "sourceName": "ListObjectChildren",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "collectionProperty": "Devices"
         },
         "envelopeVersion": 4
       },
@@ -36624,6 +38859,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGlobalLibrary",
+        "currentName": "ManageGlobalLibrary",
+        "sourceName": "ManageGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageHardwareObject",
         "currentName": "ManageHardwareObject",
         "sourceName": "ManageHardwareObject",
@@ -36670,6 +38918,68 @@
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryFolder",
+        "currentName": "ManageLibraryFolder",
+        "sourceName": "ManageLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "folderKind": "types",
+          "folderPath": "",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryMasterCopy",
+        "currentName": "ManageLibraryMasterCopy",
+        "sourceName": "ManageLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourcePath": "Examples/Example_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryType",
+        "currentName": "ManageLibraryType",
+        "sourceName": "ManageLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "Examples/FB_Motor",
+          "action": "update",
+          "properties": {
+            "DoNotUse": true
+          },
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryTypeVersion",
+        "currentName": "ManageLibraryTypeVersion",
+        "sourceName": "ManageLibraryTypeVersion",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -37336,6 +39646,19 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectLanguage",
+        "currentName": "ManageProjectLanguage",
+        "sourceName": "ManageProjectLanguage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true,
           "action": "read"
         },
@@ -38212,6 +40535,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeGlobalLibrary",
+        "currentName": "ProbeGlobalLibrary",
+        "sourceName": "ProbeGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
         "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
         "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -38298,6 +40633,26 @@
         "name": "ListIoSystems",
         "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryOverview",
+        "currentName": "GetLibraryOverview",
+        "sourceName": "ReadLibraryOverview",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryType",
+        "currentName": "GetLibraryType",
+        "sourceName": "ReadLibraryType",
         "profiles": [
           "plc-foundation"
         ],
@@ -38472,6 +40827,16 @@
           "softwarePath": "PLC_1",
           "watchTableName": "Watch_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectSettings",
+        "currentName": "GetProjectSettings",
+        "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -38658,6 +41023,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunToolTransaction",
+        "currentName": "RunToolTransaction",
+        "sourceName": "RunToolsInTransaction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "text": "Ready",
+          "confirmChange": false,
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveExportContent",
         "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
@@ -38768,6 +41156,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ShowObjectInEditor",
+        "currentName": "ShowObjectInEditor",
+        "sourceName": "ShowObjectInEditor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -38783,6 +41183,26 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeLibrary",
+        "currentName": "SynchronizeLibrary",
+        "sourceName": "SynchronizeLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "updateLibrary",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
         "envelopeVersion": 4
       },
@@ -39341,6 +41761,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckLibraryUpdates",
+        "currentName": "CheckLibraryUpdates",
+        "sourceName": "CheckLibraryUpdates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -39388,6 +41818,20 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareProjects",
+        "currentName": "CompareProjects",
+        "sourceName": "CompareProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "PLC_1",
+          "targetSoftwarePath": "PLC_2"
         },
         "envelopeVersion": 4
       },
@@ -39582,6 +42026,20 @@
           "firstRootPath": "PLC_1",
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateLibraryMasterCopy",
+        "currentName": "CreateLibraryMasterCopy",
+        "sourceName": "CreateLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceKind": "block",
+          "sourcePath": "Examples/Example_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -39792,6 +42250,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeObject",
+        "currentName": "DescribeObject",
+        "sourceName": "DescribeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeObjectProperty",
+        "currentName": "DescribeObjectProperty",
+        "sourceName": "DescribeObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeService",
+        "currentName": "DescribeService",
+        "sourceName": "DescribeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DescribeStandardPackage",
         "currentName": "DescribeStandardPackage",
         "sourceName": "DescribeStandardPackage",
@@ -39969,6 +42468,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportProjectTexts",
+        "currentName": "ExportProjectTexts",
+        "sourceName": "ExportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "sourceCulture": "en-US",
+          "targetCulture": "zh-CN",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -40289,6 +42803,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetObjectProperty",
+        "currentName": "GetObjectProperty",
+        "sourceName": "GetObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -40500,6 +43028,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportMasterCopyFromGlobalLibrary",
+        "currentName": "ImportMasterCopyFromGlobalLibrary",
+        "sourceName": "ImportMasterCopyFromGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}",
+          "masterCopyName": "FB_Motor",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlockVerified",
         "currentName": "ImportPlcBlockVerified",
         "sourceName": "ImportPlcBlockVerified",
@@ -40597,6 +43140,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportProjectTexts",
+        "currentName": "ImportProjectTexts",
+        "sourceName": "ImportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "updateSourceLanguage": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -40664,6 +43221,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeObject",
+        "currentName": "InvokeObject",
+        "sourceName": "InvokeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeService",
+        "currentName": "InvokeService",
+        "sourceName": "InvokeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcSclSource",
         "currentName": "AnalyzePlcSclSource",
         "sourceName": "LintPlcSclSource",
@@ -40685,6 +43271,20 @@
         "arguments": {
           "tool": "ListPlcBlocks",
           "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListObjectChildren",
+        "currentName": "ListObjectChildren",
+        "sourceName": "ListObjectChildren",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "collectionProperty": "Devices"
         },
         "envelopeVersion": 4
       },
@@ -40742,6 +43342,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGlobalLibrary",
+        "currentName": "ManageGlobalLibrary",
+        "sourceName": "ManageGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageHardwareObject",
         "currentName": "ManageHardwareObject",
         "sourceName": "ManageHardwareObject",
@@ -40788,6 +43401,68 @@
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryFolder",
+        "currentName": "ManageLibraryFolder",
+        "sourceName": "ManageLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "folderKind": "types",
+          "folderPath": "",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryMasterCopy",
+        "currentName": "ManageLibraryMasterCopy",
+        "sourceName": "ManageLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourcePath": "Examples/Example_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryType",
+        "currentName": "ManageLibraryType",
+        "sourceName": "ManageLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "Examples/FB_Motor",
+          "action": "update",
+          "properties": {
+            "DoNotUse": true
+          },
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryTypeVersion",
+        "currentName": "ManageLibraryTypeVersion",
+        "sourceName": "ManageLibraryTypeVersion",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -41485,6 +44160,32 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectCompilationSettings",
+        "currentName": "ManageProjectCompilationSettings",
+        "sourceName": "ManageProjectCompilationSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectLanguage",
+        "currentName": "ManageProjectLanguage",
+        "sourceName": "ManageProjectLanguage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true,
           "action": "read"
         },
@@ -42361,6 +45062,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeGlobalLibrary",
+        "currentName": "ProbeGlobalLibrary",
+        "sourceName": "ProbeGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
         "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
         "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -42447,6 +45160,26 @@
         "name": "ListIoSystems",
         "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryOverview",
+        "currentName": "GetLibraryOverview",
+        "sourceName": "ReadLibraryOverview",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryType",
+        "currentName": "GetLibraryType",
+        "sourceName": "ReadLibraryType",
         "profiles": [
           "plc-foundation"
         ],
@@ -42648,6 +45381,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetProjectSettings",
+        "currentName": "GetProjectSettings",
+        "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetTechnologyObjectTree",
         "currentName": "GetTechnologyObjectTree",
         "sourceName": "ReadTechnologyObjectTree",
@@ -42831,6 +45574,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunToolTransaction",
+        "currentName": "RunToolTransaction",
+        "sourceName": "RunToolsInTransaction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "text": "Ready",
+          "confirmChange": false,
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveExportContent",
         "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
@@ -42958,6 +45724,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ShowObjectInEditor",
+        "currentName": "ShowObjectInEditor",
+        "sourceName": "ShowObjectInEditor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -42973,6 +45751,26 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeLibrary",
+        "currentName": "SynchronizeLibrary",
+        "sourceName": "SynchronizeLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "updateLibrary",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
         "envelopeVersion": 4
       },
@@ -43531,6 +46329,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckLibraryUpdates",
+        "currentName": "CheckLibraryUpdates",
+        "sourceName": "CheckLibraryUpdates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -43578,6 +46386,20 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareProjects",
+        "currentName": "CompareProjects",
+        "sourceName": "CompareProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "PLC_1",
+          "targetSoftwarePath": "PLC_2"
         },
         "envelopeVersion": 4
       },
@@ -43772,6 +46594,20 @@
           "firstRootPath": "PLC_1",
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateLibraryMasterCopy",
+        "currentName": "CreateLibraryMasterCopy",
+        "sourceName": "CreateLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceKind": "block",
+          "sourcePath": "Examples/Example_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -43982,6 +46818,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeObject",
+        "currentName": "DescribeObject",
+        "sourceName": "DescribeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeObjectProperty",
+        "currentName": "DescribeObjectProperty",
+        "sourceName": "DescribeObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeService",
+        "currentName": "DescribeService",
+        "sourceName": "DescribeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DescribeStandardPackage",
         "currentName": "DescribeStandardPackage",
         "sourceName": "DescribeStandardPackage",
@@ -44174,6 +47051,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportProjectTexts",
+        "currentName": "ExportProjectTexts",
+        "sourceName": "ExportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "sourceCulture": "en-US",
+          "targetCulture": "zh-CN",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -44494,6 +47386,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetObjectProperty",
+        "currentName": "GetObjectProperty",
+        "sourceName": "GetObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -44705,6 +47611,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportMasterCopyFromGlobalLibrary",
+        "currentName": "ImportMasterCopyFromGlobalLibrary",
+        "sourceName": "ImportMasterCopyFromGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}",
+          "masterCopyName": "FB_Motor",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlockVerified",
         "currentName": "ImportPlcBlockVerified",
         "sourceName": "ImportPlcBlockVerified",
@@ -44802,6 +47723,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportProjectTexts",
+        "currentName": "ImportProjectTexts",
+        "sourceName": "ImportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "updateSourceLanguage": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -44869,6 +47804,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeObject",
+        "currentName": "InvokeObject",
+        "sourceName": "InvokeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeService",
+        "currentName": "InvokeService",
+        "sourceName": "InvokeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcSclSource",
         "currentName": "AnalyzePlcSclSource",
         "sourceName": "LintPlcSclSource",
@@ -44890,6 +47854,20 @@
         "arguments": {
           "tool": "ListPlcBlocks",
           "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListObjectChildren",
+        "currentName": "ListObjectChildren",
+        "sourceName": "ListObjectChildren",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "collectionProperty": "Devices"
         },
         "envelopeVersion": 4
       },
@@ -44947,6 +47925,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGlobalLibrary",
+        "currentName": "ManageGlobalLibrary",
+        "sourceName": "ManageGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageHardwareObject",
         "currentName": "ManageHardwareObject",
         "sourceName": "ManageHardwareObject",
@@ -44993,6 +47984,68 @@
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryFolder",
+        "currentName": "ManageLibraryFolder",
+        "sourceName": "ManageLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "folderKind": "types",
+          "folderPath": "",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryMasterCopy",
+        "currentName": "ManageLibraryMasterCopy",
+        "sourceName": "ManageLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourcePath": "Examples/Example_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryType",
+        "currentName": "ManageLibraryType",
+        "sourceName": "ManageLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "Examples/FB_Motor",
+          "action": "update",
+          "properties": {
+            "DoNotUse": true
+          },
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryTypeVersion",
+        "currentName": "ManageLibraryTypeVersion",
+        "sourceName": "ManageLibraryTypeVersion",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -45690,6 +48743,32 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectCompilationSettings",
+        "currentName": "ManageProjectCompilationSettings",
+        "sourceName": "ManageProjectCompilationSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectLanguage",
+        "currentName": "ManageProjectLanguage",
+        "sourceName": "ManageProjectLanguage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true,
           "action": "read"
         },
@@ -46566,6 +49645,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeGlobalLibrary",
+        "currentName": "ProbeGlobalLibrary",
+        "sourceName": "ProbeGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
         "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
         "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -46652,6 +49743,26 @@
         "name": "ListIoSystems",
         "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryOverview",
+        "currentName": "GetLibraryOverview",
+        "sourceName": "ReadLibraryOverview",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryType",
+        "currentName": "GetLibraryType",
+        "sourceName": "ReadLibraryType",
         "profiles": [
           "plc-foundation"
         ],
@@ -46853,6 +49964,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetProjectSettings",
+        "currentName": "GetProjectSettings",
+        "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetTechnologyObjectTree",
         "currentName": "GetTechnologyObjectTree",
         "sourceName": "ReadTechnologyObjectTree",
@@ -47036,6 +50157,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunToolTransaction",
+        "currentName": "RunToolTransaction",
+        "sourceName": "RunToolsInTransaction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "text": "Ready",
+          "confirmChange": false,
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveExportContent",
         "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
@@ -47179,6 +50323,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ShowObjectInEditor",
+        "currentName": "ShowObjectInEditor",
+        "sourceName": "ShowObjectInEditor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -47194,6 +50350,26 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeLibrary",
+        "currentName": "SynchronizeLibrary",
+        "sourceName": "SynchronizeLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "updateLibrary",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
         "envelopeVersion": 4
       },
@@ -47765,6 +50941,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckLibraryUpdates",
+        "currentName": "CheckLibraryUpdates",
+        "sourceName": "CheckLibraryUpdates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -47803,6 +50989,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompareLibraries",
+        "currentName": "CompareLibraries",
+        "sourceName": "CompareLibraries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareLibraryObjects",
+        "currentName": "CompareLibraryObjects",
+        "sourceName": "CompareLibraryObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "type",
+          "leftPath": "Types/FB_Motor",
+          "rightPath": "Types/FB_Motor_v2"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ComparePlcBlockDocuments",
         "currentName": "ComparePlcBlockDocuments",
         "sourceName": "ComparePlcBlockDocuments",
@@ -47812,6 +51022,20 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareProjects",
+        "currentName": "CompareProjects",
+        "sourceName": "CompareProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "PLC_1",
+          "targetSoftwarePath": "PLC_2"
         },
         "envelopeVersion": 4
       },
@@ -48006,6 +51230,20 @@
           "firstRootPath": "PLC_1",
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateLibraryMasterCopy",
+        "currentName": "CreateLibraryMasterCopy",
+        "sourceName": "CreateLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceKind": "block",
+          "sourcePath": "Examples/Example_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -48216,6 +51454,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeObject",
+        "currentName": "DescribeObject",
+        "sourceName": "DescribeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeObjectProperty",
+        "currentName": "DescribeObjectProperty",
+        "sourceName": "DescribeObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeService",
+        "currentName": "DescribeService",
+        "sourceName": "DescribeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DescribeStandardPackage",
         "currentName": "DescribeStandardPackage",
         "sourceName": "DescribeStandardPackage",
@@ -48408,6 +51687,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportProjectTexts",
+        "currentName": "ExportProjectTexts",
+        "sourceName": "ExportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "sourceCulture": "en-US",
+          "targetCulture": "zh-CN",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -48743,6 +52037,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetObjectProperty",
+        "currentName": "GetObjectProperty",
+        "sourceName": "GetObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -48954,6 +52262,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportMasterCopyFromGlobalLibrary",
+        "currentName": "ImportMasterCopyFromGlobalLibrary",
+        "sourceName": "ImportMasterCopyFromGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}",
+          "masterCopyName": "FB_Motor",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlockVerified",
         "currentName": "ImportPlcBlockVerified",
         "sourceName": "ImportPlcBlockVerified",
@@ -49051,6 +52374,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportProjectTexts",
+        "currentName": "ImportProjectTexts",
+        "sourceName": "ImportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "updateSourceLanguage": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -49118,6 +52455,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeObject",
+        "currentName": "InvokeObject",
+        "sourceName": "InvokeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeService",
+        "currentName": "InvokeService",
+        "sourceName": "InvokeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcSclSource",
         "currentName": "AnalyzePlcSclSource",
         "sourceName": "LintPlcSclSource",
@@ -49139,6 +52505,20 @@
         "arguments": {
           "tool": "ListPlcBlocks",
           "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListObjectChildren",
+        "currentName": "ListObjectChildren",
+        "sourceName": "ListObjectChildren",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "collectionProperty": "Devices"
         },
         "envelopeVersion": 4
       },
@@ -49217,6 +52597,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGlobalLibrary",
+        "currentName": "ManageGlobalLibrary",
+        "sourceName": "ManageGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageHardwareObject",
         "currentName": "ManageHardwareObject",
         "sourceName": "ManageHardwareObject",
@@ -49263,6 +52656,68 @@
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryFolder",
+        "currentName": "ManageLibraryFolder",
+        "sourceName": "ManageLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "folderKind": "types",
+          "folderPath": "",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryMasterCopy",
+        "currentName": "ManageLibraryMasterCopy",
+        "sourceName": "ManageLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourcePath": "Examples/Example_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryType",
+        "currentName": "ManageLibraryType",
+        "sourceName": "ManageLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "Examples/FB_Motor",
+          "action": "update",
+          "properties": {
+            "DoNotUse": true
+          },
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryTypeVersion",
+        "currentName": "ManageLibraryTypeVersion",
+        "sourceName": "ManageLibraryTypeVersion",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -49960,6 +53415,32 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectCompilationSettings",
+        "currentName": "ManageProjectCompilationSettings",
+        "sourceName": "ManageProjectCompilationSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectLanguage",
+        "currentName": "ManageProjectLanguage",
+        "sourceName": "ManageProjectLanguage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true,
           "action": "read"
         },
@@ -50836,6 +54317,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeGlobalLibrary",
+        "currentName": "ProbeGlobalLibrary",
+        "sourceName": "ProbeGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
         "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
         "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -50922,6 +54415,26 @@
         "name": "ListIoSystems",
         "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryOverview",
+        "currentName": "GetLibraryOverview",
+        "sourceName": "ReadLibraryOverview",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryType",
+        "currentName": "GetLibraryType",
+        "sourceName": "ReadLibraryType",
         "profiles": [
           "plc-foundation"
         ],
@@ -51123,6 +54636,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetProjectSettings",
+        "currentName": "GetProjectSettings",
+        "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetTechnologyObjectTree",
         "currentName": "GetTechnologyObjectTree",
         "sourceName": "ReadTechnologyObjectTree",
@@ -51306,6 +54829,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunToolTransaction",
+        "currentName": "RunToolTransaction",
+        "sourceName": "RunToolsInTransaction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "text": "Ready",
+          "confirmChange": false,
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveExportContent",
         "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
@@ -51449,6 +54995,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ShowObjectInEditor",
+        "currentName": "ShowObjectInEditor",
+        "sourceName": "ShowObjectInEditor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -51464,6 +55022,26 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeLibrary",
+        "currentName": "SynchronizeLibrary",
+        "sourceName": "SynchronizeLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "updateLibrary",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
         "envelopeVersion": 4
       },
@@ -52161,6 +55739,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CheckLibraryUpdates",
+        "currentName": "CheckLibraryUpdates",
+        "sourceName": "CheckLibraryUpdates",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CleanupStagedImportFiles",
         "currentName": "CleanupStagedImportFiles",
         "sourceName": "CleanupStagedImportFiles",
@@ -52199,6 +55787,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "CompareLibraries",
+        "currentName": "CompareLibraries",
+        "sourceName": "CompareLibraries",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareLibraryObjects",
+        "currentName": "CompareLibraryObjects",
+        "sourceName": "CompareLibraryObjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "type",
+          "leftPath": "Types/FB_Motor",
+          "rightPath": "Types/FB_Motor_v2"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ComparePlcBlockDocuments",
         "currentName": "ComparePlcBlockDocuments",
         "sourceName": "ComparePlcBlockDocuments",
@@ -52208,6 +55820,20 @@
         "arguments": {
           "leftFilePath": "C:\\Examples\\before\\Main.xml",
           "rightFilePath": "C:\\Examples\\after\\Main.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CompareProjects",
+        "currentName": "CompareProjects",
+        "sourceName": "CompareProjects",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "PLC_1",
+          "targetSoftwarePath": "PLC_2"
         },
         "envelopeVersion": 4
       },
@@ -52402,6 +56028,20 @@
           "firstRootPath": "PLC_1",
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateLibraryMasterCopy",
+        "currentName": "CreateLibraryMasterCopy",
+        "sourceName": "CreateLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourceKind": "block",
+          "sourcePath": "Examples/Example_1",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -52612,6 +56252,47 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeObject",
+        "currentName": "DescribeObject",
+        "sourceName": "DescribeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeObjectProperty",
+        "currentName": "DescribeObjectProperty",
+        "sourceName": "DescribeObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeService",
+        "currentName": "DescribeService",
+        "sourceName": "DescribeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DescribeStandardPackage",
         "currentName": "DescribeStandardPackage",
         "sourceName": "DescribeStandardPackage",
@@ -52804,6 +56485,21 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "dir": "C:\\Examples\\exports"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportProjectTexts",
+        "currentName": "ExportProjectTexts",
+        "sourceName": "ExportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "sourceCulture": "en-US",
+          "targetCulture": "zh-CN",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -53139,6 +56835,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetObjectProperty",
+        "currentName": "GetObjectProperty",
+        "sourceName": "GetObjectProperty",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "propertyPath": "Name"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ListPlcExternalSources",
         "currentName": "ListPlcExternalSources",
         "sourceName": "GetPlcExternalSources",
@@ -53350,6 +57060,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportMasterCopyFromGlobalLibrary",
+        "currentName": "ImportMasterCopyFromGlobalLibrary",
+        "sourceName": "ImportMasterCopyFromGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}",
+          "masterCopyName": "FB_Motor",
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportPlcBlockVerified",
         "currentName": "ImportPlcBlockVerified",
         "sourceName": "ImportPlcBlockVerified",
@@ -53447,6 +57172,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ImportProjectTexts",
+        "currentName": "ImportProjectTexts",
+        "sourceName": "ImportProjectTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "filePath": "C:\\Examples\\exports\\ProjectTexts.xlsx",
+          "updateSourceLanguage": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ImportTechnologyObject",
         "currentName": "ImportTechnologyObject",
         "sourceName": "ImportTechnologyObject",
@@ -53514,6 +57253,35 @@
         "envelopeVersion": 4
       },
       {
+        "name": "InvokeObject",
+        "currentName": "InvokeObject",
+        "sourceName": "InvokeObject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "InvokeService",
+        "currentName": "InvokeService",
+        "sourceName": "InvokeService",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "serviceTypeSuffix": "&lt;service selected from DescribeObject&gt;",
+          "methodName": "&lt;method selected from DescribeObject/DescribeService&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "AnalyzePlcSclSource",
         "currentName": "AnalyzePlcSclSource",
         "sourceName": "LintPlcSclSource",
@@ -53535,6 +57303,20 @@
         "arguments": {
           "tool": "ListPlcBlocks",
           "limit": 10
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListObjectChildren",
+        "currentName": "ListObjectChildren",
+        "sourceName": "ListObjectChildren",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "objectKind": "Project",
+          "objectPath": "",
+          "collectionProperty": "Devices"
         },
         "envelopeVersion": 4
       },
@@ -53613,6 +57395,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageGlobalLibrary",
+        "currentName": "ManageGlobalLibrary",
+        "sourceName": "ManageGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageHardwareObject",
         "currentName": "ManageHardwareObject",
         "sourceName": "ManageHardwareObject",
@@ -53659,6 +57454,68 @@
           "name": "ExampleIO",
           "subnetName": "PN_IE_1",
           "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryFolder",
+        "currentName": "ManageLibraryFolder",
+        "sourceName": "ManageLibraryFolder",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "folderKind": "types",
+          "folderPath": "",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryMasterCopy",
+        "currentName": "ManageLibraryMasterCopy",
+        "sourceName": "ManageLibraryMasterCopy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "sourcePath": "Examples/Example_1",
+          "action": "read",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryType",
+        "currentName": "ManageLibraryType",
+        "sourceName": "ManageLibraryType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "Examples/FB_Motor",
+          "action": "update",
+          "properties": {
+            "DoNotUse": true
+          },
+          "confirmDelete": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageLibraryTypeVersion",
+        "currentName": "ManageLibraryTypeVersion",
+        "sourceName": "ManageLibraryTypeVersion",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "typePath": "UDT_Status",
+          "version": "&lt;version from target discovery&gt;",
+          "action": "read",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -54356,6 +58213,32 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectCompilationSettings",
+        "currentName": "ManageProjectCompilationSettings",
+        "sourceName": "ManageProjectCompilationSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageProjectLanguage",
+        "currentName": "ManageProjectLanguage",
+        "sourceName": "ManageProjectLanguage",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true,
           "action": "read"
         },
@@ -55246,6 +59129,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ProbeGlobalLibrary",
+        "currentName": "ProbeGlobalLibrary",
+        "sourceName": "ProbeGlobalLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "libraryPath": "C:\\Examples\\Library.al{extension}"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ProbeHardwareHmiConnectionOwnerCandidates",
         "currentName": "ProbeHardwareHmiConnectionOwnerCandidates",
         "sourceName": "ProbeHardwareHmiConnectionOwnerCandidates",
@@ -55332,6 +59227,26 @@
         "name": "ListIoSystems",
         "currentName": "ListIoSystems",
         "sourceName": "ReadIoSystems",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryOverview",
+        "currentName": "GetLibraryOverview",
+        "sourceName": "ReadLibraryOverview",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetLibraryType",
+        "currentName": "GetLibraryType",
+        "sourceName": "ReadLibraryType",
         "profiles": [
           "plc-foundation"
         ],
@@ -55533,6 +59448,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetProjectSettings",
+        "currentName": "GetProjectSettings",
+        "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetTechnologyObjectTree",
         "currentName": "GetTechnologyObjectTree",
         "sourceName": "ReadTechnologyObjectTree",
@@ -55726,6 +59651,29 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RunToolTransaction",
+        "currentName": "RunToolTransaction",
+        "sourceName": "RunToolsInTransaction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "text": "Ready",
+          "confirmChange": false,
+          "dryRun": true,
+          "calls": [
+            {
+              "name": "CreatePlcTypeGroup",
+              "arguments": {
+                "softwarePath": "PLC_1",
+                "groupPath": "Examples"
+              }
+            }
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SaveExportContent",
         "currentName": "SaveExportContent",
         "sourceName": "SaveExport",
@@ -55881,6 +59829,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ShowObjectInEditor",
+        "currentName": "ShowObjectInEditor",
+        "sourceName": "ShowObjectInEditor",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "StageImportFiles",
         "currentName": "StageImportFiles",
         "sourceName": "StageImportFiles",
@@ -55896,6 +59856,26 @@
             }
           ],
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeLibrary",
+        "currentName": "SynchronizeLibrary",
+        "sourceName": "SynchronizeLibrary",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "updateLibrary",
+          "selection": [
+            {
+              "folder": ""
+            }
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "targetLibraryName": "&lt;targetLibraryName from this operation's target or user input&gt;"
         },
         "envelopeVersion": 4
       },

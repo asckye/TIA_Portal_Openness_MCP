@@ -150,6 +150,52 @@
     },
     {
       "entries": [
+        "CompareProjects",
+        "ExportProjectTexts",
+        "GetProjectSettings",
+        "ImportProjectTexts",
+        "ManageProjectLanguage",
+        "RunToolTransaction",
+        "ShowObjectInEditor"
+      ],
+      "family": "F06",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "CheckLibraryUpdates",
+        "CreateLibraryMasterCopy",
+        "GetLibraryOverview",
+        "GetLibraryType",
+        "ManageGlobalLibrary",
+        "ManageLibraryFolder",
+        "ManageLibraryMasterCopy",
+        "ManageLibraryType",
+        "ManageLibraryTypeVersion",
+        "ProbeGlobalLibrary",
+        "SynchronizeLibrary"
+      ],
+      "family": "F23",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "DescribeObject",
+        "DescribeObjectProperty",
+        "DescribeService",
+        "GetObjectProperty",
+        "InvokeObject",
+        "InvokeService",
+        "ListObjectChildren"
+      ],
+      "family": "F35",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
         "CreatePlcBlockGroup",
         "CreatePlcTypeGroup",
         "DeleteEmptyPlcBlockGroup",
@@ -6402,6 +6448,36 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "1d51f8590799e525dc1ea5cf8c5f30928f8475d66c93a76c3bafbea8310fd89e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 2000,
+            "description": "maxItems: cap on items returned.",
+            "type": "integer"
+          },
+          "updateCheckMode": {
+            "default": "ReportOutOfDateOnly",
+            "description": "updateCheckMode: ReportOutOfDateOnly | ReportOutOfDateAndUpToDate.",
+            "enum": [
+              "ReportOutOfDateOnly",
+              "ReportOutOfDateAndUpToDate"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "CheckLibraryUpdates",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "cfc65ec1e33443be6517bd8e8ff3c241d23caa8e1a23c2ff4aba96dd04c43041",
       "inputSchema": {
         "additionalProperties": false,
@@ -6769,6 +6845,92 @@
         "type": "object"
       },
       "name": "ComparePlcBlockDocuments",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "17d06fcd4b5723b745307073436518a605d0bed3fd5990bb85229efd5c9ef787",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "includeIdentical": {
+            "default": false,
+            "description": "includeIdentical: true also lists objects that compare equal.",
+            "type": "boolean"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "description": "kind: the object kind - the tool description lists the accepted values (case-sensitive).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "maxDepth": {
+            "default": 8,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "targetDevicePath": {
+            "description": "targetDevicePath: JSON array naming the target station.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetItemPath": {
+            "description": "targetItemPath: array of device-item names on the target.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetLibraryName": {
+            "default": "",
+            "description": "targetLibraryName: name of the target global library ('' = the project library).",
+            "type": "string"
+          },
+          "targetProjectName": {
+            "default": "",
+            "description": "targetProjectName: exact name of the project to compare with.",
+            "type": "string"
+          },
+          "targetSoftwarePath": {
+            "default": "",
+            "description": "targetSoftwarePath: the target PLC software path from GetProjectTree (e.g. 'PLC_1').",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      },
+      "name": "CompareProjects",
       "outputSchema": null
     },
     {
@@ -7429,6 +7591,55 @@
         "type": "object"
       },
       "name": "CreateGsdDevice",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "31e145c08ddc95fac66a465fd1707a4efcccfb09a90a82274729dcdffd7408b3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "sourceKind": {
+            "description": "sourceKind: block | type | device | screen.",
+            "enum": [
+              "block",
+              "type",
+              "device",
+              "screen"
+            ],
+            "type": "string"
+          },
+          "sourcePath": {
+            "description": "sourcePath: 'Group/Name' of the source object.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceKind",
+          "sourcePath"
+        ],
+        "type": "object"
+      },
+      "name": "CreateLibraryMasterCopy",
       "outputSchema": null
     },
     {
@@ -8435,6 +8646,100 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "b25ecb8d17f3530116594a3d1f0b1c1d39037d47fa8b8afc39b77b5b3e3182ae",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "Max member count to return",
+            "type": "integer"
+          },
+          "objectKind": {
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type",
+              "HmiScreen",
+              "HmiTag",
+              "HmiScreenItem",
+              "HmiScriptModule",
+              "HmiScripts"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath required for Block/Type and HmiScriptModule/HmiScripts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeObject",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "ea0d055529cf588ebbade9e57d5d39a43506557b8d2e977246b001ed58317616",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "maxMembers: max member count",
+            "type": "integer"
+          },
+          "objectKind": {
+            "description": "objectKind: Project|Portal|Device|DeviceItem|Software|Block|Type",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "objectPath: object path",
+            "type": "string"
+          },
+          "propertyPath": {
+            "description": "propertyPath: dotted property path, e.g. 'Connections' or 'PressedStateTags'",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: required for Block/Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath",
+          "propertyPath"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeObjectProperty",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "95ce5ad6ff268290684f2f4dea412948be0efc837afb18f8428c99cabe8516f0",
       "inputSchema": {
         "additionalProperties": false,
@@ -8461,6 +8766,55 @@
         "type": "object"
       },
       "name": "DescribePlcBlockLogic",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "21bae68b4da225cfea4e4f04d7bcd80cb9c602a8d50e3d1acfe0265bcdb543db",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "maxMembers": {
+            "default": 200,
+            "description": "Max member count to return",
+            "type": "integer"
+          },
+          "objectKind": {
+            "description": "Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type",
+              "HmiScriptModule",
+              "HmiScripts"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "type": "string"
+          },
+          "serviceTypeSuffix": {
+            "description": "Service type suffix, e.g. PlcChecksumProvider or ICompilable",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath required for Block/Type and HmiScriptModule/HmiScripts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath",
+          "serviceTypeSuffix"
+        ],
+        "type": "object"
+      },
+      "name": "DescribeService",
       "outputSchema": null
     },
     {
@@ -9602,6 +9956,39 @@
       }
     },
     {
+      "descriptionSha256": "7c7ec16171b325c03d6a2fcb98b569dfeaa57851e31b051ab07ba0257d756191",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: new absolute XLSX file in an existing directory.",
+            "type": "string"
+          },
+          "sourceCulture": {
+            "description": "sourceCulture: source language tag, e.g. 'en-US'.",
+            "type": "string"
+          },
+          "targetCulture": {
+            "description": "targetCulture: target language tag, e.g. 'zh-CN'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filePath",
+          "sourceCulture",
+          "targetCulture"
+        ],
+        "type": "object"
+      },
+      "name": "ExportProjectTexts",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "3879b1e1cb6448355ac7ec54f4fb0000d7c120378a648cdd385fd75d27d8ecbc",
       "inputSchema": {
         "additionalProperties": false,
@@ -10474,6 +10861,80 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "69926a8a246fff4e2820df0b4359e3d527f10c63fcf6e8d879c5011628270145",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeMasterCopies": {
+            "default": true,
+            "description": "includeMasterCopies: true also lists the master copies.",
+            "type": "boolean"
+          },
+          "includeTypes": {
+            "default": true,
+            "description": "includeTypes: true also lists the types.",
+            "type": "boolean"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "maxDepth": {
+            "default": 6,
+            "description": "maxDepth: how deep to walk the tree.",
+            "type": "integer"
+          },
+          "maxItems": {
+            "default": 500,
+            "description": "maxItems: cap on items returned.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetLibraryOverview",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "0b8f12e88257f5d1dfb654d76c6a376d4a57b3929916f9c9a78ee456a4161802",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "guid": {
+            "default": "",
+            "description": "guid: GUID of the type ('' = look up by name).",
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "typePath": {
+            "default": "",
+            "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetLibraryType",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "69eb61028e1a220d2c8267ebd31654e663747103f6730edf56256d7da11ce8d6",
       "inputSchema": {
         "additionalProperties": false,
@@ -10530,6 +10991,53 @@
         "type": "object"
       },
       "name": "GetNativeInvocationLog",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "8b1ec86b705aa844da963f52ed34550592586ae036692b88ad39e50e48ea72e9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "objectKind": {
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type",
+              "HmiScreen",
+              "HmiTag",
+              "HmiScreenItem",
+              "HmiScriptModule",
+              "HmiScripts"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "type": "string"
+          },
+          "propertyPath": {
+            "description": "Property path, e.g. Name or BlockGroup.Groups",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath required for Block/Type and HmiScriptModule/HmiScripts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath",
+          "propertyPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetObjectProperty",
       "outputSchema": null
     },
     {
@@ -11335,6 +11843,39 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "de68a740838706ea5ddfa546785ae7c828c2adac9b76a6286ebc3a1d8ab6bfcd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "customIdentityKey": {
+            "default": "",
+            "description": "customIdentityKey: key of the custom identity to read ('' = all).",
+            "type": "string"
+          },
+          "folderPath": {
+            "default": "",
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "limit: maximum number of items to return (paging).",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "offset: index of the first item to return (paging), 0 = beginning.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetProjectSettings",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "1a69a4b8024acb39a21e5617de8a1b74401dc99959be4954129933d4c3388ce0",
@@ -13562,6 +14103,34 @@
       }
     },
     {
+      "descriptionSha256": "8410fb8f3645aafd173ab64970129897180e8a6300689e370330050adff23f5a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "description": "filePath: existing absolute XLSX file exported by ExportProjectTexts.",
+            "type": "string"
+          },
+          "updateSourceLanguage": {
+            "description": "updateSourceLanguage: true also writes the source-language texts.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "filePath",
+          "updateSourceLanguage"
+        ],
+        "type": "object"
+      },
+      "name": "ImportProjectTexts",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "c882bf6362371fd8c8be70c159551dc95c37164c33b2e58ac155481b9ac47e8b",
       "inputSchema": {
         "additionalProperties": false,
@@ -13745,6 +14314,260 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "ec18f01cf0a99a20a06a5adbd1e75e1a9263bf30dddfdc9f2ba019f503d3a6e4",
+      "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "allowWrite": {
+            "default": false,
+            "description": "Allow write/dangerous methods. Default false.",
+            "type": "boolean"
+          },
+          "args": {
+            "description": "JSON array of args, e.g. [\"AttrName\"]. Empty for no args. DirectoryInfo/FileInfo parameters accept path strings on the MCP machine.",
+            "items": {
+              "oneOf": [
+                {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                {
+                  "items": {
+                    "$ref": "#/$defs/recursive0"
+                  },
+                  "type": "array"
+                },
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/recursive0"
+                  },
+                  "type": "object"
+                }
+              ],
+              "x-maxDepth": 62,
+              "x-maxUtf8Bytes": 10485760
+            },
+            "type": "array"
+          },
+          "methodName": {
+            "description": "Method name (case-insensitive)",
+            "type": "string"
+          },
+          "objectKind": {
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type",
+              "HmiScreen",
+              "HmiTag",
+              "HmiScreenItem",
+              "HmiScriptModule",
+              "HmiScripts"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath required for Block/Type and HmiScriptModule/HmiScripts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath",
+          "methodName"
+        ],
+        "type": "object"
+      },
+      "name": "InvokeObject",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "6a03363d5a644cfd0a1c199e838d7fcb564d2f0b5489d2d2bd1a86f59d111bc6",
+      "inputSchema": {
+        "$defs": {
+          "recursive0": {
+            "oneOf": [
+              {
+                "anyOf": [
+                  {
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/recursive0"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "allowWrite": {
+            "default": false,
+            "description": "Allow write/dangerous methods. Default false.",
+            "type": "boolean"
+          },
+          "args": {
+            "description": "JSON array of args, empty for no args",
+            "items": {
+              "oneOf": [
+                {
+                  "anyOf": [
+                    {
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                {
+                  "items": {
+                    "$ref": "#/$defs/recursive0"
+                  },
+                  "type": "array"
+                },
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/recursive0"
+                  },
+                  "type": "object"
+                }
+              ],
+              "x-maxDepth": 62,
+              "x-maxUtf8Bytes": 10485760
+            },
+            "type": "array"
+          },
+          "methodName": {
+            "description": "Method name (case-insensitive)",
+            "type": "string"
+          },
+          "objectKind": {
+            "description": "Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type",
+              "HmiScriptModule",
+              "HmiScripts"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "type": "string"
+          },
+          "serviceTypeSuffix": {
+            "description": "Service type suffix, e.g. PlcChecksumProvider or ICompilable",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath required for Block/Type and HmiScriptModule/HmiScripts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath",
+          "serviceTypeSuffix",
+          "methodName"
+        ],
+        "type": "object"
+      },
+      "name": "InvokeService",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "73d337faf901ce62f297b57415362f0707508f9ba8b4c4f47af083a422034f25",
       "inputSchema": {
         "additionalProperties": false,
@@ -13904,6 +14727,59 @@
         "type": "object"
       },
       "name": "ListIoSystems",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "d9d9c9266774d653229ccc3609cdd0a754762e91f0fbd365de657492954f316b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "collectionProperty": {
+            "description": "Enumerable property name/path, e.g. Devices, DeviceItems, BlockGroup.Blocks",
+            "type": "string"
+          },
+          "limit": {
+            "default": 200,
+            "description": "Max child items to return",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "objectKind": {
+            "description": "Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts",
+            "enum": [
+              "Project",
+              "Portal",
+              "Device",
+              "DeviceItem",
+              "Software",
+              "Block",
+              "Type",
+              "HmiScreen",
+              "HmiTag",
+              "HmiScreenItem",
+              "HmiScriptModule",
+              "HmiScripts"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath required for Block/Type and HmiScriptModule/HmiScripts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objectKind",
+          "objectPath",
+          "collectionProperty"
+        ],
+        "type": "object"
+      },
+      "name": "ListObjectChildren",
       "outputSchema": null
     },
     {
@@ -15409,6 +16285,82 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "4bcf75e5310b12f8efe6e1d35cc52b5d4e9ff5e4972dffc1168fee514f1395d3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | archive.",
+            "enum": [
+              "list",
+              "infos",
+              "create",
+              "open",
+              "openInfo",
+              "retrieve",
+              "save",
+              "saveAs",
+              "close",
+              "archive"
+            ],
+            "type": "string"
+          },
+          "archiveMode": {
+            "default": "Compressed",
+            "description": "archiveMode: None | Compressed | DiscardRestorableData | DiscardRestorableDataAndCompressed.",
+            "enum": [
+              "None",
+              "Compressed",
+              "DiscardRestorableData",
+              "DiscardRestorableDataAndCompressed"
+            ],
+            "type": "string"
+          },
+          "archiveName": {
+            "default": "",
+            "description": "archiveName: file name of the library archive to write.",
+            "type": "string"
+          },
+          "destinationDirectory": {
+            "default": "",
+            "description": "destinationDirectory: folder on the TIA machine that receives the output.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "openMode": {
+            "default": "ReadOnly",
+            "description": "openMode: how to open the library - ReadOnly or ReadWrite.",
+            "type": "string"
+          },
+          "upgrade": {
+            "default": false,
+            "description": "upgrade: true opens with an upgrade to the current TIA version when the file is older.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageGlobalLibrary",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "9d2a9689a4bd37cac064d6ad5799d9ee636fe62b186c5febccaa1dd22578886e",
       "inputSchema": {
         "additionalProperties": false,
@@ -15640,6 +16592,286 @@
         "type": "object"
       },
       "name": "ManageIoSystem",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "704feb817f3d0f593c744423865a1e3bbbfd1623a3ef65819cc0f3f7be295266",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - read | create | rename | delete.",
+            "enum": [
+              "read",
+              "create",
+              "rename",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "folderKind": {
+            "description": "folderKind: types | masterCopies.",
+            "enum": [
+              "types",
+              "masterCopies"
+            ],
+            "type": "string"
+          },
+          "folderPath": {
+            "description": "folderPath: group / folder path inside the software ('' = root).",
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "newName": {
+            "default": "",
+            "description": "newName: the new name (rename actions).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "folderKind",
+          "folderPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageLibraryFolder",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "1f9b6b79075bf9f61c40020748417099c61f79022c8086b6fd29845238bb5469",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - read | copy | compare | delete.",
+            "enum": [
+              "read",
+              "copy",
+              "compare",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "destinationLibraryName": {
+            "default": "",
+            "description": "destinationLibraryName: global library that receives the copy ('' = the project library).",
+            "type": "string"
+          },
+          "destinationPath": {
+            "default": "",
+            "description": "destinationPath: 'Folder/Name' where the copy is created.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "sourcePath": {
+            "description": "sourcePath: 'Group/Name' of the source object.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourcePath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageLibraryMasterCopy",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "f1314b1b19c2c1eae257ef85f3d77be46d3e13954646808aa4658ad0fc7d248a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - update | delete | updateLibrary | updateProject.",
+            "enum": [
+              "update",
+              "delete",
+              "updateLibrary",
+              "updateProject"
+            ],
+            "type": "string"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "deleteUnusedVersionsMode": {
+            "default": "DoNotDelete",
+            "description": "deleteUnusedVersionsMode: AutomaticallyDelete | DoNotDelete.",
+            "enum": [
+              "AutomaticallyDelete",
+              "DoNotDelete"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "forceUpdateMode": {
+            "default": "SetOnlyHigherUpdatedVersionAsDefault",
+            "description": "forceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault | ForceSetAnyUpdatedVersionAsDefault | NoDefaultVersionChange.",
+            "enum": [
+              "SetOnlyHigherUpdatedVersionAsDefault",
+              "ForceSetAnyUpdatedVersionAsDefault",
+              "NoDefaultVersionChange"
+            ],
+            "type": "string"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "scopeSoftwarePaths": {
+            "description": "scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an unscoped update is refused).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "structureConflictResolutionMode": {
+            "default": "RetainStructure",
+            "description": "structureConflictResolutionMode: UpdateStructure | RetainStructure | CancelIfStructureConflicts.",
+            "enum": [
+              "UpdateStructure",
+              "RetainStructure",
+              "CancelIfStructureConflicts"
+            ],
+            "type": "string"
+          },
+          "targetLibraryName": {
+            "default": "",
+            "description": "targetLibraryName: name of the target global library ('' = the project library).",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "typePath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageLibraryType",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "92844c9870896b56fc9e2906bca11b69e12ac2e6189efb0a472d512c486df7a2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances.",
+            "enum": [
+              "read",
+              "edit",
+              "release",
+              "setDefault",
+              "deleteVersion",
+              "updateInstances",
+              "discard",
+              "findInstances"
+            ],
+            "type": "string"
+          },
+          "author": {
+            "default": "",
+            "description": "author: author text of the version.",
+            "type": "string"
+          },
+          "comment": {
+            "default": "",
+            "description": "comment: comment text.",
+            "type": "string"
+          },
+          "dependenciesMode": {
+            "default": "",
+            "description": "dependenciesMode: how dependent types are handled by the action ('' = default).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "newVersion": {
+            "default": "",
+            "description": "newVersion: version string of the new type version, e.g. 'V1.0.1'.",
+            "type": "string"
+          },
+          "targetSoftwarePath": {
+            "default": "",
+            "description": "targetSoftwarePath: the target PLC software path from GetProjectTree (e.g. 'PLC_1').",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
+            "type": "string"
+          },
+          "version": {
+            "description": "version: catalog / firmware version string, e.g. 'V2.9'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "typePath",
+          "version",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManageLibraryTypeVersion",
       "outputSchema": null
     },
     {
@@ -16485,6 +17717,39 @@
         "type": "object"
       },
       "name": "ManagePortInterconnection",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "b297f7870223845063e2b123e7df8b45438de8c58c46d6391028a14fcac31f63",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "action: read | activate | deactivate | setEditing | setReference.",
+            "enum": [
+              "read",
+              "activate",
+              "deactivate",
+              "setEditing",
+              "setReference"
+            ],
+            "type": "string"
+          },
+          "culture": {
+            "default": "",
+            "description": "culture: exact language tag, e.g. 'en-US', 'zh-CN' (required for every action except read).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ManageProjectLanguage",
       "outputSchema": null
     },
     {
@@ -18363,6 +19628,29 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "587c7b605b60f7f0e04efb87c811d66bb5e4dd73227322848ff4ba040f07b346",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "libraryPath": {
+            "description": "libraryPath: full path to .al21 file or its containing folder",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 500,
+            "description": "maxItems: maximum items per list",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "libraryPath"
+        ],
+        "type": "object"
+      },
+      "name": "ProbeGlobalLibrary",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "7de3c6e49583e45bfe40112f79e9db6d2c76bccab7b76c4a9d2ce75b7d1de802",
       "inputSchema": {
         "additionalProperties": false,
@@ -19034,6 +20322,52 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "7ebaa9c8fe775d36da714f1c37bb3e891eb89f41be5b18de77c35e16d098c396",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "calls": {
+            "description": "calls: Array of {name, arguments:{...}} supported tool calls to run inside one transaction.",
+            "items": {
+              "properties": {
+                "arguments": true,
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "arguments"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "confirmChange": {
+            "default": false,
+            "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "text": {
+            "description": "text: transaction text shown in TIA's undo history.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "calls",
+          "text"
+        ],
+        "type": "object"
+      },
+      "name": "RunToolTransaction",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "46b8e966aa75a89abb80ed15a8a5c1cfde2ff43821d093072aaadf39e4471581",
       "inputSchema": {
         "additionalProperties": false,
@@ -19609,6 +20943,56 @@
         "type": "object"
       },
       "name": "SetPlcCpuSettings",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "be026753f172cb2d0a59b9718113ccf1416e7408dfeca3fa0c1919085ce96d71",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "default": "device",
+            "description": "kind: device | deviceItem | plcBlock | plcType | plcTagTable.",
+            "enum": [
+              "device",
+              "deviceItem",
+              "plcBlock",
+              "plcType",
+              "plcTagTable"
+            ],
+            "type": "string"
+          },
+          "objectPath": {
+            "default": "",
+            "description": "objectPath: path of the object inside the software ('Group/Name').",
+            "type": "string"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ShowObjectInEditor",
       "outputSchema": null
     },
     {
@@ -20472,6 +21856,141 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "a8fbdf5e5fe847ee6ebbe327cfc00739e33df426162f76721430a42d0ed2e069",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "action: the operation to perform - updateLibrary | updateProject | harmonizeProject | cleanUp.",
+            "enum": [
+              "updateLibrary",
+              "updateProject",
+              "harmonizeProject",
+              "cleanUp"
+            ],
+            "type": "string"
+          },
+          "cleanUpMode": {
+            "default": "PreserveDefaultVersionOfUnusedTypes",
+            "description": "cleanUpMode: PreserveDefaultVersionOfUnusedTypes | DeleteUnusedTypes.",
+            "enum": [
+              "PreserveDefaultVersionOfUnusedTypes",
+              "DeleteUnusedTypes"
+            ],
+            "type": "string"
+          },
+          "confirmChange": {
+            "default": false,
+            "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
+            "type": "boolean"
+          },
+          "deleteUnusedVersionsMode": {
+            "default": "DoNotDelete",
+            "description": "deleteUnusedVersionsMode: AutomaticallyDelete | DoNotDelete.",
+            "enum": [
+              "AutomaticallyDelete",
+              "DoNotDelete"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "forceUpdateMode": {
+            "default": "SetOnlyHigherUpdatedVersionAsDefault",
+            "description": "forceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault | ForceSetAnyUpdatedVersionAsDefault | NoDefaultVersionChange.",
+            "enum": [
+              "SetOnlyHigherUpdatedVersionAsDefault",
+              "ForceSetAnyUpdatedVersionAsDefault",
+              "NoDefaultVersionChange"
+            ],
+            "type": "string"
+          },
+          "harmonizeOptions": {
+            "description": "harmonizeOptions: Array of harmonisation option names (see the tool description).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "libraryName": {
+            "default": "",
+            "description": "libraryName: name of the global library ('' = the project library).",
+            "type": "string"
+          },
+          "scopeSoftwarePaths": {
+            "description": "scopeSoftwarePaths: JSON array of software paths that limit the update scope (required for updateProject / harmonizeProject; an unscoped update is refused).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "selection": {
+            "description": "selection: JSON array selecting the types / instances to synchronise (at least one type or folder; {folder: ''} selects the whole Types folder).",
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "folder": {
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "folder"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "type": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "type": "array"
+          },
+          "structureConflictResolutionMode": {
+            "default": "RetainStructure",
+            "description": "structureConflictResolutionMode: UpdateStructure | RetainStructure | CancelIfStructureConflicts.",
+            "enum": [
+              "UpdateStructure",
+              "RetainStructure",
+              "CancelIfStructureConflicts"
+            ],
+            "type": "string"
+          },
+          "targetLibraryName": {
+            "default": "",
+            "description": "targetLibraryName: name of the target global library ('' = the project library).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "selection"
+        ],
+        "type": "object"
+      },
+      "name": "SynchronizeLibrary",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "989958949605cb37a418748efba7f382e6bc86a7a90b397e0f4a4502ad3aa4a3",
