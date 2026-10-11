@@ -100,8 +100,30 @@ public sealed class ProtocolTests
     [InlineData("importBlocks")]
     [InlineData("exportBlocks")]
     [InlineData("generationWizard")]
-    public async Task FuturePrefillFormsAreNotInV1(string form)
+    public async Task PrefillFormsRejectUnknownNamesOrFieldsFromAnotherForm(string form)
         => await Reject(Json(Request(WorkbenchControlOperation.PrefillForm, new WorkbenchPrefillArguments())).Replace("\"inspectionRules\"", JsonSerializer.Serialize(form)));
+    [Theory, InlineData(3), InlineData(4), InlineData(5)]
+    public async Task McpFormsRoundTripSetAndClearWithClosedFields(int form)
+    {
+        WorkbenchPrefillFields fields = form switch
+        {
+            3 => new WorkbenchConnectProjectFields { ProjectPath = @"D:\Line.ap21" },
+            4 => new WorkbenchExportBlocksFields { OutputDirectory = @"D:\Exports", Format = "SimaticMl" },
+            _ => new WorkbenchImportBlocksFields { Paths = [@"D:\Main.xml"], Overwrite = false },
+        };
+        var request = Request(WorkbenchControlOperation.PrefillForm, new WorkbenchPrefillArguments { Form = (WorkbenchPrefillForm)form, Fields = fields });
+        using var stream = new MemoryStream();
+        await WorkbenchControlFrames.Write(stream, request, default); stream.Position = 0;
+        Assert.Equal(Json(request), Json(await WorkbenchControlFrames.Read<WorkbenchControlRequest>(stream, default)));
+        var node = System.Text.Json.Nodes.JsonNode.Parse(Json(request))!;
+        node["arguments"]!["fields"]!["unexpected"] = true;
+        await Reject(node.ToJsonString());
+        node["arguments"]!["fields"] = new System.Text.Json.Nodes.JsonObject();
+        await Reject(node.ToJsonString());
+        node["arguments"]!["mode"] = "clear";
+        using var clear = Frame(node.ToJsonString());
+        Assert.Equal(WorkbenchPrefillMode.Clear, ((WorkbenchPrefillArguments)(await WorkbenchControlFrames.Read<WorkbenchControlRequest>(clear, default)).Arguments).Mode);
+    }
     [Fact]
     public async Task ArgumentTypesCannotBeMixedAndNestedRequiredFieldsCannotBeOmitted()
     {
@@ -256,7 +278,7 @@ public sealed class ProtocolTests
     {
         Assert.Equal(new[] { "DisplayPage", "DisplayBlock", "DisplayCall", "DisplayLadder", "DisplayAtlas", "ReadState", "ReadSelection", "PrefillForm" }, Enum.GetNames<WorkbenchControlOperation>());
         Assert.Equal(new[] { "Overview", "Blocks", "VersionControl", "Calls", "Audit", "Environment", "Log" }, Enum.GetNames<WorkbenchPage>());
-        Assert.Equal(new[] { "InspectionRules", "BlockFilter", "BlockSelection" }, Enum.GetNames<WorkbenchPrefillForm>());
+        Assert.Equal(new[] { "InspectionRules", "BlockFilter", "BlockSelection", "ConnectProject", "ExportBlocks", "ImportBlocks" }, Enum.GetNames<WorkbenchPrefillForm>());
     }
     [Theory]
     [InlineData(-1, 100)]

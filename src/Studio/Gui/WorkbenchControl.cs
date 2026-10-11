@@ -37,7 +37,7 @@ public partial class MainWindow
 
     private void InitializeControl()
     {
-        _controlProjectPath = HasProject ? _model.Session.ProjectPath : null;
+        _controlProjectPath = HasProject ? _model.Session.BoundProjectFile : null;
         ControlSurface = new WorkbenchControlSurface(ApplyControl, CaptureControlSnapshot());
         foreach (var source in new INotifyPropertyChanged[] { _model, _model.Session, _model.Engineering, _model.Activity })
             source.PropertyChanged += OnControlChanged;
@@ -53,7 +53,7 @@ public partial class MainWindow
         PreviewKeyDown += OnControlKeyDown;
         _controlHintTimer.Tick += OnControlHintTick;
         Loc.Current.LanguageChanged += OnControlLanguageChanged;
-        if (!_loadExistingConfiguration) return;
+        if (!_loadExistingConfiguration || _model.OfflineDemo) return;
         try
         {
             string root = BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory);
@@ -81,8 +81,12 @@ public partial class MainWindow
         if (sender == _model.Session && (e.PropertyName == nameof(SessionViewModel.ProjectName)
             || _model.HasMcpPanel && e.PropertyName == nameof(SessionViewModel.ProjectPath)))
         {
-            _controlProjectPath = HasProject ? _model.Session.BoundProjectFile : null;
-            ConfirmControlPrefill();
+            string? boundProject = HasProject ? _model.Session.BoundProjectFile : null;
+            if (!string.Equals(_controlProjectPath, boundProject, StringComparison.OrdinalIgnoreCase))
+            {
+                _controlProjectPath = boundProject;
+                ConfirmControlPrefill();
+            }
         }
         if (sender == _controlFeatures && e.PropertyName == nameof(FeaturePagesViewModel.SelectedCall)) UpdateControlDetail();
         QueueControlSnapshot();
@@ -174,6 +178,8 @@ public partial class MainWindow
         switch (request.Arguments)
         {
             case WorkbenchDisplayPageArguments page:
+                if (page.Page == WorkbenchPage.VersionControl && !_model.VersionControlPageVisible)
+                    return ControlResponse.Refuse(request, "vci-api-unavailable", WorkbenchControlError.UnsupportedCapability);
                 if (page.Page is WorkbenchPage.Blocks or WorkbenchPage.VersionControl && !HasProject)
                     return ControlResponse.Refuse(request, "workbench-no-project");
                 var previous = ControlPage;
@@ -279,9 +285,12 @@ public partial class MainWindow
     private WorkbenchControlResponse ApplyControlPrefill(WorkbenchControlRequest request, WorkbenchPrefillArguments arguments)
     {
         if (!_prefills.CanChange(arguments.Form, request.Origin)) return ControlResponse.Refuse(request, "prefill-pending");
-        if (arguments.Form != WorkbenchPrefillForm.InspectionRules && !HasProject)
+        if (arguments.Form is not (WorkbenchPrefillForm.InspectionRules or WorkbenchPrefillForm.ConnectProject) && !HasProject)
             return ControlResponse.Refuse(request, "workbench-no-project");
-        if (!PrefillRegistry.Valid(arguments)) return ControlResponse.Refuse(request, "prefill-field-invalid", WorkbenchControlError.InvalidArgument, "namePattern");
+        if (PrefillRegistry.Targets.Single(target => target.Form == arguments.Form).Executes == "mcp" && !_model.HasMcpPanel)
+            return ControlResponse.Refuse(request, "shared-mcp-session-required");
+        if (!PrefillRegistry.Valid(arguments)) return ControlResponse.Refuse(request, "prefill-field-invalid", WorkbenchControlError.InvalidArgument,
+            PrefillRegistry.Targets.Single(target => target.Form == arguments.Form).Fields[0]);
         var engineering = _model.Engineering;
         BlockRow[] selection = [];
         if (arguments.Mode == WorkbenchPrefillMode.Set && arguments.Fields is WorkbenchBlockSelectionFields fields
@@ -296,10 +305,15 @@ public partial class MainWindow
             if (!_prefillRestore.ContainsKey(arguments.Form))
             {
                 string filter = engineering.BlockFilter, pattern = engineering.NamePattern;
+                string projectPath = _model.Session.ProjectPath, output = engineering.OutputDirectory, imports = engineering.ImportPathsText;
+                bool source = engineering.SourceFormat, overwrite = engineering.ImportOverwrite;
                 _prefillRestore[arguments.Form] = arguments.Form switch
                 {
                     WorkbenchPrefillForm.InspectionRules => () => engineering.NamePattern = pattern,
                     WorkbenchPrefillForm.BlockFilter => () => engineering.BlockFilter = filter,
+                    WorkbenchPrefillForm.ConnectProject => () => _model.Session.ProjectPath = projectPath,
+                    WorkbenchPrefillForm.ExportBlocks => () => { engineering.OutputDirectory = output; engineering.SourceFormat = source; },
+                    WorkbenchPrefillForm.ImportBlocks => () => { engineering.ImportPathsText = imports; engineering.ImportOverwrite = overwrite; },
                     _ => CaptureControlSelection(),
                 };
             }
@@ -307,6 +321,11 @@ public partial class MainWindow
             {
                 case WorkbenchInspectionRulesFields rules: engineering.NamePattern = rules.NamePattern ?? ""; break;
                 case WorkbenchBlockFilterFields filter: engineering.BlockFilter = filter.Filter ?? ""; break;
+                case WorkbenchConnectProjectFields connect: _model.Session.ProjectPath = connect.ProjectPath ?? ""; break;
+                case WorkbenchExportBlocksFields export:
+                    engineering.OutputDirectory = export.OutputDirectory ?? ""; engineering.SourceFormat = export.Format == "Source"; break;
+                case WorkbenchImportBlocksFields import:
+                    engineering.ImportPathsText = string.Join(Environment.NewLine, import.Paths ?? []); engineering.ImportOverwrite = import.Overwrite == true; break;
                 case WorkbenchBlockSelectionFields:
                     var selected = selection.ToHashSet();
                     foreach (var row in engineering.Blocks) row.Selected = selected.Contains(row);
@@ -314,9 +333,15 @@ public partial class MainWindow
             }
         }
         _prefills.Set(arguments, request.Origin);
-        Navigate(arguments.Form == WorkbenchPrefillForm.InspectionRules ? "Engineering" : "Blocks");
+        Navigate(arguments.Form is WorkbenchPrefillForm.InspectionRules or WorkbenchPrefillForm.ConnectProject
+            or WorkbenchPrefillForm.ExportBlocks or WorkbenchPrefillForm.ImportBlocks ? "Engineering" : "Blocks");
         if (arguments.Form == WorkbenchPrefillForm.InspectionRules && arguments.Mode == WorkbenchPrefillMode.Set)
             OperationsContent.ShowControlInspectionRules();
+        if (arguments.Mode == WorkbenchPrefillMode.Set)
+        {
+            if (arguments.Form == WorkbenchPrefillForm.ConnectProject) OperationsContent.ShowProjectOptions();
+            if (arguments.Form is WorkbenchPrefillForm.ExportBlocks or WorkbenchPrefillForm.ImportBlocks) OperationsContent.ShowTransferOptions();
+        }
         UpdateControlPrefill();
         return ControlResponse.Done(request, new() { Form = arguments.Form, Page = ControlPage,
             Applied = arguments.Mode == WorkbenchPrefillMode.Clear ? [] : PrefillRegistry.Targets.Single(target => target.Form == arguments.Form).Fields,
@@ -329,6 +354,8 @@ public partial class MainWindow
             ? pending.Form + " · " + string.Join(", ", PrefillRegistry.Targets.Single(target => target.Form == pending.Form).Fields) : null;
         BlocksContent.SetControlPrefillMarker(_prefills.Contains(WorkbenchPrefillForm.BlockFilter), _prefills.Contains(WorkbenchPrefillForm.BlockSelection));
         OperationsContent.SetControlPrefillMarker(_prefills.Contains(WorkbenchPrefillForm.InspectionRules));
+        OperationsContent.SetMcpPrefillMarkers(_prefills.Contains(WorkbenchPrefillForm.ConnectProject),
+            _prefills.Contains(WorkbenchPrefillForm.ExportBlocks), _prefills.Contains(WorkbenchPrefillForm.ImportBlocks));
     }
     private Action CaptureControlSelection()
     {

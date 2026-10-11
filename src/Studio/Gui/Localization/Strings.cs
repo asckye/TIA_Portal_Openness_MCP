@@ -18,6 +18,9 @@ internal static partial class Strings
 
     private static readonly (string Key, string En, string Zh)[] SessionCatalogue =
     [
+        ("Session.OfflineDemo", "Offline demo: calls, audit, environment and log pages only. Session operations are unavailable.", "离线演示：仅提供调用、审计、环境与日志页，会话操作不可用。"),
+        ("Blocks.Overwrite", "Overwrite existing blocks", "覆盖已有程序块"),
+        ("Vc.ReadOnlyBridge", "VCI reads only on this release; workspace writes require F33 MCP tools.", "此版本仅支持 VCI 读取；工作区写入需等待 F33 MCP 工具。"),
         ("Session.Title", "Shared MCP session", "共享 MCP 会话"),
         ("Session.Attached", "MCP panel session: {0}", "MCP 面板会话：{0}"),
         ("Session.Detached", "The MCP panel detached. Select a session key to attach again.", "MCP 面板已分离。请选择会话键重新附着。"),

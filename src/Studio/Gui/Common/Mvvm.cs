@@ -28,7 +28,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
 /// Portal, which is single-threaded and slow, so re-entrancy is a correctness issue rather
 /// than a nicety.
 /// </summary>
-public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
+public class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
 {
     private bool _running;
     public bool IsRunning => _running;
@@ -55,4 +55,13 @@ public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = nu
     }
 
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+}
+
+/// <summary>Human execution of a form through the shared MCP panel.</summary>
+public sealed class McpPanelCommand(Func<Task> execute, Func<bool>? canExecute = null) : AsyncCommand(execute, canExecute);
+
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class PrefillTargetAttribute : Attribute
+{
+    public string Executes { get; set; } = "none";
 }

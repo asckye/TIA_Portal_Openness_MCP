@@ -12,7 +12,7 @@ namespace TiaMcp.Adapters
 {
     // Opt-in Studio profile. Construction is managed only; Connect is the first operation
     // that can attach/start TIA. Foundation workers continue to use OpennessAdapter.
-    public sealed class StudioAdapter : IOpennessAdapter, IStudioSession, IHardware, IHmiExport
+    public sealed class StudioAdapter : IOpennessAdapter, IStudioSession, IStudioVciReader, IHardware, IHmiExport
     {
         private readonly StudioThreadGuard guard;
         private readonly OpennessSession session;
@@ -62,6 +62,8 @@ namespace TiaMcp.Adapters
         public SessionMode Mode => guard.Run(() => session.Mode);
         public bool IsConnected => guard.Run(() => session.IsConnected);
         public bool HasProject => guard.Run(() => session.HasProject);
+        public SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile) =>
+            guard.Run(() => session.AttachVciReadOnly(processId, startUtcTicks, projectFile));
         public SessionState Connect(bool withUserInterface, bool attachToRunning, string version) =>
             guard.Run(() => session.Connect(withUserInterface, attachToRunning, version));
         public void Disconnect() => guard.Run(session.Disconnect);

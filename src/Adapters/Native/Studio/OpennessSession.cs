@@ -24,6 +24,7 @@ using TiaOpenness.Contracts.Models.Errors;
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
 using ITiaSession = TiaMcp.Adapters.Contracts.IStudioSession;
+using IVciReadOnlySession = TiaMcp.Adapters.Contracts.IStudioVciReader;
 #else
 using TiaOpenness.Core.Abstractions;
 #endif
@@ -39,7 +40,7 @@ namespace TiaOpenness.Openness
     /// Lives only inside the bridge process, which is bound to exactly one Openness version
     /// by <c>OpennessAssemblyResolver</c> before this type is ever touched.
     /// </summary>
-    internal sealed class OpennessSession : ITiaSession
+    internal sealed class OpennessSession : ITiaSession, IVciReadOnlySession
     {
         private readonly string _boundVersion;
         private TiaPortal _portal;
@@ -95,6 +96,25 @@ namespace TiaOpenness.Openness
         }
 
         // ---- session -------------------------------------------------------
+
+        public SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile)
+        {
+            if (_portal != null) throw new InvalidOperationException("VCI reader already attached.");
+            using (var process = Process.GetProcessById(processId))
+                if (process.StartTime.ToUniversalTime().Ticks != startUtcTicks)
+                    throw new InvalidOperationException("VCI process identity changed.");
+            var target = TiaPortal.GetProcesses().SingleOrDefault(p => p.Id == processId)
+                ?? throw new InvalidOperationException("The shared TIA process is unavailable.");
+            _portal = target.Attach();
+            try
+            {
+                _project = _portal.Projects.SafeEnumerate().SingleOrDefault(p =>
+                    string.Equals(p.Path.FullName, projectFile, StringComparison.OrdinalIgnoreCase))
+                    ?? throw new InvalidOperationException("The shared project identity changed.");
+                return GetState();
+            }
+            catch { Disconnect(); throw; }
+        }
 
         public SessionState Connect(bool withUserInterface, bool attachToRunning, string version)
         {

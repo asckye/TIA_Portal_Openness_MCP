@@ -21,7 +21,7 @@ public partial class MainWindow
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
     {
-        Approvals = approvals ?? new Services.ApprovalService();
+        Approvals = approvals ?? (_model.OfflineDemo ? new ApprovalServiceStub() : new Services.ApprovalService());
         _diagnostics = diagnostics ?? new Services.DiagnosticBundleService();
         InitializeFeaturePages();
         SettingsContent.Initialize(Approvals);
@@ -75,6 +75,9 @@ public partial class MainWindow
         McpApprovalSwitch.IsChecked = Approvals.Enabled;
         UpdateMcpStatus();
         RailBlocks.IsEnabled = RailVersionControl.IsEnabled = HasProject;
+        RailVersionControl.Visibility = _model.VersionControlPageVisible ? Visibility.Visible : Visibility.Collapsed;
+        RailMcp.Visibility = RailEngineering.Visibility = _model.OfflineDemo ? Visibility.Collapsed : Visibility.Visible;
+        SettingsButton.Visibility = _model.OfflineDemo ? Visibility.Collapsed : Visibility.Visible;
         RailVersion.Text = ViewModels.MainViewModel.AppVersion.TrimStart('v');
         CurrentPageTitle.Text = Loc.Current[_page switch
         {
@@ -95,6 +98,8 @@ public partial class MainWindow
 
     internal void Navigate(string page)
     {
+        if (_model.OfflineDemo && page is not ("Calls" or "Audit" or "Environment" or "Log")) page = "Environment";
+        if (page == "VersionControl" && !_model.VersionControlPageVisible) return;
         if (page is "Blocks" or "VersionControl" && !HasProject) return;
         if (page == "Mcp") EnsureConfiguration();
         _page = page;
@@ -135,6 +140,7 @@ public partial class MainWindow
 
     internal void OpenSettings()
     {
+        if (_model.OfflineDemo) return;
         EnsureConfiguration();
         SettingsContent.LoadPaths();
         OpenDrawer("Settings");

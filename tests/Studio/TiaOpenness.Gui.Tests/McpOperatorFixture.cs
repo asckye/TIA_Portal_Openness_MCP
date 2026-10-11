@@ -20,7 +20,7 @@ namespace TiaOpenness.Gui.Tests;
 internal sealed class McpOperatorFixture : IAsyncDisposable
 {
     internal static string RepositoryRoot { get { var path = new DirectoryInfo(AppContext.BaseDirectory); while (path != null && !File.Exists(Path.Combine(path.FullName, "CLAUDE.md"))) path = path.Parent; return path?.FullName ?? throw new IOException("Repository root not found."); } }
-    internal readonly string Root = Path.GetFullPath(Path.Combine(RepositoryRoot, "bin-build", "refactor", "P8-21d-evidence", "fixture-" + Guid.NewGuid().ToString("N")));
+    internal readonly string Root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "tia-mcp-operator-fixture-" + Guid.NewGuid().ToString("N")));
     internal readonly string Key = Guid.NewGuid().ToString("N");
     internal readonly List<(string Name, JsonObject Arguments)> Calls = [];
     internal readonly List<string> Actions = [];
@@ -32,6 +32,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     internal readonly OperatorHost Host;
     internal bool HoldApproval, RejectPreview, RejectApply;
     internal bool CandidatePolicies;
+    internal bool GenerationRunActive;
+    internal bool InvalidGenericPreview;
     private readonly Dictionary<string, JsonObject> schemas = [];
     internal Action<ApprovalRequest>? ApprovalRequested;
     internal string? HandshakeError;
@@ -100,6 +102,11 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
         if (Server != null) await Server.SendNotificationAsync(OperatorProtocol.SessionStateNotification, state.DeepClone(), cancellationToken: stopping.Token);
     }
     internal JsonObject Snapshot() => (JsonObject)state.DeepClone();
+    internal void BindProject()
+    {
+        state["binding"] = new JsonObject { ["processId"] = 123, ["projectFile"] = @"D:\fixture\Line.ap19", ["bindingEpoch"] = 1 };
+        Publish();
+    }
     private static JsonElement? CandidateSchema(string tool) => tool switch
     {
         "CompilePlcSoftware" => PlcRendering::TiaMcp.Logic.V4.CompileContract.Schema(tool),
@@ -107,6 +114,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
         "OpenProject" or "ConnectPortal" or "AttachOpenProject" => PlcRendering::TiaMcp.Logic.V4.SessionCandidateContract.Schema(tool),
         "ExportPlcBlock" => PlcRendering::TiaMcp.Logic.V4.PlcExportContract.Schema(tool, "19"),
         "ImportPlcBlock" => PlcRendering::TiaMcp.Logic.V4.PlcImportContract.Schema(tool, "19"),
+        "ListVersionControlWorkspaces" or "GetVersionControlStatus" or "CreateVersionControlWorkspace" or "ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace"
+            => PlcRendering::TiaMcp.Logic.V4.FallbackContract.Schema(tool),
         _ => null
     };
     private async ValueTask<CallToolResult> Invoke(string name, CallToolRequestParams request, CancellationToken token)
@@ -121,8 +130,9 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             apply = (bool?)arguments["dryRun"] == false || (string?)arguments["mode"] == "apply";
         if (apply && schema["properties"]?["expectedPlanHash"] != null && (string?)arguments["expectedPlanHash"] != new string('a', 64))
             throw new InvalidDataException("The apply request did not preserve the reviewed plan hash.");
-        if (apply)
+        if (apply || name == "CreateVersionControlWorkspace" && schema["properties"]?["mode"] == null)
         {
+            if (GenerationRunActive) return Envelope(name, new(), "PRECONDITION_FAILED", "generation-run-active");
             if (HoldApproval) ApprovalRequested?.Invoke(FeaturePageFixtures.Request("panel-call") with { Actor = "workbench",
                 OperatorCallId = Guid.NewGuid().ToString("N"), Deadline = DateTimeOffset.UtcNow.AddMinutes(1), TimeoutSeconds = 60 });
             Pending.TrySetResult(true);
@@ -133,12 +143,19 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
         if (preview && RejectPreview) return Envelope(name, new(), "PRECONDITION_FAILED");
         JsonObject data = name switch
         {
+            "PreviewToolCall" when InvalidGenericPreview => new() { ["ok"] = false, ["summary"] = "NOT READY: invalid arguments" },
             "ListPortalProcessProjects" => new() { ["processes"] = new JsonArray(new JsonObject { ["processId"] = 123, ["projectPath"] = @"D:\fixture\Line.ap19", ["osStartTimeUtc"] = "2026-10-10T12:00:00.0000000Z" }) },
             "GetProjectTree" => new() { ["value"] = "Line\n  PlcSoftware: PLC_1 [softwarePath=devices/Station/PLC_1]" },
             "ListPlcBlocks" => new() { ["items"] = new JsonArray(Block()) },
             "GetPlcBlockHierarchy" => new() { ["name"] = "Program blocks", ["blocks"] = new JsonArray(Block()), ["groups"] = new JsonArray() },
             "GetPlcBlockInfo" => Block(),
             "CompilePlcSoftware" => new() { ["state"] = "Success", ["errorCount"] = 0, ["warningCount"] = 0 },
+            "ListVersionControlWorkspaces" => new() { ["evidence"] = new JsonObject { ["workspaces"] = new JsonArray(new JsonObject {
+                ["name"] = "git", ["rootPath"] = Root, ["mappedObjectCount"] = 1, ["language"] = "en-US" }) } },
+            "GetVersionControlStatus" => new() { ["evidence"] = new JsonObject { ["workspaceName"] = "git", ["rootPath"] = Root,
+                ["total"] = 1, ["differing"] = 1, ["objects"] = new JsonArray(new JsonObject { ["name"] = "Main", ["filePath"] = "Main.xml", ["compareState"] = "Unequal" }) } },
+            "ConnectProjectToWorkspace" => new() { ["evidence"] = new JsonObject { ["mapped"] = 1, ["visited"] = 1 } },
+            "SynchronizeVersionControlWorkspace" => new() { ["evidence"] = new JsonObject { ["synchronized"] = 1, ["rootPath"] = Root } },
             _ => new() { ["executed"] = apply }
         };
         if (name == "ExportPlcBlock")
@@ -147,7 +164,14 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             if (apply) File.WriteAllText(file, "<Document/>");
         }
         if (name is "RenderPlcBlock" or "RenderPlcProgramAtlas") File.WriteAllText((string)arguments["outputPath"]!, "<html>fixture</html>");
-        if (CandidatePolicies && preview) data["plan"] = new JsonObject { ["hash"] = new string('a', 64) };
+        if (CandidatePolicies && preview)
+        {
+            if (schema["properties"]?["route"] != null && string.IsNullOrEmpty((string?)arguments["route"]))
+                data = new() { ["observedState"] = new JsonObject { ["routes"] = new JsonArray(new JsonObject { ["id"] =
+                    name is "ListVersionControlWorkspaces" or "CreateVersionControlWorkspace" ? "vci/project/fixture"
+                    : "vci/workspace/git/fixture" }) } };
+            else data["plan"] = new JsonObject { ["hash"] = new string('a', 64) };
+        }
         if (CandidatePolicies && name == "ExportPlcBlock" && apply)
         {
             string file = (string)data["outputFile"]!; data.Remove("outputFile");
@@ -160,10 +184,10 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     }
     private static JsonObject Block() => new() { ["name"] = "Main", ["typeName"] = "OB", ["programmingLanguage"] = "LAD", ["isConsistent"] = true,
         ["isKnowHowProtected"] = false, ["attributes"] = new JsonArray(new JsonObject { ["name"] = "Number", ["value"] = 1 }) };
-    private CallToolResult Envelope(string name, JsonObject data, string? code = null)
+    private CallToolResult Envelope(string name, JsonObject data, string? code = null, string condition = "fixture")
     {
         var envelope = new JsonObject { ["schemaVersion"] = 4, ["ok"] = code == null, ["data"] = data,
-            ["error"] = code == null ? null : new JsonObject { ["code"] = code, ["message"] = "fixture refusal", ["details"] = code == "PRECONDITION_FAILED" ? new JsonObject { ["condition"] = "fixture", ["target"] = null } : code == "PLAN_STALE" ? new JsonObject { ["planHash"] = null, ["reason"] = "fixture" } : new JsonObject { ["operation"] = name, ["target"] = null } },
+            ["error"] = code == null ? null : new JsonObject { ["code"] = code, ["message"] = "fixture refusal", ["details"] = code == "PRECONDITION_FAILED" ? new JsonObject { ["condition"] = condition, ["target"] = null } : code == "PLAN_STALE" ? new JsonObject { ["planHash"] = null, ["reason"] = "fixture" } : new JsonObject { ["operation"] = name, ["target"] = null } },
             ["meta"] = new JsonObject { ["timestamp"] = DateTime.UtcNow.ToString("O"), ["releaseKey"] = Host.ReleaseKey, ["tool"] = name,
                 ["requestId"] = Guid.NewGuid().ToString("N"), ["outcome"] = code == null ? "succeeded" : "rejected-before-operation",
                 ["execution"] = code == null ? "read-only" : "not-started", ["requiresSessionReset"] = false, ["behaviorPolicy"] = "not-applicable",

@@ -4617,15 +4617,15 @@
         },
         "parameters": {
           "form": {
-            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval.",
             "requiresBinding": false
           },
           "mode": {
-            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval.",
             "requiresBinding": false
           },
           "fields": {
-            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval.",
             "requiresBinding": false
           }
         },
@@ -4637,10 +4637,44 @@
               "fields": {}
             },
             "note": "Clear only this session pending prefill; no form execution."
+          },
+          "connectProject": {
+            "arguments": {
+              "form": "connectProject",
+              "mode": "set",
+              "fields": {
+                "projectPath": "C:\\Projects\\Line.ap21"
+              }
+            },
+            "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
+          },
+          "exportBlocks": {
+            "arguments": {
+              "form": "exportBlocks",
+              "mode": "set",
+              "fields": {
+                "outputDirectory": "C:\\Exports",
+                "format": "SimaticMl"
+              }
+            },
+            "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
+          },
+          "importBlocks": {
+            "arguments": {
+              "form": "importBlocks",
+              "mode": "set",
+              "fields": {
+                "paths": [
+                  "C:\\Imports\\Main.xml"
+                ],
+                "overwrite": false
+              }
+            },
+            "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
           }
         },
         "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
-        "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
         "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
       },
       "ApplyToolBatch": {
@@ -26803,15 +26837,15 @@
         },
         "parameters": {
           "form": {
-            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval.",
             "requiresBinding": false
           },
           "mode": {
-            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval.",
             "requiresBinding": false
           },
           "fields": {
-            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval.",
+            "meaning": "Use the closed input schema. Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval.",
             "requiresBinding": false
           }
         },
@@ -26823,10 +26857,44 @@
               "fields": {}
             },
             "note": "Clear only this session pending prefill; no form execution."
+          },
+          "connectProject": {
+            "arguments": {
+              "form": "connectProject",
+              "mode": "set",
+              "fields": {
+                "projectPath": "C:\\Projects\\Line.ap21"
+              }
+            },
+            "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
+          },
+          "exportBlocks": {
+            "arguments": {
+              "form": "exportBlocks",
+              "mode": "set",
+              "fields": {
+                "outputDirectory": "C:\\Exports",
+                "format": "SimaticMl"
+              }
+            },
+            "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
+          },
+          "importBlocks": {
+            "arguments": {
+              "form": "importBlocks",
+              "mode": "set",
+              "fields": {
+                "paths": [
+                  "C:\\Imports\\Main.xml"
+                ],
+                "overwrite": false
+              }
+            },
+            "note": "Prefill only. A person must execute the MCP panel command and approve its separate write request."
           }
         },
         "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
-        "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+        "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
         "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
       },
       "ListStandardPackages": {

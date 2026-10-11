@@ -63,7 +63,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         window.Show(); WpfContext.Drain(); client.Calls.Clear();
         return (window, model, client);
     }
-    internal static string Scratch(string name) => Path.GetFullPath(Path.Combine("bin-build", "refactor", "P8-20b", name + "-" + Guid.NewGuid().ToString("N")));
+    internal static string Scratch(string name) => Path.GetFullPath(Path.Combine(Path.GetTempPath(), "tia-workbench-control-" + name + "-" + Guid.NewGuid().ToString("N")));
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
@@ -590,8 +590,8 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
     public void Surface_and_control_directory_have_no_privileged_dependencies()
     {
         Assert.Equal(new[] { "Apply", "get_Snapshot" }, typeof(IWorkbenchControlSurface).GetMethods().Select(method => method.Name).Order().ToArray());
-        Assert.Equal(3, PrefillRegistry.Targets.Count);
-        Assert.All(PrefillRegistry.Targets, target => Assert.Equal("none", target.Executes));
+        Assert.Equal(new[] { "InspectionRules:none", "BlockFilter:none", "BlockSelection:none", "ConnectProject:mcp", "ExportBlocks:mcp", "ImportBlocks:mcp" },
+            PrefillRegistry.Targets.Select(target => target.Form + ":" + target.Executes));
         var forbidden = new[] { "IStudioClient", "TiaClient", "BridgeClient", "IApprovalService", "ApprovalSettings", "ConfigurationView" };
         foreach (var type in typeof(WorkbenchControlServer).Assembly.GetTypes().Where(type => type.Namespace == typeof(WorkbenchControlServer).Namespace))
             Assert.DoesNotContain(type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic),

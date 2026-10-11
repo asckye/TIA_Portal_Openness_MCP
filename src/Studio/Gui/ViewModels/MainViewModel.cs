@@ -14,23 +14,27 @@ namespace TiaOpenness.Gui.ViewModels;
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IProjectClient _client;
-    private readonly IStudioClient _versionClient;
     private readonly IMcpSessionClient? _mcp;
     private MainView _view = MainView.Blocks;
     private bool _isConfigurationPage;
 
     public MainViewModel() : this(new McpProjectClient(new McpSessionClient()), new WpfDialogService()) { }
 
-    public MainViewModel(IProjectClient client, IDialogService dialogs)
+    internal MainViewModel(bool offlineDemo) : this(new McpProjectClient(offlineDemo ? new OfflineSessionClient() : new McpSessionClient()), new WpfDialogService(), offlineDemo) { }
+
+    public MainViewModel(IProjectClient client, IDialogService dialogs, bool offlineDemo = false, IVersionControlClient? versionControl = null)
     {
+        OfflineDemo = offlineDemo;
         _client = client;
-        _versionClient = client as IStudioClient ?? new StudioClient();
         AtlasService = client is McpProjectClient mcpProject ? new McpAtlasService(mcpProject) : new Services.Stubs.AtlasService(client);
         Activity = new WorkbenchActivity();
         Engineering = new EngineeringViewModel(client, dialogs, Activity);
         Session = new SessionViewModel(client, dialogs, Activity, LoadProjectAsync);
-        VersionControl = new VersionControlViewModel(_versionClient, dialogs, Activity,
-            () => { if (!_versionClient.IsRunning) _versionClient.Start(false, SelectedReleaseKey); }, () => Engineering.SelectedDevice?.Id, legacyAccess: client is IStudioClient);
+        VersionControl = versionControl != null ? new VersionControlViewModel(versionControl, dialogs, Activity, () => Engineering.SelectedDevice?.Name)
+            : client is McpProjectClient vcProject
+            ? new VersionControlViewModel(new McpVersionControlClient(vcProject), dialogs, Activity, () => null)
+            : new VersionControlViewModel(client as IStudioClient ?? new StudioClient(), dialogs, Activity,
+                () => { if (!client.IsRunning) client.Start(false, SelectedReleaseKey); }, () => Engineering.SelectedDevice?.Id, legacyAccess: client is IStudioClient);
         if (client is McpProjectClient project)
         {
             _mcp = project.Session;
@@ -44,8 +48,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     public McpSessionPanel? Panel { get; }
-    public bool HasMcpPanel => Panel != null;
-    public bool LegacyDemoAvailable => !HasMcpPanel;
+    public bool OfflineDemo { get; }
+    internal static bool OfflineDemoRequested(string[] args) => args.Any(a => a.Equals("--mock", StringComparison.OrdinalIgnoreCase) || a.Equals("--demo", StringComparison.OrdinalIgnoreCase));
+    public bool HasMcpPanel => Panel != null && !OfflineDemo;
+    public bool LegacyDemoAvailable => !HasMcpPanel && !OfflineDemo;
     public IEnumerable<McpProjectClient.Receipt> Receipts => (_client as McpProjectClient)?.Receipts ?? [];
     private McpProjectClient.Receipt? _selectedReceipt;
     public McpProjectClient.Receipt? SelectedReceipt
@@ -68,6 +74,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public bool ServiceOwnsRelease { get => Session.ServiceOwnsRelease; set => Session.ServiceOwnsRelease = value; }
     public bool CanSelectRelease => Session.CanSelectRelease;
     public bool Busy => Activity.Busy;
+    public bool VersionControlPageVisible => !OfflineDemo && SelectedReleaseKey is "16" or "17" or "18" or "19" or "20" or "21";
 
     public bool IsEngineeringPage => !_isConfigurationPage;
     public bool IsConfigurationPage
@@ -135,12 +142,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             VersionControl.ClearPresentation();
         }
         if (e.PropertyName is nameof(SelectedReleaseKey) or nameof(ServiceOwnsRelease) or nameof(CanSelectRelease))
+        {
             Raise(e.PropertyName);
+            Raise(nameof(VersionControlPageVisible));
+            VersionControl.RefreshCommands();
+        }
     }
 
     private void OnActivityChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(WorkbenchActivity.Busy)) Raise(nameof(Busy));
+        if (e.PropertyName == nameof(WorkbenchActivity.Busy)) { Raise(nameof(Busy)); VersionControl.RefreshCommands(); }
     }
 
     private void OnBridgeLog(object? sender, BridgeLogEventArgs e) => Activity.Append((_client is McpProjectClient ? "MCP: " : "bridge: ") + e.Line);
@@ -149,6 +160,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     /// <summary>Applies the initial view, then lets the session handle mock/project startup.</summary>
     public async Task ApplyStartupAsync(string[] args)
     {
+        if (OfflineDemo) { Activity.AppendLocalized("Session.OfflineDemo"); return; }
         var tab = Array.FindIndex(args, a => string.Equals(a, "--tab", StringComparison.OrdinalIgnoreCase));
         if (tab >= 0 && tab + 1 < args.Length)
         {
@@ -176,6 +188,5 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Panel?.Dispose();
         _mcp?.DisposeAsync().AsTask().GetAwaiter().GetResult();
         _client.Dispose();
-        if (!ReferenceEquals(_versionClient, _client)) _versionClient.Dispose();
     }
 }

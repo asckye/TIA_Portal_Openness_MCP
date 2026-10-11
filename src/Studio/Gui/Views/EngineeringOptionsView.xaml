@@ -16,7 +16,7 @@
             <TextBlock Text="{l:Tr Project.Label}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
             <DockPanel>
               <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-              <TextBox Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}"/>
+              <TextBox x:Name="ControlProjectPath" Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}"/>
             </DockPanel>
             <WrapPanel Margin="0,12" Visibility="{Binding LegacyDemoAvailable,Converter={StaticResource BoolToVisibility}}">
               <CheckBox Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Primer.Checkbox}" Margin="0,0,20,0"/>
@@ -36,9 +36,12 @@
             <TextBlock Text="{l:Tr Blocks.ExportTo}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
             <DockPanel>
               <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseOutput" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-              <TextBox Text="{Binding Engineering.OutputDirectory,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
+              <TextBox x:Name="ControlOutputDirectory" Text="{Binding Engineering.OutputDirectory,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
             </DockPanel>
             <CheckBox Content="{l:Tr Blocks.SourceFormat}" ToolTip="{l:Tr Blocks.SourceFormat.Tip}" IsChecked="{Binding Engineering.SourceFormat}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
+            <TextBlock Text="{l:Tr Dialog.Import.Title}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
+            <TextBox x:Name="ControlImportPaths" Text="{Binding Engineering.ImportPathsText,UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="60" Style="{StaticResource Primer.Input}"/>
+            <CheckBox Content="{l:Tr Blocks.Overwrite}" IsChecked="{Binding Engineering.ImportOverwrite}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
             <StackPanel Orientation="Horizontal">
               <Button Content="{l:Tr Blocks.Export}" Command="{Binding Engineering.Export}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
               <Button Content="{l:Tr Toolbar.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Secondary}"/>

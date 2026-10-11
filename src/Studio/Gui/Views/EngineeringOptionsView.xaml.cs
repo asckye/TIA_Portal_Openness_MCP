@@ -20,6 +20,12 @@ public partial class EngineeringOptionsView : UserControl
     internal void Hide() => OptionsOverlay.Visibility = Visibility.Collapsed;
     internal void SetControlPrefillMarker(bool pending)
         => ControlNamePattern.ToolTip = pending ? Localization.Loc.Current["Control.Prefilled"] : null;
+    internal void SetMcpPrefillMarkers(bool project, bool export, bool import)
+    {
+        ControlProjectPath.ToolTip = project ? Localization.Loc.Current["Control.Prefilled"] : null;
+        ControlOutputDirectory.ToolTip = export ? Localization.Loc.Current["Control.Prefilled"] : null;
+        ControlImportPaths.ToolTip = import ? Localization.Loc.Current["Control.Prefilled"] : null;
+    }
     private void OnCloseOptions(object sender, RoutedEventArgs e) => Hide();
     private void OnDeviceSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
     {

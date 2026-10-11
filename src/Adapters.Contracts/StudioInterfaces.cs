@@ -11,6 +11,10 @@ namespace TiaMcp.Adapters.Contracts.Studio
 
 namespace TiaMcp.Adapters.Contracts
 {
+    public interface IStudioVciReader
+    {
+        SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile);
+    }
     // Studio's compatibility profile: device names and block paths retain their existing
     // spelling and lookup rules. Its results and mutation policy differ from Foundation's
     // IPortalSession/IPlcProgram/IPlcData, so hosts must select this profile explicitly.

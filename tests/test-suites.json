@@ -371,5 +371,23 @@
       "--filter",
       "FullyQualifiedName~McpPanelTests"
     ]
+  },
+  "workbench-vci-prefill": {
+    "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
+    "minimumPassed": 57,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~VciPanelTests|FullyQualifiedName~WorkbenchMcpPrefillTests|FullyQualifiedName~OfflineDemoTests"
+    ]
+  },
+  "vci-read-only-binding": {
+    "project": "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj",
+    "minimumPassed": 13,
+    "maximumSkipped": 0,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName~VciReadOnlyBindingTests"
+    ]
   }
 }

@@ -332,7 +332,9 @@ public sealed class McpPanelTests(WpfContext wpf)
         {
             Assert.Contains("\"schemaVersion\": 4", model!.LastEnvelope);
             Assert.DoesNotContain("fixture refusal", model.LastEnvelope);
-            Assert.False(model.VersionControl.VcRefresh.CanExecute(null));
+            Assert.Equal(action == "Connect", model.VersionControl.VcRefresh.CanExecute(null));
+            Assert.False(model.VersionControl.VcPush.CanExecute(null)); Assert.False(model.VersionControl.VcPull.CanExecute(null));
+            Assert.DoesNotContain(host.Calls, call => call.Name.Contains("VersionControl"));
             model.Dispose();
         });
     }

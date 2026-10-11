@@ -21539,6 +21539,148 @@
                 "const": "clear"
               }
             }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {
+                  "projectPath": {
+                    "description": "Human-confirmed MCP panel prefill: projectPath. Paths are absolute local paths; no existence probe.",
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "projectPath"
+                ],
+                "type": "object"
+              },
+              "form": {
+                "const": "connectProject"
+              },
+              "mode": {
+                "const": "set"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "form": {
+                "const": "connectProject"
+              },
+              "mode": {
+                "const": "clear"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {
+                  "format": {
+                    "description": "Human-confirmed MCP panel prefill: format. Paths are absolute local paths; no existence probe.",
+                    "enum": [
+                      "SimaticMl",
+                      "Source"
+                    ],
+                    "type": "string"
+                  },
+                  "outputDirectory": {
+                    "description": "Human-confirmed MCP panel prefill: outputDirectory. Paths are absolute local paths; no existence probe.",
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "outputDirectory",
+                  "format"
+                ],
+                "type": "object"
+              },
+              "form": {
+                "const": "exportBlocks"
+              },
+              "mode": {
+                "const": "set"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "form": {
+                "const": "exportBlocks"
+              },
+              "mode": {
+                "const": "clear"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {
+                  "overwrite": {
+                    "description": "Human-confirmed MCP panel prefill: overwrite. Paths are absolute local paths; no existence probe.",
+                    "type": "boolean"
+                  },
+                  "paths": {
+                    "description": "Human-confirmed MCP panel prefill: paths. Paths are absolute local paths; no existence probe.",
+                    "items": {
+                      "maxLength": 4096,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 256,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "paths",
+                  "overwrite"
+                ],
+                "type": "object"
+              },
+              "form": {
+                "const": "importBlocks"
+              },
+              "mode": {
+                "const": "set"
+              }
+            }
+          },
+          {
+            "properties": {
+              "fields": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "form": {
+                "const": "importBlocks"
+              },
+              "mode": {
+                "const": "clear"
+              }
+            }
           }
         ],
         "properties": {
@@ -21561,9 +21703,44 @@
                 "maxLength": 256,
                 "type": "string"
               },
+              "format": {
+                "description": "Human-confirmed MCP panel prefill: format. Paths are absolute local paths; no existence probe.",
+                "enum": [
+                  "SimaticMl",
+                  "Source"
+                ],
+                "type": "string"
+              },
               "namePattern": {
                 "description": "Inspection name pattern, awaiting human confirmation.",
                 "maxLength": 256,
+                "type": "string"
+              },
+              "outputDirectory": {
+                "description": "Human-confirmed MCP panel prefill: outputDirectory. Paths are absolute local paths; no existence probe.",
+                "maxLength": 4096,
+                "minLength": 1,
+                "type": "string"
+              },
+              "overwrite": {
+                "description": "Human-confirmed MCP panel prefill: overwrite. Paths are absolute local paths; no existence probe.",
+                "type": "boolean"
+              },
+              "paths": {
+                "description": "Human-confirmed MCP panel prefill: paths. Paths are absolute local paths; no existence probe.",
+                "items": {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 256,
+                "minItems": 1,
+                "type": "array"
+              },
+              "projectPath": {
+                "description": "Human-confirmed MCP panel prefill: projectPath. Paths are absolute local paths; no existence probe.",
+                "maxLength": 4096,
+                "minLength": 1,
                 "type": "string"
               },
               "softwarePath": {
@@ -21580,7 +21757,10 @@
             "enum": [
               "inspectionRules",
               "blockFilter",
-              "blockSelection"
+              "blockSelection",
+              "connectProject",
+              "exportBlocks",
+              "importBlocks"
             ],
             "type": "string"
           },

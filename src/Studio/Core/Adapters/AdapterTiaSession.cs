@@ -12,7 +12,7 @@ namespace TiaOpenness.Core.Adapters
 {
     // Only managed DTO translation lives here. The adapter owns native policy,
     // synchronous callbacks and STA ownership; no native object crosses this boundary.
-    internal sealed class AdapterTiaSession : ITiaSession
+    internal sealed class AdapterTiaSession : ITiaSession, IVciReadOnlySession
     {
         private readonly IOpennessAdapter adapter;
         private readonly IStudioSession session;
@@ -28,6 +28,9 @@ namespace TiaOpenness.Core.Adapters
         public SessionMode Mode => (SessionMode)session.Mode;
         public bool IsConnected => session.IsConnected;
         public bool HasProject => session.HasProject;
+        public SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile) =>
+            StudioDtoMap.Map((session as IStudioVciReader ?? throw new NotSupportedException("VCI read attachment is unavailable."))
+                .AttachVciReadOnly(processId, startUtcTicks, projectFile));
         public SessionState Connect(bool withUserInterface, bool attachToRunning, string version) =>
             StudioDtoMap.Map(session.Connect(withUserInterface, attachToRunning, version));
         public void Disconnect() => session.Disconnect();

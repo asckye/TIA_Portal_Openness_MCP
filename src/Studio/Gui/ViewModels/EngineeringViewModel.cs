@@ -41,8 +41,8 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         _activity.PropertyChanged += OnActivityChanged;
 
         Refresh = new AsyncCommand(RefreshBlocksAsync, () => !_activity.Busy && SelectedDevice is not null);
-        Export = new AsyncCommand(ExportAsync, () => !_activity.Busy && SelectedDevice is not null && OutputDirectory.Length > 0);
-        Import = new AsyncCommand(ImportAsync, () => !_activity.Busy && SelectedDevice is not null);
+        Export = Command(ExportAsync, () => !_activity.Busy && SelectedDevice is not null && OutputDirectory.Length > 0);
+        Import = Command(ImportAsync, () => !_activity.Busy && SelectedDevice is not null);
         Compile = new AsyncCommand(CompileAsync, () => !_activity.Busy && SelectedDevice is not null);
         Inspect = new AsyncCommand(InspectAsync, () => !_activity.Busy && SelectedDevice is not null);
         Save = new AsyncCommand(SaveAsync, () => !_activity.Busy && SelectedDevice is not null);
@@ -61,8 +61,16 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     public ObservableCollection<DeviceNode> DeviceTree { get; } = [];
 
     public AsyncCommand Refresh { get; }
+    private AsyncCommand Command(Func<Task> execute, Func<bool> enabled) => _client is McpProjectClient
+        ? new McpPanelCommand(execute, enabled) : new AsyncCommand(execute, enabled);
+    [PrefillTarget(Executes = "mcp")]
     public AsyncCommand Export { get; }
+    [PrefillTarget(Executes = "mcp")]
     public AsyncCommand Import { get; }
+    private string _importPathsText = "";
+    private bool _importOverwrite;
+    public string ImportPathsText { get => _importPathsText; set => Set(ref _importPathsText, value); }
+    public bool ImportOverwrite { get => _importOverwrite; set => Set(ref _importOverwrite, value); }
     public AsyncCommand Compile { get; }
     public AsyncCommand Inspect { get; }
     public AsyncCommand Save { get; }
@@ -214,10 +222,12 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
     private async Task ImportAsync() => await _activity.Guarded("Status.Importing", async () =>
     {
-        var files = _dialogs.OpenFiles(Loc.Current["Dialog.Import.Title"], Loc.Current["Dialog.Import.Filter"], multiselect: true);
+        var files = string.IsNullOrWhiteSpace(ImportPathsText)
+            ? _dialogs.OpenFiles(Loc.Current["Dialog.Import.Title"], Loc.Current["Dialog.Import.Filter"], multiselect: true)
+            : ImportPathsText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         if (files is null) return;
 
-        var overwrite = _dialogs.ShowMessage(
+        var overwrite = !string.IsNullOrWhiteSpace(ImportPathsText) ? (ImportOverwrite ? DialogResult.Yes : DialogResult.No) : _dialogs.ShowMessage(
             Loc.Current["Dialog.Import.Text"], Loc.Current["Dialog.Import.Caption"],
             DialogButtons.YesNoCancel, DialogIcon.Question);
         if (overwrite == DialogResult.Cancel) return;

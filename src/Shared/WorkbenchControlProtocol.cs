@@ -11,7 +11,7 @@ namespace TiaOpenness.Shared
     internal enum WorkbenchPage { Overview, Blocks, VersionControl, Calls, Audit, Environment, Log }
     internal enum WorkbenchControlStatus { Done, Refused, Failed }
     internal enum WorkbenchControlError { ResourceUnavailable, AccessDenied, UnsupportedCapability, PreconditionFailed, IdentityMismatch, NotFound, TargetAmbiguous, Timeout, InternalError, InvalidArgument }
-    internal enum WorkbenchPrefillForm { InspectionRules, BlockFilter, BlockSelection }
+    internal enum WorkbenchPrefillForm { InspectionRules, BlockFilter, BlockSelection, ConnectProject, ExportBlocks, ImportBlocks }
     internal enum WorkbenchPrefillMode { Set, Clear }
     internal enum WorkbenchSessionSource { WorkbenchBridge, SharedMcpSession }
     internal enum WorkbenchControlNotificationKind { StateChanged }
@@ -93,6 +93,18 @@ namespace TiaOpenness.Shared
     {
         public string? SoftwarePath { get; set; }
         public string[]? BlockPaths { get; set; }
+    }
+    internal sealed class WorkbenchConnectProjectFields : WorkbenchPrefillFields
+    { public string? ProjectPath { get; set; } }
+    internal sealed class WorkbenchExportBlocksFields : WorkbenchPrefillFields
+    {
+        public string? OutputDirectory { get; set; }
+        public string? Format { get; set; }
+    }
+    internal sealed class WorkbenchImportBlocksFields : WorkbenchPrefillFields
+    {
+        public string[]? Paths { get; set; }
+        public bool? Overwrite { get; set; }
     }
 
     internal sealed class WorkbenchControlResponse
@@ -215,7 +227,7 @@ namespace TiaOpenness.Shared
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPage>("overview", "blocks", "versionControl", "calls", "audit", "environment", "log"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlStatus>("done", "refused", "failed"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlError>("RESOURCE_UNAVAILABLE", "ACCESS_DENIED", "UNSUPPORTED_CAPABILITY", "PRECONDITION_FAILED", "IDENTITY_MISMATCH", "NOT_FOUND", "TARGET_AMBIGUOUS", "TIMEOUT", "INTERNAL_ERROR", "INVALID_ARGUMENT"));
-            options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPrefillForm>("inspectionRules", "blockFilter", "blockSelection"));
+            options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPrefillForm>("inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchPrefillMode>("set", "clear"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchSessionSource>("workbench-bridge", "shared-mcp-session"));
             options.Converters.Add(new WorkbenchClosedEnum<WorkbenchControlNotificationKind>("stateChanged"));
@@ -244,6 +256,9 @@ namespace TiaOpenness.Shared
                 case WorkbenchPrefillForm.InspectionRules: return typeof(WorkbenchInspectionRulesFields);
                 case WorkbenchPrefillForm.BlockFilter: return typeof(WorkbenchBlockFilterFields);
                 case WorkbenchPrefillForm.BlockSelection: return typeof(WorkbenchBlockSelectionFields);
+                case WorkbenchPrefillForm.ConnectProject: return typeof(WorkbenchConnectProjectFields);
+                case WorkbenchPrefillForm.ExportBlocks: return typeof(WorkbenchExportBlocksFields);
+                case WorkbenchPrefillForm.ImportBlocks: return typeof(WorkbenchImportBlocksFields);
                 default: throw new InvalidDataException("Invalid prefill form.");
             }
         }
@@ -302,6 +317,13 @@ namespace TiaOpenness.Shared
             if (prefill.Fields is WorkbenchBlockSelectionFields selection) Require((selection.SoftwarePath == null || Text(selection.SoftwarePath))
                 && (selection.BlockPaths == null || selection.BlockPaths.Length <= 256 && selection.BlockPaths.All(Text)));
             bool clear = prefill.Mode == WorkbenchPrefillMode.Clear;
+            if (prefill.Fields is WorkbenchConnectProjectFields connect) Require(clear ? connect.ProjectPath == null : Text(connect.ProjectPath));
+            if (prefill.Fields is WorkbenchExportBlocksFields export) Require(clear
+                ? export.OutputDirectory == null && export.Format == null
+                : Text(export.OutputDirectory) && (export.Format == "SimaticMl" || export.Format == "Source"));
+            if (prefill.Fields is WorkbenchImportBlocksFields import) Require(clear
+                ? import.Paths == null && import.Overwrite == null
+                : import.Paths != null && import.Paths.Length >= 1 && import.Paths.Length <= 256 && import.Paths.All(Text) && import.Overwrite != null);
             if (prefill.Fields is WorkbenchInspectionRulesFields inspection) Require(clear ? inspection.NamePattern == null : inspection.NamePattern != null);
             if (prefill.Fields is WorkbenchBlockFilterFields blockFilter) Require(clear ? blockFilter.Filter == null : blockFilter.Filter != null);
             if (prefill.Fields is WorkbenchBlockSelectionFields blockSelection) Require(clear

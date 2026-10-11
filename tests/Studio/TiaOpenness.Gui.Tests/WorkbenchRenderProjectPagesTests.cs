@@ -57,7 +57,8 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                 using var trace = new BindingPathTests.BindingTrace();
                 var previous = ThemeManager.Current.Theme;
                 ThemeManager.Current.Theme = state.Item6;
-                var model = ProjectPageTestSupport.Model(state.Item3, state.Item4, !state.Item1.StartsWith("vc-empty", StringComparison.Ordinal));
+                var model = ProjectPageTestSupport.Model(state.Item3, state.Item4, !state.Item1.StartsWith("vc-empty", StringComparison.Ordinal),
+                    release: state.Item2 == "VersionControl" ? "21" : "14sp1");
                 if (state.Item2 == "Log")
                 {
                     model.Activity.Append("[INFO] 工程已加载 · Project loaded", Services.WorkbenchActivity.Severity.Info);

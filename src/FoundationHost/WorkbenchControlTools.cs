@@ -160,7 +160,7 @@ internal sealed class WorkbenchControlTool : McpServerTool
                 Add("offset", new() { ["type"] = "integer", ["minimum"] = 0, ["maximum"] = int.MaxValue, ["default"] = 0 }, false);
                 Add("limit", new() { ["type"] = "integer", ["minimum"] = 1, ["maximum"] = 256, ["default"] = 100 }, false); break;
             case WorkbenchControlOperation.PrefillForm:
-                Add("form", Enum("inspectionRules", "blockFilter", "blockSelection")); Add("mode", Enum("set", "clear"));
+                Add("form", Enum("inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks")); Add("mode", Enum("set", "clear"));
                 Add("fields", new() { ["type"] = "object", ["additionalProperties"] = false,
                     ["properties"] = new JsonObject { ["namePattern"] = new JsonObject { ["type"] = "string", ["maxLength"] = 256,
                             ["description"] = "Inspection name pattern, awaiting human confirmation." },
@@ -170,12 +170,22 @@ internal sealed class WorkbenchControlTool : McpServerTool
                             ["description"] = "Exact software path owning the selected blocks." },
                         ["blockPaths"] = new JsonObject { ["type"] = "array", ["maxItems"] = 256, ["items"] = Text(),
                             ["description"] = "Exact escaped block paths to prefill, awaiting human confirmation." } } });
+                var allFields = properties["fields"]!["properties"]!.AsObject();
+                allFields["projectPath"] = Text();
+                allFields["outputDirectory"] = Text();
+                allFields["format"] = Enum("SimaticMl", "Source");
+                allFields["paths"] = new JsonObject { ["type"] = "array", ["minItems"] = 1, ["maxItems"] = 256, ["items"] = Text() };
+                allFields["overwrite"] = new JsonObject { ["type"] = "boolean" };
+                foreach (string field in new[] { "projectPath", "outputDirectory", "format", "paths", "overwrite" })
+                    allFields[field]!["description"] = "Human-confirmed MCP panel prefill: " + field + ". Paths are absolute local paths; no existence probe.";
                 var branches = new JsonArray();
-                foreach (string form in new[] { "inspectionRules", "blockFilter", "blockSelection" })
+                foreach (string form in new[] { "inspectionRules", "blockFilter", "blockSelection", "connectProject", "exportBlocks", "importBlocks" })
                     foreach (string mode in new[] { "set", "clear" })
                     {
                         string[] fields = mode == "clear" ? Array.Empty<string>() : form == "inspectionRules" ? new[] { "namePattern" }
-                            : form == "blockFilter" ? new[] { "filter" } : new[] { "softwarePath", "blockPaths" };
+                            : form == "blockFilter" ? new[] { "filter" } : form == "blockSelection" ? new[] { "softwarePath", "blockPaths" }
+                            : form == "connectProject" ? new[] { "projectPath" } : form == "exportBlocks" ? new[] { "outputDirectory", "format" }
+                            : new[] { "paths", "overwrite" };
                         var fieldProperties = new JsonObject();
                         foreach (string field in fields) fieldProperties[field] = properties["fields"]!["properties"]![field]!.DeepClone();
                         branches.Add(new JsonObject { ["properties"] = new JsonObject { ["form"] = new JsonObject { ["const"] = form },

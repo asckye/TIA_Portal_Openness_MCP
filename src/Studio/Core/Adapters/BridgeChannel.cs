@@ -35,6 +35,7 @@ namespace TiaOpenness.Core.Rpc
         {
             switch (method)
             {
+                case "vc.attachReadOnly":
                 case RpcMethods.SessionConnect:
                 case RpcMethods.SessionDisconnect:
                 case RpcMethods.ProjectOpen:

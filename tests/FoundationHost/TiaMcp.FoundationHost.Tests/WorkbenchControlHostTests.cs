@@ -232,6 +232,29 @@ public sealed class WorkbenchControlHostTests
         var invalid = await Tool(7, worker, Client(server)).InvokeAsync(Request("PrefillWorkbenchForm", new() { ["form"] = form, ["mode"] = "set", ["fields"] = new JsonObject { ["execute"] = true } }));
         Assert.Equal("INVALID_ARGUMENT", (string?)invalid.StructuredContent?["error"]?["code"]);
     }
+    [Theory, InlineData("connectProject"), InlineData("exportBlocks"), InlineData("importBlocks")]
+    public async Task Mcp_prefill_forms_remain_closed_UI_operations_without_worker_or_approval(string form)
+    {
+        using var worker = new Worker(); using var server = new FakeServer();
+        JsonObject fields = form switch
+        {
+            "connectProject" => new() { ["projectPath"] = @"D:\Missing\Line.ap21" },
+            "exportBlocks" => new() { ["outputDirectory"] = @"D:\Missing\Exports", ["format"] = "Source" },
+            _ => new() { ["paths"] = new JsonArray(@"D:\Missing\Main.xml"), ["overwrite"] = false },
+        };
+        foreach (string mode in new[] { "set", "clear" })
+        {
+            var result = await Tool(7, worker, Client(server)).InvokeAsync(Request("PrefillWorkbenchForm", new() { ["form"] = form,
+                ["mode"] = mode, ["fields"] = mode == "set" ? fields.DeepClone() : new JsonObject() }));
+            Assert.True((bool?)result.StructuredContent?["ok"]);
+            Assert.Equal("completed", (string?)result.StructuredContent?["meta"]?["execution"]);
+        }
+        fields["execute"] = true;
+        var invalid = await Tool(7, worker, Client(server)).InvokeAsync(Request("PrefillWorkbenchForm", new() { ["form"] = form,
+            ["mode"] = "set", ["fields"] = fields }));
+        Assert.Equal("INVALID_ARGUMENT", (string?)invalid.StructuredContent?["error"]?["code"]);
+        Assert.True(server.Verified);
+    }
     private sealed class EmptyCatalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {
         public IReadOnlyDictionary<string, Descriptor> All { get; } = new Dictionary<string, Descriptor>();
@@ -294,7 +317,7 @@ public sealed class WorkbenchControlHostTests
     [Theory, InlineData(0), InlineData(1), InlineData(2), InlineData(3), InlineData(4), InlineData(5), InlineData(6), InlineData(7), InlineData(8), InlineData(9)]
     public void Render_registry_checks_session_project_exact_target_kind_provenance_and_file_identity(int scenario)
     {
-        string directory = Path.Combine(FindRoot(), "bin-build", "refactor", "P8-20c", "artifacts-" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(Path.GetTempPath(), "tia-workbench-control-artifacts-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         using var worker = new Worker { EngineIdentity = scenario % 2 == 0 };
         var registry = WorkbenchControlSession.For(worker);
@@ -324,7 +347,7 @@ public sealed class WorkbenchControlHostTests
         }
         finally
         {
-            Assert.StartsWith(Path.Combine(FindRoot(), "bin-build", "refactor", "P8-20c"), Path.GetFullPath(directory));
+            Assert.StartsWith(Path.GetFullPath(Path.GetTempPath()), Path.GetFullPath(directory));
             Directory.Delete(directory, true);
         }
     }

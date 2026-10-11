@@ -12,12 +12,10 @@ namespace TiaOpenness.Gui.ViewModels;
 /// <summary>Owns workspace mapping, status, diff and synchronization.</summary>
 public sealed class VersionControlViewModel : ObservableObject, IDisposable
 {
-    private readonly IStudioClient _client;
+    private readonly IVersionControlClient _client;
     private readonly IDialogService _dialogs;
     private readonly WorkbenchActivity _activity;
-    private readonly Action _ensureBridge;
     private readonly Func<string?> _selectedDeviceId;
-    private readonly bool _legacyAccess;
     private bool _vcSupported;
     private bool _vcDryRun = true;
     private bool _vcShowAll;
@@ -29,22 +27,23 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     public VersionControlViewModel(IStudioClient client, IDialogService dialogs, WorkbenchActivity activity,
         Action ensureBridge, Func<string?> selectedDeviceId, bool legacyAccess = true)
+        : this(new LegacyVersionControlClient(client, ensureBridge, legacyAccess), dialogs, activity, selectedDeviceId) { }
+
+    public VersionControlViewModel(IVersionControlClient client, IDialogService dialogs, WorkbenchActivity activity, Func<string?> selectedDeviceId)
     {
         _client = client;
         _dialogs = dialogs;
         _activity = activity;
-        _ensureBridge = ensureBridge;
-        _legacyAccess = legacyAccess;
         _selectedDeviceId = selectedDeviceId;
         VcStatusItems.CollectionChanged += (_, _) => Raise(nameof(HasVcItems));
         Loc.Current.LanguageChanged += OnLanguageChanged;
-        VcRefresh = new AsyncCommand(VcRefreshAsync, () => _legacyAccess);
+        VcRefresh = new AsyncCommand(VcRefreshAsync, () => _client.CanRead && !_activity.Busy);
         VcCreate = new AsyncCommand(VcCreateAsync,
-            () => _legacyAccess && VcSupported && NewWorkspaceName.Length > 0 && NewWorkspaceFolder.Length > 0);
-        VcMap = new AsyncCommand(VcMapAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
-        VcStatus = new AsyncCommand(VcStatusAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
-        VcPush = new AsyncCommand(VcPushAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
-        VcPull = new AsyncCommand(VcPullAsync, () => _legacyAccess && VcSupported && SelectedWorkspace is not null);
+            () => _client.CanWrite && !_activity.Busy && VcSupported && NewWorkspaceName.Length > 0 && NewWorkspaceFolder.Length > 0);
+        VcMap = new AsyncCommand(VcMapAsync, () => _client.CanWrite && !_activity.Busy && VcSupported && SelectedWorkspace is not null);
+        VcStatus = new AsyncCommand(VcStatusAsync, () => _client.CanRead && !_activity.Busy && VcSupported && SelectedWorkspace is not null);
+        VcPush = new AsyncCommand(VcPushAsync, () => _client.CanWrite && !_activity.Busy && VcSupported && SelectedWorkspace is not null);
+        VcPull = new AsyncCommand(VcPullAsync, () => _client.CanWrite && !_activity.Busy && VcSupported && SelectedWorkspace is not null);
     }
 
     public ObservableCollection<WorkspaceInfo> Workspaces { get; } = [];
@@ -61,9 +60,13 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     public AsyncCommand VcPush { get; }
     public AsyncCommand VcPull { get; }
 
+    internal void RefreshCommands() => RaiseVcCommands();
+    public bool IsReadOnly => _client.CanRead && !_client.CanWrite;
+
     private void RaiseVcCommands()
     {
-        foreach (var command in new[] { VcCreate, VcMap, VcStatus, VcPush, VcPull })
+        Raise(nameof(IsReadOnly));
+        foreach (var command in new[] { VcRefresh, VcCreate, VcMap, VcStatus, VcPush, VcPull })
         {
             command.RaiseCanExecuteChanged();
         }
@@ -138,7 +141,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     /// </summary>
     public async Task VcRefreshAsync() => await _activity.Guarded("Status.ReadingVc", async () =>
     {
-        _ensureBridge();
+        if (!_client.CanRead) { ClearPresentation(); return; }
         VcSupported = await _client.VcSupportedAsync();
 
         Workspaces.Clear();
@@ -151,8 +154,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             return;
         }
 
+        string? selectedName = SelectedWorkspace?.Name;
         foreach (var workspace in await _client.VcListWorkspacesAsync()) Workspaces.Add(workspace);
-        SelectedWorkspace ??= Workspaces.FirstOrDefault();
+        SelectedWorkspace = Workspaces.FirstOrDefault(w => w.Name == selectedName) ?? Workspaces.FirstOrDefault();
 
         if (Workspaces.Count == 0)
         {
@@ -322,5 +326,5 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e) => Raise(nameof(WorkspaceRootDisplay));
 
-    public void Dispose() => Loc.Current.LanguageChanged -= OnLanguageChanged;
+    public void Dispose() { Loc.Current.LanguageChanged -= OnLanguageChanged; _client.Dispose(); }
 }

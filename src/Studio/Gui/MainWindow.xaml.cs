@@ -10,7 +10,7 @@ public partial class MainWindow : Window
     private readonly bool _loadExistingConfiguration;
     private readonly TiaMcpConfigurator.ConfigurationPreview? _preview;
 
-    public MainWindow() : this(new MainViewModel()) { }
+    public MainWindow() : this(new MainViewModel(MainViewModel.OfflineDemoRequested(System.Environment.GetCommandLineArgs()))) { }
 
     internal MainWindow(MainViewModel model, bool loadExistingConfiguration = true, Services.Stubs.IApprovalService? approvals = null, Services.Stubs.IDiagnosticBundleService? diagnostics = null, TiaMcpConfigurator.ConfigurationPreview? preview = null)
     {
@@ -30,6 +30,13 @@ public partial class MainWindow : Window
             if (!_loadExistingConfiguration) return;
             await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
             var args = System.Environment.GetCommandLineArgs();
+            if (_model.OfflineDemo)
+            {
+                int tab = System.Array.IndexOf(args, "--tab");
+                Navigate(tab >= 0 && tab + 1 < args.Length ? args[tab + 1].ToLowerInvariant() switch
+                    { "calls" => "Calls", "audit" => "Audit", "log" => "Log", _ => "Environment" } : "Environment");
+                return;
+            }
             if (System.Array.IndexOf(args, "--tab") >= 0) Navigate(_model.IsVcTab ? "VersionControl" : _model.IsLogTab ? "Log" : "Engineering");
             else ShowConfiguration();
         };
@@ -40,6 +47,7 @@ public partial class MainWindow : Window
     private void OnClose(object sender, RoutedEventArgs e) => Close();
     private void OnOpenExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
     {
+        if (_model.OfflineDemo) return;
         Navigate("Engineering");
         OperationsContent.ShowProjectOptions();
     }

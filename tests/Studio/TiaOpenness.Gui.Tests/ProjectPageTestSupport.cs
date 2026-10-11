@@ -23,7 +23,7 @@ internal static class ProjectPageTestSupport
         throw new InvalidOperationException("No page element: " + name);
     }
 
-    internal static MainViewModel Model(bool connected = true, bool results = false, bool workspace = true)
+    internal static MainViewModel Model(bool connected = true, bool results = false, bool workspace = true, string release = "14sp1")
     {
         var client = new FakeProjectClient
         {
@@ -47,7 +47,7 @@ internal static class ProjectPageTestSupport
             Name = names[i], FilePath = names[i] + ".xml", FileFormat = "SimaticML",
             CompareState = i is 1 or 4 or 5 or 3 ? VcCompareState.Unequal : VcCompareState.Equal,
         });
-        var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "14sp1" };
+        var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = release };
         if (connected)
         {
             model.Session.Connect.Execute(null);

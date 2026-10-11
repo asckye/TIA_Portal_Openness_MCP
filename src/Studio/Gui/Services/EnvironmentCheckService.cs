@@ -19,6 +19,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     private readonly Func<EnvironmentCheckContext> _context;
     private readonly Func<EnvironmentProbeSources> _sources;
     private readonly Action<string> _fixMembership;
+    private readonly bool _allowFix;
     private int _busy;
     public Task Completion { get; private set; } = Task.CompletedTask;
     public IReadOnlyList<EnvironmentFinding> Findings { get; private set; } = [];
@@ -26,8 +27,12 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     public IReadOnlyList<string> LogTail { get; private set; } = [];
 
     public EnvironmentCheckService() : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix) { }
+    internal EnvironmentCheckService(bool allowFix) : this(EnvironmentServiceContext.Current, WindowsEnvironmentSources.Create, RunDoctorFix, allowFix) { }
     public EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership)
+        : this(context, sources, fixMembership, true) { }
+    internal EnvironmentCheckService(Func<EnvironmentCheckContext> context, Func<EnvironmentProbeSources> sources, Action<string> fixMembership, bool allowFix)
     {
+        _allowFix = allowFix;
         _context = context; _sources = sources; _fixMembership = fixMembership;
         Groups = Group(WorkbenchEnvironmentChecks.Ids.Select(id => EnvironmentCheckCatalogue.Unchecked(id)).ToArray());
     }
@@ -78,6 +83,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     public LocalizedText Fix(string checkId)
     {
+        if (!_allowFix) return LocalizedText.Key("Session.OfflineDemo");
         var finding = Findings.FirstOrDefault(f => f.Id == checkId);
         if (finding == null) return EnvironmentCheckCatalogue.Fix(checkId);
         if (checkId != "membership" || finding.Result == "NewLogon" || finding.Status != EnvironmentFindingStatus.Fail)

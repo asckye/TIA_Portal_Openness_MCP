@@ -19,13 +19,21 @@ namespace TiaOpenness.Core.Rpc
         private ITiaSessionFactory _factory;
         private readonly Action<RpcNotification> _notify;
         private ITiaSession _session;
+        private bool _vciReadOnly;
+        private int _vciProcessId;
+        private long _vciStartUtcTicks;
+        private readonly Action<int, long> _requireVciLease;
         internal bool BackendEntered { get; private set; }
 
         /// <param name="resolveFactory">
         /// Called once when the first operation needs a backend; the bridge keeps that factory.
         /// </param>
         public RpcDispatcher(Func<ITiaSessionFactory> resolveFactory, Action<RpcNotification> notify)
+            : this(resolveFactory, notify, VciReadOnlyBinding.Require) { }
+
+        internal RpcDispatcher(Func<ITiaSessionFactory> resolveFactory, Action<RpcNotification> notify, Action<int, long> requireVciLease)
         {
+            _requireVciLease = requireVciLease;
             _resolveFactory = resolveFactory;
             _notify = notify;
         }
@@ -94,8 +102,23 @@ namespace TiaOpenness.Core.Rpc
 
         private object Invoke(string method, JsonElement p, ProgressCallback progress)
         {
+            if (_vciReadOnly && method != RpcMethods.SessionDisconnect)
+            {
+                if (method != "vc.attachReadOnly" && method != RpcMethods.Ping && method != RpcMethods.VcSupported
+                    && method != RpcMethods.VcWorkspaceList && method != RpcMethods.VcStatus && method != RpcMethods.VcDiff)
+                    throw new InvalidOperationException("This bridge permits VCI reads only.");
+                if (method != "vc.attachReadOnly") _requireVciLease(_vciProcessId, _vciStartUtcTicks);
+            }
             switch (method)
             {
+                case "vc.attachReadOnly":
+                    _vciReadOnly = true;
+                    _vciProcessId = p.GetProperty("processId").GetInt32();
+                    _vciStartUtcTicks = p.GetProperty("startUtcTicks").GetInt64();
+                    _requireVciLease(_vciProcessId, _vciStartUtcTicks);
+                    EnsureSession();
+                    return (_session as IVciReadOnlySession ?? throw new NotSupportedException("VCI read attachment is unavailable."))
+                        .AttachVciReadOnly(_vciProcessId, _vciStartUtcTicks, Required(p, "projectFile"));
                 case RpcMethods.Ping:
                     return new { pong = true, mode = Factory().Mode.ToString(), decision = SessionFactoryLoader.LastDecision };
 

@@ -42,7 +42,7 @@ public class MainWindowTests(WpfContext wpf)
 
     private static Rendered Render(bool connected = false)
     {
-        var window = new MainWindow(ProjectPageTestSupport.Model(connected), false);
+        var window = new MainWindow(ProjectPageTestSupport.Model(connected, release: "21"), false);
 
         var content = (UIElement)window.Content;
         window.Content = null;

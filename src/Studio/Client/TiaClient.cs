@@ -45,6 +45,9 @@ namespace TiaOpenness.Client
             return _bridge.CallAsync<SessionState>(RpcMethods.SessionDisconnect, null, ct);
         }
 
+        public Task<SessionState> AttachVciReadOnlyAsync(int processId, long startUtcTicks, string projectFile, CancellationToken ct = default)
+            => _bridge.CallAsync<SessionState>("vc.attachReadOnly", new { processId, startUtcTicks, projectFile }, ct);
+
         public Task<SessionState> StateAsync(CancellationToken ct = default)
         {
             return _bridge.CallAsync<SessionState>(RpcMethods.SessionState, null, ct);

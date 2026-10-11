@@ -35,6 +35,7 @@
                 </Border>
               </StackPanel>
               <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.WorkspaceSummary}" Style="{StaticResource Primer.Mono}"/>
+              <TextBlock Text="{l:Tr Vc.ReadOnlyBridge}" FontSize="11" Visibility="{Binding VersionControl.IsReadOnly,Converter={StaticResource BoolToVisibility}}"/>
             </StackPanel>
             <DockPanel Grid.Row="1" VerticalAlignment="Bottom">
               <Button DockPanel.Dock="Right" Click="OnWorkspaceAction" Style="{StaticResource Primer.WorkspaceAction}"/>

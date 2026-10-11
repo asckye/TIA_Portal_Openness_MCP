@@ -31,12 +31,14 @@ public partial class MainWindow
 
     internal void ShowConfiguration(bool loadExisting = true, string? bundleRoot = null)
     {
+        if (_model.OfflineDemo) { Navigate("Environment"); return; }
         EnsureConfiguration(loadExisting, bundleRoot);
         Navigate("Mcp");
     }
 
     internal void EnsureConfiguration(bool loadExisting = true, string? bundleRoot = null)
     {
+        if (_model.OfflineDemo) return;
         if (Configuration == null)
         {
             var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting && _loadExistingConfiguration, _preview);

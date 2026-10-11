@@ -4,6 +4,10 @@ using TiaOpenness.Contracts.Models;
 
 namespace TiaOpenness.Core.Abstractions
 {
+    public interface IVciReadOnlySession
+    {
+        SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile);
+    }
     /// <summary>Reports progress of a long-running bridge operation back to the caller.</summary>
     /// <param name="current">Items finished so far.</param>
     /// <param name="total">Total items, or 0 when unknown.</param>

@@ -41,7 +41,9 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         RunDoctor = new AsyncCommand(DoctorAsync);
         Connect = new AsyncCommand(ConnectAsync, () => !_activity.Busy);
         Disconnect = new AsyncCommand(DisconnectAsync, () => IsConnected && !_activity.Busy);
-        OpenProject = new AsyncCommand(OpenProjectAsync, () => !_activity.Busy && ProjectPath.Length > 0);
+        OpenProject = client is McpProjectClient
+            ? new McpPanelCommand(OpenProjectAsync, () => !_activity.Busy && ProjectPath.Length > 0)
+            : new AsyncCommand(OpenProjectAsync, () => !_activity.Busy && ProjectPath.Length > 0);
         _client.Exited += OnBridgeExited;
         _activity.PropertyChanged += OnActivityChanged;
         Loc.Current.LanguageChanged += OnLanguageChanged;
@@ -66,6 +68,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     public AsyncCommand RunDoctor { get; }
     public AsyncCommand Connect { get; }
     public AsyncCommand Disconnect { get; }
+    [PrefillTarget(Executes = "mcp")]
     public AsyncCommand OpenProject { get; }
     public int ProcessId
     {
@@ -76,6 +79,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     public async Task ApplySharedStateAsync(JsonObject? state)
     {
         if (_client is not McpProjectClient project) return;
+        if ((string?)state?["releaseKey"] is { } release) Set(ref _selectedReleaseKey, release, nameof(SelectedReleaseKey));
         Raise(nameof(CanSelectRelease));
         if (state == null || (string?)state["worker"]?["state"] == "disconnected")
         {

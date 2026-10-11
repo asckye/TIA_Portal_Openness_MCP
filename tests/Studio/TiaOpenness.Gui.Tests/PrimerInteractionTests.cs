@@ -65,7 +65,7 @@ public class PrimerInteractionTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
-            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            var window = new MainWindow(ProjectPageTestSupport.Model(release: "21"), false);
             try
             {
                 var model=(MainViewModel)window.DataContext;window.Navigate("VersionControl");

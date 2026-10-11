@@ -443,7 +443,7 @@ lane `{tool, actor, requestId, sinceUtc}`、绑定 `{processId, projectFile, bin
 | 布局与发布 | `BundleLayout` 的工作台桥接与适配器路径函数（`BundleLayout.cs:370-404`）；`scripts/operations/delivery-files.json:232` 的桥接条目；`manifest/multi-version-build.json` 的 `studioReleaseKeys` 与桥接适配器文件；`build-tools/release` 的 build-studio 步骤 | 发布链改动按 release-workflow 重新生成清单，不手改哈希 |
 | 测试 | `tests/Studio/TiaOpenness.Core.Tests` 中桥接与适配器测试、`tests/Studio/Test-BridgeSmoke.cs`、`AdapterSourceClosureTests` 中的 Studio 检查、`StudioContractTests`、`StudioGoldenSamples` | 由面板与假宿主测试替代 |
 
-`TiaOpenness.Contracts` 的 DTO 被视图模型使用，迁移时改为 Gui 内部视图记录后再删（或保留为纯界面模型，视实现方便）。`--mock` 演示模式改为连接一个离线夹具宿主，或者删除（决定 6）。
+`TiaOpenness.Contracts` 的 DTO 被视图模型使用，迁移时改为 Gui 内部视图记录后再删（或保留为纯界面模型，视实现方便）。P8-21e 按任务允许的回退方案保留离线演示入口：运行 `runtime/studio/TiaOpenness.exe --mock`（或 `--demo`），仅显示调用、审计、环境和日志页，供演示与截图使用。工程、版本控制、会话和配置页均不可用；该入口不发现会话、不启动宿主、不打开操作/审批/控制管道，也不连接 TIA。测试内的 MCP SDK 操作端夹具尚未成为可分发的同包宿主；P8-21f 再决定是否将它产品化。
 
 ## 6 分步实施与验收
 
