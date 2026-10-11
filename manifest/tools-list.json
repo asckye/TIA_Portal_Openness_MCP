@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-11T16:02:51.7793362+00:00",
+  "generatedAt": "2026-10-11T18:05:59.9441134+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "56443f65210a3dbff5ff9c1ca0e1ef974261589de4fcc2f52351280bd775a6be",
+  "workerSha256": "aebecc5a1bc98b7f32bd5f4572bbbd4f04170119074d7fd015e998a0b4a9f18c",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -2707,7 +2707,7 @@
         "includeBlocks",
         "maxDepth"
       ],
-      "description": "[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). First 200 objects per group. No modification. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"ListPlcSystemGroups\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][READ] Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). V14 SP1 returns system block groups only and explicitly reports systemTypeGroups unavailable (UNSUPPORTED_CAPABILITY); unitName scopes require V16 (safety V18). First 200 objects per group. No modification. Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance. Examples: GetToolUsage(toolName: \"ListPlcSystemGroups\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
@@ -3378,7 +3378,7 @@
         "filePath",
         "schemaDirectory"
       ],
-      "description": "[L2][Validation][OFFLINE] Validate recognized SimaticML interface and LAD/FBD/SCL/STL/GRAPH fragments against the caller's local Siemens PublicAPI XSD files. Uses exact namespace schema versions; refuses DTDs and resolves schema includes only from the bounded supplied directory. No schema download or TIA connection. Read fragmentSchemasPassed, skippedFragments and issues; the whole Document, instruction semantics, CPU compatibility and native import are NOT validated. Siemens schemas are not redistributed. Examples: GetToolUsage(toolName: \"ValidatePlcDocumentSchemas\"), optionally operation or language.",
+      "description": "[L2][Validation][OFFLINE] Validate recognized SimaticML interface and LAD/FBD/SCL/STL/GRAPH fragments against the caller's local Siemens PublicAPI Schemas folder for the selected release (V14 SP1 through V21). V14 SP1 network schemas are unsuffixed and reported as skipped; its Interface/v2 is supported. Uses exact namespace schema versions; refuses DTDs and resolves schema includes only from the bounded supplied directory. No schema download or TIA connection. Read fragmentSchemasPassed, skippedFragments and issues; the whole Document, instruction semantics, CPU compatibility and native import are NOT validated. Siemens schemas are not redistributed. Examples: GetToolUsage(toolName: \"ValidatePlcDocumentSchemas\"), optionally operation or language.",
       "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"schemaDirectory\":\"C:\\\\Siemens\\\\PublicAPI\\\\V21\\\\Schemas\"}"
     },
     {
@@ -4438,7 +4438,7 @@
         "dryRun",
         "expectedFingerprint"
       ],
-      "description": "[L2][HMI-Unified][FILE] Inspect or build a custom web control folder using V21 documented package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. Examples: GetToolUsage(toolName: \"ManageUnifiedCwcPackage\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][FILE] Inspect or build a custom web control folder using the documented WinCC Unified V17–V21 package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. Examples: GetToolUsage(toolName: \"ManageUnifiedCwcPackage\"), optionally operation or language.",
       "example": "{\"directory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"action\":\"inspect\"}"
     },
     {
@@ -4618,7 +4618,7 @@
         "keyword",
         "limit"
       ],
-      "description": "[PLC foundation; native unverified] [hardware-catalog-candidate] V19–21 only. Existing explicit attached portal and open bound project required. One literal query, bounded client traversal/results with explicit truncation. Native Find has no server-side limit/cancellation. No insertion, compatibility probe, catalog repair or launch. V18 semantics gated; V14 SP1–17 API absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SearchHardwareCatalog\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified] [hardware-catalog-candidate] V18–21 only. Existing explicit attached portal and open bound project required. One literal query, bounded client traversal/results with explicit truncation. Native Find has no server-side limit/cancellation. No insertion, compatibility probe, catalog repair or launch. V14 SP1–17 API absent; V18 native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SearchHardwareCatalog\"), optionally operation or language.",
       "example": "{\"keyword\":\"1513\"}"
     },
     {
@@ -5689,7 +5689,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified] [bounded-device-add-candidate] V19–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Only documented CPU 1211C 6ES7211-1BE40-0XB0 or CPU 1513 6ES7513-1AM03-0AB0 with matching S7-1200/S7-1500 family accepted. No approximate/default/family fallback, insertion probing, HMI hint or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareDevice\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified] [bounded-device-add-candidate] V18–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Only documented CPU 1211C 6ES7211-1BE40-0XB0 or CPU 1513 6ES7513-1AM03-0AB0 with matching S7-1200/S7-1500 family accepted. No approximate/default/family fallback, insertion probing, HMI hint or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateHardwareDevice\"), optionally operation or language.",
       "example": "{\"preferredMlfb\":\"6ES7 513-1AM03-0AB0\",\"preferredVersion\":\"V3.1\",\"deviceName\":\"PLC_2\",\"family\":\"S7-1500\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -6559,7 +6559,7 @@
       "parameters": [
         "design"
       ],
-      "description": "[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI screen XML document from structured JSON. It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen). Examples: GetToolUsage(toolName: \"BuildClassicHmiScreen\"), optionally operation or language.",
+      "description": "[L2][HMI-Classic]Offline-only helper: build a V18-stamped Classic/Basic WinCC HMI screen XML document from structured JSON (V18–V21 hosts; V18/V19 TP700 Comfort import acceptance NOT RUN). It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen). Examples: GetToolUsage(toolName: \"BuildClassicHmiScreen\"), optionally operation or language.",
       "example": "{\"design\":{\"screen\":{\"name\":\"Overview\",\"width\":800,\"height\":480},\"items\":[{\"type\":\"Text\",\"name\":\"StatusText\",\"left\":20,\"top\":20,\"width\":160,\"height\":40,\"text\":\"Ready\"}]}}"
     },
     {
@@ -9148,7 +9148,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified] [special-export-candidate] Exact canonical ordinary PLC watch-table path; root/user groups, no force tables. Preview has zero file writes. Confirmed apply requires exact project and expectedPlanHash. ExportOptions.None; no overwrite, snapshots or retry. V16–21 manual-backed method source; V15.1 is signature-verified but preview only pending semantics. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTable\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified] [special-export-candidate] Exact canonical ordinary PLC watch-table path; root/user groups, no force tables. Preview has zero file writes. Confirmed apply requires exact project and expectedPlanHash. ExportOptions.None; no overwrite, snapshots or retry. V15.1–21 official API-backed method source; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTable\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"watchTableName\":\"Watch_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\Watch_1.xml\",\"dryRun\":true,\"confirm\":false}"
     },
     {
