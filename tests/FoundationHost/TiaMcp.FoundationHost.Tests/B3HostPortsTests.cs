@@ -133,7 +133,7 @@ public sealed class B3HostPortsTests
     }
 
     [Theory, MemberData(nameof(Releases))]
-    public void Passive_diagnostics_preserve_the_existing_modern_projection_without_hiding_catalog_tools(string release)
+    public async Task Passive_diagnostics_preserve_the_existing_modern_projection_without_hiding_catalog_tools(string release)
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var registry = LegacyHostToolRegistry.Create(worker, release, false);
@@ -142,11 +142,81 @@ public sealed class B3HostPortsTests
         Assert.All(moved, name => Assert.Equal(PortedFamilies.Available(release, name), registry.Any(tool => tool.ProtocolTool.Name == name)));
         var legacyRegistry = registry.Where(tool => !moved.Contains(tool.ProtocolTool.Name)).ToArray();
         var actual = FoundationPassiveDiagnostics.Inspect(release, false, registry);
+        JsonObject Projection(JsonObject report)
+        {
+            var projection = report.DeepClone().AsObject();
+            foreach (string field in new[] { "registeredToolCount", "registeredTools", "nextOffset" }) projection.Remove(field);
+            // These two checks now cover the full catalog, including the moved tools.
+            projection["checks"]!.AsObject().Remove("foundationOperationsInSourceAllowlist");
+            projection["checks"]!.AsObject().Remove("passed");
+            return projection;
+        }
         if (release is "20" or "21")
-            Assert.Equal(FoundationPassiveDiagnostics.Inspect(release, false, legacyRegistry).ToJsonString(), actual.ToJsonString());
+            Assert.Equal(Projection(FoundationPassiveDiagnostics.Inspect(release, false, legacyRegistry)).ToJsonString(),
+                Projection(actual).ToJsonString());
         else
             Assert.Equal(registry.Count, (int)actual["registeredToolCount"]!);
         Assert.True((bool)actual["checks"]!["passed"]!);
+        Assert.True((bool)actual["checks"]!["foundationOperationsInSourceAllowlist"]!);
+        var legacyRows = new Dictionary<string, string>(StringComparer.Ordinal);
+        const int pageSize = 17;
+        for (int offset = 0; offset < legacyRegistry.Length;)
+        {
+            var page = FoundationPassiveDiagnostics.Inspect(release, false, legacyRegistry, offset: offset, limit: pageSize);
+            Assert.InRange(page["registeredTools"]!.AsArray().Count, 1, pageSize);
+            foreach (var row in page["registeredTools"]!.AsArray()) legacyRows.Add((string)row!["name"]!, row.ToJsonString());
+            offset += page["registeredTools"]!.AsArray().Count;
+        }
+        var expectedNames = registry.Select(tool => tool.ProtocolTool.Name).Order(StringComparer.Ordinal).ToArray();
+        foreach (string name in new[] { "InitializeEnvironment", "RunCapabilitySelfTest" })
+        {
+            var tool = registry.Single(tool => tool.ProtocolTool.Name == name);
+            var names = new List<string>();
+            int offset = 0;
+            while (true)
+            {
+                var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                    Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                        JsonSerializer.Serialize(new { offset, limit = pageSize })) } };
+                var response = await tool.InvokeAsync(request);
+                var text = ((TextContentBlock)response.Content.Single()).Text;
+                var body = response.StructuredContent!;
+                Assert.False(response.IsError == true);
+                Assert.True((bool)body["ok"]!);
+                Assert.True(text.Length < 65536);
+                Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(text)));
+                var data = body["data"]!;
+                Assert.Equal(registry.Count, (int)data["registeredToolCount"]!);
+                foreach (string check in new[] { "uniqueRegisteredNames", "objectSchemaContracts", "foundationOperationsInSourceAllowlist", "passed" })
+                    Assert.True((bool)data["checks"]![check]!);
+                var rows = data["registeredTools"]!.AsArray();
+                Assert.InRange(rows.Count, 1, pageSize);
+                foreach (var row in rows)
+                {
+                    string rowName = (string)row!["name"]!;
+                    names.Add(rowName);
+                    Assert.True((bool)row["objectSchemaContractValid"]!);
+                    if (legacyRows.TryGetValue(rowName, out string? expectedRow)) Assert.Equal(expectedRow, row.ToJsonString());
+                }
+                var paging = body["meta"]!["paging"]!;
+                Assert.Equal("offset", (string?)paging["mode"]);
+                Assert.Equal(offset, (int)paging["offset"]!);
+                Assert.Equal(pageSize, (int)paging["limit"]!);
+                Assert.Equal(registry.Count, (int)paging["total"]!);
+                int? next = (int?)paging["nextOffset"];
+                Assert.Equal((int?)FoundationPassiveDiagnostics.Inspect(release, false, registry, offset: offset, limit: pageSize)["nextOffset"], next);
+                Assert.Equal(offset + rows.Count == registry.Count, (bool)paging["complete"]!);
+                if (next == null)
+                {
+                    Assert.True((bool)paging["complete"]!);
+                    break;
+                }
+                Assert.Equal(offset + rows.Count, next.Value);
+                offset = next.Value;
+            }
+            Assert.Equal(expectedNames, names);
+            Assert.Equal(registry.Count, names.Distinct(StringComparer.Ordinal).Count());
+        }
         Assert.Equal(0, worker.Calls);
     }
 

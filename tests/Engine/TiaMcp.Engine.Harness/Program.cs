@@ -215,8 +215,13 @@ internal static partial class Program
                         Activator.CreateInstance(schemaType, new[] { parse.Invoke(null, new object[] { Json.Serialize(t["inputSchema"]) }) })!);
                 int rejected = 0, failed = 0;
                 foreach(var item in ((object[])Json.DeserializeObject(File.ReadAllText(args[4]))).Cast<Dictionary<string, object>>()) {
+                    if (!schemas.TryGetValue((string)item["tool"], out var schema)) {
+                        failed++;
+                        Console.WriteLine("FAIL " + item["label"] + " " + item["tool"] + ": tool is not registered");
+                        continue;
+                    }
                     var input = parse.Invoke(null, new object[] { Json.Serialize(item["args"]) });
-                    var error = schemaType.GetMethod("Validate")!.Invoke(schemas[(string)item["tool"]], new[] { input, "arguments" });
+                    var error = schemaType.GetMethod("Validate")!.Invoke(schema, new[] { input, "arguments" });
                     bool negative = (bool)item["negativeInput"];
                     if((error != null) != negative) {
                         failed++;
@@ -224,7 +229,7 @@ internal static partial class Program
                     } else { Passed++; if(negative) rejected++; }
                 }
                 Console.WriteLine("COMPLETE: " + Passed + " script input checks passed (" + rejected + " explicit rejections); " + failed + " failed; no dispatch");
-                return 0;
+                return failed == 0 ? 0 : 1;
             }
             if(args.Length >= 4 && args[1] == "device-candidate-only") {
                 string api=Path.GetFullPath(args[2]);
