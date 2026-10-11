@@ -229,3 +229,5 @@ TiaMcp.Engine.Harness 进程用仅测试用的 readiness 标记模拟 Openness �
 
 何时运行完整链：合并任何改动宿主行为（引擎、Foundation、worker、审批与数据目录）、打包与交付清单、随包文档或发布脚本的变更后，
 从干净 worktree 运行一次，不要攒到发布前。日常审查验证不包含发布构建内的宿主检查，4.0 发布候选曾因此连续暴露多个只在发布时才检查的问题。
+
+产品 profile、拒绝夹具、版本目录、包计数和行为表统一由 `generate-catalogs` 生成；嵌入用法目录由 `generate-tool-usage` 生成。先按此顺序生成，再构建与捕获。`generate-release-migration -Check` 校验 3.x→4.0 迁移表，4.0 发布后冻结该表。`audit-version-tools` 校验版本目录并只写 API 证据；用法覆盖清单仅由 `audit-tool-usage` 写入。

@@ -154,7 +154,7 @@ P6-02 已完成，P6-01 已更新事实与路径待审查，其余为待实施�
 `L5-X` 表示真机台账 P6-X 中该发布键的基线和候选行为均通过。原生策略任务可以先准备离线代码，
 但在 L5-X 前不得切换发布能力；未验收族保持 current 行为。每次任务说明须列出精确路径，超出范围先停。
 
-公共证明缩写：`C`=`scripts/generate/Generate-Phase6Plan.py` --self-test/--check、仓库/死引用及全部 source-contracts；
+公共证明缩写：`C`=`build-tools/release/CatalogGenerator.cs` --self-test/--check、仓库/死引用及全部 source-contracts；
 `T`=受影响离线套件按发布工具 `test-suites` 子命令（`dotnet run --project build-tools/release -- test-suites`）的 TRX 最低数量门禁、0 失败；
 `V`=八版实际名称/schema/响应快照符合生成映射，直接/CallTool/批次同形，版本/action 无扩张；
 `N`=逐方法前后 Siemens 调用顺序/参数/线程与全部织入类别差量，加本族故障证据及 L5。
@@ -163,7 +163,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 
 | ID | 单次任务与文件边界 | 前置依赖 | 验收证明 | 状态 |
 |---|---|---|---|---|
-| P6-01 | 合并后冻结八版事实与任务路径清单；重跑 `scripts/generate/Generate-Phase6Plan.py`，固定新契约快照目录/生成规则；登记 I 与 L5 实际状态；[路径清单](phase6-review.md#phase6-path-p6-01) | 本规范；只读核对 I，不改服务 | 两次生成相同、C；当前目录与源码一致 | done |
+| P6-01 | 合并后冻结八版事实与任务路径清单；重跑 `build-tools/release/CatalogGenerator.cs`，固定新契约快照目录/生成规则；登记 I 与 L5 实际状态；[路径清单](phase6-review.md#phase6-path-p6-01) | 本规范；只读核对 I，不改服务 | 两次生成相同、C；当前目录与源码一致 | done |
 | P6-02 | 已在 `src/Logic/V4` 实现 V4 信封、25 种错误详情、分页/批次/计划 DTO、MCP/CLI 映射和单一序列化/校验边界，补齐黄金字节、往返、文化与非法组合测试，现有工具不接线；[路径清单](phase6-review.md#phase6-path-p6-02) | 本规范（不依赖 01） | T；成功/拒绝/失败/partial/unknown 黄金字节，null/键序/关联 ID；无 Siemens 引用 | done |
 | P6-03 | 新建 P/S/N/R/M/L/V/C/W 类型及校验适配层，ToolArguments 按目标 schema；保持原 parser 预算；[路径清单](phase6-review.md#phase6-path-p6-03) | 02 | T；双编码、重复字段、溢出、null/缺省、批次 allowlist/上限正反例 | done |
 | P6-04 | 新建 B 构造 DTO 与按 kind 的联合、嵌套 call 字段；限定新 DTO/转换文件；[路径清单](phase6-review.md#phase6-path-p6-04) | 02 | T；Foundation 窄语法、输出版本/预算、XML 内容等价 | done |
@@ -202,7 +202,7 @@ C# 的每项任务均须编译其受影响精确 SDK 版本；完整八版集成
 | P6-37 | 引擎/Foundation/CLI 的 bundle-root 与严格资源/同级路由；公共 BundleLayout 实现；[路径清单](phase6-review.md#phase6-path-p6-37) | 36 | T；CLI→环境→锚点矩阵，错误根不回退，Foundation release-key/worker 参数保留 | done |
 | P6-38 | Studio 根定位、客户端配置/更新/桥接路径消费新产品表，删除任意布局探测；[路径清单](phase6-review.md#phase6-path-p6-38) | 37 | T Core/GUI/config；配置备份迁移、缺目标引擎拒绝、worktree 禁止更新；G3/J 不变 | done |
 | P6-39 | 引擎/Studio 日志、Python 默认环境及 CLI 私人 workspace/fixture 显式输入；[路径清单](phase6-review.md#phase6-path-p6-39) | 38 | T；只读安装、LocalAppData 不可写、显式 Python、私人默认值消失、并发日志 | done |
-| P6-40 | 更新 `reference/tool-examples`、`src/Engine/ModelContextProtocol/McpPrompts.cs`、`plugin/skill` 及现行文档；运行 `scripts/generate/Generate-ToolUsage.py`、`Generate-ToolCapabilityMatrix.cs`；[路径清单](phase6-review.md#phase6-path-p6-40) | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | done |
+| P6-40 | 更新 `reference/tool-examples`、`src/Engine/ModelContextProtocol/McpPrompts.cs`、`plugin/skill` 及现行文档；运行 `build-tools/release/ToolUsageGenerator.cs`、`Generate-ToolCapabilityMatrix.cs`；[路径清单](phase6-review.md#phase6-path-p6-40) | 35、39、44–48 | 八版示例检索/schema 对齐、lite 每项实参例子；C；不手改嵌入 JSON 和 manifest 哈希 | done |
 | P6-41 | 按规范第 7 节在 `manifest/contracts/v4` 建立逐发布键快照和 CI 检查；现有 Snapshot-ToolContracts/Responses 脚本生成，3.x 基线逐字节归档至 `manifest/history/contracts-v3`，禁止用改哈希掩盖差异；P6-41a 已提前完成 3.x 归档、归档守护与静态 V4 检查；[路径清单](phase6-review.md#phase6-path-p6-41) | 40 | C、T、V；清洁 checkout 两次生成相同；布局扫描命中逐项关闭或注明历史证据 | done |
 | P6-42 | 发布候选完整八版构建/离线/重定位/严格验包及真实行为台账复核，列出实际纳入和延期族；[路径清单](phase6-review.md#phase6-path-p6-42) | 41；纳入族各自 L5，阶段 4 发布门槛也须满足 | L3、V、L5、只读安装；完整包启动/连接冒烟；未验收族不得误切 safe-v4 | todo |
 | P6-43 | **最后任务：发布说明**生成旧→新工具名/参数/产品入口对照，类型/信封/安全策略/目录变更及实际验收状态；[路径清单](phase6-review.md#phase6-path-p6-43) | 42 | 对照表逐版与发布产物一致、链接可执行示例、刷新客户端工具缓存说明；仅文档，无程序转换层 | done |

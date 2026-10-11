@@ -1,0 +1,3442 @@
+{
+  "14sp1": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap14"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap14"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap14"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "15.1": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap15_1"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap15_1"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap15_1"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "16": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap16"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap16"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap16"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "17": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap17"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap17"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap17"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "18": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap18"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap18"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap18"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "19": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap19"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap19"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap19"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "20": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap20"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  },
+  "21": {
+    "AttachOpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
+    },
+    "CloseProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "saveChanges": false,
+      "discardChanges": false,
+      "confirmDiscard": false
+    },
+    "CompileDevice/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "devicePath": [
+        "Device_1"
+      ],
+      "itemPath": []
+    },
+    "CompileHmiDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "HMI_RT_1"
+    },
+    "CompilePlcDiagnostics/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-COMPILE": {
+      "mode": "preview",
+      "confirm": false,
+      "offlinePolicy": "require",
+      "softwarePath": "PLC_1",
+      "password": ""
+    },
+    "CompilePlcSoftware/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "ConnectIsolatedPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectPortal/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false
+    },
+    "ConnectProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": true,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
+    },
+    "ConnectProjectToWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateGsdDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "GSD",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareCatalogDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateHardwareDevice/P6-DEVICE": {
+      "typeIdentifier": "<exact catalog TypeIdentifier>",
+      "deviceName": "Device_1",
+      "family": "S7-1500",
+      "mode": "preview",
+      "confirm": false
+    },
+    "CreateVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "workspaceName": "reviewed",
+      "folderPath": "C:\\authorized-project-copy\\workspace"
+    },
+    "DeletePlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "DisconnectPortal/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "DownloadPlc/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1"
+    },
+    "DownloadPlcToFolder/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "destinationDirectory": "C:\\authorized-project-copy\\card"
+    },
+    "ExportPlcBlock/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "blockPath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "blockPath": "Block_1",
+      "exportPath": "C:\\authorized-project-copy\\documents"
+    },
+    "ExportPlcBlocks/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcBlocksDocuments/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTagTable/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "tagTableName": "Object_1",
+      "exportPath": "C:\\reviewed-exports\\Table_1.xml",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcType/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "typePath": "Object_1",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "ExportPlcTypes/P6-EXPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "groupPath": "",
+      "exportPath": "C:\\reviewed-exports",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop"
+    },
+    "GenerateBlocksFromExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl"
+    },
+    "GetVersionControlStatus/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ImportPlcBlock/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ImportPlcBlockDocuments/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false,
+      "softwarePath": "PLC_1",
+      "importPath": "C:\\authorized-project-copy\\documents",
+      "fileNameWithoutExtension": "Block_1"
+    },
+    "ImportPlcBlockDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "fileNameWithoutExtension": "Object_1"
+    },
+    "ImportPlcBlocksDocuments/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1"
+      ]
+    },
+    "ImportPlcBlocksFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "groupPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcExternalSource/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "ImportPlcProgramFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "sourceDir": "C:\\reviewed-imports",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcTagTable/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "folderPath": ""
+    },
+    "ImportPlcTagTablesFromDirectory/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "dir": "C:\\reviewed-imports",
+      "folderPath": "",
+      "importOrder": [
+        "Object_1.xml"
+      ]
+    },
+    "ImportPlcType/P6-IMPORT": {
+      "softwarePath": "<exact PLC software path>",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "versionPolicy": "exact",
+      "onError": "stop",
+      "compileAfter": false,
+      "importPath": "C:\\reviewed-imports\\Object_1.xml",
+      "groupPath": ""
+    },
+    "ListPlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": ""
+    },
+    "ListVersionControlWorkspaces/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    },
+    "ManagePlcExternalSources/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "action": "list"
+    },
+    "OpenProject/P6-SESSION": {
+      "processId": 1234,
+      "processStartUtc": "2026-10-03T00:00:00Z",
+      "startNew": false,
+      "reuseOpen": false,
+      "upgrade": "reject",
+      "mode": "preview",
+      "confirm": false,
+      "projectPath": "C:\\authorized-project-copy\\Project_1.ap21"
+    },
+    "PlanPlcExternalSourceImport/P6-SOURCE": {
+      "softwarePath": "",
+      "groupPath": "",
+      "mode": "preview",
+      "confirm": false,
+      "overwrite": false,
+      "onError": "stop",
+      "missingPolicy": "reject",
+      "sourceName": "Source_1.scl",
+      "filePath": "C:\\authorized-project-copy\\Source_1.scl",
+      "allowedFilePath": "C:\\authorized-project-copy\\Source_1.scl"
+    },
+    "SaveProject/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false
+    },
+    "SaveProjectCopy/P6-CLOSE": {
+      "mode": "preview",
+      "confirm": false,
+      "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+    },
+    "SynchronizeVersionControlWorkspace/P6-FALLBACK": {
+      "route": "",
+      "retryPolicy": "never",
+      "refreshReadHandle": false,
+      "mode": "preview",
+      "confirm": false
+    }
+  }
+}

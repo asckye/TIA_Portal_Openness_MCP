@@ -18,7 +18,9 @@ def helper(name):
 
 
 def coverage(records, output):
-    """Generate the usage manifest from this run, never from stale transport reports."""
+    """Write standalone evidence; the product manifest belongs to audit-tool-usage."""
+    if output.resolve() == (ROOT / 'manifest/tool-usage-coverage.json').resolve():
+        raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')
     # Use the V4 contracts: version-tools.json still omits the two render tools
     # on Foundation. This audit must not bless or rewrite an unrelated manifest.
     matrix = {key: json.loads((ROOT / f'manifest/contracts/v4/baseline/{key}.json').read_text('utf-8'))['tools']
@@ -65,6 +67,8 @@ def main():
     parser.add_argument('--evidence', type=Path, required=True, help='New worktree directory for this run')
     parser.add_argument('--coverage-output', type=Path, required=True)
     args = parser.parse_args()
+    if args.coverage_output.resolve() == (ROOT / 'manifest/tool-usage-coverage.json').resolve():
+        raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')
     snapshots = helper('Snapshot-ToolResponses')
     resources = snapshots.resources
     if args.engine_host:

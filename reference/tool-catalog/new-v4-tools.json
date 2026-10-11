@@ -1,0 +1,184 @@
+{
+  "ListStandardPackages": {
+    "owner": "P8-31d",
+    "operation": "READ",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "ManageStandardPackage": {
+    "owner": "P8-31d",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "ValidateStandardPackage": {
+    "owner": "P8-31d",
+    "operation": "OFFLINE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "DescribeStandardPackage": {
+    "owner": "P8-31d",
+    "operation": "READ",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "ManageMachineDescription": {
+    "owner": "P8-31d",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "PlanProjectGeneration": {
+    "owner": "P8-31e",
+    "operation": "READ",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "ApplyGenerationPlan": {
+    "owner": "P8-31e",
+    "operation": "WRITE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "GetGenerationRun": {
+    "owner": "P8-31e",
+    "operation": "READ",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "StageImportFiles": {
+    "owner": "P6-67",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "ListStagedImportFiles": {
+    "owner": "P6-67",
+    "operation": "READ",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "CleanupStagedImportFiles": {
+    "owner": "P6-67",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "RenderPlcBlock": {
+    "owner": "P6-48",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  },
+  "RenderPlcProgramAtlas": {
+    "owner": "P6-48",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
+  }
+}

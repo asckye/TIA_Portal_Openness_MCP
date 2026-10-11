@@ -22,6 +22,8 @@
 - 删除、移动或新增文件的任务都要运行 `dotnet run --project build-tools/release -- validate-bundle -Strict -NoBinaries -SkipSourceHashes` 与
   `Check-Repository.py --no-binaries`；两者含必需文件清单，`Package-Release.py` 另有一份同类清单。
 
+- 嵌入目录按 `dotnet run --project build-tools/release -- generate-catalogs`、`dotnet run --project build-tools/release -- generate-tool-usage` 的顺序生成，再构建与捕获；迁移表用 `generate-release-migration`。三个命令的 `-Check` 都逐字节检查。
+
 ## 提交
 
 - 不执行 `git add`、`git commit`、推送、合并或改写历史；改动留在 worktree 中，由审查者核对后提交。

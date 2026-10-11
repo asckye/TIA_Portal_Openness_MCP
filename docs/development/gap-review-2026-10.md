@@ -7,7 +7,7 @@
 
 ## 一、对照西门子官方 Openness API
 
-依据：八版官方 PublicAPI XML（本地 `sdk/`，不随仓库分发），按 `scripts/diagnostics/Audit-VersionTools.py` 的口径过滤，
+依据：八版官方 PublicAPI XML（本地 `sdk/`，不随仓库分发），按 `build-tools/release/CatalogAudits.cs` 的口径过滤，
 与 [Openness 覆盖](../reference/openness-coverage.md)、[机器可读功能证据](../../reference/version-feature-matrix.json)一致。
 
 | 发布键 | 官方领域成员（方法） | 工具数 | 编译后直接引用的方法 |

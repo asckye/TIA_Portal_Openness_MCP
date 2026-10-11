@@ -1,0 +1,12 @@
+{
+  "发现、用法与完整目录调用": "FindTools GetToolUsage ListToolCategories CallTool PreviewToolCall",
+  "环境与会话诊断": "InitializeEnvironment GetEnvironmentDiagnostics GetSessionState GetOpennessWorkerStatus RestartOpennessWorker ValidateAutomationContext",
+  "工程生命周期": "ListPortalProcessProjects ConnectProject ConnectPortal AttachOpenProject DisconnectPortal OpenProject CloseProject SaveProject CreateProject ArchiveSavedProject",
+  "工程和 PLC 定位": "GetProjectInfo GetProjectTree ListDevices GetSoftwareTree GetSoftwareInfo GetPlcBlockHierarchy ListPlcBlocks GetPlcBlockInfo ListPlcTypes GetPlcTypeInfo ListPlcTagTables",
+  "常用 PLC 交换与编译": "ImportPlcBlock ExportPlcBlock ImportPlcType ExportPlcType ImportPlcTagTable ExportPlcTagTable ImportPlcExternalSource GenerateBlocksFromExternalSource CompilePlcDiagnostics WritePlcSclSourceFile",
+  "离线构造与规划": "BuildPlcUdt BuildPlcGlobalDb BuildPlcTagTable PlanArtifactImportOrder ValidatePlcDocumentSchemas",
+  "硬件查找和精确创建": "SearchHardwareCatalog CreateHardwareDevice",
+  "HMI 定位和诊断": "ListHmiScreens DescribeHmiScreen ListHmiTagTables ListHmiTags CompileHmiDiagnostics",
+  "大结果分页与文件交付": "ListExportHandles GetExportContent SaveExportContent DeleteExportHandle ClearExportHandles",
+  "诊断收尾": "GenerateErrorReport"
+}

@@ -152,7 +152,9 @@ CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们
 | `dotnet run --project build-tools/release -- test-suites -Suite source-contracts` | 成员定位、Python 兼容向量、诊断只读、导入安全/选择、prompt 注册、补充读取与版本目录接线、C# 诊断客户端合成夹具及 token 脱敏；至少 148 项、零跳过 |
 | `python scripts/checks/Test-DomainTools.py --source-only` | 所有已迁移领域的工具注册与回归夹具清单一致 |
 
-该 job 还执行 `python scripts/generate/Generate-ToolUsage.py --check`；静态检查自检统一使用
+该 job 还按顺序执行 `dotnet run --project build-tools/release -- generate-catalogs -Check`、
+`dotnet run --project build-tools/release -- generate-tool-usage -Check` 和
+`dotnet run --project build-tools/release -- generate-release-migration -Check`，并运行 `check-tools-list` 及其 `-SelfTest`；静态检查自检统一使用
 `dotnet run --project build-tools/release -- check-repository -SelfTest`，也在 `offline-tests` job 运行。CFC 已包含在上述全领域检查中。V4 脚本调用检查仅由本 job 执行：
 `check-script-tool-calls`、`Check-ScriptToolCalls.py --self-test` 和 `Check-ScriptToolCalls.py`；V4 解码和诊断客户端断言已进入 `source-contracts`，
 `validate.yml` 不重复执行。
@@ -568,4 +570,4 @@ dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge <Bridge.exe> --public-ap
 
 `Test-BridgeSmoke.cs` 只验证 hello、未绑定的 session.state/ping/doctor.run 和退出，不创建原生会话。`Test-Ecosystem.py` 保留在生态测试部分：它需要伴随 Python 的 pytest 与上游源码优先级，默认不配置 live 端点，命令仍为 `bin-build/ecosystem-python/Scripts/python.exe -X utf8 scripts/checks/Test-Ecosystem.py`。其运行环境与开发工具的 Python 迁移分别维护。
 
-历史 `ledger` 渲染与旧 Python 输出逐字节一致（UTF-8 无 BOM、LF）；使用 `--output <file>`。现行 `real-machine-ledger.md` 含 L5 输入和 `Generate-Phase6Plan` 能力块，历史表生成器拒绝覆盖它，能力块仍须保留。`vm_ledger.json` 是冻结数据，不再扫描机器会话记录。
+历史 `ledger` 渲染与旧 Python 输出逐字节一致（UTF-8 无 BOM、LF）；使用 `--output <file>`。现行 `real-machine-ledger.md` 含 L5 输入和 `generate-catalogs` 能力块，历史表生成器拒绝覆盖它，能力块仍须保留。`vm_ledger.json` 是冻结数据，不再扫描机器会话记录。

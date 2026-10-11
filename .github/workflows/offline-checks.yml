@@ -26,6 +26,12 @@ jobs:
           python-version: '3.12'
       - name: Ratchet fingerprints, baseline bytes, guidance fix and TIA capture
         run: dotnet run scripts/checks/Test-StaticCheckParity.cs -- -Python python -Output bin-build/py-cs-parity
+      - name: Product generators produce the committed bytes
+        run: |
+          dotnet run --project build-tools/release -- generate-catalogs -Check
+          dotnet run --project build-tools/release -- generate-tool-usage -Check
+          dotnet run --project build-tools/release -- generate-release-migration -Check
+          dotnet run --project build-tools/release -- check-tools-list
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -59,11 +65,14 @@ jobs:
         with:
           python-version: '3.12'
       - name: Official example catalog must match pinned sources
-        run: python3 scripts/generate/Generate-ToolUsage.py --check
+        run: |
+          dotnet run --project build-tools/release -- generate-catalogs -Check
+          dotnet run --project build-tools/release -- generate-tool-usage -Check
+          dotnet run --project build-tools/release -- generate-release-migration -Check
       - name: Write guard roster and operation categories
         run: |
-          python3 scripts/checks/Check-ToolsList.py --self-test
-          python3 scripts/checks/Check-ToolsList.py
+          dotnet run --project build-tools/release -- check-tools-list -SelfTest
+          dotnet run --project build-tools/release -- check-tools-list
       - name: Script calls must use registered V4 tools
         run: |
           python scripts/checks/Check-ScriptToolCalls.py --self-test
@@ -84,6 +93,7 @@ jobs:
         run: python3 scripts/checks/Test-DomainTools.py --source-only
       - name: Static V4 contract inventories and response coverage
         run: |
+          python3 scripts/checks/Snapshot-ToolContracts.py self-test
           python3 scripts/checks/Snapshot-ToolContracts.py verify
           python3 scripts/checks/Snapshot-ToolResponses.py verify
 

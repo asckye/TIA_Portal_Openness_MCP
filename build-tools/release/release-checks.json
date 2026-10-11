@@ -242,7 +242,7 @@
       ]
     },
     {
-      "path": "scripts/checks/Check-ToolsList.py",
+      "path": "build-tools/release/ToolsListChecks.cs",
       "checks": [
         "toolslist-self-test"
       ]
@@ -462,6 +462,69 @@
       "checks": [
         "dead-tool-references-self-test"
       ]
+    },
+    {
+      "path": "build-tools/release/CatalogData.cs",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "build-tools/release/CatalogGenerator.cs",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "build-tools/release/ToolUsageGenerator.cs",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "build-tools/release/ReleaseMigrationGenerator.cs",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "build-tools/release/CatalogAudits.cs",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "build-tools/release/GeneratorCommands.cs",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
+    },
+    {
+      "path": "reference/tool-catalog/",
+      "checks": [
+        "toolslist-self-test",
+        "offline-suites",
+        "resource-discovery",
+        "engine-contracts"
+      ]
     }
   ],
   "selfTests": [
@@ -581,9 +644,10 @@
     },
     {
       "check": "toolslist-self-test",
-      "script": "scripts/checks/Check-ToolsList.py",
-      "arguments": [
-        "--self-test"
+      "script": "build-tools/release/ToolsListChecks.cs",
+      "command": [
+        "check-tools-list",
+        "-SelfTest"
       ]
     },
     {

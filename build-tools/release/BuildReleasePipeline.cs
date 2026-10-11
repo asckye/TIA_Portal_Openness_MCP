@@ -232,7 +232,7 @@ internal static partial class ReleaseCommands
             writeGuardPassed = ReadSuitePassed(suiteResults, "write-guard");
             RunDotnetSuiteForRelease("crash-evidence", "crash-evidence", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
             crashEvidencePassed = ReadSuitePassed(suiteResults, "crash-evidence");
-            RunBuildSpec("tool-usage", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
+            RunBuildSpec("tool-usage", dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-tool-usage", "-Check"], outputDirectory, runTemp, cliHome, apiRoot);
             RestoreBuildProject(dotnet, Path.Combine(Root, "tests/Repository/TiaMcp.SourceContracts.Tests/TiaMcp.SourceContracts.Tests.csproj"), nuget, outputDirectory, runTemp, cliHome, apiRoot);
             RunDotnetSuiteForRelease("source-contracts", "version-catalog", dotnet, suiteResults, outputDirectory, runTemp, cliHome, apiRoot, nuget);
 

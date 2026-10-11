@@ -145,7 +145,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 <!-- behavior-capabilities:start -->
 
-逐版行为能力由 `Generate-Phase6Plan.py` 从上面的 L5 台账与实际入口目录生成。空入口数组表示该宿主无此族 MCP 入口；不授予原生验收。
+逐版行为能力由 `generate-catalogs` 从上面的 L5 台账与实际入口目录生成。空入口数组表示该宿主无此族 MCP 入口；不授予原生验收。
 
 | releaseKey | family | state | L5 | entries |
 |---|---|---|---|---|

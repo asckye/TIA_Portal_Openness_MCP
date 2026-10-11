@@ -1,11 +1,9 @@
-"""Phase 6 migration groups for the snapshot proofs, derived from the plan generator.
+"""Frozen Phase 6 migration groups for the snapshot proofs, read from reviewed JSON.
 
 A group is the set of 3.x tool names whose source file appendix G assigns to a task; the Foundation releases belong to P6-08 as a whole.
 """
 import json
 import re
-import runpy
-from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
 
@@ -37,12 +35,14 @@ def additions(task, release=None):
 
 @lru_cache(maxsize=1)
 def _generator():
-    return runpy.run_path(str(ROOT / 'scripts/generate/Generate-Phase6Plan.py'), run_name='phase6_groups')
+    return json.loads((ROOT / 'reference/tool-catalog/phase6-groups.json').read_text('utf-8-sig'))
 
 
 def renames():
     """3.x name -> V4 name for every current name (unchanged names map to themselves)."""
-    return dict(_generator()['renames'])
+    table = json.loads((ROOT / 'reference/tool-catalog/v3-v4-renames.json').read_text('utf-8-sig'))
+    table.update({name: name for name in json.loads((ROOT / 'reference/tool-catalog/new-v4-tools.json').read_text('utf-8-sig'))})
+    return table
 
 
 def group(task, release, baseline_names):
@@ -64,11 +64,7 @@ def group(task, release, baseline_names):
         return set(baseline_names) if task == 'P6-08' else set()
     if task == 'P6-08':
         return set()
-    g = _generator()
-    members = defaultdict(set)
-    for name, (path, _method) in g['source_tools'].items():
-        members[g['owners'][path]].add(name)
-    return members[task] & set(baseline_names)
+    return set(_generator().get(task, [])) & set(baseline_names)
 
 
 def names(task):
@@ -92,8 +88,7 @@ def names(task):
             path = ROOT / 'manifest/history/contracts-v3/baseline' / (release + '.json')
             old |= {tool['name'] for tool in json.loads(path.read_text('utf-8-sig'))['tools']}
     else:
-        g = _generator()
-        old = {name for name, (path, _method) in g['source_tools'].items() if g['owners'][path] == task}
+        old = set(_generator().get(task, []))
     return old | {renames().get(name, name) for name in old}
 
 

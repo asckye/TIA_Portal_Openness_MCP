@@ -221,7 +221,8 @@ internal static partial class ReleaseCommands
         RunReleaseCommand(["check-dead-tool-references"], "dead tool references", outputDirectory, runTemp, apiRoot);
         RunReleaseCommand(["validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes", "-PendingRelease", version], "repository bundle validation before build", outputDirectory, runTemp, apiRoot);
         RunReleaseCommand(["check-bundle-layout", "-SelfTest"], "bundle layout self-test", outputDirectory, runTemp, apiRoot);
-        RunReleaseSpec("tool usage catalog", python, [Path.Combine(Root, "scripts/generate/Generate-ToolUsage.py"), "--check"], outputDirectory, runTemp, cliHome, apiRoot);
+        RunReleaseCommand(["generate-catalogs", "-Check"], "product catalogs", outputDirectory, runTemp, apiRoot);
+        RunReleaseCommand(["generate-tool-usage", "-Check"], "tool usage catalog", outputDirectory, runTemp, apiRoot);
         RunReleaseCommand(["test-suites", "-Suite", "source-contracts"], "version catalog wiring", outputDirectory, runTemp, apiRoot);
         RunReleaseSpec("native supervisor safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeLifecycle.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);
         RunReleaseSpec("native MCP safety", python, [Path.Combine(Root, "scripts/checks/Test-NativeMcpSession.py"), "--self-test"], outputDirectory, runTemp, cliHome, apiRoot);

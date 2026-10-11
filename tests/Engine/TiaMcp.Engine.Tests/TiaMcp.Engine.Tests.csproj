@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Remove="Fixtures/PlcRender/generate.cs" />
+  </ItemGroup>
   <Import Project="../../Shared/Xunit.props" />
   <!--
     最小离线自检套件。

@@ -1,0 +1,80 @@
+{
+  "EXCEPTIONS": {
+    "GetExport": [
+      "FILE",
+      "READ",
+      "Reads a parked response in memory; no file I/O."
+    ],
+    "ListExports": [
+      "FILE",
+      "READ",
+      "Lists in-memory response handles; no file I/O."
+    ],
+    "ClearExports": [
+      "FILE",
+      "WRITE",
+      "Deletes in-memory response handles, not files."
+    ],
+    "DeleteExport": [
+      "FILE",
+      "WRITE",
+      "Deletes an in-memory response handle, not a file."
+    ],
+    "SaveAsProject": [
+      "FILE",
+      "SESSION",
+      "TIA Save As switches the open project and MCP binding (P7-07b finding 48)."
+    ]
+  },
+  "NEW_FOUNDATION_TOOLS": {
+    "CreatePlcTag": [
+      "CreatePlcTag",
+      "WRITE",
+      "Creates a tag in the bound offline PLC project."
+    ],
+    "CreatePlcTagTable": [
+      "CreatePlcTagTable",
+      "WRITE",
+      "Creates a tag table in the bound offline PLC project."
+    ],
+    "CreatePlcUserConstant": [
+      "CreatePlcUserConstant",
+      "WRITE",
+      "Creates a user constant in the bound offline PLC project."
+    ],
+    "GetPortalConnectionReadiness": [
+      "DiagnosePortalConnectReadiness",
+      "READ",
+      "Passive connection prerequisites; does not attach."
+    ],
+    "ListPlcSystemConstants": [
+      "ReadPlcSystemConstants",
+      "READ",
+      "Reads system constant declarations from the bound project."
+    ],
+    "ListPlcTags": [
+      "ReadPlcTags",
+      "READ",
+      "Reads tag declarations from the bound project."
+    ],
+    "ListPlcUserConstants": [
+      "ReadPlcUserConstants",
+      "READ",
+      "Reads user constant declarations from the bound project."
+    ],
+    "PlanPlcExternalSourceImport": [
+      "PlanPlcExternalSourceImport",
+      "OFFLINE",
+      "Plans an external source import; no import execution."
+    ]
+  },
+  "WITHDRAWN": {
+    "ConnectProject": "ConnectToProject"
+  },
+  "REBASED_SOURCES": {
+    "ExportPlcBlockDocuments": "ExportAsDocuments",
+    "ExportPlcBlocksDocuments": "ExportBlocksAsDocuments",
+    "ImportPlcBlockDocuments": "ImportFromDocuments",
+    "ImportPlcBlocksDocuments": "ImportBlocksFromDocuments"
+  }
+}

@@ -26,7 +26,7 @@ internal static class ReleaseCommandTable
         new("write-guard", "test-suites -Suite write-guard", "write-guard.log", "minimum 3", "writeGuardChecksPassed"),
         new("crash-evidence", "test-suites -Suite crash-evidence", "crash-evidence-tests.log", "minimum 7", "crashEvidenceChecksPassed"),
         new("updater", "test-suites -Suite updater", "updater.log", "minimum 20", "updaterPassed"),
-        new("tool-usage", "Generate-ToolUsage.py --check", "tool-usage-catalog.log", "exit 0", "toolUsageCatalog"),
+        new("tool-usage", "generate-tool-usage -Check", "tool-usage-catalog.log", "exit 0", "toolUsageCatalog"),
         new("version-catalog", "test-suites -Suite source-contracts", "version-catalog-wiring.log", "registered TRX gate", "versionCatalogWiring"),
         new("offline", "test-suites -Suite offline", "offline.log", "minimum 5153 (Linux 5152)", "offlinePassed"),
         new("offline-v20", "test-suites -Suite offline-v20", "offline-v20.log", "minimum 5153 (Linux 5152)", "offlineV20Passed"),

@@ -16,6 +16,7 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
+        "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" => GeneratorCommand(command, options),
         "check-ratchet" or "check-envelope-rewrite" or "check-adapter-boundary" or "check-bundle-layout" or "check-repository" or "check-dead-tool-references" or "check-tia-features" or "check-script-tool-calls" => StaticCheck(command, options),
         "preflight" => Preflight(options),
         "prerequisites" => Prerequisites(options),
@@ -48,8 +49,9 @@ internal static partial class ReleaseCommands
             ("repository, links, shipped-document links, CHANGELOG version", "check-repository", ["-NoBinaries"]),
             ("repository check self-tests", "check-repository", ["-SelfTest"]),
             ("dead tool references (descriptions and current docs)", "check-dead-tool-references", []),
-            ("phase-6 tables generator", Py, ["-B", "scripts/generate/Generate-Phase6Plan.py", "--shared-host", "--check"]),
-            ("tool usage catalog generator", Py, ["scripts/generate/Generate-ToolUsage.py", "--check"]),
+            ("product catalogs generator", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-catalogs", "-Check"]),
+            ("tool usage catalog generator", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-tool-usage", "-Check"]),
+            ("release migration tables generator", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-release-migration", "-Check"]),
             ("V4 contract snapshots", Py, ["scripts/checks/Snapshot-ToolContracts.py", "verify"]),
             ("V4 response snapshots", Py, ["scripts/checks/Snapshot-ToolResponses.py", "verify"]),
             ("suite runner self-tests", "test-suites", ["-SelfTest"]),
@@ -60,8 +62,6 @@ internal static partial class ReleaseCommands
             ("release tool test suite", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false"]),
             ("parallel pipeline behavior", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Pipeline"])
         };
-        if (File.Exists(Path.Combine(Root, "scripts/generate/Generate-ReleaseToolMigration.py")))
-            checks.Insert(5, ("release migration tables generator", Py, ["scripts/generate/Generate-ReleaseToolMigration.py", "--check"]));
 
         if (options.Get("Tier") == "package") checks = checks.Where(check => check.Name is "repository, links, shipped-document links, CHANGELOG version" or "dead tool references (descriptions and current docs)" or "strict bundle rules" or "release documentation rules").ToList();
         var failures = new List<(string Name, CommandResult Result)>();
@@ -1496,13 +1496,13 @@ internal static partial class ReleaseCommands
 
             if (plan.Includes("native-coverage"))
             {
-            var audit = RunLoggedProcess(python, ["scripts/diagnostics/Audit-VersionTools.py", "--public-api-root", api], logs, "api-audit.log", null);
+            var audit = RunLoggedProcess(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "audit-version-tools", "-PublicApiRoot", api], logs, "api-audit.log", null);
             ProcessRunner.RequireSuccess(audit, "Per-version tool/API audit failed; build full engines first");
             }
             var validationAfter = JsonNode.Parse(validation.GetRawText())!.AsObject();
             if (test && plan.Includes("foundation-transport"))
             {
-                var usage = RunLoggedProcess(python, ["scripts/diagnostics/Audit-ToolUsage.py"], logs, "tool-usage.log", null);
+                var usage = RunLoggedProcess(Dotnet, [typeof(ReleaseCommands).Assembly.Location, "audit-tool-usage"], logs, "tool-usage.log", null);
                 ProcessRunner.RequireSuccess(usage, "All-release usage coverage failed");
                 validationAfter["toolUsageCoverageExecuted"] = true;
             }

@@ -26,6 +26,8 @@ def main():
     parser.add_argument('--evidence', type=Path, required=True)
     parser.add_argument('--coverage-output', type=Path, required=True)
     args = parser.parse_args()
+    if args.coverage_output.resolve() == (ROOT / 'manifest/tool-usage-coverage.json').resolve():
+        raise ValueError('audit-tool-usage is the only writer of manifest/tool-usage-coverage.json; choose a bin-build evidence output')
     args.repo_root, args.transport = ROOT, 'stdio'
     snapshots = helper('Snapshot-ToolResponses')
     contracts = helper('Snapshot-ToolContracts')

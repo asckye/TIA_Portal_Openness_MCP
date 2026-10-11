@@ -47,8 +47,11 @@ adapters. Selecting a release does not upgrade a project.
   checks. [The real-machine ledger](../reference/real-machine-ledger.md) records
   accepted evidence by release and behavior family.
 
-Keep the editable example source in `reference/tool-examples` and regenerate its
-embedded catalog after edits. Do not add separate issue-specific example systems.
+Keep the editable example source in `reference/tool-examples` and the reviewed catalog
+data in `reference/tool-catalog`. After edits, run `dotnet run --project build-tools/release -- generate-catalogs`,
+then `dotnet run --project build-tools/release -- generate-tool-usage`, then build the hosts before capturing
+contracts, responses or usage evidence. Run `dotnet run --project build-tools/release -- generate-release-migration`
+while the 4.0 migration table remains editable. Do not add separate issue-specific example systems.
 Foundation and full-engine schemas remain release-specific.
 
 ## Known limits

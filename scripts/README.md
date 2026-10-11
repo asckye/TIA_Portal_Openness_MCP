@@ -23,10 +23,10 @@
 | 检查 | `TiaMcp.Engine.Harness.exe <engine.exe> test-migration-read-assembly <PublicAPI>`、`test-ecosystem-assembly <PublicAPI>` | 反射迁移程序集和生态工具行为；由 Build-Release 调用，离线缺依赖时可加 `--skip-pdf --skip-companion` |
 | 检查 | [Test-AdapterInputs.cs](../src/Adapters/build/Test-AdapterInputs.cs)、[Test-WorkerIsolation.cs](../src/Adapters/build/Test-WorkerIsolation.cs) | C# file-based app：适配器输入选择与八版 worker 隔离证据 |
 | 检查 | [TiaMcp.ShippedTools.Tests](../tests/Tools/TiaMcp.ShippedTools.Tests/TiaMcp.ShippedTools.Tests.csproj) | Claude Code 写保护钩子的拒绝/放行/审计及真实 stdin/stdout 自检；由 Build-Release 调用 |
-| 生成 | [Generate-ToolUsage.py](generate/Generate-ToolUsage.py)、[Audit-ToolUsage.py](diagnostics/Audit-ToolUsage.py)、[Audit-VersionTools.py](diagnostics/Audit-VersionTools.py) | 统一示例、八版真实 MCP 检索与按版本 API 对照 |
+| 生成 | `dotnet run --project build-tools/release -- generate-catalogs` / `generate-tool-usage` / `generate-release-migration` / `audit-tool-usage` / `audit-version-tools` | 产品目录、嵌入用法、迁移表、八版真实 MCP 检索与按版本 API 对照；生成器支持 `-Check` |
 | 生成 | [Generate-ToolCapabilityMatrix.cs](generate/Generate-ToolCapabilityMatrix.cs) | 从 manifest/tools-list.json 按大类→域生成工具矩阵，支持 `--check`（由 Build-Release 调用） |
 | 生成 | `TiaMcp.Engine.Harness.exe <engine.exe> generate-tools-list <PublicAPI> <output> <package>` | 从已编译程序集反射生成 `manifest/tools-list.json`，验证 ToolExamples / ToolRecipes（由 Build-Release 调用） |
-| 诊断 | [Audit-OpennessCoverage.cs](diagnostics/Audit-OpennessCoverage.cs) | 逐成员对照官方 PublicAPI XML 与引擎源码，保留的 V21 词法诊断；当前八版报告由 Audit-VersionTools.py 生成，不用旧词法计数覆盖当前报告 |
+| 诊断 | [Audit-OpennessCoverage.cs](diagnostics/Audit-OpennessCoverage.cs) | 逐成员对照官方 PublicAPI XML 与引擎源码，保留的 V21 词法诊断；当前八版报告由 audit-version-tools 生成，不用旧词法计数覆盖当前报告 |
 | 诊断 | [Sweep-WrongPathHonesty.cs](diagnostics/Sweep-WrongPathHonesty.cs) | 手动诊断：给只读工具喂不存在的路径，找出误报成功的工具；需真实工程与 TIA；`--bundle-root <bundle> --release-key <key>` 选择随包 FoundationHost |
 | 诊断 | [Workbench 诊断包](../src/Studio/Gui/Services/TiaExitEvidenceCollector.cs) | 一键包含最近 24 小时的 TIA/Windows 退出事件、TIA 进程清单、dump 文件清单和原生导出日志；不会复制 dump 内容，诊断包需按隐私说明审阅后再分享 |
 | 诊断 | [LibraryRenameProbe](diagnostics/LibraryRenameProbe/README.md) | VM 双击 `LibraryRenameProbe.exe` 运行隔离测试；离线自检包含监督器场景；用 `dotnet run scripts/diagnostics/LibraryRenameProbe/BuildPackage.cs -- --sdk-directory <V21 net48 PublicAPI>` 构建单独 ZIP |

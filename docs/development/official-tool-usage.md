@@ -59,7 +59,7 @@ its assets, `calls.json`, `sequences.json`, and `metadata.json`. Call records ar
 separate for `plc-foundation` and `full-engine`; operation entries are argument
 overrides on the tool's base example. Release format tokens expand at retrieval
 (`.ap15_1` for V15.1, `.ap20` for V20, etc.). Run
-`scripts/generate/Generate-ToolUsage.py` to embed it; `--check` detects drift.
+`build-tools/release/ToolUsageGenerator.cs` to embed it; `--check` detects drift.
 Retrieval needs no checkout/network and executes no example.
 
 The retained official corpus contains 89 complete documents and 381 indexed code
