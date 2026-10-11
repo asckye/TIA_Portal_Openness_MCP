@@ -87,6 +87,8 @@ internal static class FastSuites
         environment["TIA_MCP_TEST_SHARD_PLAN"] = plan;
         environment["TIA_MCP_TEST_CASE_TIMINGS"] = Path.Combine(directory, "case-timings.tsv");
         File.Delete(environment["TIA_MCP_TEST_CASE_TIMINGS"]!);
+        environment["TIA_MCP_TEST_PRODUCER_TIMINGS"] = Path.Combine(directory, "producer-timings.tsv");
+        File.Delete(environment["TIA_MCP_TEST_PRODUCER_TIMINGS"]!);
         var trx = Path.Combine(directory, name + ".trx"); File.Delete(trx);
         environment["TIA_MCP_TEST_PHASE_TIMINGS"] = Path.Combine(directory, "phase-timings.json");
         var assembly = CheckAllBuild.TestAssembly(root, unit);

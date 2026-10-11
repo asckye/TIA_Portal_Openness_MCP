@@ -187,7 +187,22 @@ public sealed class CheckAllRound3Tests
     [Fact]
     public void RestoreCoversTransitiveReferencesAfterLocalGlobalPropertyOverrides()
     {
-        using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath; var repo = Repository.FindRoot();
+        using var fixture = new OfflineFixtures();
+        VerifyTransitiveRestore(fixture.DirectoryPath);
+    }
+
+    [Fact]
+    public void LongCleanLayoutKeepsGeneratedInputsIncremental()
+    {
+        var ordinary = Path.Combine(Repository.FindRoot(), "bin-build", "restore-long-" + new string('0', 32));
+        using var fixture = new OfflineFixtures("restore-long-" + new string('x', Math.Max(0, 118 - ordinary.Length)));
+        Assert.True(fixture.DirectoryPath.Length >= 118);
+        VerifyTransitiveRestore(fixture.DirectoryPath, verifyInvalidation: true);
+    }
+
+    private static void VerifyTransitiveRestore(string root, bool verifyInvalidation = false)
+    {
+        var repo = Repository.FindRoot();
         void Write(string relative, string content) { var path = Path.Combine(root, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, content); }
         foreach (var file in new[] { "CheckAll.Build.props", "CheckAll.Build.targets", "check-build/TiaMcp.CheckBuild.csproj", "check-build/CheckBuildTasks.cs" })
             Write("build-tools/release/" + file, File.ReadAllText(Path.Combine(repo, "build-tools/release", file)));
@@ -226,5 +241,15 @@ public sealed class CheckAllRound3Tests
         result = CheckAllBuild.Run(root, builds, Path.Combine(root, "warm"), "dotnet", null, Path.Combine(root, "offline.config"), 1, false);
         Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
         Assert.Equal(timestamps, assemblies.Select(File.GetLastWriteTimeUtc));
+        if (verifyInvalidation)
+        {
+            var project = Path.Combine(root, leafProject);
+            File.WriteAllText(project, File.ReadAllText(project).Replace("<AssemblyName>leaf</AssemblyName>", "<AssemblyName>leaf</AssemblyName><AssemblyVersion>2.0.0.0</AssemblyVersion>", StringComparison.Ordinal));
+            Write("leaf/Value.cs", "public class Value {\n#if ONE\npublic const int Number = 3;\n#else\npublic const int Number = 4;\n#endif\n}\n");
+            result = CheckAllBuild.Run(root, builds, Path.Combine(root, "changed"), "dotnet", null, Path.Combine(root, "offline.config"), 1, false);
+            Assert.True(result.ExitCode == 0, result.StandardOutput + result.StandardError);
+            Assert.Equal(new[] { 3, 3, 3, 4, 4 }, assemblies.Select(path => (int)System.Reflection.Assembly.Load(File.ReadAllBytes(path)).GetType("Value")!.GetField("Number")!.GetRawConstantValue()!).Order());
+            Assert.All(assemblies, path => Assert.Equal(new Version(2, 0, 0, 0), System.Reflection.Assembly.Load(File.ReadAllBytes(path)).GetName().Version));
+        }
     }
 }

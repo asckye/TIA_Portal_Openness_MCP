@@ -48,26 +48,29 @@ internal static class AdapterSourceClosureTests
         var engineCode=code.Where(x=>!x.Key.EndsWith("/OpennessAdapter.cs",StringComparison.Ordinal)
             && !x.Key.Contains("/Native/Studio/",StringComparison.Ordinal)
             && x.Value.Contains("class PlcFoundationEngine",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
-        var all=Methods(engineCode.Values);
+        var engineMethods=engineCode.ToDictionary(x=>x.Key,x=>Methods(new[]{x.Value}));
+        var all=engineMethods.Values.SelectMany(methods=>methods).ToHashSet(StringComparer.Ordinal);
         foreach(var op in WorkerOperations.Names) check(all.Contains(op),"Worker operation exists in actual adapter source inventory: "+op);
         // Simulated source omissions must be caught for every operation-bearing module.
         foreach(var entry in engineCode)
         {
-            var owned=Methods(new[]{entry.Value}).Intersect(WorkerOperations.Names,StringComparer.Ordinal).ToArray();
+            var owned=engineMethods[entry.Key].Intersect(WorkerOperations.Names,StringComparer.Ordinal).ToArray();
             if(owned.Length==0) continue;
-            var without=Methods(engineCode.Where(x=>x.Key!=entry.Key).Select(x=>x.Value));
+            var without=engineMethods.Where(x=>x.Key!=entry.Key).SelectMany(x=>x.Value).ToHashSet(StringComparer.Ordinal);
             check(owned.Any(op=>!without.Contains(op)),"Omitting operation module is detected: "+entry.Key);
         }
         var studioCode=code.Where(x=>x.Key.Contains("/Native/Studio/",StringComparison.Ordinal)
             && !x.Key.EndsWith("/StudioAdapter.cs",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
+        var studioMethods=studioCode.ToDictionary(x=>x.Key,x=>Methods(new[]{x.Value}));
+        var studioAll=studioMethods.Values.SelectMany(methods=>methods).ToHashSet(StringComparer.Ordinal);
         foreach(var operation in new[]{"Connect","Disconnect","GetState","OpenProject","GetProjectInfo","SaveProject","CloseProject",
             "ListDevices","FindPlcDeviceId","ListBlocks","ExportBlocks","ImportBlocks","ListTagTables","ListTags","CompileDevice",
             "ListWorkspaces","CreateWorkspace","MapProject","GetStatus","Sync"})
-            check(Methods(studioCode.Values).Contains(operation),"Studio operation exists in native inventory: "+operation);
+            check(studioAll.Contains(operation),"Studio operation exists in native inventory: "+operation);
         foreach(var entry in studioCode)
         {
-            var owned=Methods(new[]{entry.Value});
-            var without=Methods(studioCode.Where(x=>x.Key!=entry.Key).Select(x=>x.Value));
+            var owned=studioMethods[entry.Key];
+            var without=studioMethods.Where(x=>x.Key!=entry.Key).SelectMany(x=>x.Value).ToHashSet(StringComparer.Ordinal);
             check(owned.Except(without).Any(),"Omitting Studio native module is detected: "+entry.Key);
         }
     }

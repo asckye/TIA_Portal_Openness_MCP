@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit.Sdk;
 
@@ -35,6 +39,7 @@ namespace TiaMcp.Engine.Tests.Shared
             // Legacy suites block on async work. Keep them off xUnit's synchronization context.
             return Task.Run(() =>
             {
+                var clock = Stopwatch.StartNew();
                 var rows = new List<object[]>();
                 void Add(bool passed, string message, string? reason = null)
                 {
@@ -42,6 +47,9 @@ namespace TiaMcp.Engine.Tests.Shared
                 }
                 try { run((ok, message) => Add(ok, message), (message, reason) => Add(false, message, reason)); }
                 catch (Exception ex) { Add(false, "Suite threw: " + ex); }
+                if (Environment.GetEnvironmentVariable("TIA_MCP_TEST_PRODUCER_TIMINGS") is string path)
+                    File.AppendAllText(path, Convert.ToBase64String(Encoding.UTF8.GetBytes(name)) + "\t" +
+                        clock.Elapsed.TotalSeconds.ToString("R", CultureInfo.InvariantCulture) + "\t" + rows.Count + "\n");
                 return rows;
             }).GetAwaiter().GetResult();
         }

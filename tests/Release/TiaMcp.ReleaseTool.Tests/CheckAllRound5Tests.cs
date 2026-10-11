@@ -8,6 +8,39 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class CheckAllRound5Tests
 {
     [Fact]
+    public void ProducerTelemetryPreservesEveryRowIncludingFailureAndSkip()
+    {
+        using var fixture = new OfflineFixtures();
+        var path = Path.Combine(fixture.DirectoryPath, "producer.tsv");
+        var previous = Environment.GetEnvironmentVariable("TIA_MCP_TEST_PRODUCER_TIMINGS");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_TEST_PRODUCER_TIMINGS", path);
+            var rows = TiaMcp.Engine.Tests.Shared.CheckSuite.Run("producer", (check, skip) => {
+                check(true, "passed"); check(false, "failed"); skip("skipped", "reason");
+            }).Select(row => (TiaMcp.Engine.Tests.Shared.CheckRow)row[0]).ToArray();
+            Assert.Equal(new[] { "passed", "failed", "skipped" }, rows.Select(row => row.Message));
+            Assert.Equal(new[] { 1, 2, 3 }, rows.Select(row => row.Number));
+            Assert.True(rows[0].Passed); Assert.False(rows[1].Passed); Assert.Equal("reason", rows[2].SkipReason);
+            var fields = Assert.Single(File.ReadAllLines(path)).Split('\t');
+            Assert.Equal("producer", System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(fields[0])));
+            Assert.True(double.Parse(fields[1], System.Globalization.CultureInfo.InvariantCulture) >= 0); Assert.Equal("3", fields[2]);
+        }
+        finally { Environment.SetEnvironmentVariable("TIA_MCP_TEST_PRODUCER_TIMINGS", previous); }
+    }
+
+    [Fact]
+    public void CleanCheckoutKeepsRootGrowthWithinTwentyFourCharacters()
+    {
+        using var fixture = new OfflineFixtures();
+        var normal = fixture.DirectoryPath;
+        var clean = ReleaseCommands.CheckAllSnapshotPath(normal, "12345678");
+        Assert.True(clean.Length - normal.Length <= ReleaseCommands.CheckAllCleanRootMargin);
+        ReleaseCommands.RequireCheckAllCleanRootHeadroom(normal, normal + new string('x', 24));
+        Assert.Throws<ReleaseException>(() => ReleaseCommands.RequireCheckAllCleanRootHeadroom(normal, normal + new string('x', 25)));
+    }
+
+    [Fact]
     public void FileAppCacheInvalidatesOnActualSourceImportAndSdkChanges()
     {
         using var fixture = new OfflineFixtures(); var root = fixture.DirectoryPath;

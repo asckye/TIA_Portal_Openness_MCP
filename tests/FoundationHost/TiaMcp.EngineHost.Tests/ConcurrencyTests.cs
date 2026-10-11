@@ -106,39 +106,43 @@ public sealed partial class PipelineTests
     [InlineData("open"), InlineData("closed"), InlineData("expired"), InlineData("restarted"), InlineData("unknown"), InlineData("active")]
     public void HttpStagingOwnersRetainCleanupAdmissionAfterSessionEnd(string state)
     {
-        var root = Path.Combine(AppContext.BaseDirectory, "staging-lifecycle-" + Guid.NewGuid().ToString("N"));
-        using var owner = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession("session-a");
-        using var peer = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession("session-b");
-        using var first = new TiaMcp.Logic.ModelContextProtocol.ImportStagingStore(root, "21", owner);
-        using var current = new TiaMcp.Logic.ModelContextProtocol.ImportStagingStore(root, "21", peer);
-        var batch = first.Stage(new[] { new TiaMcp.Logic.ModelContextProtocol.StagedTextFile {
-            FileName = "F.scl", Kind = "scl", Content = "FUNCTION F : Void\nBEGIN\nEND_FUNCTION" } }, false);
-        string id = (string)batch["batchId"]!, folder = (string)batch["directory"]!;
-        Assert.Equal("session-a", (string?)batch["mcpSessionId"]);
-        IDisposable? active = state == "active" ? owner.EnterRequest() : null;
+        var root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "staging-lifecycle-" + Guid.NewGuid().ToString("N"));
         try
         {
-            if (state is "closed" or "expired" or "active") owner.Dispose();
-            if (state is "unknown" or "restarted")
-                foreach (string name in new[] { ".staging-batch.json", ".staging-batch.previous.json" })
-                {
-                    string path = Path.Combine(folder, name); var manifest = JsonNode.Parse(File.ReadAllText(path))!;
-                    manifest["hostInstanceId"] = Guid.NewGuid().ToString("N");
-                    if (state == "restarted") manifest["hostStartedUtc"] = DateTimeOffset.UtcNow.AddYears(-1).ToString("O");
-                    File.WriteAllText(path, manifest.ToJsonString());
-                }
-            bool ended = state is "closed" or "expired" or "restarted";
-            Assert.Equal(ended ? "ended" : state == "unknown" ? "unknown" : "live-other",
-                (string?)current.List()["batches"]![0]!["ownerState"]);
-            foreach (bool preview in new[] { true, false })
-                if (ended) current.Cleanup(id, preview);
-                else Assert.Throws<ArgumentException>(() => current.Cleanup(id, preview));
-            if (state == "active")
+            using var owner = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession("session-a");
+            using var peer = new TiaMcp.Logic.ModelContextProtocol.ImportStagingSession("session-b");
+            using var first = new TiaMcp.Logic.ModelContextProtocol.ImportStagingStore(root, "21", owner);
+            using var current = new TiaMcp.Logic.ModelContextProtocol.ImportStagingStore(root, "21", peer);
+            var batch = first.Stage(new[] { new TiaMcp.Logic.ModelContextProtocol.StagedTextFile {
+                FileName = "F.scl", Kind = "scl", Content = "FUNCTION F : Void\nBEGIN\nEND_FUNCTION" } }, false);
+            string id = (string)batch["batchId"]!, folder = (string)batch["directory"]!;
+            Assert.Equal("session-a", (string?)batch["mcpSessionId"]);
+            IDisposable? active = state == "active" ? owner.EnterRequest() : null;
+            try
             {
-                active!.Dispose(); active = null; current.Cleanup(id, false); Assert.False(Directory.Exists(folder));
+                if (state is "closed" or "expired" or "active") owner.Dispose();
+                if (state is "unknown" or "restarted")
+                    foreach (string name in new[] { ".staging-batch.json", ".staging-batch.previous.json" })
+                    {
+                        string path = Path.Combine(folder, name); var manifest = JsonNode.Parse(File.ReadAllText(path))!;
+                        manifest["hostInstanceId"] = Guid.NewGuid().ToString("N");
+                        if (state == "restarted") manifest["hostStartedUtc"] = DateTimeOffset.UtcNow.AddYears(-1).ToString("O");
+                        File.WriteAllText(path, manifest.ToJsonString());
+                    }
+                bool ended = state is "closed" or "expired" or "restarted";
+                Assert.Equal(ended ? "ended" : state == "unknown" ? "unknown" : "live-other",
+                    (string?)current.List()["batches"]![0]!["ownerState"]);
+                foreach (bool preview in new[] { true, false })
+                    if (ended) current.Cleanup(id, preview);
+                    else Assert.Throws<ArgumentException>(() => current.Cleanup(id, preview));
+                if (state == "active")
+                {
+                    active!.Dispose(); active = null; current.Cleanup(id, false); Assert.False(Directory.Exists(folder));
+                }
             }
+            finally { active?.Dispose(); }
         }
-        finally { active?.Dispose(); }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
 
     private static RequestContext<CallToolRequestParams> Request(string name) => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) {

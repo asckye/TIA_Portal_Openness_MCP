@@ -33,11 +33,15 @@ dotnet run --project build-tools/release -- check-all -PublicApiRoot <SDK-root> 
 ```
 
 `-Clean` 在当前 worktree 的 `bin-build` 内建立保留现有源码修改的 detached checkout，并复用构建缓存；
+干净 checkout 根目录比原 worktree 最多增加 24 个字符，入口和自检都校验这个余量；暂存生命周期夹具在仓库的
+`bin-build` 下创建自有短目录并清理，避免隔离程序集目录消耗产品的 MAX_PATH 余量。
 `-Cold` 先清理已列入构建图的输出，记录冷构建耗时。暖运行不加 `-Clean`，在同一 worktree 内保留 `obj` 和 `bin` 做增量构建，
 不恢复或重写缓存输出。构建复用 SDK 的引用准备目标收集实际节点及全局属性，包含目标执行时修改的引用属性、框架协商和 NuGet 加入的传递引用。
 每轮 Restore 后重新求值，节点与属性集合稳定后才开始一次编译；失败或四轮后仍不稳定立即停止。节点标识在求值前按项目路径及实际全局属性字典计算，区分显式全局值与项目的同值默认值，也区分同目录中的不同项目。
 每个项目/属性组合使用固定的 obj/bin 目录，适配器显式关闭的 Directory.Build 导入也由本入口统一启用；编译前另核对节点标识和完整 SHA-256 收据，冲突立即失败。
 较长项目名的生成 editorconfig 使用同一中间目录内的短文件名，避免 Windows 增量检查把超过 MAX_PATH 的输入误判为缺失而重复编译。
+同样缩短超限的 AssemblyInfo、SourceLink 及编译/程序集属性输入缓存文件名；缓存仍使用 SDK 计算的原始哈希，
+内容相同时保持时间戳，项目/全局属性身份和输出目录不变。
 构建或生成失败立即停止全集并写出失败报告，不能继续使用旧输出。运行时按 MSBuild 返回的实际路径复制到原发现布局，文件内容不变时不重写；注册套件用对应变体的准确 TargetPath 执行。
 release CLI 保留已经启动的普通目录副本，避免覆盖外层启动器持有的 DLL；检查命令使用私有 driver，release-tool 套件使用准确的变体程序集。
 Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应的隔离编译变体。新增 suite-output-parity 比较每个套件变体普通构建与隔离构建的文件清单，内容缺失即失败。普通构建清单按源码和构建属性的输入哈希缓存，测试结果不缓存。
@@ -55,6 +59,8 @@ cpu-plan.json 记录核掩码、队列容量、依赖、预测成本及 companio
 `bin-build/check-timings` 保存套件的用例耗时历史，先用单进程 TRX 初始化，再用执行边界的实际耗时更新（含旧 theory 的 producer 时间）。
 计划按耗时从长到短分配到最轻的分片，目标为 55 秒执行加约 5 秒启动；可序列化 theory 可逐例拆分，延迟枚举的旧 CheckTheory 保留完整 producer。
 未知用例继续使用确定性分片键，不省略执行；分片计划及预测耗时保存在套件结果目录。`process-load.json` 和每项计时记录同期本轮及其他进程 CPU 增量、不可读取进程数；一秒采样可能漏记很短的进程。
+各分片的 `producer-timings.tsv` 记录旧 CheckSuite producer 的名称（Base64）、执行秒数和原始行数，
+用于区分延迟枚举的实际工作与逐行 xUnit 的耗时；不缓存检查结果，也不改变执行顺序。
 合并后仍检查原套件最低通过数、最高跳过数和失败数。
 
 首次等价验证可加 `-ProveEquivalence`，执行原有单进程测试后比较完整测试身份多重集合及结果；此验证运行计入耗时。

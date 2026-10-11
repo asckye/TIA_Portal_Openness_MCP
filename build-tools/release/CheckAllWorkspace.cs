@@ -4,10 +4,25 @@ namespace TiaMcp.ReleaseTool;
 
 internal static partial class ReleaseCommands
 {
+    internal const int CheckAllCleanRootMargin = 24;
+
+    internal static string CheckAllSnapshotPath(string original, string id)
+    {
+        var snapshot = Path.GetFullPath(Path.Combine(original, "bin-build/c", id));
+        RequireCheckAllCleanRootHeadroom(original, snapshot);
+        return snapshot;
+    }
+
+    internal static void RequireCheckAllCleanRootHeadroom(string original, string snapshot)
+    {
+        if (Path.GetFullPath(snapshot).TrimEnd('\\', '/').Length > Path.GetFullPath(original).TrimEnd('\\', '/').Length + CheckAllCleanRootMargin)
+            throw new ReleaseException("Clean checkout root exceeds the normal root by more than " + CheckAllCleanRootMargin + " characters: " + snapshot);
+    }
+
     private static int CheckAllSnapshot(Options options)
     {
         var original = Root;
-        var snapshot = Path.GetFullPath(Path.Combine(original, "bin-build/c", Guid.NewGuid().ToString("N")[..8]));
+        var snapshot = CheckAllSnapshotPath(original, Guid.NewGuid().ToString("N")[..8]);
         var output = Path.GetFullPath(options.Get("OutputDirectory", Path.Combine(original, "bin-build/check-all/clean-" + Guid.NewGuid().ToString("N"))));
         Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
         // Git for Windows' clone transport invokes sh even for a local worktree,

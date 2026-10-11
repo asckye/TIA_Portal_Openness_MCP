@@ -14,12 +14,34 @@
     <!-- MSBuild's incremental input check treats editorconfig paths over
          MAX_PATH as missing, even when Roslyn successfully writes them. -->
     <GeneratedMSBuildEditorConfigFile Condition="'$(GeneratedMSBuildEditorConfigFile)' == '' and $([System.String]::Copy('$(IntermediateOutputPath)$(MSBuildProjectName).GeneratedMSBuildEditorConfig.editorconfig').Length) &gt; 259">$(IntermediateOutputPath)check-all.editorconfig</GeneratedMSBuildEditorConfigFile>
+    <GeneratedAssemblyInfoFile Condition="$([System.String]::Copy('$(GeneratedAssemblyInfoFile)').Length) &gt; 259 or ('$(GeneratedAssemblyInfoFile)' == '' and $([System.String]::Copy('$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo$(DefaultLanguageSourceExtension)').Length) &gt; 259)">$(IntermediateOutputPath)check-all.AssemblyInfo$(DefaultLanguageSourceExtension)</GeneratedAssemblyInfoFile>
     <OutDir>$(OutputPath)</OutDir>
     <TargetDir>$(OutputPath)</TargetDir>
     <TargetPath>$(TargetDir)$(TargetFileName)</TargetPath>
     <ProjectDepsFilePath>$(TargetDir)$(AssemblyName).deps.json</ProjectDepsFilePath>
     <ProjectRuntimeConfigFilePath>$(TargetDir)$(AssemblyName).runtimeconfig.json</ProjectRuntimeConfigFilePath>
   </PropertyGroup>
+  <Target Name="ShortenCheckSourceLinkPath" AfterTargets="_SetSourceLinkFilePath"
+          Condition="'$(CheckAllVariant)' != '' and $([System.String]::Copy('$(_SourceLinkFilePath)').Length) &gt; 259">
+    <PropertyGroup><_SourceLinkFilePath>$(IntermediateOutputPath)check-all.sourcelink.json</_SourceLinkFilePath></PropertyGroup>
+  </Target>
+  <Target Name="ShortenCheckAssemblyInfoCache" AfterTargets="CreateGeneratedAssemblyInfoInputsCacheFile"
+          Condition="'$(CheckAllVariant)' != '' and $([System.String]::Copy('$(GeneratedAssemblyInfoInputsCacheFile)').Length) &gt; 259">
+    <ReadLinesFromFile File="$(GeneratedAssemblyInfoInputsCacheFile)"><Output TaskParameter="Lines" ItemName="_CheckAssemblyInfoHash" /></ReadLinesFromFile>
+    <PropertyGroup><GeneratedAssemblyInfoInputsCacheFile>$(IntermediateOutputPath)check-all.AssemblyInfoInputs.cache</GeneratedAssemblyInfoInputsCacheFile></PropertyGroup>
+    <WriteLinesToFile File="$(GeneratedAssemblyInfoInputsCacheFile)" Lines="@(_CheckAssemblyInfoHash)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup><FileWrites Include="$(GeneratedAssemblyInfoInputsCacheFile)" /></ItemGroup>
+  </Target>
+  <Target Name="ShortenCheckCompileInputCache" AfterTargets="_GenerateCompileDependencyCache"
+          Condition="'$(CheckAllVariant)' != '' and $([System.String]::Copy('$(IntermediateOutputPath)$(MSBuildProjectFile).CoreCompileInputs.cache').Length) &gt; 259">
+    <PropertyGroup><_CheckCompileInputCache>$(IntermediateOutputPath)check-all.CoreCompileInputs.cache</_CheckCompileInputCache></PropertyGroup>
+    <WriteLinesToFile File="$(_CheckCompileInputCache)" Lines="$(CoreCompileDependencyHash)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <CustomAdditionalCompileInputs Remove="$(IntermediateOutputPath)$(MSBuildProjectFile).CoreCompileInputs.cache" />
+      <CustomAdditionalCompileInputs Include="$(_CheckCompileInputCache)" />
+      <FileWrites Include="$(_CheckCompileInputCache)" />
+    </ItemGroup>
+  </Target>
   <Target Name="SeedCheckRestoreLock" BeforeTargets="_GenerateRestoreGraphProjectEntry" Condition="'$(CheckAllVariant)' != '' and Exists('$(_CheckAllOriginalLockPath)') and !Exists('$(NuGetLockFilePath)')">
     <Copy SourceFiles="$(_CheckAllOriginalLockPath)" DestinationFiles="$(NuGetLockFilePath)" />
   </Target>

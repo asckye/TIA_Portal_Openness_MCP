@@ -30,7 +30,7 @@ public sealed class StagedGenerationTests
         internal bool Created, DeviceCreated;
         internal string? TransitionFault;
         internal string BindingGeneration = "1";
-        internal readonly Worker Worker;
+        internal Worker Worker;
         internal readonly PlanningFixture Planner;
         internal readonly Session Session;
         internal int Approvals, StepWaits;
@@ -44,6 +44,7 @@ public sealed class StagedGenerationTests
         internal readonly HashSet<string> Tables = new(), Groups = new();
         internal bool CompileFails, RecordRace, RecordIo;
         private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private Catalog catalog = null!;
         internal Fixture(string release, int maximumSteps = 10000, bool newProject = false)
         {
             Release = release; Project = Path.Combine(Root, "project", "Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
@@ -57,22 +58,34 @@ public sealed class StagedGenerationTests
                 Planner.Machine.Target.Project.Directory = Path.Combine(Root, "project"); Planner.Machine.Target.Project.Name = "Fixture";
             }
             Worker = new Worker(this);
-            Configuration.ReleaseKey = release; Configuration.Worker = Worker;
-            var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
-                new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), release, null,
-                    () => new ApprovalSettings(true, 1), (pending, _, _) => {
-                        StepWaits++;
-                        return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Source requested a second approval."));
-                    })).ToArray();
-            Catalog? catalog = null;
             Session = new Session(() => Root, Call, name => catalog.Find(name) ?? Ordinary(name), (pending, _, _) => {
                 Approvals++; pending.Validate(); OnApproval?.Invoke();
                 return Task.FromResult(new ApprovalOutcome(pending, ApprovalDisabled, ApprovalReason));
             }, () => Time, () => Cancelled, maximumSteps: maximumSteps);
-            var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", release, executionSession: Session), release, null,
+            ConfigureWorker();
+        }
+        private void ConfigureWorker()
+        {
+            Configuration.ReleaseKey = Release; Configuration.Worker = Worker;
+            var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
+                new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), Release, null,
+                    () => new ApprovalSettings(true, 1), (pending, _, _) => {
+                        StepWaits++;
+                        return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Source requested a second approval."));
+                    })).ToArray();
+            var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", Release, executionSession: Session), Release, null,
                 () => new ApprovalSettings(true, 1), (pending, _, _) => { StepWaits++; return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Record requested a second approval.")); });
             var registered = tools.Append(record).ToArray(); catalog = new Catalog(registered);
             Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, registered), () => false, new HashSet<string>());
+        }
+        internal void Reconnect()
+        {
+            var previous = Worker;
+            Worker = new Worker(this);
+            foreach (var source in previous.Sources) Worker.Sources.Add(source.Key, source.Value);
+            Worker.Objects.AddRange(previous.Objects);
+            BindingGeneration = (int.Parse(BindingGeneration) + 1).ToString();
+            ConfigureWorker();
         }
         internal JsonObject Plan(string[]? adopt = null)
         {
@@ -607,7 +620,9 @@ public sealed class StagedGenerationTests
     public void UnknownExistingObjectNeedsExplicitAdoptionAndGetsAnAdoptedWitness(string release)
     {
         using var f = new Fixture(release); f.Failure = "unknown"; var result = f.Apply(); Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
-        f.Failure = null; f.Worker.Uncertain = false; f.Worker.Sources.Clear();
+        Assert.Equal("SESSION_RESET_REQUIRED", (string?)Host.SessionPrecheckRefusal("ImportPlcExternalSource")?.StructuredContent?["error"]?["code"]);
+        f.Failure = null; f.Reconnect(); f.Worker.Sources.Clear();
+        Assert.Null(Host.SessionPrecheckRefusal("ImportPlcExternalSource"));
         f.Worker.Objects.Add(new PlcExternalSourceObject { Kind = "block", Name = "FB_Motor", Path = "FB_Motor", ModifiedDate = new DateTime(2026, 10, 10) });
         var plan = f.Plan(); Assert.Contains(plan["conflicts"]!.AsArray(), c => (string?)c!["key"] == "PLC1/block/FB_Motor" && (string?)c["reason"] == "unknown-outcome");
         var adopted = f.Plan(new[] { "PLC1/block/FB_Motor" }); Assert.Contains(adopted["skipped"]!.AsArray(), s => (string?)s!["key"] == "PLC1/block/FB_Motor" && (string?)s["reason"] == "adopted");
