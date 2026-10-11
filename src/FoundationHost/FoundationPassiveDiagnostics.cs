@@ -14,7 +14,7 @@ namespace TiaMcp.FoundationHost;
 internal static class FoundationPassiveDiagnostics
 {
     internal const string Contract = "legacy-host-passive-diagnostics-v1";
-    internal const int MaxTools = 256;
+    internal const int MaxTools = 1024;
     internal readonly record struct InstallationLocation(string? Path, string? Source);
     internal static JsonObject Readiness(string releaseKey) => Readiness(releaseKey, (string?)null, (string?)null);
     internal static JsonObject Readiness(string releaseKey, string? hostApiDirectory, string? hostApiDirectorySource)

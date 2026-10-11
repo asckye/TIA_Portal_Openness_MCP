@@ -124,7 +124,6 @@
     <Compile Include="../Shared/TransactionExecution.cs" Link="Shared/TransactionExecution.cs" />
     <Compile Include="../Shared/EngineeringServicesTools.cs" Link="Shared/EngineeringServicesTools.cs" />
     <Compile Include="../Shared/EngineeringServicesPortService.cs" Link="Shared/EngineeringServicesPortService.cs" />
-    <Compile Include="../Shared/EngineeringToolContract.cs" Link="Shared/EngineeringToolContract.cs" />
     <Compile Include="../Shared/SecurityToolContract.cs" Link="Shared/SecurityToolContract.cs" />
     <Compile Include="../Shared/ReflectionTools.cs" Link="Shared/ReflectionTools.cs" />
     <Compile Include="../Shared/ReflectionPortService.cs" Link="Shared/ReflectionPortService.cs" />

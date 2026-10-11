@@ -221,7 +221,6 @@
     <PackageReference Include="Sharp7" Version="1.1.84" />
     <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
     <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
-    <Compile Include="../../../src/Shared/EngineeringToolContract.cs" Link="EngineeringToolContract.cs" />
     <Compile Include="../../../src/Shared/SecurityToolContract.cs" Link="SecurityToolContract.cs" />
     <Compile Include="../../../src/Shared/ReflectionTools.cs" Link="ReflectionTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs" Link="UnifiedEngineeringTools.cs" />

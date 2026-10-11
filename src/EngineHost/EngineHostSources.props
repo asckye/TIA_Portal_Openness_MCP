@@ -31,7 +31,6 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TransactionExecution.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringServicesTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringServicesPortService.cs" />
-    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/EngineeringToolContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SecurityToolContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ReflectionTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ReflectionPortService.cs" />
