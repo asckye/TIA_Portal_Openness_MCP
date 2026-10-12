@@ -30,7 +30,8 @@ public sealed class AnalyzerWarningTests
         var inside = Path.Combine(tree.Root, "bin-build", "analyzer-warnings", "observed");
         AnalyzerWarnings.RememberDirectory(tree.Root, inside);
         Assert.Equal("bin-build/analyzer-warnings/observed\n", File.ReadAllText(Path.Combine(tree.Root, "bin-build/analyzer-warnings/last-directory.txt")));
-        Assert.Throws<ReleaseException>(() => AnalyzerWarnings.LocalDirectory(@"\\server\share\reports"));
+        // UNC network paths exist only on Windows; elsewhere the same text is an ordinary relative name.
+        if (OperatingSystem.IsWindows()) Assert.Throws<ReleaseException>(() => AnalyzerWarnings.LocalDirectory(@"\\server\share\reports"));
         Assert.Throws<ReleaseException>(() => AnalyzerWarnings.LocalDirectory("https://example.invalid/reports"));
         // Source paths and reviewed data stay inside the repository.
         Assert.Throws<ReleaseException>(() => AnalyzerWarnings.RepositoryPath(tree.Root, reports));
@@ -146,6 +147,22 @@ public sealed class AnalyzerWarningTests
             new System.Text.Json.Nodes.JsonObject { ["kind"] = "inSource", ["status"] = status });
         File.WriteAllText(path, data.ToJsonString());
         Assert.Equal(expected, AnalyzerWarnings.Collect(tree.Root, reports).Entries.Length);
+    }
+
+    [Fact]
+    public void ReportsOutsideTheCheckoutAreCollectedButTheirSourcesStayInside()
+    {
+        // check-all -Clean compiles a detached checkout and collects the reports from the caller's output directory.
+        using var outside = new StaticTree(); using var tree = new StaticTree();
+        var external = Path.Combine(outside.Root, "check-all", "build", "analyzer-warnings");
+        Directory.CreateDirectory(Path.GetDirectoryName(external)!);
+        Directory.Move(Reports(tree), external);
+        Assert.Single(AnalyzerWarnings.Collect(tree.Root, external).Entries);
+        var receipt = Path.Combine(external, "a.inputs");
+        var foreign = outside.Write("src/C.cs", Source);
+        File.WriteAllText(receipt, File.ReadAllText(receipt).Replace(Path.Combine(tree.Root, "src/C.cs"), foreign));
+        Assert.Throws<ReleaseException>(() => AnalyzerWarnings.Collect(tree.Root, external));
+        Assert.Throws<ReleaseException>(() => AnalyzerWarnings.ReportFile(external, Path.Combine(outside.Root, "a.sarif")));
     }
 
     [Fact]

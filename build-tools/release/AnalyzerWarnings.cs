@@ -48,6 +48,19 @@ internal static class AnalyzerWarnings
         return full;
     }
 
+    // Report and receipt files are read from the report directory itself, wherever it is; a linked file could
+    // substitute another build's data.
+    internal static void ReportFile(string directory, string path)
+    {
+        var full = Path.GetFullPath(path);
+        var prefix = directory.TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+        if (!full.StartsWith(prefix, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            throw new ReleaseException("Analyzer report leaves its directory: " + path);
+        for (var part = new FileInfo(full) as FileSystemInfo; part != null && part.FullName.Length >= prefix.Length - 1;
+            part = part is FileInfo file ? file.Directory : ((DirectoryInfo)part).Parent)
+            if (part.LinkTarget != null) throw new ReleaseException("Analyzer report path contains a symbolic link: " + path);
+    }
+
     internal static string RepositoryPath(string root, string value)
     {
         if (Uri.TryCreate(value, UriKind.Absolute, out var uri))
@@ -133,6 +146,8 @@ internal static class AnalyzerWarnings
         if (!Directory.Exists(directory)) throw new ReleaseException("Analyzer reports missing; run the existing build first: " + directory);
         var reports = Directory.GetFiles(directory, "*.sarif").Order(StringComparer.Ordinal).ToArray();
         if (reports.Length == 0) throw new ReleaseException("No compiler analyzer reports: " + directory);
+        var insideRoot = directory.StartsWith(Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar,
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         var sources = new HashSet<string>(StringComparer.Ordinal);
         var coverage = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         var entries = new List<AnalyzerWarning>();
@@ -146,9 +161,10 @@ internal static class AnalyzerWarnings
         }
         foreach (var report in reports)
         {
-            Relative(report);
+            ReportFile(directory, report);
             var inputs = Path.ChangeExtension(report, ".inputs");
-            Relative(inputs);
+            ReportFile(directory, inputs);
+            if (insideRoot) { Relative(report); Relative(inputs); }
             if (!File.Exists(inputs)) throw new ReleaseException("Analyzer input receipt missing: " + inputs);
             var rows = File.ReadAllLines(inputs);
             var contextParts = rows.FirstOrDefault()?.Split('|');

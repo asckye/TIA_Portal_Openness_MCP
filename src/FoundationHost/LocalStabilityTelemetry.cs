@@ -28,7 +28,7 @@ internal sealed class LocalStabilityTelemetry : IDisposable
             File.AppendAllText(path, JsonSerializer.Serialize(new {
                 atUtc = DateTime.UtcNow, pid = process.Id, image = Environment.ProcessPath,
                 handleCount = process.HandleCount, threads = process.Threads.Count,
-                processorAffinity = unchecked((ulong)process.ProcessorAffinity.ToInt64()).ToString("X"), processorCount = Environment.ProcessorCount,
+                processorAffinity = Affinity(process), processorCount = Environment.ProcessorCount,
                 threadPool = new { threads = ThreadPool.ThreadCount, pending = ThreadPool.PendingWorkItemCount, completed = ThreadPool.CompletedWorkItemCount,
                     availableWorkers, availableIo, minimumWorkers, minimumIo, maximumWorkers, maximumIo },
                 gc = new { gc.HeapSizeBytes, gc.TotalCommittedBytes, gc.FragmentedBytes, gc.MemoryLoadBytes, gc.PauseTimePercentage,
@@ -36,5 +36,8 @@ internal sealed class LocalStabilityTelemetry : IDisposable
             }) + "\n");
         }
     }
+    // Processor affinity exists only on Windows and Linux; other platforms record no mask.
+    private static string? Affinity(Process process) => OperatingSystem.IsWindows() || OperatingSystem.IsLinux()
+        ? unchecked((ulong)process.ProcessorAffinity.ToInt64()).ToString("X") : null;
     public void Dispose() => timer.Dispose();
 }

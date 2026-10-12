@@ -299,23 +299,6 @@
     },
     {
       "rule": "CA1416",
-      "path": "src/FoundationHost/LocalStabilityTelemetry.cs",
-      "line": 31,
-      "column": 54,
-      "endLine": 31,
-      "endColumn": 79,
-      "message": "This call site is reachable on all platforms. \u0027Process.ProcessorAffinity\u0027 is supported on: \u0027linux\u0027, \u0027windows\u0027.",
-      "member": "TiaMcp . FoundationHost/LocalStabilityTelemetry/Sample( )",
-      "anchor": "process . ProcessorAffinity ",
-      "fingerprint": "d3990f12c3e63d2c80dd42d67f5b6e7163f515bee3a596e6f359b59084287d3c",
-      "reason": "windows-platform-boundary",
-      "retirement": "",
-      "contexts": [
-        "variants|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
-      ]
-    },
-    {
-      "rule": "CA1416",
       "path": "src/Logic/Siemens/Engineering.cs",
       "line": 121,
       "column": 49,
