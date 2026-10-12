@@ -52,6 +52,13 @@ jobs:
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression, generation basic package and MCP SDK version policy
         run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite offline -Suite offline-v20 -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: offline-test-results
+          path: |
+            bin-build/test-results*/
+            bin-build/check-all/
 
   source-contracts:
     # Source contracts: .NET 10 and Python, without Siemens SDKs or TIA.
@@ -99,6 +106,13 @@ jobs:
           python3 scripts/checks/Snapshot-ToolContracts.py self-test
           python3 scripts/checks/Snapshot-ToolContracts.py verify
           python3 scripts/checks/Snapshot-ToolResponses.py verify
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: source-contract-test-results
+          path: |
+            bin-build/test-results*/
+            bin-build/check-all/
 
   studio-tests:
     runs-on: windows-latest
@@ -113,9 +127,14 @@ jobs:
       - name: Build Studio
         run: dotnet build src/Studio/Gui/TiaOpenness.Gui.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
       - name: Studio client functional tests
-        run: dotnet test tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
+        run: dotnet test tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }} --logger "trx;LogFileName=studio-core.trx" --results-directory bin-build/ci-test-results/studio-core
       - name: Studio WPF functional tests
-        run: dotnet test tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }}
+        run: dotnet test tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo -p:TiaSharedAdapterPaths=${{ matrix.shared-adapter-paths }} --logger "trx;LogFileName=studio-gui.trx" --results-directory bin-build/ci-test-results/studio-gui
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: studio-test-results-${{ matrix.shared-adapter-paths }}
+          path: bin-build/ci-test-results/
 
   foundation-transport:
     runs-on: windows-latest
@@ -143,3 +162,11 @@ jobs:
           done
       - name: Six real STDIO hosts and isolated HTTP sessions
         run: python scripts/checks/Test-FoundationTransport.py --fixture tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: foundation-transport-test-results
+          path: |
+            bin-build/test-results*/
+            bin-build/check-all/
+            bin-build/ci-foundation-results/

@@ -3,10 +3,11 @@ using System.Text;
 using TiaMcp.BuildCommon;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace TiaMcp.ReleaseTool.Tests;
 
-public sealed class CheckAllRound3Tests
+public sealed class CheckAllRound3Tests(ITestOutputHelper output)
 {
     private static CommandResult Passed() => new(0, "passed\n", "");
 
@@ -88,8 +89,17 @@ public sealed class CheckAllRound3Tests
         ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, ["build", Path.Combine(root, "fake.csproj"), "-c", "Release", "-m:1", "-nodeReuse:false",
             "-p:RestoreConfigFile=" + Path.Combine(root, "offline.config"), "-p:UseSharedCompilation=false"], root), "fake compiler fixture");
         var output = Path.Combine(root, "failed-run");
+        using var current = Process.GetCurrentProcess();
+        ulong available = OperatingSystem.IsWindows() ? unchecked((ulong)current.ProcessorAffinity.ToInt64())
+            : throw new PlatformNotSupportedException("Windows check-all fixture");
+        int reserved = CheckAffinity.PhysicalCores().Where(core => (core.Mask & available) != 0)
+            .Min(core => System.Numerics.BitOperations.PopCount(core.Mask & available));
         var result = ProcessRunner.Run(dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", "-PublicApiRoot", root,
-            "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-BuildParallelism", "1", "-MaxParallelism", "16", "-OutputDirectory", output], Repository.FindRoot());
+            "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
+            "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-StabilityCores", reserved.ToString(),
+            "-BuildParallelism", "1", "-MaxParallelism", "16", "-OutputDirectory", output], Repository.FindRoot());
+        output.WriteLine("Fake build: logical cores={0}, available mask={1:X}, reserved cores={2}", Environment.ProcessorCount, available, reserved);
+        output.WriteLine(result.StandardOutput + result.StandardError);
         Assert.Equal(1, result.ExitCode);
         var checks = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(output, "report.json")))!["checks"]!.AsArray();
         Assert.Equal(new[] { "generate-catalogs", "generate-tool-usage", "build-once", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
@@ -104,6 +114,16 @@ public sealed class CheckAllRound3Tests
         var options = Options.Parse(["-CompanionPython", python], new HashSet<string>());
         Assert.Equal(python, ReleaseCommands.CheckAllCompanionPython(options));
         Assert.Throws<ReleaseException>(() => ReleaseCommands.CheckAllCompanionPython(Options.Parse(["-CompanionPython", python + ".missing"], new HashSet<string>())));
+    }
+
+    [Fact]
+    public void FourLogicalCoresWithSmtRejectTheDefaultSingleCoreReservationBeforeBuild()
+    {
+        int defaultReservation = Math.Min(8, Math.Max(1, 4 / 3));
+        Assert.Equal(1, defaultReservation);
+        var error = Assert.Throws<ReleaseException>(() => CheckAffinity.SplitPreferred(0xf, defaultReservation, [0x3, 0xc]));
+        Assert.Equal(64, error.ExitCode);
+        Assert.Equal((0x3UL, 0xcUL), CheckAffinity.SplitPreferred(0xf, 2, [0x3, 0xc]));
     }
 
     [Fact]
@@ -146,14 +166,43 @@ public sealed class CheckAllRound3Tests
         using var fixture = new OfflineFixtures(); using var process = Process.GetCurrentProcess();
         ulong available = unchecked((ulong)process.ProcessorAffinity.ToInt64()); ulong mask = available & (~available + 1);
         string Print() => "[Diagnostics.Process]::GetCurrentProcess().ProcessorAffinity.ToInt64(); $env:TIA_MCP_PLC_TOOLS_PYTHON";
-        string Encoded(string command) => Convert.ToBase64String(Encoding.Unicode.GetBytes(command));
-        var child = Print() + "; & powershell.exe -NoProfile -NonInteractive -EncodedCommand " + Encoded(Print());
-        var parent = Print() + "; & powershell.exe -NoProfile -NonInteractive -EncodedCommand " + Encoded(child);
+        var grandchild = Path.Combine(fixture.DirectoryPath, "grandchild.ps1");
+        var child = Path.Combine(fixture.DirectoryPath, "child.ps1");
+        var parent = Path.Combine(fixture.DirectoryPath, "parent.ps1");
+        File.WriteAllText(grandchild, Print());
+        File.WriteAllText(child, Print() + "; & powershell.exe -NoProfile -NonInteractive -File '" + grandchild.Replace("'", "''") + "'");
+        File.WriteAllText(parent, Print() + "; & powershell.exe -NoProfile -NonInteractive -File '" + child.Replace("'", "''") + "'");
         using var affinity = CheckAffinity.Enter(mask);
-        var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Encoded(parent)], fixture.DirectoryPath,
-            new Dictionary<string, string?> { ["TIA_MCP_PLC_TOOLS_PYTHON"] = "companion python.exe" }, timeoutMilliseconds: 30000);
+        var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-File", parent], fixture.DirectoryPath,
+            new Dictionary<string, string?> { ["TIA_MCP_PLC_TOOLS_PYTHON"] = "companion python.exe" }, timeoutMilliseconds: 30000, waitForDescendants: true);
         Assert.True(result.ExitCode == 0, result.StandardError);
         Assert.Equal(Enumerable.Range(0, 3).SelectMany(_ => new[] { mask.ToString(), "companion python.exe" }), result.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    [Fact]
+    public void AffinityJobWaitsForOwnedDescendantsAfterTheirParentExits()
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows job object verification");
+        using var fixture = new OfflineFixtures(); using var current = Process.GetCurrentProcess();
+        ulong available = unchecked((ulong)current.ProcessorAffinity.ToInt64()); ulong mask = available & (~available + 1);
+        string Quote(string text) => "'" + text.Replace("'", "''") + "'";
+        var child = Path.Combine(fixture.DirectoryPath, "owned-child.ps1");
+        var ready = Path.Combine(fixture.DirectoryPath, "child-ready.txt");
+        var parent = Path.Combine(fixture.DirectoryPath, "owned-parent.ps1");
+        File.WriteAllText(child, "$PID | Set-Content -LiteralPath " + Quote(ready) + "; Start-Sleep -Seconds 60");
+        File.WriteAllText(parent, "$child = Start-Process powershell.exe -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile', '-NonInteractive', '-File', " +
+            Quote("\"" + child + "\"") + "); while (!(Test-Path -LiteralPath " + Quote(ready) + ")) { Start-Sleep -Milliseconds 25 }; $child.Id");
+        using var affinity = CheckAffinity.Enter(mask);
+        try
+        {
+            var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-File", parent], fixture.DirectoryPath,
+                timeoutMilliseconds: 30000, waitForDescendants: true);
+            Assert.True(result.ExitCode == 0, result.StandardError);
+            int pid = int.Parse(result.StandardOutput.Trim());
+            Assert.Equal(pid, int.Parse(File.ReadAllText(ready).Trim()));
+            Assert.Throws<ArgumentException>(() => Process.GetProcessById(pid));
+        }
+        catch (Exception ex) { output.WriteLine(ex.ToString()); throw; }
     }
 
     [Fact]

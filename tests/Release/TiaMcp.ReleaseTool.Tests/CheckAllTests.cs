@@ -90,6 +90,48 @@ public sealed class CheckAllTests
         Assert.NotEqual(TestShard.CostKey("Theory", "Check", "case one", false), TestShard.CostKey("Theory", "Check", "case two", false));
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(4)]
+    [InlineData(8)]
+    public void SensitiveClassesRemainExclusiveEvenWithoutHistoryOrWithOldCaseAssignments(int ordinaryCount)
+    {
+        var classes = TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Classes.Keys.Concat(["Unmeasured", "UnmeasuredTheory"]).ToArray();
+        var cases = classes.SelectMany(cls => Enumerable.Range(0, 7).Select(row => (Class: cls, Key: "T:" + cls + ".Case(" + row + ")"))).ToArray();
+        var oldPlan = cases.Take(100).ToDictionary(test => test.Key, _ => 0);
+        int count = ordinaryCount + 1;
+        var shards = Enumerable.Range(0, count).Select(index => cases.Where(test =>
+            TestShard.Assign(test.Class, test.Key, test.Key, count, oldPlan, true) == index).ToArray()).ToArray();
+        Assert.Equal(cases.OrderBy(test => test.Key), shards.SelectMany(shard => shard).OrderBy(test => test.Key));
+        Assert.Equal(cases.Length, shards.Sum(shard => shard.Length));
+        Assert.All(shards[^1], test => Assert.True(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Contains(test.Class)));
+        Assert.All(shards.Take(ordinaryCount).SelectMany(shard => shard), test => Assert.False(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Contains(test.Class)));
+        Assert.Equal(TiaMcp.Engine.Tests.Shared.TimeSensitiveTests.Classes.Count * 7, shards[^1].Length);
+        Assert.Throws<InvalidOperationException>(() => TestShard.Assign("Unmeasured", "T:unknown", "fallback", count,
+            new Dictionary<string, int> { ["C:Unmeasured"] = ordinaryCount }, true));
+    }
+
+    [Fact]
+    public void SensitivePartitionIsScheduledAndMergedUnderTheOriginalSuiteGate()
+    {
+        using var fixture = new OfflineFixtures();
+        var catalog = DotnetSuites.LoadCatalog(Path.Combine(Repository.FindRoot(), "tests/test-suites.json"), Repository.FindRoot());
+        foreach (string name in new[] { "foundation", "foundation-api", "worker-robustness", "worker-channel", "release-tool" })
+        {
+            var suite = catalog[name]!.AsObject(); string original = suite.ToJsonString();
+            var jobs = new List<CheckJob>();
+            FastSuites.AddJobs(jobs, Repository.FindRoot(), name, suite, fixture.DirectoryPath, "dotnet", 4, null, [],
+                history: Path.Combine(fixture.DirectoryPath, "history", name));
+            var shards = jobs.Where(job => job.Name.Contains("-shard-", StringComparison.Ordinal)).ToArray();
+            Assert.Equal(5, shards.Length); Assert.True(shards[^1].Exclusive);
+            Assert.Equal(shards.Select(job => job.Name), jobs[^1].Dependencies);
+            Assert.True(jobs[^1].AllowFailedDependencies); Assert.Equal(original, suite.ToJsonString());
+            var plan = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.DirectoryPath, name, "shard-plan.json")))!;
+            Assert.Equal(4, (int)plan["exclusiveShard"]!);
+            Assert.Contains("EngineHttpSessionTests", plan["timeSensitiveClasses"]!.AsObject().Select(pair => pair.Key));
+        }
+    }
+
     [Fact]
     public void VariantsHaveIndependentBuildPathsAndKeepEveryExistingFilter()
     {

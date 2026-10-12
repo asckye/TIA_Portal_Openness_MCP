@@ -17,6 +17,19 @@ internal sealed record CheckBuild
 
 internal static class CheckAllBuild
 {
+    internal static IEnumerable<CheckBuild> WithTestFixtures(IEnumerable<CheckBuild> builds)
+    {
+        var units = builds.ToList();
+        // ReferenceOutputAssembly=false fixtures are compiled transitively, but
+        // only traversal roots receive runtime projection receipts. Their tests
+        // discover the ordinary fixture paths in a fresh checkout.
+        if (units.Any(unit => Path.GetFileNameWithoutExtension(unit.Project) is "TiaMcp.FoundationHost.Tests" or "TiaMcp.WorkerChannel.Tests"))
+            units.Add(new("tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj", "", []));
+        if (units.Any(unit => Path.GetFileNameWithoutExtension(unit.Project) == "TiaMcp.FoundationHost.Tests"))
+            units.Add(new("tests/WorkerChannel/TiaMcp.EngineWorker.FaultFixture/TiaMcp.EngineWorker.FaultFixture.csproj", "", ["-p:TiaMcpEngineWorkerFaultFixture=true"]));
+        return units.GroupBy(unit => unit.Project + "|" + unit.Variant + "|" + string.Join(";", unit.Properties), StringComparer.Ordinal).Select(group => group.First());
+    }
+
     internal static CheckBuild Suite(JsonObject suite)
     {
         var properties = DotnetSuites.BuildArguments(suite["arguments"]!.AsArray().Select(a => a!.GetValue<string>())).ToArray();

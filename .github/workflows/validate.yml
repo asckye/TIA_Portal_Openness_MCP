@@ -39,7 +39,7 @@ jobs:
         run: |
           # Stop at the first failing command; otherwise only the last exit code fails the step.
           $PSNativeCommandUseErrorActionPreference = $true
-          dotnet test tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj -c Release --nologo
+          dotnet test tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj -c Release --nologo --logger "trx;LogFileName=release-tool.trx" --results-directory bin-build/ci-test-results/release-tool
           dotnet run --project build-tools/release -- preflight
           dotnet run --project build-tools/release -- release -DocumentationOnly
           dotnet run --project build-tools/release -- run-release-build -Tier full -DryRun
@@ -58,3 +58,12 @@ jobs:
         run: dotnet run --project build-tools/release -- test-suites -Suite source-contracts
       - name: Build launcher and test .NET 10 configuration page
         run: dotnet run --project build-tools/release -- build-configurator -Test
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: validate-bundle-test-results
+          path: |
+            bin-build/ci-test-results/
+            bin-build/test-results*/
+            bin-build/check-all/
+            bin-build/preflight-*/

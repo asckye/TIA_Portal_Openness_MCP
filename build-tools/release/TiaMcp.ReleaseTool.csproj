@@ -6,9 +6,11 @@
     <RootNamespace>TiaMcp.ReleaseTool</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);TIA_RELEASE_TEST_SCHEDULING</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="check-build/**" />
+    <Compile Include="../../tests/Shared/TimeSensitiveTests.cs" Link="TimeSensitiveTests.cs" />
     <ProjectReference Include="check-build/TiaMcp.CheckBuild.csproj" OutputItemType="_CheckBuildTask" />
     <EmbeddedResource Include="dead-reference-policy.json" />
     <ProjectReference Include="../common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />

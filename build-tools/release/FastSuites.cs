@@ -47,7 +47,8 @@ internal static class FastSuites
             ["LOCALAPPDATA"] = Path.Combine(isolation, "local"), ["APPDATA"] = Path.Combine(isolation, "roaming"),
             ["TIA_MCP_TEST_PIPE_SCOPE"] = Guid.NewGuid().ToString("N"), ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = api,
             ["TIA_MCP_TEST_PRODUCT_ROOT"] = null, ["TIA_MCP_TEST_SHARD_COUNT"] = null, ["TIA_MCP_TEST_SHARD_INDEX"] = null,
-            ["TIA_MCP_TEST_SHARD_ASSEMBLY"] = null, ["NuGetAudit"] = "false", ["TIA_MCP_CHECK_SYSTEM_TEMP_ROOT"] = SystemTemp
+            ["TIA_MCP_TEST_SHARD_ASSEMBLY"] = null, ["TIA_MCP_TEST_SHARD_PLAN"] = null, ["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = null,
+            ["NuGetAudit"] = "false", ["TIA_MCP_CHECK_SYSTEM_TEMP_ROOT"] = SystemTemp
         };
     }
 
@@ -57,7 +58,8 @@ internal static class FastSuites
         var unit = CheckAllBuild.Suite(suite);
         var directory = Path.Combine(output, name);
         history ??= Path.Combine(root, "bin-build/check-timings");
-        var plan = SuiteCosts.Prepare(name, directory, history, baseline, shards); shards = plan.Costs.Length;
+        bool reserveSensitive = TimeSensitiveTests.ReserveShard(unit.Project);
+        var plan = SuiteCosts.Prepare(name, directory, history, baseline, shards, reserveSensitive); shards = plan.Costs.Length;
         var paths = Enumerable.Range(0, shards).Select(i => Path.Combine(directory, "shard-" + i, name + ".trx")).ToArray();
         var sequential = baseline;
         if (prove)
@@ -69,8 +71,8 @@ internal static class FastSuites
         for (int i = 0; i < shards; i++)
         {
             var index = i; var jobName = jobPrefix + name + "-shard-" + i; shardNames.Add(jobName);
-            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path), dependencies,
-                Exclusive: name is "worker-robustness" or "worker-channel") { EstimatedSeconds = plan.Costs[index] + 5 });
+            jobs.Add(new(jobName, () => RunShard(root, name, suite, Path.GetDirectoryName(paths[index])!, dotnet, api, unit, index, shards, extra, plan.Path, reserveSensitive), dependencies,
+                Exclusive: reserveSensitive && index == shards - 1 || name is "worker-robustness" or "worker-channel") { EstimatedSeconds = plan.Costs[index] + 5 });
         }
         // Merge runs even after a failed test process, so partial totals/failures remain
         // reviewable. The caller schedules merges in a second wave without prerequisites.
@@ -78,7 +80,7 @@ internal static class FastSuites
     }
 
     internal static CommandResult RunShard(string root, string name, JsonObject suite, string directory, string dotnet, string? api,
-        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null)
+        CheckBuild unit, int index, int count, string[]? extra = null, string? plan = null, bool reserveSensitive = false)
     {
         Directory.CreateDirectory(directory);
         var environment = EnvironmentFor(directory, api);
@@ -86,6 +88,7 @@ internal static class FastSuites
         environment["TIA_MCP_TEST_SHARD_COUNT"] = count.ToString(); environment["TIA_MCP_TEST_SHARD_INDEX"] = index.ToString();
         environment["TIA_MCP_TEST_SHARD_ASSEMBLY"] = Path.GetFileNameWithoutExtension(unit.Project);
         environment["TIA_MCP_TEST_SHARD_PLAN"] = plan;
+        environment["TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD"] = reserveSensitive ? "1" : null;
         environment["TIA_MCP_TEST_CASE_TIMINGS"] = Path.Combine(directory, "case-timings.tsv");
         File.Delete(environment["TIA_MCP_TEST_CASE_TIMINGS"]!);
         environment["TIA_MCP_TEST_PRODUCER_TIMINGS"] = Path.Combine(directory, "producer-timings.tsv");
@@ -134,12 +137,18 @@ internal static class FastSuites
         int parallelism = CpuParallelism(root, options);
         int count = Positive(options, "Shards", 8);
         var names = options.All("Suite");
+        var builds = CheckAllBuild.WithTestFixtures(names.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject()))).ToArray();
         if (!options.Has("NoBuild"))
         {
-            var build = CheckAllBuild.Run(root, names.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject())).ToArray(), Path.Combine(output, "build"), dotnet,
-                options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT"), options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG"), parallelism, false);
-            if (build.ExitCode != 0) return build;
-            ReleaseCommands.PrepareCheckAllRuntime(root, names.Select(name => CheckAllBuild.Suite(catalog[name]!.AsObject())), Path.Combine(output, "build/runtime-paths.tsv"));
+            var build = CheckAllBuild.Run(root, builds, Path.Combine(output, "build"), dotnet,
+                options.Get("PublicApiRoot") ?? Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT"), options.Get("NuGetConfig") ?? Environment.GetEnvironmentVariable("TIA_MCP_OFFLINE_NUGET_CONFIG"), Positive(options, "BuildParallelism", parallelism), false);
+            if (build.ExitCode != 0)
+            {
+                File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
+                { exitCode = build.ExitCode, build = "failed", error = build.StandardError, output = build.StandardOutput }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
+                return build;
+            }
+            ReleaseCommands.PrepareCheckAllRuntime(root, builds, Path.Combine(output, "build/runtime-paths.tsv"));
         }
         var jobs = new List<CheckJob>();
         foreach (var name in names)
@@ -152,6 +161,8 @@ internal static class FastSuites
         }
         var rows = CheckScheduler.Run(jobs.Where(job => !job.Name.EndsWith("-gate", StringComparison.Ordinal)).ToArray(), parallelism, Path.Combine(output, "logs"));
         var gates = CheckScheduler.Run(jobs.Where(job => job.Name.EndsWith("-gate", StringComparison.Ordinal)).Select(job => job with { Dependencies = [] }).ToArray(), parallelism, Path.Combine(output, "gates"));
+        File.WriteAllText(Path.Combine(output, "report.json"), System.Text.Json.JsonSerializer.Serialize(new
+        { passed = gates.Count(row => row.Status == "passed"), failed = gates.Count(row => row.Status != "passed"), checks = rows.Concat(gates) }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
         return new(rows.Concat(gates).All(row => row.Status == "passed") ? 0 : 1, $"Suites: {gates.Count(row => row.Status == "passed")} passed; {gates.Count(row => row.Status != "passed")} failed. Evidence: {output}\n", "");
     }
 }

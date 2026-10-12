@@ -134,7 +134,7 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
-    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false)
+    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false, bool waitForDescendants = false)
     {
         var commandArguments = arguments.ToArray();
         var affinity = CheckAffinity.Current;
@@ -165,7 +165,7 @@ internal static class ProcessRunner
             // the job limit. Otherwise runtime thread/GC sizing can use all cores.
             start.Environment["DOTNET_PROCESSOR_COUNT"] = System.Numerics.BitOperations.PopCount(cpuMask).ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
-        foreach (var key in new[] { "TIA_MCP_TEST_SHARD_COUNT", "TIA_MCP_TEST_SHARD_INDEX", "TIA_MCP_TEST_SHARD_ASSEMBLY", "TIA_MCP_TEST_SHARD_PLAN", "TIA_MCP_TEST_CASE_TIMINGS" }) start.Environment.Remove(key);
+        foreach (var key in new[] { "TIA_MCP_TEST_SHARD_COUNT", "TIA_MCP_TEST_SHARD_INDEX", "TIA_MCP_TEST_SHARD_ASSEMBLY", "TIA_MCP_TEST_SHARD_PLAN", "TIA_MCP_TEST_CASE_TIMINGS", "TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD" }) start.Environment.Remove(key);
         if (environment is not null)
             foreach (var (key, value) in environment)
                 if (value is null) start.Environment.Remove(key); else start.Environment[key] = value;
@@ -175,6 +175,8 @@ internal static class ProcessRunner
         catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
         CheckLoad.Current?.Register(process.Id);
         using var affinityJob = affinity is { } mask ? CheckAffinity.Assign(process, mask) : null;
+        using var ownedChildren = waitForDescendants ? CheckAffinity.CompleteOnDispose(
+            affinityJob ?? throw new ReleaseException("Descendant cleanup requires an owned affinity job"), TiaMcp.BuildCommon.Repository.FindRoot()) : null;
         StreamWriter? logWriter = null;
         if (logPath != null)
         {
@@ -203,11 +205,13 @@ internal static class ProcessRunner
         }
         if (timeoutMilliseconds is { } timeout && !process.WaitForExit(timeout))
         {
-            process.Kill(entireProcessTree: true);
+            if (waitForDescendants) CheckAffinity.StopAndWait(affinityJob!, TiaMcp.BuildCommon.Repository.FindRoot());
+            else process.Kill(entireProcessTree: true);
             process.WaitForExit();
             throw new ReleaseException($"{executable} timed out after {timeout} ms.");
         }
         process.WaitForExit();
+        if (waitForDescendants) CheckAffinity.StopAndWait(affinityJob!, TiaMcp.BuildCommon.Repository.FindRoot());
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
         return new CommandResult(process.ExitCode, output, error);

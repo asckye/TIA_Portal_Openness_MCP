@@ -1,4 +1,5 @@
 extern alias foundationhost;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -468,6 +469,8 @@ public sealed class PlcWorkerRobustnessTests
     private sealed class PlcTimeoutScope : IDisposable
     {
         internal readonly Foundation.WorkerClient Worker;
+        private readonly string fixtureDirectory = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "bin-build", "plc-timeout-" + Guid.NewGuid().ToString("N")[..8]);
         internal readonly string Log = Path.Combine(AppContext.BaseDirectory, "plc-timeout-" + Guid.NewGuid().ToString("N") + ".jsonl");
         private readonly string? previousLog = Environment.GetEnvironmentVariable("TIA_FIXTURE_LOG");
         private readonly string? previousFault = Environment.GetEnvironmentVariable("TIA_FIXTURE_FAULT");
@@ -479,6 +482,14 @@ public sealed class PlcWorkerRobustnessTests
             Environment.SetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS", environment);
             string exe = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.WorkerChannel.TransportFixture", "TiaMcp.WorkerChannel.TransportFixture.exe");
             Assert.True(File.Exists(exe), exe);
+            Directory.CreateDirectory(fixtureDirectory);
+            foreach (string source in Directory.EnumerateFiles(Path.GetDirectoryName(exe)!, "*", SearchOption.AllDirectories))
+            {
+                string destination = Path.Combine(fixtureDirectory, Path.GetRelativePath(Path.GetDirectoryName(exe)!, source));
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                File.Copy(source, destination);
+            }
+            exe = Path.Combine(fixtureDirectory, Path.GetFileName(exe));
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
             Worker = new Foundation.WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true, defaultSeconds, config) { Bundled = false };
         }
@@ -490,11 +501,27 @@ public sealed class PlcWorkerRobustnessTests
         }
         public void Dispose()
         {
-            Worker.Dispose();
+            Process? owned = null;
+            if ((int?)Worker.OperatorSnapshot()["pid"] is { } pid)
+            {
+                try { owned = Process.GetProcessById(pid); }
+                catch (ArgumentException) { }
+            }
+            using (owned)
+            {
+                if (owned != null && !owned.HasExited && !string.Equals(owned.MainModule?.FileName,
+                    Path.Combine(fixtureDirectory, "TiaMcp.WorkerChannel.TransportFixture.exe"), StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Refusing to dispose a worker outside the private fixture directory.");
+                Worker.Dispose();
+                // Busy shutdown requests termination asynchronously. Keep our
+                // own process handle until its DLL mappings have been released.
+                owned?.WaitForExit();
+            }
             Environment.SetEnvironmentVariable("TIA_FIXTURE_LOG", previousLog);
             Environment.SetEnvironmentVariable("TIA_FIXTURE_FAULT", previousFault);
             Environment.SetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS", previousOverrides);
             if (File.Exists(Log)) File.Delete(Log);
+            Directory.Delete(fixtureDirectory, recursive: true);
         }
     }
 

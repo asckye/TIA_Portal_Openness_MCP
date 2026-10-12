@@ -96,6 +96,79 @@ internal static class CheckAffinity
             throw;
         }
     }
+
+    internal static IDisposable CompleteOnDispose(SafeFileHandle job, string root) => new Scope(() => StopAndWait(job, root));
+
+    internal static void StopAndWait(SafeFileHandle job, string root)
+    {
+        // Keep the owned job open until all its processes have released their
+        // working directories, including descendants whose parent already exited.
+        var clock = Stopwatch.StartNew();
+        while (JobProcesses(job).Length != 0 && clock.Elapsed < TimeSpan.FromSeconds(5)) Thread.Sleep(25);
+        var children = new List<Process>();
+        var targets = new List<Process>();
+        try
+        {
+            foreach (int pid in JobProcesses(job))
+            {
+                Process child;
+                try { child = Process.GetProcessById(pid); }
+                catch (ArgumentException) { continue; }
+                children.Add(child);
+                if (child.HasExited) continue;
+                string path = child.MainModule?.FileName ?? throw new ReleaseException("Cannot verify owned child executable: " + pid);
+                string prefix = Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+                if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ||
+                    CommandLine(child).Contains(prefix, StringComparison.OrdinalIgnoreCase)) targets.Add(child);
+            }
+            // Console brokers can belong to our job without a worktree command
+            // line. Stop only the verified application PIDs; their brokers exit
+            // naturally after the applications release their consoles.
+            foreach (var child in targets) if (!child.HasExited) child.Kill();
+            foreach (var child in children)
+                if (!child.WaitForExit(10000)) throw new ReleaseException("Owned job child did not exit; executable was not authorized for termination: " + child.Id);
+            while (JobProcesses(job).Length != 0)
+            {
+                if (clock.Elapsed > TimeSpan.FromSeconds(30)) throw new ReleaseException("Owned affinity job did not drain");
+                Thread.Sleep(25);
+            }
+        }
+        finally { foreach (var child in children) child.Dispose(); }
+    }
+
+    private static int[] JobProcesses(SafeFileHandle job)
+    {
+        for (int size = 1024; ; size *= 2)
+        {
+            var buffer = Marshal.AllocHGlobal(size);
+            try
+            {
+                if (!QueryInformationJobObject(job, 3, buffer, size, out _))
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    if (error is 122 or 234) continue;
+                    throw new Win32Exception(error);
+                }
+                int count = Marshal.ReadInt32(buffer, 4);
+                return Enumerable.Range(0, count).Select(index => checked((int)Marshal.ReadIntPtr(buffer, 8 + index * IntPtr.Size))).ToArray();
+            }
+            finally { Marshal.FreeHGlobal(buffer); }
+        }
+    }
+
+    private static string CommandLine(Process process)
+    {
+        NtQueryInformationProcess(process.Handle, 60, IntPtr.Zero, 0, out int size);
+        var buffer = Marshal.AllocHGlobal(size);
+        try
+        {
+            int status = NtQueryInformationProcess(process.Handle, 60, buffer, size, out _);
+            if (status != 0) throw new ReleaseException("Cannot verify owned child command line: " + process.Id + " NTSTATUS=" + status);
+            int length = (ushort)Marshal.ReadInt16(buffer);
+            return Marshal.PtrToStringUni(Marshal.ReadIntPtr(buffer, IntPtr.Size), length / 2) ?? "";
+        }
+        finally { Marshal.FreeHGlobal(buffer); }
+    }
     [StructLayout(LayoutKind.Sequential)]
     private struct BasicLimits
     {
@@ -112,6 +185,10 @@ internal static class CheckAffinity
     private static extern bool SetInformationJobObject(SafeFileHandle job, int information, ref BasicLimits limits, int length);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool AssignProcessToJobObject(SafeFileHandle job, IntPtr process);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool QueryInformationJobObject(SafeFileHandle job, int information, IntPtr buffer, int length, out int returned);
+    [DllImport("ntdll.dll")]
+    private static extern int NtQueryInformationProcess(IntPtr process, int information, IntPtr buffer, int length, out int returned);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetLogicalProcessorInformationEx(int relationship, IntPtr buffer, ref uint length);
 }

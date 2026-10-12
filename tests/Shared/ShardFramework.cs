@@ -37,6 +37,20 @@ namespace TiaMcp.Engine.Tests.Shared
 
         public static string CostKey(string className, string method, string displayName, bool lateTheory) =>
             lateTheory ? "M:" + className + "." + method : "T:" + displayName;
+
+        public static int Assign(string className, string costKey, string fallbackKey, int count,
+            IReadOnlyDictionary<string, int> plan, bool reserveSensitive)
+        {
+            if (count < (reserveSensitive ? 2 : 1)) throw new InvalidOperationException("Invalid test shard count.");
+            if (reserveSensitive && TimeSensitiveTests.Contains(className)) return count - 1;
+            int ordinaryCount = reserveSensitive ? count - 1 : count;
+            if (plan.TryGetValue(costKey, out int planned) || plan.TryGetValue("C:" + className, out planned))
+            {
+                if (planned < 0 || planned >= ordinaryCount) throw new InvalidOperationException("Cost shard outside shard count.");
+                return planned;
+            }
+            return Bucket(fallbackKey, ordinaryCount);
+        }
     }
 
     internal sealed class ShardExecutor : XunitTestFrameworkExecutor
@@ -70,16 +84,12 @@ namespace TiaMcp.Engine.Tests.Shared
                 {
                     string cls = test.TestMethod.TestClass.Class.Name;
                     string costKey = TestShard.CostKey(cls, test.TestMethod.Method.Name, test.DisplayName, test is XunitTheoryTestCase);
-                    if (plan.TryGetValue(costKey, out int planned) || plan.TryGetValue("C:" + cls, out planned))
-                    {
-                        if (planned < 0 || planned >= count) throw new InvalidOperationException("Cost shard outside shard count.");
-                        return planned == index;
-                    }
                     // Late-enumerated theories are indivisible: running their producer
                     // repeatedly would duplicate side effects and all recorded assertions.
                     string key = TestShard.SplitCases(cls) && !(test is XunitTheoryTestCase)
                         ? cls + ":" + test.UniqueID : cls;
-                    return TestShard.Bucket(key, count) == index;
+                    return TestShard.Assign(cls, costKey, key, count, plan,
+                        Environment.GetEnvironmentVariable("TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD") == "1") == index;
                 });
             }
             string? timings = Environment.GetEnvironmentVariable("TIA_MCP_TEST_CASE_TIMINGS");

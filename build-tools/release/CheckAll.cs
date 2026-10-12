@@ -156,7 +156,7 @@ internal static partial class ReleaseCommands
             var name = $"studio-{project.ToLowerInvariant()}-{mode}"; var selectedMode = mode; var selectedProject = project;
             Add(name, () => Isolated(name, dotnet, ["test", $"tests/Studio/TiaOpenness.{selectedProject}.Tests/TiaOpenness.{selectedProject}.Tests.csproj", "-c", "Release", "--no-build", "--no-restore",
                 "-p:TiaSharedAdapterPaths=" + selectedMode,
-                "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]));
+                "--disable-build-servers", "-m:1", "-nodeReuse:false", "--logger", "trx;LogFileName=" + name + ".trx", "--results-directory", Path.Combine(output, "studio")]), exclusive: true);
         }
         AddCheckAllStaticJobs(Add, Tool, Python, Isolated, output, api, nuget, parallelism, shards, dotnet);
         jobs.RemoveAll(job => job.Name == "preflight");
@@ -397,7 +397,7 @@ internal static partial class ReleaseCommands
         foreach (var mode in new[] { "false", "true" })
         foreach (var project in new[] { "src/Studio/Bridge/TiaOpenness.Bridge.csproj", "src/Studio/Gui/TiaOpenness.Gui.csproj", "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj", "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" })
             units.Add(new(project, "", ["-p:TiaSharedAdapterPaths=" + mode]));
-        return units.GroupBy(unit => unit.Project + "|" + unit.Variant + "|" + string.Join(";", unit.Properties), StringComparer.Ordinal).Select(group => group.First()).ToArray();
+        return CheckAllBuild.WithTestFixtures(units).ToArray();
     }
 
 }

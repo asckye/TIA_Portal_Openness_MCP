@@ -60,8 +60,10 @@ internal static partial class ReleaseCommands
             ("relocation checker self-tests", Py, ["scripts/checks/Test-RelocatedBundle.py", "--self-test"]),
             ("strict bundle rules", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "validate-bundle", "-Strict", "-NoBinaries", "-SkipSourceHashes"]),
             ("release documentation rules", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "release", "-DocumentationOnly"]),
-            ("release tool test suite", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false"]),
-            ("parallel pipeline behavior", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Pipeline"])
+            ("release tool test suite", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false",
+                "--logger", "trx;LogFileName=release-tool.trx", "--results-directory", "bin-build/test-results/preflight"]),
+            ("parallel pipeline behavior", Dotnet, ["test", "tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj", "-c", "Release", "-p:UseAppHost=false", "-p:UseSharedCompilation=false", "-m:1", "-nodeReuse:false", "--filter", "Category=Pipeline",
+                "--logger", "trx;LogFileName=pipeline.trx", "--results-directory", "bin-build/test-results/preflight"])
         ];
 
     private static int Preflight(Options options)

@@ -89,7 +89,7 @@ internal static class SuiteSharding
 internal sealed record ShardPlan(string Path, double[] Costs);
 internal static class SuiteCosts
 {
-    internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback)
+    internal static ShardPlan Prepare(string name, string directory, string historyDirectory, string? baseline, int fallback, bool reserveSensitive = false)
     {
         Directory.CreateDirectory(historyDirectory); Directory.CreateDirectory(directory);
         var history = Path.Combine(historyDirectory, name + ".json");
@@ -101,6 +101,7 @@ internal static class SuiteCosts
         foreach (var (key, seconds) in costs)
         {
             var cls = ClassName(key);
+            if (reserveSensitive && cls != null && TimeSensitiveTests.Contains(cls)) continue;
             // Small classes stay together; expensive classes use measured case
             // costs. Late producers are never executed more than once.
             if (cls != null && classes.TryGetValue(cls, out var measured) && measured.Seconds <= 55)
@@ -109,9 +110,15 @@ internal static class SuiteCosts
         }
         int count = fallback == 1 ? 1 : planned.Count == 0 ? fallback : Math.Clamp((int)Math.Ceiling(planned.Values.Sum() / 55), 1, 32);
         var (assignments, totals) = Balance(planned, count);
+        if (reserveSensitive)
+        {
+            double sensitiveCost = costs.Where(pair => ClassName(pair.Key) is { } cls && TimeSensitiveTests.Contains(cls)).Sum(pair => pair.Value);
+            totals = [.. totals, sensitiveCost];
+        }
         var path = Path.Combine(directory, "shard-plan.tsv");
         File.WriteAllLines(path, assignments.Select(pair => Convert.ToBase64String(Encoding.UTF8.GetBytes(pair.Key)) + "\t" + pair.Value));
-        File.WriteAllText(Path.Combine(directory, "shard-plan.json"), JsonSerializer.Serialize(new { source = history, targetSeconds = 55, startupAllowanceSeconds = 5, costs = totals, assignments, measuredClasses = classes }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+        File.WriteAllText(Path.Combine(directory, "shard-plan.json"), JsonSerializer.Serialize(new { source = history, targetSeconds = 55, startupAllowanceSeconds = 5, costs = totals, assignments, measuredClasses = classes,
+            exclusiveShard = reserveSensitive ? (int?)(totals.Length - 1) : null, timeSensitiveClasses = reserveSensitive ? TimeSensitiveTests.Classes : null }, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         return new(path, totals);
     }
 
