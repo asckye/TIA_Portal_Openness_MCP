@@ -1,5 +1,7 @@
 # Unified version framework
 
+Status: Current · Last checked: 2026-10-11, master `578a05ee`
+
 [Current handoff](handoff.md) · [Tool matrix](../reference/version-tools.md) · [Validation](validation.md)
 
 ## Exact release identity
@@ -21,16 +23,15 @@ does not translate XML, upgrade a project, or make its unavailable tools runnabl
 
 | Profile | Runtime contract |
 |---|---|
-| V14 SP1–V19 MCP | .NET 10 foundation host (bundled runtime) plus exact typed .NET Framework worker; advertises its supported subset |
-| V20/V21 MCP | Full .NET Framework engines, full/lite catalogs and discovery bridge |
-| Studio, all eight releases | Desktop and bridge call the selected Openness adapter directly; no Studio MCP transport |
+| V14 SP1–V19 MCP | .NET 10 FoundationHost (bundled runtime) plus exact typed .NET Framework worker; advertises its supported subset |
+| V20/V21 MCP | FoundationHost (.NET 10) + engine workers (.NET Framework 4.8), full/lite catalogs and discovery bridge |
+| Studio, all eight releases | Workbench Engineering attaches to the selected MCP session through the operator pipe; the old bridge is pending retirement |
 
 All eight foundation workers and their adapters target .NET Framework 4.8.
 V14 SP1, V15.1 and V16 retain their exact original Siemens API identities;
 their net48 workers require the release-time checks in the
 [real-machine ledger](../reference/real-machine-ledger.md).
-The foundation worker serializes native calls on its owning STA; the full engine
-has its own threading and optional worker-isolation contract. Do not merge these
+The foundation worker serializes native calls on its owning STA; the V20/V21 engine worker uses its MTA owner thread and per-session worker channel contract. Do not merge these
 by replacing one tool's name or threading primitive.
 
 The catalog, environment facts, process arguments, diagnostics, dependency planning
@@ -183,3 +184,7 @@ manifests and version matrix. The 62-name ledger is not an exhaustive API invent
 New capabilities update typed routes, admission, unified examples and meaningful
 functional checks together. Use `dotnet run` for console test projects; `dotnet test`
 does not execute their assertions. [Validation](validation.md) documents the current gates.
+
+## Current architecture
+
+All eight releases use FoundationHost with a version-matched worker. The [architecture specification](design-spec/architecture.md) is authoritative for processes, admission, thread ownership and session lifetime. This page retains compilation and format-boundary details. See [ADR 0005](decisions/0005-v20-v21-on-foundation-host.md) and [ADR 0012](decisions/0012-old-release-tool-registration.md).

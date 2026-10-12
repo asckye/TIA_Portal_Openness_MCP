@@ -75,7 +75,14 @@ internal static partial class ReleaseCommands
         // Generation is an ordered prerequisite of compilation/capture. -Check is
         // also retained below, so regeneration never hides source drift.
         Add("generate-catalogs", () => Tool("generate-catalogs", "generate-catalogs"));
-        Add("generate-tool-usage", () => Tool("generate-tool-usage", "generate-tool-usage"), ["generate-catalogs"]);
+        Add("generate-tool-usage", () =>
+        {
+            var usage = Tool("generate-tool-usage", "generate-tool-usage");
+            if (usage.ExitCode != 0) return usage;
+            var counts = Tool("generate-tool-counts", "generate-tool-counts");
+            return new(counts.ExitCode, usage.StandardOutput + counts.StandardOutput,
+                usage.StandardError + counts.StandardError);
+        }, ["generate-catalogs"]);
         Wave();
         if (!CheckAllPrerequisitesPassed(timings)) return Finish();
         var builds = CheckAllBuildInventory(catalog, api);
@@ -288,7 +295,7 @@ internal static partial class ReleaseCommands
         {
             Affinity = job.Affinity ?? masks.General,
             EstimatedSeconds = CheckAllJobCost(job, costs),
-            Dependencies = job.Name is "migration-drift" or "preflight-5" ? ["generate-release-migration"] : job.Dependencies
+            Dependencies = job.Name == "migration-drift" || job.Name == "preflight-" + PreflightChecks().FindIndex(check => check.Name == "release migration tables generator") ? ["generate-release-migration"] : job.Dependencies
         }).ToArray();
         var priorities = CheckScheduler.CriticalCosts(plan);
         File.WriteAllText(Path.Combine(output, "cpu-plan.json"), JsonSerializer.Serialize(new { availableMask = available.ToString("X"),

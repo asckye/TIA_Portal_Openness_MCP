@@ -1,5 +1,8 @@
 # TIA Openness Studio
 
+状态：现行 · 最后核对：2026-10-11，master `578a05ee`
+
+
 The English/Chinese WPF desktop now hosts both **Engineering** and **MCP & clients** in
 one .NET 10 main window. The root `TiaOpenness.exe` is the Studio launcher (`TiaOpenness.Launcher` assembly)
 for this desktop, not a second configuration application. Configuration code is compiled
@@ -20,6 +23,8 @@ copyright 2026 asckye. See [LICENSE](../../third_party/tia-openness-studio/LICEN
 The complete original tree and Git history remain under `../../third_party/tia-openness-studio/upstream/` as reference archives.
 
 For a first installation and a step-by-step desktop walkthrough, see the [beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md).
+
+工程操作和版本控制页经操作端管道附着 MCP 会话，共用工具、审批和审计。旧桥接与适配器代码保留到清理任务；下文涉及直接桥接的内容为历史实现。现行调用路径见[架构规范](../../docs/development/design-spec/architecture.md)。
 
 ## Build and run
 

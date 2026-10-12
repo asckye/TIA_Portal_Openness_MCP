@@ -10,7 +10,7 @@
 
 - 八个 TIA Portal 版本（发布键 `14sp1`、`15.1`、`16`、`17`、`18`、`19`、`20`、`21`）使用同一个 MCP 宿主程序：`runtime/v{发布键}/TiaMcp.FoundationHost.exe --release-key {发布键}`（net10，随包 .NET 10 运行时）。宿主负责 MCP 传输、工具目录、参数校验、预检、审批、审计、调用日志和 Openness 通道。
 - 宿主为每个 MCP 会话启动一个 worker 进程（net48）。V14 SP1–V19 是 PLC worker `runtime/v{发布键}/worker/TiaMcp.PlcWorker.{发布键}.exe`，在 STA 所属线程上调用 Openness；V20/V21 是引擎 worker `runtime/v20|v21/worker/TiaMcp.Engine.V20|V21.exe --engine-worker`，在一个 MTA 所属线程上同时承载 Foundation 适配器和引擎代码，共用一个 TIA 连接。
-- 八版共有的工具（V19 的 67 个）和已移植的能力族在八个版本上使用同一份 Foundation 适配器代码（`TiaMcp.Adapter.{发布键}.dll`，按发布键编译八次）。尚未移植的 V20/V21 专有工具仍由引擎代码在引擎 worker 中执行。
+- 八版共有的工具和已移植的能力族在八个版本上使用同一份 Foundation 适配器代码（`TiaMcp.Adapter.{发布键}.dll`，按发布键编译八次）。尚未移植的 V20/V21 专有工具仍由引擎代码在引擎 worker 中执行。
 - 只有 worker 接触 Siemens 对象。worker 与宿主之间是 WorkerChannel 协议 2（行分隔 JSON-RPC 2.0，hello 握手核对 worker 与适配器的 SHA-256、PID 和启动 nonce，绑定纪元）。
 - 每个会话一条 Openness 通道（lane），原生调用在会话内串行；不调用 TIA 的工具走并发的本地通道，不等待正在运行的 TIA 调用。
 - 每个版本都用 TIA 进程租约把选定的 TIA 进程保留给一个 MCP 会话。越过原生调用后结果未知的写入会锁定会话，后续原生调用返回 `SESSION_RESET_REQUIRED`。
@@ -133,7 +133,7 @@ flowchart LR
 
 - 发布键决定工具目录。旧版只注册至少有一个已实现动作能在该版 API 上运行的已移植工具；部分动作缺 API 的工具保留，并在原生调用前对该动作返回 `UNSUPPORTED_CAPABILITY`。依据是 `src/Adapters.Contracts/PortedFamilies.cs` 的逐工具、逐发布键表，注册、发现、用法、桥接和被动诊断共用它。
 - 编译期差异由 `src/Shared/TiaFeatures.props` 的特性符号表达（例如过程映像服务只在 V21），适配器按精确 PublicAPI 编译八次；运行期不靠工具名或相邻版本推断能力。
-- V20/V21 的版本准入（`ToolVersionPolicy`）在发现、桥接、预检和派发前生效；V20 排除 11 个 V21 专有工具。
+- V20/V21 的版本准入（`ToolVersionPolicy`）在发现、桥接、预检和派发前生效；V20 的排除工具由目录和官方 API 支持规则生成。
 - 原生行为能力按 D1 行为族披露，当前八版全部为 `current / NOT RUN`；SafeV4 候选实现只在显式 `TiaMcpTestPolicy` 测试构建中可选。
 
 ## 5 关键流程
@@ -423,11 +423,11 @@ stateDiagram-v2
 
 | 主题 | 文档 | 说明 |
 |---|---|---|
-| 当前交接与计划 | [handoff.md](../handoff.md)、[refactor-plan.md](../refactor-plan.md)、[roadmap.md](../roadmap.md) | 状态部分过期，4.0 前刷新（P8-63，见 [文档偏差清单](deviations/docs.md) DOC-05） |
+| 当前交接与计划 | [handoff.md](../handoff.md)、[refactor-plan.md](../refactor-plan.md)、[roadmap.md](../roadmap.md) | 任务启动基线的事实与状态已刷新；以重构计划为任务状态入口 |
 | 阶段 7：V20/V21 改用 Foundation 宿主 | [阶段 7 宿主与 worker 拆分设计](../design/p7-host-worker-split.md) | 历史记录（已实施）；决定见 ADR 0005–0008 |
 | 阶段 8 迁移方案 | [phase8-port-plan.md](../phase8-port-plan.md) | 族、批次、闸门 |
-| 工作台控制与共享会话 | [phase8-workbench-control.md](../phase8-workbench-control.md) | 现行设计；§1 的现状描述早于 P8-21 |
-| 生成框架 | [phase8-generation-framework.md](../phase8-generation-framework.md)、[分阶段生成执行设计](../design/p8-31-staged-generation.md) | 前者 §6.3 已被 D3 决定修改，以后者为准 |
+| 工作台控制与共享会话 | [phase8-workbench-control.md](../design/workbench-control-and-shared-session.md) | 现行设计；§1 的现状描述早于 P8-21 |
+| 生成框架 | [phase8-generation-framework.md](../design/project-generation-framework.md)、[分阶段生成执行设计](../design/p8-31-staged-generation.md) | 前者 §6.3 已被 D3 决定修改，以后者为准 |
 | 运行时布局、审批、控制通道、租约、审计 | [runtime-layout.md](../runtime-layout.md) | 现行，个别数字过期 |
 | 版本框架 | [unified-version-framework.md](../unified-version-framework.md) | 运行形态一节过期 |
 | 适配器与 worker 协议 | [adapter-merge.md](../adapter-merge.md) | 协议 2 的定义仍有效；其余为阶段 4 历史 |
@@ -435,3 +435,9 @@ stateDiagram-v2
 | V4 契约 | [phase6-review.md](../phase6-review.md) | 已冻结；现行协议见 [V4 工具协议规范](v4-protocol.md) |
 | 验证与发布 | [validation.md](../validation.md)、[release-workflow.md](../release-workflow.md) | 现行，个别命令过期 |
 | 设计决策 | [架构决策记录](../decisions/README.md) | 一页一个决定，含待补写清单 |
+
+## 版本处理与通道规范
+
+八个发布键由 `TiaVersionCatalog` 统一解释，不把原版 V14、V15 视为 SP1 或 V15.1 的别名。FoundationHost 校验所选发布键、worker 和 PublicAPI，编译特性与文档格式边界见[版本框架](../unified-version-framework.md)。已移植工具只有至少一个已实现动作能在该版官方 API 上执行时才注册，见 [ADR 0012](../decisions/0012-old-release-tool-registration.md)；具体工具和数量由目录生成，不由架构正文手写。
+
+内部帧与绑定纪元的现行定义见[worker 协议 2](worker-protocol.md)。历史适配器设计的协议对比表描述迁移过程，不再作为当前运行形态表。

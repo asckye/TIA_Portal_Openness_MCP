@@ -15,6 +15,7 @@ internal static partial class ReleaseCommands
         switch (command)
         {
             case "generate-catalogs": outputs = CatalogGenerator.Generate(root, prepareSources: options.Has("Check") ? null : prepared => CatalogJson.Write(root, prepared, false)); break;
+            case "generate-tool-counts": outputs = ToolCountGenerator.Generate(root); break;
             case "generate-tool-usage": outputs = new() { ["src/Shared/ToolUsageData.json"] = CatalogJson.Encode(ToolUsageGenerator.Generate(root)) }; break;
             case "generate-release-migration": outputs = new() { [ReleaseMigrationGenerator.Output] = ReleaseMigrationGenerator.Render(root) }; break;
             case "audit-version-tools":

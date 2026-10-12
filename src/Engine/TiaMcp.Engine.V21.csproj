@@ -20,6 +20,8 @@
     <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/Host/ToolJsonArguments.cs" Link="Host/ToolJsonArguments.cs" />
+    <Compile Include="../Shared/Host/EngineeringFileNames.cs" Link="Host/EngineeringFileNames.cs" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpEngineWorkerSdkFixture)' == 'true'">
       <_Parameter1>TiaMcpEngineWorkerSdkFixture</_Parameter1>
       <_Parameter2>true</_Parameter2>

@@ -691,3 +691,11 @@ V4 计划、审批和 PLAN_STALE 中的 `planHash`、`argumentsHash`、`inventor
 - `inputSchema`/`outputSchema` 放宽为任意 2020-12 关键字，`structuredContent` 放宽为任意 JSON 值。
 
 这些变化对 V4 的影响分别记在 MCP-01、MCP-05、MCP-12、MCP-13、MCP-15。
+
+## 文案、行为披露与审计的来源
+
+新增 MCP 描述、参数说明、错误与警告消息使用英文；工具名、代码、TIA 原文和示例值保持原样。工作台使用中英资源，用户文档按[文档规范](documentation-style.md)维护。既有契约消息在本次文档整理中保持不变。
+
+D1 现行行为由生成的能力表披露。`GetToolUsage` 的空选择器返回所选发布键的 `behaviorCapabilities`，每项包含 `family`、`state`、`l5` 和 `entries`；适用的目标结果保留 `meta.behaviorPolicy` 和 `UNVERIFIED_BEHAVIOR`。桥接或批次派发前拒绝保留桥接身份，同时披露已选定的目标族。只有明确的逐版 L5 证据能切换到 `safe-v4`，见 [ADR 0002](../decisions/0002-native-behavior-by-family-acceptance.md)。候选专用参数在现行目录中不广告；保持已实现的 `confirm`、`expectedProjectFile`、计划哈希及所选版本的身份参数。已撤回的 `ConnectProject` 不作为现行参数示例。
+
+审批先预检、批准后复核，见 [ADR 0004](../decisions/0004-precheck-before-approval.md)。请求、审批决定、start/end 和结果用同一 requestId 关联。审计链在共享数据根串行追加；哈希校验只能证明保留记录间的完整性，不能证明整段日志未被删除。默认启用审批，MCP 客户端不能自批，控制通道不能审批或切换审批。目录、管道和回退规则见[运行时布局](../runtime-layout.md)。`RECOVERY_GUIDANCE` 的生成规则见[恢复指导](../../reference/recovery-guidance.md)，复用 `GetToolUsage` 的现行示例，不创建第二套参数库。

@@ -1,34 +1,27 @@
 # 工程能力与验收边界
 
-当前 4.0 源码提供八个 TIA 版本的 MCP 运行时，以及直接调用 Openness 的 Studio。入口分别为根 `TiaOpenness.exe`、V14 SP1–V19 的 `TiaMcp.FoundationHost.exe`，以及 `TiaMcp.Engine.V20.exe` / `TiaMcp.Engine.V21.exe`。第一次使用请从[新手指南](../getting-started/beginners.zh-CN.md)开始；完整工具与版本对应关系以[版本矩阵](version-tools.md)、[生成的工具目录](version-tool-catalog.md)为准。
+当前 4.0 源码提供八版 FoundationHost 宿主、匹配版本的 worker 和工作台。工作台入口为包根 `TiaOpenness.exe`；MCP 入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`。工程操作页附着 MCP 会话，与 AI 共用工具、审批和审计。第一次使用请从[新手指南](../getting-started/beginners.zh-CN.md)开始；完整工具与版本对应关系以[版本矩阵](version-tools.md)、[生成的工具目录](version-tool-catalog.md)为准。
 
 ## 当前支持范围
 
 | 入口 | 范围 |
 |---|---|
-| V14 SP1、V15.1、V16、V17、V18、V19 MCP | PLC 基础宿主与各版原生工作进程；覆盖工程连接、PLC 浏览、选定导入导出、外部源生成和编译等已实现子集。并非 V20/V21 完整工具集的直接移植。 |
-| V20 / V21 MCP | 完整引擎覆盖 PLC、经典 HMI、Unified、硬件网络、库、在线通道和选件。默认 lite 通过 FindTools / CallTool 访问其余工具。 |
-| Studio | 八个独立版本适配器，共用 PLC 浏览、导入导出、编译工作流；界面支持中文和英文。Studio 不经过 MCP。V14 SP1 / V15.1 无 VCI。 |
-| 配置器 | 选择精确 TIA 版本、同机或虚拟机连接、客户端配置、服务诊断及更新入口。选择版本不会转换工程。 |
+| V14 SP1、V15.1、V16、V17、V18、V19 MCP | FoundationHost 与 PLC worker；包含按官方 API 启用的 PLC、硬件网络、库和 HMI 能力。逐工具动作以所选目录为准。 |
+| V20 / V21 MCP | V20/V21 覆盖 PLC、经典 HMI、Unified、硬件网络、库、在线通道和选件。默认 lite 通过 FindTools / CallTool 访问其余工具。 |
+| 工作台 | 工程操作页附着所选 MCP 会话，共用浏览、导入导出、编译、审批与审计；界面支持中文和英文。V14 SP1 / V15.1 无 VCI。 |
+| 工作台的 MCP 与客户端页 | 选择精确 TIA 版本、同机或虚拟机连接、客户端配置、服务诊断及更新入口。选择版本不会转换工程。 |
 
-只支持精确版本键 `14sp1`、`15.1`、`16`、`17`、`18`、`19`、`20`、`21`，不包含原始 V14 / V15。同名工具在基础宿主与完整引擎上可能有不同参数和结果结构，应读取实际连接版本的 schema。
+只支持精确发布键 `14sp1`、`15.1`、`16`、`17`、`18`、`19`、`20`、`21`，不包含原始 V14 / V15。同名工具在不同发布键上可能有不同参数和结果结构，应读取实际连接版本的 schema。
 
 ## V4 候选发布的行为能力
 
-`GetToolUsage` 空选择器索引的 `data.behaviorCapabilities` 按连接发布键返回八个 D1 行为族，
-每行包含 `family`、`state`、`l5` 和实际 `entries`。完整引擎的 `InitializeEnvironment` / `GetPortalInfo`
-与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。
-当前八版每个适用 D1 行为族全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。离线、schema 或构建通过不改变此状态。
-逐版入口清单见[生成的行为台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)及[功能矩阵](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)。
+`GetToolUsage` 空选择器索引的 `data.behaviorCapabilities` 按连接发布键返回八个 D1 行为族，每行包含 `family`、`state`、`l5` 和实际 `entries`。V20/V21 的 `InitializeEnvironment` / `GetPortalInfo` 与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。当前八版每个适用 D1 行为族全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。离线、schema 或构建通过不改变此状态。逐版入口清单见[生成的行为台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)及[功能矩阵](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)。
 
 ## AI 如何取得正确示例
 
 所有版本统一使用 `GetToolUsage` 获取实际 schema、输入来源、调用示例、结果解释和官方出处。调用参数是匹配所选工具 `inputSchema` 的 JSON 对象，成功与失败结果使用 V4 `schemaVersion` / `ok` / `data` / `error` / `meta` 信封。语言代码、文件模板及多步顺序也从同一库读取，不再维护独立的指南或配方工具。
 
-原配方列表行为使用 `exampleKind: "sequence"`，指定配方使用
-`exampleId: "sequence/<topic>"`。原作者指南主题通过 `language`、`query` 或相应
-`exampleId` 选择；例如 `startdrive-bico` 映射到 `ManageStartdriveParameter`
-的 `read` 操作示例。
+原配方列表行为使用 `exampleKind: "sequence"`，指定配方使用 `exampleId: "sequence/<topic>"`。原作者指南主题通过 `language`、`query` 或相应 `exampleId` 选择；例如 `startdrive-bico` 映射到 `ManageStartdriveParameter` 的 `read` 操作示例。
 
 - 按工具查：提供 `toolName`，具有多个动作时再提供 `operation`。
 - 按语言或完整流程查：使用 `language` 或 `exampleId`。
@@ -42,14 +35,14 @@
 
 | 工作流 | 当前实现与边界 |
 |---|---|
-| PLC 源文件 | 八版均有外部源导入和块生成路线。基础宿主目前限定根目录 ASCII SCL/AWL/DB/UDT；中文源编码仍未验收。V14 SP1 的生成 API 无返回对象，需要比较前后清单。 |
+| PLC 源文件 | 八版均有外部源导入和块生成路线。宿主目前限定根目录 ASCII SCL/AWL/DB/UDT；中文源编码仍未验收。V14 SP1 的生成 API 无返回对象，需要比较前后清单。 |
 | PLC XML 与文档 | 两个声明构建器支持八版 UDT / Global DB 格式；其他构建器有各自版本限制。XML 片段 XSD 通过不等于完整文档可导入或程序正确。SIMATIC SD 导入使用目录和不带扩展名的文档名。 |
-| 编译 | 返回错误数量、警告和嵌套诊断；API 调用返回不等于编译成功。基础宿主实际编译路线已接入，新增原生验收仍未运行。 |
-| PLC 编辑与分析 | 完整引擎支持导出检查、有限的文本/标量初始值补丁、验证导入、离线引用、差异及质量审计；不是任意 LAD/FBD/SCL 编辑器。 |
-| HMI / Unified | 完整引擎提供普通画面、控件、标签、报警、事件、全局脚本、列表及库等接口。事件代码与全局脚本模块使用不同 API；面板类型内部创作仍有未实现边界。 |
+| 编译 | 返回错误数量、警告和嵌套诊断；API 调用返回不等于编译成功。宿主实际编译路线已接入，新增原生验收仍未运行。 |
+| PLC 编辑与分析 | V20/V21支持导出检查、有限的文本/标量初始值补丁、验证导入、离线引用、差异及质量审计；不是任意 LAD/FBD/SCL 编辑器。 |
+| HMI / Unified | V20/V21提供普通画面、控件、标签、报警、事件、全局脚本、列表及库等接口。事件代码与全局脚本模块使用不同 API；面板类型内部创作仍有未实现边界。 |
 | 硬件、库与选件 | 以实际版本 SDK、安装选件、许可证和对象提供的服务为准。工具名称存在不表示所有动作都能在所有版本执行。 |
-| 运行时数据 | 完整引擎另有 S7 Web API、Unified Open Pipe、PLCSIM Advanced 等通道；这些不属于 Openness 工程对象读取。 |
-| 写操作审批与审计 | MCP `WRITE` / `ONLINE-WRITE` 实际执行默认先由 Workbench 审批；`dryRun=true` 或候选工具 `mode=preview` 不排队审批。拒绝、超时或 Workbench 不可用时在派发前返回 `CONFIRMATION_REQUIRED`。实际写调用的请求、决定及结果使用响应 `requestId` 写入 `data/logs/audit` 哈希链。 |
+| 运行时数据 | V20/V21另有 S7 Web API、Unified Open Pipe、PLCSIM Advanced 等通道；这些不属于 Openness 工程对象读取。 |
+| 写操作审批与审计 | MCP `WRITE` / `ONLINE-WRITE` 实际执行默认先由工作台审批；`dryRun=true` 或候选工具 `mode=preview` 不排队审批。拒绝、超时或工作台不可用时在派发前返回 `CONFIRMATION_REQUIRED`。实际写调用的请求、决定及结果使用响应 `requestId` 写入 `data/logs/audit` 哈希链。 |
 | 梯形图渲染 | `RenderPlcBlock` 与 `RenderPlcProgramAtlas` 生成静态视图/图册，不在线编辑或下载；原生导出仍受对应导出族的验收状态约束。 |
 | 数据目录 | 包根由 `--bundle-root` 或 `TIA_MCP_BUNDLE_ROOT` 选择。日志和审计位于 `data/logs`，调用诊断包位于 `data/diagnostics`；PLC Tools Python 默认是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`。 |
 | 第三方复用 | 已接入的源码、伴随进程及其用途见[生态集成](ecosystem-tools.md)。外部候选不计作已实现工具。 |
@@ -60,7 +53,7 @@
 |---|---|
 | SDK 形状检查 / 编译 | 所检查的目标版本签名存在、适配器可编译。 |
 | 离线功能与 MCP 协议测试 | 被测输入、解析、结果和进程协议满足断言。 |
-| Studio mock / WPF 检查 | 模拟工作流及界面行为通过对应检查。 |
+| 工作台 mock / WPF 检查 | 模拟工作流及界面行为通过对应检查。 |
 | 实际 TIA 工程记录 | 仅证明记录中的版本、工程、动作和输入曾得到该结果。 |
 | 工具/API 覆盖统计 | 描述清单或审计范围；不是所有 Siemens API 已封装、全部动作可执行或全部工具真机通过的承诺。 |
 
@@ -68,7 +61,7 @@
 
 ## 仍未完成
 
-基础宿主尚未迁移完整引擎的大部分 HMI、库、硬件网络、在线和选件工具；逐族候选与确定的版本差异见[版本矩阵](version-tools.md#remaining-tools-and-acceptance)。同一 API 在 SDK 中出现，不代表该功能已有 MCP 执行入口。
+已移植能力及尚未移植的在线、Unified 和选件能力以[版本目录](version-tools.md)为准。旧版只有至少一个已实现动作具有对应 API 时才注册工具；其他动作在原生调用前拒绝。SDK 中有 API 不代表已有执行入口或已通过真机验收。
 
 Unified 脚本库类型改名仍有实测崩溃；`p2051[0]` BICO 读取修正尚未原生复测；PLC 原生交叉引用默认关闭。这些限制统一记录在[已知限制](../troubleshooting/openness-limitations.md)，不另建调用规范系统。
 

@@ -126,8 +126,8 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/McpServer.Maintenance.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HostToolServices.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/LibraryToolContract.cs" />
-    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/EngineeringFileNames.cs" />
-    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Engine/ModelContextProtocol/Tools/ToolJsonArguments.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/EngineeringFileNames.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/ToolJsonArguments.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiContract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OnlineMonitoringPolicy.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/EnvironmentDoctor.cs" />

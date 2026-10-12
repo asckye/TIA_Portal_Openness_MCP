@@ -1,6 +1,6 @@
 # HMI 连接与驱动选择
 
-适用于 V20/V21 完整引擎。先用 `GetHmiProgramInfo` 确认目标是 WinCC Unified 还是 Classic，再读取相应工具的 `GetToolUsage`。V14 SP1–V19 的 MCP 基础目录没有本页 HMI 工具。
+适用于 V20/V21。先用 `GetHmiProgramInfo` 确认目标是 WinCC Unified 还是 Classic，再读取相应工具的 `GetToolUsage`。Classic HMI 读取与交换已在对应旧版启用；Unified 动作以所选发布键的目录和 API 为准。
 
 ## Unified 连接
 

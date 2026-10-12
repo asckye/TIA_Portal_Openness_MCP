@@ -1,6 +1,9 @@
 # Shared Openness host utilities
 
-These files are source-linked by their consumers. They have no MCP or Siemens API dependency.
+Status: Current · Last checked: 2026-10-11, master `578a05ee`
+
+
+These files are source-linked by their consumers. Core utilities use BCL-only contracts; native diagnostics observe boundaries without referencing Siemens types. The `Host/` folder contains shared MCP declarations and host support, including `EngineeringFileNames.cs` and `ToolJsonArguments.cs`; its consumers provide the MCP SDK dependencies.
 
 | Source | Consumers | Contract |
 |---|---|---|
@@ -40,3 +43,5 @@ directories. Runtime executables are build outputs, not entries in this table.
 `Check-BundleLayout.py` verifies Git membership and the enforced resource list in
 `validate-bundle` (release tool). `build-configurator` records this shared desktop input;
 `build-release` and `build-multi-version` already inventory the whole shared directory.
+
+This component is part of the shared FoundationHost and per-session worker architecture. Ported native tools live in `src/Adapters/Native`; shared declarations and host mappings live in `src/Shared`. Historical step tables below record the original migration. Current ownership and acceptance follow the architecture specification and generated catalogs.

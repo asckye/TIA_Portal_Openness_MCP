@@ -35,3 +35,12 @@ reference/version-feature-matrix.json text eol=lf
 docs/reference/version-tool-catalog.md text eol=lf
 docs/reference/real-machine-ledger.md text eol=lf
 docs/releases/v4.0.0-tool-migration.md text eol=lf
+
+# Generated tool-count blocks are byte-checked inside these documents.
+README.md text eol=lf
+README.zh-CN.md text eol=lf
+docs/getting-started/configuration.md text eol=lf
+docs/getting-started/beginners.zh-CN.md text eol=lf
+docs/reference/version-tools.md text eol=lf
+docs/releases/v4.0.0.md text eol=lf
+docs/development/runtime-layout.md text eol=lf

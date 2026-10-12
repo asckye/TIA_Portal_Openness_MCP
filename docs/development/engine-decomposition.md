@@ -1,5 +1,7 @@
 # 完整引擎拆分设计（重构阶段 3）
 
+状态：历史记录 · 最后核对：2026-10-11，master `578a05ee` · 现行规则见[设计规范](design-spec/README.md)
+
 [重构计划](refactor-plan.md) · [版本框架](unified-version-framework.md) · [验证分层](validation.md)
 
 本页是 P3-01 的设计结论。路径相对 `src/Engine`；`P.` 表示 `Siemens/Portal/Portal.`，
@@ -794,9 +796,7 @@ CLI 自检、报告命令和离线验证套件直接解析 `DiagnosticsTools` �
 | Diagnostics | `GetEnvironmentDiagnostics` |
 | Maintenance | `CheckProductUpdate` |
 
-`GetToolUsage(exampleKind: "sequence")` lists the former recipe entries;
-`exampleId: "sequence/<topic>"` selects one. The former authoring-guide topics use
-the matching `language`, `query`, or `exampleId` selector.
+`GetToolUsage(exampleKind: "sequence")` 列出原配方条目；`exampleId: "sequence/<topic>"` 选择一条序列。原作者指南主题使用对应的 `language`、`query` 或 `exampleId`。
 
 这个边界是领域迁移完成后的目标，不表示单独应用本步就删除尚未合并的其他领域实现。
 并行迁移中的硬件和 Unified HMI 工具仍由各自任务负责；`McpServer.Runtime.cs`、

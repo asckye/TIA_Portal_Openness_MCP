@@ -1,6 +1,6 @@
 # Unified 全局脚本
 
-适用于 V20/V21 完整引擎中实际提供相应 Unified 服务的设备。全局模块属于 `HmiSoftware.Scripts`，按钮事件属于 `EventHandlers.Script`；两者使用不同的读取和更新方法。
+适用于 V20/V21中实际提供相应 Unified 服务的设备。全局模块属于 `HmiSoftware.Scripts`，按钮事件属于 `EventHandlers.Script`；两者使用不同的读取和更新方法。
 
 ## 读取与修改现有模块
 

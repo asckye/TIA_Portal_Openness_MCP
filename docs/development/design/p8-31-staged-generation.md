@@ -2,9 +2,9 @@
 
 状态：现行（设计）· P8-31e1–e4 已实施，e5、e6、h1、j1 未实施，任务状态以 [重构计划](../refactor-plan.md) 为准 · 最后核对：2026-10-11，master `3a227657`
 
-[设计规范索引](../design-spec/README.md) · [架构决策记录](../decisions/README.md) · [生成框架方案](../phase8-generation-framework.md) · [架构概览](../design-spec/architecture.md)
+[设计规范索引](../design-spec/README.md) · [架构决策记录](../decisions/README.md) · [生成框架方案](project-generation-framework.md) · [架构概览](../design-spec/architecture.md)
 
-本设计写于 2026-10-10，调研依据是 master `3300186b` 和 P8-31e 的实施提交 `2fc60da1`。维护者于 2026-10-10 按推荐回答了第 11 节的 Q1–Q14；e1–e4 已合并到 master（`b0f0eda9`、`6127d939`）。2026-10-11 移入仓库时删除了工作树路径、本地报告引用和以 P8-31e 工作树为准的行号，代码位置改为 master 上的文件、类型和方法名；设计判断未改写。[生成框架方案](../phase8-generation-framework.md) §6.3、§6.5–6.7 中与本设计冲突的内容以本设计为准（修订属于 P8-31j1）。调研阶段只读：未构建、未测试，未连接 TIA、引擎或宿主进程，所有原生行为仍按 `current / NOT RUN` 处理。
+本设计写于 2026-10-10，调研依据是 master `3300186b` 和 P8-31e 的实施提交 `2fc60da1`。维护者于 2026-10-10 按推荐回答了第 11 节的 Q1–Q14；e1–e4 已合并到 master（`b0f0eda9`、`6127d939`）。2026-10-11 移入仓库时删除了工作树路径、本地报告引用和以 P8-31e 工作树为准的行号，代码位置改为 master 上的文件、类型和方法名；设计判断未改写。[生成框架方案](project-generation-framework.md) §6.3、§6.5–6.7 中与本设计冲突的内容以本设计为准（修订属于 P8-31j1）。调研阶段只读：未构建、未测试，未连接 TIA、引擎或宿主进程，所有原生行为仍按 `current / NOT RUN` 处理。
 
 ## 0 结论摘要
 
@@ -430,7 +430,7 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 | P8-31e5 | e | 归属与记录：`tiamcp.generation-record/1` schema 与模型；见证采集；`PublishGenerationRecord`（宿主 FILE，八版）；规划读取记录与日志并按第 8 节分类，新增 `adopt` 参数；`cleanup` 阶段；保留规则；`ManageGenerationArtifacts`（可并入） | 新增 `src/Logic/Generation/GenerationRecord.cs`、`schemas/standards/v1/generation-record.schema.json`；规划器、`ProjectModelComparison.cs`；执行器；`src/FoundationHost/GenerationTool.cs`、`src/Logic/ModelContextProtocol/ToolMetadata.cs`、`ToolProfiles.resx`；目录、契约、响应快照、示例都用生成器和捕获工具重建（八版） | 10.2 第 13、14 项；契约差异只有新增工具及其记录；八版 `GetToolUsage` 检索与功能检查 | e2；e4（新建工程的记录路径） |
 | P8-31e6 | e（SafeV4） | `v4-candidate/1` 规则；候选会话消费后移除 `plans`（共享代码，需 grep 全部调用方） | `src/Logic/V4/*Candidate*.cs`、规则注册表 | 在 `TiaMcpTestPolicy` 构建下重跑同一套故障注入；`compile-candidate`、`compile-candidate-no-safety` 等候选套件 | e2；可推迟到 SafeV4 启用前 |
 | P8-31h1 | h | 第 9 节的审批抽屉扩展和结果卡 | `src/Studio/Gui/Services/ApprovalService.cs`、`FeatureContracts.cs`、`ViewModels/FeaturePagesViewModel.cs`、`Views/ApprovalsDrawer.xaml(.cs)`、`Localization/Strings.FeaturePages.cs` | 视图模型测试，加 `WpfContext` 真实窗口：大计划渲染、迟填列、禁止集、发散结果卡；真实 Windows 账户下的审批往返（P8-31e 实施报告列出的遗留项） | e2、e5；P8-21c |
-| P8-31j1 | j | 修订 §6.3、§6.5–6.7；`reference/tool-examples` 的 `sequence/project-generation` 和新工具示例；生成嵌入目录；八版检索与功能检查 | `docs/development/phase8-generation-framework.md`、`reference/tool-examples/*`、生成产物 | `Check-Repository.py --no-binaries`；核对链接、路径、适用版本和引用 | e2–e5 |
+| P8-31j1 | j | 修订 §6.3、§6.5–6.7；`reference/tool-examples` 的 `sequence/project-generation` 和新工具示例；生成嵌入目录；八版检索与功能检查 | `docs/development/design/project-generation-framework.md`、`reference/tool-examples/*`、生成产物 | `Check-Repository.py --no-binaries`；核对链接、路径、适用版本和引用 | e2–e5 |
 
 顺序：e1 → e2 → e3、e4、e5（e3 改共享准入，要与 P8-21c 错开）→ h1 → j1；e6 视 SafeV4 启用时间而定。各子任务按 `docs/development/validation.md` 构建并跑全部版本检查，新增用例进入现有注册套件并上调最低数，不放宽门禁。
 
@@ -489,7 +489,7 @@ SafeV4 候选形态（e6）共用一条 `v4-candidate/1` 规则：
 
 ## 附 依据
 
-- 设计：[生成框架方案](../phase8-generation-framework.md) §1.4、§6.1–6.7、§7、维护者决定；[工作台控制设计](../phase8-workbench-control.md) §1.1、§5.1–5.3、维护者决定；`AGENTS.md`；`CLAUDE.md`。
+- 设计：[生成框架方案](project-generation-framework.md) §1.4、§6.1–6.7、§7、维护者决定；[工作台控制设计](workbench-control-and-shared-session.md) §1.1、§5.1–5.3、维护者决定；`AGENTS.md`；`CLAUDE.md`。
 - P8-31e：`src/Shared/Host/GenerationExecutionTools.cs`、`src/Shared/Host/GenerationTools.cs`、`src/Logic/Generation/GenerationRunStore.cs`、`src/Logic/Generation/GenerationPlanner.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/ApprovalPipe.cs`、`src/Shared/AuditInvocation.cs`、`src/FoundationHost/GenerationTool.cs`、`src/FoundationHost/FoundationV4Tool.cs`、`tests/FoundationHost/TiaMcp.EngineHost.Tests/GenerationExecutionTests.cs`。
 - 写工具复核：`src/Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs`、`PlcExternalSourceWorkflow.cs`、`PlcExternalSourceDelete.cs`、`PlcExternalSourceImportPolicy.cs`；`src/Adapters.Contracts/PlcExternalSourceWorkflowContracts.cs`；`src/Logic/V4/SourceCandidate.cs`、`SourceContract.cs`、`CompileCandidate.cs`、`SaveCloseCandidate.cs`、`PlcImport.cs`、`Plan.cs`、`HostBehavior.cs`、`BehaviorCapabilities.cs`；`src/FoundationHost/FoundationTools.cs`、`FoundationV4Result.cs`；`src/Engine/ModelContextProtocol/Tools/McpServer.Approval.cs`、`PlcExternalSourcesTools.cs`；`src/Shared/Host/McpServer.Batch.cs`、`McpServer.ToolBridge.cs`。
 - 工程生命周期：`src/Adapters/Native/Session/PlcFoundationEngine.cs`、`MutationIdentityPolicy.cs`。

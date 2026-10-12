@@ -1,11 +1,13 @@
 # 原生 MCP 会话验收流程
 
-`scripts/checks/Test-NativeMcpSession.py` 使用实际生产 MCP STDIO 入口及 `--isolate-openness`，补充原来的独立 net48 原生生命周期框架。当前发布构建只运行该脚本的离线安全检查；新增原生流程验收状态为 **NOT RUN**。本页命令与独立生命周期测试都只覆盖 V20/V21，其他六个版本的工程验收按[验证说明](validation.md)分别记录。
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+
+`scripts/checks/Test-NativeMcpSession.py` 使用FoundationHost 的实际生产 MCP STDIO 入口和每会话 worker，补充原来的独立 net48 原生生命周期框架。当前发布构建只运行该脚本的离线安全检查；新增原生流程验收状态为 **NOT RUN**。本页命令与独立生命周期测试都只覆盖 V20/V21，其他六个版本的工程验收按[验证说明](validation.md)分别记录。
 
 在具有匹配 TIA、许可证、Openness 用户组和已获准测试程序的 Windows 环境中，先生成计划：
 
 ```powershell
-python scripts/checks/Test-NativeMcpSession.py --exe 'D:\TIA_MCP\runtime\v21\TiaMcp.Engine.V21.exe' --major 21 --output 'D:\TIA_TestResults\new-run'
+python scripts/checks/Test-NativeMcpSession.py --exe 'D:\TIA_MCP\runtime\v21\TiaMcp.FoundationHost.exe' --major 21 --output 'D:\TIA_TestResults\new-run'
 ```
 
 默认只显示计划，不启动进程或创建目录。确认处于获准的测试环境后，同一命令显式增加 `--run-live --confirm-new-portal` 才会执行。V20 使用对应 EXE 和 `--major 20`；输出目录必须不存在。
@@ -22,4 +24,4 @@ python scripts/checks/Test-NativeMcpSession.py --exe 'D:\TIA_MCP\runtime\v21\Tia
 
 结果为 `native-mcp-result.json`、`scenario.jsonl`、`host-stderr.log` 及 `diagnostics/`。未执行或失败均不能写成原生验收通过。`--self-test` 的成功只证明防误启动参数和错误响应检查通过，不证明该原生流程可成功运行。
 
-本流程覆盖会话、工程生命周期与身份检查；尚不覆盖 PLC/HMI 各工具族的真实编辑、HMI 变量依赖影响、编译结果、同文件在 UI 中关闭后重开，以及原生崩溃根因。HMI 删除需在另行获准的 Classic/Unified 测试工程中验收“预览→删除→不存在→编译”，不可拿生产工程补测。PLC 原生交叉引用继续保持默认关闭。
+本流程覆盖会话、工程生命周期与身份检查；尚不覆盖 PLC/HMI 各工具族的真实编辑、HMI 变量依赖影响、编译结果、同文件在 UI 中关闭后重开，以及原生崩溃根因。HMI 删除需在另行获准的 Classic/Unified 测试工程中验收“预览→删除→不存在→编译”，不可拿生产工程补测。PLC 原生交叉引用仍默认关闭。

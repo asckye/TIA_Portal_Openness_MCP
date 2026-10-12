@@ -22,7 +22,7 @@ The historical PLC migration backlog contained seven pending tool names at basel
 `c5379c1`; this batch adds scoped external-source creation and generation, leaving
 five names unimplemented. It is only one migration list. The functional review checks the
 engineering workflows those names represent, existing runtime gates, and additional
-API families. See the [implementation order](version-tools.md#remaining-tools-and-acceptance).
+API families. See the [implementation order](version-tools.md#release-differences).
 
 Reproduce with `build-tools/release/CatalogAudits.cs --public-api-root <SDK-root>` after building all targets. [Machine-readable summary and SDK hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/version-api-audit.json) identify the exact inputs. Detailed identifier-only candidate lists are written under `bin-build/multi-version/api-audit`.
 

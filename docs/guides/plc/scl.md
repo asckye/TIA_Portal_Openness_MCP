@@ -1,6 +1,6 @@
 # 编写、导入和编译 SCL
 
-V14 SP1–V21 均提供外部源导入、生成块和编译工具，但基础引擎与完整引擎的参数和执行流程不同。先让 AI 读取当前服务的 `GetToolUsage`，再调用对应工具。
+V14 SP1–V21 均提供外部源导入、生成块和编译工具，但宿主与V20/V21 的参数和执行流程不同。先让 AI 读取当前服务的 `GetToolUsage`，再调用对应工具。
 
 ## 从完整示例开始
 
@@ -17,8 +17,8 @@ V14 SP1–V21 均提供外部源导入、生成块和编译工具，但基础引
 
 | 引擎 | 调用序列 |
 |---|---|
-| V14 SP1–V19 基础引擎 | `GetToolUsage(exampleId="sequence/plc-scl-block-foundation")` |
-| V20/V21 完整引擎 | `GetToolUsage(exampleId="sequence/plc-scl-block")` |
+| V14 SP1–V19 宿主 | `GetToolUsage(exampleId="sequence/plc-scl-block-foundation")` |
+| V20/V21 | `GetToolUsage(exampleId="sequence/plc-scl-block")` |
 
 1. 读取实际工程和 PLC 路径。
 2. 把完整源文件放在运行 TIA/MCP 的电脑上。虚拟机服务读取的是虚拟机文件系统，不是 AI 宿主机的同名路径。
@@ -27,7 +27,7 @@ V14 SP1–V21 均提供外部源导入、生成块和编译工具，但基础引
 5. 在工程设备满足离线编译前提后编译，检查错误数、警告数和嵌套诊断，再读回目标块。
 6. 确认结果后保存项目。以上步骤不自动下载到 PLC。
 
-基础引擎当前执行路径接受 ASCII 源文件；中文等非 ASCII 源编码仍待原生验证。完整引擎的编码以具体文件示例为准，不能将 `.scl` 与 `.s7dcl` 的编码要求混为一谈。
+宿主当前执行路径接受 ASCII 源文件；中文等非 ASCII 源编码仍待原生验证。V20/V21 的编码以具体文件示例为准，不能将 `.scl` 与 `.s7dcl` 的编码要求混为一谈。
 
 V14 SP1 的生成 API 没有返回对象列表，因此需结合前后块清单和读回结果判断。其他版本返回生成对象也不能代替编译诊断。
 

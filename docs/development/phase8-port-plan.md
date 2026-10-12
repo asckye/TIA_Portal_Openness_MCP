@@ -1,13 +1,17 @@
 # P8-01 迁移清单与方案：V20/V21 独有工具迁入 Foundation 适配器
 
-研究产物（只读调查，未改动仓库其他文件，未构建、未连接 TIA/VM）。日期 2026-10-08，基于 master `5623a784` 的当前工作区。
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+
+历史调研基线（只读调查，未改动仓库其他文件，未构建、未连接 TIA/VM）。日期 2026-10-08，基于 master `5623a784` 的当前工作区。
 上游任务：[重构计划](refactor-plan.md) 阶段 8 P8-01；背景见 [路线图](roadmap.md)“阶段 8”与 [差距复查](gap-review-2026-10.md)。
+
+现行实施：B1–B7 和 F19 样板已合并；旧版注册规则与 API 复核已合并。后续批次及验收状态以[重构计划](refactor-plan.md)为准。下方数量、源码定位和 API 调研保留 2026-10-08 的研究基线；现行范围只引用[生成目录](../reference/version-tool-catalog.md)。决定见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)、[ADR 0012](decisions/0012-old-release-tool-registration.md)和 [ADR 0014](decisions/0014-tool-counts-follow-official-api.md)。
 
 ## 0. 摘要
 
 | 项 | 结论 |
 |---|---|
-| 范围 | `manifest/contracts/v4/baseline/20.json`、`21.json` 中不在 `19.json` 的工具名：**431 个**（V20 420、V21 431；V21 独有 11 个，V20 无独有）。核对：V19 67、V20 487、V21 498 个工具；487−67=420，498−67=431；19 ⊂ 20 ⊂ 21 |
+| 范围 | `manifest/contracts/v4/baseline/20.json`、`21.json` 中不在 `19.json` 的工具名：**431 个（调研时）**（V20 420、V21 431；V21 独有 11 个，V20 无独有）。核对：V19 67、V20 487、V21 498 个工具；487−67=420，498−67=431；19 ⊂ 20 ⊂ 21 |
 | 分族 | **35 个能力族**（F01–F35），每个工具恰属一族；附录 A 逐行列出 431 个工具，合计与基线一致 |
 | 执行位置 | 按 `src/Logic/ModelContextProtocol/ToolExecution.cs`：29 个已在 Foundation 主机执行（host），402 个在引擎 worker 内由引擎代码执行（worker） |
 | 无 Openness 依赖的族 | F01–F04（83 个工具）：宿主元工具/诊断报告、PLC 离线分析、HMI 离线设计、运行时通道（S7/Web API/OPC UA 客户端/Open Pipe/PLCSIM Adv） |

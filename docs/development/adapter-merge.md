@@ -1,5 +1,7 @@
 # 按版本的类型化适配器设计（重构阶段 4）
 
+状态：历史记录 · 最后核对：2026-10-11，master `578a05ee` · 现行规则见[设计规范](design-spec/README.md)
+
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md)
 
 本页是 P4-01 的设计结论。路径前缀：**E** = `src/Engine/Siemens/Portal/`，

@@ -1,8 +1,10 @@
 # 验证分层
 
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+
 [文档目录](../README.md) · [发布流程](release-workflow.md) · [当前交接](handoff.md)
 
-命令从仓库根目录运行。v3.2.0 已完成八个精确 SDK 目标及当前离线功能构建；
+命令从仓库根目录运行。八个精确 SDK 目标和离线结果以当前构建记录为准；
 新增真实 TIA 工程验收仍为 **NOT RUN**。发布上传、发布后验包和原生验收分别记录。
 
 | 证据 | 位置和用途 |
@@ -24,7 +26,7 @@
 该开关让真实 planner 的 Basic/plain 八版夹具把实际 UTF-8 字节写入源码 Golden 目录；
 其他确定性、哈希和语义断言仍执行。移除开关，审查每个 diff，再正常运行同一套件验证；默认运行不写文件。
 
-本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录和工具用法，再构建两个 solution 的项目、八版 PLC worker、
+本机离线全集可用 `check-all` 执行。它先按顺序生成嵌入目录、工具用法和文档数量块，再构建两个 solution 的项目、八版 PLC worker、
 V20/V21 生产及 SDK fixture 引擎、Harness、Studio 两种路径模式和全部套件，后续测试使用对应程序集直接执行 VSTest，保留注册的过滤表达式；其他工程入口使用 `--no-build --no-restore`。
 SDK 仅传入 `foundation-api` 与两个 PLC exchange 套件；其余注册套件清除 SDK 环境变量，继续执行 clean-checkout 门槛。
 
@@ -49,7 +51,7 @@ Studio 测试收到既有的 bundle 根目录覆盖；bridge 载荷来自对应�
 每次 `-OutputDirectory` 必须使用新目录。报告保存每个进程的计时、日志、TRX 合并计数、源码漂移和五分钟门槛。
 低于五分钟与检查通过是两个独立条件，任何一个不满足都返回非零状态。
 
-构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部 15 项并展开到该图，避免嵌套调度；汇总在依赖结束后执行，失败的分片仍产生汇总。
+构建后的注册套件、Studio、静态检查、捕获、usage、Harness 和引擎检查进入同一依赖调度图。preflight 保留全部检查并加入文档工具数量校验并展开到该图，避免嵌套调度；汇总在依赖结束后执行，失败的分片仍产生汇总。
 压测与其他检查同时运行，但通过 Windows job object 分别限定到互不相交的 CPU 核集合。默认预留 8 个逻辑核（小机器取三分之一）、最多四个压测进程；`-StabilityCores` 和 `-StabilityParallelism` 控制预留和并发。HTTP 夹具使用独立临时工作目录，避免 ASP.NET 配置文件监视器扫描整个 worktree；原句柄和内存界限保持不变。
 读取 Windows 物理核拓扑，优先预留较高性能等级的完整物理核，避免拆开 SMT 同胞；启动前设置 DOTNET_PROCESSOR_COUNT 与 job 的实际核心数一致。cpu-plan.json 记录实际分配，不把非空闲诊断当作性能验收。
 客户端启动后先等待父进程分配 job，再启动实际命令，job 限制覆盖宿主、worker 和立即启动的子孙进程。50 轮、内存和句柄增长限值保持；结果及失败前的 process-samples.json 记录实际 affinity 与样本。worker deadline 和配置页面检查独占普通队列，隔离的压测队列继续运行。
@@ -370,7 +372,7 @@ GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR
 工具数识别静态 roster 候选，排除可识别的第三方客户端上限；它不能自动证明数字已过时。
 `*Leftovers*` 是文件数预算，其余类别按规范化注释内容比较 SHA-256 多重集合。
 
-P2-05a 初始清点为 **564 个文件、348 个类别条目**。与[设计统计](runtime-layout.md#注释与-leftovers)的对照：
+P2-05a 初始清点为 **564 个文件、348 个类别条目**。与[设计统计](../archive/development/runtime-layout-history.md#注释与-leftovers)的对照：
 
 | 类别 | 检查器 | 设计 | 口径说明 |
 |---|---:|---:|---|
@@ -567,7 +569,7 @@ Release 构建中的每个宿主检查都使用该次运行 temp 目录下独立
 实际范围和结果由完整构建记录保存。
 
 ```powershell
-python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcp.Engine.V21.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --rounds 50 --output bin-build/stability-v21
+python scripts/checks/Test-LocalStability.py --exe runtime/v21/worker/TiaMcp.Engine.V21.exe --major 21 --public-api sdk/TIA_V21_PublicAPI/V21/net48 --host-harness tests/Engine/TiaMcp.Engine.Harness/bin/Release/net48/TiaMcp.Engine.Harness.exe --rounds 50 --output bin-build/stability-v21
 ```
 
 输出目录必须不存在。脚本仅清理它创建的服务，不连接 TIA，不解禁原生交叉引用。
@@ -634,3 +636,7 @@ dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge <Bridge.exe> --public-ap
 `Test-BridgeSmoke.cs` 只验证 hello、未绑定的 session.state/ping/doctor.run 和退出，不创建原生会话。`Test-Ecosystem.py` 保留在生态测试部分：它需要伴随 Python 的 pytest 与上游源码优先级，默认不配置 live 端点，命令仍为 `bin-build/ecosystem-python/Scripts/python.exe -X utf8 scripts/checks/Test-Ecosystem.py`。其运行环境与开发工具的 Python 迁移分别维护。
 
 历史 `ledger` 渲染与旧 Python 输出逐字节一致（UTF-8 无 BOM、LF）；使用 `--output <file>`。现行 `real-machine-ledger.md` 含 L5 输入和 `generate-catalogs` 能力块，历史表生成器拒绝覆盖它，能力块仍须保留。`vm_ledger.json` 是冻结数据，不再扫描机器会话记录。
+
+## 文档数量与链接
+
+`generate-tool-counts` 从已核对的注册目录及 lite 配置更新入口、配置、版本范围、运行布局和发布说明中的标记块；`-Check` 逐字节拒绝漂移、缺失和重复块。迁移表由 `generate-release-migration` 维护。文档数值不得手写。仓库检查核对链接和随包路径，死引用检查核对工具名；检查结果仍须与当前目录及适用版本一起审阅。

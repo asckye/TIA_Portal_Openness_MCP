@@ -4,11 +4,9 @@
 
 V20/V21 MCP host 在 TIA 未安装、检测到的 TIA 版本不匹配、Openness DLL 无法初始化或用户不在 `Siemens TIA Openness` 组时仍可提供 MCP 诊断。`InitializeEnvironment`、`GetEnvironmentDiagnostics` 和 `GetOpennessWorkerStatus` 显示失败原因与修复建议。需要原生 TIA 的工具在 dispatch 前返回 `RESOURCE_UNAVAILABLE`；环境门禁拒绝时，V4 元数据为 `rejected-before-operation` / `not-started`。读取、离线分类和诊断工具可继续使用。
 
-隔离运行时，MCP transport、身份验证和诊断由 host 提供，Openness 调用由同一 V20/V21 EXE 的 worker 进程承担。worker 已接收调用后发生超时或崩溃时，不得报告为“操作前拒绝”；需要先检查工程实际状态。重启 worker 后必须重新连接并显式绑定目标工程。4.0 发布版保持默认隔离关闭，直到本页之外的 VM 验收完成；运行手册见[worker 隔离指南](../guides/openness-worker-isolation.md)。
+每个 MCP 会话使用独立 worker，宿主提供传输、鉴权与诊断。派发后超时或崩溃可能使结果未知；先检查工程，再恢复会话并重新绑定。恢复步骤见[worker 与恢复](../guides/openness-worker-isolation.md)。
 
-For an isolated call, a timeout or crash after dispatch may leave the native outcome unknown. Inspect the project before retrying, restart only an idle/faulted worker, then explicitly connect and bind again. Isolation does not make a dispatched TIA operation transactional or cancellable.
-
-本页描述 v3.2.0 当前实现和已知现场问题。八版入口并不具有同一套能力，先核对[版本矩阵](../reference/version-tools.md)与当前服务 `GetToolUsage`。官方 API 存在、工具可列出、离线测试通过、真实工程执行成功是不同证据。
+本页描述当前源码的边界和已知现场问题。八版入口并不具有同一套能力，先核对[版本矩阵](../reference/version-tools.md)与当前服务 `GetToolUsage`。官方 API 存在、工具可列出、离线测试通过、真实工程执行成功是不同证据。
 
 ## 已知未解决的现场问题
 
@@ -27,13 +25,13 @@ PLC 交叉引用的显式诊断开关为服务进程环境变量 `TIA_MCP_ENABLE
 
 | 通道 | 当前可以做什么 | 前提与限制 |
 |---|---|---|
-| TIA Openness | 工程对象读写、导入导出、编译；完整引擎还有上线/离线、下载、站上载和在线比较等指定接口。 | 取决于版本、对象、安装选件与原生 API。工程标签或 DB 初始值不是 CPU 实时值。 |
-| S7 Web server API | 完整引擎的 `GetPlcWebVars` / `WritePlcWebVars`、`GetPlcWebDiagnostics`、`SetPlcWebOperatingMode`。 | PLC 固件及 Web API 支持、账户权限和证书；独立于 Openness。诊断工具的设备信息和运行模式不等于完整故障缓冲区。 |
-| Unified Open Pipe | 完整引擎读取/写入 Runtime 标签、读取活动报警及限定的单次消息。 | MCP 运行在 Runtime 本机，用户具备对应组权限；不提供任意远程管道或持续订阅。 |
-| PLCSIM Advanced API | 完整引擎管理仿真实例、读写标签并运行限定场景。 | 本机安装匹配 API；仿真通过不等于真实 CPU 验收。 |
+| TIA Openness | 工程对象读写、导入导出、编译；V20/V21还有上线/离线、下载、站上载和在线比较等指定接口。 | 取决于版本、对象、安装选件与原生 API。工程标签或 DB 初始值不是 CPU 实时值。 |
+| S7 Web server API | V20/V21 的 `GetPlcWebVars` / `WritePlcWebVars`、`GetPlcWebDiagnostics`、`SetPlcWebOperatingMode`。 | PLC 固件及 Web API 支持、账户权限和证书；独立于 Openness。诊断工具的设备信息和运行模式不等于完整故障缓冲区。 |
+| Unified Open Pipe | V20/V21读取/写入 Runtime 标签、读取活动报警及限定的单次消息。 | MCP 运行在 Runtime 本机，用户具备对应组权限；不提供任意远程管道或持续订阅。 |
+| PLCSIM Advanced API | V20/V21管理仿真实例、读写标签并运行限定场景。 | 本机安装匹配 API；仿真通过不等于真实 CPU 验收。 |
 | 其他运行时/伴随工具 | 按各工具声明的 OPC UA、S7 或独立程序接口执行。 | 分别检查连接目标和实际协议，不能因 Openness 已连接就视为这些通道已就绪。 |
 
-基础宿主只提供其公开的 PLC 子集，不因完整引擎存在某个运行时工具而自动具备该工具。完整引擎中部分选件入口仅在一个版本有实际调用路径，详情见[逐版 Openness 覆盖](../reference/openness-coverage.md#v20v21-optional-tools-and-scope)。
+宿主只提供其公开的 PLC 子集，不因V20/V21存在某个运行时工具而自动具备该工具。V20/V21中部分选件入口仅在一个版本有实际调用路径，详情见[逐版 Openness 覆盖](../reference/openness-coverage.md#v20v21-optional-tools-and-scope)。
 
 ## 当前没有可承诺的 Openness 路线
 

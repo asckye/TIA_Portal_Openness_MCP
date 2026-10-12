@@ -1,5 +1,8 @@
 # Adapter contracts (steps B, D and G)
 
+Status: Current · Last checked: 2026-10-11, master `578a05ee`
+
+
 Targets: net48 and net10.0. No Siemens or JSON dependency. Existing declarations keep
 their namespaces, member order, accessors and defaults. Step D implements session, PLC program and PLC data facets by delegation. The worker still calls the existing engine.
 Step G adds `IStudioSession` and fills hardware (device listing), VCI and HMI export
@@ -9,9 +12,11 @@ describes the separate Studio policy, release capabilities and STA ownership.
 The `Studio/` values preserve the original Studio DTO shapes in a distinct
 namespace; Core and bridge keep using their original DTOs until the host switch.
 
+This component is part of the shared FoundationHost and per-session worker architecture. Ported native tools live in `src/Adapters/Native`; shared declarations and host mappings live in `src/Shared`. Historical step tables below record the original migration. Current ownership and acceptance follow the architecture specification and generated catalogs.
+
 ## Moved declarations
 
-The remaining sources now live under `../TiaMcp.Adapters/Native/` and `../TiaMcp.Adapters/Policy/`.
+The remaining sources now live under `../Adapters/Native/` and `../Adapters/Policy/`.
 The tables below record the declarations moved in step B; the step D inventory gives their current paths.
 
 | Original file | Types moved verbatim |

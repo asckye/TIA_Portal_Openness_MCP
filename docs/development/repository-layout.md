@@ -1,5 +1,7 @@
 # 仓库结构
 
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+
 [文档目录](../README.md) · [当前交接](handoff.md)
 
 仅维护 `master`；旧版本分支记录由 Git 历史保留。
@@ -10,14 +12,15 @@
 | `TiaPortalOpenness.Offline.slnx` | 40 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `src/Shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由 .NET release tool 收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
-| `src/Engine`、`src/FoundationHost`、`src/PlcWorker` | V20/V21 完整引擎、六版 Foundation 宿主及八版 worker；项目文件名已与产品名称对齐；P6-36 已更新产品程序集与 EXE 名称 |
+| `src/Engine`、`src/FoundationHost`、`src/PlcWorker` | V20/V21 引擎 worker 和 CLI、八版 FoundationHost 宿主、V14 SP1–V19 PLC worker |
+| `src/EngineHost` | V20/V21 宿主包装链库；宿主实现和链接源集中在这里 |
 | `src/Adapters`、`src/Adapters.Contracts`、`src/OnlineChannels`、`src/WorkerChannel` | 类型化适配器、契约、运行通道与进程通道 |
 | `src/Logic` | net48/net10.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
 | `src/Studio/Launcher` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
 | `src/Studio/Gui/Configuration` | 编译型 WPF 配置页、配置逻辑及中英资源字典；使用 Studio 调色板 |
 | `src/Studio/Gui/Themes/Primer.xaml`、`Controls/WorkbenchLogView.cs`、`Fonts` | 工作台内的 Primer 样式、日志视图和字体；字体许可及来源记录与字体同目录 |
 | `tests/Studio/TiaOpenness.Configuration.Tests` | .NET 10 配置页控制台测试（用 dotnet run 执行） |
-| `src/Studio` | 直接调用 Openness 的 Studio、桥接进程和八个适配器 |
+| `src/Studio` | 工作台的共享 MCP 操作面板；旧桥接和八个 Studio 适配器保留到清理任务 |
 | `src/Shared` | 无 Siemens 版本依赖的安装布局解析、环境信息、参数、诊断、导入依赖规划和统一示例库 |
 | `third_party` | 固定版本的第三方组件及其许可证 |
 | `third_party/tia-openness-studio` | Studio 上游 LICENSE、`UPSTREAM.json` 和完整源码/历史归档；来源记录内的导入路径仍相对原上游目录 |

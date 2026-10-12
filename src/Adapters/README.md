@@ -1,9 +1,9 @@
 # Explicit release adapters and PLC foundation workers
 
-These eight peer projects compile the PLC foundation subset and Studio native
-extension surfaces into separate typed libraries. V20 and V21 have exactly the same project structure as
-the earlier releases. The foundation host publishes the matching subset for V14 SP1–V19,
-while V20/V21 retain their full engines. Each worker references exactly one selected adapter.
+Status: Current · Last checked: 2026-10-11, master `578a05ee`
+
+
+These eight peer projects compile native Foundation capabilities into version-specific typed libraries. FoundationHost uses the matching adapter through each session's worker on every release. V20/V21 retain an engine worker for capabilities still being ported. The old Studio extension surfaces remain until their retirement task. Each worker references exactly one selected adapter.
 Use `dotnet run --project build-tools/release -- build-multi-version` from the repository root to build, test and deploy
 the eight-version distribution. Native TIA acceptance remains pending.
 
@@ -12,6 +12,8 @@ It is intentionally transitional: `PlcReadContracts.cs` still contains typed
 implementation. Version symbols come from `src/Shared/TiaFeatures.props`.
 No full eight-copy source fork is introduced; plain DTOs and interfaces live in
 `TiaMcp.Adapters.Contracts`.
+
+This component is part of the shared FoundationHost and per-session worker architecture. Ported native tools live in `src/Adapters/Native`; shared declarations and host mappings live in `src/Shared`. Historical step tables below record the original migration. Current ownership and acceptance follow the architecture specification and generated catalogs.
 
 ## Studio extension surfaces (step G, part 1)
 

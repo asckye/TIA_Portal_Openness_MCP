@@ -1,8 +1,10 @@
 # 工具开发
 
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+
 [重构计划](refactor-plan.md) · [仓库结构](repository-layout.md) · [验证分层](validation.md) · [响应与异常设计](response-and-errors.md)
 
-完整引擎的工具声明位于 `src/Engine/ModelContextProtocol/Tools`。
+尚未移植的 V20/V21 工具声明位于 `src/Engine/ModelContextProtocol/Tools`。
 新增工具时同时检查所属文件、类型化调用、版本策略和注册目录；示例、参数来源及结果解释统一维护在
 `reference/tool-examples`，按验证分层执行受影响版本的构建、离线测试和契约快照。
 
@@ -15,7 +17,7 @@
 
 ## MCP 文案语言
 
-按[运行时布局与清理](runtime-layout.md#用户可见文案语言)的维护者决定（2026-10-03）：
+按[运行时布局与清理](design-spec/v4-protocol.md#文案行为披露与审计的来源)的维护者决定（2026-10-03）：
 阶段 0–5 冻结全部既有 MCP 可见文本，包括描述、参数说明、消息、异常、meta、中文与错别字；
 重构不能顺便翻译或润色。**新增 MCP 可见文本一律英文；中文只作为数据出现**，例如 TIA 原文、
 工程对象名与示例名称。阶段 6（4.0）统一为英文、增加稳定机器错误码，并提供旧→新对照表。
@@ -31,7 +33,7 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 
 ## 注释改写
 
-按[清理设计](runtime-layout.md#注释与-leftovers)执行；本阶段先建立门禁，注释修改随后续领域任务进行：
+按[清理设计](../archive/development/runtime-layout-history.md#注释与-leftovers)执行；本阶段先建立门禁，注释修改随后续领域任务进行：
 
 - 删除产品版本号、维护者归属和旧 `Phase N` / `sub-batch` 叙事，把修复经过改写为当前必须保持的不变量。
 - 原生行为证据保留，写明 TIA/PLCSIM 版本、日期和[真机验收清单](../reference/real-machine-ledger.md)链接。
@@ -62,3 +64,7 @@ XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授�
 [TiaMcp.Engine.Harness 黄金数据](../../tests/Engine/TiaMcp.Engine.Harness/README.md)记录；
 修改响应代码须比较规范化快照和格式 3 原始文本哈希。`meta.error` 按维护者决策 D1 只将首行
 “类型: 消息”作为执行器黄金比较的契约，堆栈帧允许随迁移变化；这不授权改写实际返回内容。
+
+## 现行工具归属
+
+已移植工具的声明与响应映射在 `src/Shared`，无 Openness 的宿主工具在 `src/Shared/Host`；原生实现位于 `src/Adapters/Native`。FoundationHost 和 EngineHost 链接同一份声明，禁止在引擎中重建已移植实现。尚未移植的专有工具保留在 `src/Engine/ModelContextProtocol/Tools`，按能力族继续迁移，见 [ADR 0009](decisions/0009-port-v20-v21-tools-to-foundation-adapters.md)。注册与动作范围以生成目录为准；新增声明后依次运行 `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`，再构建与捕获。

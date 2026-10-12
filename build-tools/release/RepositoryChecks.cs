@@ -125,6 +125,8 @@ internal static class RepositoryChecks
                     var target = Uri.UnescapeDataString(match.Groups[1].Value.Trim('<', '>').Split('#', 2)[0]);
                     if (target.Length > 0 && !Regex.IsMatch(target, @"\A[\w+.-]+:") && !rules.Resource(Path.GetRelativePath(root, Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!, target))).Replace('\\', '/'))) errors.Add(relative + ": shipped document links outside the delivery: " + target);
                 }
+                if (error is null && DocumentationLinks.AnchorError(source, match.Groups[1].Value) is { } anchorError)
+                    errors.Add(relative + ": " + anchorError);
             }
         }
         void Required(string name, string label)

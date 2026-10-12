@@ -1,6 +1,6 @@
 # Unified 启动画面与 Runtime 工程设置
 
-V20/V21 完整引擎提供 `GetUnifiedRuntimeSettings` 和 `SetUnifiedRuntimeSettings`。它们编辑 HMI 工程的 `RuntimeSettings`，不是运行设备上的画面切换命令；实际属性支持取决于安装的 Unified API 和设备。
+V20/V21 提供 `GetUnifiedRuntimeSettings` 和 `SetUnifiedRuntimeSettings`。它们编辑 HMI 工程的 `RuntimeSettings`，不是运行设备上的画面切换命令；实际属性支持取决于安装的 Unified API 和设备。
 
 ## 读取再修改
 

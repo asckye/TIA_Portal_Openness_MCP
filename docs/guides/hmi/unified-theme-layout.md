@@ -1,8 +1,6 @@
 # Unified HMI theme and layout tools
 
-Document id: `hmi-unified-theme-layout`
-
-These V20/V21 full-engine tools calculate or apply the user's chosen theme and layout. They do not select a product design for the user or establish PLC bindings.
+These V20/V21 tools calculate or apply the user's chosen theme and layout. They do not select a product design for the user or establish PLC bindings.
 
 | Tool | Operation |
 |---|---|

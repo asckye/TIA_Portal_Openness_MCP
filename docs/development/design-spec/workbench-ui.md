@@ -13,7 +13,7 @@
 
 冲突时按下列顺序取上位：
 
-1. **项目红线**：审批与“AI 控制工作台界面”的规则，来源 [工作台控制设计](../phase8-workbench-control.md)（§2.7、§3.3、§3.4、§4、§5.2–5.3 及 2026-10-08 维护者决定）。本文 §11 原样收录，标注“项目规则”。
+1. **项目红线**：审批与“AI 控制工作台界面”的规则，来源 [工作台控制设计](../design/workbench-control-and-shared-session.md)（§2.7、§3.3、§3.4、§4、§5.2–5.3 及 2026-10-08 维护者决定）。本文 §11 原样收录，标注“项目规则”。
 2. **WCAG 2.2 AA（可量化的无障碍底线，2026-10-11 维护者决定）**：[WCAG 2.2](https://www.w3.org/TR/WCAG22/) 的 A 级与 AA 级成功准则，按 W3C [WCAG2ICT（2025-12-11 Group Note）](https://www.w3.org/TR/wcag2ict-22/) 对非 Web 软件的解释应用到 WPF 桌面程序。逐条适用性、工作台解释、验证方法与 Microsoft 对应条目见 §15。
 3. **Microsoft Windows 应用设计指南**：learn.microsoft.com/windows/apps/design（Fluent、布局、字体、颜色、命令、控件、对话框、无障碍、键盘、全球化、写作）。
 4. **WPF 与 Windows 桌面专项指南**：WPF 焦点与 UI Automation 文档、.NET《Accessibility Best Practices》、Win32 高 DPI 指南；新版指南缺少对应条目时才引用 Windows 7 时期的 Win32 UX Guide（`win32/uxguide`，在 Microsoft Learn 上仍在维护，但示例外观已过时）。
@@ -249,7 +249,7 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 
 ## 11 审批与 AI 控制红线（项目规则）
 
-本节规则来源于 `docs/development/phase8-workbench-control.md`，优先级高于本文其他章节。其中“依据”标注的 Microsoft / W3C 条目只用于说明实现方式。
+本节规则来源于 `docs/development/design/workbench-control-and-shared-session.md`，优先级高于本文其他章节。其中“依据”标注的 Microsoft / W3C 条目只用于说明实现方式。
 
 ### 11.1 审批
 
@@ -520,4 +520,4 @@ Microsoft 新版设计指南以 WinUI 控件为例。下表说明工作台（WPF
 | AutomationProperties.HeadingLevelProperty / IsDialogProperty | https://learn.microsoft.com/en-us/dotnet/api/system.windows.automation.automationproperties.headinglevelproperty ；https://learn.microsoft.com/en-us/dotnet/api/system.windows.automation.automationproperties.isdialogproperty |
 | WCAG 2.2 | https://www.w3.org/TR/WCAG22/ |
 | WCAG2ICT（2025-12-11 Group Note） | https://www.w3.org/TR/wcag2ict-22/ |
-| 项目红线 | `docs/development/phase8-workbench-control.md` |
+| 项目红线 | `docs/development/design/workbench-control-and-shared-session.md` |

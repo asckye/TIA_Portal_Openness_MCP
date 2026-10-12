@@ -31,6 +31,7 @@ jobs:
           dotnet run --project build-tools/release -- generate-catalogs -Check
           dotnet run --project build-tools/release -- generate-tool-usage -Check
           dotnet run --project build-tools/release -- generate-release-migration -Check
+          dotnet run --project build-tools/release -- generate-tool-counts -Check
           dotnet run --project build-tools/release -- check-tools-list
       - uses: actions/upload-artifact@v6
         if: always()
@@ -69,6 +70,7 @@ jobs:
           dotnet run --project build-tools/release -- generate-catalogs -Check
           dotnet run --project build-tools/release -- generate-tool-usage -Check
           dotnet run --project build-tools/release -- generate-release-migration -Check
+          dotnet run --project build-tools/release -- generate-tool-counts -Check
       - name: Write guard roster and operation categories
         run: |
           dotnet run --project build-tools/release -- check-tools-list -SelfTest

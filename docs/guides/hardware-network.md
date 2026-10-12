@@ -1,8 +1,6 @@
 # Hardware and network configuration
 
-Document id: `hardware-network`
-
-The tools below belong to the V20/V21 full engines. The V19 foundation engine has a narrower hardware search/device-creation route; it does not expose this entire network tool family. See [version support](../reference/version-tools.md).
+Hardware and network tools use the Foundation adapters on releases with the required API. Inspect [version support](../reference/version-tools.md) and `GetToolUsage` for the selected release; unavailable actions are refused before native calls.
 
 ## Read, plan, apply and check
 

@@ -1,8 +1,6 @@
 # Unified HMI event actions
 
-Document id: `hmi-unified-actions`
-
-These tools belong to the V20/V21 full engines. Button event code and global script modules are different objects; use the [global-script workflow](global-scripts.md) for modules.
+These tools apply to V20/V21. Button event code and global script modules are different objects; use the [global-script workflow](global-scripts.md) for modules.
 
 ## Choose an entry point
 

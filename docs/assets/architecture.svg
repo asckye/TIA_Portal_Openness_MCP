@@ -1,106 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 396"
-     width="100%" style="max-width:980px;height:auto;" role="img"
-     aria-label="TIA Portal MCP architecture">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 450" role="img" aria-labelledby="title desc">
+  <title id="title">TIA Portal Openness MCP 4.0 components</title>
+  <desc id="desc">AI clients and the Workbench Engineering page share a FoundationHost session. Each session owns a version-matched worker: PLC worker on V14 SP1 through V19, engine worker on V20 and V21. The worker alone calls TIA Openness.</desc>
+  <!-- Editable vector source. Relationships match docs/development/design-spec/architecture.md. -->
   <defs>
-    <style><![CDATA[
-      .title { font: 700 21px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#FFFFFF; }
-      .sub   { font: 13px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#3F4A5C; }
-      .h2    { font: 700 14px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#1F2937; }
-      .body  { font: 11px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#3F4A5C; }
-      .chip  { font: 700 12px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#1F2937; }
-      .lbl   { font: 11px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#6B7686; }
-      .foot  { font: italic 11px 'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif; fill:#6B7686; }
-    ]]></style>
-    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-opacity="0.10"/>
-    </filter>
-    <marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L6,3 L0,6 Z" fill="#5B6776"/>
-    </marker>
+    <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#172b4d} .heading{font-size:19px;font-weight:600} .body{font-size:15px} .box{fill:#f6f8fa;stroke:#8799b0;stroke-width:1.5} .arrow{stroke:#405778;stroke-width:2;fill:none}</style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#405778"/></marker>
   </defs>
-
-  <!-- title -->
-  <rect x="10" y="12" width="960" height="46" rx="8" fill="#0F2E5C"/>
-  <text x="490" y="35" class="title" text-anchor="middle" dominant-baseline="middle">
-    TIA Portal MCP &#8212; architecture
-  </text>
-  <text x="490" y="80" class="sub" text-anchor="middle">
-    TIA Portal V14 SP1, V15.1 and V16&#8211;V21 &#8212; eight version-matched runtimes.
-  </text>
-
-  <!-- pipeline arrows (behind cards' gaps) -->
-  <line x1="238" y1="175" x2="259" y2="175" stroke="#5B6776" stroke-width="2.2" marker-end="url(#ar)"/>
-  <line x1="479" y1="175" x2="500" y2="175" stroke="#5B6776" stroke-width="2.2" marker-end="url(#ar)"/>
-  <line x1="720" y1="175" x2="741" y2="175" stroke="#5B6776" stroke-width="2.2" marker-end="url(#ar)"/>
-
-  <!-- card 1: MCP client -->
-  <g transform="translate(20,100)">
-    <rect width="217" height="150" rx="10" fill="#FFFFFF" stroke="#CBD3DE" stroke-width="1.2" filter="url(#sh)"/>
-    <rect width="217" height="6" rx="3" fill="#0E8F8A"/>
-    <text x="108.5" y="34" class="h2" text-anchor="middle">MCP Client</text>
-    <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">Claude Code &#183; Codex</tspan>
-      <tspan x="108.5" dy="1.7em">Cursor &#183; VS Code &#183; Gemini CLI</tspan>
-      <tspan x="108.5" dy="1.7em">and other MCP clients</tspan>
-    </text>
-  </g>
-
-  <!-- card 2: server -->
-  <g transform="translate(261,100)">
-    <rect width="217" height="150" rx="10" fill="#FFFFFF" stroke="#CBD3DE" stroke-width="1.2" filter="url(#sh)"/>
-    <rect width="217" height="6" rx="3" fill="#1F4E89"/>
-    <text x="108.5" y="34" class="h2" text-anchor="middle">TiaMcp.Engine.V21.exe</text>
-    <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">V14 SP1&#8211;V19: foundation</tspan>
-      <tspan x="108.5" dy="1.7em">V20/V21: full engines</tspan>
-      <tspan x="108.5" dy="1.7em">GetToolUsage: unified examples</tspan>
-    </text>
-  </g>
-
-  <!-- card 3: openness -->
-  <g transform="translate(502,100)">
-    <rect width="217" height="150" rx="10" fill="#FFFFFF" stroke="#CBD3DE" stroke-width="1.2" filter="url(#sh)"/>
-    <rect width="217" height="6" rx="3" fill="#8E44AD"/>
-    <text x="108.5" y="34" class="h2" text-anchor="middle">Siemens Openness</text>
-    <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">Exact installed API identity</tspan>
-      <tspan x="108.5" dy="1.7em">Typed version adapters</tspan>
-      <tspan x="108.5" dy="1.7em">Release-specific capabilities</tspan>
-    </text>
-  </g>
-
-  <!-- card 4: TIA Portal -->
-  <g transform="translate(743,100)">
-    <rect width="217" height="150" rx="10" fill="#FFFFFF" stroke="#CBD3DE" stroke-width="1.2" filter="url(#sh)"/>
-    <rect width="217" height="6" rx="3" fill="#E07A22"/>
-    <text x="108.5" y="34" class="h2" text-anchor="middle">Selected TIA Portal</text>
-    <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">live project</tspan>
-      <tspan x="108.5" dy="1.7em">PLC foundation on all releases</tspan>
-      <tspan x="108.5" dy="1.7em">Broader tools on V20/V21</tspan>
-    </text>
-  </g>
-
-  <!-- flow caption -->
-  <text x="490" y="272" class="lbl" text-anchor="middle">
-    JSON-RPC over stdio / HTTP  &#8594;  matching Openness runtime  &#8594;  selected TIA project
-  </text>
-
-  <!-- outputs -->
-  <text x="20" y="298" class="lbl">Capabilities depend on the selected release and installed products</text>
-  <g class="chip">
-    <rect x="20"  y="306" width="220" height="42" rx="8" fill="#E8F5EE" stroke="#2E8B57" stroke-width="1.1"/>
-    <text x="130" y="331" text-anchor="middle">Project &amp; Hardware</text>
-    <rect x="260" y="306" width="220" height="42" rx="8" fill="#E8F5EE" stroke="#2E8B57" stroke-width="1.1"/>
-    <text x="370" y="331" text-anchor="middle">PLC: Tag/UDT/DB/SCL/LAD</text>
-    <rect x="500" y="306" width="220" height="42" rx="8" fill="#E8F5EE" stroke="#2E8B57" stroke-width="1.1"/>
-    <text x="610" y="331" text-anchor="middle">WinCC Unified HMI</text>
-    <rect x="740" y="306" width="220" height="42" rx="8" fill="#E8F5EE" stroke="#2E8B57" stroke-width="1.1"/>
-    <text x="850" y="331" text-anchor="middle">Compile &amp; Download</text>
-  </g>
-
-  <!-- footnote -->
-  <text x="490" y="376" class="foot" text-anchor="middle">
-    Studio uses Openness directly across eight releases. Siemens product licenses remain separate.
-  </text>
+  <rect width="1100" height="450" fill="white"/>
+  <text x="30" y="37" class="heading">TIA Portal Openness MCP 4.0</text>
+  <text x="30" y="65" class="body">Eight exact releases · One worker per MCP session · Native acceptance recorded separately</text>
+  <rect x="25" y="112" width="230" height="90" rx="8" class="box"/>
+  <text x="42" y="145" class="heading">AI MCP client</text><text x="42" y="177" class="body">STDIO or HTTP</text>
+  <rect x="25" y="270" width="230" height="135" rx="8" class="box"/>
+  <text x="42" y="302" class="heading">Workbench</text><text x="42" y="331" class="body">Engineering: operator pipe</text><text x="42" y="359" class="body">Write approvals and audit</text><text x="42" y="386" class="body">UI control: separate pipe</text>
+  <rect x="305" y="112" width="230" height="293" rx="8" class="box"/>
+  <text x="323" y="148" class="heading">FoundationHost</text><text x="323" y="179" class="body">MCP session and catalog</text><text x="323" y="216" class="body">Precheck → approval</text><text x="323" y="245" class="body">Recheck → dispatch</text><text x="323" y="282" class="body">Shared human / AI session</text><text x="323" y="311" class="body">Lease, journal and audit</text><text x="323" y="365" class="body">.NET 10</text>
+  <rect x="585" y="112" width="230" height="293" rx="8" class="box"/>
+  <text x="603" y="148" class="heading">Openness worker</text><text x="603" y="184" class="body">V14 SP1–V19: PLC worker</text><text x="603" y="211" class="body">STA owner thread</text><text x="603" y="259" class="body">V20/V21: engine worker</text><text x="603" y="286" class="body">MTA owner thread</text><text x="603" y="333" class="body">Version-specific adapters</text><text x="603" y="365" class="body">.NET Framework 4.8</text>
+  <rect x="865" y="112" width="210" height="293" rx="8" class="box"/>
+  <text x="884" y="148" class="heading">TIA Portal</text><text x="884" y="191" class="body">Matching release / API</text><text x="884" y="230" class="body">Selected process</text><text x="884" y="259" class="body">Explicit project binding</text><text x="884" y="333" class="body">Project and engineering</text><text x="884" y="362" class="body">objects</text>
+  <path d="M255 156H305" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M255 333H305" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M535 247H585" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M815 247H865" class="arrow" marker-end="url(#arrow)"/>
+  <text x="30" y="436" class="body">A dispatched write with an unknown result must be inspected before recovery. No automatic replay.</text>
 </svg>

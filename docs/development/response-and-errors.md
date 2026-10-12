@@ -1,5 +1,7 @@
 # 响应信封与吞异常治理设计（P2-01、P2-03）
 
+状态：历史记录 · 最后核对：2026-10-11，master `578a05ee` · 现行规则见[设计规范](design-spec/README.md)
+
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [适配器合并设计](adapter-merge.md) · [验证分层](validation.md)
 
 本页是 P2-01（统一响应信封构造器）和 P2-03（审计空 `catch`）的设计结论。路径缩写：`T.` =

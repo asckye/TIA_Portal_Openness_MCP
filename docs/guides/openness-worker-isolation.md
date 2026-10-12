@@ -1,49 +1,30 @@
-# Optional Openness worker isolation
+# Openness workers and recovery
 
-V20/V21 full engines can run engineering tools in a supervised child process. Release builds currently default to isolation off until real-machine acceptance passes. Enable it by adding the following argument to the existing HTTP or STDIO MCP command:
+Every MCP session has a version-matched worker. All eight releases start `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`; V14 SP1–V19 use a PLC worker and V20/V21 use an engine worker. The host owns MCP transport, authentication, approvals and diagnostics. Workers serialize native calls on their owner thread: STA for V14 SP1–V19, MTA for V20/V21.
 
-```text
---isolate-openness --worker-timeout-seconds 120
-```
+`--isolate-openness` and `--no-isolate-openness` have been removed. Use the Workbench-generated FoundationHost command. Worker separation is part of the architecture and has no on/off switch.
 
-Use `--no-isolate-openness` to explicitly force isolation off. The build default is centralized in `TiaMcpWorkerIsolationDefault` and appears in the release record as `workerIsolation.enabledByDefault`. The configurator has no isolation checkbox, and generated client commands include neither switch unless the user chooses one. Edit the server command or client entry to override the default. These flags apply to MCP host startup, not `gen`, `patch` or other explicit CLI subcommands. Foundation engines use their own worker architecture and should not be configured by copying these full-engine flags.
+## Timeouts and cancellation
 
-## Startup without a ready TIA installation
+The shared budget is 120 seconds by default, 300 seconds for the first attach in a worker generation, and 30 minutes for compile, transfer, import/export, archive and library updates. `--worker-timeout-config` reads category budgets; `TIA_MCP_WORKER_TIMEOUTS` overrides the file, and `--worker-timeout-seconds` sets the default. Previews and reads use the default. Cancellation before dispatch returns `CANCELLED`; after dispatch the host waits for the actual result.
 
-The MCP host can remain available when the TIA installation is missing, its major version does not match the engine, Openness API initialization fails, or the user is not in the Siemens Openness group. `InitializeEnvironment` and `GetEnvironmentDiagnostics` report the cause and repair steps. TIA-dependent tools return `RESOURCE_UNAVAILABLE` for `tia-openness-environment` with V4 metadata `rejected-before-operation` / `not-started`. Read-only diagnostics remain available. The Workbench environment page reports a running engine with an unavailable Openness environment, while the call panel labels worker-dispatched calls as **Engine worker**.
+A timeout, worker exit, malformed reply or loss of the TIA process invalidates the worker generation. A dispatched write may have an unknown outcome. Ending a worker does not roll back or cancel an operation TIA has received. Requests are never replayed automatically.
 
-TIA-dependent tools return `RESOURCE_UNAVAILABLE` when Openness is not ready (`tia-openness-environment`, `rejected-before-operation` / `not-started`). Bootstrap and the environment doctor provide the repair steps. `GetOpennessWorkerStatus` reports `enabledByDefault`, the effective isolation mode, and environment readiness.
+## Inspect and recover
 
-## What it changes
+Use `GetToolUsage` for the selected release's status and recovery tools. `GetOpennessWorkerStatus` and `RestartOpennessWorker` are registered on all eight releases; inspect their release-specific schema and result. Controls affect only the calling session. The recovery route through `DisconnectPortal` applies on every release.
 
-The host keeps the MCP connection, authentication and diagnostics available while engineering calls execute one at a time in the child. A timeout or native channel failure invalidates that child; failed operations are not automatically replayed. The timeout accepts 10–180 seconds and includes queueing, startup and execution.
+1. Inspect TIA, the actual project result and the native invocation log before repeating a write.
+2. Call `DisconnectPortal`. An idle worker detaches without saving or closing the project. A busy, timed-out or lost worker is ended and the reply requires restarting TIA.
+3. If the TIA lease is uncertain, inspect and save as needed, then restart that TIA instance. Do not remove its lease file to bypass the refusal.
+4. Start a new MCP session, connect to the intended TIA process and explicitly attach the exact project file. Read back session state before continuing.
 
-Terminating the client worker does not cancel or roll back an operation already received by TIA. A dispatched write without a trustworthy result has an unknown outcome. Isolation also cannot prevent a crash inside the TIA server itself.
+Alternatively, explicitly restart the worker with `RestartOpennessWorker`. An idle worker detaches first; a faulted worker preserves the uncertain lease and reports `requiresTiaRestart`. Old export handles and preview plans are invalid after reset.
 
-## Status and recovery
+Each live HTTP session owns a separate worker. Separate sessions must use separate TIA instances for concurrent engineering work. This lease does not coordinate arbitrary third-party Openness applications or GUI edits.
 
-Read the current examples with `GetToolUsage(toolName="GetOpennessWorkerStatus")` and `GetToolUsage(toolName="RestartOpennessWorker")`.
+## Diagnostics and acceptance
 
-| Tool | Use |
-|---|---|
-| `GetOpennessWorkerStatus` | Read worker state, PID, active calls and last fault without starting it |
-| `GetNativeInvocationLog` | Read bounded invocation diagnostics from the host |
-| `RestartOpennessWorker` | Preview or explicitly reset an idle/faulted worker |
+The host remains available for diagnostics when TIA or its Openness environment is unavailable. `InitializeEnvironment` reports repair steps; TIA-dependent operations are refused before native dispatch. Read the selected release's schema rather than assuming every diagnostic tool exists on every release.
 
-Call host controls directly or via `CallTool`, not inside an engineering batch. After a fault:
-
-1. Read the status and invocation log.
-2. Inspect the intended TIA instance and actual project result before repeating an operation.
-3. Once active calls have ended, follow the reset example. Reset discards old export IDs and preview plans.
-4. If an instance lease is marked uncertain after an unclean exit, inspect and save the project as needed, then restart that TIA instance before reconnecting. Do not remove the lease to bypass the state check.
-5. List actual TIA processes and bind the intended PID, start time and full project path using the current connection example. Read back state before continuing.
-
-If isolation is disabled, there is no child to reset. Clear the failed binding through `DisconnectPortal`, or restart the MCP host when that cannot complete, then explicitly bind the correct project. Reopening TIA alone does not clear an old MCP binding.
-
-Separate MCP processes under the same Windows user reserve an instance for a connection. Use different TIA instances for concurrent engineering sessions. This does not coordinate arbitrary third-party Openness applications or GUI edits.
-
-## Diagnostics and validation
-
-[Native-call diagnostics](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-call-diagnostics.md) describe the journal and local evidence collector. Logs may contain private project paths; inspect them before sharing.
-
-Release checks exercise protocol behavior, worker failures and reset paths with offline test children. They do not establish live TIA stability, native cancellation or rollback. Current native acceptance is recorded in [capabilities](../reference/capabilities.md).
+[Native-call diagnostics](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/development/native-call-diagnostics.md) explain the journal. Review private paths before sharing logs. Offline worker and transport fixtures establish their tested protocol behavior; current native acceptance is recorded in [capabilities](../reference/capabilities.md).

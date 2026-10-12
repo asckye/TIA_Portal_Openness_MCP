@@ -47,7 +47,7 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs" Link="V20OptionsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
     <Compile Include="../../../src/Shared/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
+    <Compile Include="../../../src/Shared/Host/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />
     <Compile Include="../../../src/Shared/LibraryTools.cs" Link="LibraryTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/SivarcTools.cs" Link="SivarcTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/VersionControlTools.cs" Link="VersionControlTools.cs" />
@@ -226,7 +226,7 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../../src/Engine/ModelContextProtocol/Tools/PlcProgramImport.cs" Link="PlcProgramImport.cs" /></ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/EngineeringFileNames.cs" Link="EngineeringFileNames.cs" />
+    <Compile Include="../../../src/Shared/Host/EngineeringFileNames.cs" Link="EngineeringFileNames.cs" />
     <Compile Include="../../../src/Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" Link="ClassicHmiTemporaryImportPreflightSuite.cs" />
   </ItemGroup>
   <ItemGroup>

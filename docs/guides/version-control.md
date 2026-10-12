@@ -4,13 +4,13 @@ VCI 将受支持的工程对象与本地文本文件对应，Git 再管理这些
 
 ## 版本和入口
 
-| 版本 | MCP | Studio |
+| 版本 | MCP | 工作台 |
 |---|---|---|
 | V14 SP1、V15.1 | 基础目录不提供 VCI | 无 VCI 实现 |
 | V16–V19 | 基础目录不提供 VCI | 使用旧版 WorkspaceMapping 接口 |
-| V20、V21 | 完整引擎提供 VCI 工具 | 使用 MappedObject 接口 |
+| V20、V21 | V20/V21 提供 VCI 工具 | 使用 MappedObject 接口 |
 
-工具目录中的存在与实际项目支持是两项检查；连接项目后确认其 VCI 服务和可导出对象。Studio 直接调用 Openness，不经过 MCP。详细支持范围见[版本说明](../reference/version-tools.md)。
+工具目录中的存在与实际项目支持是两项检查；连接项目后确认其 VCI 服务和可导出对象。工作台的版本控制页经所附着的 MCP 会话调用同一套 VCI 工具。详细支持范围见[版本说明](../reference/version-tools.md)。
 
 ## 用 MCP 建立一次基线
 

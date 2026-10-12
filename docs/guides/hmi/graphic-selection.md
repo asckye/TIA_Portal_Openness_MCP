@@ -1,6 +1,6 @@
 # 读取和比较图形对象坐标
 
-V20/V21 完整引擎提供 `GetUnifiedGraphicSelection` 和离线工具 `CompareUnifiedGraphicSelections`。它们读取用户明确选择的对象、比较前后坐标，不移动对象。
+V20/V21 提供 `GetUnifiedGraphicSelection` 和离线工具 `CompareUnifiedGraphicSelections`。它们读取用户明确选择的对象、比较前后坐标，不移动对象。
 
 ## 操作步骤
 

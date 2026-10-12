@@ -16,7 +16,7 @@ internal static partial class ReleaseCommands
 
     internal static int Run(string command, Options options) => command switch
     {
-        "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" => GeneratorCommand(command, options),
+        "generate-tool-counts" or "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage" or "check-tools-list" => GeneratorCommand(command, options),
         "check-ratchet" or "check-envelope-rewrite" or "check-adapter-boundary" or "check-bundle-layout" or "check-repository" or "check-dead-tool-references" or "check-tia-features" or "check-script-tool-calls" => StaticCheck(command, options),
         "preflight" => Preflight(options),
         "prerequisites" => Prerequisites(options),
@@ -49,6 +49,7 @@ internal static partial class ReleaseCommands
             ("repository check self-tests", "check-repository", ["-SelfTest"]),
             ("dead tool references (descriptions and current docs)", "check-dead-tool-references", []),
             ("product catalogs generator", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-catalogs", "-Check"]),
+            ("documentation tool counts", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-tool-counts", "-Check"]),
             ("tool usage catalog generator", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-tool-usage", "-Check"]),
             ("release migration tables generator", Dotnet, [typeof(ReleaseCommands).Assembly.Location, "generate-release-migration", "-Check"]),
             ("V4 contract snapshots", Py, ["scripts/checks/Snapshot-ToolContracts.py", "verify"]),

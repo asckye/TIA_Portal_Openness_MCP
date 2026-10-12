@@ -1,10 +1,14 @@
 # P8-10 自有 Python 改为 C#：清单与分批方案（研究稿，2026-10-08）
 
+状态：现行 · 最后核对：2026-10-11，任务启动基线 master `578a05ee`
+
 统计口径：`git ls-files "*.py"`，提交 `5623a784`（master）。工作树当时有未提交修改
 （`ToolProfiles.resx`、`gap-review-2026-10.md`、`refactor-plan.md`、`roadmap.md`），逐字节双跑必须改用干净提交。
 `bin-build/` 未跟踪，不计。P8-10 依赖 P7-11：P7-11 的 B1/B2（测试目录重组）、B5（退役 `phase6_groups.py`，
 预检不再执行 `Generate-Phase6Plan --check`）和 B13（`scripts/build/Package-*.py` 移到 `build-tools/`）会改变本文部分路径。
 开工前按合并后的树重新运行本清单的统计命令。
+
+现行实施：批 1、2、3、7 已合并（`9b81a301`、`2dac44cc`、`d147ca7d`、`f812fd3d`）。剩余批次状态以[重构计划](refactor-plan.md)为准；下方脚本清单保留调研时的历史范围，不表示文件仍存在。
 
 ## 1. 总览
 

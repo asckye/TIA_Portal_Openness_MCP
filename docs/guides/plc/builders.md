@@ -1,7 +1,5 @@
 # PLC XML builders
 
-Document id: `plc-builders`
-
 The builders create XML without connecting to TIA. Their presence in a version's tool list does not mean every XML format they produce belongs to that version. Read `GetToolUsage(toolName="...")` on the selected engine for the current parameters and examples.
 
 ## Select the output format

@@ -9,9 +9,9 @@ This skill explains how to find and use the project's maintained examples. Tool 
 
 ## Select the current release and tool
 
-The root launcher is `TiaOpenness.exe`; it starts the Workbench. V14 SP1–V19 MCP calls run through `TiaMcp.FoundationHost.exe`; V20 and V21 use `TiaMcp.Engine.V20.exe` and `TiaMcp.Engine.V21.exe`. Foundation hosts expose their implemented PLC subset. V20/V21 use the full engine, with 60 tools directly visible in the default lite profile and `FindTools`/`CallTool` discovery for the rest. Foundation hosts have no full-engine discovery bridge or project-generation CLI. Studio is a separate direct Openness application.
+The root launcher is `TiaOpenness.exe`, which opens the Workbench. Every release uses `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`, with one version-matched worker per MCP session. V20/V21 default to lite; `FindTools` and `CallTool` reach the remaining tools. Older releases also provide discovery and bridge tools. Consult the generated counts and release applicability in `docs/reference/version-tools.md`, and use runtime `tools/list`. The Engineering page shares an MCP session's tools, approvals and audit. The retired `--isolate-openness` and `--no-isolate-openness` switches must be removed from old client commands.
 
-Read the connected server's `tools/list` and `GetToolUsage()` index. Select tools from that release, since identical names can have different arguments. The V4 result envelope is `{schemaVersion, ok, data, error, meta}`; inspect `meta.outcome`, `meta.execution` and `meta.completeness`, and follow `meta.paging` only for the same release/session/binding/query snapshot. On `OUTCOME_UNKNOWN`, inspect the target and reset the session when required; never replay a write automatically. Use the implemented typed `GetToolUsage` selectors: `toolName`, `operation`, `language`, `exampleId`, `exampleKind`, `query`, `documentId`, `offset` and `limit`. For an unfamiliar call, retrieve the tool's schema and example. On full engines, `FindTools` can locate the tool and its schema before `CallTool` executes it.
+Read the connected server's `tools/list` and `GetToolUsage()` index. Select tools from that release, since identical names can have different arguments. The V4 result envelope is `{schemaVersion, ok, data, error, meta}`; inspect `meta.outcome`, `meta.execution` and `meta.completeness`, and follow `meta.paging` only for the same release/session/binding/query snapshot. On `OUTCOME_UNKNOWN`, inspect the target and reset the session when required; never replay a write automatically. Use the implemented typed `GetToolUsage` selectors: `toolName`, `operation`, `language`, `exampleId`, `exampleKind`, `query`, `documentId`, `offset` and `limit`. For an unfamiliar call, retrieve the tool's schema and example. On every release, `FindTools` can locate the tool and its schema before `CallTool` executes it.
 
 ## Retrieve an example
 
@@ -33,11 +33,11 @@ Example lookups:
 {"exampleId":"sequence/plc-scl-block-foundation"}
 ```
 
-The foundation sequence applies to V14 SP1–V19. Full V20/V21 engines use `sequence/plc-scl-block`. Other languages, HMI event code, global modules and XML examples have their own identifiers and version requirements in the same index.
+Select the sequence returned for the connected release; shared session tools use the Foundation sequence on all eight releases. Other languages, HMI event code, global modules and XML examples have their own identifiers and version requirements in the same index.
 
 ## Apply the example to the user's project
 
-Resolve the intended project and software path with the selected release's connection/state/tree tools. Full engines offer `InitializeEnvironment`; use the foundation host's own schema and examples instead of assuming the same startup sequence.
+Resolve the intended project and software path with the selected release's connection/state/tree tools. Use `InitializeEnvironment` and the connected host's current session examples.
 
 Replace example placeholders with values read from the actual project or supplied by the user. A file path refers to the computer running TIA/MCP; in VM mode this is the VM, not the AI client's host. Engineering object paths are a different kind of value from filesystem paths.
 

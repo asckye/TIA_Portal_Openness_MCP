@@ -1,6 +1,6 @@
 # HMI 与 PLC 变量绑定
 
-本页用于 V20/V21 完整引擎的 WinCC Unified 工具。V14 SP1–V19 基础目录不提供这些 HMI 路径。
+本页用于 V20/V21 的 WinCC Unified 工具。V14 SP1–V19 基础目录不提供这些 HMI 路径。
 
 ## 先确定连接和变量来源
 
