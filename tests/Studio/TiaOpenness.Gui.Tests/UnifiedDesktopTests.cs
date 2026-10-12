@@ -318,6 +318,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 page.GetType().GetMethod("Append", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(page, new object[] { "operation completed after cancelled close" });
                 WpfContext.Drain(); Assert.Contains("operation completed after cancelled close", page.ActivityLogText);
                 window.Close();
+                WpfContext.Drain(); // the close completes after the asynchronous MCP detach
                 Assert.True(closed);
             }
             finally

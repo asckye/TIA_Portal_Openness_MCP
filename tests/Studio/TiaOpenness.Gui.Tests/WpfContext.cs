@@ -53,10 +53,21 @@ public sealed class WpfContext : IDisposable
         }
     }
 
-    /// <summary>Runs on the UI thread; exceptions are re-thrown on the caller's thread.</summary>
-    public void Run(Action action) => Ui().Invoke(action);
+    /// <summary>
+    /// Runs on the UI thread; exceptions are re-thrown on the caller's thread. Work the test left queued (for example the
+    /// window's deferred close after its asynchronous MCP detach) finishes before the next test starts.
+    /// </summary>
+    public void Run(Action action)
+    {
+        try { Ui().Invoke(action); }
+        finally { Ui().Invoke(() => { }, DispatcherPriority.ContextIdle); }
+    }
 
-    public T Run<T>(Func<T> action) => Ui().Invoke(action);
+    public T Run<T>(Func<T> action)
+    {
+        try { return Ui().Invoke(action); }
+        finally { Ui().Invoke(() => { }, DispatcherPriority.ContextIdle); }
+    }
 
     /// <summary>
     /// Runs with the language forced, then puts it back. The catalogue is a process-wide
