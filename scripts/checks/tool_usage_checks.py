@@ -191,9 +191,10 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
             offline_calls.append(name)
         if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
             built = call(name, args)
+            assert built.get('ok') is True, 'OFFLINE action builder must run without TIA readiness: ' + str(built)
             if unready_engine_refusal is not None and built.get('ok') is False:
-                # This engine-owned pure builder remains behind the production
-                # readiness gate. Preserve and validate its actual no-TIA reply.
+                # The success assertion above forbids a readiness refusal for this
+                # pure builder. Retain the typed refusal diagnostic as well.
                 unready_engine_refusal(built, name)
                 continue
             recipe = built['data']['evidence']

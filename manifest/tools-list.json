@@ -1,10 +1,10 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-11T18:05:59.9441134+00:00",
+  "generatedAt": "2026-10-12T00:02:56.0125668+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
-  "workerSha256": "aebecc5a1bc98b7f32bd5f4572bbbd4f04170119074d7fd015e998a0b4a9f18c",
+  "workerSha256": "aadfc1fe1b80dfdc2d7b007bc1006ca87da56b8ff3be2b4b5cb4d2818ef1767e",
   "toolCount": 516,
   "note": "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -3782,7 +3782,7 @@
       "layer": "L1",
       "category": "plc",
       "domain": "PLC-Software",
-      "operation": "OFFLINE",
+      "operation": "READ",
       "operationInferred": false,
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
@@ -3796,7 +3796,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified] [external-source-plan-only] Compatibility preview for one allowlisted local ASCII SCL/AWL/DB/UDT file (4 MiB) and ordinary PLC root. This older planning contract never executes. Use ImportPlcExternalSource with its own preview and confirmation to import, then GenerateBlocksFromExternalSource and CompilePlcDiagnostics. This call creates zero sources. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"PlanPlcExternalSourceImport\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified] [L1][PLC-Software][READ][external-source-plan-only] Compatibility preview for one allowlisted local ASCII SCL/AWL/DB/UDT file (4 MiB) and ordinary PLC root. This older planning contract never executes. Use ImportPlcExternalSource with its own preview and confirmation to import, then GenerateBlocksFromExternalSource and CompilePlcDiagnostics. This call creates zero sources. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"PlanPlcExternalSourceImport\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"filePath\":\"C:/Examples/FC_Add.scl\",\"allowedFilePath\":\"C:\\\\Examples\\\\FC_Add.scl\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -5046,7 +5046,7 @@
       "layer": "L2",
       "category": "project",
       "domain": "Validation",
-      "operation": "OFFLINE",
+      "operation": "READ",
       "operationInferred": false,
       "method": "RenderPlcBlockDocumentV4",
       "returnType": "CallToolResult",
@@ -5058,7 +5058,7 @@
         "outputPath",
         "maxChars"
       ],
-      "description": "[L2][Validation][OFFLINE] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"RenderPlcBlockDocument\"), optionally operation or language.",
+      "description": "[L2][Validation][READ] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"RenderPlcBlockDocument\"), optionally operation or language.",
       "example": "{}"
     },
     {

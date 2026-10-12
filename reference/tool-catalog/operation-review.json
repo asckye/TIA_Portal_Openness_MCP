@@ -39,6 +39,11 @@
       "ONLINE",
       "ONLINE-WRITE",
       "mode=run may write files, run project tests or write PLC values; apply needs Workbench approval (maintainer 2026-10-11)."
+    ],
+    "RenderPlcBlockDocument": [
+      "OFFLINE",
+      "READ",
+      "The blockPath branch exports the bound PLC block through Openness before rendering; filePath remains local (P8-65 code and IL audit, maintainer 2026-10-11)."
     ]
   },
   "NEW_FOUNDATION_TOOLS": {
@@ -79,8 +84,8 @@
     ],
     "PlanPlcExternalSourceImport": [
       "PlanPlcExternalSourceImport",
-      "OFFLINE",
-      "Plans an external source import; no import execution."
+      "READ",
+      "Reads the bound project, selected PLC software and external-source group through Openness to plan an import; performs no import (P8-65 code and IL audit, maintainer 2026-10-11)."
     ]
   },
   "WITHDRAWN": {

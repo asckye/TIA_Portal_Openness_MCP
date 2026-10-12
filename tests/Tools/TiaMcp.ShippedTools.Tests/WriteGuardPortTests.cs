@@ -25,7 +25,7 @@ public sealed class WriteGuardPortTests
         var additions = new Dictionary<string, string> {
             ["CreatePlcTag"] = "WRITE", ["CreatePlcTagTable"] = "WRITE", ["CreatePlcUserConstant"] = "WRITE",
             ["GetPortalConnectionReadiness"] = "READ", ["ListPlcSystemConstants"] = "READ", ["ListPlcTags"] = "READ",
-            ["ListPlcUserConstants"] = "READ", ["PlanPlcExternalSourceImport"] = "OFFLINE"
+            ["ListPlcUserConstants"] = "READ", ["PlanPlcExternalSourceImport"] = "READ"
         };
         foreach (var (name, operation) in additions)
         {
