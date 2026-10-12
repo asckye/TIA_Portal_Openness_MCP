@@ -63,9 +63,9 @@ namespace TiaMcpServer.Siemens
 {
     internal partial interface IEngineeringSession
     {
-        JsonObject GetPutGetAccess(string path) => throw new InvalidOperationException("Runtime contract tests do not enter native sessions.");
-        ResponseJsonReport TraceTagCause(string softwarePath, string tag, string blockScope) => throw new InvalidOperationException("Runtime contract tests do not enter native sessions.");
-        ResponseJsonReport TraceTagCauseLive(string softwarePath, string tag, string ip, int rack, int slot, string blockScope, string expectModuleContains) => throw new InvalidOperationException("Runtime contract tests do not enter native sessions.");
+        public JsonObject GetPutGetAccess(string path) => throw new InvalidOperationException("Runtime contract tests do not enter native sessions.");
+        public ResponseJsonReport TraceTagCause(string softwarePath, string tag, string blockScope) => throw new InvalidOperationException("Runtime contract tests do not enter native sessions.");
+        public ResponseJsonReport TraceTagCauseLive(string softwarePath, string tag, string ip, int rack, int slot, string blockScope, string expectModuleContains) => throw new InvalidOperationException("Runtime contract tests do not enter native sessions.");
     }
     internal sealed partial class Portal
     {

@@ -174,6 +174,8 @@ internal static class RepositoryChecks
         foreach (var name in new[] { "manifest/history/contracts-v3/README.md", "manifest/history/contracts-v3/provenance.json" }.Concat(new[] { "manifest/history/contracts-v3", "manifest/contracts/v4" }.SelectMany(d => new[] { "baseline", "responses" }.SelectMany(c => TiaFeatures.Releases.Select(r => $"{d}/{c}/{r}.json"))))) Required(name, "contract snapshot");
         foreach (var kind in RatchetChecks.Baselines.Keys)
             if (RatchetChecks.Run(root, Options.Parse(["-Kind", kind], new HashSet<string>())) != 0) errors.Add(kind + " baseline check failed (see diagnostics above)");
+        if (AnalyzerWarnings.Run(root, Options.Parse(["-Check"], new HashSet<string> { "Check" })) != 0)
+            errors.Add("analyzer warning baseline check failed (see diagnostics above)");
         if (BundleLayoutChecks.Run(root) != 0) errors.Add("Bundle-layout resource check failed (see diagnostics above)");
         return (count, errors);
     }

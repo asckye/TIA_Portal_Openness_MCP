@@ -53,7 +53,7 @@ catch (ChannelFaultException error) { Console.Error.WriteLine(error.Message); re
 finally { Record(new { stage = "exit", pid = Environment.ProcessId }); }
 return 0;
 
-sealed class FaultOutput(Stream stream, string fault) : Stream
+internal sealed class FaultOutput(Stream stream, string fault) : Stream
 {
     private byte[]? hello;
     public override void Write(byte[] buffer, int offset, int count)

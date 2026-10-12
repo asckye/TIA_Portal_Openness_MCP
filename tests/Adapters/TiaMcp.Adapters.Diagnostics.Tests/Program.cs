@@ -90,4 +90,4 @@ foreach(string key in new[]{"14sp1","15.1","16","17","18","19","20","21"}){
 Console.WriteLine($"PASS: {checks} portable diagnostics and PE isolation checks; native NOT RUN.");
 return 0;
 } catch(Exception ex) { Console.Error.WriteLine("FAIL: "+ex); return 1; }
-sealed class ExplosiveToString { public int Calls; public override string ToString(){Calls++;throw new Exception("Must never be called");} }
+internal sealed class ExplosiveToString { public int Calls; public override string ToString(){Calls++;throw new Exception("Must never be called");} }

@@ -9,7 +9,7 @@ namespace TiaMcp.Engine.Tests
 {
     internal static class PlcEditingTests
     {
-        const string Xml = @"<Document><Engineering version='V21'/><SW.Blocks.FC ID='0'><AttributeList>
+        private const string Xml = @"<Document><Engineering version='V21'/><SW.Blocks.FC ID='0'><AttributeList>
 <Name>Main</Name><Number>7</Number><ProgrammingLanguage>LAD</ProgrammingLanguage><MemoryLayout>Optimized</MemoryLayout><HeaderAuthor>Engineer</HeaderAuthor>
 <Interface><Sections xmlns='urn:interface'><Section Name='Input'><Member Name='Speed' Datatype='Int'><AttributeList><BooleanAttribute Name='ExternalWritable'>false</BooleanAttribute></AttributeList><StartValue>1</StartValue></Member></Section></Sections></Interface>
 </AttributeList><ObjectList><SW.Blocks.CompileUnit ID='1'><AttributeList><ProgrammingLanguage>LAD</ProgrammingLanguage><NetworkSource><FlgNet xmlns='urn:flg'><Parts>

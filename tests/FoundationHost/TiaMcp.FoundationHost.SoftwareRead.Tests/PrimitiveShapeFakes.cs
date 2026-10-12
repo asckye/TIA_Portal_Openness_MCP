@@ -20,7 +20,7 @@ namespace Siemens.Engineering.HW.Features
 }
 namespace Siemens.Engineering.Compiler
 {
-    public interface ICompilable { CompilerResult Compile(); }
+    public interface ICompilable { public CompilerResult Compile(); }
     public enum CompilerResultState { Success, Warning, Error }
     public class CompilerResult
     {

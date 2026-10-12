@@ -9,6 +9,9 @@
     <DefineConstants>$(DefineConstants);TIA_RELEASE_TEST_SCHEDULING</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Use the installed SDK parser; no additional analyzer or NuGet package. -->
+    <Reference Include="Microsoft.CodeAnalysis" HintPath="$(MSBuildBinPath)/Roslyn/bincore/Microsoft.CodeAnalysis.dll" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp" HintPath="$(MSBuildBinPath)/Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll" />
     <Compile Remove="check-build/**" />
     <Compile Include="../../tests/Shared/TimeSensitiveTests.cs" Link="TimeSensitiveTests.cs" />
     <ProjectReference Include="check-build/TiaMcp.CheckBuild.csproj" OutputItemType="_CheckBuildTask" />

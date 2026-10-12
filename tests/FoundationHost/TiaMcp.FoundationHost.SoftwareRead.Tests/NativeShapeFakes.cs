@@ -1,9 +1,9 @@
 // Test doubles only. These prove control flow and C# source integration, never Siemens API compatibility.
 namespace Siemens.Engineering
 {
-    public interface IEngineeringInstance { IEngineeringObject? Parent { get; } }
-    public interface IEngineeringServiceProvider { T GetService<T>(); }
-    public interface IEngineeringObject : IEngineeringInstance, IEngineeringServiceProvider { object? GetAttribute(string name); }
+    public interface IEngineeringInstance { public IEngineeringObject? Parent { get; } }
+    public interface IEngineeringServiceProvider { public T GetService<T>(); }
+    public interface IEngineeringObject : IEngineeringInstance, IEngineeringServiceProvider { public object? GetAttribute(string name); }
     public class EngineeringObject : IEngineeringObject
     {
         public IEngineeringObject? Parent { get; set; }

@@ -639,4 +639,27 @@ dotnet run tests/Studio/Test-BridgeSmoke.cs -- --bridge <Bridge.exe> --public-ap
 
 ## 文档数量与链接
 
+编译器分析器警告由 `check-analyzer-warnings` 棘轮约束。`build-solutions` 和 `check-all` 的现有构建为每个
+工程、框架和变体输出 SARIF 2.1；缺少报告会触发该工程的增量编译，不额外执行完整构建。报告固定使用
+英文消息，按规则、仓库相对路径、起止位置与消息去重。检查比较成员、诊断片段的令牌和消息，成员内移动
+行号或空白不会新增警告；相同诊断的多处出现仍分别计数。
+
+```powershell
+dotnet run --project build-tools/release -- check-analyzer-warnings -Check -Complete -DiagnosticsDirectory <check-all-output>/build/analyzer-warnings
+dotnet run --project build-tools/release -- check-analyzer-warnings -UpdateBaseline -Complete -DiagnosticsDirectory <check-all-output>/build/analyzer-warnings -DiagnosticsDirectory <build-solutions-output>
+```
+
+基线在 `scripts/checks/analyzer-warnings-baseline.json`，每项保留原因类别及待删除引擎文件所属移植批次。
+`-Check` 拒绝新增警告、已覆盖编译配置中消失的警告及已删除文件的基线项。`-Complete` 还拒绝未构建的基线
+源码或当前构建种类中消失警告的未覆盖配置。条目记录普通 solution 构建和 check-all 变体构建的来源配置；
+两者可能对同一源码产生不同消息，分别保留。更新模式要求完整覆盖及所有已审阅构建种类的报告，只能删除
+已消失的条目，遇到增长时不写文件。可重复传入 `-DiagnosticsDirectory` 合并报告。
+初始审查使用 `-Capture <file>` 输出候选，由审查者填写原因，再以 `-Initialize -ReviewData <file>` 建立
+尚不存在的基线；该入口不能覆盖已有基线。规则严重性和功能基线不随此命令改变。
+
+`check-repository` 复用最近一次成功完成构建的收集目录；`-DiagnosticsDirectory <directory>` 或环境变量
+`TIA_MCP_ANALYZER_REPORT_DIRECTORY` 可以明确指定报告。`build-solutions` 和没有完整 SDK 的离线 CI 比较实际
+编译配置（solutions 不包含全部注册套件），完整
+worktree 检查由 `check-all` 执行。输入 SHA-256 与当前源码、分析器配置必须一致，过期报告和仓库外路径均拒绝。
+
 `generate-tool-counts` 从已核对的注册目录及 lite 配置更新入口、配置、版本范围、运行布局和发布说明中的标记块；`-Check` 逐字节拒绝漂移、缺失和重复块。迁移表由 `generate-release-migration` 维护。文档数值不得手写。仓库检查核对链接和随包路径，死引用检查核对工具名；检查结果仍须与当前目录及适用版本一起审阅。

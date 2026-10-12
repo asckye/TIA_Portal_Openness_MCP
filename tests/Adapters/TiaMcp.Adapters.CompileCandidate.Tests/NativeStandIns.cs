@@ -3,7 +3,7 @@ using System.Security;
 // Managed stand-ins only; the test project has no Siemens references or native session.
 namespace Siemens.Engineering
 {
-    public interface IEngineeringServiceProvider { T? GetService<T>() where T : class; }
+    public interface IEngineeringServiceProvider { public T? GetService<T>() where T : class; }
 }
 namespace Siemens.Engineering.HW
 {
@@ -33,7 +33,7 @@ namespace Siemens.Engineering.SW
 }
 namespace Siemens.Engineering.Compiler
 {
-    public interface ICompilable { CompilerResult Compile(); }
+    public interface ICompilable { public CompilerResult Compile(); }
     public enum CompilerResultState { Success, Warning, Error }
     public sealed class CompilerResult
     {

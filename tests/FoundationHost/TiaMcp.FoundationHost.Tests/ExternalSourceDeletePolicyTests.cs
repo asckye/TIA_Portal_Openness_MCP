@@ -37,7 +37,7 @@ internal static class ExternalSourceDeletePolicyTests
         Reject(()=>throwingTokens.Get(new Proxy("other")),"equality failure propagates without fallback");
     }
 
-    sealed class Proxy(string identity) { public override bool Equals(object? other)=>other is Proxy p&&p.Identity==Identity;private string Identity=>identity;public override int GetHashCode()=>identity.GetHashCode();}
+    private sealed class Proxy(string identity) { public override bool Equals(object? other)=>other is Proxy p&&p.Identity==Identity;private string Identity=>identity;public override int GetHashCode()=>identity.GetHashCode();}
 
-    sealed class ThrowingProxy { public override bool Equals(object? other)=>throw new InvalidOperationException("native equality unavailable");public override int GetHashCode()=>0;}
+    private sealed class ThrowingProxy { public override bool Equals(object? other)=>throw new InvalidOperationException("native equality unavailable");public override int GetHashCode()=>0;}
 }

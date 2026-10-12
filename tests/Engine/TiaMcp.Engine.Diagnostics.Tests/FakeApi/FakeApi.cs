@@ -34,7 +34,7 @@ namespace DiagnosticFixture
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         private sealed class Cursor : IEnumerator<Node>
         {
-            int index;
+            private int index;
             public Node Current { get { Order.Add("current"); return new Node(); } }
             object IEnumerator.Current => Current;
             public bool MoveNext() { Order.Add("move"); return ++index <= 2; }

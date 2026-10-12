@@ -5,7 +5,7 @@ using System.Collections;
 namespace Siemens.Engineering
 {
     public interface IEngineeringObject { }
-    public interface IEngineeringServiceProvider { T? GetService<T>() where T : class; }
+    public interface IEngineeringServiceProvider { public T? GetService<T>() where T : class; }
     public sealed class EngineeringObjectDisposedException : Exception { }
 }
 namespace Siemens.Engineering.SW.Blocks { public sealed class PlcBlock : Siemens.Engineering.IEngineeringObject { } }

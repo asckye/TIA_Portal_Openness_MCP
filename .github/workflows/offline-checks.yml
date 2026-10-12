@@ -38,6 +38,9 @@ jobs:
         with:
           name: py-cs-parity-${{ matrix.os }}
           path: bin-build/py-cs-parity
+      - name: Reviewed analyzer warning ratchet
+        run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
+
   offline-tests:
     # 已迁移的 xunit 套件逐项生成 trx；最低数量门禁拒绝零测试、失败和超限跳过。
     runs-on: ubuntu-latest
@@ -59,6 +62,9 @@ jobs:
           path: |
             bin-build/test-results*/
             bin-build/check-all/
+
+      - name: Reviewed analyzer warning ratchet
+        run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
   source-contracts:
     # Source contracts: .NET 10 and Python, without Siemens SDKs or TIA.
@@ -114,6 +120,9 @@ jobs:
             bin-build/test-results*/
             bin-build/check-all/
 
+      - name: Reviewed analyzer warning ratchet
+        run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
+
   studio-tests:
     runs-on: windows-latest
     strategy:
@@ -135,6 +144,9 @@ jobs:
         with:
           name: studio-test-results-${{ matrix.shared-adapter-paths }}
           path: bin-build/ci-test-results/
+
+      - name: Reviewed analyzer warning ratchet
+        run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
 
   foundation-transport:
     runs-on: windows-latest
@@ -162,6 +174,8 @@ jobs:
           done
       - name: Six real STDIO hosts and isolated HTTP sessions
         run: python scripts/checks/Test-FoundationTransport.py --fixture tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/bin/Release/net10.0/TiaMcp.WorkerChannel.TransportFixture.exe --releases 14sp1 15.1 16 17 18 19 --output bin-build/ci-foundation-results
+      - name: Reviewed analyzer warning ratchet
+        run: dotnet run --project build-tools/release -- check-analyzer-warnings -Check
       - uses: actions/upload-artifact@v6
         if: always()
         with:

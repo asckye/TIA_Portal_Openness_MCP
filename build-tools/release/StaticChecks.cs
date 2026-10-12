@@ -14,7 +14,7 @@ internal static partial class ReleaseCommands
             try
             {
                 Console.SetOut(output); Console.SetError(error);
-                var code = StaticCheck(command, Options.Parse(arguments, new HashSet<string>(["SelfTest", "NoBinaries", "PackageMode", "UpdateBaseline", "AllowGrowth", "Fix", "NoBuild"], StringComparer.OrdinalIgnoreCase)));
+                var code = StaticCheck(command, Options.Parse(arguments, new HashSet<string>(["SelfTest", "NoBinaries", "PackageMode", "UpdateBaseline", "AllowGrowth", "Fix", "NoBuild", "Check", "Initialize", "Complete"], StringComparer.OrdinalIgnoreCase)));
                 return new CommandResult(code, output.ToString(), error.ToString());
             }
             catch (ReleaseException ex) { return new CommandResult(ex.ExitCode, output.ToString(), error + ex.Message); }
@@ -34,6 +34,7 @@ internal static partial class ReleaseCommands
         var root = Path.GetFullPath(options.Get("Root", Root));
         return command switch
         {
+            "check-analyzer-warnings" => AnalyzerWarnings.Run(root, options),
             "check-ratchet" => RatchetChecks.Run(root, options),
             "check-envelope-rewrite" => EnvelopeRewrite.Run(root, options),
             "check-adapter-boundary" => SourceCheck.Report("Adapter boundary", AdapterBoundary.Check(root)),

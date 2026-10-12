@@ -10,17 +10,17 @@ using TiaMcpServer.ModelContextProtocol;
 
 internal static class Program
 {
-    static int checks;
-    static void Check(bool value, string name) { if (!value) throw new Exception(name); checks++; Console.WriteLine("PASS " + name); }
-    static void DisposeGeneric<T>(ref T value) where T : struct, IDisposable { value.Dispose(); }
-    static T Echo<T>(Node node, T value) where T : class => node.Echo(value);
+    private static int checks;
+    private static void Check(bool value, string name) { if (!value) throw new Exception(name); checks++; Console.WriteLine("PASS " + name); }
+    private static void DisposeGeneric<T>(ref T value) where T : struct, IDisposable { value.Dispose(); }
+    private static T Echo<T>(Node node, T value) where T : class => node.Echo(value);
     private sealed class PrivateRow { public int Value; }
     private sealed class GenericBox<T>
     {
         private sealed class Row { public T Value = default!; }
         internal T Filter(T value) => new[] { new Row { Value = value } }.Where(x => x != null).Select(x => x.Value).Single();
     }
-    static int Main(string[] args)
+    private static int Main(string[] args)
     {
         try
         {

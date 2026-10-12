@@ -109,7 +109,7 @@ public sealed class PromptRegistrationChecks
 
 }
 
-sealed class FixtureContext(string directory) : AssemblyLoadContext(isCollectible: true)
+internal sealed class FixtureContext(string directory) : AssemblyLoadContext(isCollectible: true)
 {
     protected override Assembly? Load(AssemblyName name)
     {

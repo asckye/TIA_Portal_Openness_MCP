@@ -64,6 +64,7 @@ internal static partial class ReleaseCommands
             environment["PYTHONIOENCODING"] = "utf-8";
             environment["TIA_MCP_CHECK_NO_BUILD"] = "1";
             environment["TIA_MCP_PLC_TOOLS_PYTHON"] = companionPython;
+            environment["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = null;
             return ProcessRunner.Run(executable, args, Root, environment);
         }
         void Add(string name, Func<CommandResult> run, string[]? depends = null, bool exclusive = false) => jobs.Add(new(name, run, depends ?? [], Exclusive: exclusive));
@@ -90,7 +91,12 @@ internal static partial class ReleaseCommands
         Add("build-once", () => CheckAllCachedBuild(options, builds, output, dotnet, api, nuget,
             FastSuites.Positive(options, "BuildParallelism", parallelism)));
         Wave();
-        if (options.Has("BuildOnly") || !CheckAllPrerequisitesPassed(timings)) return Finish();
+        if (!CheckAllPrerequisitesPassed(timings)) return Finish();
+        AnalyzerWarnings.RememberDirectory(Root, Path.Combine(output, "build/analyzer-warnings"));
+        Add("analyzer-warnings", () => Tool("analyzer-warnings", "check-analyzer-warnings", "-Check", "-Complete",
+            "-DiagnosticsDirectory", Path.Combine(output, "build/analyzer-warnings")));
+        Wave();
+        if (options.Has("BuildOnly")) return Finish();
         Add("suite-output-parity", () => CheckAllLayout.Verify(Root, builds, dotnet, nuget, api, Path.Combine(output, "suite-output-parity")));
         Wave();
         string host = Path.Combine(Root, "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");

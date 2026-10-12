@@ -9,7 +9,7 @@ using TiaMcpServer.ModelContextProtocol;
 namespace Siemens.Engineering
 {
     // Self-description boundary only; no Siemens runtime is loaded offline.
-    internal interface IEngineeringObject { List<TiaMcp.Engine.Tests.GraphicSelectionTests.Info> GetAttributeInfos(); List<TiaMcp.Engine.Tests.GraphicSelectionTests.Info> GetCompositionInfos(); object GetAttribute(string name); }
+    internal interface IEngineeringObject { public List<TiaMcp.Engine.Tests.GraphicSelectionTests.Info> GetAttributeInfos(); public List<TiaMcp.Engine.Tests.GraphicSelectionTests.Info> GetCompositionInfos(); public object GetAttribute(string name); }
 }
 namespace TiaMcp.Engine.Tests
 {

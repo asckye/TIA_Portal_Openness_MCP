@@ -2,11 +2,11 @@ using TiaMcp.Adapters;
 
 internal static class BindingSnapshotTests
 {
-    static readonly BindingProcessObservation Anchor=new(321,638000000000000000);
-    static FakeProject Detached()=>new(new(false,false,null,null,false));
-    static FakeProject Attached()=>new(new(true,false,321,null,false));
-    static FakeProject Bound(bool local=false)=>new(new(true,true,321,@"C:\work\Line.ap20",local));
-    static BindingObservation Capture(FakeProject source,BindingProcessObservation? anchor=null,FakeProcess? processes=null)=>BindingObservationPolicy.Capture(source,processes??new FakeProcess(),anchor);
+    private static readonly BindingProcessObservation Anchor=new(321,638000000000000000);
+    private static FakeProject Detached()=>new(new(false,false,null,null,false));
+    private static FakeProject Attached()=>new(new(true,false,321,null,false));
+    private static FakeProject Bound(bool local=false)=>new(new(true,true,321,@"C:\work\Line.ap20",local));
+    private static BindingObservation Capture(FakeProject source,BindingProcessObservation? anchor=null,FakeProcess? processes=null)=>BindingObservationPolicy.Capture(source,processes??new FakeProcess(),anchor);
     internal static void Run(Action<bool,string> Check)
     {
         var before = AppDomain.CurrentDomain.GetAssemblies().ToHashSet();
@@ -107,17 +107,17 @@ internal static class BindingSnapshotTests
         Check(callbacks==0,"diagnostic nested callback never executes");
         Check(!AppDomain.CurrentDomain.GetAssemblies().Except(before).Any(a=>a.GetName().Name!.StartsWith("Siemens.",StringComparison.Ordinal)),"binding observations load no Siemens assembly");
     }
-    sealed class FakeProcess : IBindingProcessObservationSource
+    private sealed class FakeProcess : IBindingProcessObservationSource
     {
         public BindingProcessObservation? First=Anchor,Second=Anchor;
         public bool Throw;
-        int reads;
+        private int reads;
         public BindingProcessObservation? Read(int processId) { if(Throw) throw new UnauthorizedAccessException(); return ++reads==1 ? First : Second; }
     }
-    sealed class FakeProject : IBindingProjectObservationSource
+    private sealed class FakeProject : IBindingProjectObservationSource
     {
-        readonly BindingCachedFields fields;
-        int fieldReads;
+        private readonly BindingCachedFields fields;
+        private int fieldReads;
         public int ProjectReads;
         public bool ThrowFields,ThrowProject;
         public BindingCachedFields? NextFields;

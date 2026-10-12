@@ -8,7 +8,7 @@ namespace TiaMcp.DiagnosticClients;
 
 public interface IMcpClient
 {
-    JsonNode? Rpc(string method, JsonNode? parameters = null, bool notify = false, int timeoutSeconds = 0);
+    public JsonNode? Rpc(string method, JsonNode? parameters = null, bool notify = false, int timeoutSeconds = 0);
 }
 
 public sealed class Connection

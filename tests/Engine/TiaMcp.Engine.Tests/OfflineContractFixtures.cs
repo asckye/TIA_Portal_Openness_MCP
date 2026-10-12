@@ -67,11 +67,11 @@ namespace TiaMcpServer.Siemens
 {
     internal partial interface IEngineeringSession
     {
-        void ImportType(string softwarePath, string group, string path);
-        void ImportPlcTagTable(string softwarePath, string group, string path);
-        void ImportBlock(string softwarePath, string group, string path);
-        object CompileSoftware(string softwarePath);
-        (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string softwarePath, string blockPath);
+        public void ImportType(string softwarePath, string group, string path);
+        public void ImportPlcTagTable(string softwarePath, string group, string path);
+        public void ImportBlock(string softwarePath, string group, string path);
+        public object CompileSoftware(string softwarePath);
+        public (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string softwarePath, string blockPath);
     }
 
     internal sealed partial class Portal

@@ -46,8 +46,8 @@ public sealed class WorkerJsonGoldenTests
     // These two Foundation operations have not yet moved onto a shared facet.
     private interface FoundationHardware
     {
-        PlcHardwareCatalogSearchResult SearchHardwareCatalog(string keyword, int limit=50);
-        PlcDeviceAddResult AddDeviceWithFallback(string preferredMlfb,string preferredVersion,string deviceName,string family="S7-1500",bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcHardwareCatalogSearchResult SearchHardwareCatalog(string keyword, int limit=50);
+        public PlcDeviceAddResult AddDeviceWithFallback(string preferredMlfb,string preferredVersion,string deviceName,string family="S7-1500",bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
     }
 
     private static MethodInfo Method(string name) => new[] { typeof(IPortalSession), typeof(IPlcProgram), typeof(IPlcData), typeof(FoundationHardware) }

@@ -953,6 +953,16 @@
   ],
   "requiredFiles": [
     {
+      "path": "scripts/checks/analyzer-warnings-baseline.json",
+      "consumers": ["repository", "bundle", "package"],
+      "repositoryLabel": "reviewed analyzer warnings"
+    },
+    {
+      "path": "build-tools/release/AnalyzerWarnings.cs",
+      "consumers": ["repository", "package"],
+      "repositoryLabel": "analyzer warning ratchet"
+    },
+    {
       "path": "src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj",
       "consumers": [
         "repository",

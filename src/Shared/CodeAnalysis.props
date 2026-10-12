@@ -6,9 +6,42 @@
     <AnalysisLevel>10.0</AnalysisLevel>
     <AnalysisMode>Default</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <PreferredUILang>en-US</PreferredUILang>
+    <TiaMcpAnalysisRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</TiaMcpAnalysisRoot>
   </PropertyGroup>
   <ItemGroup>
     <!-- Include the discovered editor configuration in incremental compilation and release cache keys. -->
     <CustomAdditionalCompileInputs Include="$(MSBuildThisFileDirectory)../../.editorconfig" />
   </ItemGroup>
+  <!-- Persist compiler diagnostics even when a later traversal skips CoreCompile.
+       The report is an incremental output, so a missing report triggers compilation. -->
+  <Target Name="PrepareAnalyzerWarningReport" BeforeTargets="CoreCompile" Condition="'$(Language)' == 'C#'">
+    <PropertyGroup>
+      <_TiaAnalyzerReport>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)analyzer-warnings.sarif', '$(MSBuildProjectDirectory)'))</_TiaAnalyzerReport>
+      <ErrorLog>$(_TiaAnalyzerReport),version=2.1</ErrorLog>
+      <_TiaAnalyzerDirectory Condition="'$(TIA_MCP_ANALYZER_REPORT_DIRECTORY)' != ''">$(TIA_MCP_ANALYZER_REPORT_DIRECTORY)</_TiaAnalyzerDirectory>
+      <_TiaAnalyzerDirectory Condition="'$(_TiaAnalyzerDirectory)' == ''">$(TiaMcpAnalysisRoot)/bin-build/analyzer-warnings/observed</_TiaAnalyzerDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <CustomAdditionalCompileOutputs Include="$(_TiaAnalyzerReport)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="CollectAnalyzerWarningReport" AfterTargets="CoreCompile"
+          Condition="'$(Language)' == 'C#' and '$(DesignTimeBuild)' != 'true' and (!$([System.String]::Copy('$(MSBuildProjectFullPath)').Replace('\', '/').Contains('/bin-build/')) or '$(TIA_MCP_ANALYZER_REPORT_DIRECTORY)' != '')">
+    <Error Condition="!Exists('$(_TiaAnalyzerReport)')" Text="Missing compiler analyzer report: $(_TiaAnalyzerReport)" />
+    <MakeDir Directories="$(_TiaAnalyzerDirectory)" />
+    <WriteLinesToFile File="$(_TiaAnalyzerReport).identity" Lines="$(_TiaAnalyzerReport)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <GetFileHash Files="$(_TiaAnalyzerReport).identity" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_TiaAnalyzerReportId" />
+    </GetFileHash>
+    <Copy SourceFiles="$(_TiaAnalyzerReport)" DestinationFiles="$(_TiaAnalyzerDirectory)/$(_TiaAnalyzerReportId).sarif" />
+    <ItemGroup>
+      <_TiaAnalyzerInputs Include="@(Compile);$(TiaMcpAnalysisRoot)/.editorconfig;$(TiaMcpAnalysisRoot)/src/Shared/CodeAnalysis.props" />
+    </ItemGroup>
+    <GetFileHash Files="@(_TiaAnalyzerInputs)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_TiaAnalyzerHashedInputs" />
+    </GetFileHash>
+    <WriteLinesToFile File="$(_TiaAnalyzerDirectory)/$(_TiaAnalyzerReportId).inputs" Overwrite="true"
+                      Lines="context|$(MSBuildProjectFullPath)|$(TargetFramework)|$([System.String]::Copy('$(DefineConstants)').Replace(';', ','));@(_TiaAnalyzerHashedInputs->'%(FullPath)|%(FileHash)')" />
+  </Target>
 </Project>

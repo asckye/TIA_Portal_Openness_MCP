@@ -13,6 +13,7 @@ internal static class ReleaseCommandTable
         new("test-suites", "test-suites -Suite <name> | -SelfTest", "test-suites.log", "registered TRX gate", "dotnetSuites"),
         new("host-parity", "host-parity -EngineMajor <20|21>", "host-behavior-parity.log", "minimum 103; zero skips", "hostBehaviorParity"),
         new("check-ratchet", "check-ratchet -Kind swallowed|comments|mcp-text|envelopes", "ratchet.log", "shrinking baseline; zero issues", "ratchets"),
+        new("check-analyzer-warnings", "check-analyzer-warnings -Check [-Complete] | -UpdateBaseline -Complete", "analyzer-warnings.log", "reviewed compiler warnings; no new or stale entries", "analyzerWarnings"),
         new("check-envelope-rewrite", "check-envelope-rewrite -Base <commit> -Path <pathspec>", "envelope-rewrite.log", "closed templates; exit 0", "envelopeRewrite"),
         new("check-adapter-boundary", "check-adapter-boundary", "adapter-boundary.log", "zero forbidden dependencies", "adapterBoundary"),
         new("check-bundle-layout", "check-bundle-layout", "bundle-layout.log", "complete resource table", "bundleLayout"),

@@ -6,8 +6,8 @@ namespace Siemens.Engineering
     public enum ImportOptions { None }
     public interface IEngineeringObject
     {
-        object GetAttribute(string name);
-        void SetAttribute(string name, object value);
+        public object GetAttribute(string name);
+        public void SetAttribute(string name, object value);
     }
 }
 namespace Siemens.Engineering.SW.WatchAndForceTables

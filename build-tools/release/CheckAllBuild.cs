@@ -89,7 +89,8 @@ internal static class CheckAllBuild
             "-p:Configuration=Release", "-p:NuGetAudit=false", "-p:UseSharedCompilation=false", "-p:TiaSharedAdapterPaths=false" };
         if (api != null) arguments.Add("-p:TiaPublicApiRoot=" + api);
         if (nuget != null) arguments.Add("-p:RestoreConfigFile=" + nuget);
-        var environment = new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null };
+        var environment = new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null,
+            ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = Path.Combine(directory, "analyzer-warnings") };
         var results = new List<CommandResult>();
         CommandResult Step(string target, string log)
         {

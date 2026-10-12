@@ -9,7 +9,7 @@ namespace TiaMcpServer.Dispatch
     internal static class ToolDispatchLanes
     {
 #if TIA_ENGINE_HOST
-        internal interface IWorkerLane { void Activate(); }
+        internal interface IWorkerLane { public void Activate(); }
 #endif
         private static readonly ConditionalWeakTable<object, SemaphoreSlim> Sessions = new ConditionalWeakTable<object, SemaphoreSlim>();
         private static readonly object UnavailableSession = new object();
