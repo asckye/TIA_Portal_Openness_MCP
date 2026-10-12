@@ -88,7 +88,7 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         var dotnet = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet";
         ProcessRunner.RequireSuccess(ProcessRunner.Run(dotnet, ["build", Path.Combine(root, "fake.csproj"), "-c", "Release", "-m:1", "-nodeReuse:false",
             "-p:RestoreConfigFile=" + Path.Combine(root, "offline.config"), "-p:UseSharedCompilation=false"], root), "fake compiler fixture");
-        var output = Path.Combine(root, "failed-run");
+        var runDirectory = Path.Combine(root, "failed-run");
         using var current = Process.GetCurrentProcess();
         ulong available = OperatingSystem.IsWindows() ? unchecked((ulong)current.ProcessorAffinity.ToInt64())
             : throw new PlatformNotSupportedException("Windows check-all fixture");
@@ -97,11 +97,11 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         var result = ProcessRunner.Run(dotnet, [typeof(ReleaseCommands).Assembly.Location, "check-all", "-PublicApiRoot", root,
             "-NuGetConfig", Path.Combine(root, "offline.config"), "-Dotnet", Path.Combine(root, "bin/Release/net10.0/fake.exe"),
             "-CompanionPython", Path.Combine(root, "bin/Release/net10.0/fake.exe"), "-StabilityCores", reserved.ToString(),
-            "-BuildParallelism", "1", "-MaxParallelism", "16", "-OutputDirectory", output], Repository.FindRoot());
+            "-BuildParallelism", "1", "-MaxParallelism", "16", "-OutputDirectory", runDirectory], Repository.FindRoot());
         output.WriteLine("Fake build: logical cores={0}, available mask={1:X}, reserved cores={2}", Environment.ProcessorCount, available, reserved);
         output.WriteLine(result.StandardOutput + result.StandardError);
         Assert.Equal(1, result.ExitCode);
-        var checks = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(output, "report.json")))!["checks"]!.AsArray();
+        var checks = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(runDirectory, "report.json")))!["checks"]!.AsArray();
         Assert.Equal(new[] { "generate-catalogs", "generate-tool-usage", "build-once", "tracked-tree-drift" }, checks.Select(row => (string)row!["Name"]!));
         Assert.Equal("failed", (string)checks[2]!["Status"]!);
         Assert.False(File.Exists(Path.Combine(Repository.FindRoot(), "unexpected-check")));
@@ -170,10 +170,10 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         var child = Path.Combine(fixture.DirectoryPath, "child.ps1");
         var parent = Path.Combine(fixture.DirectoryPath, "parent.ps1");
         File.WriteAllText(grandchild, Print());
-        File.WriteAllText(child, Print() + "; & powershell.exe -NoProfile -NonInteractive -File '" + grandchild.Replace("'", "''") + "'");
-        File.WriteAllText(parent, Print() + "; & powershell.exe -NoProfile -NonInteractive -File '" + child.Replace("'", "''") + "'");
+        File.WriteAllText(child, Print() + "; & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File '" + grandchild.Replace("'", "''") + "'");
+        File.WriteAllText(parent, Print() + "; & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File '" + child.Replace("'", "''") + "'");
         using var affinity = CheckAffinity.Enter(mask);
-        var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-File", parent], fixture.DirectoryPath,
+        var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", parent], fixture.DirectoryPath,
             new Dictionary<string, string?> { ["TIA_MCP_PLC_TOOLS_PYTHON"] = "companion python.exe" }, timeoutMilliseconds: 30000, waitForDescendants: true);
         Assert.True(result.ExitCode == 0, result.StandardError);
         Assert.Equal(Enumerable.Range(0, 3).SelectMany(_ => new[] { mask.ToString(), "companion python.exe" }), result.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries));
@@ -190,12 +190,12 @@ public sealed class CheckAllRound3Tests(ITestOutputHelper output)
         var ready = Path.Combine(fixture.DirectoryPath, "child-ready.txt");
         var parent = Path.Combine(fixture.DirectoryPath, "owned-parent.ps1");
         File.WriteAllText(child, "$PID | Set-Content -LiteralPath " + Quote(ready) + "; Start-Sleep -Seconds 60");
-        File.WriteAllText(parent, "$child = Start-Process powershell.exe -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile', '-NonInteractive', '-File', " +
+        File.WriteAllText(parent, "$child = Start-Process powershell.exe -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', " +
             Quote("\"" + child + "\"") + "); while (!(Test-Path -LiteralPath " + Quote(ready) + ")) { Start-Sleep -Milliseconds 25 }; $child.Id");
         using var affinity = CheckAffinity.Enter(mask);
         try
         {
-            var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-File", parent], fixture.DirectoryPath,
+            var result = ProcessRunner.Run("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", parent], fixture.DirectoryPath,
                 timeoutMilliseconds: 30000, waitForDescendants: true);
             Assert.True(result.ExitCode == 0, result.StandardError);
             int pid = int.Parse(result.StandardOutput.Trim());
