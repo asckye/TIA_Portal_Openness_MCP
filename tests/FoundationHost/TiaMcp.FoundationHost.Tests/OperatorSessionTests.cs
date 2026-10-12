@@ -15,6 +15,7 @@ using Connection = foundationhost::TiaMcp.FoundationHost.OperatorConnection;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using EngineHost = foundationhost::TiaMcp.FoundationHost.EngineReleaseHost;
 
+[Collection(BundleSelectionCollection.Name)]
 public sealed class OperatorSessionTests
 {
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
@@ -218,10 +219,19 @@ public sealed class OperatorSessionTests
                 EngineWorkerExe = release is "20" or "21" ? exe : null, EngineCatalog = catalog, Profile = "full" };
             BundleLayout.Initialize(AppContext.BaseDirectory, Options.BundleRoot);
         }
+        // BundleLayout.Initialize selects the bundle process-wide (AppDomain data and TIA_MCP_BUNDLE_ROOT); restore both.
+        private readonly object? previousBundle = AppDomain.CurrentDomain.GetData("TiaOpenness.Shared.BundleLayout.v4");
+        private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
         internal async Task<Session> Create(bool owned = false) => Options.EngineWorkerExe == null
             ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSession(Options, owned);
         internal Registration Register() => new(Options, "S-1-5-21-1-2-3-1001", DirectoryPath, error => throw error);
-        public void Dispose() { Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", priorLease); Directory.Delete(DirectoryPath, true); }
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", priorLease);
+            AppDomain.CurrentDomain.SetData("TiaOpenness.Shared.BundleLayout.v4", previousBundle);
+            Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", previousRootVariable);
+            Directory.Delete(DirectoryPath, true);
+        }
     }
 
     internal sealed class Peer : IAsyncDisposable

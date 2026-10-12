@@ -11,6 +11,7 @@ using Host = enginehost::TiaMcpServer.ModelContextProtocol;
 using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
+[Collection(BundleSelectionCollection.Name)]
 public sealed class OfflineReadinessTests
 {
     public static IEnumerable<object[]> Cases =>
@@ -140,6 +141,8 @@ public sealed class OfflineReadinessTests
     {
         private const string BundleSelection = "TiaOpenness.Shared.BundleLayout.v4";
         private readonly object? previousBundle = AppDomain.CurrentDomain.GetData(BundleSelection);
+        // BundleLayout.Initialize also sets this process-wide variable; restore it with the selection.
+        private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
         private readonly string root = Path.Combine(Path.GetTempPath(), "offline-readiness-" + Guid.NewGuid().ToString("N"));
         internal Files()
         {
@@ -204,6 +207,7 @@ public sealed class OfflineReadinessTests
         public void Dispose()
         {
             AppDomain.CurrentDomain.SetData(BundleSelection, previousBundle);
+            Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", previousRootVariable);
             if (Directory.Exists(root)) Directory.Delete(root, true);
         }
     }
