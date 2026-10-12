@@ -13,15 +13,19 @@ public sealed class V4ProtocolRulesTests
     [Theory]
     [InlineData("ImportDeviceAml", "{\"dryRun\":false}", true)]
     [InlineData("ImportDeviceAml", "{}", false)]
+    [InlineData("ImportDeviceAml", "{\"dryRun\":true}", false)]
     [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"import\",\"dryRun\":false}", true)]
     [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"export\",\"dryRun\":false}", false)]
     [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"import\"}", false)]
+    [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"import\",\"dryRun\":true}", false)]
     [InlineData("ExchangeUnifiedTags", "{\"action\":\"import\",\"dryRun\":false}", true)]
     [InlineData("ExchangeUnifiedTags", "{\"action\":\"export\",\"dryRun\":false}", false)]
     [InlineData("ExchangeUnifiedTags", "{\"action\":\"import\"}", false)]
+    [InlineData("ExchangeUnifiedTags", "{\"action\":\"import\",\"dryRun\":true}", false)]
     [InlineData("ExchangeUnifiedScriptModules", "{\"action\":\"import\",\"dryRun\":false}", true)]
     [InlineData("ExchangeUnifiedScriptModules", "{\"action\":\"export\",\"dryRun\":false}", false)]
     [InlineData("ExchangeUnifiedScriptModules", "{\"action\":\"import\"}", false)]
+    [InlineData("ExchangeUnifiedScriptModules", "{\"action\":\"import\",\"dryRun\":true}", false)]
     [InlineData("RunPlcSimAdvancedTestScenario", "{\"dryRun\":false}", true)]
     [InlineData("RunPlcSimAdvancedTestScenario", "{\"dryRun\":true}", false)]
     [InlineData("RunPlcSimAdvancedTestScenario", "{}", false)]
@@ -52,12 +56,14 @@ public sealed class V4ProtocolRulesTests
         Assert.Equal(gated ? "CONFIRMATION_REQUIRED" : null, (string?)result.StructuredContent!["error"]?["code"]);
         Assert.Equal(gated ? 1 : 0, waits);
         Assert.Equal(gated && !preview ? 0 : 1, worker.Calls);
+        if (preview) Assert.Equal(new[] { gated || (bool?)args["dryRun"] != false }, worker.PreviewCalls);
     }
     private sealed class ApprovalWorker : IFoundationWorker
     {
         internal int Calls;
+        internal readonly List<bool> PreviewCalls = new();
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-        { Calls++; return Task.FromResult<JsonNode?>(new JsonObject { ["success"] = true, ["Executed"] = arguments["dryRun"]?.GetValue<bool>() != true }); }
+        { Calls++; if (arguments["dryRun"] is JsonValue preview) PreviewCalls.Add(preview.GetValue<bool>()); return Task.FromResult<JsonNode?>(new JsonObject { ["success"] = true, ["Executed"] = arguments["dryRun"]?.GetValue<bool>() != true }); }
         public void Dispose() { }
     }
     [Theory]

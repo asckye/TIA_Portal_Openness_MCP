@@ -42,6 +42,13 @@ namespace TiaMcp.Logic.V4
             if (data is PreviewData preview) V4Validation.Preview(envelope, preview);
             return envelope;
         }
+
+        public static Envelope Create<T>(T data, Error? error, Meta meta, bool nativeIssued, bool mutation)
+        {
+            var envelope = Create(data, error, meta);
+            V4Validation.Envelope(envelope, 4, nativeIssued, mutation);
+            return envelope;
+        }
     }
 
     public sealed class Meta

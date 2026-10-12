@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../Shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../Shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../Shared/SessionBehavior.cs" Link="Shared/SessionBehavior.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../Shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../Shared/WindowsFirewallRule.cs" Link="Shared/WindowsFirewallRule.cs" /></ItemGroup>
   <ItemGroup>

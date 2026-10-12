@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -79,11 +80,60 @@ internal static class CatalogAudits
             var key = Text(record!["releaseKey"]); Require(!record["exampleCallsExecuted"]!.GetValue<bool>(), "Native usage calls must not execute");
             Require(record["registeredToolCount"]!.GetValue<int>() == record["checkedToolCount"]!.GetValue<int>() && record["checkedToolCount"]!.GetValue<int>() == matrix[key]!["toolCount"]!.GetValue<int>(), "Usage count mismatch: " + key);
             Require(Set(record["tools"]!.AsArray().Select(r => Text(r!["toolName"]))).SetEquals(Strings(matrix[key]!["tools"])), "Usage roster mismatch: " + key);
-            var row = new JsonObject(); foreach (var p in record.AsObject().Where(p => p.Key is not "profile" and not "transport")) row[p.Key] = p.Value?.DeepClone(); releases[key] = row;
+            var schemas = record["inputSchemas"]?.AsObject() ?? throw new ReleaseException("Actual served input schemas required: " + key);
+            Require(Set(schemas.Select(p => p.Key)).SetEquals(Strings(matrix[key]!["tools"])), "Usage schema roster mismatch: " + key);
+            ValidateUsageExamples(catalog, schemas, key, record["tools"]!.AsArray()
+                .ToDictionary(t => Text(t!["toolName"]), t => Text(t!["usageProfile"])));
+            var row = new JsonObject(); foreach (var p in record.AsObject().Where(p => p.Key is not "profile" and not "transport" and not "inputSchemas")) row[p.Key] = p.Value?.DeepClone(); releases[key] = row;
         }
         Require(Set(releases.Select(p => p.Key)).SetEquals(matrix.Select(p => p.Key)), "Usage release coverage differs"); var union = Set(matrix.SelectMany(p => Strings(p.Value!["tools"]))); Require(union.SetEquals(catalog["tools"]!.AsObject().Select(p => p.Key)), "Missing or obsolete usage mapping");
         return new JsonObject { ["basis"] = "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
             ["catalogSha256"] = Hash(Encoding.UTF8.GetBytes(Source(root, "src/Shared/ToolUsageData.json"))), ["uniqueTools"] = union.Count, ["documents"] = catalog["documents"]!.AsArray().Count, ["versionToolPairs"] = matrix.Sum(p => p.Value!["toolCount"]!.GetValue<int>()), ["offlineCallExecutions"] = releases.Sum(p => p.Value!["offlineCallExamplesExecuted"]!.AsArray().Count), ["indexedExampleBlocksOrMethods"] = catalog["documents"]!.AsArray().Sum(d => d!["examples"]!.AsArray().Count), ["programmingExamples"] = catalog["examples"]!.AsArray().Count, ["callSequences"] = catalog["sequences"]!.AsArray().Count,
             ["languages"] = new JsonArray(catalog["languages"]!.AsArray().Select(l => Copy(l!["id"]!)).ToArray()), ["relatedOfficialPatternMappings"] = catalog["tools"]!.AsObject().Count(p => Text(p.Value!["relationship"]) == "related-api-patterns"), ["noDirectVendoredExampleMappings"] = catalog["tools"]!.AsObject().Count(p => Text(p.Value!["relationship"]) == "no-direct-official-example"), ["sources"] = Copy(catalog["sources"]!), ["nativeTiaExecuted"] = false, ["releases"] = releases };
+    }
+
+    internal static void ValidateUsageExamples(JsonNode catalog, JsonObject schemas, string release, IReadOnlyDictionary<string, string>? usageProfiles = null)
+    {
+        var profile = release is "20" or "21" ? "full-engine" : "plc-foundation";
+        var problems = new List<string>();
+        void Check(string name, JsonObject arguments, string location)
+        {
+            Require(schemas[name] is JsonObject, "Example tool is absent from the served catalog: " + location);
+            var schema = new TiaMcp.Logic.V4.Inputs.InputSchema(JsonSerializer.SerializeToElement(schemas[name]));
+            var error = schema.Validate(JsonSerializer.SerializeToElement(arguments), "arguments");
+            if (error != null) problems.Add(release + "/" + location + ": " + TiaMcp.Logic.V4.V4Json.Serialize(error));
+        }
+        JsonObject Bound(JsonNode arguments) => JsonNode.Parse(arguments.ToJsonString()
+            .Replace("{release}", release, StringComparison.Ordinal).Replace("{major}", release is "14sp1" ? "14" : release is "15.1" ? "15" : release, StringComparison.Ordinal)
+            .Replace("{extension}", Text(catalog["calls"]!["releaseExtensions"]![release]), StringComparison.Ordinal))!.AsObject();
+        foreach (var sourceProfile in catalog["calls"]!["profiles"]!.AsObject())
+        foreach (var pair in sourceProfile.Value!.AsObject())
+        {
+            if (!schemas.ContainsKey(pair.Key)) continue; // A union profile also includes tools from other releases.
+            var servedProfile = usageProfiles?.GetValueOrDefault(pair.Key);
+            if (sourceProfile.Key != (string.IsNullOrEmpty(servedProfile) ? profile : servedProfile)) continue;
+            var entry = pair.Value!; var args = Bound(entry["arguments"]!);
+            ToolUsageGenerator.ValidateHints(entry, schemas[pair.Key]!["properties"]!.AsObject().Select(p => p.Key), release + "/" + pair.Key);
+            Check(pair.Key, args, sourceProfile.Key + "/" + pair.Key);
+            void Variant(JsonNode patch, string location)
+            {
+                var variant = args.DeepClone().AsObject();
+                foreach (var field in Bound(patch)) variant[field.Key] = field.Value?.DeepClone();
+                Check(pair.Key, variant, sourceProfile.Key + "/" + pair.Key + "/" + location);
+            }
+            if (entry["execution"]?["arguments"] is JsonObject execution) Variant(execution, "execution");
+            foreach (var operation in entry["operations"]?.AsObject() ?? [])
+            {
+                ToolUsageGenerator.ValidateHints(operation.Value!, schemas[pair.Key]!["properties"]!.AsObject().Select(p => p.Key), release + "/" + pair.Key + "/" + operation.Key);
+                Variant(operation.Value!["arguments"]!, "operations/" + operation.Key);
+            }
+        }
+        foreach (var example in catalog["examples"]!.AsArray().Concat(catalog["sequences"]!.AsArray()))
+        {
+            if (!Strings(example!["releaseKeys"]).Contains(release) || example["profile"] != null && Text(example["profile"]) != profile) continue;
+            foreach (var step in example["steps"]?.AsArray() ?? [])
+                Check(Text(step!["tool"]), Bound(step["arguments"]!), Text(example["id"]));
+        }
+        Require(problems.Count == 0, "Example arguments refused:\n" + string.Join("\n", problems));
     }
 }

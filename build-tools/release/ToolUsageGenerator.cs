@@ -96,6 +96,7 @@ internal static class ToolUsageGenerator
         }
         var meta = Read(root, "reference/tool-examples/metadata.json"); var calls = Read(root, "reference/tool-examples/calls.json"); var sequences = Read(root, "reference/tool-examples/sequences.json").AsArray();
         ValidateCoverage(data.Rosters, calls, data.Families["F00"].Tools); ValidateFoundation(calls, sequences); ValidateRetest(root, calls, sequences, meta);
+        ValidateSourceHints(root, Read(root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json"));
         var result = new JsonObject { ["schemaVersion"] = 2, ["scope"] = "Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.",
             ["sources"] = sources, ["documents"] = documents, ["tools"] = mappings,
             ["languages"] = Copy(library["languages"]!), ["examples"] = Copy(library["examples"]!),
@@ -109,6 +110,20 @@ internal static class ToolUsageGenerator
         var x = a.Replace('\\', '/').Split('/'); var y = b.Replace('\\', '/').Split('/');
         for (var i = 0; i < Math.Min(x.Length, y.Length); i++) { var c = PythonStringComparer.Instance.Compare(x[i].ToLowerInvariant(), y[i].ToLowerInvariant()); if (c != 0) return c; }
         return x.Length.CompareTo(y.Length);
+    }
+    internal static void ValidateHints(JsonNode example, IEnumerable<string> parameters, string location)
+    {
+        var names = Set(parameters);
+        foreach (var hint in example["parameters"]?.AsObject() ?? [])
+            Require(names.Contains(hint.Key), "Unknown parameter hint: " + location + "/" + hint.Key);
+    }
+    internal static void ValidateSourceHints(string root, JsonNode examples)
+    {
+        var releases = Read(root, "tests/Engine/TiaMcp.Engine.Tests/FullEngineRejections.json")["releases"]!.AsObject();
+        foreach (var release in releases)
+            foreach (var tool in release.Value!.AsArray())
+                if (examples[Text(tool!["name"])] is JsonObject example)
+                    ValidateHints(example, tool["parameters"]!.AsObject().Select(p => p.Key), "engine-source/" + release.Key + "/" + Text(tool["name"]));
     }
     private static string[] SplitLines(string text) => text.Length == 0 ? [] : Regex.Split(text.TrimEnd('\n'), "\\r\\n|[\\n\\r\\v\\f\\x1c-\\x1e\\x85\\u2028\\u2029]");
     internal static void ValidateCoverage(Dictionary<string, HashSet<string>> rosters, JsonNode calls, IEnumerable<string>? sharedFoundation = null)

@@ -347,7 +347,9 @@ namespace TiaMcp.Engine.Tests
         public void InvalidCombinationsAreRejectedAtConstruction()
         {
             Assert.Throws<ArgumentException>(() => new Envelope(4, true, null, Reject().Error, Metadata()));
-            Assert.False(Metadata(Outcome.Unknown, Execution.Unknown).RequiresSessionReset);
+            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null,
+                new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata(Outcome.Unknown, Execution.Unknown),
+                nativeIssued: true, mutation: true));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, Reject().Error, Metadata(Outcome.Partial, Execution.Partial)));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Mixed.", new PartialFailureDetails(1, 1, 0)), Metadata()));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata()));
@@ -370,6 +372,26 @@ namespace TiaMcp.Engine.Tests
             Assert.NotNull(Record.Exception(() => V4Json.Serialize(new { Value = double.PositiveInfinity })));
             Assert.NotNull(Record.Exception(() => V4Json.Serialize(new { Value = double.NegativeInfinity })));
             Assert.Throws<ArgumentException>(() => V4Json.Serialize(new { Time = new DateTime(2026, 10, 3) }));
+        }
+
+        [Theory]
+        [InlineData(false, false)]
+        [InlineData(false, true)]
+        [InlineData(true, false)]
+        [InlineData(true, true)]
+        public void UnknownResetMustEqualTheNativeSessionLock(bool nativeIssued, bool mutation)
+        {
+            bool locked = nativeIssued && mutation;
+            Meta Observation(bool reset) => new Meta(Stamp, "21", "Sample", "request-1", Outcome.Unknown,
+                Execution.Unknown, reset, BehaviorPolicy.NotApplicable, Completeness.Unknown, null, Array.Empty<Warning>());
+            var error = new Error("Lost.", new OutcomeUnknownDetails(null, Empty));
+            var correct = Envelope.Create<object?>(null, error, Observation(locked), nativeIssued, mutation);
+            Assert.Equal(locked, correct.Meta.RequiresSessionReset);
+            Assert.Equal(ErrorCode.OutcomeUnknown, correct.Error!.Code);
+            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, error, Observation(!locked), nativeIssued, mutation));
+            // Even an unlocked unknown result cannot turn into a replayable native failure.
+            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null,
+                new Error("Lost.", new NativeOperationFailedDetails(null, null, Empty)), Observation(locked)));
         }
 
         [Fact]

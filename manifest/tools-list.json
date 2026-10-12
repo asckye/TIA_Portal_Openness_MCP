@@ -1,6 +1,6 @@
 {
   "package": "TIA_MCP_Delivery_v3.3.0_20261008",
-  "generatedAt": "2026-10-12T07:10:31.4998191+00:00",
+  "generatedAt": "2026-10-12T11:11:18.9388313+00:00",
   "source": "FoundationHost V21 full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "3.3.0.0",
   "exeSha256": "5afc7ca3ba0add70c1683614d632ac334bbd83437c9d3a54cc2951cf4edfa9a2",
@@ -3430,7 +3430,7 @@
         "dryRun"
       ],
       "description": "[L1][Project][WRITE] Preview a stored generation plan by default. Execute with dryRun=false, exact fresh expectedPlanHash and expectedProjectFile. One Workbench plan approval covers selected steps. Active runs fence all other session writes, including attached panel writes. Cancellation stops between steps; earlier writes remain. New projects rebind within the run only after verified process, path, epoch and empty-tree readback. Source steps use their own preview, compare approved deciding fields, inventories and witness constraints, fill only expectedPlanHash, then use existing admission/precheck/hash checks/audit/worker lane and verify effects. Stop on refusal, failure, unknown or divergence; retain completed writes and run facts, never retry. Replan to approve changes. Freshness is checked before approval and the first write; approved runs have 4-hour/10000-step caps. Optional phases must include dependencies. Examples: GetToolUsage(toolName: \"ApplyGenerationPlan\"), optionally operation or language. Examples: GetToolUsage(toolName: \"ApplyGenerationPlan\"), optionally operation or language.",
-      "example": "{\"planId\":\"gen-0000000000000000000000000000000000000000000000000000000000000000\",\"expectedPlanHash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"dryRun\":true,\"expectedProjectFile\":\"\\u003CexpectedProjectFile: resolve from the parameter description/current project\\u003E\"}"
+      "example": "{\"planId\":\"gen-0000000000000000000000000000000000000000000000000000000000000000\",\"expectedPlanHash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"dryRun\":true,\"expectedProjectFile\":\"C:/Projects/Machine.ap21\"}"
     },
     {
       "name": "PlanProjectGeneration",
@@ -8218,7 +8218,7 @@
         "expectedProjectFile"
       ],
       "description": "[PLC foundation; native unverified][WRITE] [batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, poison session; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[]}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
     },
     {
       "name": "ImportPlcBlockVerified",
@@ -8262,7 +8262,7 @@
         "expectedProjectFile"
       ],
       "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. Every uncertain attempted outcome may have changed project, poisons session and is never replayed. Syntax/content validity and native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"FC_Add\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"FC_Add\",\"dryRun\":true,\"confirm\":false,\"overwrite\":true}"
     },
     {
       "name": "ImportPlcBlock",
@@ -9258,7 +9258,7 @@
         "expectedProjectFile"
       ],
       "description": "[PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. V20 resources required, V21 optional. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcBlocksDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003CgroupPath: resolve from the parameter description/current project\\u003E\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003Cexact caller-selected block group containing the intended FB blocks\\u003E\"}"
     },
     {
       "name": "ExtractPlcBlockMetrics",

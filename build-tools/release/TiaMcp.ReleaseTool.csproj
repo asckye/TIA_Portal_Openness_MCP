@@ -17,6 +17,7 @@
     <ProjectReference Include="check-build/TiaMcp.CheckBuild.csproj" OutputItemType="_CheckBuildTask" />
     <EmbeddedResource Include="dead-reference-policy.json" />
     <ProjectReference Include="../common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
+    <ProjectReference Include="../../src/Logic/TiaMcp.Logic.csproj" />
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>TiaMcp.ReleaseTool.Tests</_Parameter1>
     </AssemblyAttribute>

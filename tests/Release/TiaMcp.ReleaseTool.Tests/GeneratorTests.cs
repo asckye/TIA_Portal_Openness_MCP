@@ -229,11 +229,65 @@ public sealed class GeneratorTests
     public void UsageAuditRequiresEveryToolReleaseAndNoNativeExampleCalls()
     {
         var matrix = Read(Root, "manifest/version-tools.json")["releases"]!.AsObject(); var catalog = Read(Root, "src/Shared/ToolUsageData.json"); var records = new JsonArray();
-        foreach (var key in Keys) records.Add(new JsonObject { ["releaseKey"] = key, ["profile"] = "full", ["transport"] = "stdio", ["exampleCallsExecuted"] = false, ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray() });
+        foreach (var key in Keys) records.Add(new JsonObject { ["releaseKey"] = key, ["profile"] = "full", ["transport"] = "stdio", ["exampleCallsExecuted"] = false, ["registeredToolCount"] = Copy(matrix[key]!["toolCount"]!), ["checkedToolCount"] = Copy(matrix[key]!["toolCount"]!), ["tools"] = new JsonArray(Strings(matrix[key]!["tools"]).Select(n => (JsonNode)new JsonObject { ["toolName"] = n }).ToArray()), ["offlineCallExamplesExecuted"] = new JsonArray(),
+            ["inputSchemas"] = Read(Root, "manifest/contracts/v4/baseline/" + key + ".json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!["inputSchema"]!.DeepClone().AsObject()).ToJsonObject() });
         var result = CatalogAudits.UsageFromRecords(Root, matrix, catalog, records); Assert.Equal(8, result["releases"]!.AsObject().Count); Assert.Equal(Hash(Encoding.UTF8.GetBytes(Source(Root, "src/Shared/ToolUsageData.json"))), Text(result["catalogSha256"])); Assert.Null(result["releases"]!["21"]!["profile"]);
         records[0]!["exampleCallsExecuted"] = true; Assert.Throws<ReleaseException>(() => CatalogAudits.UsageFromRecords(Root, matrix, catalog, records)); records[0]!["exampleCallsExecuted"] = false;
         records[0]!["checkedToolCount"] = 0; Assert.Throws<ReleaseException>(() => CatalogAudits.UsageFromRecords(Root, matrix, catalog, records)); records[0]!["checkedToolCount"] = Copy(matrix["14sp1"]!["toolCount"]!);
         records.RemoveAt(7); Assert.Throws<ReleaseException>(() => CatalogAudits.UsageFromRecords(Root, matrix, catalog, records));
+    }
+    [Theory]
+    [InlineData("ApplyToolBatch", "previewToken", "token")]
+    [InlineData("PatchPlcBlockDocument", "expectedDocumentHash", "expectedFingerprint")]
+    [InlineData("ManageUnifiedCwcPackage", "expectedPackageHash", "expectedFingerprint")]
+    [InlineData("SetUnifiedGlobalScript", "previewToken", "expectedToken")]
+    [InlineData("DeleteUnifiedHmiButtonEvent", "previewToken", "expectedToken")]
+    [InlineData("DeleteUnifiedHmiDynamization", "previewToken", "expectedToken")]
+    [InlineData("ImportPlcBlockVerified", "previewToken", "expectedToken")]
+    [InlineData("ManageUnifiedEvent", "previewToken", "expectedToken")]
+    [InlineData("SetUnifiedRuntimeSettings", "previewToken", "expectedToken")]
+    public void SourceBindingHintsCannotDetachFromRenamedParameters(string name, string current, string old)
+    {
+        var examples = Read(Root, "tests/Engine/TiaMcp.Engine.Tests/Fixtures/EngineSourceExamples.json");
+        var hints = examples[name]!["parameters"]!.AsObject();
+        Assert.True(hints[current]!["requiresBinding"]!.GetValue<bool>());
+        ToolUsageGenerator.ValidateSourceHints(Root, examples);
+        hints[old] = hints[current]!.DeepClone(); hints.Remove(current);
+        Assert.Throws<ReleaseException>(() => ToolUsageGenerator.ValidateSourceHints(Root, examples));
+    }
+    [Theory]
+    [InlineData("argument")]
+    [InlineData("hint")]
+    [InlineData("type")]
+    [InlineData("required")]
+    [InlineData("nested")]
+    [InlineData("execution")]
+    [InlineData("operation")]
+    [InlineData("sequence")]
+    [InlineData("language")]
+    public void UsageExamplesMustSatisfyEveryServedSchema(string mutation)
+    {
+        var schema = JsonNode.Parse("""{"type":"object","additionalProperties":false,"required":["fix","target"],"properties":{"fix":{"type":"boolean"},"target":{"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string","minLength":1}}}}}""")!;
+        var entry = JsonNode.Parse("""{"arguments":{"fix":false,"target":{"name":"fixture"}},"parameters":{"fix":{"requiresBinding":true}},"operations":{}}""")!;
+        var catalog = new JsonObject { ["calls"] = new JsonObject { ["releaseExtensions"] = new JsonObject { ["19"] = "19" },
+            ["profiles"] = new JsonObject { ["plc-foundation"] = new JsonObject { ["GetEnvironmentDiagnostics"] = entry } } }, ["examples"] = new JsonArray(), ["sequences"] = new JsonArray() };
+        var schemas = new JsonObject { ["GetEnvironmentDiagnostics"] = schema };
+        CatalogAudits.ValidateUsageExamples(catalog, schemas, "19");
+        switch (mutation)
+        {
+            case "argument": entry["arguments"]!["unknown"] = 1; break;
+            case "hint": entry["parameters"]!["oldFix"] = new JsonObject { ["requiresBinding"] = true }; break;
+            case "type": entry["arguments"]!["fix"] = "false"; break;
+            case "required": entry["arguments"]!.AsObject().Remove("fix"); break;
+            case "nested": entry["arguments"]!["target"]!["name"] = ""; break;
+            case "execution": entry["execution"] = new JsonObject { ["arguments"] = new JsonObject { ["fix"] = "false" } }; break;
+            case "operation": entry["operations"]!["repair"] = new JsonObject { ["arguments"] = new JsonObject { ["fix"] = "false" } }; break;
+            case "sequence": case "language":
+                catalog[mutation == "sequence" ? "sequences" : "examples"]!.AsArray().Add(new JsonObject {
+                    ["id"] = mutation, ["releaseKeys"] = new JsonArray("19"), ["profile"] = "plc-foundation",
+                    ["steps"] = new JsonArray(new JsonObject { ["tool"] = "GetEnvironmentDiagnostics", ["arguments"] = new JsonObject { ["fix"] = "false" } }) }); break;
+        }
+        Assert.Throws<ReleaseException>(() => CatalogAudits.ValidateUsageExamples(catalog, schemas, "19"));
     }
     [Fact]
     public void StdioAuditReceiptsMustBeDistinctAndHashChecked()

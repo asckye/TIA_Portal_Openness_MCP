@@ -142,7 +142,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
                     assert set(schema.get('required', [])) <= set(selected_args) <= set(props), (name, choice)
                     operation_records.append({'operation': choice, 'exampleKind': selected_usage['example']['kind'],
                         'releaseProblem': selected_usage['example']['releaseProblem']})
-        records.append({'toolName': name, 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
+        records.append({'toolName': name, 'usageProfile': usage['profile'], 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
         if exhaustive and name in GENERATION_EXAMPLES:
             check_generation_example(call, name, args)
             offline_calls.append(name)
@@ -263,6 +263,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
                 assert any(e.tag.endswith('Name') and e.text == (data.get('udtName') or data.get('dbName') or data.get('name')) for e in root.iter()), example['id']
                 builder_examples += 1
     return {'releaseKey': str(release), 'registeredToolCount': len(names), 'checkedToolCount': len(records),
+            'inputSchemas': schemas,
             'documentCount': first['documentCount'], 'allSourceTextRetrievedAndHashChecked': verify_documents,
             'operationExampleCount': sum(len(r['operations']) for r in records),
             'programmingExampleCount': sum(not e['id'].startswith('sequence/') for e in first['exampleLibrary']['examples']),

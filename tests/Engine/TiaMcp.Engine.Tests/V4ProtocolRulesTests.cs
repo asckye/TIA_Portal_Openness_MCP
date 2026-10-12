@@ -21,19 +21,20 @@ namespace TiaMcp.Engine.Tests
         public static class ApprovalProbe
         {
             internal static int Calls;
-            private static CallToolResult Result(string name) { Calls++; return McpServer.V4Result(name, new JsonObject()); }
+            internal static readonly List<bool> PreviewCalls = new List<bool>();
+            private static CallToolResult Result(string name, bool? dryRun = null) { Calls++; if (dryRun.HasValue) PreviewCalls.Add(dryRun.Value); return McpServer.V4Result(name, new JsonObject()); }
             [ModelContextProtocol.Server.McpServerTool(Name = "ImportDeviceAml")]
-            public static CallToolResult Aml(bool dryRun = true) => Result("ImportDeviceAml");
+            public static CallToolResult Aml(bool dryRun = true) => Result("ImportDeviceAml", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "ExchangeSystemDiagnosticsSettings")]
-            public static CallToolResult Diagnostics(string action, bool dryRun = true) => Result("ExchangeSystemDiagnosticsSettings");
+            public static CallToolResult Diagnostics(string action, bool dryRun = true) => Result("ExchangeSystemDiagnosticsSettings", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "ExchangeUnifiedTags")]
-            public static CallToolResult Tags(string action, bool dryRun = true) => Result("ExchangeUnifiedTags");
+            public static CallToolResult Tags(string action, bool dryRun = true) => Result("ExchangeUnifiedTags", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "ExchangeUnifiedScriptModules")]
-            public static CallToolResult Scripts(string action, bool dryRun = true) => Result("ExchangeUnifiedScriptModules");
+            public static CallToolResult Scripts(string action, bool dryRun = true) => Result("ExchangeUnifiedScriptModules", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "RunPlcSimAdvancedTestScenario")]
-            public static CallToolResult Scenario(bool dryRun = true) => Result("RunPlcSimAdvancedTestScenario");
+            public static CallToolResult Scenario(bool dryRun = true) => Result("RunPlcSimAdvancedTestScenario", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "RunTestSuiteCase")]
-            public static CallToolResult TestCase(bool dryRun = true) => Result("RunTestSuiteCase");
+            public static CallToolResult TestCase(bool dryRun = true) => Result("RunTestSuiteCase", dryRun);
             [ModelContextProtocol.Server.McpServerTool(Name = "EnsureOpennessUserGroup")]
             public static CallToolResult Group() => Result("EnsureOpennessUserGroup");
             [ModelContextProtocol.Server.McpServerTool(Name = "GetEnvironmentDiagnostics")]
@@ -47,6 +48,7 @@ namespace TiaMcp.Engine.Tests
         [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"import\",\"dryRun\":false}", true, 1)]
         [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"export\",\"dryRun\":false}", false, 1)]
         [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"import\"}", false, 1)]
+        [InlineData("ExchangeSystemDiagnosticsSettings", "{\"action\":\"import\",\"dryRun\":true}", false, 1)]
         [InlineData("ExchangeUnifiedTags", "{\"action\":\"import\",\"dryRun\":false}", true, 1)]
         [InlineData("ExchangeUnifiedTags", "{\"action\":\"export\",\"dryRun\":false}", false, 1)]
         [InlineData("ExchangeUnifiedTags", "{\"action\":\"import\",\"dryRun\":true}", false, 1)]
@@ -68,6 +70,7 @@ namespace TiaMcp.Engine.Tests
             using var fixture = new InfrastructureContractsTests();
             McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(ApprovalProbe) }), () => true, new HashSet<string>());
             ApprovalProbe.Calls = 0;
+            ApprovalProbe.PreviewCalls.Clear();
             var settings = TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
             var previous = McpServer.ApprovalWaitOverrideForTests;
             bool context = McpServer.EnterMcpApprovalContext();
@@ -83,6 +86,8 @@ namespace TiaMcp.Engine.Tests
                 Assert.Equal(gated ? "CONFIRMATION_REQUIRED" : null, (string?)body["error"]?["code"]);
                 Assert.Equal(gated ? 1 : 0, waits);
                 Assert.Equal(calls, ApprovalProbe.Calls);
+                if (name is "ImportDeviceAml" or "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" or "RunPlcSimAdvancedTestScenario" or "RunTestSuiteCase")
+                    Assert.Equal(new[] { gated || (bool?)JsonNode.Parse(json)!["dryRun"] != false }, ApprovalProbe.PreviewCalls);
             }
             finally { McpServer.LeaveMcpApprovalContext(context); McpServer.ApprovalWaitOverrideForTests = previous; settings.Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath); }
         }

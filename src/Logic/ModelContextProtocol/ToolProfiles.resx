@@ -18895,8 +18895,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -21128,9 +21128,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "regexName": "FB_.*",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
         },
         "envelopeVersion": 4
       },
@@ -22811,9 +22811,9 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "importOption": "Override",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "overwrite": true
         },
         "envelopeVersion": 4
       },
@@ -22846,9 +22846,11 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "regexName": "",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "fileNamesWithoutExtension": [
+            "&lt;exact document basename from the import directory&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -27929,8 +27931,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -30162,9 +30164,9 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "regexName": "FB_.*",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "groupPath": "&lt;exact caller-selected block group containing the intended FB blocks&gt;"
         },
         "envelopeVersion": 4
       },
@@ -31857,9 +31859,9 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "importOption": "Override",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "overwrite": true
         },
         "envelopeVersion": 4
       },
@@ -31892,9 +31894,11 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "regexName": "",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "fileNamesWithoutExtension": [
+            "&lt;exact document basename from the import directory&gt;"
+          ]
         },
         "envelopeVersion": 4
       },
@@ -37147,8 +37151,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -41681,8 +41685,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -46628,8 +46632,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -51894,8 +51898,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -57359,8 +57363,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },
@@ -63022,8 +63026,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "envelopeVersion": 4
       },

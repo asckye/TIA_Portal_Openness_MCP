@@ -183,7 +183,7 @@
         },
         "parameters": {
           "inputRoot": {
-            "meaning": "Existing immutable caller-owned directory containing the selected native symbol exports.",
+            "meaning": "Existing immutable caller-owned directory containing the selected native symbol exports. An XML export or directory of native PLC tag-table and GlobalDB exports. Empty tag tables are accepted, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning.",
             "requiresBinding": true,
             "exampleValue": "<existing caller-owned immutable symbol export directory>"
           },
@@ -817,11 +817,7 @@
       },
       "DisconnectPortal": {
         "arguments": {},
-        "parameters": {
-          "path": {
-            "meaning": "An XML export or directory of native PLC tag-table and GlobalDB exports. Empty tag tables are accepted, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning."
-          }
-        },
+        "parameters": {},
         "operations": {},
         "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Read/session call exercised successfully; project-dependent values here are bindings, not copied VM identities. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
         "resultContract": {
@@ -2838,13 +2834,17 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "regexName": "FB_.*",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
         },
         "parameters": {
           "preservePath": {
             "exampleValue": false
+          },
+          "groupPath": {
+            "requiresBinding": true,
+            "meaning": "Resolve the exact group from GetPlcBlockTree; this served API selects a group, not a regex."
           }
         },
         "operations": {},
@@ -2860,9 +2860,9 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "importOption": "Override",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "overwrite": true
         },
         "parameters": {},
         "operations": {},
@@ -2878,13 +2878,19 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "regexName": "",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "fileNamesWithoutExtension": [
+            "<exact document basename from the import directory>"
+          ]
         },
         "parameters": {
-          "importOption": {
-            "exampleValue": "Override"
+          "overwrite": {
+            "exampleValue": true
+          },
+          "fileNamesWithoutExtension": {
+            "requiresBinding": true,
+            "meaning": "Enumerate and explicitly select the document basenames before applying."
           }
         },
         "operations": {},
@@ -4904,7 +4910,7 @@
           "filePath": {
             "exampleValue": "C:\\Examples\\exports\\Main.xml"
           },
-          "rulesJson": {
+          "rules": {
             "exampleValue": "<rulesJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -4923,7 +4929,7 @@
           "directoryPath": "C:\\Examples"
         },
         "parameters": {
-          "rulesJson": {
+          "rules": {
             "exampleValue": "<rulesJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -4986,7 +4992,7 @@
           "recursive": {
             "exampleValue": true
           },
-          "extensionsJson": {
+          "extensions": {
             "exampleValue": "<extensionsJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -5016,7 +5022,7 @@
           "recursive": {
             "exampleValue": true
           },
-          "extensionsJson": {
+          "extensions": {
             "exampleValue": "<extensionsJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -5129,11 +5135,11 @@
           "recursive": {
             "exampleValue": true
           },
-          "extensionsJson": {
+          "extensions": {
             "exampleValue": "<extensionsJson from this operation's target or user input>",
             "requiresBinding": true
           },
-          "markersJson": {
+          "markers": {
             "exampleValue": "<markersJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -7367,7 +7373,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"Name\":\"Ready_2\"}"
+              "properties": {
+                "Name": "Ready_2"
+              }
             }
           },
           "delete": {
@@ -8292,8 +8300,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "operations": {},
         "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
@@ -9114,11 +9122,11 @@
           "targetSoftwarePath": "PLC_2"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -9126,11 +9134,11 @@
             "exampleValue": "<targetProjectName from this operation's target or user input>",
             "requiresBinding": true
           },
-          "targetDevicePathJson": {
+          "targetDevicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "targetItemPathJson": {
+          "targetItemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -11790,9 +11798,9 @@
           "setPermissions": {
             "arguments": {
               "action": "setPermissions",
-              "permissions": {
-                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-              },
+              "permissions": [
+                "<exact supported permission name from the device-user permission catalog>"
+              ],
               "userName": "ExampleUser"
             }
           },
@@ -11829,11 +11837,11 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -11873,11 +11881,11 @@
           "group": {
             "exampleValue": ""
           },
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           }
@@ -12123,19 +12131,19 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
-          "attributesJson": {
+          "attributes": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -12220,7 +12228,7 @@
           "target": {
             "exampleValue": "umac"
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           }
@@ -12408,7 +12416,7 @@
           "action": "status"
         },
         "parameters": {
-          "filesJson": {
+          "files": {
             "exampleValue": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]"
           },
           "revision": {
@@ -12446,7 +12454,9 @@
           "stage": {
             "arguments": {
               "action": "stage",
-              "filesJson": "[\"PLC_1/FC_Ready.scl\"]"
+              "files": [
+                "PLC_1/FC_Ready.scl"
+              ]
             }
           },
           "commit": {
@@ -12592,7 +12602,7 @@
               "itemId": "<Teamcenter item id>",
               "revisionId": "<Teamcenter revision id>",
               "datasetName": "<exact dataset name>",
-              "datasetType": "<dataset type>"
+              "datasetType": "T4TiaProjectDataset"
             }
           }
         },
@@ -13081,7 +13091,7 @@
           "directoryPath": "C:\\Examples"
         },
         "parameters": {
-          "rulesJson": {
+          "rules": {
             "exampleValue": "<rulesJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -13506,11 +13516,11 @@
           "targetSoftwarePath": "PLC_2"
         },
         "parameters": {
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -13518,11 +13528,11 @@
             "exampleValue": "<targetProjectName from this operation's target or user input>",
             "requiresBinding": true
           },
-          "targetDevicePathJson": {
+          "targetDevicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "targetItemPathJson": {
+          "targetItemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -14473,11 +14483,7 @@
       },
       "DisconnectPortal": {
         "arguments": {},
-        "parameters": {
-          "path": {
-            "meaning": "An XML export or directory of native PLC tag-table and GlobalDB exports. Empty tag tables are accepted, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning."
-          }
-        },
+        "parameters": {},
         "operations": {},
         "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Read/session call exercised successfully; project-dependent values here are bindings, not copied VM identities. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
         "resultContract": {
@@ -15822,7 +15828,7 @@
           "recursive": {
             "exampleValue": true
           },
-          "extensionsJson": {
+          "extensions": {
             "exampleValue": "<extensionsJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -16001,7 +16007,7 @@
           "recursive": {
             "exampleValue": true
           },
-          "extensionsJson": {
+          "extensions": {
             "exampleValue": "<extensionsJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -18841,7 +18847,7 @@
           "updateParameter": {
             "arguments": {
               "action": "updateParameter",
-              "partner": {
+              "properties": {
                 "ParameterText": "Example"
               }
             }
@@ -19048,9 +19054,9 @@
           "setPermissions": {
             "arguments": {
               "action": "setPermissions",
-              "permissions": {
-                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-              },
+              "permissions": [
+                "<exact supported permission name from the device-user permission catalog>"
+              ],
               "userName": "ExampleUser"
             }
           },
@@ -20476,7 +20482,7 @@
           "target": {
             "exampleValue": "umac"
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           }
@@ -21062,7 +21068,7 @@
           "action": "status"
         },
         "parameters": {
-          "filesJson": {
+          "files": {
             "exampleValue": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]"
           },
           "revision": {
@@ -21100,7 +21106,9 @@
           "stage": {
             "arguments": {
               "action": "stage",
-              "filesJson": "[\"PLC_1/FC_Ready.scl\"]"
+              "files": [
+                "PLC_1/FC_Ready.scl"
+              ]
             }
           },
           "commit": {
@@ -21215,7 +21223,7 @@
             "exampleValue": "<runtimeGroup from this operation's target or user input>",
             "requiresBinding": true
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
@@ -21630,7 +21638,9 @@
           "update": {
             "arguments": {
               "action": "update",
-              "propertiesJson": "{\"Name\":\"Ready_2\"}"
+              "properties": {
+                "Name": "Ready_2"
+              }
             }
           },
           "delete": {
@@ -21836,11 +21846,11 @@
           "group": {
             "exampleValue": ""
           },
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           }
@@ -21961,7 +21971,7 @@
           "action": "read"
         },
         "parameters": {
-          "groupPathJson": {
+          "groupPath": {
             "exampleValue": "[]"
           },
           "evaluationDeviceName": {
@@ -22073,7 +22083,7 @@
           "action": "read"
         },
         "parameters": {
-          "groupPathJson": {
+          "groupPath": {
             "exampleValue": "[]"
           },
           "name": {
@@ -22251,7 +22261,7 @@
           "dryRun": true
         },
         "parameters": {
-          "groupPathJson": {
+          "groupPath": {
             "exampleValue": "[]"
           },
           "index": {
@@ -22267,7 +22277,7 @@
             "exampleValue": "<signalName from this operation's target or user input>",
             "requiresBinding": true
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           }
@@ -22309,7 +22319,7 @@
           "action": "read"
         },
         "parameters": {
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           }
@@ -22781,19 +22791,19 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "propertiesJson": {
+          "properties": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
-          "attributesJson": {
+          "attributes": {
             "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
             "requiresBinding": true
           },
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -23002,7 +23012,7 @@
               "itemId": "<Teamcenter item id>",
               "revisionId": "<Teamcenter revision id>",
               "datasetName": "<exact dataset name>",
-              "datasetType": "<dataset type>"
+              "datasetType": "T4TiaProjectDataset"
             }
           }
         },
@@ -25369,11 +25379,11 @@
           "name": {
             "exampleValue": "Example_1"
           },
-          "devicePathJson": {
+          "devicePath": {
             "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
             "requiresBinding": true
           },
-          "itemPathJson": {
+          "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
           },
@@ -25390,7 +25400,7 @@
       "ListSafetyActivationTests": {
         "arguments": {},
         "parameters": {
-          "groupPathJson": {
+          "groupPath": {
             "exampleValue": "[]"
           },
           "name": {
@@ -25921,7 +25931,7 @@
             "exampleValue": "<cursor from the preceding read>",
             "requiresBinding": true
           },
-          "pageSize": {
+          "limit": {
             "exampleValue": 100
           },
           "budgetMs": {
@@ -26147,7 +26157,7 @@
           "mode": {
             "exampleValue": "run"
           },
-          "argumentsJson": {
+          "arguments": {
             "exampleValue": "<argumentsJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -26387,11 +26397,11 @@
           "recursive": {
             "exampleValue": true
           },
-          "extensionsJson": {
+          "extensions": {
             "exampleValue": "<extensionsJson from this operation's target or user input>",
             "requiresBinding": true
           },
-          "markersJson": {
+          "markers": {
             "exampleValue": "<markersJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -27356,13 +27366,17 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportPath": "C:\\Examples\\exports",
-          "regexName": "FB_.*",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "groupPath": "<exact caller-selected block group containing the intended FB blocks>"
         },
         "parameters": {
           "preservePath": {
             "exampleValue": false
+          },
+          "groupPath": {
+            "requiresBinding": true,
+            "meaning": "Resolve the exact group from GetPlcBlockTree; this served API selects a group, not a regex."
           }
         },
         "operations": {},
@@ -27442,13 +27456,19 @@
           "softwarePath": "PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
-          "regexName": "",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "fileNamesWithoutExtension": [
+            "<exact document basename from the import directory>"
+          ]
         },
         "parameters": {
-          "importOption": {
-            "exampleValue": "Override"
+          "overwrite": {
+            "exampleValue": true
+          },
+          "fileNamesWithoutExtension": {
+            "requiresBinding": true,
+            "meaning": "Enumerate and explicitly select the document basenames before applying."
           }
         },
         "operations": {},
@@ -27465,9 +27485,9 @@
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "fileNameWithoutExtension": "FC_Add",
-          "importOption": "Override",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "overwrite": true
         },
         "parameters": {},
         "operations": {},
@@ -27667,7 +27687,7 @@
         },
         "parameters": {
           "inputRoot": {
-            "meaning": "Existing immutable caller-owned directory containing the selected native symbol exports.",
+            "meaning": "Existing immutable caller-owned directory containing the selected native symbol exports. An XML export or directory of native PLC tag-table and GlobalDB exports. Empty tag tables are accepted, tag comments are ignored, user constants retain raw values, and system constants are skipped with a warning.",
             "requiresBinding": true,
             "exampleValue": "<existing caller-owned immutable symbol export directory>"
           },
@@ -28032,7 +28052,7 @@
           "filePath": {
             "exampleValue": "C:\\Examples\\exports\\Main.xml"
           },
-          "rulesJson": {
+          "rules": {
             "exampleValue": "<rulesJson from this operation's target or user input>",
             "requiresBinding": true
           },
@@ -31286,8 +31306,8 @@
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
           "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
-          "dryRun": true
+          "dryRun": true,
+          "expectedProjectFile": "C:/Projects/Machine.ap21"
         },
         "operations": {},
         "note": "Bind the intended project first; use the session release and exact project file. Inspect the deterministic plan, unavailable phases and conflicts. Apply preview defaults true; execution requires the fresh hash and one Workbench approval. Stop on any failure or unknown outcome; inspect retained run and replan. No automatic replay. Generation ownership uses post-save witnesses. Replanning fills missing objects; owned-unchanged objects skip. modified-after-generation, regeneration-required and unknown-outcome are conflicts. After personal inspection, PlanProjectGeneration adopt:[key] accepts only existing unknown objects; the next record marks them adopted. Successful compile precedes cleanup of exactly this run's imported sources, then save and record publication.",
