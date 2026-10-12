@@ -389,7 +389,7 @@
 
 ### 7.4 字符分页
 
-GetExportContent 和大响应寄存以 UTF-16 码元为单位（`string.Length`），每片最多 20000 个码元，切片不会拆开代理对（`ExportStore.Slice`）。`meta.paging.limit` 回显的是请求的长度，不是实际返回的长度；`nextOffset` 按 `offset + length` 计算，下一次读取时 `Slice` 会自动回退到代理对边界（API-15、API-31）。
+GetExportContent 和大响应寄存以 UTF-16 码元为单位（`string.Length`），每片最多 20000 个码元，切片不会拆开代理对（`ExportStore.Slice`）。`meta.paging.limit` 回显应用默认值和上限后的正数请求长度；`data.returned` 报告实际返回的码元数。空末页的 returned 为 0，complete 为 true，nextOffset 为 null，limit 仍为请求长度。代理对边界可能缩短一页，消费者用实际 nextOffset 继续读取（API-15、API-31）。
 
 ### 7.5 paging 与 completeness 的关系（现状不一致）
 
@@ -411,7 +411,7 @@ meta.completeness 描述本页是否完整交付；meta.paging.complete 表示�
 
 - 阈值为 20000 个字符，可用 `TIA_MCP_MAX_RESPONSE_CHARS` 覆盖。0 或负数表示不限；值写错时使用默认值。
 - 只处理“恰好一个 TextContent”的结果。错误结果（`isError`）**MUST NOT** 被寄存。导出工具本身、CallTool 转发到导出工具的调用、已经寄存过的结果都不再处理。寄存失败时原样返回完整结果（fail-open）。
-- V4 信封被寄存后，`data` 换成 `{content: <信封 JSON 文本的前 N 个字符>, export: ExportHandle}`，`meta.paging` 为字符 offset 页，原来的 `meta` 和 `error` 保留。`ExportHandle = {id, mediaType: "application/json", byteLength(UTF-8), sha256(64 位小写十六进制), expiresUtc}`。
+- V4 信封被寄存后，`data` 换成 `{text: <信封 JSON 文本的前 N 个码元>, returned: <实际码元数>, export: ExportHandle}`，`meta.paging` 为字符 offset 页，原来的 `meta` 和 `error` 保留。`ExportHandle = {id, mediaType: "application/json", byteLength(UTF-8), sha256(64 位小写十六进制), expiresUtc}`。
 - 消费者 **MUST** 先检查 `data.export` 是否存在。存在时 `data` 已不是工具原来的结果形状，**MUST** 用 GetExportContent 读完全部内容，拼接后再解析。
 
 ### 8.2 生命周期工具
@@ -442,7 +442,8 @@ V20/V21 worker 通道的单帧上限为 1 MiB：超限的请求在派发前以 `
 
 - safe-v4 候选：`mode == "apply"` 时算写调用。
 - 有 `dryRun` 参数的工具：显式传入 `dryRun: true`，或者省略 `dryRun` 且默认是预览时，不算写调用。
-- 其余情况：分类为 WRITE 或 ONLINE-WRITE 的工具，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`。FILE 分类本身不触发审批；`StageImportFiles` 和 `CleanupStagedImportFiles` 沿用文件操作分类。
+- 混合文件工具 `ExchangeSystemDiagnosticsSettings`、`ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules` 仅 action=import 触发审批；export/read 保持不触发。`GetEnvironmentDiagnostics` 仅 fix=true 触发；默认 fix=false。`EnsureOpennessUserGroup` 始终触发。
+- 其余情况：分类为 WRITE 或 ONLINE-WRITE 的工具，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`。`ImportDeviceAml` 为 WRITE，两个测试执行工具 `RunPlcSimAdvancedTestScenario`、`RunTestSuiteCase` 为 ONLINE-WRITE（维护者 2026-10-11，P8-60 第二轮）。FILE 分类本身不触发审批；`StageImportFiles` 和 `CleanupStagedImportFiles` 沿用显式文件操作审批。
 
 ### 9.2 现行（current 政策）的预览与确认参数
 
@@ -500,7 +501,7 @@ PlanFile = {path, exists, byteLength|null, sha256|null}；PlanOperation = {tool,
 ### 9.5 批次计划（PreviewToolBatch / ApplyToolBatch）
 
 - `PreviewToolBatch(operations[1..50], expectedProject)`：只接受带布尔 `dryRun` 且分类为可批量写的工具，并强制 `dryRun: true`。逐项预览，遇到失败就停止，余下的项标为 `NOT_EXECUTED`。全部成功时签发令牌（两个 GUID 拼成的 64 位十六进制，有效期 10 分钟，只能用一次），返回 `data{token, expiresUtc, operations, items, executed:false, scope}`。
-- `ApplyToolBatch(token)`：取出令牌后立即作废（不存在时返回 `NOT_FOUND`）。批次中有 UI 工具时返回 `UNSUPPORTED_CAPABILITY`。复核绑定身份和全部预览，有变化时返回 `PLAN_STALE`（details.planHash 中放的是令牌，见 API-22）。然后按顺序以 `dryRun: false` 执行，遇到失败或未知就停止，余下的项为 `NOT_EXECUTED`。不回滚（`data.rollbackPerformed: false`）。
+- `ApplyToolBatch(previewToken)`：取出令牌后立即作废（不存在时返回 `NOT_FOUND`）。批次中有 UI 工具时返回 `UNSUPPORTED_CAPABILITY`。复核绑定身份和全部预览，有变化时返回 `PLAN_STALE`（details.previewToken 中放令牌，details.planHash 为 null，见 API-22）。然后按顺序以 `dryRun: false` 执行，遇到失败或未知就停止，余下的项为 `NOT_EXECUTED`。不回滚（`data.rollbackPerformed: false`）。
 
 ### 9.6 生成计划（P8-31e）
 
@@ -602,7 +603,7 @@ TIMEOUT 仅用于宿主可证明没有派发的超时。worker 超时属于通�
 ### 13.1 工具名
 
 - **MUST** 是 PascalCase 的“动词 + 领域对象 + 必要限定”，只用 ASCII 字母和数字。现状：514 个工具中最长的 45 个字符（`ProbeHardwareHmiConnectionWhitelistedServices`），没有连续大写的缩写，`Plc`、`Hmi`、`OpcUa`、`Db` 都写成单词形式。
-- 动词 **MUST** 取自闭集（66 个，定义在 `build-tools/release/CatalogData.cs`）。现状：513 个符合，`PrefillWorkbenchForm` 的 `Prefill` 不在闭集内。这项检查只覆盖改名，不覆盖新增的工具（API-38）。动词分布：Manage 95、Get 86、List 45、Import 29、Build 25、Export 25、Set 19、Create 13……
+- 动词 **MUST** 取自 `build-tools/release/CatalogData.cs` 的闭集，包含经维护者批准的 Prefill 和 Publish。生成器检查所有最终工具名，包括新增入口；`PublishGenerationRecord` 保留名称（API-38，维护者 2026-10-11）。
 - 单个对象用单数，批量操作用复数（`ExportPlcBlock` / `ExportPlcBlocks`）。`Manage*` 工具的对象单复数不统一（`ManageDeviceUsers`、`ManagePlcExternalSources`、`ManageDcbLibraries`）。
 - 名称 **MUST NOT** 暴露 `Json`、`Xml`、`Xlsx` 等序列化格式；`SimaticMl`、`Aml`、`Scl`、`FlgNet` 是领域语言名称，保留。
 - 直接调用、CallTool、PreviewToolCall 和大响应寄存层都 MUST 精确匹配工具名。注册时仍拒绝仅大小写不同的冲突名称。

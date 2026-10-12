@@ -254,7 +254,7 @@ def run_profile(args, transport, profile, run_dir):
                     require(value['meta']['outcome'] == 'rejected-before-operation'
                             and value['meta']['execution'] == 'not-started'
                             and value['meta']['requiresSessionReset'] is False
-                            and value['error']['details']['condition'] == 'ConnectPortal',
+                            and value['error']['details']['condition'] == 'connect-portal',
                             label + ': reflection port must retain no-native-call admission evidence')
                 require(value.get('ok') is False and value['error']['code'] == error_codes[label],
                         label + ': wrong V4 error code: ' + json.dumps(value))

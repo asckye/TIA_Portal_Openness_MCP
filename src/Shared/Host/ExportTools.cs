@@ -40,13 +40,14 @@ namespace TiaMcpServer.ModelContextProtocol
             limit = limit <= 0 ? ExportStore.MaxSliceChars : Math.Min(limit, ExportStore.MaxSliceChars);
             var slice = ExportStore.Slice(exportId, offset, limit);
             if (slice.Error != null) return Missing(tool, exportId);
-            return PlcExchangeContract.Result(tool, new JsonObject { ["text"] = slice.Text, ["export"] = Describe(entry) },
-                paging: new Paging(PagingMode.Offset, offset, Math.Max(1, slice.Returned), slice.NextOffset, null, null,
+            return PlcExchangeContract.Result(tool, new JsonObject { ["text"] = slice.Text, ["returned"] = slice.Returned, ["export"] = Describe(entry) },
+                paging: new Paging(PagingMode.Offset, offset, limit, slice.NextOffset, null, null,
                     slice.TotalLength, slice.Eof, PagingUnit.Utf16));
         }
 
         [McpServerTool(Name = "ListExportHandles"), Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles.")]
-        public CallToolResult ListExports(string? tool = null, int limit = 20, int offset = 0)
+        public CallToolResult ListExports(string? tool = null, int limit = 20,
+            [Description("Zero-based offset into the matching in-memory export handles.")] int offset = 0)
         {
             if (limit < 1 || offset < 0) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput(limit < 1 ? "limit" : "offset"), current: false);
             var matches = ExportStore.List(tool, int.MaxValue);

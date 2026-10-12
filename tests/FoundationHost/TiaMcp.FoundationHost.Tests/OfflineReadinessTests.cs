@@ -90,10 +90,10 @@ public sealed class OfflineReadinessTests
     }
 
     [Theory]
-    [InlineData("PlanPlcExternalSourceImport")] [InlineData("RenderPlcBlockDocument")]
-    public void Tools_with_project_read_paths_are_not_offline(string name)
+    [InlineData("PlanPlcExternalSourceImport", "READ")] [InlineData("RenderPlcBlockDocument", "FILE")]
+    public void Tools_with_project_read_paths_are_not_offline(string name, string operation)
     {
-        Assert.Equal("READ", TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)!.Operation);
+        Assert.Equal(operation, TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)!.Operation);
         Assert.False(TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(name));
     }
 
@@ -177,6 +177,22 @@ public sealed class OfflineReadinessTests
         }
         internal void Bind(string name, JsonObject args)
         {
+            if (name is "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider")
+            {
+                args["tagPaths"] = new JsonArray("DB_Status.Ready");
+                if (name == "PlanOnlineReadOnlyMonitoring") { args["softwarePath"] = "PLC_1"; args["mode"] = "current-values"; }
+                else { args["provider"] = "opcua"; args["endpoint"] = "opc.tcp://127.0.0.1:4840"; }
+            }
+            if (name is "ValidateClassicHmiMinimalPackageFiles" or "ValidateClassicHmiMinimalPackagePlcSync")
+            {
+                var package = TiaMcpServer.ModelContextProtocol.ClassicHmiMinimalPackageBuilder.WriteFiles("""
+                    {"name":"Fixture","screenDesign":{"screen":{"name":"Overview","width":800,"height":480},
+                     "items":[{"type":"Text","name":"StatusText","left":20,"top":20,"width":160,"height":40,"text":"Ready"}]},
+                     "tagTable":{"name":"FixtureTags","tags":[{"name":"Ready","dataType":"Bool","length":"1"}]}}
+                    """, Path.Combine(root, "classic"));
+                args["path"] = (string)package["manifestPath"]!;
+                if (name == "ValidateClassicHmiMinimalPackagePlcSync") args["plcSymbols"] = new JsonArray("DB_Status.Ready");
+            }
             foreach (string key in new[] { "libraryPath", "templateDirectory", "directory", "referenceProjectPath", "referenceGlobalLibraryPath" })
                 if (args.ContainsKey(key)) args[key] = root;
             if (args.ContainsKey("templateFile")) args["templateFile"] = Path.Combine(root, "unified_screen.json");

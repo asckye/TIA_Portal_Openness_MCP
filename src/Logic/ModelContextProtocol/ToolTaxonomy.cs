@@ -35,7 +35,9 @@ namespace TiaMcpServer.ModelContextProtocol
             "BuildPlcLadFcBlock", "BuildPlcSymbolManifestFromPath", "BuildPlcTagTable", "BuildPlcUdt",
             "BuildReleaseDiagnosticReport", "BuildReleaseManifest", "BuildReleaseRunbook", "BuildStructuredText",
             "DecodePlcSimaticMl", "ValidatePlcDocumentSchemas", "RenderPlcBlock", "RenderPlcProgramAtlas", "RenderPlcVisualDiff",
-            "ScanPlcSourceAnnotations", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
+            "ScanPlcSourceAnnotations", "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles",
+            "PlanOnlineReadOnlyMonitoring", "PlanOnlineReadOnlyDataProvider",
+            "ValidateClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackagePlcSync"
         };
         private static readonly HashSet<string> SessionReaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "InitializeEnvironment", "GetEnvironmentDiagnostics", "PreviewToolCall" };

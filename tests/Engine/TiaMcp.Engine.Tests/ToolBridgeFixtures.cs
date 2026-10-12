@@ -136,11 +136,11 @@ namespace TiaMcp.Engine.Tests
 
         [Theory]
         [InlineData("ProbeMcpThrow", "INTERNAL_ERROR", "read-failed", false)]
-        [InlineData("ProbeWriteThrow", "OUTCOME_UNKNOWN", "unknown", true)]
-        [InlineData("ProbeSessionThrow", "OUTCOME_UNKNOWN", "unknown", true)]
-        [InlineData("ProbeExecuteThrow", "OUTCOME_UNKNOWN", "unknown", true)]
-        [InlineData("ProbeFileThrow", "OUTCOME_UNKNOWN", "unknown", true)]
-        [InlineData("ProbeOnlineThrow", "OUTCOME_UNKNOWN", "unknown", true)]
+        [InlineData("ProbeWriteThrow", "OUTCOME_UNKNOWN", "unknown", false)]
+        [InlineData("ProbeSessionThrow", "OUTCOME_UNKNOWN", "unknown", false)]
+        [InlineData("ProbeExecuteThrow", "OUTCOME_UNKNOWN", "unknown", false)]
+        [InlineData("ProbeFileThrow", "OUTCOME_UNKNOWN", "unknown", false)]
+        [InlineData("ProbeOnlineThrow", "OUTCOME_UNKNOWN", "unknown", false)]
         public void BridgeExceptionsReturnTypedV4Results(string tool, string code, string outcome, bool reset)
         {
             ToolBridgeFixture.Configure();

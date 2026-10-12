@@ -5288,7 +5288,7 @@
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
-        "token": "&lt;token from PreviewToolBatch&gt;"
+        "previewToken": "&lt;token from PreviewToolBatch&gt;"
       }
     },
     {
@@ -5604,7 +5604,7 @@
       "family": "F02",
       "example": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
           {
@@ -7100,7 +7100,7 @@
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
-        "token": "&lt;token from PreviewToolBatch&gt;"
+        "previewToken": "&lt;token from PreviewToolBatch&gt;"
       }
     },
     {
@@ -7416,7 +7416,7 @@
       "family": "F02",
       "example": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
           {
@@ -9212,7 +9212,7 @@
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
-        "token": "&lt;token from PreviewToolBatch&gt;"
+        "previewToken": "&lt;token from PreviewToolBatch&gt;"
       }
     },
     {
@@ -9528,7 +9528,7 @@
       "family": "F02",
       "example": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
           {
@@ -11495,7 +11495,7 @@
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
-        "token": "&lt;token from PreviewToolBatch&gt;"
+        "previewToken": "&lt;token from PreviewToolBatch&gt;"
       }
     },
     {
@@ -11811,7 +11811,7 @@
       "family": "F02",
       "example": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
           {
@@ -13923,7 +13923,7 @@
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
-        "token": "&lt;token from PreviewToolBatch&gt;"
+        "previewToken": "&lt;token from PreviewToolBatch&gt;"
       }
     },
     {
@@ -14239,7 +14239,7 @@
       "family": "F02",
       "example": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
           {
@@ -16460,7 +16460,7 @@
       "entry": "ApplyToolBatch",
       "family": "F01",
       "example": {
-        "token": "&lt;token from PreviewToolBatch&gt;"
+        "previewToken": "&lt;token from PreviewToolBatch&gt;"
       }
     },
     {
@@ -16776,7 +16776,7 @@
       "family": "F02",
       "example": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+        "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
           {
@@ -18894,7 +18894,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -18908,7 +18908,7 @@
           "full"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -25830,7 +25830,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -27928,7 +27928,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -27942,7 +27942,7 @@
           "full"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -35047,7 +35047,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -37146,7 +37146,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -37160,7 +37160,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -39927,7 +39927,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -41680,7 +41680,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -41694,7 +41694,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -44744,7 +44744,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -46627,7 +46627,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -46641,7 +46641,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -49957,7 +49957,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -51893,7 +51893,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -51907,7 +51907,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -55366,7 +55366,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -57358,7 +57358,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -57372,7 +57372,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -60991,7 +60991,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -63021,7 +63021,7 @@
         ],
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -63035,7 +63035,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -66766,7 +66766,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -68776,7 +68776,7 @@
           "full"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -74832,7 +74832,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {
@@ -76238,7 +76238,7 @@
           "full"
         ],
         "arguments": {
-          "token": "&lt;token from PreviewToolBatch&gt;"
+          "previewToken": "&lt;token from PreviewToolBatch&gt;"
         },
         "envelopeVersion": 4
       },
@@ -82477,7 +82477,7 @@
         ],
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
+          "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
             {

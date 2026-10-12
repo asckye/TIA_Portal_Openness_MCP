@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Runtime.CompilerServices;
 using TiaMcp.Logic.V4;
 using TiaMcpServer.Cli;
 using Xunit;
@@ -17,7 +19,24 @@ namespace TiaMcp.Engine.Tests
             var assembly = typeof(CliV4Tests).Assembly;
             using var stream = assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n => n.EndsWith("Golden.CliV4.json")))!;
             using var document = JsonDocument.Parse(stream);
-            foreach (var sample in document.RootElement.EnumerateArray()) yield return new object[] { sample.Clone() };
+            var samples = document.RootElement.EnumerateArray().Select(sample => JsonNode.Parse(sample.GetRawText())!.AsObject()).ToArray();
+            if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") Regenerate(samples);
+            foreach (var sample in samples) yield return new object[] { JsonSerializer.SerializeToElement(sample) };
+        }
+
+        private static void Regenerate(JsonObject[] samples, [CallerFilePath] string sourceFile = "")
+        {
+            foreach (var sample in samples)
+            {
+                if ((int)sample["exitCode"]! >= 64) continue;
+                var envelope = JsonNode.Parse((string)sample["stdout"]!)!;
+                envelope["meta"]!["timestamp"] = V4Json.Timestamp(DateTimeOffset.Parse((string)envelope["meta"]!["timestamp"]!, System.Globalization.CultureInfo.InvariantCulture));
+                if ((string?)envelope["error"]?["code"] == "OUTCOME_UNKNOWN") envelope["error"]!["details"]!["reason"] = null;
+                sample["stdout"] = V4Json.Serialize(V4Json.Deserialize<Envelope>(envelope.ToJsonString())) + "\n";
+            }
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(sourceFile)!, "Golden", "CliV4.json"),
+                JsonSerializer.Serialize(samples, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n",
+                new System.Text.UTF8Encoding(false));
         }
 
         [Theory, MemberData(nameof(Goldens))]

@@ -88,8 +88,8 @@ def main():
                     preview=call('ManageUnifiedCwcPackage',{'directory':str(cwc)})
                     check(preview['ok'] and not preview['data']['data']['written'],'CWC inspection failed')
                     output=case/preview['data']['data']['suggestedFileName']
-                    params={'directory':str(cwc),'action':'build','outputPath':str(output),'dryRun':False,'expectedFingerprint':preview['data']['data']['packageFingerprint']}
-                    check(call('ManageUnifiedCwcPackage',dict(params,expectedFingerprint='stale'))['ok'] is False and not output.exists(),'Stale CWC built')
+                    params={'directory':str(cwc),'action':'build','outputPath':str(output),'dryRun':False,'expectedPackageHash':preview['data']['data']['packageFingerprint']}
+                    check(call('ManageUnifiedCwcPackage',dict(params,expectedPackageHash='stale'))['ok'] is False and not output.exists(),'Stale CWC built')
                     applied=call('ManageUnifiedCwcPackage',params)
                     check(applied['ok'] and output.exists(),'CWC build failed')
                     with zipfile.ZipFile(output) as z: check(set(z.namelist())=={'manifest.json','control/index.html'},'CWC root layout wrong')

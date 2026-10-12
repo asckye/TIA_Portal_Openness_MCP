@@ -114,7 +114,11 @@ namespace TiaMcp.Generation.Tests
             Assert.NotEqual(hash, GenerationDocuments.MachineHash(machine.ToJsonString()));
             var plan = Object("plan");
             hash = GenerationDocuments.PlanHash(plan.ToJsonString());
-            plan["planHash"] = "sha256:" + new string('a', 64);
+            Assert.Matches("^[a-f0-9]{64}$", hash);
+            plan["planHash"] = "sha256:" + hash;
+            Assert.Contains(Assert.Throws<GenerationValidationException>(() => GenerationDocuments.Load<GenerationPlan>(plan.ToJsonString())).Errors,
+                error => error.Path == "/planHash" && error.Rule == "pattern");
+            plan["planHash"] = new string('a', 64);
             Assert.Equal(hash, GenerationDocuments.PlanHash(Reverse(plan).ToJsonString()));
             plan["target"]!["projectIdentity"] = "another-project";
             Assert.NotEqual(hash, GenerationDocuments.PlanHash(plan.ToJsonString()));

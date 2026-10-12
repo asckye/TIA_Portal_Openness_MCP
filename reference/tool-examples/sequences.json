@@ -3348,8 +3348,8 @@
         "tool": "ApplyGenerationPlan",
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedProjectFile": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
         "expect": "Inspect selected phases; substitute the returned identifiers before execution."
@@ -3921,8 +3921,8 @@
         "tool": "ApplyGenerationPlan",
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedProject": "C:/Projects/Machine.ap21",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedProjectFile": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
         "expect": "Inspect selected phases; substitute the returned identifiers before execution."

@@ -237,12 +237,13 @@ public sealed class GenerationExecutionTests : IDisposable
     {
         var log = new AuditLog(Path.Combine(root, "audit"));
         log.Append("request", "legacy", "foundation", "19", "CreatePlcTag");
-        log.Append("request", "step-request", "foundation", "19", "CreatePlcTag", planHash: "sha256:" + new string('a',64),
+        log.Append("request", "step-request", "foundation", "19", "CreatePlcTag", planHash: new string('a',64),
             planId: "plan", stepId: "step", runId: "run", parentRequestId: "parent");
         log.Append("end", "step-request", "foundation", "19", "CreatePlcTag", outcome: "succeeded",
             planId: "plan", stepId: "step", runId: "run", parentRequestId: "parent");
         Assert.True(log.Verify().Passed); Assert.Equal(3, log.Verify().Count);
         var rows = log.Read(); Assert.Null(rows[0].PlanId); Assert.Equal("parent", rows[1].ParentRequestId); Assert.Equal("run", rows[2].RunId);
+        Assert.Equal(new string('a', 64), rows[1].PlanHash);
     }
     [Theory, MemberData(nameof(Releases))]
     public void ExpiryIsCheckedAfterApprovalButNotBetweenWrites(string release)

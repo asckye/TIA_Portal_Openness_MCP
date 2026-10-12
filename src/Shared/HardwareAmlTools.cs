@@ -73,7 +73,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error exporting AML from '{devicePath}': {ex.Message}", ex, McpErrorCode.InternalError);
             }
         }
-        [McpServerTool(Name="ImportDeviceAml"), Description("[L2][Hardware][FILE] Import an AutomationML/CAx (.aml) file into the open project via CaxProvider.Import(file, logFile, option). filePath must exist (absolute); logFilePath is a NEW absolute file; importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns native bool result, device counts and the log file sha256. Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
+        [McpServerTool(Name="ImportDeviceAml"), Description("[L2][Hardware][WRITE] Import an AutomationML/CAx (.aml) file into the open project via CaxProvider.Import(file, logFile, option). filePath must exist (absolute); logFilePath is a NEW absolute file; importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns native bool result, device counts and the log file sha256. Default preview; no save/compile/download. Behavior policy is current; existing native selection/retry/overwrite behavior remains pending V4 acceptance.")]
         public CallToolResult ImportDeviceAmlV4(
             [Description("filePath: existing absolute AutomationML (.aml) file.")] string filePath,
             [Description("logFilePath: full path of the log file to write on the TIA machine ('' = no log).")] string logFilePath,

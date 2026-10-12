@@ -1132,7 +1132,7 @@
         "SetUnifiedGlobalScript"
       ],
       "notes": [
-        "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take expectedToken from the preview, then apply the same text."
+        "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take previewToken from the preview, then apply the same text."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
@@ -1175,7 +1175,7 @@
             "moduleName": "<same module>",
             "scriptCode": "<the same complete modified source>",
             "dryRun": false,
-            "expectedToken": "<token from previous preview>"
+            "previewToken": "<token from previous preview>"
           },
           "expect": "Inspect native import and exact text verification; compile separately."
         }

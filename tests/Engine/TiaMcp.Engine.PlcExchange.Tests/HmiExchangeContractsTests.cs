@@ -101,7 +101,7 @@ namespace PlcExchangeTests
             {
                 var body = Body(result);
                 Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
-                Assert.Equal(ReferenceEquals(result, directResult) ? "arguments" : "expectedTagNames", (string?)body["error"]!["details"]!["parameter"]);
+                Assert.Equal("expectedTagNames", (string?)body["error"]!["details"]!["parameter"]);
                 Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
                 Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
             }

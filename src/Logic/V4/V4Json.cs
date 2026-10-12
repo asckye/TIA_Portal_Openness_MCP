@@ -250,6 +250,9 @@ namespace TiaMcp.Logic.V4
                     throw new JsonException("error requires code, message and details.");
                 var code = codeJson.Deserialize<ErrorCode>(options);
                 if (!DetailTypes.TryGetValue(code, out var detailType)) throw new JsonException("Unknown error code.");
+                foreach (var property in detailType.GetProperties())
+                    if (!detailsJson.TryGetProperty(JsonNamingPolicy.CamelCase.ConvertName(property.Name), out _))
+                        throw new JsonException("Missing error detail property: " + property.Name);
                 if (code == ErrorCode.ConfirmationRequired && (!detailsJson.TryGetProperty("reason", out _)
                     || !detailsJson.TryGetProperty("planHash", out _) || !detailsJson.TryGetProperty("requestId", out _)))
                     throw new JsonException("Confirmation details require reason, planHash and requestId.");

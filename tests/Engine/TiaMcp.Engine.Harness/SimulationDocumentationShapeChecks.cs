@@ -22,7 +22,7 @@ internal static class SimulationDocumentationShapeChecks
         var write = Tool("WritePlcSimAdvancedTags");
         check(Equals(Default(write, "dryRun"), true) && Equals(Default(write, "confirmWrite"), false) && Description(write).StartsWith("[L2][Simulation][ONLINE-WRITE]", StringComparison.Ordinal), "WritePlcSimAdvancedTags preview + confirmWrite, ONLINE-WRITE");
         var scenario = Tool("RunPlcSimAdvancedTestScenario");
-        check(Equals(Default(scenario, "dryRun"), true) && Equals(Default(scenario, "confirmRun"), false) && Description(scenario).StartsWith("[L2][Simulation][EXECUTE]", StringComparison.Ordinal), "RunPlcSimAdvancedTestScenario preview + confirmRun, EXECUTE");
+        check(Equals(Default(scenario, "dryRun"), true) && Equals(Default(scenario, "confirmRun"), false) && Description(scenario).StartsWith("[L2][Simulation][ONLINE-WRITE]", StringComparison.Ordinal), "RunPlcSimAdvancedTestScenario preview + confirmRun, ONLINE-WRITE");
         foreach (var name in new[] { "ListPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario" })
             check(Equals(Default(Tool(name), "apiPath"), ""), name + " auto-detects the API by default");
 

@@ -291,7 +291,7 @@ public sealed class P8RecheckTests
                 await Invoke(new JsonObject { ["directory"] = directory, ["action"] = "build", ["outputPath"] = output, ["dryRun"] = true });
                 Assert.False(File.Exists(output));
                 await Invoke(new JsonObject { ["directory"] = directory, ["action"] = "build", ["outputPath"] = output,
-                    ["dryRun"] = false, ["expectedFingerprint"] = (string)preview["packageFingerprint"]! });
+                    ["dryRun"] = false, ["expectedPackageHash"] = (string)preview["packageFingerprint"]! });
                 using var zip = System.IO.Compression.ZipFile.OpenRead(output);
                 Assert.Equal(new[] { "control/index.html", "manifest.json" }, zip.Entries.Select(e => e.FullName).OrderBy(n => n).ToArray());
             }

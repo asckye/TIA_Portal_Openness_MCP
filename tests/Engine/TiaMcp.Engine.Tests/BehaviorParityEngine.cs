@@ -66,6 +66,7 @@ namespace TiaMcp.Engine.Tests
                 if (scenario.StartsWith("single-", StringComparison.Ordinal))
                 {
                     var data = BehaviorParityCases.SingleBackup(scenario, dryRun);
+                    if (!dryRun && scenario == "single-import-failed") InvocationJournal.NativeCallStarted();
                     var baseResult = !dryRun && scenario == "single-import-failed" ? McpServer.TargetFailure("CreatePlcTag", new IOException("Fixture native interruption."), true) : McpServer.V4Result("CreatePlcTag", data, completed: !dryRun);
                     var body = McpServer.ResultBody(baseResult)!.AsObject();
                     body["data"] = data;

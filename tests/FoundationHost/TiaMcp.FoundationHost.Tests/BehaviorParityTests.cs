@@ -224,6 +224,7 @@ public sealed class BehaviorParityTests
             var results = new JsonArray(await Call(scenario=="single-type-group-missing" ? "ImportType" : scenario=="single-table-group-missing" ? "ImportPlcTagTable" : scenario == "single-legacy-group-missing" ? "ImportBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompileSoftware" : scenario == "native-read" ? "ReadPlcTags"
                 : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
             Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
+            if (scenario == "single-import-failed") Assert.True((bool?)results[0]?["reset"]);
             if (enabled && scenario is ("argument" or "single-group-missing" or "single-legacy-group-missing" or "batch-inconsistent"))
             { Assert.NotNull(results[0]?["precheckWarning"]); Assert.False((bool?)results[0]?["nativeWarning"]); }
             if (scenario is "single-inconsistent" or "single-export-refused" or "single-import-failed" or "single-native-warning")

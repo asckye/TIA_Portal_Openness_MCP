@@ -8291,7 +8291,7 @@
       "ApplyGenerationPlan": {
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },
@@ -31285,7 +31285,7 @@
       "ApplyGenerationPlan": {
         "arguments": {
           "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-          "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
           "expectedProject": "C:/Projects/Machine.ap21",
           "dryRun": true
         },

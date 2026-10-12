@@ -12,7 +12,7 @@ namespace TiaMcp.Generation.Tests
     {
         private static GenerationRecord Record() => new GenerationRecord { Project = new GenerationRecordProject { File = "C:/Projects/Line/Line.ap21", Release = "21" } };
         private static GenerationRecordRun Run() => new GenerationRecordRun { RunId = "fixture-run", PlanId = "fixture-plan",
-            PlanHash = "sha256:" + new string('a', 64), MachineHash = "sha256:" + new string('b', 64),
+            PlanHash = new string('a', 64), MachineHash = "sha256:" + new string('b', 64),
             Package = new GenerationPlanPackage { Id = "fixture", Version = "1.0.0", Hash = "sha256:" + new string('c', 64) } };
         [Theory]
         [InlineData(null)]

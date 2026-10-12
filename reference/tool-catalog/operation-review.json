@@ -43,7 +43,7 @@
     "RenderPlcBlockDocument": [
       "OFFLINE",
       "FILE",
-      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+      "The optional outputPath writes a Markdown file and the blockPath branch exports through Openness before rendering; FILE conservatively covers both effects and retains the P8-65 portal/readiness requirement (P8-60 annotation review)."
     ],
     "ExportPlcProDiagInfo": [
       "READ",
@@ -99,6 +99,21 @@
       "OFFLINE",
       "FILE",
       "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "RunTestSuiteCase": [
+      "EXECUTE",
+      "ONLINE-WRITE",
+      "Executes a project test case that may change online PLC state; requires Workbench approval (P8-60 round 2 maintainer decision, 2026-10-11)."
+    ],
+    "ImportDeviceAml": [
+      "FILE",
+      "WRITE",
+      "Imports AutomationML into the project and may replace devices; apply requires Workbench approval (P8-60 round 2 maintainer decision, 2026-10-11)."
+    ],
+    "RunPlcSimAdvancedTestScenario": [
+      "EXECUTE",
+      "ONLINE-WRITE",
+      "Runs a simulation scenario that may write tags and change simulated PLC state, like WritePlcSimAdvancedTags; requires Workbench approval (P8-60 round 2 maintainer decision, 2026-10-11)."
     ]
   },
   "NEW_FOUNDATION_TOOLS": {

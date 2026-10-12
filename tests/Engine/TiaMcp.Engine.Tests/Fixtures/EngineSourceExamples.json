@@ -157,7 +157,7 @@
   },
   "ApplyToolBatch": {
     "arguments": {
-      "token": "<token from PreviewToolBatch>"
+      "previewToken": "<token from PreviewToolBatch>"
     },
     "parameters": {
       "token": {
@@ -10353,7 +10353,7 @@
   "PatchPlcBlockDocument": {
     "arguments": {
       "filePath": "C:\\Examples\\exports\\Main.xml",
-      "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+      "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
       "dryRun": true,
       "changes": [
         {

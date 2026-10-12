@@ -130,7 +130,7 @@ namespace PlcExchangeTests
                 foreach (var spelling in new[] { name, name.ToLowerInvariant() })
                 {
                     Assert.False(PreflightLogic.NeedsProject("FILE", spelling));
-                    Assert.True((bool)guard.Invoke(null, new object[] { spelling })!);
+                    Assert.Equal(string.Equals(name, spelling, StringComparison.Ordinal), (bool)guard.Invoke(null, new object[] { spelling })!);
                 }
             foreach (var name in new[] { "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports", "GetBlocks" })
             {
@@ -374,10 +374,37 @@ namespace PlcExchangeTests
                 Park("Other", "third", "three");
                 var body = Invoke("ListExportHandles", "Fixture", 1);
                 Verdict(body, "succeeded", "read-only");
-                Assert.Equal("partial", (string?)body["meta"]!["completeness"]);
+                Assert.Equal("complete", (string?)body["meta"]!["completeness"]);
+                Assert.False((bool)body["meta"]!["paging"]!["complete"]!);
                 Assert.Equal(2, (int)body["data"]!["matchingCount"]!);
                 Assert.Single(body["data"]!["items"]!.AsArray());
                 Assert.Equal("complete", (string?)Invoke("ListExportHandles", "Fixture", 2)["meta"]!["completeness"]);
+            }
+            finally { ExportStore.Clear(0); }
+        }
+
+        [Fact]
+        public void Empty_export_tail_keeps_the_requested_positive_limit_and_returns_zero_units()
+        {
+            ExportStore.Clear(0);
+            try
+            {
+                string id = Park("Fixture", "tail", "A\U0001F600B");
+                var head = Invoke("GetExportContent", id, 0, 2);
+                Assert.Equal(2, (int)head["meta"]!["paging"]!["limit"]!);
+                Assert.Equal(1, (int)head["data"]!["returned"]!);
+                Assert.Equal("A", (string?)head["data"]!["text"]);
+                var tail = Invoke("GetExportContent", id, 4, 7);
+                Verdict(tail, "succeeded", "read-only");
+                Assert.Equal("complete", (string?)tail["meta"]!["completeness"]);
+                Assert.Equal("", (string?)tail["data"]!["text"]);
+                Assert.Equal(0, (int)tail["data"]!["returned"]!);
+                Assert.Equal(7, (int)tail["meta"]!["paging"]!["limit"]!);
+                Assert.Equal(4, (int)tail["meta"]!["paging"]!["offset"]!);
+                Assert.Equal("utf16", (string?)tail["meta"]!["paging"]!["unit"]);
+                Assert.True((bool)tail["meta"]!["paging"]!["complete"]!);
+                Assert.Null(tail["meta"]!["paging"]!["nextOffset"]);
+                V4Json.Deserialize<Envelope>(tail.ToJsonString());
             }
             finally { ExportStore.Clear(0); }
         }

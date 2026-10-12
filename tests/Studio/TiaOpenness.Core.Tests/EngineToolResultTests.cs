@@ -87,7 +87,7 @@ public sealed class EngineToolResultTests
             {
                 if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text))
                 {
-                    if (text == "<string:timestamp>") obj[pair.Key] = "2026-10-03T00:00:00Z";
+                    if (text == "<string:timestamp>") obj[pair.Key] = "2026-10-03T00:00:00.0000000Z";
                     if (text == "<string:requestId>") obj[pair.Key] = "snapshot-request";
                 }
                 else if (pair.Value != null) Hydrate(pair.Value);
@@ -102,7 +102,7 @@ public sealed class EngineToolResultTests
         var source = JsonNode.Parse(V4Fixtures.Supplemental().First().GetRawText())!;
         source["meta"]!["completeness"] = "partial";
         source["meta"]!["warnings"] = JsonNode.Parse("""[{"code":"INCOMPLETE_DATA","message":"Missing fields.","details":{"field":"name"}}]""");
-        source["meta"]!["paging"] = JsonNode.Parse("""{"mode":"offset","offset":0,"limit":10,"nextOffset":10,"cursor":null,"nextCursor":null,"total":20,"complete":false}""");
+        source["meta"]!["paging"] = JsonNode.Parse("""{"mode":"offset","offset":0,"limit":10,"nextOffset":10,"cursor":null,"nextCursor":null,"total":20,"complete":false,"unit":"items"}""");
         var result = EngineToolResult.Read(source.ToJsonString());
         Assert.Equal("partial", result.DisplayOutcome);
         Assert.False(result.IsCompleteSuccess);

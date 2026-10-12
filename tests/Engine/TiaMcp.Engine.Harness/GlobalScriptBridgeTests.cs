@@ -66,7 +66,7 @@ internal static class GlobalScriptBridgeTests
         var tool = EngineSurface.For(server).Tool("SetUnifiedGlobalScript")!;
         check(tool.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute")
             && (bool)tool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue
-            && tool.GetParameters().Single(p => p.Name == "expectedToken").DefaultValue?.ToString() == "",
+            && tool.GetParameters().Single(p => p.Name == "previewToken").DefaultValue?.ToString() == "",
             "actual EXE registers SetUnifiedGlobalScript with safe preview defaults");
         // Inspect the actual referenced Siemens DLL, never start/attach TIA.
         var unifiedReference = server.GetReferencedAssemblies().SingleOrDefault(a => a.Name == "Siemens.Engineering.WinCCUnified");

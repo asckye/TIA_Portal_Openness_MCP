@@ -63,7 +63,7 @@ namespace TiaMcp.BehaviorParity
             new object[] { "staging-old-list", "", "succeeded", "read-only" },
             new object[] { "staging-old-cleanup", "", "succeeded", "completed" },
             new object[] { "staging-extra-cleanup", "", "succeeded", "completed" },
-            new object[] { "batch-stale", "INVALID_ARGUMENT", "rejected-before-operation", "not-started" }
+            new object[] { "batch-stale", "PLAN_STALE", "rejected-before-operation", "not-started" }
         };
 
         public static IEnumerable<object[]> All => Enabled.Concat(Enabled.Where(row => new[] {

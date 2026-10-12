@@ -217,9 +217,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 using (var hash = System.Security.Cryptography.SHA256.Create())
                     sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
                 var entry = ExportStore.Get(id);
-                var data = new JsonObject { ["text"] = head.Text, ["export"] = PlcExchangeContract.DescribeExport(entry!) };
+                var data = new JsonObject { ["text"] = head.Text, ["returned"] = head.Returned, ["export"] = PlcExchangeContract.DescribeExport(entry!) };
                 var m = original.Meta;
-                var paging = new Paging(PagingMode.Offset, 0, Math.Max(1, head.Returned), head.NextOffset, null, null,
+                var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ExportStore.MaxSliceChars), head.NextOffset, null, null,
                     head.TotalLength, head.Eof, PagingUnit.Utf16);
                 var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
                     m.BehaviorPolicy, m.Completeness, paging, m.Warnings);

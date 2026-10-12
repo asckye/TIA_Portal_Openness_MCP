@@ -7,7 +7,7 @@
     },
     "error": null,
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -34,11 +34,14 @@
         "allowedValues": [
           "preview",
           "apply"
+        ],
+        "parameters": [
+          "mode"
         ]
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -67,7 +70,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -96,7 +99,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -123,7 +126,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -148,7 +151,7 @@
       "details": {}
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -175,7 +178,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -206,7 +209,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -235,7 +238,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -262,7 +265,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -285,14 +288,13 @@
       "code": "CONFIRMATION_REQUIRED",
       "message": "Failure.",
       "details": {
-        "planHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      ,
         "reason": "plan-confirmation",
+        "planHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "requestId": null
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -316,11 +318,12 @@
       "message": "Failure.",
       "details": {
         "planHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "reason": "input changed"
+        "reason": "input-changed",
+        "previewToken": null
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -344,11 +347,12 @@
       "message": "Failure.",
       "details": {
         "condition": "borrowed",
-        "target": "project"
+        "target": "project",
+        "parameter": null
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -377,7 +381,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -404,7 +408,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -432,7 +436,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -455,11 +459,11 @@
       "code": "SESSION_RESET_REQUIRED",
       "message": "Failure.",
       "details": {
-        "reason": "channel closed"
+        "reason": "channel-closed"
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -482,11 +486,11 @@
       "code": "RESOURCE_UNAVAILABLE",
       "message": "Failure.",
       "details": {
-        "resource": "SDK"
+        "resource": "sdk"
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -514,7 +518,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -549,7 +553,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -586,7 +590,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "16",
       "tool": "CompilePlcSoftware",
       "requestId": "request-1",
@@ -609,11 +613,11 @@
       "code": "CANCELLED",
       "message": "Failure.",
       "details": {
-        "stage": "before dispatch"
+        "stage": "before-dispatch"
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -640,7 +644,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -667,7 +671,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -696,7 +700,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -726,11 +730,12 @@
             "source": "readback",
             "nativeResult": null
           }
-        }
+        },
+        "reason": null
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",
@@ -757,7 +762,7 @@
       }
     },
     "meta": {
-      "timestamp": "2026-10-03T00:00:00Z",
+      "timestamp": "2026-10-03T00:00:00.0000000Z",
       "releaseKey": "21",
       "tool": "Sample",
       "requestId": "request-1",

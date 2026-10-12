@@ -147,14 +147,14 @@
       {
         "name": "ApplyToolBatch",
         "parameters": {
-          "token": {
+          "previewToken": {
             "type": "string",
             "default": null,
-            "description": "Single-use token from PreviewToolBatch; expires after 10 minutes."
+            "description": "Single-use previewToken from PreviewToolBatch; expires after 10 minutes."
           }
         },
         "arguments": {
-          "token": "<token from PreviewToolBatch>"
+          "previewToken": "<token from PreviewToolBatch>"
         },
         "renamedFrom": [],
         "typedParameters": {}
@@ -2818,7 +2818,7 @@
             "default": "true",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -2864,7 +2864,7 @@
             "default": "true",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -5843,13 +5843,13 @@
           "offset": {
             "type": "int",
             "default": "0",
-            "description": "Zero-based character offset.",
+            "description": "Zero-based UTF-16 code-unit offset.",
             "value": 0
           },
-          "length": {
+          "limit": {
             "type": "int",
             "default": "0",
-            "description": "Requested characters; 0 uses the response limit, capped at 20000.",
+            "description": "Requested UTF-16 code units; 0 uses the response limit, capped at 20000.",
             "value": 0
           }
         },
@@ -7497,7 +7497,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -7542,7 +7542,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "50",
             "value": 50
@@ -7588,7 +7588,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "20",
             "value": 20
@@ -7734,7 +7734,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -8008,7 +8008,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -8601,7 +8601,7 @@
             "description": "True exports a backup and preview only; false attempts the native import.",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "description": "Token returned by the matching preview; binds session, project, target, current document, candidate and compile option.",
@@ -9760,6 +9760,12 @@
             "type": "int",
             "default": "20",
             "value": 20
+          },
+          "offset": {
+            "type": "int",
+            "default": "0",
+            "description": "Zero-based offset into the matching in-memory export handles.",
+            "value": 0
           }
         },
         "arguments": {
@@ -10458,7 +10464,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -10517,7 +10523,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -10553,7 +10559,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -15359,7 +15365,7 @@
             "description": "True previews only; false builds when action=build.",
             "value": true
           },
-          "expectedFingerprint": {
+          "expectedPackageHash": {
             "type": "string",
             "default": "\"\"",
             "description": "packageFingerprint from the matching inspect/preview.",
@@ -15525,7 +15531,7 @@
             "description": "scriptProperties: Object of script properties to set.",
             "value": null
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -16221,7 +16227,7 @@
             "default": null,
             "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]."
           },
-          "expectedFingerprint": {
+          "expectedDocumentHash": {
             "type": "string",
             "default": null,
             "description": "documentFingerprint returned by GetPlcBlockEditCapabilities for this input."
@@ -16241,7 +16247,7 @@
         },
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+          "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
           "dryRun": true,
           "changes": [
             {
@@ -18046,7 +18052,7 @@
             "description": "Preview and back up only by default. Set false only to apply the reviewed text.",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "description": "Token from this tool's preview for the same project, HMI, module, original and proposed content.",
@@ -18401,7 +18407,7 @@
             "default": "true",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -19333,14 +19339,14 @@
       {
         "name": "ApplyToolBatch",
         "parameters": {
-          "token": {
+          "previewToken": {
             "type": "string",
             "default": null,
-            "description": "Single-use token from PreviewToolBatch; expires after 10 minutes."
+            "description": "Single-use previewToken from PreviewToolBatch; expires after 10 minutes."
           }
         },
         "arguments": {
-          "token": "<token from PreviewToolBatch>"
+          "previewToken": "<token from PreviewToolBatch>"
         },
         "renamedFrom": [],
         "typedParameters": {}
@@ -22004,7 +22010,7 @@
             "default": "true",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -22050,7 +22056,7 @@
             "default": "true",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -25055,13 +25061,13 @@
           "offset": {
             "type": "int",
             "default": "0",
-            "description": "Zero-based character offset.",
+            "description": "Zero-based UTF-16 code-unit offset.",
             "value": 0
           },
-          "length": {
+          "limit": {
             "type": "int",
             "default": "0",
-            "description": "Requested characters; 0 uses the response limit, capped at 20000.",
+            "description": "Requested UTF-16 code units; 0 uses the response limit, capped at 20000.",
             "value": 0
           }
         },
@@ -26709,7 +26715,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -26754,7 +26760,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "50",
             "value": 50
@@ -26800,7 +26806,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "20",
             "value": 20
@@ -26946,7 +26952,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -27220,7 +27226,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -27813,7 +27819,7 @@
             "description": "True exports a backup and preview only; false attempts the native import.",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "description": "Token returned by the matching preview; binds session, project, target, current document, candidate and compile option.",
@@ -29012,6 +29018,12 @@
             "type": "int",
             "default": "20",
             "value": 20
+          },
+          "offset": {
+            "type": "int",
+            "default": "0",
+            "description": "Zero-based offset into the matching in-memory export handles.",
+            "value": 0
           }
         },
         "arguments": {
@@ -29754,7 +29766,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -29813,7 +29825,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -29849,7 +29861,7 @@
             "default": "\"\"",
             "value": ""
           },
-          "pageSize": {
+          "limit": {
             "type": "int",
             "default": "100",
             "value": 100
@@ -35268,7 +35280,7 @@
             "description": "True previews only; false builds when action=build.",
             "value": true
           },
-          "expectedFingerprint": {
+          "expectedPackageHash": {
             "type": "string",
             "default": "\"\"",
             "description": "packageFingerprint from the matching inspect/preview.",
@@ -35434,7 +35446,7 @@
             "description": "scriptProperties: Object of script properties to set.",
             "value": null
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""
@@ -36130,7 +36142,7 @@
             "default": null,
             "description": "JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}]."
           },
-          "expectedFingerprint": {
+          "expectedDocumentHash": {
             "type": "string",
             "default": null,
             "description": "documentFingerprint returned by GetPlcBlockEditCapabilities for this input."
@@ -36150,7 +36162,7 @@
         },
         "arguments": {
           "filePath": "C:\\Examples\\exports\\Main.xml",
-          "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+          "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
           "dryRun": true,
           "changes": [
             {
@@ -37955,7 +37967,7 @@
             "description": "Preview and back up only by default. Set false only to apply the reviewed text.",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "description": "Token from this tool's preview for the same project, HMI, module, original and proposed content.",
@@ -38310,7 +38322,7 @@
             "default": "true",
             "value": true
           },
-          "expectedToken": {
+          "previewToken": {
             "type": "string",
             "default": "\"\"",
             "value": ""

@@ -60,11 +60,11 @@ public sealed class PortedPortalAdmissionTests
             or "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory")
         {
             Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
-            Assert.Equal("ConnectPortal", (string?)body["error"]?["details"]?["condition"]);
+            Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
         }
-        if ((string?)body["error"]?["details"]?["condition"] == "ConnectPortal")
+        if ((string?)body["error"]?["details"]?["condition"] == "connect-portal")
         {
-            Assert.Equal("ConnectPortal", (string?)body["error"]?["details"]?["condition"]);
+            Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.Equal("none", (string?)body["meta"]?["completeness"]);
@@ -86,7 +86,7 @@ public sealed class PortedPortalAdmissionTests
         }
         if (name is "PlanOnlineReadOnlyMonitoring" or "PlanOnlineReadOnlyDataProvider")
         {
-            Assert.NotEqual("ConnectPortal", (string?)body["error"]?["details"]?["condition"]);
+            Assert.NotEqual("connect-portal", (string?)body["error"]?["details"]?["condition"]);
             Assert.Equal(0, worker.Calls);
         }
         Assert.True(worker.Calls <= (name == "SearchInstalledGsdDevices" ? 2 : 1), "A missing portal must not dispatch a native operation: " + name);

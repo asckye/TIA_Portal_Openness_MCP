@@ -101,7 +101,7 @@ internal static partial class Program
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", data);
             foreach (var scenario in new[] { "read-exception", "write-exception", "legacy-result", "cancel-before-call" })
                 await Test("direct SDK dispatch guard returns V4: " + scenario, async () => {
-                    // Each scenario is its own session: write-exception leaves its session reset-required (P6-60).
+                    // Each scenario is its own session: an unissued write exception leaves the reset observation false (P8-60).
                     var session = new object();
                     Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetProperty("ApprovalSessionKeyForTests", All)!
                         .SetValue(null, (Func<object?>)(() => session));
@@ -121,7 +121,7 @@ internal static partial class Program
                     Check((string)error["code"] == (unknown ? "OUTCOME_UNKNOWN" : cancelled ? "CANCELLED" : "INTERNAL_ERROR")
                         && (string)meta["outcome"] == (unknown ? "unknown" : cancelled ? "rejected-before-operation" : "read-failed")
                         && (string)meta["execution"] == (unknown ? "unknown" : cancelled ? "not-started" : "read-only")
-                        && (bool)meta["requiresSessionReset"] == unknown, "SDK guard lost typed outcome details: " + scenario + " " + text);
+                        && (bool)meta["requiresSessionReset"] == false, "SDK guard lost typed outcome details: " + scenario + " " + text);
                     Check(fixture.Calls == (cancelled ? 0 : 1) && !text.Contains("SECRET") && !body.ContainsKey("message"), "SDK guard leaked arguments or dispatched cancellation");
                     if (unknown)
                     {

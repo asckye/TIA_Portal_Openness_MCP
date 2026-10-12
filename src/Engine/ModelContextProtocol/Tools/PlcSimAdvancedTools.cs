@@ -313,7 +313,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
-        [McpServerTool(Name = "RunPlcSimAdvancedTestScenario"), Description("[L2][Simulation][EXECUTE] Run an ordered PLCSIM Advanced scenario with instance, mode (singleStep or default), optional stopOnFailure and 1..500 write, waitMs or assert steps. Write/assert values are name-to-scalar maps; assertions may include tolerance and note. Default dryRun=true validates the plan only; execution requires dryRun=false and confirmRun=true. Returns step evidence and assertion counts. An unknown write stops execution without replay. Virtual CPU only. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+        [McpServerTool(Name = "RunPlcSimAdvancedTestScenario"), Description("[L2][Simulation][ONLINE-WRITE] Run an ordered PLCSIM Advanced scenario with instance, mode (singleStep or default), optional stopOnFailure and 1..500 write, waitMs or assert steps. Write/assert values are name-to-scalar maps; assertions may include tolerance and note. Default dryRun=true validates the plan only; execution requires dryRun=false and confirmRun=true. Returns step evidence and assertion counts. An unknown write stops execution without replay. Virtual CPU only. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult RunPlcSimAdvancedTestScenarioV4(
             [Description("scenario: object containing instance, mode and ordered write, waitMs or assert steps.")] PlcSimScenario scenario,
             [Description("confirmRun: must be true together with dryRun=false to execute the steps.")] bool confirmRun = false,

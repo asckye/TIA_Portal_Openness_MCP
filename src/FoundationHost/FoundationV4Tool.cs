@@ -218,8 +218,14 @@ internal sealed class FoundationV4Tool : McpServerTool
         var result = await InvokeCoreAsync(request, cancellationToken, settings, value => approval = value, id, audit, write);
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
         if (TiaMcp.Logic.ModelContextProtocol.RecoveryHints.Attach(body, (name, key, operation) =>
-            name == tool.Name && key == release ? TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation",
-                tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), operation: operation)["example"] as JsonObject : null))
+        {
+            if (name != tool.Name || key != release) return null;
+            var schema = JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject();
+            var usage = TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", tool.Description ?? "", schema);
+            if (operation.Length == 0) return usage["example"] as JsonObject;
+            if (!usage["operations"]!.AsArray().Any(row => (string?)row!["operation"] == operation)) return null;
+            return TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", tool.Description ?? "", schema, operation: operation)["example"] as JsonObject;
+        }))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         if ((string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool { IsNative: true } uncertain

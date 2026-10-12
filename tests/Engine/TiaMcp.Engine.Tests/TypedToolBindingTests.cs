@@ -298,9 +298,14 @@ namespace TiaMcp.Engine.Tests
                 Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]!["code"]);
                 Assert.Equal("rejected-before-operation", (string?)result["meta"]!["outcome"]);
                 Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
-                if (ReferenceEquals(result, bridged) && (string?)direct["error"]!["details"]!["parameter"] == "arguments")
-                    Assert.Equal(json == "{}" ? "input" : json.Contains("\"Input\"") ? "input, Input" : "extra",
-                        (string?)result["error"]!["details"]!["parameter"]);
+                if (ReferenceEquals(result, bridged) && (json == "{}" || json.Contains("\"Input\"") || json.Contains("\"extra\"")))
+                {
+                    string[] fields = json == "{}" ? new[] { "input" } : json.Contains("\"Input\"") ? new[] { "input", "Input" } : new[] { "extra" };
+                    var expected = new JsonObject { ["code"] = "INVALID_ARGUMENT", ["message"] = "Missing or invalid target field(s): " + string.Join(", ", fields) + ".",
+                        ["details"] = new JsonObject { ["parameter"] = fields[0], ["allowedValues"] = new JsonArray(),
+                            ["parameters"] = new JsonArray(fields.Select(field => (JsonNode?)JsonValue.Create(field)).ToArray()) } };
+                    Assert.True(JsonNode.DeepEquals(expected, result["error"]));
+                }
                 else Assert.True(JsonNode.DeepEquals(direct["error"], result["error"]));
             }
             Assert.Equal(0, calls);

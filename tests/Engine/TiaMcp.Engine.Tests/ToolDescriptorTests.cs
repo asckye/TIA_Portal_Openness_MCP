@@ -36,7 +36,8 @@ namespace TiaMcp.Engine.Tests
         public void DescriptorCapturesDefaultsWithoutLosingBooleanTextOrSignature()
         {
             var catalog = new ToolCatalog(new[] { typeof(Probe) });
-            var tool = catalog.Find("descriptorprobe")!;
+            Assert.Null(catalog.Find("descriptorprobe"));
+            var tool = catalog.Find("DescriptorProbe")!;
             Assert.Equal("DescriptorProbe", tool.Name);
             Assert.Equal("Descriptor fixture.", tool.RawDescription);
             Assert.Equal(McpServer.CreateTool(tool.Name, typeof(Probe).GetMethod("Invoke")!).ProtocolTool.InputSchema.GetRawText(), tool.Tool.InputSchema.GetRawText());

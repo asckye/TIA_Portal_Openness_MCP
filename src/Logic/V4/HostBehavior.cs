@@ -25,7 +25,11 @@ namespace TiaMcp.Logic.V4
                 { if (preview) return false; }
                 else if (args.ContainsKey("dryRun") || defaultPreview) return false;
             }
-            return classifiedWrite || tool == "SaveProject" || tool == "SaveProjectCopy" || tool == "CloseProject";
+            if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")
+                return args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import";
+            if (tool == "GetEnvironmentDiagnostics")
+                return args["fix"] is JsonValue fix && fix.TryGetValue<bool>(out var repair) && repair;
+            return classifiedWrite || tool is "EnsureOpennessUserGroup" or "SaveProject" or "SaveProjectCopy" or "CloseProject";
         }
 
         internal static bool NeedsPrecheck(bool internalPreview, bool write, bool enabled, bool hasPreview)
@@ -69,8 +73,8 @@ namespace TiaMcp.Logic.V4
 
         internal static void ExportPreview(JsonObject data)
         {
-            bool export = (string?)data["kind"] is "watch-table" or "technology-object"
-                || (string?)data["options"] == "native-default-two-argument-overload";
+            bool export = data["kind"] is JsonValue kind && kind.TryGetValue<string>(out var name) && name is "watch-table" or "technology-object"
+                || data["options"] is JsonValue options && options.TryGetValue<string>(out var option) && option == "native-default-two-argument-overload";
             if (!export || data["applyBlocked"] != null) return;
             if (data["planHash"] == null || data["status"] is not JsonValue status || !status.TryGetValue<string>(out var text)) return;
             string? reason = NativeExportPolicy.BlockedReason(text);

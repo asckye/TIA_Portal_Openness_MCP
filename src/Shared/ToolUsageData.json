@@ -11069,7 +11069,7 @@
         "SetUnifiedGlobalScript"
       ],
       "notes": [
-        "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take expectedToken from the preview, then apply the same text."
+        "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take previewToken from the preview, then apply the same text."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
@@ -11112,7 +11112,7 @@
             "moduleName": "<same module>",
             "scriptCode": "<the same complete modified source>",
             "dryRun": false,
-            "expectedToken": "<token from previous preview>"
+            "previewToken": "<token from previous preview>"
           },
           "expect": "Inspect native import and exact text verification; compile separately."
         }
@@ -11278,7 +11278,7 @@
     },
     "ApplyToolBatch": {
       "arguments": {
-        "token": "<token from PreviewToolBatch>"
+        "previewToken": "<token from PreviewToolBatch>"
       },
       "parameters": {
         "token": {
@@ -21474,7 +21474,7 @@
     "PatchPlcBlockDocument": {
       "arguments": {
         "filePath": "C:\\Examples\\exports\\Main.xml",
-        "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+        "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
         "dryRun": true,
         "changes": [
           {
@@ -32115,10 +32115,10 @@
         },
         "ApplyToolBatch": {
           "arguments": {
-            "token": "<token from PreviewToolBatch>"
+            "previewToken": "<token from PreviewToolBatch>"
           },
           "parameters": {
-            "token": {
+            "previewToken": {
               "requiresBinding": true
             }
           },
@@ -32327,7 +32327,7 @@
             "exportId": {
               "requiresBinding": true
             },
-            "length": {
+            "limit": {
               "exampleValue": 0
             }
           },
@@ -32763,7 +32763,7 @@
         "PatchPlcBlockDocument": {
           "arguments": {
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+            "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
             "dryRun": true,
             "changes": [
               {
@@ -32776,7 +32776,7 @@
             ]
           },
           "parameters": {
-            "expectedFingerprint": {
+            "expectedDocumentHash": {
               "requiresBinding": true
             },
             "outputPath": {
@@ -33023,7 +33023,7 @@
               "exampleValue": "<new absolute path outside source folder using suggestedFileName GUID.zip>",
               "requiresBinding": true
             },
-            "expectedFingerprint": {
+            "expectedPackageHash": {
               "exampleValue": "<packageFingerprint from this same inspect/build preview>",
               "requiresBinding": true
             }
@@ -35151,8 +35151,8 @@
             "compileAfterImport": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -36000,7 +36000,7 @@
         "ApplyGenerationPlan": {
           "arguments": {
             "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-            "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
             "expectedProject": "C:/Projects/Machine.ap21",
             "dryRun": true
           },
@@ -40637,10 +40637,10 @@
         },
         "ApplyToolBatch": {
           "arguments": {
-            "token": "<token from PreviewToolBatch>"
+            "previewToken": "<token from PreviewToolBatch>"
           },
           "parameters": {
-            "token": {
+            "previewToken": {
               "requiresBinding": true
             }
           },
@@ -41993,8 +41993,8 @@
             "dryRun": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             },
             "onlyIfEmpty": {
@@ -42014,8 +42014,8 @@
             "dryRun": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -44733,8 +44733,8 @@
             "compileAfterImport": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -45583,7 +45583,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 100
             },
             "budgetMs": {
@@ -45620,7 +45620,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 100
             },
             "budgetMs": {
@@ -51291,7 +51291,7 @@
               "exampleValue": "<new absolute path outside source folder using suggestedFileName GUID.zip>",
               "requiresBinding": true
             },
-            "expectedFingerprint": {
+            "expectedPackageHash": {
               "exampleValue": "<packageFingerprint from this same inspect/build preview>",
               "requiresBinding": true
             }
@@ -51437,8 +51437,8 @@
               "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
               "requiresBinding": true
             },
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -52021,7 +52021,7 @@
         "PatchPlcBlockDocument": {
           "arguments": {
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "expectedFingerprint": "<fingerprint from GetPlcBlockEditCapabilities>",
+            "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
             "dryRun": true,
             "changes": [
               {
@@ -52034,7 +52034,7 @@
             ]
           },
           "parameters": {
-            "expectedFingerprint": {
+            "expectedDocumentHash": {
               "requiresBinding": true
             },
             "outputPath": {
@@ -53380,7 +53380,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 100
             },
             "budgetMs": {
@@ -53401,7 +53401,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 50
             },
             "budgetMs": {
@@ -53425,7 +53425,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 20
             },
             "budgetMs": {
@@ -53486,7 +53486,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 100
             },
             "budgetMs": {
@@ -54665,8 +54665,8 @@
             "scriptCode": {
               "requiresBinding": true
             },
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -54759,8 +54759,8 @@
             "dryRun": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },
@@ -55109,7 +55109,7 @@
             "exportId": {
               "requiresBinding": true
             },
-            "length": {
+            "limit": {
               "exampleValue": 0
             }
           },
@@ -55922,7 +55922,7 @@
               "exampleValue": "<cursor from the preceding read>",
               "requiresBinding": true
             },
-            "pageSize": {
+            "limit": {
               "exampleValue": 100
             },
             "budgetMs": {
@@ -58994,7 +58994,7 @@
         "ApplyGenerationPlan": {
           "arguments": {
             "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-            "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
             "expectedProject": "C:/Projects/Machine.ap21",
             "dryRun": true
           },
@@ -62408,8 +62408,8 @@
           "tool": "ApplyGenerationPlan",
           "arguments": {
             "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-            "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-            "expectedProject": "C:/Projects/Machine.ap21",
+            "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "expectedProjectFile": "C:/Projects/Machine.ap21",
             "dryRun": true
           },
           "expect": "Inspect selected phases; substitute the returned identifiers before execution."
@@ -62981,8 +62981,8 @@
           "tool": "ApplyGenerationPlan",
           "arguments": {
             "planId": "gen-0000000000000000000000000000000000000000000000000000000000000000",
-            "expectedPlanHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-            "expectedProject": "C:/Projects/Machine.ap21",
+            "expectedPlanHash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "expectedProjectFile": "C:/Projects/Machine.ap21",
             "dryRun": true
           },
           "expect": "Inspect selected phases; substitute the returned identifiers before execution."
@@ -63093,7 +63093,7 @@
       ],
       "meaning": "Use the intended device address from the selected route/discovery."
     },
-    "expectedToken": {
+    "previewToken": {
       "tools": [],
       "meaning": "Copy the token from this same tool's preview with the same target and proposed content."
     },

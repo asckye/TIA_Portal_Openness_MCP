@@ -41,7 +41,7 @@ public sealed class DeviceApplyAdmissionTests
     [Theory]
     [InlineData("duplicate", "PRECONDITION_FAILED", "deviceName")]
     [InlineData("stale", "INVALID_ARGUMENT", "expectedPlanHash")]
-    [InlineData("catalog", "INVALID_ARGUMENT", "preferredMlfb/preferredVersion")]
+    [InlineData("catalog", "INVALID_ARGUMENT", "preferredMlfb")]
     public async Task Approval_disabled_apply_checks_the_real_policy_and_keeps_the_session_usable(string scenario, string code, string parameter)
     {
         using var worker=new Worker();
@@ -62,6 +62,7 @@ public sealed class DeviceApplyAdmissionTests
         if (scenario=="catalog") args["preferredVersion"]="V1.7";
         var body=await Call("AddDeviceWithFallback",args);
         Assert.Equal(code,(string?)body["error"]?["code"]);Assert.Equal(parameter,(string?)body["error"]?["details"]?["parameter"]);
+        if (scenario == "catalog") Assert.Equal(new[] { "preferredMlfb", "preferredVersion" }, body["error"]!["details"]!["parameters"]!.AsArray().Select(value => (string)value!));
         Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
         Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.Equal(scenario=="duplicate" ? 1 : 0,worker.Creates);
         Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");

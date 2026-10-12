@@ -37,9 +37,7 @@ public sealed class FoundationV4ContractsTests
         Assert.Contains(roster, t => t.ProtocolTool.Name == "CallTool");
         foreach (var tool in roster)
         {
-            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool.ProtocolTool.Name)
-                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool.ProtocolTool.Name).Name != "F00") Assert.Null(tool.ProtocolTool.OutputSchema);
-            else Assert.NotNull(tool.ProtocolTool.OutputSchema);
+            Assert.Equal(EnvelopeSchema.Value.GetRawText(), tool.ProtocolTool.OutputSchema!.Value.GetRawText());
             Assert.DoesNotContain(tool.ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject(), p => p.Name.EndsWith("Json"));
             var result = Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, "{\"__invalid\":true}")));
             Assert.Equal(4, (int)result["schemaVersion"]!);

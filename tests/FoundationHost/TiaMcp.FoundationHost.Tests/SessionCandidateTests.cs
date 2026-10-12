@@ -179,7 +179,8 @@ public sealed class SessionCandidateTests
         Assert.False(SessionPrimitives.IsTimeout(new IOException("Attach timed out; Openness confirmation")));
         var error = new Error("test", new OutcomeUnknownDetails("attach", new Dictionary<string, JsonElement>(), timeout && matching ? SessionPrimitives.ConfirmationReason : null));
         var read = V4Json.Deserialize<Error>(V4Json.Serialize(error)); Assert.Equal(error.Code, read.Code);
-        Assert.Equal(timeout && matching, V4Json.Serialize(error).Contains("\"reason\""));
+        Assert.Equal(timeout && matching ? SessionPrimitives.ConfirmationReason : null, Assert.IsType<OutcomeUnknownDetails>(read.Details).Reason);
+        Assert.True(JsonDocument.Parse(V4Json.Serialize(error)).RootElement.GetProperty("details").TryGetProperty("reason", out _));
     }
     [Theory]
     [InlineData("ConnectPortal")][InlineData("ConnectIsolatedPortal")][InlineData("ConnectProject")][InlineData("AttachOpenProject")][InlineData("OpenProject")]

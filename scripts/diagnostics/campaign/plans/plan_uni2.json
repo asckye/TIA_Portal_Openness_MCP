@@ -132,7 +132,7 @@
 "scriptProperties": {
 "ScriptCode": "export function Btn_OnDown(item, x, y, modifiers, trigger) {}"
 },
-"expectedToken": "",
+"previewToken": "",
 "dryRun": false
 },
 "note": "",
@@ -149,7 +149,7 @@
 "buttonName": "Btn",
 "eventType": "Down",
 "dryRun": false,
-"expectedToken": "",
+"previewToken": "",
 "onlyIfEmpty": false
 },
 "note": "",
@@ -194,7 +194,7 @@
 "itemName": "Rect",
 "propertyName": "Visibility",
 "dryRun": false,
-"expectedToken": ""
+"previewToken": ""
 },
 "note": "",
 "expect": "any",
@@ -556,7 +556,7 @@
 "StartScreen": "MCP_UScreen"
 },
 "dryRun": false,
-"expectedToken": ""
+"previewToken": ""
 },
 "note": "",
 "expect": "any",
@@ -570,7 +570,7 @@
 "softwarePath": "HMI_RT_2",
 "expectedProject": "项目1",
 "cursor": "",
-"pageSize": 20,
+"limit": 20,
 "budgetMs": 5000
 },
 "note": "",
@@ -600,7 +600,7 @@
 "expectedProject": "项目1",
 "moduleName": "Nope",
 "cursor": "",
-"pageSize": 20,
+"limit": 20,
 "budgetMs": 5000
 },
 "note": "",
@@ -615,7 +615,7 @@
 "moduleName": "Nope",
 "scriptCode": "",
 "dryRun": true,
-"expectedToken": ""
+"previewToken": ""
 },
 "note": "",
 "expect": "any",
@@ -628,7 +628,7 @@
 "expectedProject": "项目1",
 "folderPath": "",
 "cursor": "",
-"pageSize": 20,
+"limit": 20,
 "budgetMs": 5000
 },
 "note": "",
@@ -643,7 +643,7 @@
 "typePath": "Nope",
 "version": "",
 "cursor": "",
-"pageSize": 20,
+"limit": 20,
 "budgetMs": 5000
 },
 "note": "",
@@ -660,7 +660,7 @@
 "typePath": "",
 "version": "",
 "cursor": "",
-"pageSize": 20,
+"limit": 20,
 "budgetMs": 5000
 },
 "note": "",
