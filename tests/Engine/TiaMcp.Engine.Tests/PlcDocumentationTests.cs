@@ -149,7 +149,7 @@ END_FUNCTION_BLOCK
                 // ---- handbook
                 Write("FC_Helper.scl", "FUNCTION \"FC_Helper\" : Void\nBEGIN\n  ;\nEND_FUNCTION\n");
                 Write("broken.xml", "<Document><SW.Blocks.FC><AttributeList><Name>Broken</Name></AttributeList><ObjectList><SW.Blocks.CompileUnit><AttributeList><NetworkSource><FlgNet>");
-                var hb = PlcDocumentationLogic.RenderHandbook(dir, false, OfflineAnalysisLogic.DefaultExtensions, "Test handbook");
+                var hb = PlcDocumentationLogic.RenderHandbook(dir, false, OfflineAnalysisLogic.DefaultExtensions.ToArray(), "Test handbook");
                 check(hb.Entries.Count == 3 && hb.Failed == 1, "handbook parses 2 of 3 documents (broken XML is reported, not fatal)");
                 check(hb.Markdown.StartsWith("# Test handbook", StringComparison.Ordinal), "handbook title");
                 check(hb.Markdown.Contains("| [`DocFb`](#fb-123-docfb-lad) | FB | 123 | LAD | 2 | 3 | 1 |"), "index row for DocFb: " + string.Join(" ", hb.Markdown.Split((char)10).Where(l => l.Contains("DocFb`](#"))));

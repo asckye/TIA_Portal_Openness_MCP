@@ -91,7 +91,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public HashSet<string> Disabled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             public int MaxLineLength = 120;
             public int MaxNesting = 5;
-            public string[] Markers = OfflineAnalysisLogic.DefaultMarkers;
+            public string[] Markers = OfflineAnalysisLogic.DefaultMarkers.ToArray();
         }
 
         // ------------------------------------------------------------------ rendering one block

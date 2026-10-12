@@ -337,7 +337,7 @@ internal sealed partial class FoundationTool : McpServerTool
         catch(OperationCanceledException) { throw; }
         catch(McpException) { throw; }
         catch(Exception ex) when(definition.ResponseMember!=null)
-        { throw new McpException(ex.Message,ex,ex is ArgumentException || ex is WorkerOperationException { Code:-32602 } ? McpErrorCode.InvalidParams : McpErrorCode.InternalError); }
+        { throw new McpException(ex.Message,ex,ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException || ex is WorkerOperationException { Code:-32602 } ? McpErrorCode.InvalidParams : McpErrorCode.InternalError); }
         catch(Exception ex) { return new CallToolResult { IsError=true,Content=new List<ContentBlock>{new TextContentBlock { Text=ex.Message }} }; }
     }
 }

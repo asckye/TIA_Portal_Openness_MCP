@@ -29,7 +29,7 @@ internal static class DesktopLauncher
             string desktop = Path.Combine(root, "runtime", "studio", "TiaOpenness.exe");
             if (!File.Exists(desktop)) throw new FileNotFoundException("请完整解压交付包后启动。The complete desktop bundle is required.", desktop);
             var arguments = args.Length == 0 ? new[] { "--mcp" } : args;
-            using (var process = Process.Start(new ProcessStartInfo(desktop, String.Join(" ", arguments.Select(TiaOpenness.Shared.ProcessArguments.Quote))) {
+            using (var process = Process.Start(new ProcessStartInfo(desktop, string.Join(" ", arguments.Select(TiaOpenness.Shared.ProcessArguments.Quote))) {
                 WorkingDirectory = root, UseShellExecute = false }))
             {
                 if (process == null) throw new InvalidOperationException("The desktop could not be started.");

@@ -142,7 +142,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         }
         catch (ChannelLimitException error) when (!sent)
         { error.Data["foundationRequestSent"] = false; error.Data["workerLimitBytes"] = ChannelLimits.RequestBytes; throw; }
-        catch (ChannelFailure failure)
+        catch (ChannelFailureException failure)
         {
             var error = WorkerOperationException.FromChannelFailure(failure);
             error.Data["foundationRequestSent"] = sent;
@@ -257,7 +257,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         lock (stateSync)
         {
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session; a new host session is required.", isArgument: false);
-            if (Faulted) throw new ChannelFault("Engine worker generation is faulted; explicitly restart and rebind. Never replay the request.", false);
+            if (Faulted) throw new ChannelFaultException("Engine worker generation is faulted; explicitly restart and rebind. Never replay the request.", false);
             if (process == null)
             {
                 string worker = options.EngineWorkerExe!;
@@ -329,7 +329,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
         { error.Data["workerRequestSent"] = false; error.Data["workerLimitBytes"] = ChannelLimits.RequestBytes; throw; }
         catch (OperationCanceledException error) when (!sent && token.IsCancellationRequested)
         { error.Data["workerRequestSent"] = false; throw; }
-        catch (ChannelFailure error) when (error.Outcome != ChannelOutcome.Unknown)
+        catch (ChannelFailureException error) when (error.Outcome != ChannelOutcome.Unknown)
         { error.Data["workerRequestSent"] = false; throw; }
         catch (Exception error)
         { RecordFault(error, name, sent); error.Data["workerRequestSent"] = sent; error.Data["workerOutcomeUnknown"] = sent; throw; }

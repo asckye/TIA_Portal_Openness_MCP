@@ -5,7 +5,7 @@ namespace TiaOpenness.Gui.Services;
 
 public interface IApprovalNotification : IDisposable
 {
-    void Show(string title, string message, Action activate);
+    public void Show(string title, string message, Action activate);
 }
 
 /// <summary>The native notification is created only for an incoming request while minimised.</summary>

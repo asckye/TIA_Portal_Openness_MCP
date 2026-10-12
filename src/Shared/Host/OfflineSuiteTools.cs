@@ -764,7 +764,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int GetManifestInt(JsonObject? obj, string name)
         {
             if (obj == null || obj[name] == null) return 0;
-            return int.TryParse(obj[name]?.ToString(), out var value) ? value : 0;
+            return int.TryParse(obj[name]?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value) ? value : 0;
         }
 
         #endregion

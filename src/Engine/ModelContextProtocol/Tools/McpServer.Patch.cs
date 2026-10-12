@@ -15,6 +15,9 @@ namespace TiaMcpServer.ModelContextProtocol
     // not touched.
     public static partial class McpServer
     {
+        private static JsonNode ParsePatchSpec(string spec)
+            => JsonNode.Parse(spec) ?? throw new System.Text.Json.JsonException("spec parsed to null");
+
         public static ResponseScaffold PatchProject(string spec, bool dryRun = false, bool noOverwrite = false)
         {
             var resp = new ResponseScaffold { Ok = true };
@@ -22,7 +25,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
 
             JsonNode root;
-            try { root = JsonNode.Parse(spec) ?? throw new Exception("spec parsed to null"); }
+            try { root = ParsePatchSpec(spec); }
             catch (Exception ex) { throw new McpException($"PatchProject: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
 
             string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): a non-string spec field uses its existing default */ { return def; } }

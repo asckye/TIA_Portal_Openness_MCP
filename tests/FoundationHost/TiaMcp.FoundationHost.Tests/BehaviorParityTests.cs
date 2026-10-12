@@ -17,7 +17,7 @@ public sealed class BehaviorParityTests
     [Theory, InlineData(SessionBehavior.LeaseReserved), InlineData(SessionBehavior.LeaseNotReleased)]
     public void Both_worker_clients_use_the_same_authored_lease_refusal_mapping(string message)
     {
-        var failure = new TiaMcp.WorkerChannel.ChannelFailure(message, -32603, TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,
+        var failure = new TiaMcp.WorkerChannel.ChannelFailureException(message, -32603, TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,
             "{\"exceptionType\":\"InvalidOperationException\"}");
         var error = WorkerOperationException.FromChannelFailure(failure);
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })

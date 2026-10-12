@@ -9,7 +9,7 @@ internal static class SpecialExportTests
     {
         var root=Path.Combine(Path.GetTempPath(),"tia-special-export-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         var output=Path.Combine(root,"special.xml"); int exports=0,offline=0;
-        void Refuse(Action action,string label) { try {action();throw new Exception("Accepted: "+label);} catch(ArgumentException){check(true,label);} catch(NotSupportedException){check(true,label);} }
+        void Refuse(Action action,string label) { try {action();throw new Exception("Accepted: "+label);} catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {check(true,label);} catch(ArgumentException){check(true,label);} catch(NotSupportedException){check(true,label);} }
         PlcSpecialExportResult Run(bool dry,string hash="",string kind="watch-table",string release="17",string path="folder/WT",bool consistent=true,Func<FileInfo,Action<FileInfo>,string?>? publisher=null)=>PlcSpecialExportPolicy.Run(kind,release,"/project.ap17","devices/Station/PLC",path,output,consistent,dry,hash,()=>offline++,f=>{exports++; File.WriteAllText(f.FullName,"<Document><Name>Original</Name><Number>42</Number></Document>");},publisher);
         JsonObject Wire(PlcSpecialExportResult value)=>JsonSerializer.SerializeToNode(value)!.AsObject();
         try

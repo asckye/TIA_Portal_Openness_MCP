@@ -82,7 +82,7 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 name = block.Name; kind = block.GetType().Name;
                 var raw = ((IEngineeringObject)block).GetAttribute("Number");
-                if (raw == null || !int.TryParse(raw.ToString(), out int parsed) || parsed < 0) throw new InvalidDataException("Native block number is unavailable.");
+                if (raw == null || !int.TryParse(raw.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int parsed) || parsed < 0) throw new InvalidDataException("Native block number is unavailable.");
                 number = parsed;
             }
             else if (value is PlcType type) { name = type.Name; kind = type.GetType().Name == "PlcStruct" ? "UDT" : type.GetType().Name; }

@@ -5,21 +5,23 @@
 #define PLC_TECH_GROUP_READ
 #define PLC_DOCUMENT_EXPORT
 #define PLC_WATCH_EXPORT
+#endif
+using System;
+using System.Collections.Generic;
+using System.IO;
+using global::Siemens.Engineering;
+using global::Siemens.Engineering.SW;
+using global::Siemens.Engineering.SW.TechnologicalObjects;
+#if PLC_WATCH_READ
+using global::Siemens.Engineering.SW.WatchAndForceTables;
+#endif
+
+#if TIA_ENGINE_LOCAL_PRIMITIVES
 namespace TiaMcpServer.Siemens.LocalWatchTechnology
 #else
 namespace TiaMcp.Adapters
 #endif
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using global::Siemens.Engineering;
-    using global::Siemens.Engineering.SW;
-    using global::Siemens.Engineering.SW.TechnologicalObjects;
-#if PLC_WATCH_READ
-    using global::Siemens.Engineering.SW.WatchAndForceTables;
-#endif
-
     // Raw native operations only. Hosts retain lookup, traversal, import options,
     // reflection fallbacks, readback, error handling and their existing threads.
     public static class WatchTechnologyPrimitives

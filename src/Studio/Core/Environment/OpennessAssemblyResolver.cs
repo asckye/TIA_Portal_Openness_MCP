@@ -83,7 +83,7 @@ namespace TiaOpenness.Core.Environment
     }
 
     /// <summary>Thrown when no TIA Portal Openness installation matches the request.</summary>
-    public class OpennessNotInstalledException : Exception
+    public sealed class OpennessNotInstalledException : Exception
     {
         public OpennessNotInstalledException(string requestedVersion)
             : base(BuildMessage(requestedVersion))

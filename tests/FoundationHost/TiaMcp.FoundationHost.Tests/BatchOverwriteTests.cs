@@ -85,7 +85,7 @@ public sealed class BatchOverwriteTests : IDisposable
     public void Middle_known_failure_restores_earlier_replacements_in_original_dependency_order()
     {
         Inputs(("Dependent", "UDT", "<Member Datatype=\"&quot;Base&quot;\"/>"), ("Base", "UDT", ""), ("Last", "FC", ""));
-        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailure("known rejection") : new[] { item });
+        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailureException("known rejection") : new[] { item });
         Assert.Equal(new[] { "restore:Base", "restore:Last", "restore:Dependent" }, calls.Where(x => x.StartsWith("restore:")));
         Assert.Equal(3, result.Restored.Length); Assert.Empty(result.RemainingChanged); Assert.False(result.NativeOutcomeUnknown);
         Assert.False(result.RequiresSessionReset); BatchImportContract.Validate(Wire(result), false);
@@ -115,7 +115,7 @@ public sealed class BatchOverwriteTests : IDisposable
     public void Unknown_import_or_restore_retains_recovery_evidence_and_never_claims_success(bool restoreFailure)
     {
         Inputs(("A", "FC", ""), ("B", "FC", ""), ("C", "FC", ""));
-        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "B" ? restoreFailure ? throw new PlcBatchImportKnownFailure("known rejection") : throw new IOException("unknown native outcome") : new[] { item }, restoreFailure: restoreFailure);
+        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "B" ? restoreFailure ? throw new PlcBatchImportKnownFailureException("known rejection") : throw new IOException("unknown native outcome") : new[] { item }, restoreFailure: restoreFailure);
         Assert.DoesNotContain("import:C", calls); Assert.True(result.NativeOutcomeUnknown); Assert.True(result.RequiresSessionReset);
         Assert.All(result.Items, x => Assert.True(File.Exists(x.RecoveryPath))); Assert.NotEmpty(result.RemainingChanged);
         BatchImportContract.Validate(Wire(result), false); var envelope = Envelope(result);
@@ -126,7 +126,7 @@ public sealed class BatchOverwriteTests : IDisposable
     public void Failed_restoration_does_not_restore_a_consumer_against_an_unverified_dependency()
     {
         Inputs(("Dependent", "UDT", "<Member Datatype=\"&quot;Base&quot;\"/>"), ("Base", "UDT", ""), ("Last", "FC", ""));
-        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailure("known rejection") : new[] { item }, restoreFailure: true);
+        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailureException("known rejection") : new[] { item }, restoreFailure: true);
         Assert.DoesNotContain("restore:Dependent", calls);
         Assert.Equal("not-attempted-dependency-unverified", result.Items.Single(x => x.Planned.Name == "Dependent").RestoreStatus);
         Assert.True(result.NativeOutcomeUnknown); BatchImportContract.Validate(Wire(result), false);
@@ -135,7 +135,7 @@ public sealed class BatchOverwriteTests : IDisposable
     public void Mixed_create_replace_failure_reports_new_objects_remaining_after_originals_are_restored()
     {
         Inputs(("New", "FC", ""), ("Old", "FC", ""), ("Last", "FC", "")); inventory = inventory.Where(x => x.Name != "New").ToArray();
-        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailure("known rejection") : new[] { item });
+        var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailureException("known rejection") : new[] { item });
         Assert.Equal(new[] { "New" }, result.RemainingChanged.Select(x => x.Name));
         Assert.Equal(new[] { "Old", "Last" }, result.Restored.Select(x => x.Name));
         Assert.DoesNotContain("backup:New", calls); Assert.DoesNotContain("restore:New", calls);

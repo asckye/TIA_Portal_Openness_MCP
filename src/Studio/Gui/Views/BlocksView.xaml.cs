@@ -8,7 +8,7 @@ using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Views;
 
-public partial class BlocksView : UserControl, IDisposable
+public sealed partial class BlocksView : UserControl, IDisposable
 {
     public static readonly DependencyProperty AtlasProperty = DependencyProperty.Register(
         nameof(Atlas), typeof(AtlasPresentation), typeof(BlocksView));

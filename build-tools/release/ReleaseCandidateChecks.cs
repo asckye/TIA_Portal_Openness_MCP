@@ -1,3 +1,4 @@
+using System;
 using System.IO.Compression;
 using System.Text.Json;
 
@@ -71,7 +72,7 @@ internal static partial class ReleaseCommands
                 var result = runIsolated("sdk-worker-build", dotnet,
                     ["build", Path.Combine(Root, $"src/Engine/TiaMcp.Engine.V{release}.csproj"), "-c", "Release", "-v:q", "-m:1", "-nodeReuse:false", "-p:UseSharedCompilation=false",
                      "-p:TiaMcpEngineWorkerSdkFixture=true", "-p:AppendTargetFrameworkToOutputPath=false", $"-p:OutputPath={directory}",
-                     $"-p:SiemensEngineeringDirectory={ResolveReleaseApi(null, api, int.Parse(release))}", "-p:NuGetAudit=false"], true, Root);
+                     $"-p:SiemensEngineeringDirectory={ResolveReleaseApi(null, api, int.Parse(release, System.Globalization.CultureInfo.InvariantCulture))}", "-p:NuGetAudit=false"], true, Root);
                 ProcessRunner.RequireSuccess(result, "SDK fixture worker build");
                 result = runIsolated("sdk-worker-catalog", worker, ["--bundle-root", Root, "--write-tool-catalog", Path.Combine(directory, "tool-catalog.json")], true, Root);
                 ProcessRunner.RequireSuccess(result, "SDK fixture catalog generation");

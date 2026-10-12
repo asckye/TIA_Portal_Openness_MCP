@@ -29,10 +29,10 @@ namespace TiaMcpServer.ModelContextProtocol
             internal ReleaseScope(string? previous) { this.previous = previous; }
             public void Dispose() { Release.Value = previous; }
         }
-        private sealed class InputFailure : Exception
+        private sealed class InputFailureException : Exception
         {
             internal Error Error { get; }
-            internal InputFailure(Error error) { Error = error; }
+            internal InputFailureException(Error error) { Error = error; }
         }
 
         internal static AttributeMap<Scalar> EmptyAttributes() => new AttributeMap<Scalar>(new Dictionary<string, Scalar>());
@@ -45,7 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // key/count limits remain local, ahead of service lookup and native work.
             string json = V4Json.Serialize(settings);
             try { new InputBudget(characters: 32768).Check(V4Json.ParseInput(json)); }
-            catch (InputRejection rejection) { throw new InputFailure(rejection.ToError("settings")); }
+            catch (InputRejectionException rejection) { throw new InputFailureException(rejection.ToError("settings")); }
             var values = new AttributeMap<Scalar>(settings.ExactAttributes);
             Input(Attributes(values), values, "settings.exactAttributes");
             return json;
@@ -58,23 +58,23 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string Input<T>(InputContract<T> contract, T value, string parameter)
         {
             var result = contract.Validate(value, parameter);
-            if (!result.IsValid) throw new InputFailure(result.Error!);
+            if (!result.IsValid) throw new InputFailureException(result.Error!);
             return V4Json.Serialize(result.Value);
         }
 
         internal static void RequireProject(bool available)
         {
-            if (!available) throw new InputFailure(new Error("No project is bound.", new ProjectNotBoundDetails()));
+            if (!available) throw new InputFailureException(new Error("No project is bound.", new ProjectNotBoundDetails()));
         }
 
         internal static void Management(string action, string[] itemPath, string[] destinationDevicePath, int position)
         {
             if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem" }.Contains(action))
-                throw new InputFailure(McpServer.InvalidInput("action"));
+                throw new InputFailureException(McpServer.InvalidInput("action"));
             if ((action == "deleteDevice") != (itemPath.Length == 0))
-                throw new InputFailure(McpServer.InvalidInput("itemPath"));
+                throw new InputFailureException(McpServer.InvalidInput("itemPath"));
             if ((action == "moveItem" || action == "copyItem") && (destinationDevicePath.Length == 0 || position < 0))
-                throw new InputFailure(McpServer.InvalidInput("destinationDevicePath/position"));
+                throw new InputFailureException(McpServer.InvalidInput("destinationDevicePath/position"));
         }
 
         internal static void Address(string ioType, int startAddress, bool allowNone)
@@ -83,13 +83,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 : new[] { "Input", "Output", "Diagnosis", "Substitute" };
             if (startAddress < 0 || !allowed.Contains(allowNone ? ioType : ioType?.Trim(),
                 allowNone ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase))
-                throw new InputFailure(McpServer.InvalidInput("ioType/startAddress"));
+                throw new InputFailureException(McpServer.InvalidInput("ioType/startAddress"));
         }
 
         internal static CallToolResult Run(string tool, Func<ResponseMessage> action, bool write, bool current)
         {
             try { return Map(tool, action(), write, current); }
-            catch (InputFailure ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, current); }
+            catch (InputFailureException ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, current); }
             catch (Exception ex)
             {
                 if (TiaOpenness.Shared.HostFailurePolicy.Precondition(ex) is { } refusal)

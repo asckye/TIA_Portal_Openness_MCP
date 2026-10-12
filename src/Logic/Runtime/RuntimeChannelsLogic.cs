@@ -78,7 +78,7 @@ namespace TiaMcpServer.Runtime
             var list = new List<string>();
             string s = (json ?? "").Trim();
             if (s.Length == 0) throw new ArgumentException($"{paramName} is empty; give a JSON array of names, e.g. [\"\\\"DB1\\\".\\\"Speed\\\"\"].");
-            if (s.StartsWith("["))
+            if (s.StartsWith("[", StringComparison.Ordinal))
             {
                 JsonNode? node;
                 try { node = JsonNode.Parse(s); }
@@ -91,7 +91,7 @@ namespace TiaMcpServer.Runtime
                     list.Add(str.Trim());
                 }
             }
-            else if (s.StartsWith("{")) throw new ArgumentException($"{paramName} must be a JSON array of strings, not an object.");
+            else if (s.StartsWith("{", StringComparison.Ordinal)) throw new ArgumentException($"{paramName} must be a JSON array of strings, not an object.");
             else
             {
                 foreach (var part in s.Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
@@ -227,9 +227,9 @@ namespace TiaMcpServer.Runtime
             if (h.Contains("/") || h.Contains("\\") || h.Contains(" ") || h.Contains("?") || h.Contains("#"))
                 throw new ArgumentException("host must be a bare host name or IP with optional :port (no path, no spaces).");
             int colon = h.LastIndexOf(':');
-            if (colon > 0 && !h.StartsWith("["))
+            if (colon > 0 && !h.StartsWith("[", StringComparison.Ordinal))
             {
-                if (!int.TryParse(h.Substring(colon + 1), out int port) || port < 1 || port > 65535)
+                if (!int.TryParse(h.Substring(colon + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int port) || port < 1 || port > 65535)
                     throw new ArgumentException("host port must be 1..65535.");
             }
             return h;
@@ -269,7 +269,7 @@ namespace TiaMcpServer.Runtime
         {
             string p = (pipeName ?? "").Trim();
             if (p.Length == 0) p = DefaultOpenPipeName;
-            if (p.StartsWith(@"\\"))
+            if (p.StartsWith(@"\\", StringComparison.Ordinal))
             {
                 var parts = p.Substring(2).Split(new[] { '\\' }, StringSplitOptions.None);
                 if (parts.Length != 3 || !parts[1].Equals("pipe", StringComparison.OrdinalIgnoreCase) || parts[2].Length == 0)

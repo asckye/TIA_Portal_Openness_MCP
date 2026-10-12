@@ -29,8 +29,8 @@ namespace TiaOpenness.Core.Mock
         private readonly string _statePath;
         private MockVcState _state = new MockVcState();
 
-        private List<MockWorkspace> _workspaces { get { return _state.Workspaces; } }
-        private Dictionary<string, RestoredContent> _restored { get { return _state.Restored; } }
+        private List<MockWorkspace> Workspaces { get { return _state.Workspaces; } }
+        private Dictionary<string, RestoredContent> Restored { get { return _state.Restored; } }
 
 
         public MockVersionControl(MockTiaSession session, string projectPath)
@@ -42,7 +42,7 @@ namespace TiaOpenness.Core.Mock
 
         public IReadOnlyList<WorkspaceInfo> ListWorkspaces()
         {
-            return _workspaces.Select(Describe).ToList();
+            return Workspaces.Select(Describe).ToList();
         }
 
         public WorkspaceInfo CreateWorkspace(string name, string folderPath)
@@ -64,13 +64,13 @@ namespace TiaOpenness.Core.Mock
                     ". Create the folder, or clone the Git repository, first.");
             }
 
-            if (_workspaces.Any(w => string.Equals(w.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)))
+            if (Workspaces.Any(w => string.Equals(w.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)))
             {
                 throw new InvalidOperationException("A workspace named '" + name + "' already exists.");
             }
 
             var workspace = new MockWorkspace { Name = name.Trim(), RootPath = directory.FullName };
-            _workspaces.Add(workspace);
+            Workspaces.Add(workspace);
             Save();
             return Describe(workspace);
         }
@@ -245,7 +245,7 @@ namespace TiaOpenness.Core.Mock
                         }
                         // Reading a version back marks the block as changed and not yet compiled,
                         // which is what the real API leaves behind too.
-                        _restored[mapping.Key] = new RestoredContent
+                        Restored[mapping.Key] = new RestoredContent
                         {
                             Content = File.ReadAllText(mapping.FilePath),
                             RecordedAt = DateTimeOffset.UtcNow,
@@ -278,11 +278,11 @@ namespace TiaOpenness.Core.Mock
         private string RestoredOr(string key, BlockInfo block, Func<string> fallback)
         {
             RestoredContent restored;
-            if (!_restored.TryGetValue(key, out restored)) return fallback();
+            if (!Restored.TryGetValue(key, out restored)) return fallback();
 
             if (block.ModifiedDate.HasValue && block.ModifiedDate.Value > restored.RecordedAt)
             {
-                _restored.Remove(key);
+                Restored.Remove(key);
                 return fallback();
             }
             return restored.Content;
@@ -469,21 +469,21 @@ namespace TiaOpenness.Core.Mock
 
         private MockWorkspace Require(string workspaceName)
         {
-            if (_workspaces.Count == 0)
+            if (Workspaces.Count == 0)
             {
                 throw new InvalidOperationException(
                     "This project has no version control workspace yet. Create one first, then map " +
                     "the project's objects into it.");
             }
-            if (string.IsNullOrWhiteSpace(workspaceName)) return _workspaces[0];
+            if (string.IsNullOrWhiteSpace(workspaceName)) return Workspaces[0];
 
-            var match = _workspaces.FirstOrDefault(w =>
+            var match = Workspaces.FirstOrDefault(w =>
                 string.Equals(w.Name, workspaceName.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (match == null)
             {
                 throw new KeyNotFoundException("No workspace named '" + workspaceName + "'. Available: " +
-                    string.Join(", ", _workspaces.Select(w => w.Name)));
+                    string.Join(", ", Workspaces.Select(w => w.Name)));
             }
             return match;
         }

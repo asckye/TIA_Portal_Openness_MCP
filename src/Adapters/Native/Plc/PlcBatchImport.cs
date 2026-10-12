@@ -28,14 +28,14 @@ namespace TiaMcp.Adapters
             if(!new[]{"FC","FB","OB","GlobalDB","InstanceDB"}.Contains(kind)) throw new AdapterPreconditionException("Target contains a block kind outside the bounded ordinary inventory.","softwarePath",false);
             // Number is a required collision check here, not optional display metadata.
             var raw=((IEngineeringObject)block).GetAttribute("Number");
-            if(raw==null || !int.TryParse(raw.ToString(),out var number) || number<0) throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
+            if(raw==null || !int.TryParse(raw.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number) || number<0) throw new AdapterPreconditionException("Cannot establish exact existing block number.","softwarePath",false);
             return new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=kind,Number=number,GroupPath=group};
         }
         private static PlcBatchImportObject BatchReturnedBlock(PlcBlock block,string group,object expectedGroup)
         {
             // Keep readable identity evidence even if native number inspection fails after mutation.
             var result=new PlcBatchImportObject {Name=PlcNative.Name(block),Kind=block.GetType().Name,GroupPath=BatchReturnedGroup(block,expectedGroup,group)};
-            try {var value=((IEngineeringObject)block).GetAttribute("Number");if(value!=null && int.TryParse(value.ToString(),out var number) && number>=0)result.Number=number;}
+            try {var value=((IEngineeringObject)block).GetAttribute("Number");if(value!=null && int.TryParse(value.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var number) && number>=0)result.Number=number;}
             catch(Exception) /* swallow(native-fallback): an unreadable returned block number stays missing so the batch policy rejects verification */ { /* Missing number is an explicit verification failure in the policy. */ }
             return result;
         }

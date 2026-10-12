@@ -12,7 +12,7 @@ internal static class DocumentImportTests
     internal static void Run(Action<bool,string> Check)
     {
 string projectFile=Path.Combine(FixtureRoot,"p.ap21"), documentDirectory=Path.Combine(FixtureRoot,"documents");
-void Reject(Action a,string n) {bool rejected=false;try{a();}catch(ArgumentException){rejected=true;}catch(NotSupportedException){rejected=true;}catch(InvalidDataException){rejected=true;}Check(rejected,n);}
+void Reject(Action a,string n) {bool rejected=false;try{a();}catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {rejected=true;} catch(ArgumentException){rejected=true;}catch(NotSupportedException){rejected=true;}catch(InvalidDataException){rejected=true;}Check(rejected,n);}
 string code="{ S7_Optimized := \"TRUE\"; S7_Version := \"0.1\" } DATA_BLOCK \"Demo\" VAR Flag : Bool := true; Count : DInt := -12; END_VAR END_DATA_BLOCK";
 Check(PlcDocumentDeclaration.Parse(Encoding.ASCII.GetBytes(code))=="Demo","identity");
 Check(PlcDocumentDeclaration.Parse(Encoding.ASCII.GetBytes("//DATA_BLOCK Fake\n"+code+"// DATA_BLOCK Other"))=="Demo","comments ignored");

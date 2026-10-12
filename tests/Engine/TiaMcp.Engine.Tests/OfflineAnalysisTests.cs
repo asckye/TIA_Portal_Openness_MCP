@@ -318,7 +318,7 @@ namespace TiaMcp.Engine.Tests
                 var cmp = OfflineAnalysisLogic.CompareFiles(baseline, same, 0, 100);
                 check(cmp["identicalAfterNormalization"]!.GetValue<bool>(), "identical files are identical after normalization");
                 check(cmp["hunkCount"]!.GetValue<int>() == 0 && cmp["structurallyIdentical"]!.GetValue<bool>(), "identical files produce no hunks and no structural differences");
-                check(cmp["normalizationRules"] is JsonArray rules && rules.Count == OfflineAnalysisLogic.NormalizationRules.Length, "normalization rules are reported");
+                check(cmp["normalizationRules"] is JsonArray rules && rules.Count == OfflineAnalysisLogic.NormalizationRules.Count, "normalization rules are reported");
 
                 var volatileOnly = Write("c.xml", Lad(created: "2026-06-30T12:34:56.7890000Z", idBase: 0x40, uidBase: 100));
                 cmp = OfflineAnalysisLogic.CompareFiles(baseline, volatileOnly, 0, 100);
@@ -394,22 +394,22 @@ namespace TiaMcp.Engine.Tests
                 check(fc.SourceLines == 11 && fc.CommentLines == 3, "scl source/comment line counts (11/3), got " + fc.SourceLines + "/" + fc.CommentLines);
 
                 // ---- annotations
-                var rows = OfflineAnalysisLogic.ScanText(baseline, File.ReadAllText(baseline), OfflineAnalysisLogic.DefaultMarkers);
+                var rows = OfflineAnalysisLogic.ScanText(baseline, File.ReadAllText(baseline), OfflineAnalysisLogic.DefaultMarkers.ToArray());
                 var todoRow = rows.FirstOrDefault(r => r.Marker == "TODO");
                 var expectedLine = File.ReadAllLines(baseline).Select((l, i) => (l, i)).First(t => t.l.Contains("TODO verify")).i + 1;
                 check(rows.Count == 1 && todoRow != null && todoRow.Line == expectedLine && todoRow.Network == 1 && todoRow.Kind == "networkComment" && todoRow.BlockName == "MCPVerify_FC_LAD", "xml network comment TODO found with correct line/network/kind");
-                rows = OfflineAnalysisLogic.ScanText(fbXml, SclFbXml, OfflineAnalysisLogic.DefaultMarkers);
+                rows = OfflineAnalysisLogic.ScanText(fbXml, SclFbXml, OfflineAnalysisLogic.DefaultMarkers.ToArray());
                 check(rows.Count == 1 && rows[0].Marker == "FIXME" && rows[0].Kind == "sclComment" && rows[0].Network == 1 && rows[0].Line == 21, "xml SCL LineComment FIXME found at line 21, got " + (rows.Count > 0 ? rows[0].Line.ToString() : "none"));
-                rows = OfflineAnalysisLogic.ScanText(scl, SclFcText, OfflineAnalysisLogic.DefaultMarkers);
+                rows = OfflineAnalysisLogic.ScanText(scl, SclFcText, OfflineAnalysisLogic.DefaultMarkers.ToArray());
                 check(rows.Count == 2 && rows[0].Marker == "TODO" && rows[0].Line == 20 && rows[0].Network == 1 && rows[1].Marker == "HACK" && rows[1].Line == 24, "scl // TODO (line 20) and (* HACK (line 24) found; NOTE in string literal ignored");
-                rows = OfflineAnalysisLogic.ScanText(s7dcl, LadFbS7dcl, OfflineAnalysisLogic.DefaultMarkers, LadFbS7res);
+                rows = OfflineAnalysisLogic.ScanText(s7dcl, LadFbS7dcl, OfflineAnalysisLogic.DefaultMarkers.ToArray(), LadFbS7res);
                 check(rows.Count == 1 && rows[0].Marker == "TODO" && rows[0].Kind == "networkTitle" && rows[0].Network == 2 && rows[0].Line == 44, "s7dcl MLC network title TODO resolved via s7res (network 2, line 44), got " + (rows.Count > 0 ? rows[0].Line + "/" + rows[0].Network : "none"));
-                check(OfflineAnalysisLogic.ScanText(scl, "// todo lower-case\n// TODO_Block suffix\n", OfflineAnalysisLogic.DefaultMarkers).Count == 0, "[sentinel] lower-case and suffixed words are not markers");
+                check(OfflineAnalysisLogic.ScanText(scl, "// todo lower-case\n// TODO_Block suffix\n", OfflineAnalysisLogic.DefaultMarkers.ToArray()).Count == 0, "[sentinel] lower-case and suffixed words are not markers");
                 check(OfflineAnalysisLogic.ScanText(scl, "// CHECK me\n", new[] { "CHECK" }).Count == 1, "custom marker list honoured");
-                check(OfflineAnalysisLogic.ParseMarkers("").SequenceEqual(OfflineAnalysisLogic.DefaultMarkers) && OfflineAnalysisLogic.ParseMarkers("[\"A\",\"B\"]").SequenceEqual(new[] { "A", "B" }), "markersJson default and parse");
+                check(OfflineAnalysisLogic.ParseMarkers("").SequenceEqual(OfflineAnalysisLogic.DefaultMarkers.ToArray()) && OfflineAnalysisLogic.ParseMarkers("[\"A\",\"B\"]").SequenceEqual(new[] { "A", "B" }), "markersJson default and parse");
                 check(Fails(() => OfflineAnalysisLogic.ParseMarkers("[]")) && Fails(() => OfflineAnalysisLogic.ParseMarkers("{\"a\":1}")) && Fails(() => OfflineAnalysisLogic.ParseMarkers("[\"a b\"]")), "markersJson refuses empty array, object and non-word marker");
                 check(OfflineAnalysisLogic.ParseExtensions("[\"XML\",\".s7dcl\"]").SequenceEqual(new[] { ".xml", ".s7dcl" }), "extensionsJson normalized to lower-case with dot");
-                var scanned = OfflineAnalysisLogic.EnumerateDocuments(dir, true, OfflineAnalysisLogic.DefaultExtensions);
+                var scanned = OfflineAnalysisLogic.EnumerateDocuments(dir, true, OfflineAnalysisLogic.DefaultExtensions.ToArray());
                 check(scanned.Count == 10 && scanned.Count == Directory.GetFiles(dir).Count(f => !f.EndsWith(".s7res")), "directory enumeration filters by extension (s7res excluded)");
                 var csv = OfflineAnalysisLogic.ToCsv(new[] { new OfflineAnalysisLogic.AnnotationRow { File = "x.xml", BlockName = "B", Network = 2, Line = 5, Marker = "TODO", Kind = "k", Text = "say \"hi\", now" } });
                 check(csv.StartsWith("file,blockName,network,line,marker,kind,text") && csv.Contains("x.xml,B,2,5,TODO,k,\"say \"\"hi\"\", now\""), "csv header and quoting");

@@ -14,13 +14,13 @@ public sealed class ServerTests
         var server = Server(output, request => {
             Assert.Equal(owner, Environment.CurrentManagedThreadId); calls++;
             return request.Method == "adapter.Disconnect" ? ChannelResponse.Success("{}")
-                : ChannelResponse.Error(new ChannelFailure("unknown", -32603, ChannelOutcome.Unknown));
+                : ChannelResponse.Error(new ChannelFailureException("unknown", -32603, ChannelOutcome.Unknown));
         });
         server.WriteHello(); server.Handle(Encoding.UTF8.GetBytes(Request()));
         Assert.False(server.Poisoned);
         server.Handle(Encoding.UTF8.GetBytes(Request(2).Replace("adapter.ReadState", "adapter.Disconnect")));
         Assert.Equal(2, calls);
-        Assert.Throws<ChannelFault>(() => server.Handle(Encoding.UTF8.GetBytes(Request(3))));
+        Assert.Throws<ChannelFaultException>(() => server.Handle(Encoding.UTF8.GetBytes(Request(3))));
         Assert.Equal(2, calls);
     }
     [Theory]
@@ -30,9 +30,9 @@ public sealed class ServerTests
         using var output=new FailingOutput(!oversized); int calls=0;
         var server=Server(output,_=>{calls++;return ChannelResponse.Success(oversized ? "\""+new string('x',16*1024*1024)+"\"" : "null");});
         server.WriteHello(); long before=output.Length;
-        var failure=Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request())));
+        var failure=Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request())));
         Assert.True(failure.OutcomeUnknown); Assert.True(server.Poisoned); Assert.Equal(1,calls); Assert.Equal(before,output.Length);
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2)))); Assert.Equal(1,calls);
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2)))); Assert.Equal(1,calls);
     }
 
     [Theory]
@@ -41,7 +41,7 @@ public sealed class ServerTests
     {
         using var output=new MemoryStream(); int calls=0;
         var server=new ChannelServer(Stream.Null,output,Identity,()=>new ChannelBinding(epoch,bound),_=>{calls++;return ChannelResponse.Success("null");});
-        Assert.Throws<ChannelFault>(server.WriteHello); Assert.True(server.Poisoned); Assert.Equal(0,calls); Assert.Equal(0,output.Length);
+        Assert.Throws<ChannelFaultException>(server.WriteHello); Assert.True(server.Poisoned); Assert.Equal(0,calls); Assert.Equal(0,output.Length);
     }
 
     [Fact]
@@ -49,15 +49,15 @@ public sealed class ServerTests
     {
         using var output=new MemoryStream(); int calls=0;
         var server=new ChannelServer(Stream.Null,output,Identity,()=>new ChannelBinding(0,false),_=>{calls++;return ChannelResponse.Success("null");});
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request()))); Assert.Equal(0,calls);
-        Assert.Throws<ChannelFault>(server.WriteHello);
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request()))); Assert.Equal(0,calls);
+        Assert.Throws<ChannelFaultException>(server.WriteHello);
     }
 
     [Fact]
     public void DuplicateHelloTerminal()
     {
         using var output=new MemoryStream(); var server=Server(output); server.WriteHello();
-        Assert.Throws<ChannelFault>(server.WriteHello); Assert.True(server.Poisoned);
+        Assert.Throws<ChannelFaultException>(server.WriteHello); Assert.True(server.Poisoned);
     }
 
     [Theory]
@@ -69,8 +69,8 @@ public sealed class ServerTests
     {
         using var output=new MemoryStream(); int calls=0;
         var server=Server(output,_=>{calls++;return ChannelResponse.Success("null");}); server.WriteHello();
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(frame)));
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2)))); Assert.Equal(0,calls);
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(frame)));
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2)))); Assert.Equal(0,calls);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class ServerTests
         using var output=new MemoryStream(); int calls=0;
         var server=Server(output,_=>{calls++;return ChannelResponse.Success("null");}); server.WriteHello();
         server.Handle(Encoding.UTF8.GetBytes(Request(5)));
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(4)))); Assert.Equal(1,calls);
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(4)))); Assert.Equal(1,calls);
     }
 
     [Theory]
@@ -90,7 +90,7 @@ public sealed class ServerTests
             kind=="truncated" ? Encoding.UTF8.GetBytes(Request()) : kind=="utf8" ? new byte[]{255,10} : Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(Request()+"\n")).ToArray();
         using var input=new MemoryStream(bytes); using var output=new MemoryStream(); int calls=0;
         var server=new ChannelServer(input,output,Identity,()=>new ChannelBinding(0,false),_=>{calls++;return ChannelResponse.Success("null");});
-        Assert.Throws<ChannelFault>(server.Run); Assert.Equal(0,calls);
+        Assert.Throws<ChannelFaultException>(server.Run); Assert.Equal(0,calls);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public sealed class ServerTests
         using var output=new MemoryStream(); Action<int>? retained=null;
         var server=Server(output,r=>{retained=r.Progress;return ChannelResponse.Success("null");}); server.WriteHello();
         server.Handle(Encoding.UTF8.GetBytes(Request())); long length=output.Length;
-        Assert.Throws<ChannelFault>(()=>retained!(50)); Assert.True(server.Poisoned); Assert.Equal(length,output.Length);
+        Assert.Throws<ChannelFaultException>(()=>retained!(50)); Assert.True(server.Poisoned); Assert.Equal(length,output.Length);
     }
 
     [Theory]
@@ -109,13 +109,13 @@ public sealed class ServerTests
         using var output=new MemoryStream(); ChannelServer? server=null;
         server=Server(output,r=>
         {
-            if(kind=="reentrant") Assert.Throws<ChannelFault>(()=>server!.Handle(Encoding.UTF8.GetBytes(Request(2))));
-            if(kind=="wrong-thread") { var thread=new Thread(()=>Assert.Throws<ChannelFault>(()=>r.Progress(50))); thread.Start(); thread.Join(); }
-            if(kind=="invalid-progress") Assert.Throws<ChannelFault>(()=>r.Progress(101));
-            if(kind=="progress-cap") { for(int i=0;i<1024;i++) r.Progress(50); Assert.Throws<ChannelFault>(()=>r.Progress(50)); }
+            if(kind=="reentrant") Assert.Throws<ChannelFaultException>(()=>server!.Handle(Encoding.UTF8.GetBytes(Request(2))));
+            if(kind=="wrong-thread") { var thread=new Thread(()=>Assert.Throws<ChannelFaultException>(()=>r.Progress(50))); thread.Start(); thread.Join(); }
+            if(kind=="invalid-progress") Assert.Throws<ChannelFaultException>(()=>r.Progress(101));
+            if(kind=="progress-cap") { for(int i=0;i<1024;i++) r.Progress(50); Assert.Throws<ChannelFaultException>(()=>r.Progress(50)); }
             return ChannelResponse.Success("null");
         }); server.WriteHello();
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request()))); Assert.True(server.Poisoned);
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request()))); Assert.True(server.Poisoned);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public sealed class ServerTests
     {
         using var output=new MemoryStream(); int observed=0;
         var server=new ChannelServer(Stream.Null,output,Identity,()=>++observed==3?throw new IOException("observer failed"):new ChannelBinding(0,false),_=>ChannelResponse.Success("null"));
-        server.WriteHello(); Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request()))); Assert.True(server.Poisoned);
+        server.WriteHello(); Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request()))); Assert.True(server.Poisoned);
         Assert.Single(Encoding.UTF8.GetString(output.ToArray()).Split('\n',StringSplitOptions.RemoveEmptyEntries));
     }
 

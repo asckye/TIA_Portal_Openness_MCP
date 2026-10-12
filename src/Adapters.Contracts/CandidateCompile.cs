@@ -86,14 +86,14 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface ICompileAdapter
     {
-        CompileObservation Observe();
-        void BeforeAction();
-        void Login(string password);
-        CompileDiagnostics Compile();
-        void Logout();
-        void MarkUncertain();
+        public CompileObservation Observe();
+        public void BeforeAction();
+        public void Login(string password);
+        public CompileDiagnostics Compile();
+        public void Logout();
+        public void MarkUncertain();
     }
-    public interface ICompileBoundary { CompileAttempt Execute(CompileCheck check, string password); }
+    public interface ICompileBoundary { public CompileAttempt Execute(CompileCheck check, string password); }
     public static class CompilePrimitives
     {
         public static string Digest(CompileCheck check)

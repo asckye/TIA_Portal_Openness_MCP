@@ -115,7 +115,7 @@ namespace TiaMcp.Updater
             string deliveryFile = Combine(root, "manifest/delivery.json");
             if (!ExistsFile(deliveryFile)) throw new InvalidOperationException("Not a TIA MCP delivery: manifest/delivery.json is missing.");
             DeliveryManifest installed = ReadJson<DeliveryManifest>(deliveryFile);
-            if (installed == null || String.IsNullOrWhiteSpace(installed.Release) || String.IsNullOrWhiteSpace(installed.Package)) throw new InvalidOperationException("manifest/delivery.json has no release/package fields.");
+            if (installed == null || string.IsNullOrWhiteSpace(installed.Release) || string.IsNullOrWhiteSpace(installed.Package)) throw new InvalidOperationException("manifest/delivery.json has no release/package fields.");
             if (!Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$")) throw new InvalidOperationException("manifest/delivery.json has an unsafe package name.");
             say(UpdaterText.Bilingual("InstallRoot", "install root") + ": " + root + "; " + UpdaterText.Bilingual("InstalledVersion", "installed") + ": " + installed.Release + " (" + installed.Package + ")");
             WaitForProcess(options, say);
@@ -160,7 +160,7 @@ namespace TiaMcp.Updater
 
         public static bool IsSafeRelativePath(string relative)
         {
-            if (String.IsNullOrWhiteSpace(relative) || relative.IndexOfAny(new[] { '\\', ':', '*', '?', '[', ']' }) >= 0) return false;
+            if (string.IsNullOrWhiteSpace(relative) || relative.IndexOfAny(new[] { '\\', ':', '*', '?', '[', ']' }) >= 0) return false;
             string[] parts = relative.Split('/');
             return parts.All(p => p.Length > 0 && p != "." && p != "..") && !Path.IsPathRooted(relative);
         }
@@ -169,7 +169,7 @@ namespace TiaMcp.Updater
         {
             Match match = VersionPattern.Match(value ?? "");
             if (!match.Success) throw new InvalidOperationException("Release tag is not a version: " + value);
-            return String.Join(".", match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value);
+            return string.Join(".", match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value);
         }
 
         public static int CompareVersions(string left, string right)
@@ -192,7 +192,7 @@ namespace TiaMcp.Updater
         private static void RequireStopped(string root, Func<string, IList<string>> processProbe)
         {
             IList<string> running = processProbe == null ? FindRunningProcesses(root) : processProbe(root);
-            if (running != null && running.Count > 0) throw new InvalidOperationException(UpdaterText.Bilingual("ProcessesRunning", "close these bundle processes first; the updater never kills them") + ": " + String.Join("; ", running));
+            if (running != null && running.Count > 0) throw new InvalidOperationException(UpdaterText.Bilingual("ProcessesRunning", "close these bundle processes first; the updater never kills them") + ": " + string.Join("; ", running));
         }
 
         public static IList<string> FindRunningProcesses(string root)
@@ -229,7 +229,7 @@ namespace TiaMcp.Updater
         private static ReleaseInfo FindRelease(UpdaterOptions options, string installed, Action<string> say)
         {
             string api = options.ApiBaseUrl ?? "https://api.github.com";
-            string tag = String.IsNullOrEmpty(options.Version) ? "" : "v" + options.Version.TrimStart('v', 'V');
+            string tag = string.IsNullOrEmpty(options.Version) ? "" : "v" + options.Version.TrimStart('v', 'V');
             string url = api.TrimEnd('/') + "/repos/" + options.Repository + "/releases/" + (tag.Length == 0 ? "latest" : "tags/" + tag);
             try
             {
@@ -255,7 +255,7 @@ namespace TiaMcp.Updater
                 foreach (Match asset in Regex.Matches(html, @"/releases/download/" + Regex.Escape(tag) + @"/(?<name>TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.(?:zip|sha256))"))
                 {
                     string name = Uri.UnescapeDataString(asset.Groups["name"].Value);
-                    if (!fallback.Assets.Any(a => String.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase)))
+                    if (!fallback.Assets.Any(a => string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase)))
                         fallback.Assets.Add(new ReleaseAsset { Name = name, Url = pageBase.TrimEnd('/') + asset.Value });
                 }
                 SelectAsset(fallback, true);
@@ -323,7 +323,7 @@ namespace TiaMcp.Updater
                         RemoveOwnedFile(root, file.Key, file.Value, say);
                 CopyPackage(package, root, options.BeforeDeployFile);
                 changed = true;
-                DeliveryManifest now = ReadJson<DeliveryManifest>(deliveryFilePath(root));
+                DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
                 say(UpdaterText.Bilingual("UpdateDone", "DONE") + ": " + installed.Release + " -> " + now.Release + "; -Rollback restores " + installed.Package + ".");
             }
             catch
@@ -374,10 +374,10 @@ namespace TiaMcp.Updater
                     using (var output = new FileStream(Prefix(target), FileMode.CreateNew, FileAccess.Write, FileShare.None)) input.CopyTo(output);
                 }
             }
-            string direct = deliveryFilePath(extraction);
+            string direct = DeliveryFilePath(extraction);
             if (ExistsFile(direct)) { say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return extraction; }
             string[] children = GetDirectories(extraction);
-            if (children.Length == 1 && ExistsFile(deliveryFilePath(children[0]))) { say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return children[0]; }
+            if (children.Length == 1 && ExistsFile(DeliveryFilePath(children[0]))) { say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return children[0]; }
             throw new InvalidOperationException("The ZIP does not contain a delivery root with manifest/delivery.json.");
         }
 
@@ -438,7 +438,7 @@ namespace TiaMcp.Updater
                 if (!ExistsFile(path)) continue;
                 InventoryRecord manifest = ReadJson<InventoryRecord>(path);
                 foreach (InventoryRecord row in (manifest.RuntimeFiles ?? new List<InventoryRecord>()).Concat(manifest.Files ?? new List<InventoryRecord>()))
-                    if (row != null && !String.IsNullOrEmpty(row.Path) && !String.IsNullOrEmpty(row.Sha256)) inventory[row.Path] = row.Sha256;
+                    if (row != null && !string.IsNullOrEmpty(row.Path) && !string.IsNullOrEmpty(row.Sha256)) inventory[row.Path] = row.Sha256;
             }
             return inventory;
         }
@@ -460,10 +460,10 @@ namespace TiaMcp.Updater
         {
             string path = OwnedPath(root, relative);
             if (!ExistsFile(path)) return;
-            if (!String.Equals(HashFile(path), expected, StringComparison.OrdinalIgnoreCase)) { say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + relative); return; }
+            if (!string.Equals(HashFile(path), expected, StringComparison.OrdinalIgnoreCase)) { say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + relative); return; }
             File.Delete(Prefix(path));
             string parent = Path.GetDirectoryName(path);
-            while (IsWithin(parent, NormalizeForCompare(root)) && !String.Equals(NormalizeForCompare(parent), NormalizeForCompare(root), StringComparison.OrdinalIgnoreCase))
+            while (IsWithin(parent, NormalizeForCompare(root)) && !string.Equals(NormalizeForCompare(parent), NormalizeForCompare(root), StringComparison.OrdinalIgnoreCase))
             {
                 if (GetEntries(parent).Length != 0) break;
                 Directory.Delete(Prefix(parent), false);
@@ -483,7 +483,7 @@ namespace TiaMcp.Updater
             string[] backups = GetDirectories(previousRoot).OrderByDescending(Directory.GetLastWriteTimeUtc).ToArray();
             if (backups.Length == 0) throw new InvalidOperationException("Nothing to roll back to (.previous is empty).");
             string backup = backups[0];
-            DeliveryManifest prior = ReadJson<DeliveryManifest>(deliveryFilePath(backup));
+            DeliveryManifest prior = ReadJson<DeliveryManifest>(DeliveryFilePath(backup));
             if (prior == null) throw new InvalidOperationException("Backup has no manifest/delivery.json: " + backup);
             RequireStopped(root, runningProcesses);
             say(UpdaterText.Bilingual("RollingBack", "rolling back") + ": " + installed.Release + " -> " + prior.Release + " from " + backup);
@@ -491,7 +491,7 @@ namespace TiaMcp.Updater
             if (receipt.Count == 0) receipt = InstalledInventory(root);
             RemoveAddedFiles(root, backup, receipt, say);
             CopyTree(backup, root, true, null);
-            DeliveryManifest now = ReadJson<DeliveryManifest>(deliveryFilePath(root));
+            DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
             say(UpdaterText.Bilingual("RollbackDone", "DONE") + ": installed version is now " + now.Release + ".");
             Relaunch(root, options, say);
             return 0;
@@ -537,7 +537,7 @@ namespace TiaMcp.Updater
 
         private static void PruneBackups(string previousRoot, string keep)
         {
-            foreach (string directory in GetDirectories(previousRoot).Where(d => !String.Equals(NormalizeForCompare(d), NormalizeForCompare(keep), StringComparison.OrdinalIgnoreCase))
+            foreach (string directory in GetDirectories(previousRoot).Where(d => !string.Equals(NormalizeForCompare(d), NormalizeForCompare(keep), StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(Directory.GetLastWriteTimeUtc).Skip(1))
             {
                 File.Delete(Prefix(directory + ".update-receipt.json"));
@@ -558,11 +558,11 @@ namespace TiaMcp.Updater
         {
 #if UPDATER_TEST_SOURCE
             string fixture = Environment.GetEnvironmentVariable("TIA_MCP_UPDATER_TEST_SOURCE");
-            if (!String.IsNullOrWhiteSpace(fixture))
+            if (!string.IsNullOrWhiteSpace(fixture))
             {
                 string asset = Path.GetFileName(new Uri(url).AbsolutePath);
                 string source = Path.Combine(fixture, asset);
-                if (String.IsNullOrWhiteSpace(asset) || !File.Exists(source)) throw new FileNotFoundException("Test release asset was not found.", source);
+                if (string.IsNullOrWhiteSpace(asset) || !File.Exists(source)) throw new FileNotFoundException("Test release asset was not found.", source);
                 File.Copy(source, Prefix(destination), true);
                 return;
             }
@@ -606,7 +606,7 @@ namespace TiaMcp.Updater
         {
 #if UPDATER_TEST_SOURCE
             string fixture = Environment.GetEnvironmentVariable("TIA_MCP_UPDATER_TEST_SOURCE");
-            if (!String.IsNullOrWhiteSpace(fixture))
+            if (!string.IsNullOrWhiteSpace(fixture))
             {
                 using (Stream stream = File.OpenRead(Path.Combine(fixture, "latest.json"))) return (T)JsonSerializer(typeof(T)).ReadObject(stream);
             }
@@ -649,7 +649,7 @@ namespace TiaMcp.Updater
 
         private static string ReadAllText(string path) { using (var reader = new StreamReader(Prefix(path), Encoding.UTF8, true)) return reader.ReadToEnd(); }
 
-        private static string deliveryFilePath(string root) { return Combine(root, "manifest/delivery.json"); }
+        private static string DeliveryFilePath(string root) { return Combine(root, "manifest/delivery.json"); }
         private static bool InDelivery(string path, DeliveryRules rules) { return Matches(path, rules.Include) && !Matches(path, rules.Exclude); }
         private static bool Matches(string path, RuleSet rule)
         {
@@ -675,7 +675,7 @@ namespace TiaMcp.Updater
             return new[] { "data", "staging", ".previous", ".update", "TiaMcp_Output", ".git", "bin-build" }.Contains(first, StringComparer.OrdinalIgnoreCase);
         }
 
-        private static bool IsValidRepository(string value) { return !String.IsNullOrWhiteSpace(value) && Regex.IsMatch(value.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$") && !value.Contains(".."); }
+        private static bool IsValidRepository(string value) { return !string.IsNullOrWhiteSpace(value) && Regex.IsMatch(value.Trim(), @"^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$") && !value.Contains(".."); }
         private static string Combine(string root, string relative) { return root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar + relative.Replace('/', Path.DirectorySeparatorChar); }
         private static string RelativeTo(string root, string path) { string prefix = NormalizeForCompare(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar; return NormalizeForCompare(path).Substring(prefix.Length).Replace('\\', '/'); }
         private static string NormalizeForCompare(string path)
@@ -685,7 +685,7 @@ namespace TiaMcp.Updater
             else if (full.StartsWith("\\\\?\\", StringComparison.Ordinal)) full = full.Substring(4);
             return full.TrimEnd('\\', '/');
         }
-        private static bool IsWithin(string path, string root) { string normalized = NormalizeForCompare(path); return normalized.StartsWith(root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || String.Equals(normalized, root.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase); }
+        private static bool IsWithin(string path, string root) { string normalized = NormalizeForCompare(path); return normalized.StartsWith(root.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || string.Equals(normalized, root.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase); }
 
         private static string Prefix(string path)
         {
@@ -699,7 +699,7 @@ namespace TiaMcp.Updater
         private static bool ExistsFile(string path) { return File.Exists(Prefix(path)); }
         private static bool DirectoryExists(string path) { return Directory.Exists(Prefix(path)); }
         private static bool ExistsAny(string path) { return ExistsFile(path) || DirectoryExists(path); }
-        private static void CreateDirectory(string path) { if (!String.IsNullOrEmpty(path)) Directory.CreateDirectory(Prefix(path)); }
+        private static void CreateDirectory(string path) { if (!string.IsNullOrEmpty(path)) Directory.CreateDirectory(Prefix(path)); }
         private static string[] GetFiles(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetFiles(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
         private static string[] GetDirectories(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetDirectories(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
         private static string[] GetEntries(string path) { return Directory.Exists(Prefix(path)) ? Directory.GetFileSystemEntries(Prefix(path)) : new string[0]; }

@@ -114,7 +114,7 @@ namespace TiaMcpServer.Siemens
                     {
                         // Key names follow pattern TIAP21, TIAP20, etc.
                         var numMatch = System.Text.RegularExpressions.Regex.Match(subName, @"TIAP(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                        if (!numMatch.Success || !int.TryParse(numMatch.Groups[1].Value, out int regVer)) continue;
+                        if (!numMatch.Success || !int.TryParse(numMatch.Groups[1].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int regVer)) continue;
 
                         foreach (var suffix in new[] { @"\TIA_Opns", @"\Global" })
                         {

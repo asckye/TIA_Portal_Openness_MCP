@@ -5,7 +5,7 @@ internal static class PathAndIdentityTests
 {
     internal static void Run(Action<bool,string> check)
     {
-        void Reject(Action action,string message) { try { action(); throw new Exception(message); } catch(ArgumentException) { check(true,message); } }
+        void Reject(Action action,string message) { try { action(); throw new Exception(message); } catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,message); } catch(ArgumentException) { check(true,message); } }
         var cpu=new PlcReadCandidate<int> { Value=1,ExactPath="devices/Station/PLC_1",Device="Station",Host="PLC_1",Context="exact-host",DeviceContext="exact-device" };
         check((string?)PlcReadPathPolicy.Select(new[]{cpu},"PLC_1").Context=="exact-host","Safety host stays bound to selected PLC candidate");
         check((string?)PlcReadPathPolicy.Select(new[]{cpu},"PLC_1").DeviceContext=="exact-device","Offline device stays bound to selected PLC candidate");

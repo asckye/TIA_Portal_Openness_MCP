@@ -38,7 +38,10 @@
       "runtime/tools/TiaMcp.WriteGuard.exe",
       "runtime/tools/TiaMcp.WriteGuard.dll",
       "runtime/tools/TiaMcp.WriteGuard.deps.json",
-      "runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json"
+      "runtime/tools/TiaMcp.WriteGuard.runtimeconfig.json",
+      ".editorconfig",
+      "Directory.Build.props",
+      "src/Shared/CodeAnalysis.props"
     ],
     "prefixes": [
       "runtime/",

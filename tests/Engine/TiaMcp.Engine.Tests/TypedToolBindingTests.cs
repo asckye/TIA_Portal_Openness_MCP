@@ -363,7 +363,7 @@ namespace TiaMcp.Engine.Tests
         {
             var tool = RegisterTools(typeof(ArtifactUnion)).Single();
             const string arguments = "{\"kind\":\"udt\",\"spec\":{\"members\":[],\"members\":[]}}";
-            Assert.Throws<InputRejection>(() => new ToolArguments(Json(arguments)));
+            Assert.Throws<InputRejectionException>(() => new ToolArguments(Json(arguments)));
             var direct = Body(await tool.InvokeAsync(Request("FindTools", arguments)));
             Assert.Equal("INVALID_ARGUMENT", (string?)direct["error"]!["code"]);
             Assert.Equal("spec", (string?)direct["error"]!["details"]!["parameter"]);

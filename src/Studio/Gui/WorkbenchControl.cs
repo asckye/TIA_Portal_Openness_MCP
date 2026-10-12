@@ -96,9 +96,21 @@ public partial class MainWindow
         string? id = _controlDetailRequestId = Features.SelectedCall?.Record.RequestId;
         CallDetailContent.SetControlActivity("");
         if (id == null) return;
-        var activity = await System.Threading.Tasks.Task.Run(() => WorkbenchControlLog.ReadActivity(id));
-        if (!_controlClosing && _controlDetailRequestId == id && activity != null)
-            CallDetailContent.SetControlActivity(Loc.Current.T("Control.Record", activity.Operation, activity.Status));
+        await ReadControlDetailAsync(id, () => WorkbenchControlLog.ReadActivity(id));
+    }
+    internal async System.Threading.Tasks.Task ReadControlDetailAsync(string id,
+        Func<WorkbenchControlLog.Activity?> read)
+    {
+        try
+        {
+            var activity = await System.Threading.Tasks.Task.Run(read);
+            if (!_controlClosing && _controlDetailRequestId == id && activity != null)
+                CallDetailContent.SetControlActivity(Loc.Current.T("Control.Record", activity.Operation, activity.Status));
+        }
+        catch (Exception error)
+        {
+            _model.Activity.AppendLocalized("Log.Error", error.Message);
+        }
     }
     private void OnControlBlocksChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {

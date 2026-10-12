@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
             RequireNonEmpty(op, "subnetName", index, errors);
 
             var node = op["interfaceIndex"];
-            if (node == null || !int.TryParse(node.ToString(), out var interfaceIndex) || interfaceIndex < 0)
+            if (node == null || !int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var interfaceIndex) || interfaceIndex < 0)
                 errors.Add($"operations[{index}].interfaceIndex must be a zero-based non-negative integer from network-node discovery readback.");
 
             if (op.ContainsKey("anchorDeviceItemPath"))

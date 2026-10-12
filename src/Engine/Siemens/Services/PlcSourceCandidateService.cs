@@ -25,10 +25,10 @@ namespace TiaMcpServer.Siemens.Services
             string release = session.PortalMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), id = Meta.Correlate(InvocationJournal.CorrelationId);
             try
             {
-                if (BehaviorCapabilities.Select(typeof(PlcSourceCandidateService).Assembly, release, "P6-SOURCE") != BehaviorPolicy.SafeV4) throw new SourceRejection(new Error("Candidate is not selected.", new UnsupportedCapabilityDetails(release, "P6-SOURCE", "candidate-not-selected")));
+                if (BehaviorCapabilities.Select(typeof(PlcSourceCandidateService).Assembly, release, "P6-SOURCE") != BehaviorPolicy.SafeV4) throw new SourceRejectionException(new Error("Candidate is not selected.", new UnsupportedCapabilityDetails(release, "P6-SOURCE", "candidate-not-selected")));
                 if (sources.RequiresSessionReset) return SourceSession.Result(release, tool, id, null, new Error("The source session must be rebuilt.", new SessionResetRequiredDetails("source-unknown")), Outcome.RejectedBeforeOperation, Execution.NotStarted);
                 var project = session.CurrentProject;
-                if (project == null || session.CurrentPortal == null) throw new SourceRejection(new Error("No project is bound.", new ProjectNotBoundDetails()));
+                if (project == null || session.CurrentPortal == null) throw new SourceRejectionException(new Error("No project is bound.", new ProjectNotBoundDetails()));
                 var plc = session.ExactPlcForEngineering(request.SoftwarePath, false);
                 CandidateIdentity Identity()
                 {

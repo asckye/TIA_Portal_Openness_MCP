@@ -91,7 +91,7 @@ namespace TiaMcp.Logic.V4.Inputs
                     if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member)) Check(member, property.Value, Json);
                     else if (Json.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value, Json);
                 }
-                catch (InputRejection rejection) { errors.Add(rejection.ToError(property.Name)); }
+                catch (InputRejectionException rejection) { errors.Add(rejection.ToError(property.Name)); }
             }
             return errors;
         }
@@ -99,7 +99,7 @@ namespace TiaMcp.Logic.V4.Inputs
         public Error? Validate(JsonElement value, string parameter)
         {
             try { new InputBudget().Check(value); Check(value); return null; }
-            catch (InputRejection ex) { return ex.ToError(parameter); }
+            catch (InputRejectionException ex) { return ex.ToError(parameter); }
             catch (Exception ex) when (ex is ArgumentException || ex is JsonException || ex is InvalidOperationException || ex is RegexMatchTimeoutException)
             { return InputGuard.Invalid(parameter); }
         }
@@ -208,11 +208,11 @@ namespace TiaMcp.Logic.V4.Inputs
                 if (!schema.TryGetProperty(keyword, out var branches)) continue;
                 if (keyword == "allOf") { foreach (var branch in branches.EnumerateArray()) Check(branch, value, root); continue; }
                 int matches = 0;
-                InputRejection? budgetFailure = null;
+                InputRejectionException? budgetFailure = null;
                 foreach (var branch in branches.EnumerateArray())
                 {
                     try { Check(branch, value, root); matches++; }
-                    catch (InputRejection rejection) { if (rejection.IsLimit) budgetFailure = rejection; }
+                    catch (InputRejectionException rejection) { if (rejection.IsLimit) budgetFailure = rejection; }
                 }
                 if (matches == 0 && budgetFailure != null) throw budgetFailure;
                 InputGuard.Require(keyword == "oneOf" ? matches == 1 : matches > 0);
@@ -268,7 +268,7 @@ namespace TiaMcp.Logic.V4.Inputs
         private static bool Matches(JsonElement schema, JsonElement value, JsonElement root)
         {
             try { Check(schema, value, root); return true; }
-            catch (InputRejection) /* swallow(parse-fallback): a failing branch is the expected result of a schema not predicate */
+            catch (InputRejectionException) /* swallow(parse-fallback): a failing branch is the expected result of a schema not predicate */
             { return false; }
         }
         private static bool IsType(JsonElement value, string type) => type switch

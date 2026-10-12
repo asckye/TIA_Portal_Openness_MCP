@@ -10,9 +10,9 @@ namespace TiaMcp.Logic.V4
 {
     public interface IPlcExportFiles
     {
-        CandidateFile Observe(string path);
-        string Stage(string destination, bool documents);
-        void Publish(string staging, string destination, bool documents, bool overwrite);
+        public CandidateFile Observe(string path);
+        public string Stage(string destination, bool documents);
+        public void Publish(string staging, string destination, bool documents, bool overwrite);
     }
     public sealed class PlcExportFiles : IPlcExportFiles
     {
@@ -146,7 +146,7 @@ namespace TiaMcp.Logic.V4
                     catch (Exception) /* swallow(privacy): a failed publish with unavailable destination state is uncertain */ { unknown = true; }
                 }
                 RequiresSessionReset |= unknown;
-                ErrorDetails details = ex is PlcExportRejection refused ? refused.Error.Details : ex is DeviceCreationRejection bindingRejected ? bindingRejected.Error.Details : ex is CandidateObservationException observed ? Fault(observed.Fault, expectedPlanHash, release)
+                ErrorDetails details = ex is PlcExportRejectionException refused ? refused.Error.Details : ex is DeviceCreationRejectionException bindingRejected ? bindingRejected.Error.Details : ex is CandidateObservationException observed ? Fault(observed.Fault, expectedPlanHash, release)
                     : ex is IOException || ex is UnauthorizedAccessException ? (ErrorDetails)new IoFailedDetails(publishing ? "publish" : "export-preflight", destination) : new PreconditionFailedDetails("export-preflight", null);
                 var residue = new JsonObject { ["stagingPath"] = stage, ["destinationPath"] = destination, ["status"] = "unavailable", ["nativeExportIssued"] = issued, ["published"] = published };
                 try
@@ -224,12 +224,12 @@ namespace TiaMcp.Logic.V4
         public static void Unsupported(string release, string action) => Refuse(new UnsupportedCapabilityDetails(release, "P6-EXPORT", action));
         private static void Invalid(string parameter) => Refuse(new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         public static void IdentityMismatch() => Refuse(new IdentityMismatchDetails("project-binding", null, null));
-        public static void Refuse(string message, ErrorDetails details) => throw new PlcExportRejection(new Error(message, details));
-        private static void Refuse(ErrorDetails details) => throw new PlcExportRejection(new Error("Export request does not satisfy the reviewed capability or precondition.", details));
+        public static void Refuse(string message, ErrorDetails details) => throw new PlcExportRejectionException(new Error(message, details));
+        private static void Refuse(ErrorDetails details) => throw new PlcExportRejectionException(new Error("Export request does not satisfy the reviewed capability or precondition.", details));
     }
-    public sealed class PlcExportRejection : Exception
+    public sealed class PlcExportRejectionException : Exception
     {
         public Error Error { get; }
-        public PlcExportRejection(Error error) : base(error.Message) { Error = error; }
+        public PlcExportRejectionException(Error error) : base(error.Message) { Error = error; }
     }
 }

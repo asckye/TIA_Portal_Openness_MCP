@@ -107,7 +107,7 @@ namespace TiaMcp.Logic.V4
                     return Result(release, tool, id, data, new Error("Save/close outcome is unknown. Inspect binding, object validity and worker cleanup, then reset the session; do not replay.",
                         new OutcomeUnknownDetails("save-close-native-or-readback", evidence)), Outcome.Unknown, Execution.Unknown);
                 }
-                var rejection = error is SessionCandidateRejection rejected ? rejected.Error
+                var rejection = error is SessionCandidateRejectionException rejected ? rejected.Error
                     : error is CandidateObservationException observed ? new Error("Save/close observation refused.", observed.Fault.Kind == "identity" ? (ErrorDetails)new IdentityMismatchDetails("save-close-binding", null, null) : new PreconditionFailedDetails(observed.Fault.Subject, null))
                     : new Error("Save/close preflight failed; no native action was issued.", new PreconditionFailedDetails("save-close-preflight", null));
                 if (data == null) data = new JsonObject { ["nativeIssued"] = false, ["observedState"] = ObservationData(null) };
@@ -133,6 +133,6 @@ namespace TiaMcp.Logic.V4
         private static void Invalid(string parameter) => Refuse(new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         private static void Mismatch() => Refuse(new IdentityMismatchDetails("save-close-binding", null, null));
         private static void Stale(string hash) => Refuse(new PlanStaleDetails(hash, "missing-consumed-or-changed-save-close-plan"));
-        private static void Refuse(ErrorDetails details, string message = "Save/close candidate preconditions are not satisfied.") => throw new SessionCandidateRejection(new Error(message, details));
+        private static void Refuse(ErrorDetails details, string message = "Save/close candidate preconditions are not satisfied.") => throw new SessionCandidateRejectionException(new Error(message, details));
     }
 }

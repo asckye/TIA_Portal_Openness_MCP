@@ -7,15 +7,15 @@ namespace TiaOpenness.Gui.Services;
 
 public interface IVersionControlClient : IDisposable
 {
-    bool CanRead { get; }
-    bool CanWrite { get; }
-    Task<bool> VcSupportedAsync();
-    Task<List<WorkspaceInfo>> VcListWorkspacesAsync();
-    Task<WorkspaceInfo> VcCreateWorkspaceAsync(string name, string folderPath);
-    Task<MappingResult> VcMapProjectAsync(string? workspaceName, string? deviceId, bool dryRun);
-    Task<WorkspaceStatusReport> VcStatusAsync(string? workspaceName, bool changedOnly);
-    Task<WorkspaceDiff> VcDiffAsync(string? workspaceName, string? file);
-    Task<SyncResult> VcSyncAsync(string? workspaceName, SyncDirection direction, bool dryRun);
+    public bool CanRead { get; }
+    public bool CanWrite { get; }
+    public Task<bool> VcSupportedAsync();
+    public Task<List<WorkspaceInfo>> VcListWorkspacesAsync();
+    public Task<WorkspaceInfo> VcCreateWorkspaceAsync(string name, string folderPath);
+    public Task<MappingResult> VcMapProjectAsync(string? workspaceName, string? deviceId, bool dryRun);
+    public Task<WorkspaceStatusReport> VcStatusAsync(string? workspaceName, bool changedOnly);
+    public Task<WorkspaceDiff> VcDiffAsync(string? workspaceName, string? file);
+    public Task<SyncResult> VcSyncAsync(string? workspaceName, SyncDirection direction, bool dryRun);
 }
 
 internal sealed class LegacyVersionControlClient(IStudioClient client, Action ensureBridge, bool enabled) : IVersionControlClient

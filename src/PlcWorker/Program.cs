@@ -61,7 +61,7 @@ internal static class Program
         using (var engine = new PlcFoundationEngine(releaseKey, api))
         {
             engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
-            engine.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text, int.Parse(releaseKey), null).ToJsonString())!;
+            engine.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text, int.Parse(releaseKey, System.Globalization.CultureInfo.InvariantCulture), null).ToJsonString())!;
 #if !OPCUA_NO_EXTENSION
             engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
 #endif
@@ -80,7 +80,7 @@ internal static class Program
             var input=Console.OpenStandardInput();
             var server=new ChannelServer(input,Console.OpenStandardOutput(),identity,dispatcher.Observe,session.Dispatch);
             try { server.Run(); }
-            catch(ChannelFault ex)
+            catch(ChannelFaultException ex)
             {
                 Console.Error.WriteLine(ex.Message);
                 // A poisoned session never dispatches again. Preserve the existing

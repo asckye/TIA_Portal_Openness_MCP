@@ -27,7 +27,7 @@ namespace TiaMcp.Logic.Generation
             SafeRoot();
             using (JournalFileLock.Acquire(Path.Combine(root, ".runs.lock")))
             {
-                if (!create && !File.Exists(path)) throw new ArgumentException("Unknown generation run.", "runId");
+                if (!create && !File.Exists(path)) throw new ArgumentException("Unknown generation run.", nameof(runId));
                 RejectLink(path);
                 var copy = (JsonObject)row.DeepClone();
                 copy["utc"] = DateTimeOffset.UtcNow.ToString("O");
@@ -40,7 +40,7 @@ namespace TiaMcp.Logic.Generation
         {
             var path = RunPath(runId);
             SafeRoot();
-            if (!File.Exists(path)) throw new ArgumentException("Unknown generation run.", "runId");
+            if (!File.Exists(path)) throw new ArgumentException("Unknown generation run.", nameof(runId));
             RejectLink(path);
             using var locked = JournalFileLock.Acquire(Path.Combine(root, ".runs.lock"), readOnly: true);
             var lines = File.ReadAllLines(path, new UTF8Encoding(false, true));
@@ -74,9 +74,11 @@ namespace TiaMcp.Logic.Generation
             result["events"] = events;
             return result;
         }
-        public System.Collections.Generic.Dictionary<string, string>? Lineage(string project, string release)
+        public bool TryGetLineage(string project, string release,
+            out System.Collections.Generic.Dictionary<string, string> lineage)
         {
-            if (!Directory.Exists(root)) return null;
+            lineage = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal);
+            if (!Directory.Exists(root)) return false;
             SafeRoot();
             JsonObject? latest = null;
             foreach (var file in Directory.GetFiles(root, "*.jsonl"))
@@ -85,7 +87,10 @@ namespace TiaMcp.Logic.Generation
                 if (!string.Equals(((string?)run["project"])?.Replace('\\', '/'), project.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase) || (string?)run["release"] != release) continue;
                 if (latest == null || string.CompareOrdinal((string?)run["utc"], (string?)latest["utc"]) > 0) latest = run;
             }
-            return latest == null ? null : new System.Collections.Generic.Dictionary<string, string> { ["runId"] = (string)latest["runId"]!, ["status"] = (string)latest["status"]! };
+            if (latest == null) return false;
+            lineage.Add("runId", (string)latest["runId"]!);
+            lineage.Add("status", (string)latest["status"]!);
+            return true;
         }
         public JsonObject[] ForProject(string project, string release)
         {
@@ -97,16 +102,16 @@ namespace TiaMcp.Logic.Generation
         }
         public JsonObject ByPlan(string planId)
         {
-            if (!Regex.IsMatch(planId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Invalid plan identity.", "planId");
+            if (!Regex.IsMatch(planId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Invalid plan identity.", nameof(planId));
             SafeRoot();
             var runs = Directory.GetFiles(root, "*.jsonl").Select(file => Read(Path.GetFileNameWithoutExtension(file)))
                 .Where(run => (string?)run["planId"] == planId).OrderByDescending(run => (string?)run["utc"], StringComparer.Ordinal).ToArray();
-            if (runs.Length == 0) throw new ArgumentException("No run for this plan.", "planId");
+            if (runs.Length == 0) throw new ArgumentException("No run for this plan.", nameof(planId));
             return runs[0];
         }
         public ClaimScope Claim(string planId)
         {
-            if (!Regex.IsMatch(planId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Invalid plan identity.", "planId");
+            if (!Regex.IsMatch(planId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Invalid plan identity.", nameof(planId));
             SafeRoot();
             string path = Path.Combine(root, planId + ".consumed");
             RejectLink(path);
@@ -116,7 +121,7 @@ namespace TiaMcp.Logic.Generation
                 file.Flush(true);
                 return new ClaimScope(path);
             }
-            catch (IOException ex) when (File.Exists(path)) { throw new ArgumentException("Plan was already applied; observe the project and replan.", "planId", ex); }
+            catch (IOException ex) when (File.Exists(path)) { throw new ArgumentException("Plan was already applied; observe the project and replan.", nameof(planId), ex); }
         }
         public sealed class ClaimScope : IDisposable
         {

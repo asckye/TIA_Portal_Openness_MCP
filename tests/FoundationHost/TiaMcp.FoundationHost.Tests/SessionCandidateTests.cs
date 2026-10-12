@@ -281,7 +281,7 @@ public sealed class SessionCandidateTests
         };
         var args = new JsonObject { ["mode"] = mode };
         var call = client.CallAsync("adapter.SessionCandidate", args.ToJsonString(), WorkerClient.BindingChangeFor("SessionCandidate", args), mode == "preview", TimeSpan.FromSeconds(3));
-        if (poison) await Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelFault>(() => call);
+        if (poison) await Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelFaultException>(() => call);
         else { Assert.Equal("null", await call); Assert.Equal(after, client.BindingEpoch); }
         Assert.Equal(poison, client.Poisoned);
     }

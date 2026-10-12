@@ -102,13 +102,13 @@ namespace TiaMcp.Adapters.Reflection
                 ? Enum.Parse(targetType, enumText, ignoreCase: true)
                 : Enum.ToObject(targetType, value);
             if (targetType == typeof(bool)) return value is string boolText ? bool.Parse(boolText) : Convert.ToBoolean(value);
-            if (targetType == typeof(byte)) return value is string byteText ? byte.Parse(byteText) : Convert.ToByte(value);
-            if (targetType == typeof(short)) return value is string shortText ? short.Parse(shortText) : Convert.ToInt16(value);
-            if (targetType == typeof(ushort)) return value is string ushortText ? ushort.Parse(ushortText) : Convert.ToUInt16(value);
-            if (targetType == typeof(int)) return value is string intText ? int.Parse(intText) : Convert.ToInt32(value);
-            if (targetType == typeof(uint)) return value is string uintText ? uint.Parse(uintText) : Convert.ToUInt32(value);
-            if (targetType == typeof(long)) return value is string longText ? long.Parse(longText) : Convert.ToInt64(value);
-            if (targetType == typeof(ulong)) return value is string ulongText ? ulong.Parse(ulongText) : Convert.ToUInt64(value);
+            if (targetType == typeof(byte)) return value is string byteText ? byte.Parse(byteText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToByte(value);
+            if (targetType == typeof(short)) return value is string shortText ? short.Parse(shortText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToInt16(value);
+            if (targetType == typeof(ushort)) return value is string ushortText ? ushort.Parse(ushortText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToUInt16(value);
+            if (targetType == typeof(int)) return value is string intText ? int.Parse(intText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToInt32(value);
+            if (targetType == typeof(uint)) return value is string uintText ? uint.Parse(uintText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToUInt32(value);
+            if (targetType == typeof(long)) return value is string longText ? long.Parse(longText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToInt64(value);
+            if (targetType == typeof(ulong)) return value is string ulongText ? ulong.Parse(ulongText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToUInt64(value);
             if (targetType == typeof(float)) return value is string floatText ? float.Parse(floatText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToSingle(value);
             if (targetType == typeof(double)) return value is string doubleText ? double.Parse(doubleText, System.Globalization.CultureInfo.InvariantCulture) : Convert.ToDouble(value);
             if (targetType == typeof(Color)) return CoerceColor(value);

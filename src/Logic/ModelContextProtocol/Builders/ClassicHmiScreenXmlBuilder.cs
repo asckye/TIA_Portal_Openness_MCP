@@ -489,8 +489,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static int ParseInt(string? value, int fallback)
         {
-            if (int.TryParse(value, out var result)) return result;
-            if (double.TryParse(value, out var dbl)) return (int)Math.Round(dbl);
+            if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var result)) return result;
+            if (double.TryParse(value, System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, System.Globalization.CultureInfo.InvariantCulture, out var dbl)) return (int)Math.Round(dbl);
             return fallback;
         }
 

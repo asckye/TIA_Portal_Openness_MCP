@@ -1,3 +1,5 @@
+using Siemens.Engineering.VersionControl;
+using Siemens.Engineering;
 using System.Collections;
 
 namespace Siemens.Engineering
@@ -89,8 +91,6 @@ namespace Siemens.Engineering.VersionControl
 }
 namespace TiaOpenness.Openness
 {
-    using Siemens.Engineering;
-    using Siemens.Engineering.VersionControl;
     public static class VersionControlPrimitives
     {
         public static VersionControlInterface? Service(IEngineeringServiceProvider p) => p.GetService<VersionControlInterface>();

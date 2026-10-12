@@ -90,7 +90,7 @@ namespace TiaMcpConfigurator
                     {
                         string request = reader.ReadLine(), line;
                         bool auth = false;
-                        while (!String.IsNullOrEmpty(line = reader.ReadLine()))
+                        while (!string.IsNullOrEmpty(line = reader.ReadLine()))
                             if (line.Equals("Authorization: Bearer test-secret", StringComparison.OrdinalIgnoreCase)) auth = true;
                         if (i == 0 && !request.Contains("/mcp/health")) throw new Exception("Wrong health path");
                         if (i == 1 && (!request.Contains("/mcp/ready") || !auth)) throw new Exception("Missing readiness auth");
@@ -188,7 +188,7 @@ namespace TiaMcpConfigurator
                 var installedItem = (System.Windows.Controls.TextBlock)settings.FindName("UpdateInstalledItem");
                 string bundleRoot = MainWindow.FindBundleRoot(AppDomain.CurrentDomain.BaseDirectory);
                 Assert(File.Exists(Path.Combine(bundleRoot, "manifest", "package-manifest.json"))
-                    && !String.Equals(bundleRoot.TrimEnd(Path.DirectorySeparatorChar), AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase),
+                    && !string.Equals(bundleRoot.TrimEnd(Path.DirectorySeparatorChar), AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase),
                     "configuration console output resolves its bundle through the development anchor");
                 string installed = UpdateCheck.Installed(null);
                 bool sourceRepository = UpdateCheck.IsSourceRepository(bundleRoot);
@@ -322,7 +322,7 @@ namespace TiaMcpConfigurator
                 ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
                 // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
                 string capture = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");
-                if (!String.IsNullOrEmpty(capture))
+                if (!string.IsNullOrEmpty(capture))
                 {
                     Directory.CreateDirectory(capture);
                     var fixture = new[] {
@@ -441,7 +441,7 @@ namespace TiaMcpConfigurator
                 VersionCatalogTests(Path.Combine(temp, "version-catalog"));
 
                 string[] roundtrip = { "", secret, "C:\\space path\\", "a\\\"b", "\"", "a&echo nope", "end\\\\" };
-                var info = new ProcessStartInfo(Application.ExecutablePath, "--echo " + String.Join(" ", roundtrip.Select(ConfigCore.Quote))) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, StandardOutputEncoding = Encoding.UTF8 };
+                var info = new ProcessStartInfo(Application.ExecutablePath, "--echo " + string.Join(" ", roundtrip.Select(ConfigCore.Quote))) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, StandardOutputEncoding = Encoding.UTF8 };
                 // Child console uses the same explicit UTF-8 encoding below.
                 using (var child = Process.Start(info))
                 {
@@ -466,7 +466,7 @@ namespace TiaMcpConfigurator
                         Loc.Current.Language = language;
                         string detected = language == AppLanguage.Chinese ? "已检测" : "Detected";
                         string missing = language == AppLanguage.Chinese ? "未检测到" : "Not detected";
-                        Assert(profiles.All(x => !String.IsNullOrEmpty(x.Evidence) && x.Category.EndsWith(x.Detected ? detected : missing) && x.Tooltip.Contains(x.Path)), "every card reports detection in " + language);
+                        Assert(profiles.All(x => !string.IsNullOrEmpty(x.Evidence) && x.Category.EndsWith(x.Detected ? detected : missing) && x.Tooltip.Contains(x.Path)), "every card reports detection in " + language);
                     }
                 }
                 finally { Loc.Current.Language = previousLanguage; }

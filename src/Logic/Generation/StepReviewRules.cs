@@ -34,7 +34,7 @@ namespace TiaMcp.Logic.Generation
             try { samePath = string.Equals(GenerationProjectPath.Normalize(predicted), GenerationProjectPath.Normalize((string?)after["projectPath"] ?? ""), StringComparison.OrdinalIgnoreCase); }
             catch (ArgumentException ex) { verdict.Differences.Add(new JsonObject { ["field"] = "projectPath.normalization", ["error"] = ex.Message }); }
             if (!samePath) verdict.Different("projectPath", JsonValue.Create(predicted), after["projectPath"]);
-            if (!long.TryParse(before["generation"]?.ToString(), out var previous) || !long.TryParse(after["generation"]?.ToString(), out var current) || current <= previous)
+            if (!long.TryParse(before["generation"]?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var previous) || !long.TryParse(after["generation"]?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var current) || current <= previous)
                 verdict.Different("generation", before["generation"], after["generation"]);
             if (!EmptyProject(tree, predicted)) verdict.Different("emptyProject", JsonValue.Create(true), tree);
             return verdict;

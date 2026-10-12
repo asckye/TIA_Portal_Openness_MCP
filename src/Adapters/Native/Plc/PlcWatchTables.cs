@@ -209,7 +209,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 else
                 {
-                    doc = WatchTableEntryXml.NewTable(resolvedPath.Contains("/") ? resolvedPath.Substring(resolvedPath.LastIndexOf('/') + 1) : resolvedPath, (_session.ReleaseKey == "14sp1" ? 14 : _session.ReleaseKey == "15.1" ? 15 : int.Parse(_session.ReleaseKey)));
+                    doc = WatchTableEntryXml.NewTable(resolvedPath.Contains("/") ? resolvedPath.Substring(resolvedPath.LastIndexOf('/') + 1) : resolvedPath, (_session.ReleaseKey == "14sp1" ? 14 : _session.ReleaseKey == "15.1" ? 15 : int.Parse(_session.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture)));
                     meta["entriesBefore"] = 0;
                 }
                 var action = WatchTableEntryXml.Upsert(doc, address, modifyValue, triggerName);

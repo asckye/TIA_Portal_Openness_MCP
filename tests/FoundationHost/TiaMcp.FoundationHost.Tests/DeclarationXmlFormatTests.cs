@@ -21,8 +21,8 @@ internal static class DeclarationXmlFormatTests
             (Key: "20", Folder: "TIA_V20_PublicAPI/V20", Header: "V20", Interface: "v5", ObjectNamespace: true),
             (Key: "21", Folder: "TIA_V21_PublicAPI/V21/net48", Header: "V21", Interface: "v5", ObjectNamespace: true)
         };
-        const string udtJson = """{"name":"UDT_Status","members":[{"name":"Ready","datatype":"Bool","externalWritable":true,"comment":"就绪 <状态> & 输出"},{"name":"Counter","datatype":"Int"},{"name":"Speed","datatype":"Real"},{"name":"Caption","datatype":"String[20]"}]}""";
-        const string dbJson = """{"dbName":"DB_Status","dbNumber":42,"staticMembers":[{"name":"Ready","datatype":"Bool","externalWritable":false,"comment":"就绪 <状态> & 输出","startValue":"TRUE"},{"name":"Counter","datatype":"Int","startValue":"12"},{"name":"Speed","datatype":"Real","startValue":"1.25"},{"name":"Caption","datatype":"String[20]","startValue":"'Ready'"}]}""";
+        const string udtJson = """{"name":"UDT_Status","members":[{"name":"Ready","datatype":"Bool","externalWritable":true,"comment":"就绪 <状态> & 输出"},{"name":"Counter","datatype":"Int"},{"name":"Speed","datatype":"Real"},{"name":"Caption","datatype":"string[20]"}]}""";
+        const string dbJson = """{"dbName":"DB_Status","dbNumber":42,"staticMembers":[{"name":"Ready","datatype":"Bool","externalWritable":false,"comment":"就绪 <状态> & 输出","startValue":"TRUE"},{"name":"Counter","datatype":"Int","startValue":"12"},{"name":"Speed","datatype":"Real","startValue":"1.25"},{"name":"Caption","datatype":"string[20]","startValue":"'Ready'"}]}""";
 
         foreach (var release in releases)
         foreach (var kind in new[] { "UDT", "GlobalDB" })

@@ -11,12 +11,12 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static class UnifiedCwcPackage
     {
-        static void NoLinks(string path)
+        private static void NoLinks(string path)
         {
             for (FileSystemInfo? p = new DirectoryInfo(path); p != null; p = p is DirectoryInfo d ? d.Parent : ((FileInfo)p).Directory)
                 if (p.Exists && (p.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse paths refused.");
         }
-        static void UniqueKeys(JsonElement e)
+        private static void UniqueKeys(JsonElement e)
         {
             if (e.ValueKind == JsonValueKind.Object) {
                 var names = new HashSet<string>(StringComparer.Ordinal);

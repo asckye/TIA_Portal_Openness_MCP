@@ -29,7 +29,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                             var row = JsonNode.Parse(line);
                             if (row == null) continue;
                             if (row is not JsonObject) { malformed++; continue; }
-                            var time = DateTimeOffset.TryParse(row["utc"]?.ToString(), out var utc) ? utc : new DateTimeOffset(file.LastWriteTimeUtc);
+                            var time = DateTimeOffset.TryParse(row["utc"]?.ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var utc) ? utc : new DateTimeOffset(file.LastWriteTimeUtc);
                             rows.Add((time, order++, row));
                             rows.Sort((a, b) => { int timeOrder = a.Time.CompareTo(b.Time); return timeOrder != 0 ? timeOrder : a.Order.CompareTo(b.Order); });
                             if (rows.Count > take) rows.RemoveAt(0);

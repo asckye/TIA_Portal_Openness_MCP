@@ -32,18 +32,18 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (value.Kind == JsonValueKind.Undefined) return "null";
             if (action == "setParameter" && (value.Kind == JsonValueKind.Object || value.Kind == JsonValueKind.Array))
-                throw new InputFailure(McpServer.InvalidInput("value"));
+                throw new InputFailureException(McpServer.InvalidInput("value"));
             return V4Json.Serialize(value);
         }
-        private sealed class InputFailure : Exception
+        private sealed class InputFailureException : Exception
         {
             internal Error Error { get; }
-            internal InputFailure(Error error) => Error = error;
+            internal InputFailureException(Error error) => Error = error;
         }
         internal static CallToolResult Run(string tool, bool writes, Func<object> operation)
         {
             try { return Map(tool, operation(), writes); }
-            catch (InputFailure ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None); }
+            catch (InputFailureException ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None); }
             catch (Exception ex)
             {
                 CallerInputFiles.RecordExportFailure(ex);

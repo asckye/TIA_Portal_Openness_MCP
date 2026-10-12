@@ -72,14 +72,14 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface ISessionCandidateAdapter
     {
-        SessionObservation Observe();
-        void BeforeAction();
-        void Attach(SessionRequest request);
-        void Bind(SessionRequest request);
-        void Open(SessionRequest request);
-        void MarkUncertain();
+        public SessionObservation Observe();
+        public void BeforeAction();
+        public void Attach(SessionRequest request);
+        public void Bind(SessionRequest request);
+        public void Open(SessionRequest request);
+        public void MarkUncertain();
     }
-    public interface ISessionCandidateBoundary { SessionAttempt Execute(SessionCheck check); }
+    public interface ISessionCandidateBoundary { public SessionAttempt Execute(SessionCheck check); }
 
     public static class SessionPrimitives
     {

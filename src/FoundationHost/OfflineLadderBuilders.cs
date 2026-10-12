@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -139,7 +140,7 @@ internal static class OfflineLadderBuilders
         var parts = network.Element(Ns + "Parts")?.Elements().ToArray() ?? throw new InvalidOperationException("Missing parts.");
         var wires = network.Element(Ns + "Wires")?.Elements(Ns + "Wire").ToArray() ?? throw new InvalidOperationException("Missing wires.");
         var ids = parts.Concat(wires).Select(e => (string?)e.Attribute("UId") ?? "").ToArray();
-        if (ids.Any(id => !int.TryParse(id, out int n) || n < 1) || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("UId collision.");
+        if (ids.Any(id => !int.TryParse(id, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int n) || n < 1) || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("UId collision.");
         var call = parts.Single(e => e.Name == Ns + "Call");
         var info = call.Element(Ns + "CallInfo")!;
         var parameters = info.Elements(Ns + "Parameter").ToArray();

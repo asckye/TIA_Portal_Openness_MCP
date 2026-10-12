@@ -8,7 +8,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class CatalogJson
 {
-    internal static readonly string[] Keys = PortedFamilies.ReleaseKeys;
+    internal static readonly IReadOnlyList<string> Keys = PortedFamilies.ReleaseKeys;
     internal static JsonNode Read(string root, string path) => JsonNode.Parse(Repository.ReadSource(Path.Combine(root, path))) ?? throw new ReleaseException("Empty JSON: " + path);
     internal static string Text(JsonNode? node) => node?.GetValue<string>() ?? "";
     internal static string[] Strings(JsonNode? node) => node?.AsArray().Select(Text).ToArray() ?? [];

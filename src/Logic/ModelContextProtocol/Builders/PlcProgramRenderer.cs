@@ -23,10 +23,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private const long MaxBytes = 64 * 1024 * 1024;
         private const int LadderWidth = 640, ContactHeight = 24, ContactGap = 16, TimerWidth = 150, TimerHeight = 100;
 
-        private sealed class Rejected : Exception
+        private sealed class RejectedException : Exception
         {
             internal ErrorDetails Details { get; }
-            internal Rejected(string message, ErrorDetails details) : base(message) => Details = details;
+            internal RejectedException(string message, ErrorDetails details) : base(message) => Details = details;
         }
 
         private sealed class Page
@@ -59,11 +59,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 Absolute(inputPath, "inputPath"); Absolute(outputPath, "outputPath");
                 if (!outputPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) Invalid("outputPath", "Output must end in .html.");
                 if (File.Exists(outputPath) || Directory.Exists(outputPath))
-                    throw new Rejected("Existing output is never overwritten.", new AlreadyExistsDetails(outputPath));
+                    throw new RejectedException("Existing output is never overwritten.", new AlreadyExistsDetails(outputPath));
                 if (!Directory.Exists(Path.GetDirectoryName(outputPath)))
-                    throw new Rejected("Output parent directory does not exist.", new NotFoundDetails(Path.GetDirectoryName(outputPath)));
+                    throw new RejectedException("Output parent directory does not exist.", new NotFoundDetails(Path.GetDirectoryName(outputPath)));
                 if (!File.Exists(inputPath) && !(atlas && Directory.Exists(inputPath)))
-                    throw new Rejected("Input export does not exist.", new NotFoundDetails(inputPath));
+                    throw new RejectedException("Input export does not exist.", new NotFoundDetails(inputPath));
                 cancellationToken.ThrowIfCancellationRequested();
                 reading = true;
                 var pages = Load(inputPath, atlas, cancellationToken);
@@ -85,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     sources = pages.Select(p => new { path = p.Source, engineeringVersion = p.Version }).ToArray() },
                     null, Outcome.Succeeded, Execution.Completed, Completeness.Complete);
             }
-            catch (Rejected ex)
+            catch (RejectedException ex)
             { return Result(null, new Error(ex.Message, ex.Details), Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None); }
             catch (OperationCanceledException) /* swallow(privacy): expose the stable V4 cancellation code without exception text */
             { return Result(null, new Error("Rendering cancelled before file creation.", new CancelledDetails("render")), Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None); }
@@ -117,10 +117,10 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static void Invalid(string parameter, string message)
-            => throw new Rejected(message, new InvalidArgumentDetails(parameter, Array.Empty<string>()));
+            => throw new RejectedException(message, new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         private static void Limit(string parameter, long actual, long maximum)
         {
-            if (actual > maximum) throw new Rejected("Render budget exceeded.", new LimitExceededDetails(parameter, maximum, actual));
+            if (actual > maximum) throw new RejectedException("Render budget exceeded.", new LimitExceededDetails(parameter, maximum, actual));
         }
 
         private static IEnumerable<string> Files(string directory, int depth = 0)

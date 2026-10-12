@@ -6,10 +6,10 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal interface IEngineeringTransaction : IDisposable
     {
-        bool CanCommit { get; }
-        bool CommitRequested { get; }
-        bool IsCancellationRequested { get; }
-        void Commit();
+        public bool CanCommit { get; }
+        public bool CommitRequested { get; }
+        public bool IsCancellationRequested { get; }
+        public void Commit();
     }
 
     internal static class TransactionExecution

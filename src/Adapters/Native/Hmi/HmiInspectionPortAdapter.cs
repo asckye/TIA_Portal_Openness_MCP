@@ -6,9 +6,9 @@ using System.Linq;
 namespace TiaMcp.Adapters.Native.Hmi {
     internal interface IHmiInspectionSession
     {
-        object ResolveHmiSoftwareOrThrow(string path);
-        HmiMessage RunHmiStepTool(string tool, Func<HmiObject, string> action, bool requiresProject = true);
-        void RecordHmiReadFault(HmiObject meta);
+        public object ResolveHmiSoftwareOrThrow(string path);
+        public HmiMessage RunHmiStepTool(string tool, Func<HmiObject, string> action, bool requiresProject = true);
+        public void RecordHmiReadFault(HmiObject meta);
     }
     internal sealed class HmiInspectionPortAdapter { private readonly IHmiInspectionSession _session; public HmiInspectionPortAdapter(IHmiInspectionSession session) => _session = session;
 public HmiMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)

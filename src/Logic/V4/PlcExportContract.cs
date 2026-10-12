@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -7,7 +8,7 @@ namespace TiaMcp.Logic.V4
 {
     public class PlcExportContract : IBehaviorCandidateContract
     {
-        public static readonly string[] Entries = { "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcBlocks", "ExportPlcTypes", "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcBlocks", "ExportPlcTypes", "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments" });
         public static bool Documents(string tool) => tool.EndsWith("Documents", StringComparison.Ordinal);
         public static bool Batch(string tool) => tool == "ExportPlcBlocks" || tool == "ExportPlcTypes" || tool == "ExportPlcBlocksDocuments";
         protected virtual string Entry => "ExportPlcBlock";

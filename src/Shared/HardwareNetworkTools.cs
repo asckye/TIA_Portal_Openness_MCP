@@ -34,16 +34,16 @@ namespace TiaMcpServer.ModelContextProtocol
             InputSchema.Map(InputSchema.Scalar(), maximum: 50,
                 keys: InputSchema.String(minLength: 1, pattern: "^[\\p{L}\\p{Nd}_]+$")), new InputBudget(characters: 32768));
 
-        private sealed class InputFailure : Exception
+        private sealed class InputFailureException : Exception
         {
             internal Error Error { get; }
-            internal InputFailure(Error error) { Error = error; }
+            internal InputFailureException(Error error) { Error = error; }
         }
 
         internal static string Json<T>(T value, string parameter, InputContract<T> contract)
         {
             var result = contract.Validate(value, parameter);
-            if (result.Error != null) throw new InputFailure(result.Error);
+            if (result.Error != null) throw new InputFailureException(result.Error);
             return V4Json.Serialize(result.Value);
         }
 
@@ -60,15 +60,15 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try { validation(); }
             catch (ArgumentException) /* swallow(privacy): legacy validators can include input values in their messages */
-            { throw new InputFailure(McpServer.InvalidInput("arguments")); }
+            { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
             catch (NotSupportedException) /* swallow(privacy): keep capability refusals separate from parser diagnostics */
-            { throw new InputFailure(new Error("The requested hardware operation is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "hardware", null))); }
+            { throw new InputFailureException(new Error("The requested hardware operation is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "hardware", null))); }
         }
 
         internal static void Confirm(bool dryRun, bool confirmed)
         {
             if (!dryRun && !confirmed)
-                throw new InputFailure(new Error("Explicit confirmation is required for this hardware change.", new ConfirmationRequiredDetails(null)));
+                throw new InputFailureException(new Error("Explicit confirmation is required for this hardware change.", new ConfirmationRequiredDetails(null)));
         }
 
         internal static CallToolResult Unsupported(string tool, string release, string? action)
@@ -77,7 +77,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Invoke(string tool, bool readOnly, bool current, Func<ResponseMessage> operation)
         {
             try { return MapResult(tool, operation(), readOnly, current); }
-            catch (InputFailure failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current); }
+            catch (InputFailureException failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current); }
             catch (Exception) /* swallow(privacy): an escaped native error has no confirmed write outcome; never publish exception text */
             {
                 return Result(tool, null, readOnly ? NativeFailure() : UnknownFailure(), readOnly ? Outcome.ReadFailed : Outcome.Unknown,

@@ -228,7 +228,7 @@ namespace TiaMcp.Logic.V4.Domain
         internal static void Require(bool condition)
         {
             try { InputGuard.Require(condition); }
-            catch (InputRejection rejection) { throw new ArgumentException(V4Json.Serialize(rejection.ToError("input"))); }
+            catch (InputRejectionException rejection) { throw new ArgumentException(V4Json.Serialize(rejection.ToError("input"))); }
         }
     }
 }

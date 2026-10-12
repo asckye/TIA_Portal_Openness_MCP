@@ -76,8 +76,8 @@ public sealed class BridgeChannelTests
                 process.Id, wrong == "nonce" ? new string('0', 64) : nonce), ChannelProfile.Studio);
         try
         {
-            await Assert.ThrowsAsync<ChannelFault>(() => channel.ConnectAsync(Budget));
-            await Assert.ThrowsAsync<ChannelFault>(() => channel.CallAsync("session.connect", "{}", BindingChange.Advance, false, Budget));
+            await Assert.ThrowsAsync<ChannelFaultException>(() => channel.ConnectAsync(Budget));
+            await Assert.ThrowsAsync<ChannelFaultException>(() => channel.CallAsync("session.connect", "{}", BindingChange.Advance, false, Budget));
             Assert.Equal(0, writes.Count);
             Assert.False(channel.OutcomeUnknown);
         }
@@ -228,8 +228,8 @@ public sealed class BridgeChannelTests
             }
             if (failure == "concurrent")
             {
-                await Assert.ThrowsAsync<ChannelFault>(() => bridge.CallAsync<object>("session.state"));
-                await Assert.ThrowsAsync<ChannelFault>(() => call);
+                await Assert.ThrowsAsync<ChannelFaultException>(() => bridge.CallAsync<object>("session.state"));
+                await Assert.ThrowsAsync<ChannelFaultException>(() => call);
             }
             else if (failure == "cancel")
             {
@@ -307,7 +307,7 @@ public sealed class BridgeChannelTests
         var process = Child(bridge);
         var channel = Channel(bridge);
         long epoch = channel.BindingEpoch;
-        var failure = await Assert.ThrowsAsync<ChannelFailure>(() => channel.CallAsync(method, "{}",
+        var failure = await Assert.ThrowsAsync<ChannelFailureException>(() => channel.CallAsync(method, "{}",
             BridgeChannel.BindingChangeFor(method), BridgeChannel.IsReadOnly(method), Budget));
         Assert.Equal(outcome, failure.Outcome);
         var rpc = JObject.Parse(failure.RpcErrorJson);
@@ -347,7 +347,7 @@ public sealed class BridgeChannelTests
         {
             retained = request.ReportProgress;
             request.ReportProgress(50, "{\"operation\":\"导出\",\"current\":1,\"total\":2,\"message\":\"块\"}");
-            return ChannelResponse.Error(new ChannelFailure("故障", -32603, ChannelOutcome.ReadFailed, rpcErrorJson: rpc));
+            return ChannelResponse.Error(new ChannelFailureException("故障", -32603, ChannelOutcome.ReadFailed, rpcErrorJson: rpc));
         }, ChannelProfile.Studio);
         server.WriteHello();
         server.Handle(Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tag.list\",\"params\":{},\"bindingEpoch\":0}"));
@@ -355,7 +355,7 @@ public sealed class BridgeChannelTests
         Assert.True(JToken.DeepEquals(JObject.Parse(rpc), frames[2]["error"]!["data"]!["rpc"]));
         Assert.Equal("ReadFailed", frames[2]["error"]!["data"]!.Value<string>("outcome"));
         Assert.Equal("导出", frames[1]["params"]!["payload"]!.Value<string>("operation"));
-        Assert.Throws<ChannelFault>(() => retained!(100, "{}"));
+        Assert.Throws<ChannelFaultException>(() => retained!(100, "{}"));
         Assert.True(server.Poisoned);
     }
 

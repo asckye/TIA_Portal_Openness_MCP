@@ -25,18 +25,18 @@ namespace TiaMcp.FoundationHost
 
     public interface IEngineWorker : IDisposable
     {
-        bool Faulted { get; }
-        JsonNode? Binding { get; }
-        object SessionKey { get; }
-        JsonObject Snapshot();
-        Task<JsonObject> Status(CancellationToken token);
-        Task<JsonObject> Restart(bool confirmed, CancellationToken token);
-        Task<IDisposable> Acquire(CancellationToken token);
-        Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token);
+        public bool Faulted { get; }
+        public JsonNode? Binding { get; }
+        public object SessionKey { get; }
+        public JsonObject Snapshot();
+        public Task<JsonObject> Status(CancellationToken token);
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token);
+        public Task<IDisposable> Acquire(CancellationToken token);
+        public Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token);
     }
     public interface IEngineWorkerProgress
     {
-        IDisposable UseProgress(Action<string>? report);
+        public IDisposable UseProgress(Action<string>? report);
     }
 
     internal static class EngineHostConfiguration

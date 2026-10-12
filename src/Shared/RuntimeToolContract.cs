@@ -16,16 +16,16 @@ namespace TiaMcpServer.ModelContextProtocol
     // The group boundary retains domain evidence; messages never establish success.
     internal static class RuntimeToolContract
     {
-        private sealed class InputFailure : Exception
+        private sealed class InputFailureException : Exception
         {
             internal Error Error { get; }
-            internal InputFailure(Error error) => Error = error;
+            internal InputFailureException(Error error) => Error = error;
         }
 
         internal static string Json<T>(T value, string parameter, InputContract<T> contract)
         {
             var result = contract.Validate(value, parameter);
-            if (result.Error != null) throw new InputFailure(result.Error);
+            if (result.Error != null) throw new InputFailureException(result.Error);
             return V4Json.Serialize(result.Value);
         }
 
@@ -53,13 +53,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static void Confirm(bool preview, bool confirmed)
         {
-            if (!preview && !confirmed) throw new InputFailure(new Error("Explicit confirmation is required.", new ConfirmationRequiredDetails(null)));
+            if (!preview && !confirmed) throw new InputFailureException(new Error("Explicit confirmation is required.", new ConfirmationRequiredDetails(null)));
         }
 
         internal static CallToolResult Run(string tool, bool readOnly, bool current, Func<object> operation)
         {
             try { return Map(tool, operation(), readOnly, current); }
-            catch (InputFailure failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Completeness.None, current); }
+            catch (InputFailureException failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Completeness.None, current); }
             catch (Exception ex)
             {
                 // A wrapped native exception can occur after a write was issued. Its

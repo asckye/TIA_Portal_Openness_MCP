@@ -21,7 +21,7 @@ internal static class BatchDocumentImportTests
    Import=()=>{Check(closed==0,"all locks retained");calls++;var mode=modes.GetValueOrDefault(name,"");if(mode=="throw")throw new IOException();if(mode=="null")return null!;if(mode=="partial"||mode=="failure")return new(){State="PartialSuccess"};inventory.Add(PlcDocumentImportPolicy.InventoryItem("",name,"GlobalDB",name+"-id"));if(mode=="extra")inventory.Add("stray");return new(){State="Success",Success=true,ExistsVerified=true,Identities=new[]{PlcDocumentImportPolicy.InventoryItem("",name,"GlobalDB","returned")}};}
   }).ToArray();
   PlcBatchDocumentImportResult Preview(string[] names)=>PlcBatchDocumentImportPolicy.Run(Contexts(names),true,"",false,"");
-  void Reject(Action action,string test){bool failed=false;try{action();}catch(ArgumentException){failed=true;}Check(failed,test);}
+  void Reject(Action action,string test){bool failed=false;try{action();}catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {failed=true;} catch(ArgumentException){failed=true;}Check(failed,test);}
   string[] names={"A","B","C"};var p=Preview(names);
   JsonObject Request(bool dry,string hash)=>new(){["softwarePath"]="PLC",["groupPath"]="",["importPath"]=documentDirectory,["fileNamesWithoutExtension"]=new JsonArray(names.Select(x=>(JsonNode?)JsonValue.Create(x)).ToArray()),["overwrite"]=false,["dryRun"]=dry,["confirm"]=!dry,["expectedPlanHash"]=hash,["expectedProjectFile"]=projectFile};
   BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(p),Request(true,""));Check(true,"host preview");Check(calls==0&&closed==3&&p.Items.All(x=>x.Status=="not-attempted"),"preview locks only");closed=0;

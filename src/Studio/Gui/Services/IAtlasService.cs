@@ -12,5 +12,5 @@ public sealed record AtlasResult(string? HtmlPath, string? Error);
 /// <summary>Export acquisition and offline HTML generation boundary.</summary>
 public interface IAtlasService
 {
-    Task<AtlasResult> GenerateAsync(AtlasRequest request, IProgress<AtlasProgress> progress, CancellationToken cancellationToken);
+    public Task<AtlasResult> GenerateAsync(AtlasRequest request, IProgress<AtlasProgress> progress, CancellationToken cancellationToken);
 }

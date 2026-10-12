@@ -171,7 +171,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (error == null)
             {
                 try { error = ToolInvoker.Bind(name, new ToolArguments(arguments), out _); }
-                catch (InputRejection rejection) { error = rejection.ToError("arguments"); }
+                catch (InputRejectionException rejection) { error = rejection.ToError("arguments"); }
             }
             if (error != null) result = V4TargetReject(name, error, current: CurrentBehaviorTargets(name, arguments));
         }

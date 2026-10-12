@@ -126,26 +126,26 @@ namespace TiaMcp.Logic.ModelContextProtocol
         {
             lock (gate)
             {
-                if (files == null || files.Length < 1 || files.Length > MaximumFiles) throw new ArgumentException("Supply 1..128 files.", "files");
+                if (files == null || files.Length < 1 || files.Length > MaximumFiles) throw new ArgumentException("Supply 1..128 files.", nameof(files));
                 var bytes = new List<byte[]>(); long total = 0;
                 foreach (var file in files)
                 {
                     var content = Validate(file); total += content.LongLength;
-                    if (total > MaximumBytes) throw new ArgumentException("Batch staging byte quota exceeded.", "files");
+                    if (total > MaximumBytes) throw new ArgumentException("Batch staging byte quota exceeded.", nameof(files));
                     bytes.Add(content);
                 }
-                if (files.Select(f => f.FileName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != files.Length) throw new ArgumentException("Case-insensitive duplicate filenames are refused.", "files");
+                if (files.Select(f => f.FileName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != files.Length) throw new ArgumentException("Case-insensitive duplicate filenames are refused.", nameof(files));
                 foreach (var disk in Discover(root).Where(b => (bool?)b["identified"] == true))
                     batches[(string)disk["batchId"]!] = disk;
                 foreach (var id in batches.Keys.Where(id => !Directory.Exists(Path.Combine(root, id))).ToArray()) batches.Remove(id);
                 long retained = batches.Values.Sum(b => b["byteLength"]!.GetValue<long>());
                 int count = batches.Values.Sum(b => b["files"]!.AsArray().Count);
-                if (batches.Count >= MaximumBatches || count + files.Length > MaximumFiles || retained + total > MaximumBytes) throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", "files");
+                if (batches.Count >= MaximumBatches || count + files.Length > MaximumFiles || retained + total > MaximumBytes) throw new ArgumentException("Session staging quota exceeded; review and clean up staged batches.", nameof(files));
                 CheckWritable();
                 // Only Windows hosts hand staged paths to net48 workers and engines.
                 foreach (var file in files)
                     if (Path.DirectorySeparatorChar == '\\' && Path.Combine(root, new string('0', 32), file.FileName).Length >= 260)
-                        throw new ArgumentException("Staged import path exceeds the net48 MAX_PATH limit; use a shorter bundle path or filename.", "files");
+                        throw new ArgumentException("Staged import path exceeds the net48 MAX_PATH limit; use a shorter bundle path or filename.", nameof(files));
                 var entries = new JsonArray();
                 for (int i = 0; i < files.Length; i++) entries.Add(new JsonObject { ["fileName"] = files[i].FileName, ["kind"] = files[i].Kind,
                     ["encoding"] = files[i].Kind == "scl" || files[i].Kind == "s7dcl" || files[i].Kind == "udt" && !Path.GetExtension(files[i].FileName).Equals(".xml", StringComparison.OrdinalIgnoreCase) ? "ascii" : "utf-8",
@@ -231,13 +231,13 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (stream.Length < 1 || stream.Length > 128 * 1024) return null;
             var input = JsonNode.Parse(stream)?.AsObject();
             if (input != null && ((string?)input["sessionId"] != owner || (string?)input["batchId"] != id)) throw new ManifestIdentityException();
-            if ((int?)input?["manifestVersion"] is not (1 or 2) || !DateTimeOffset.TryParse((string?)input?["createdUtc"], out _) || input?["files"] is not JsonArray files
+            if ((int?)input?["manifestVersion"] is not (1 or 2) || !DateTimeOffset.TryParse((string?)input?["createdUtc"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _) || input?["files"] is not JsonArray files
                 || files.Count > MaximumFiles || (int?)input["writtenFileCount"] is not int written || written < 0 || written > files.Count) return null;
             if ((string?)input["releaseKey"] is not string releaseKey || !new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Contains(releaseKey)) return null;
             if ((int?)input["manifestVersion"] == 2 && ((string?)input["mcpSessionId"] is not string mcp || string.IsNullOrWhiteSpace(mcp) || mcp.Length > 256
                 || !Guid.TryParseExact((string?)input["hostInstanceId"], "N", out _))) return null;
             if (input["hostPid"] != null && (input["hostPid"] is not JsonValue pidValue || !pidValue.TryGetValue<int>(out var pid) || pid < 1)
-                || input["hostStartedUtc"] != null && (input["hostStartedUtc"] is not JsonValue startValue || !startValue.TryGetValue<string>(out var started) || !DateTimeOffset.TryParse(started, out _))
+                || input["hostStartedUtc"] != null && (input["hostStartedUtc"] is not JsonValue startValue || !startValue.TryGetValue<string>(out var started) || !DateTimeOffset.TryParse(started, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
                 || input["partial"] != null && (input["partial"] is not JsonValue partialValue || !partialValue.TryGetValue<bool>(out _))) return null;
             // Persisted JSON is untrusted; publish only the schema we own.
             var batch = new JsonObject(); foreach (string key in ManifestKeys) batch[key] = input[key]?.DeepClone();
@@ -381,11 +381,11 @@ namespace TiaMcp.Logic.ModelContextProtocol
         {
             lock (gate)
             {
-                if (!Guid.TryParseExact(batchId, "N", out _)) throw new ArgumentException("Select an identified batchId from ListStagedImportFiles.", "batchId");
+                if (!Guid.TryParseExact(batchId, "N", out _)) throw new ArgumentException("Select an identified batchId from ListStagedImportFiles.", nameof(batchId));
                 var matches = Discover().Where(b => (string?)b["batchId"] == batchId).ToArray();
-                if (matches.Length != 1 || (bool?)matches[0]["identified"] != true) throw new ArgumentException("Batch is unknown or ambiguous; a valid staging manifest is required for cleanup.", "batchId");
+                if (matches.Length != 1 || (bool?)matches[0]["identified"] != true) throw new ArgumentException("Batch is unknown or ambiguous; a valid staging manifest is required for cleanup.", nameof(batchId));
                 var batch = matches[0]; string folder = (string)batch["directory"]!;
-                if ((string?)batch["ownerState"] is not ("current" or "ended")) throw new ArgumentException("The batch belongs to another live or uninspectable MCP session; cleanup refused.", "batchId");
+                if ((string?)batch["ownerState"] is not ("current" or "ended")) throw new ArgumentException("The batch belongs to another live or uninspectable MCP session; cleanup refused.", nameof(batchId));
                 Safe(Path.Combine(folder, "probe"));
                 try { NativeExportPolicy.CheckWritableDirectory(folder, WriteAccessForTests); }
                 catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)

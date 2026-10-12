@@ -71,7 +71,7 @@ namespace TiaMcp.Engine.Tests
                 object?[] arguments = { name, Activator.CreateInstance(argumentsType, new object[] { Input(json) }), null, null };
                 error = Type("McpServer").GetMethod("BindV4Call", All)!.Invoke(null, arguments);
             }
-            catch (TargetInvocationException exception) when (exception.InnerException?.GetType().Name == "InputRejection")
+            catch (TargetInvocationException exception) when (exception.InnerException?.GetType().Name == "InputRejectionException")
             {
                 error = exception.InnerException.GetType().GetMethod("ToError", All)!.Invoke(exception.InnerException, new object[] { "arguments" });
             }

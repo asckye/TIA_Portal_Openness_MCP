@@ -268,7 +268,7 @@ public sealed class WorkerRobustnessTests
     public async Task First_attach_has_a_longer_deadline_and_the_access_confirmation_hint()
     {
         using var scope = new Scope("hang"); var clock = System.Diagnostics.Stopwatch.StartNew();
-        var error = await Assert.ThrowsAsync<ChannelFault>(() => scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None));
+        var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", new() { ["processId"] = 123 }, CancellationToken.None));
         Assert.True(clock.Elapsed.TotalSeconds >= 1);
         Assert.Contains("Openness access confirmation", error.Message);
         Assert.True(scope.Worker.Faulted);

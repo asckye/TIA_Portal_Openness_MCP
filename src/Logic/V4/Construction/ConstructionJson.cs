@@ -48,13 +48,13 @@ namespace TiaMcp.Logic.V4.Construction
         internal static void Require(bool condition, string message)
         {
             try { InputGuard.Require(condition); }
-            catch (InputRejection rejection) { throw new ArgumentException(message, rejection); }
+            catch (InputRejectionException rejection) { throw new ArgumentException(message, rejection); }
         }
 
         internal static void Limit(int actual, int limit)
         {
             try { InputGuard.Limit(actual, limit); }
-            catch (InputRejection rejection) { throw new ArgumentException("Construction budget exceeded.", rejection); }
+            catch (InputRejectionException rejection) { throw new ArgumentException("Construction budget exceeded.", rejection); }
         }
 
         internal static IReadOnlyList<T>? Rows<T>(JsonElement json, string field, Func<JsonElement, T> read) =>
@@ -63,7 +63,7 @@ namespace TiaMcp.Logic.V4.Construction
         internal static void Budget(JsonElement json, JsonSerializerOptions options)
         {
             try { InputBudget.Check(json); XmlCharacters(json); }
-            catch (InputRejection rejection) { throw new ArgumentException("Construction input exceeds its contract.", rejection); }
+            catch (InputRejectionException rejection) { throw new ArgumentException("Construction input exceeds its contract.", rejection); }
         }
 
         // Foundation counts decoded, compact XML-oriented JSON, whereas InputBudget
@@ -155,7 +155,7 @@ namespace TiaMcp.Logic.V4.Construction
             {
                 using var document = JsonDocument.ParseValue(ref reader);
                 try { return (T)ConstructionJson.CheckedRead(typeToConvert, document.RootElement); }
-                catch (InputRejection rejection) { throw new ArgumentException("Construction input does not satisfy its contract.", rejection); }
+                catch (InputRejectionException rejection) { throw new ArgumentException("Construction input does not satisfy its contract.", rejection); }
             }
 
             public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

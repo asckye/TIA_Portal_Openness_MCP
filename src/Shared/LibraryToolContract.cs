@@ -27,21 +27,21 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try { validation(); }
             catch (ArgumentException) /* swallow(privacy): legacy validators can contain caller values */
-            { throw new InputFailure(McpServer.InvalidInput("arguments")); }
+            { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
             catch (JsonException) /* swallow(privacy): malformed typed values are rejected before native work */
-            { throw new InputFailure(McpServer.InvalidInput("arguments")); }
+            { throw new InputFailureException(McpServer.InvalidInput("arguments")); }
             catch (NotSupportedException) /* swallow(privacy): preserve capability rejection without native details */
-            { throw new InputFailure(new Error("This operation is unavailable.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "library-sivarc", null))); }
+            { throw new InputFailureException(new Error("This operation is unavailable.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "library-sivarc", null))); }
         }
-        private sealed class InputFailure : Exception
+        private sealed class InputFailureException : Exception
         {
             internal Error Error { get; }
-            internal InputFailure(Error error) => Error = error;
+            internal InputFailureException(Error error) => Error = error;
         }
         internal static CallToolResult Run(string tool, bool writes, bool current, Func<object> operation)
         {
             try { return Map(tool, operation(), writes, current); }
-            catch (InputFailure ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None, current: current); }
+            catch (InputFailureException ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None, current: current); }
             catch (Exception ex)
             {
                 var cause = ex;

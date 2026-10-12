@@ -11,7 +11,7 @@ using TiaOpenness.Gui.Services;
 namespace TiaOpenness.Gui.ViewModels;
 
 /// <summary>Composes the workbench and owns navigation and window-wide services.</summary>
-public sealed class MainViewModel : ObservableObject, IDisposable
+public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposable
 {
     private readonly IProjectClient _client;
     private readonly IMcpSessionClient? _mcp;
@@ -174,7 +174,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         await Session.ApplyStartupAsync(args);
     }
 
-    public void Dispose()
+    private void PrepareDispose()
     {
         Session.PropertyChanged -= OnSessionChanged;
         Activity.PropertyChanged -= OnActivityChanged;
@@ -186,6 +186,21 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Activity.Dispose();
         if (_client is McpProjectClient project) project.ResultChanged -= OnMcpResult;
         Panel?.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        PrepareDispose();
+        // Retain the UI context: client disposal must follow MCP detach on the owning thread.
+        if (_mcp != null) await _mcp.DisposeAsync();
+        _client.Dispose();
+    }
+
+    public void Dispose()
+    {
+        PrepareDispose();
+        // Synchronous compatibility for non-UI callers. The window uses DisposeAsync.
+        // McpSessionClient detaches with ConfigureAwait(false), so this cannot capture its caller's context.
         _mcp?.DisposeAsync().AsTask().GetAwaiter().GetResult();
         _client.Dispose();
     }

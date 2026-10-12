@@ -547,7 +547,8 @@ public sealed class StagedGenerationTests
         using var f = new Fixture(release, newProject: true); f.TransitionFault = "normalized";
         var result = f.Apply(); Assert.True((bool?)result["ok"], result.ToJsonString());
         Assert.Equal(1, f.Approvals); Assert.True(f.Worker.Generations > 0);
-        var lineage = new GenerationRunStore(Path.Combine(f.Root, "runs")).Lineage((string)f.Identity()["projectPath"]!, release);
+        Assert.True(new GenerationRunStore(Path.Combine(f.Root, "runs"))
+            .TryGetLineage((string)f.Identity()["projectPath"]!, release, out var lineage));
         Assert.Equal((string?)result["data"]!["runId"], lineage!["runId"]);
     }
 

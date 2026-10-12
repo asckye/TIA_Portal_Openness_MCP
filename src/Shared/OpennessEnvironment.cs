@@ -37,7 +37,7 @@ namespace TiaOpenness.Shared
             if (string.IsNullOrWhiteSpace(path)) return null;
             var match = Regex.Match(path, @"[Vv](\d{2})(?!\d)", RegexOptions.RightToLeft);
             int version;
-            return match.Success && int.TryParse(match.Groups[1].Value, out version) ? version : (int?)null;
+            return match.Success && int.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out version) ? version : (int?)null;
         }
 
         public static bool PathMatchesVersion(string path, int version)

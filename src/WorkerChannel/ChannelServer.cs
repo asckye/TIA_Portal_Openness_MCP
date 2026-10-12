@@ -120,7 +120,7 @@ namespace TiaMcp.WorkerChannel
         private void Emit(byte[] bytes)
         { RequireUsable(); output.Write(bytes, 0, bytes.Length); output.Flush(); RequireUsable(); }
         private void RequireUsable() { if (Poisoned) throw new IOException("Worker session is poisoned; requests are never replayed."); }
-        private ChannelFault Fault(Exception cause)
-        { Interlocked.Exchange(ref faulted, 1); return new ChannelFault(cause.Message, dispatched || (cause is ChannelFault fault && fault.OutcomeUnknown), cause); }
+        private ChannelFaultException Fault(Exception cause)
+        { Interlocked.Exchange(ref faulted, 1); return new ChannelFaultException(cause.Message, dispatched || (cause is ChannelFaultException fault && fault.OutcomeUnknown), cause); }
     }
 }

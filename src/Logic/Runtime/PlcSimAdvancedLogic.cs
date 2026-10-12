@@ -18,8 +18,8 @@ namespace TiaMcpServer.Runtime
         public const int MaxScenarioSteps = 500;
         public const int MaxTagsPerCall = 500;
 
-        public static readonly string[] InstanceActions = { "register", "powerOn", "run", "stop", "powerOff", "memoryReset", "unregister" };
-        public static readonly string[] PrimitiveTypes = { "Bool", "Int8", "Int16", "Int32", "Int64", "UInt8", "UInt16", "UInt32", "UInt64", "Float", "Double", "Char", "WChar" };
+        public static readonly IReadOnlyList<string> InstanceActions = Array.AsReadOnly(new string[] { "register", "powerOn", "run", "stop", "powerOff", "memoryReset", "unregister" });
+        public static readonly IReadOnlyList<string> PrimitiveTypes = Array.AsReadOnly(new string[] { "Bool", "Int8", "Int16", "Int32", "Int64", "UInt8", "UInt16", "UInt32", "UInt64", "Float", "Double", "Char", "WChar" });
 
         // ------------------------------------------------------------------ API location
 
@@ -69,7 +69,7 @@ namespace TiaMcpServer.Runtime
         // (ENetworkMode TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus, changeable only while no instance runs). A requested
         // communicationInterface maps onto that mode: Softbus -> Softbus, TCPIP keeps the current TCPIP variant or falls back to
         // TCPIPMultipleAdapter, an ENetworkMode name is taken literally, None is refused.
-        public static readonly string[] NetworkModes = { "TCPIPMultipleAdapter", "TCPIPSingleAdapter", "Softbus" };
+        public static readonly IReadOnlyList<string> NetworkModes = Array.AsReadOnly(new string[] { "TCPIPMultipleAdapter", "TCPIPSingleAdapter", "Softbus" });
 
         public static string NetworkModeFor(string? communicationInterface, string? currentNetworkMode)
         {

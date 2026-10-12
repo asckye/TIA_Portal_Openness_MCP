@@ -36,7 +36,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    public partial class Portal : IDisposable
+    public sealed partial class Portal : IDisposable
     {
         // closing parantheses for regex characters ommitted, because they are not relevant for regex detection
         private readonly char[] _regexChars = ['.', '^', '$', '*', '+', '?', '(', '[', '{', '\\', '|'];
@@ -711,11 +711,11 @@ namespace TiaMcpServer.Siemens
 
                 if (!string.IsNullOrEmpty(sessionName) && sessions.Any(s => s.Name.Equals(sessionName)))
                 {
-                    // Session is already open  
+                    // Session is already open
                     _session = _portal?.LocalSessions.FirstOrDefault(s => s.Project.Name == sessionName);
                     if (_session != null)
                     {
-                        // Correctly cast MultiuserProject to Project  
+                        // Correctly cast MultiuserProject to Project
                         _project = _session.Project;
                         CaptureBinding();
                         return _project != null;

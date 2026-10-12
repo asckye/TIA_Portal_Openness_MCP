@@ -196,7 +196,7 @@ public sealed class PlcExportCandidateTests
     public void RelativeOutputsNeedWorkspaceAndCannotEscapeIt()
     {
         string root = Root(); Assert.Equal(Path.Combine(root, "out"), PlcExportSession.Resolve("out", root));
-        Assert.Throws<PlcExportRejection>(() => PlcExportSession.Resolve("../escape", root)); Assert.Throws<PlcExportRejection>(() => PlcExportSession.Resolve("out", ""));
+        Assert.Throws<PlcExportRejectionException>(() => PlcExportSession.Resolve("../escape", root)); Assert.Throws<PlcExportRejectionException>(() => PlcExportSession.Resolve("out", ""));
     }
     [Fact]
     public void DestinationAppearingDuringNativeExportIsPreserved()

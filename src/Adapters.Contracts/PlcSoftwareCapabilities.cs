@@ -6,7 +6,7 @@ namespace TiaMcp.Adapters.Contracts
     {
         public static string? Unsupported(string release, string tool, string action = "", string family = "", string unitName = "", string unitKind = "unit", string targetKind = "", string copyMode = "", string generateOption = "None")
         {
-            int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
+            int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
             if (PortedFamilies.Contains(tool) && !PortedFamilies.Available(release, tool)) return "The requested tool is unavailable in this release: " + tool;
             if ((tool == "ListPlcSoftwareUnits" || tool == "ManagePlcSoftwareUnit") && unitKind == "safety" && version < 18) return "PlcSafetyUnit requires V18.";
             if (tool == "ManagePlcSoftwareUnit" && copyMode.Length != 0 && version < 20) return "Software-unit master-copy modes require V20.";

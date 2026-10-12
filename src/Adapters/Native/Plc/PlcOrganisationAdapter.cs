@@ -76,7 +76,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 throw new PlcSoftwareException("InvalidParams", "DeletePlcBlock: blockPath is empty");
             }
 
-            var leaf = blockPath.Contains("/") ? blockPath.Substring(blockPath.LastIndexOf("/") + 1) : blockPath;
+            var leaf = blockPath.Contains("/") ? blockPath.Substring(blockPath.LastIndexOf("/", StringComparison.Ordinal) + 1) : blockPath;
             if (leaf.IndexOfAny(_session.RegexChars) >= 0)
             {
                 throw new PlcSoftwareException("InvalidParams",
@@ -196,7 +196,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
             // 变量表名允许带 '/' 做组分隔，所以只校验叶子名里的元字符。
             var tableLeaf = tagTableName.Replace('\\', '/').Trim('/');
-            tableLeaf = tableLeaf.Contains("/") ? tableLeaf.Substring(tableLeaf.LastIndexOf("/") + 1) : tableLeaf;
+            tableLeaf = tableLeaf.Contains("/") ? tableLeaf.Substring(tableLeaf.LastIndexOf("/", StringComparison.Ordinal) + 1) : tableLeaf;
             if (tableLeaf.IndexOfAny(_session.RegexChars) >= 0)
             {
                 // 变量表的定位走字面比对，本来不会把名字当模式；但删除口的规矩三处一致比
@@ -340,7 +340,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 throw new PlcSoftwareException("InvalidParams", "DeletePlcType: typePath is empty");
             }
 
-            var leaf = typePath.Contains("/") ? typePath.Substring(typePath.LastIndexOf("/") + 1) : typePath;
+            var leaf = typePath.Contains("/") ? typePath.Substring(typePath.LastIndexOf("/", StringComparison.Ordinal) + 1) : typePath;
             if (leaf.IndexOfAny(_session.RegexChars) >= 0)
             {
                 // _session.GetType() 在没有字面同名时会把名字当锚定模式匹配，删除工具绝不能吃这一口。

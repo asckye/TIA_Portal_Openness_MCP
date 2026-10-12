@@ -15,7 +15,7 @@ namespace TiaOpenness.Core.Tests;
 /// against it. So its contract is worth holding: refusing work before a project is open, and
 /// reporting rather than hiding the block that deliberately cannot be exported.
 /// </summary>
-public class MockTiaSessionTests : IDisposable
+public sealed class MockTiaSessionTests : IDisposable
 {
     private readonly MockTiaSession _session = new();
     private readonly string _outputDirectory =

@@ -6,7 +6,7 @@ namespace TiaMcp.Adapters.Contracts
     {
         public static string? Unsupported(string release, PlcSoftwareRequest request)
         {
-            int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
+            int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
             if (request.Operation == "ManagePlcSoftwareUnit" && version < 18 && request.Properties.ContainsKey("NamespacePreset"))
                 return "PlcUnitBase.NamespacePreset requires V18.";
             if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment")

@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters
         private List<(PropertyInfo Property, object? Value)> LibraryPrepare(Type type, Dictionary<string, HardwareScalar> changes)
         {
             if (changes.Count > 50) throw new ArgumentException("At most 50 properties per request.");
-            LibraryPolicy.GuardKnownTypeWrites(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey), type, changes.Keys);
+            LibraryPolicy.GuardKnownTypeWrites(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), type, changes.Keys);
             var result = new List<(PropertyInfo, object?)>();
             foreach (var change in changes)
             {
@@ -104,7 +104,7 @@ namespace TiaMcp.Adapters
         }
         private void LibraryApply(object target, List<(PropertyInfo Property, object? Value)> changes, Dictionary<string, object?> meta)
         {
-            LibraryPolicy.GuardKnownTypeWrites(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey), target.GetType(), changes.Select(p => p.Property.Name));
+            LibraryPolicy.GuardKnownTypeWrites(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), target.GetType(), changes.Select(p => p.Property.Name));
             HardwareScalarEvidence.Apply(target, changes, meta);
         }
         private static Dictionary<string, object?> LibraryObjectAddress(object target)

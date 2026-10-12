@@ -205,7 +205,7 @@ namespace TiaOpenness.Client
                 return RpcResponse.Ok(id,
                     BridgeJson.Deserialize<JsonElement>(json));
             }
-            catch (ChannelFailure ex)
+            catch (ChannelFailureException ex)
             {
                 return new RpcResponse
                 {
@@ -213,7 +213,7 @@ namespace TiaOpenness.Client
                     Error = BridgeJson.DeserializeClient<RpcError>(BridgeJson.Deserialize<JsonElement>(ex.RpcErrorJson)),
                 };
             }
-            catch (ChannelFault ex)
+            catch (ChannelFaultException ex)
             {
                 _faulted = true;
                 if (ex.InnerException is TimeoutException)
@@ -263,7 +263,7 @@ namespace TiaOpenness.Client
     }
 
     /// <summary>The bridge answered a call with a JSON-RPC error object.</summary>
-    public class BridgeRpcException : Exception
+    public sealed class BridgeRpcException : Exception
     {
         public BridgeRpcException(string method, RpcError error)
             : base(method + " failed (" + error.Code + "): " + error.Message)

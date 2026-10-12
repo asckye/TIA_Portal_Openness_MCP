@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +8,7 @@ namespace TiaMcp.Logic.V4
     public class SourceContract : IBehaviorCandidateContract
     {
         public const string Description = "[PLC-Software] Exact PLC and external-source candidate. Empty softwarePath selects only a unique PLC. Query paths and source names (including extensions) are literal. Preview lists files, source identities and native calls. Apply requires confirmation, expectedPlanHash and expectedProjectFile. overwrite=false, onError=stop, missingPolicy=reject. One native call per item; stop on failure, unknown requires session reset, no replay. Generation requires a source imported by this candidate session with verified collision names; no compile or save. Test/accepted behaviorPolicy=safe-v4.";
-        public static readonly string[] Entries = { "ListPlcExternalSources", "PlanPlcExternalSourceImport", "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource", "ManagePlcExternalSources" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "ListPlcExternalSources", "PlanPlcExternalSourceImport", "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource", "ManagePlcExternalSources" });
         protected virtual string Entry => "ImportPlcExternalSource";
         public JsonElement InputSchema => Schema(Entry);
         public static JsonElement Schema(string entry)

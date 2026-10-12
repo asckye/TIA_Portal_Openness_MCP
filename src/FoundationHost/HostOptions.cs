@@ -1,3 +1,4 @@
+using System;
 using TiaMcp.Versioning;
 
 namespace TiaMcp.FoundationHost;
@@ -62,7 +63,7 @@ internal sealed class HostOptions
         if (explicitWorker != options.ContainsKey("--engine-catalog") || explicitWorker && !engine)
             throw new ArgumentException("The engine host requires release 20 or 21 and both --engine-worker and --engine-catalog.");
         int timeout = 120;
-        if (options.ContainsKey("--worker-timeout-seconds") && (!int.TryParse(Value("--worker-timeout-seconds"), out timeout) || timeout <= 0))
+        if (options.ContainsKey("--worker-timeout-seconds") && (!int.TryParse(Value("--worker-timeout-seconds"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out timeout) || timeout <= 0))
             throw new ArgumentException("--worker-timeout-seconds must be positive.");
         string profile = Value("--profile", Environment.GetEnvironmentVariable("TIA_MCP_PROFILE") ?? "lite").Trim().ToLowerInvariant();
         profile = profile is "full" or "all" ? "full" : "lite";
@@ -71,7 +72,7 @@ internal sealed class HostOptions
         int? operatorOwner = null;
         if (options.ContainsKey("--operator-owner"))
         {
-            if (!int.TryParse(Value("--operator-owner"), out int pid) || pid <= 0 || transport == "stdio")
+            if (!int.TryParse(Value("--operator-owner"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int pid) || pid <= 0 || transport == "stdio")
                 throw new ArgumentException("--operator-owner requires a positive Workbench PID and http or operator transport.");
             operatorOwner = pid;
         }

@@ -24,7 +24,7 @@ namespace TiaMcpServer.Siemens
         internal static string QuoteSymbol(string symbol)
         {
             var text = (symbol ?? "").Trim();
-            if (text.Length == 0 || text.StartsWith("\"")) return text;
+            if (text.Length == 0 || text.StartsWith("\"", StringComparison.Ordinal)) return text;
             var dot = text.IndexOf('.');
             return dot < 0 ? "\"" + text + "\"" : "\"" + text.Substring(0, dot) + "\"" + text.Substring(dot);
         }

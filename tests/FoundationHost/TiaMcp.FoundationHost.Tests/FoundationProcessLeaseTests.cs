@@ -14,7 +14,7 @@ public sealed class FoundationProcessLeaseTests
     private static ChannelRequest Attach(int pid) => Request("Attach", JsonSerializer.Serialize(new { processId = pid }));
     private static ChannelRequest Candidate(int pid, string mode = "apply") => Request(WorkerOperations.SessionCandidate,
         JsonSerializer.Serialize(new { mode, candidate = new { Action = "execute", Check = new { Request = new { Action = "attach", ProcessId = pid } } } }));
-    private static ChannelFailure Rejection(string message) => new(message, -32603, ChannelOutcome.RejectedBeforeNative,
+    private static ChannelFailureException Rejection(string message) => new(message, -32603, ChannelOutcome.RejectedBeforeNative,
         "{\"exceptionType\":\"InvalidOperationException\"}");
 
     private sealed class Session : IDisposable
@@ -89,7 +89,7 @@ public sealed class FoundationProcessLeaseTests
     {
         using var session = new Session(); session.Boundary.Dispatch(Attach(session.Pid));
         session.Reply = _ => { session.Reset = typed; return typed ? ChannelResponse.Success("{}")
-            : ChannelResponse.Error(new ChannelFailure("Unknown fixture outcome.", -32603, ChannelOutcome.Unknown)); };
+            : ChannelResponse.Error(new ChannelFailureException("Unknown fixture outcome.", -32603, ChannelOutcome.Unknown)); };
         session.Boundary.Dispatch(Request("FixtureUnknown")); session.Boundary.Dispose();
         Assert.Equal("UNCERTAIN\n", File.ReadAllText(session.FilePath));
         Assert.Equal(SessionBehavior.LeaseNotReleased,
@@ -128,7 +128,7 @@ public sealed class FoundationProcessLeaseTests
     public void Unknown_attach_without_cached_adoption_keeps_uncertain()
     {
         using var session = new Session();
-        session.Reply = _ => ChannelResponse.Error(new ChannelFailure("Attach outcome unknown.", -32603, ChannelOutcome.Unknown));
+        session.Reply = _ => ChannelResponse.Error(new ChannelFailureException("Attach outcome unknown.", -32603, ChannelOutcome.Unknown));
         session.Boundary.Dispatch(Attach(session.Pid)); session.Boundary.Dispose();
         Assert.Equal("UNCERTAIN\n", File.ReadAllText(session.FilePath));
     }

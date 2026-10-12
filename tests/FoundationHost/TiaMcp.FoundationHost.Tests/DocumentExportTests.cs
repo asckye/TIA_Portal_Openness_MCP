@@ -39,7 +39,7 @@ internal static class DocumentExportTests
     {
         var root=Path.Combine(Path.GetTempPath(),"tia-doc-test-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         int calls=0,offline=0;
-        void Reject(Action action,string name) { bool rejected=false; try {action();} catch(ArgumentException){rejected=true;} catch(NotSupportedException){rejected=true;} catch(IOException){rejected=true;} catch(InvalidDataException){rejected=true;} check(rejected,name); }
+        void Reject(Action action,string name) { bool rejected=false; try {action();} catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {rejected=true;} catch(ArgumentException){rejected=true;} catch(NotSupportedException){rejected=true;} catch(IOException){rejected=true;} catch(InvalidDataException){rejected=true;} check(rejected,name); }
         PlcDocumentExportResult Run(string output,bool dry=true,string hash="",string release="20",string language="LAD",bool consistent=true,Func<DirectoryInfo,string,string[]>? export=null,Action<DirectoryInfo,DirectoryInfo>? move=null) => PlcDocumentExportPolicy.Run(release,"/project.ap"+release,"device/PLC","group/Block",output,language,consistent,dry,hash,()=>offline++,export??((dir,name)=>{calls++;var paths=new[]{Path.Combine(dir.FullName,name+".s7dcl"),Path.Combine(dir.FullName,name+".s7res")};foreach(var path in paths) File.WriteAllText(path,"native document bytes");return paths;}),move);
         JsonObject Wire(PlcDocumentExportResult result)=>JsonSerializer.SerializeToNode(result)!.AsObject();
         try

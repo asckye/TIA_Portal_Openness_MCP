@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Exact installed SemVer version, or empty for sourcePath.")] string version = "",
             [Description("Optional existing absolute package directory/zip instead of an installed identity.")] string sourcePath = "")
             => Run("ValidateStandardPackage", false, s => sourcePath.Length != 0 && (packageId.Length != 0 || version.Length != 0)
-                ? throw new ArgumentException("Choose sourcePath or packageId/version.", "sourcePath") : s.Validate(packageId, version, sourcePath));
+                ? throw new ArgumentException("Choose sourcePath or packageId/version.", nameof(sourcePath)) : s.Validate(packageId, version, sourcePath));
 
         [McpServerTool(Name = "DescribeStandardPackage"), Description("[L1][Project][READ] Describe exact installed standard package and resolved inheritance: device parameter schemas/signals/emits, naming rules, library implementations, release coverage and source/licence notices. Exposes basic programAlarm=false for S7-1200; true selects the isolated S7-1500 adapter, with native CPU/firmware acceptance NOT RUN. Offline, no writes or Openness calls.")]
         public CallToolResult DescribeStandardPackage(

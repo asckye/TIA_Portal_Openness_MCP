@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -752,8 +753,8 @@ internal static partial class ReleaseCommands
         if (bundleVersion != newest) throw new ReleaseException($"Version mismatch: CHANGELOG says {newest}, manifest bundleVersion says {bundleVersion}");
         var packageName = JsonString(manifest.RootElement, "packageName");
         if (!Regex.IsMatch(packageName, "v" + Regex.Escape(newest) + "[_-]")) throw new ReleaseException($"Version mismatch: manifest packageName '{packageName}' does not carry v{newest}");
-        if (strictRecordHash(root, delivery, "manifest/release-build.json", "engineBuildSha256") is { } engineHash) throw new ReleaseException(engineHash);
-        if (strictRecordHash(root, delivery, "manifest/configurator-build.json", "configuratorBuildSha256") is { } configHash) throw new ReleaseException(configHash);
+        if (StrictRecordHash(root, delivery, "manifest/release-build.json", "engineBuildSha256") is { } engineHash) throw new ReleaseException(engineHash);
+        if (StrictRecordHash(root, delivery, "manifest/configurator-build.json", "configuratorBuildSha256") is { } configHash) throw new ReleaseException(configHash);
         if (IntValue(configurator, "testsPassed") <= 0 && (!build.TryGetProperty("checkPlan", out _) || ReleasePlanFromRecord(build).Includes("gui-tests"))) throw new ReleaseException("Configurator test result missing");
         var executable = configurator.GetProperty("executable");
         if (!noBinaries && ReleaseRecords.HashFile(Path.Combine(root, JsonString(executable, "path"))) != JsonString(executable, "sha256")) throw new ReleaseException("Configurator EXE changed after validation");
@@ -780,7 +781,7 @@ internal static partial class ReleaseCommands
             }
     }
 
-    private static string? strictRecordHash(string root, JsonElement record, string relative, string property)
+    private static string? StrictRecordHash(string root, JsonElement record, string relative, string property)
     {
         if (!record.TryGetProperty(property, out var value) || !File.Exists(Path.Combine(root, relative)) || ReleaseRecords.HashFile(Path.Combine(root, relative)) != value.GetString()) return "Build record changed: " + relative;
         return null;
@@ -913,8 +914,8 @@ internal static partial class ReleaseCommands
             ProcessRunner.RequireSuccess(testResult, "Configurator tests");
             var resultText = testResult.StandardOutput + testResult.StandardError;
             var match = System.Text.RegularExpressions.Regex.Match(resultText, "(?m)^Passed: (\\d+)\\s*$");
-            if (!match.Success || int.Parse(match.Groups[1].Value) < 157) throw new ReleaseException("Configurator tests did not report at least 157 checks");
-            configurationPassed = int.Parse(match.Groups[1].Value);
+            if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) < 157) throw new ReleaseException("Configurator tests did not report at least 157 checks");
+            configurationPassed = int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
         }
         {
             var inputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

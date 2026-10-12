@@ -44,7 +44,7 @@ var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandard
         }
     }
     if (mode == "tia-lost" && request.Method.StartsWith("adapter."))
-        return ChannelResponse.Error(new ChannelFailure("Fixture TIA process lost.", -32603, ChannelOutcome.Unknown,
+        return ChannelResponse.Error(new ChannelFailureException("Fixture TIA process lost.", -32603, ChannelOutcome.Unknown,
             "{\"exceptionType\":\"PortalProcessLost\"}"));
     string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
     if (request.Method.StartsWith("adapter.")) {

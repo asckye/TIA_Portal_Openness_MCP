@@ -14,15 +14,15 @@ public sealed record OperatorSession(OperatorHost Host, string SessionKey, JsonO
 
 public interface IMcpSessionClient : IAsyncDisposable
 {
-    string? SessionKey { get; }
-    JsonObject? State { get; }
-    JsonObject? ToolSchema(string tool);
-    event EventHandler<JsonObject>? StateChanged;
-    event EventHandler? Detached;
-    Task<IReadOnlyList<OperatorSession>> DiscoverAsync(string releaseKey, CancellationToken token = default);
-    Task AttachAsync(OperatorSession session, CancellationToken token = default);
-    Task CreateAsync(string releaseKey, CancellationToken token = default);
-    Task DetachAsync();
-    void CancelPending();
-    Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default);
+    public string? SessionKey { get; }
+    public JsonObject? State { get; }
+    public JsonObject? ToolSchema(string tool);
+    public event EventHandler<JsonObject>? StateChanged;
+    public event EventHandler? Detached;
+    public Task<IReadOnlyList<OperatorSession>> DiscoverAsync(string releaseKey, CancellationToken token = default);
+    public Task AttachAsync(OperatorSession session, CancellationToken token = default);
+    public Task CreateAsync(string releaseKey, CancellationToken token = default);
+    public Task DetachAsync();
+    public void CancelPending();
+    public Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default);
 }

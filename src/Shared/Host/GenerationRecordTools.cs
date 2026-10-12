@@ -95,7 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Overlay(run, owned);
             var paths = JsonSerializer.Deserialize<Dictionary<string, string>>(run["softwarePaths"]?.ToJsonString() ?? "{}")!;
             bool saved = run["steps"]!.AsArray().Any(s => (string?)s!["tool"] == "SaveProject" && (string?)s["status"] == "succeeded");
-            if (!saved) throw new GenerationCallRejection(new Error("Successful SaveProject is required before collecting generation witnesses.", new PreconditionFailedDetails("generation-save", (string?)run["runId"])));
+            if (!saved) throw new GenerationCallRejectionException(new Error("Successful SaveProject is required before collecting generation witnesses.", new PreconditionFailedDetails("generation-save", (string?)run["runId"])));
             foreach (string key in plan.Adopt)
             {
                 var item = Copy(plan.Objects.Single(o => o.Key == key)); item.State = "adopted";
@@ -112,21 +112,21 @@ namespace TiaMcpServer.ModelContextProtocol
         private void PersistWitnesses(GenerationRunStore records, string runId, GenerationPlan plan)
         {
             try { records.Append(runId, new JsonObject { ["event"] = "witness", ["objects"] = JsonSerializer.SerializeToNode(CollectRunObjects(records.Read(runId), plan), RecordOptions) }); }
-            catch (GenerationCallRejection ex) { records.Append(runId, new JsonObject { ["event"] = "witness-refused", ["error"] = ex.Message }); }
+            catch (GenerationCallRejectionException ex) { records.Append(runId, new JsonObject { ["event"] = "witness-refused", ["error"] = ex.Message }); }
             catch (Exception ex) when (ex is ArgumentException || ex is IOException || ex is UnauthorizedAccessException)
             { records.Append(runId, new JsonObject { ["event"] = "witness-refused", ["error"] = ex.Message }); }
         }
         internal CallToolResult Publish(string recordPath, string planId, string runId, bool preview, string hash)
         {
-            if ((planId.Length == 0) == (runId.Length == 0)) throw new ArgumentException("Supply exactly one of planId and runId.", "runId");
+            if ((planId.Length == 0) == (runId.Length == 0)) throw new ArgumentException("Supply exactly one of planId and runId.", nameof(runId));
             var run = planId.Length != 0 ? Records.ByPlan(planId) : Records.Read(runId);
             var before = Target(); string project = (string)run["project"]!, release = (string)run["release"]!;
             if (!SameProject(before.Project, project) || release != McpServer.ReleaseKey || !SameProject(recordPath, GenerationRecordFile.DefaultPath(project)))
-                throw new ArgumentException("Record/run must belong to the bound project and exact default record path.", "recordPath");
+                throw new ArgumentException("Record/run must belong to the bound project and exact default record path.", nameof(recordPath));
             var plan = GenerationDocuments.Load<GenerationPlan>(run["plan"]!.ToJsonString());
             var previous = GenerationRecordFile.Read(recordPath);
             if (previous.Record != null && (!SameProject(previous.Record.Project.File, project) || previous.Record.Project.Release != release))
-                throw new ArgumentException("Previous generation record belongs to another project/release.", "recordPath");
+                throw new ArgumentException("Previous generation record belongs to another project/release.", nameof(recordPath));
             var record = previous.Record ?? new GenerationRecord { Project = new GenerationRecordProject { File = project, Release = release } };
             record.PreviousRecordHash = previous.PreviousHash == "absent" ? null : previous.PreviousHash;
             var objects = record.Objects.ToDictionary(o => o.Key, StringComparer.OrdinalIgnoreCase);

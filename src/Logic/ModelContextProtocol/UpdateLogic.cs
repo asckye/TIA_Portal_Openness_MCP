@@ -45,7 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (string.IsNullOrWhiteSpace(text)) return null;
             var m = VersionPattern.Match(text!.Trim());
             if (!m.Success) return null;
-            return new[] { int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value) };
+            return new[] { int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture) };
         }
 
         /// <summary>Negative when a &lt; b, zero when equal, positive when a &gt; b; null when either does not parse.</summary>

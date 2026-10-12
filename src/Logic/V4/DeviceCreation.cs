@@ -10,10 +10,10 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.Logic.V4
 {
-    public sealed class DeviceCreationRejection : Exception
+    public sealed class DeviceCreationRejectionException : Exception
     {
         public Error Error { get; }
-        public DeviceCreationRejection(Error error) : base(error.Message) { Error = error; }
+        public DeviceCreationRejectionException(Error error) : base(error.Message) { Error = error; }
     }
 
     // Serialized by the owning native thread. Plans and consumed attempts belong to this session only.
@@ -59,7 +59,7 @@ namespace TiaMcp.Logic.V4
                 DeviceCatalogEntry ObserveCatalog()
                 {
                     try { return Select(adapter.ReadCatalog(typeIdentifier), typeIdentifier); }
-                    catch (DeviceCreationRejection) when (mode == "apply") { Stale(expectedPlanHash); throw; }
+                    catch (DeviceCreationRejectionException) when (mode == "apply") { Stale(expectedPlanHash); throw; }
                 }
                 var selected = ObserveCatalog();
                 var scope = Capability(selected, family, release, foundation, tool);
@@ -96,7 +96,7 @@ namespace TiaMcp.Logic.V4
                 if (!issued)
                 {
                     var error = failure is CandidateObservationException observed ? CandidateHostMapping.Device(observed.Fault).Error
-                        : failure is DeviceCreationRejection rejected ? rejected.Error
+                        : failure is DeviceCreationRejectionException rejected ? rejected.Error
                         : new Error("Preflight could not establish a complete device-creation plan. No Create was issued.", new PreconditionFailedDetails("device-create-preflight", deviceName));
                     return Result(release, tool, requestId, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted);
                 }
@@ -197,6 +197,6 @@ namespace TiaMcp.Logic.V4
         private static void Invalid(string parameter) => Refuse("Invalid device creation argument.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         private static void Stale(string hash) => Refuse("The catalog, inventory or arguments changed since preview.", new PlanStaleDetails(hash, "device-plan-changed"));
         private static void IdentityMismatch() => Refuse("The project or process binding changed since preview.", new IdentityMismatchDetails("project-binding", null, null));
-        private static void Refuse(string message, ErrorDetails details) => throw new DeviceCreationRejection(new Error(message, details));
+        private static void Refuse(string message, ErrorDetails details) => throw new DeviceCreationRejectionException(new Error(message, details));
     }
 }

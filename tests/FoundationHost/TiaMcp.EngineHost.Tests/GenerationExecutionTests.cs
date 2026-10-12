@@ -167,8 +167,8 @@ public sealed class GenerationExecutionTests : IDisposable
     public void StaleHashAndWrongProjectRefuseBeforeApproval(string release)
     {
         var session = Session(release); var plan = Plan(session, release);
-        Assert.Throws<GenerationCallRejection>(() => session.Apply((string)plan["planId"]!, "sha256:" + new string('a',64), "C:/Projects/Test.ap" + release, null, false));
-        Assert.Throws<GenerationCallRejection>(() => session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, "wrong", null, false));
+        Assert.Throws<GenerationCallRejectionException>(() => session.Apply((string)plan["planId"]!, "sha256:" + new string('a',64), "C:/Projects/Test.ap" + release, null, false));
+        Assert.Throws<GenerationCallRejectionException>(() => session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, "wrong", null, false));
         Assert.Equal(0, approvals); Assert.Equal(0, writes);
     }
     [Theory, MemberData(nameof(Releases))]
@@ -188,8 +188,8 @@ public sealed class GenerationExecutionTests : IDisposable
     [Theory, MemberData(nameof(Releases))]
     public void PartialReadbackAndMissingPortalRefusePlanning(string release)
     {
-        incomplete = true; var session = Session(release); Assert.Throws<GenerationCallRejection>(() => Plan(session, release));
-        noPortal = true; incomplete = false; var error = Assert.Throws<GenerationCallRejection>(() => Plan(session, release));
+        incomplete = true; var session = Session(release); Assert.Throws<GenerationCallRejectionException>(() => Plan(session, release));
+        noPortal = true; incomplete = false; var error = Assert.Throws<GenerationCallRejectionException>(() => Plan(session, release));
         Assert.Contains("ConnectPortal", error.Message); Assert.Equal(0, writes);
     }
     [Fact]

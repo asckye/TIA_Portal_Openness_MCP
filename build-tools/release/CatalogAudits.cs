@@ -58,7 +58,7 @@ internal static class CatalogAudits
         {
             // The remaining Python STDIO capturers emit one receipt per release.
             var receipts = Read(root, recordsPath).AsArray();
-            Require(receipts.Count == Keys.Length && Set(receipts.Select(r => Text(r!["releaseKey"]))).SetEquals(Keys), "Exactly eight distinct usage receipts required");
+            Require(receipts.Count == Keys.Count && Set(receipts.Select(r => Text(r!["releaseKey"]))).SetEquals(Keys), "Exactly eight distinct usage receipts required");
             Require(receipts.All(r => r!["allSourceTextRetrievedAndHashChecked"]!.GetValue<bool>()), "Source text hash check required for every release");
             return UsageFromRecords(root, matrix, catalog, receipts);
         }

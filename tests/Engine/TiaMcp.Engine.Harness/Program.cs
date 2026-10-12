@@ -117,7 +117,7 @@ internal static partial class Program
         - EngineSurface.PortedTools(Server, major.ToString(System.Globalization.CultureInfo.InvariantCulture)).Length - 2;
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-    internal static bool HasChinese(string? value) => !String.IsNullOrEmpty(value)
+    internal static bool HasChinese(string? value) => !string.IsNullOrEmpty(value)
         && value.Any(character => character >= '\u4e00' && character <= '\u9fff');
     private static Dictionary<string, object> Parse(string value) => Json.Deserialize<Dictionary<string, object>>(value);
     private static string Request(object id) => Json.Serialize(new { jsonrpc = "2.0", id, method = "tools/call", @params = new { name = "GetSessionState" } });
@@ -316,6 +316,23 @@ internal static partial class Program
                 string release = args.Length > 2 ? args[2] : FindServerType(Server, "TiaMcpServer.Siemens.EngineRouter")
                     .GetField("CompiledTiaMajorVersion", All)!.GetValue(null)!.ToString()!;
                 var index = GetToolUsage();
+                var parsePatch = FindServerType(Server, "TiaMcpServer.ModelContextProtocol.McpServer")
+                    .GetMethod("ParsePatchSpec", All)!;
+                foreach (string invalidSpec in new[] { "null", "{" })
+                {
+                    try
+                    {
+                        parsePatch.Invoke(null, new object[] { invalidSpec });
+                        Counted(false, "Patch spec must reject invalid JSON before any native call.");
+                    }
+                    catch (TargetInvocationException error)
+                    {
+                        string expectedType = invalidSpec == "null"
+                            ? "System.Text.Json.JsonException" : "System.Text.Json.JsonReaderException";
+                        Counted(error.InnerException?.GetType().FullName == expectedType,
+                            "Patch spec rejects null and malformed JSON with JsonException.");
+                    }
+                }
                 Counted(IsV4ForRelease(index, release), "GetToolUsage index has the selected release V4 envelope");
                 var indexData = AsObject(index["data"]);
                 Counted(Convert.ToInt32(indexData["toolCount"]) > 0 && AsArray(indexData["tools"]).Length > 0,

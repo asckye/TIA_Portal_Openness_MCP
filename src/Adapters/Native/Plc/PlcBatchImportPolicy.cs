@@ -23,9 +23,9 @@ namespace TiaMcp.Adapters
             Software=software;Directory=directory;BlockGroup=blockGroup;TypeGroup=typeGroup;TagGroup=tagGroup;Regex=regex;Program=program;Overwrite=overwrite;CompileAfter=compileAfter;Confirm=confirm;DryRun=dryRun;StopOnImportFailure=stopOnImportFailure;Order=order ?? new string[0];ExpectedHash=expectedHash;ExpectedProject=expectedProject;TechnologyGroup=technologyGroup;MaxItems=maxItems;
         }
     }
-    public sealed class PlcBatchImportKnownFailure : Exception
+    public sealed class PlcBatchImportKnownFailureException : Exception
     {
-        public PlcBatchImportKnownFailure(string message) : base(message) { }
+        public PlcBatchImportKnownFailureException(string message) : base(message) { }
     }
     internal sealed class PlcBatchImportDependency
     {
@@ -272,7 +272,7 @@ namespace TiaMcp.Adapters
                         catch(Exception) when(i==0 && !item.Attempted) { throw; }
                         catch(Exception error) /* swallow(native-fallback): a failed recheck after prior imports or an issued import stops the batch and retains recovery evidence */
                         {
-                            bool unknown=item.Attempted && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailure));
+                            bool unknown=item.Attempted && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
                             item.Status="failed";item.Failure=unknown ? "native-outcome-uncertain" : item.Attempted ? "native-import-or-verification-failed" : "target-recheck-failed";
                             result.NativeOutcomeUnknown=unknown;result.RequiresSessionReset=unknown || !request.Overwrite;
                             stopped=true;

@@ -104,9 +104,9 @@ namespace TiaMcp.Logic.V4.Inputs
                 Budget.CheckText(json);
                 return Read(V4Json.ParseInput(json), parameter, optional);
             }
-            catch (InputRejection rejection) { return Failure(InputPresence.Value, rejection.ToError(parameter)); }
+            catch (InputRejectionException rejection) { return Failure(InputPresence.Value, rejection.ToError(parameter)); }
             catch (V4Json.InputDepthException) /* swallow(privacy): map the bounded reader failure to value-free limit details */
-            { return Failure(InputPresence.Value, new InputRejection(limit: Budget.Depth, actual: V4Json.MaximumInputDepth + 1).ToError(parameter)); }
+            { return Failure(InputPresence.Value, new InputRejectionException(limit: Budget.Depth, actual: V4Json.MaximumInputDepth + 1).ToError(parameter)); }
             catch (JsonException) /* swallow(privacy): parser diagnostics may contain credentials; return a value-free V4 error */
             { return Failure(InputPresence.Value, InputGuard.Invalid(parameter)); }
         }
@@ -127,7 +127,7 @@ namespace TiaMcp.Logic.V4.Inputs
                 var value = normalize(V4Json.Deserialize<T>(V4Json.Serialize(input)));
                 return new InputResult<T>(presence, value, null);
             }
-            catch (InputRejection rejection) { return Failure(presence, rejection.ToError(parameter)); }
+            catch (InputRejectionException rejection) { return Failure(presence, rejection.ToError(parameter)); }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException || ex is FormatException || ex is System.Text.RegularExpressions.RegexMatchTimeoutException)
             { return Failure(presence, InputGuard.Invalid(parameter)); }
         }
@@ -145,13 +145,13 @@ namespace TiaMcp.Logic.V4.Inputs
         private static InputResult<T> Failure(InputPresence presence, Error error) => new InputResult<T>(presence, default, error);
     }
 
-    internal sealed class InputRejection : Exception
+    internal sealed class InputRejectionException : Exception
     {
         private readonly int? limit;
         private readonly int? actual;
         private readonly string[] allowed;
         internal bool IsLimit => limit.HasValue;
-        internal InputRejection(string[]? allowed = null, int? limit = null, int? actual = null)
+        internal InputRejectionException(string[]? allowed = null, int? limit = null, int? actual = null)
         { this.allowed = allowed ?? Array.Empty<string>(); this.limit = limit; this.actual = actual; }
         internal Error ToError(string parameter) => limit.HasValue
             ? new Error("Input exceeds its declared budget.", new LimitExceededDetails(parameter, limit, actual))
@@ -163,16 +163,16 @@ namespace TiaMcp.Logic.V4.Inputs
         internal static Error Invalid(string parameter, string[]? allowed = null) =>
             new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, allowed ?? Array.Empty<string>()));
         internal static void Require(bool condition, string[]? allowed = null)
-        { if (!condition) throw new InputRejection(allowed); }
+        { if (!condition) throw new InputRejectionException(allowed); }
         internal static void Limit(int actual, int? limit)
-        { if (limit.HasValue && actual > limit.Value) throw new InputRejection(limit: limit, actual: actual); }
+        { if (limit.HasValue && actual > limit.Value) throw new InputRejectionException(limit: limit, actual: actual); }
         internal static bool Identifier(string value) => !string.IsNullOrWhiteSpace(value) && value.All(c => char.IsLetterOrDigit(c) || c == '_');
         internal static void Result(Error? error)
         {
             if (error == null) return;
             if (error.Details is LimitExceededDetails limit)
-                throw new InputRejection(limit: (int?)limit.Limit, actual: (int?)limit.Actual);
-            throw new InputRejection(error.Details is InvalidArgumentDetails invalid ? invalid.AllowedValues.ToArray() : null);
+                throw new InputRejectionException(limit: (int?)limit.Limit, actual: (int?)limit.Actual);
+            throw new InputRejectionException(error.Details is InvalidArgumentDetails invalid ? invalid.AllowedValues.ToArray() : null);
         }
         internal static void Closed(JsonElement value, string[] required, params string[] optional)
         {

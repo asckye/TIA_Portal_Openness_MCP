@@ -71,13 +71,13 @@ namespace TiaMcpConfigurator
         }
         public static Version Parse(string text)
         {
-            if (String.IsNullOrWhiteSpace(text)) return null;
+            if (string.IsNullOrWhiteSpace(text)) return null;
             var m = Regex.Match(text.Trim(), @"^v?(\d+)\.(\d+)\.(\d+)");
-            return m.Success ? new Version(Int32.Parse(m.Groups[1].Value), Int32.Parse(m.Groups[2].Value), Int32.Parse(m.Groups[3].Value)) : null;
+            return m.Success ? new Version(int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(m.Groups[3].Value, System.Globalization.CultureInfo.InvariantCulture)) : null;
         }
         public static string TagFromLocation(string location)
         {
-            if (String.IsNullOrEmpty(location)) return null;
+            if (string.IsNullOrEmpty(location)) return null;
             var m = Regex.Match(location, @"/releases/tag/([^/?#]+)$");
             return m.Success ? Uri.UnescapeDataString(m.Groups[1].Value) : null;
         }
@@ -145,7 +145,7 @@ namespace TiaMcpConfigurator
             var names = TiaMcp.Versioning.TiaVersionCatalog.Runnable
                 .Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).Executable)).Distinct().ToList();
             names.AddRange(TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => Path.GetFileNameWithoutExtension(TiaOpenness.Shared.BundleLayout.GetProduct(release.Key).WorkerExecutable)).Distinct());
-            string boundary = String.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            string boundary = string.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
             foreach (string name in names.Distinct())
             foreach (var p in Process.GetProcessesByName(name))
             {

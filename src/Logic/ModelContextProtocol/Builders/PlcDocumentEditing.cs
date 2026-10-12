@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["supportedPatchActions"] = new JsonArray("setBlockText", "setNetworkText", "setMemberStartValue"),
                 ["nativeImportValidated"] = false, ["scope"] = "Exported structure only; does not establish target CPU compatibility, consistency or native import safety." };
         }
-        static JsonArray TextTargets(XElement owner)
+        private static JsonArray TextTargets(XElement owner)
         {
             var result = new JsonArray();
             foreach (var text in owner.Elements().Where(e => e.Name.LocalName == "ObjectList").Elements().Where(e => e.Name.LocalName == "MultilingualText"))

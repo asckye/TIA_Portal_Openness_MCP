@@ -306,7 +306,7 @@ public sealed class SaveCloseCandidateTests
             feed.Send(JsonSerializer.Serialize(new { jsonrpc = "2.0", id = request["id"]!.GetValue<long>(), bindingEpochBefore = 0, bindingEpochAfter = after, result = (object?)null })); };
         var args = new JsonObject { ["mode"] = mode, ["candidate"] = JsonSerializer.SerializeToNode(new SaveCloseCall { Action = "execute", Check = new() { Request = Request(action) } }) };
         var call = client.CallAsync("adapter.SaveCloseCandidate", args.ToJsonString(), WorkerClient.BindingChangeFor("SaveCloseCandidate", args), mode == "preview", TimeSpan.FromSeconds(3));
-        if (poison) await Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelFault>(() => call); else Assert.Equal("null", await call);
+        if (poison) await Assert.ThrowsAsync<TiaMcp.WorkerChannel.ChannelFaultException>(() => call); else Assert.Equal("null", await call);
         Assert.Equal(poison, client.Poisoned);
     }
     private sealed class Feed : Stream

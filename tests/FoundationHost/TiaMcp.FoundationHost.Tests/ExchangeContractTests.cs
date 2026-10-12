@@ -8,7 +8,7 @@ internal static class ExchangeContractTests
 {
     internal static void Run(Action<bool,string> check)
     {
-        void Reject(Action action,string message) { try { action(); throw new Exception(message); } catch(ArgumentException) { check(true,message); } }
+        void Reject(Action action,string message) { try { action(); throw new Exception(message); } catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,message); } catch(ArgumentException) { check(true,message); } }
         var root=Path.Combine(Path.GetTempPath(),"tia-exchange-contract-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try

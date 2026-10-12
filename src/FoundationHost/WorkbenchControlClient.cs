@@ -6,9 +6,9 @@ namespace TiaMcp.FoundationHost;
 
 internal interface IWorkbenchConnection : IDisposable
 {
-    Stream Stream { get; }
-    Task Connect(CancellationToken token);
-    bool MatchesServer(string sid, string image);
+    public Stream Stream { get; }
+    public Task Connect(CancellationToken token);
+    public bool MatchesServer(string sid, string image);
 }
 
 internal sealed class WorkbenchControlClient

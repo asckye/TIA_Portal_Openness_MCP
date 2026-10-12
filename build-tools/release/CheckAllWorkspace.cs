@@ -126,7 +126,7 @@ internal static partial class ReleaseCommands
         var inputs = Directory.EnumerateFiles(Path.Combine(root, "build-tools/common"), "*", SearchOption.AllDirectories)
             .Where(file => !file.Split(Path.DirectorySeparatorChar).Any(part => part is "obj" or "bin"))
             .Concat(new[] { Path.Combine(root, "scripts/checks/" + name + ".cs"), nuget, Path.Combine(root, "Version.props") })
-            .Concat(new[] { "Directory.Build.props", "Directory.Build.targets", "global.json" }.Select(file => Path.Combine(root, file)).Where(File.Exists));
+            .Concat(new[] { "Directory.Build.props", "Directory.Build.targets", "global.json", ".editorconfig", "src/Shared/CodeAnalysis.props" }.Select(file => Path.Combine(root, file)).Where(File.Exists));
         return CheckAllLayout.InputKey(inputs.Select(file => new KeyValuePair<string, string>(file, ReleaseRecords.HashFile(file))),
             [name, sdkVersion, "Release;UseAppHost=false;UseSharedCompilation=false;NuGetAudit=false"]);
     }

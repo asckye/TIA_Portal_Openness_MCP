@@ -70,24 +70,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
     internal interface IToolCatalogView
     {
-        IReadOnlyDictionary<string, ToolDescriptor> All { get; }
-        IReadOnlyDictionary<string, ToolDescriptor> IncludingUnavailable { get; }
-        IReadOnlyList<ToolDescriptor> Lite { get; }
-        ToolDescriptor? Find(string name, bool includeUnavailable = false);
-        JsonArray BehaviorCapabilities { get; }
+        public IReadOnlyDictionary<string, ToolDescriptor> All { get; }
+        public IReadOnlyDictionary<string, ToolDescriptor> IncludingUnavailable { get; }
+        public IReadOnlyList<ToolDescriptor> Lite { get; }
+        public ToolDescriptor? Find(string name, bool includeUnavailable = false);
+        public JsonArray BehaviorCapabilities { get; }
     }
 
     internal interface IToolInvoker
     {
-        Error? Bind(string name, ToolArguments arguments, out IBoundToolCall? call);
-        ToolInvocationResult Invoke(string name, ToolArguments arguments, bool preview);
-        Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false);
-        McpServerTool CreateTool(ToolDescriptor tool);
+        public Error? Bind(string name, ToolArguments arguments, out IBoundToolCall? call);
+        public ToolInvocationResult Invoke(string name, ToolArguments arguments, bool preview);
+        public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false);
+        public McpServerTool CreateTool(ToolDescriptor tool);
     }
 
     internal interface IBoundToolCall
     {
-        ToolInvocationResult Invoke(bool preview);
+        public ToolInvocationResult Invoke(bool preview);
     }
 
     internal sealed class ToolInvocationResult
@@ -107,12 +107,15 @@ namespace TiaMcpServer.ModelContextProtocol
             {
 #if !TIA_ENGINE_HOST
                 lock (ToolCatalogSync)
-                    if (_bridgeCatalog == null) InitializeToolCatalog(ref _bridgeCatalog, ref _bridgeInvoker);
+                    if (BridgeCatalog == null) InitializeToolCatalog(ref BridgeCatalog, ref BridgeInvoker);
 #endif
-                return _bridgeCatalog ?? throw new InvalidOperationException("Tool catalog is not configured.");
+                return BridgeCatalog ?? throw new InvalidOperationException("Tool catalog is not configured.");
             }
         }
-        internal static IToolInvoker ToolInvoker { get { _ = CatalogView; return _bridgeInvoker!; } }
+        internal static IToolInvoker ToolInvoker { get { _ = CatalogView; return BridgeInvoker!; } }
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void InitializeToolCatalog(ref IToolCatalogView? catalog, ref IToolInvoker? invoker);
 
         internal static Dictionary<string, ToolDescriptor> AllToolDescriptors(bool includeUnavailable = false)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -6,7 +7,7 @@ namespace TiaMcp.Logic.V4
 {
     public class SessionCandidateContract : IBehaviorCandidateContract
     {
-        public static readonly string[] Entries = { "ConnectPortal", "ConnectIsolatedPortal", "ConnectProject", "AttachOpenProject", "OpenProject" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "ConnectPortal", "ConnectIsolatedPortal", "ConnectProject", "AttachOpenProject", "OpenProject" });
         public const string Description = "[Portal][SESSION] Explicit PID/start-time session candidate. Default preview; attach never binds or starts TIA. Bind an exact open project with explicit reuseOpen=true. Open only in an empty attached process. Upgrade defaults reject; allow requires a complete independent copyPath and separate confirmUpgrade. Apply needs confirm and the reviewed hash/project; one native action, no close or retry. Unknown requires session reset. Test/accepted behaviorPolicy=safe-v4.";
         protected virtual string Entry => "ConnectPortal";
         public JsonElement InputSchema => Schema(Entry);

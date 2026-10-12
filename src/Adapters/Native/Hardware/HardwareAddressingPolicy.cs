@@ -9,8 +9,8 @@ namespace TiaMcp.Adapters.Hardware
 {
     public static class HardwareAddressingPolicy
     {
-        public static readonly string[] AddressAttributes = { "Context", "ProcessImage", "IsochronousMode", "InterruptObNumber" };
-        public static readonly string[] IoTypes = { "None", "Input", "Output", "Diagnosis", "Substitute" };
+        public static readonly IReadOnlyList<string> AddressAttributes = Array.AsReadOnly(new string[] { "Context", "ProcessImage", "IsochronousMode", "InterruptObNumber" });
+        public static readonly IReadOnlyList<string> IoTypes = Array.AsReadOnly(new string[] { "None", "Input", "Output", "Diagnosis", "Substitute" });
 
         public static void RequireAvailable(string release, string tool)
         {

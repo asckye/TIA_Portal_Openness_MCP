@@ -190,11 +190,32 @@ namespace TiaMcpServer.ModelContextProtocol
             finally { observation?.Dispose(); }
         }
 
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
+
         static partial void RecordBridgeEvent(string id, string name, string phase);
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void StartCallProjection(string id, MethodInfo method, object?[] arguments, ref IDisposable? observation);
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void EndCallProjection(IDisposable? observation, object? result);
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void RecordCallRejection(string name, ToolArguments arguments, CallToolResult result);
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void ValidateRuntimeBinding(MethodInfo method);
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void WaitToolTask(Task task, ref bool waited);
 
         private static readonly ConcurrentDictionary<(string Name, MethodInfo Method), JsonElement> InputSchemas =
@@ -233,7 +254,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (IsInfrastructureParameter(parameter.ParameterType) || !arguments.TryGetProperty(parameter.Name!, out var value)) continue;
                 try { JsonSerializer.Deserialize(value.GetRawText(), parameter.ParameterType, V4BindingJson); }
-                catch (InputRejection rejection) { return rejection.ToError(parameter.Name!); }
+                catch (InputRejectionException rejection) { return rejection.ToError(parameter.Name!); }
                 catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException || ex is OverflowException || ex is NotSupportedException)
                 { return InvalidInput(parameter.Name!); }
             }

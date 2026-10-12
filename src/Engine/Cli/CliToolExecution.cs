@@ -12,7 +12,7 @@ namespace TiaMcpServer.Cli
 {
     internal sealed class CliToolExecution
     {
-        private sealed class Stopped : Exception { }
+        private sealed class StoppedException : Exception { }
         private readonly List<Envelope> results = new List<Envelope>();
 
         internal static Envelope Read(CallToolResult result)
@@ -32,7 +32,7 @@ namespace TiaMcpServer.Cli
             }));
             if (resultTool != null) result = Rename(result, resultTool);
             if (!preparation || !result.Ok) results.Add(result);
-            if (threw && !continueOnException) throw new Stopped();
+            if (threw && !continueOnException) throw new StoppedException();
         }
 
         private void Session(string tool, Func<object> action, bool write, bool preparation = false, string? resultTool = null)
@@ -61,7 +61,7 @@ namespace TiaMcpServer.Cli
             // written only after the tool and its diagnostics have completed.
             Console.SetOut(Console.Error);
             try { execution.Execute(args); }
-            catch (Stopped) { if (execution.results.Count == 0) throw; }
+            catch (StoppedException) { if (execution.results.Count == 0) throw; }
             catch (Exception error)
             {
                 Console.Error.WriteLine("ERROR: " + error.Message);

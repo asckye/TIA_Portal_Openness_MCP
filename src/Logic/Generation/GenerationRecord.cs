@@ -94,7 +94,7 @@ namespace TiaMcp.Logic.Generation
         {
             string normalized = GenerationProjectPath.Normalize(project).Replace('\\', '/');
             int dot = normalized.LastIndexOf('.');
-            if (dot < normalized.LastIndexOf('/')) throw new ArgumentException("Project file extension required.", "project");
+            if (dot < normalized.LastIndexOf('/')) throw new ArgumentException("Project file extension required.", nameof(project));
             return normalized.Substring(0, dot) + ".tiagen.json";
         }
         public static void RejectLinks(string path)

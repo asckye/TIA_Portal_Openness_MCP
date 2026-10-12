@@ -92,7 +92,7 @@ namespace TiaMcp.Versioning
             var version = Entries.FirstOrDefault(v => string.Equals(v.Key, key, StringComparison.Ordinal));
             if (version == null)
                 throw new ArgumentException("Unsupported TIA version key '" + key + "'. Use: " +
-                    string.Join(", ", Entries.Select(v => v.Key)) + ".", "key");
+                    string.Join(", ", Entries.Select(v => v.Key)) + ".", nameof(key));
             return version;
         }
 
@@ -124,7 +124,7 @@ namespace TiaMcp.Versioning
                 });
                 if (match != null) return match;
             }
-            throw new ArgumentException("Unsupported Openness API version: " + value, "value");
+            throw new ArgumentException("Unsupported Openness API version: " + value, nameof(value));
         }
 
         public static void RequireMatchingEngine(string requestedKey, string compiledKey)

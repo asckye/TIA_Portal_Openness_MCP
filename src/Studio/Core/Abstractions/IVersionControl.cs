@@ -17,13 +17,13 @@ namespace TiaOpenness.Core.Abstractions
     public interface IVersionControl
     {
         /// <summary>Every workspace in the open project, including those inside workspace groups.</summary>
-        IReadOnlyList<WorkspaceInfo> ListWorkspaces();
+        public IReadOnlyList<WorkspaceInfo> ListWorkspaces();
 
         /// <summary>
         /// Creates a workspace pointing at an existing folder — normally a Git working tree.
         /// Creating it maps nothing; call <see cref="MapProject"/> afterwards.
         /// </summary>
-        WorkspaceInfo CreateWorkspace(string name, string folderPath);
+        public WorkspaceInfo CreateWorkspace(string name, string folderPath);
 
         /// <summary>
         /// Walks the project and maps every object VCI can handle into the workspace.
@@ -33,11 +33,11 @@ namespace TiaOpenness.Core.Abstractions
         /// <param name="workspaceName">Null or empty selects the project's first workspace.</param>
         /// <param name="deviceFilter">Map only this device. Null maps everything.</param>
         /// <param name="dryRun">Report what would be mapped without touching the project.</param>
-        MappingResult MapProject(string workspaceName, string deviceFilter, bool dryRun, ProgressCallback progress);
+        public MappingResult MapProject(string workspaceName, string deviceFilter, bool dryRun, ProgressCallback progress);
 
         /// <summary>Per-object comparison between the project and the workspace files. Read-only.</summary>
         /// <param name="changedOnly">List only objects that are not in sync.</param>
-        WorkspaceStatusReport GetStatus(string workspaceName, bool changedOnly);
+        public WorkspaceStatusReport GetStatus(string workspaceName, bool changedOnly);
 
         /// <summary>
         /// Synchronizes mapped objects. <see cref="SyncDirection.ProjectToWorkspace"/> writes text
@@ -45,6 +45,6 @@ namespace TiaOpenness.Core.Abstractions
         /// <see cref="SyncDirection.WorkspaceToProject"/> overwrites blocks in the open project.
         /// </summary>
         /// <param name="dryRun">Report what would move without moving it.</param>
-        SyncResult Sync(string workspaceName, SyncDirection direction, bool dryRun, ProgressCallback progress);
+        public SyncResult Sync(string workspaceName, SyncDirection direction, bool dryRun, ProgressCallback progress);
     }
 }

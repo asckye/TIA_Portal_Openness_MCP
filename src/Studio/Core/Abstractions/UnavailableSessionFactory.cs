@@ -31,7 +31,7 @@ namespace TiaOpenness.Core.Abstractions
     }
 
     /// <summary>The real backend is not usable here. Carries the diagnosis, not just a symptom.</summary>
-    public class OpennessUnavailableException : System.Exception
+    public sealed class OpennessUnavailableException : System.Exception
     {
         public OpennessUnavailableException(string reason)
             : base("TIA Portal Openness is not available on this machine. " + reason)

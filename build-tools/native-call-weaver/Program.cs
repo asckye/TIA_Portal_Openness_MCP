@@ -5,7 +5,7 @@ using System.Text.Json;
 internal static class Program
 {
     internal static IEnumerable<TypeDefinition> Types(ModuleDefinition module) => module.Types.SelectMany(Descend);
-    static IEnumerable<TypeDefinition> Descend(TypeDefinition t) { yield return t; foreach (var n in t.NestedTypes.SelectMany(Descend)) yield return n; }
+    private static IEnumerable<TypeDefinition> Descend(TypeDefinition t) { yield return t; foreach (var n in t.NestedTypes.SelectMany(Descend)) yield return n; }
     internal static bool Native(TypeReference t) => t.Scope?.Name?.StartsWith("Siemens.Engineering", StringComparison.Ordinal) == true;
     internal static string? Category(MethodReference m)
     {
@@ -22,7 +22,7 @@ internal static class Program
     }
     internal static bool EnumerableType(TypeReference t) => t.FullName == "System.Collections.IEnumerable" ||
         t is GenericInstanceType g && g.ElementType.FullName == "System.Collections.Generic.IEnumerable`1";
-    static int Main(string[] args)
+    private static int Main(string[] args)
     {
         try
         {

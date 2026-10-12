@@ -66,7 +66,7 @@ namespace TiaMcpServer.Siemens.Services
                 var error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
                     ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                         typed.ParamName, new Dictionary<string, System.Text.Json.JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message))
-                    : ex is PlcImportRejection rejected ? rejected.Error
+                    : ex is PlcImportRejectionException rejected ? rejected.Error
                     : new Error("The exact PLC import target is unavailable; no import was issued.", new PreconditionFailedDetails("plc-import-target", null));
                 return PlcImportSession.Result(release, tool, id, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }

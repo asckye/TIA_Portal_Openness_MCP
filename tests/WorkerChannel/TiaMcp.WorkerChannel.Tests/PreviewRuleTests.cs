@@ -80,8 +80,8 @@ public sealed class PreviewRuleTests
             using var output=new MemoryStream(); int calls=0;
             var server=new ChannelServer(Stream.Null,output,Identity,()=>new ChannelBinding(0,false),_=>{calls++;return ChannelResponse.Success("null");});
             server.WriteHello();
-            Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(frame)));
-            Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2)))); Assert.Equal(0,calls);
+            Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(frame)));
+            Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2)))); Assert.Equal(0,calls);
         }
         else
         {
@@ -89,16 +89,16 @@ public sealed class PreviewRuleTests
             if(kind=="hello")
             {
                 wire.Input.Feed(frame);
-                await Assert.ThrowsAsync<ChannelFault>(()=>wire.Client.ConnectAsync(Budget)); Assert.Empty(wire.Output.Writes);
+                await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(Budget)); Assert.Empty(wire.Output.Writes);
                 Assert.False(wire.Client.OutcomeUnknown);
             }
             else
             {
                 await wire.Connect(); wire.Output.OnWrite=_=>wire.Input.Feed(frame);
-                await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); Assert.True(wire.Client.OutcomeUnknown);
+                await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.True(wire.Client.OutcomeUnknown);
                 Assert.Single(wire.Output.Writes);
             }
-            await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call());
+            await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
         }
     }
 
@@ -108,7 +108,7 @@ public sealed class PreviewRuleTests
         using var wire=new Wire(); await wire.Connect();
         wire.Output.OnWrite=_=>wire.Input.Feed(Reply()); Assert.Equal("null",await wire.Call());
         wire.Output.OnWrite=_=>wire.Input.Feed(Reply(2,payload:Error));
-        var error=await Assert.ThrowsAsync<ChannelFailure>(()=>wire.Call());
+        var error=await Assert.ThrowsAsync<ChannelFailureException>(()=>wire.Call());
         Assert.Equal(-32602,error.Code); Assert.Equal("failed",error.Message); Assert.Equal("null",error.EvidenceJson);
         Assert.False(wire.Client.Poisoned);
     }
@@ -119,7 +119,7 @@ public sealed class PreviewRuleTests
     {
         using var wire=new Wire(); await wire.Connect();
         wire.Output.OnWrite=_=>wire.Input.Feed(Reply(after:1,payload:Error.Replace("ReadFailed",outcome)));
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call(change:BindingChange.Advance));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call(change:BindingChange.Advance));
         Assert.True(wire.Client.OutcomeUnknown); Assert.Equal(0,wire.Client.BindingEpoch);
     }
 
@@ -131,8 +131,8 @@ public sealed class PreviewRuleTests
         await wire.Call();
         wire.Output.OnWrite=_=>wire.Input.Feed(Progress(2)+"\n"+Reply(2)); await wire.Call();
         wire.Output.OnWrite=_=>wire.Input.Feed(string.Join("\n",Enumerable.Range(1,1025).Select(i=>Progress(3,i))));
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call());
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); Assert.Equal(3,wire.Output.Writes.Count);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.Equal(3,wire.Output.Writes.Count);
     }
 
     [Theory]
@@ -144,10 +144,10 @@ public sealed class PreviewRuleTests
         input.Feed(Hello); await client.ConnectAsync(Budget);
         var pending=client.CallAsync("adapter.ReadState","{}",BindingChange.None,true,cancel?Budget:TimeSpan.FromMilliseconds(40),cts.Token);
         if(cancel) cts.Cancel();
-        await Assert.ThrowsAsync<ChannelFault>(()=>pending.WaitAsync(Budget));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>pending.WaitAsync(Budget));
         Assert.False(output.Completion.Task.IsCompleted); Assert.True(client.OutcomeUnknown);
         output.Completion.SetException(new IOException("late pipe failure"));
-        await Assert.ThrowsAsync<ChannelFault>(()=>client.CallAsync("adapter.ReadState","{}",BindingChange.None,true,Budget));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>client.CallAsync("adapter.ReadState","{}",BindingChange.None,true,Budget));
         Assert.Equal(1,output.Writes);
     }
 
@@ -158,18 +158,18 @@ public sealed class PreviewRuleTests
         using var output=new CallbackOutput(); ChannelServer? server=null; int observations=0,calls=0;
         server=new ChannelServer(Stream.Null,output,Identity,()=>
         {
-            if(++observations==2 && stage=="observe") Assert.Throws<ChannelFault>(()=>server!.Handle(Encoding.UTF8.GetBytes(Request(2))));
+            if(++observations==2 && stage=="observe") Assert.Throws<ChannelFaultException>(()=>server!.Handle(Encoding.UTF8.GetBytes(Request(2))));
             return new ChannelBinding(0,false);
-        },r=>{calls++;if(stage=="progress-emit") Assert.Throws<ChannelFault>(()=>r.Progress(50));return ChannelResponse.Success("null");});
+        },r=>{calls++;if(stage=="progress-emit") Assert.Throws<ChannelFaultException>(()=>r.Progress(50));return ChannelResponse.Success("null");});
         server.WriteHello();
         output.Callback=()=>
         {
-            if(stage=="emit") Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2))));
+            if(stage=="emit") Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(2))));
             if(stage=="progress-emit") throw new IOException("progress pipe failed");
         };
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request())));
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request())));
         Assert.True(server.Poisoned); Assert.Equal(stage=="observe"?0:1,calls);
-        Assert.Throws<ChannelFault>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(3))));
+        Assert.Throws<ChannelFaultException>(()=>server.Handle(Encoding.UTF8.GetBytes(Request(3))));
     }
 
     [Fact]

@@ -76,7 +76,7 @@ public partial class App : Application
         try
         {
             if (args.Length != 4) throw new ArgumentException("Invalid network configuration arguments.");
-            TiaMcpConfigurator.ConfigCore.ConfigureNetwork(args[1], int.Parse(args[2]), args[3]);
+            TiaMcpConfigurator.ConfigCore.ConfigureNetwork(args[1], int.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture), args[3]);
             return 0;
         }
         catch (Exception ex)
@@ -114,23 +114,28 @@ public partial class App : Application
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        ReportUiException(e.Exception);
+        e.Handled = true;
+    }
+
+    internal static void ReportUiException(Exception error)
+    {
         string details;
         try
         {
             File.AppendAllText(CrashLogPath,
-                $"{DateTimeOffset.Now:O}{System.Environment.NewLine}{e.Exception}{System.Environment.NewLine}{System.Environment.NewLine}");
+                $"{DateTimeOffset.Now:O}{System.Environment.NewLine}{error}{System.Environment.NewLine}{System.Environment.NewLine}");
             details = Loc.Current.T("Dialog.Error.Details", CrashLogPath);
         }
-        catch (Exception error)
+        catch (Exception logError)
         {
-            details = "IO_FAILED: " + error.Message;
-            TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaOpenness.crash", error);
+            details = "IO_FAILED: " + logError.Message;
+            TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaOpenness.crash", logError);
         }
 
         MessageBox.Show(
-            e.Exception.Message + System.Environment.NewLine + System.Environment.NewLine +
+            error.Message + System.Environment.NewLine + System.Environment.NewLine +
             details,
             Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
-        e.Handled = true;
     }
 }

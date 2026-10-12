@@ -35,7 +35,7 @@ internal static class EngineSessionFixture
             {
                 int pid = (int)input["processId"]!;
                 if (pid is 901 or 902 or 903 or 904)
-                    return ChannelResponse.Error(new ChannelFailure(pid == 901 ? LeaseMessage : pid == 904 ? SessionBehavior.LeaseReserved : pid == 903 ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
+                    return ChannelResponse.Error(new ChannelFailureException(pid == 901 ? LeaseMessage : pid == 904 ? SessionBehavior.LeaseReserved : pid == 903 ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
                         ChannelOutcome.RejectedBeforeNative, new JsonObject { ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
                 if (!foundation || leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot ?? DataLocations.Current.LeasesDirectory, pid, 1);
                 attached = pid; epoch++;
@@ -52,7 +52,7 @@ internal static class EngineSessionFixture
                 lease?.ReleaseCleanly(); lease = null;
                 return ChannelResponse.Success(result.ToJsonString());
             }
-            if (request.Method == "adapter.FixtureUnknown") return ChannelResponse.Error(new ChannelFailure("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
+            if (request.Method == "adapter.FixtureUnknown") return ChannelResponse.Error(new ChannelFailureException("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
             if (request.Method == "adapter.FixtureHang") { if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), ""); Thread.Sleep(10000); return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.ReadPortalProcessProjects")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["Processes"] = new JsonArray(),

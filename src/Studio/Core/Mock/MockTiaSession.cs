@@ -115,7 +115,7 @@ namespace TiaOpenness.Core.Mock
         {
             var device = RequireDevice(deviceId);
             return device.Blocks
-                .Where(b => includeSystemBlocks || !b.Name.StartsWith("_"))
+                .Where(b => includeSystemBlocks || !b.Name.StartsWith("_", StringComparison.Ordinal))
                 .ToList();
         }
 

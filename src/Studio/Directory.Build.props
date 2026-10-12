@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/CodeAnalysis.props" Condition="'$(TiaMcpCodeAnalysisImported)' != 'true'" />
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
   <Import Project="$(MSBuildThisFileDirectory)../Shared/TiaSharedAdapterPaths.props" />
   <PropertyGroup Condition="'$(TiaSharedAdapterPaths)' == 'true'">

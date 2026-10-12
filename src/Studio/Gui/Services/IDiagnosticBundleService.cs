@@ -6,7 +6,7 @@ namespace TiaOpenness.Gui.Services.Stubs;
 
 public interface IDiagnosticBundleService : INotifyPropertyChanged
 {
-    DiagnosticProgress Progress { get; }
-    string Export();
-    LocalizedText OpenFolder();
+    public DiagnosticProgress Progress { get; }
+    public string Export();
+    public LocalizedText OpenFolder();
 }

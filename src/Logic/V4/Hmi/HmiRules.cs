@@ -105,7 +105,7 @@ namespace TiaMcp.Logic.V4.Hmi
         internal static void AmlBudget(IEnumerable<DeviceItemSpec> items)
         {
             try { AmlBudget(items, item => item.DeviceItems ?? Array.Empty<DeviceItemSpec>()); }
-            catch (InputRejection rejection)
+            catch (InputRejectionException rejection)
             {
                 // Preserve the existing constructor/Deserialize exception contract.
                 // InputContract runs the same guard before constructing these DTOs.

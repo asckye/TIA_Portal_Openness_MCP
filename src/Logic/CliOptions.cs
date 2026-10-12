@@ -1,3 +1,4 @@
+using System;
 namespace TiaMcpServer
 {
     public class CliOptions
@@ -171,7 +172,7 @@ namespace TiaMcpServer
                 switch (args[i].ToLowerInvariant())
                 {
                     case "--workspace-root":
-                        if (options.WorkspaceRoot != null || ++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--"))
+                        if (options.WorkspaceRoot != null || ++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--", StringComparison.Ordinal))
                             throw new System.ArgumentException("INVALID_ARGUMENT: --workspace-root requires one absolute directory.");
                         options.WorkspaceRoot = args[i];
                         options.RequireWorkspaceRoot();
@@ -212,7 +213,7 @@ namespace TiaMcpServer
 
                     case "-logging":
                     case "--logging":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], out int l))
+                        if (i + 1 < args.Length && int.TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int l))
                         {
                             options.Logging = l;
                             i++;
@@ -420,7 +421,7 @@ namespace TiaMcpServer
                         break;
 
                     case "--max-plc-tag-tables-to-export":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], out int maxTagTables))
+                        if (i + 1 < args.Length && int.TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int maxTagTables))
                         {
                             options.MaxPlcTagTablesToExport = maxTagTables;
                             i++;
@@ -780,7 +781,7 @@ namespace TiaMcpServer
                         break;
 
                     case "--tia-step-timeout-seconds":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], out int stepTimeoutSeconds))
+                        if (i + 1 < args.Length && int.TryParse(args[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int stepTimeoutSeconds))
                         {
                             options.TiaStepTimeoutSeconds = stepTimeoutSeconds;
                             i++;

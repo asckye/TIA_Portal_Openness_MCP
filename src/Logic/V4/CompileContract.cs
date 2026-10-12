@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +8,7 @@ namespace TiaMcp.Logic.V4
     public class CompileContract : IBehaviorCandidateContract
     {
         public const string Description = "[EXECUTE] Compile candidate with offlinePolicy=require. Preview reports the exact compiler target, capability, offline prerequisite and Safety permission. Apply requires confirmation, expectedPlanHash and expectedProjectFile. Never goes offline automatically. password is optional for Safety; only a login created by this invocation is ended. Full compiler diagnostic tree and root/leaf counts are retained; cleanup failures remain visible. Unknown native outcome requires session reset; no retry. Test/accepted behaviorPolicy=safe-v4.";
-        public static readonly string[] Entries = { "CompilePlcSoftware", "CompilePlcDiagnostics", "CompileDevice", "CompileHmiDiagnostics" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "CompilePlcSoftware", "CompilePlcDiagnostics", "CompileDevice", "CompileHmiDiagnostics" });
         protected virtual string Entry => "CompilePlcSoftware";
         public JsonElement InputSchema => Schema(Entry);
         public static JsonElement Schema(string entry)

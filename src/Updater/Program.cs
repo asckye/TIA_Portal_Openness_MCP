@@ -18,7 +18,7 @@ namespace TiaMcp.Updater
             if (options.SelfTest) return SelfTest();
             string executable = Assembly.GetExecutingAssembly().Location;
             string root = options.InstallRoot;
-            if (String.IsNullOrWhiteSpace(root)) root = FindInstallRoot(executable);
+            if (string.IsNullOrWhiteSpace(root)) root = FindInstallRoot(executable);
             options.InstallRoot = Path.GetFullPath(root);
 
             // The worker runs from TEMP, so neither its image nor a loaded updater assembly is replaced in place.
@@ -63,8 +63,8 @@ namespace TiaMcp.Updater
                     case "force": options.Force = true; break;
                     case "repository": options.Repository = value; break;
                     case "installroot": options.InstallRoot = value; break;
-                    case "timeoutseconds": options.TimeoutSeconds = Int32.Parse(value); break;
-                    case "waitforpid": options.WaitForPid = Int32.Parse(value); break;
+                    case "timeoutseconds": options.TimeoutSeconds = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
+                    case "waitforpid": options.WaitForPid = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
                     case "relaunchconfigurator": options.RelaunchConfigurator = true; break;
                     case "selftest": options.SelfTest = true; break;
                     case "staged": break;
@@ -97,7 +97,7 @@ namespace TiaMcp.Updater
             string stage = Path.Combine(Path.GetTempPath(), "tia-mcp-updater-" + Guid.NewGuid().ToString("N"));
             string target = UpdaterFileStaging.CopyTo(source, stage);
             var forwarded = args.Where(a => !a.Equals("-staged", StringComparison.OrdinalIgnoreCase)).Concat(new[] { "-staged" });
-            var start = new ProcessStartInfo(target, String.Join(" ", forwarded.Select(Quote))) { WorkingDirectory = Path.GetDirectoryName(target), UseShellExecute = true };
+            var start = new ProcessStartInfo(target, string.Join(" ", forwarded.Select(Quote))) { WorkingDirectory = Path.GetDirectoryName(target), UseShellExecute = true };
             Process.Start(start);
             Say(UpdaterText.Bilingual("Staged", "updater staged outside the install and started") + ": " + stage);
             return 0;
@@ -105,7 +105,7 @@ namespace TiaMcp.Updater
 
         private static string Quote(string value)
         {
-            if (value.Length > 0 && value.All(c => !Char.IsWhiteSpace(c) && c != '"')) return value;
+            if (value.Length > 0 && value.All(c => !char.IsWhiteSpace(c) && c != '"')) return value;
             var result = new StringBuilder("\""); int slashes = 0;
             foreach (char c in value)
             {
@@ -124,7 +124,7 @@ namespace TiaMcp.Updater
 
         private static void Relaunch(UpdaterOptions options)
         {
-            if (!options.RelaunchConfigurator || String.IsNullOrWhiteSpace(options.InstallRoot)) return;
+            if (!options.RelaunchConfigurator || string.IsNullOrWhiteSpace(options.InstallRoot)) return;
             string executable = Path.Combine(options.InstallRoot, "TiaOpenness.exe");
             if (File.Exists(executable))
             {

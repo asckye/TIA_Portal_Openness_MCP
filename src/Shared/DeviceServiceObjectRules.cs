@@ -36,7 +36,7 @@ namespace TiaMcpServer.Siemens
             else if (!string.IsNullOrEmpty(name) && action != "read") throw new ArgumentException("name applies to setDefault / update / delete / setServiceGroupName / createService / deleteService.");
             if (action == "createService")
             {
-                if (!uint.TryParse(name, out _)) throw new ArgumentException("createService: name is the new service Id (UInt32).");
+                if (!uint.TryParse(name, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _)) throw new ArgumentException("createService: name is the new service Id (UInt32).");
                 RequireKeys(properties, new[] { "ServiceGroupName", "ServiceType" }, "propertiesJson");
                 if (properties["ServiceGroupName"] == null || properties["ServiceType"] == null) throw new ArgumentException("createService needs propertiesJson {ServiceGroupName, ServiceType} (CertificateSupportedServiceComposition.Create(id, serviceGroupName, serviceType)).");
                 if ((properties["ServiceGroupName"]!.ToString()).Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters.");

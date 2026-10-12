@@ -19,7 +19,9 @@ namespace TiaOpenness.Shared
         internal static string? Parameter(Exception error)
         {
             for (var cause = error; cause != null; cause = cause.InnerException)
-                if (cause is ArgumentException argument && argument.ParamName != null) return argument.ParamName;
+                if (cause is AdapterPreconditionException precondition && precondition.ParamName != null)
+                    return precondition.ParamName;
+                else if (cause is ArgumentException argument && argument.ParamName != null) return argument.ParamName;
             return null;
         }
 

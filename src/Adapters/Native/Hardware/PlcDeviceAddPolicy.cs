@@ -80,9 +80,9 @@ namespace TiaMcp.Adapters
         internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
         {
             try { return RunChecked(r,catalog,inventory,check,create); }
-            catch(ArgumentException error) when (!(error is AdapterPreconditionException))
-            { throw new AdapterPreconditionException(error.Message,error.ParamName??"arguments",true,error); }
-            catch(InvalidOperationException error)
+            catch(Exception error) when (error is ArgumentException argument && error is not AdapterPreconditionException)
+            { throw new AdapterPreconditionException(argument.Message,argument.ParamName??"arguments",true,error); }
+            catch(InvalidOperationException error) when (error is not AdapterPreconditionException)
             { throw new AdapterPreconditionException("Device preflight could not verify the complete catalog, inventory or binding; no create attempted.","device-create-preflight",false,error); }
         }
         private static PlcDeviceAddResult RunChecked(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)

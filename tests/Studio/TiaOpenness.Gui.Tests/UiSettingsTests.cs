@@ -12,7 +12,7 @@ namespace TiaOpenness.Gui.Tests;
 /// truncated or edited by hand without stopping the app from starting. Every one of these
 /// cases falls back to the system default rather than throwing.
 /// </summary>
-public class UiSettingsTests : IDisposable
+public sealed class UiSettingsTests : IDisposable
 {
     private readonly string _path = Path.Combine(
         Path.GetTempPath(), "tia-ui-settings-" + Guid.NewGuid().ToString("N"), "ui.settings");

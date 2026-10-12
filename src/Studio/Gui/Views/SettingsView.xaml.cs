@@ -84,7 +84,7 @@ public partial class SettingsView : UserControl
 
     private async void OnTimeoutClick(object sender, RoutedEventArgs e)
     {
-        int value = int.Parse((string)((RadioButton)sender).Tag);
+        int value = int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture);
         if (_approvals != null) await SaveApproval(() => _approvals.TimeoutSeconds = value);
     }
 

@@ -12,7 +12,7 @@ internal static class BatchExportTests
         PlcBatchExportSource Source(string path,bool consistent=true)=>new() {Path=path,Consistent=consistent,Export=file=>{native++;File.WriteAllText(file.FullName,"<Document><Number>42</Number><Name>Original</Name></Document>");}};
         var sources=new[]{Source("z/CON"),Source("a/A"),Source("a/a"),Source("q/%2F..%5CCON")};
         PlcBatchExportResult Run(bool dry,string hash="",IEnumerable<PlcBatchExportSource>? inventory=null,Func<FileInfo,Action<FileInfo>,string?>? publish=null,int max=128,Action? gate=null)=>PlcBatchExportPolicy.Run("blocks","/project.ap17","devices/PLC","",true,root,max,dry,hash,inventory??sources,gate??(()=>offline++),publish);
-        void Refused(Action action,string message) {try {action(); throw new Exception("Accepted: "+message);} catch(ArgumentException) {check(true,message);} }
+        void Refused(Action action,string message) {try {action(); throw new Exception("Accepted: "+message);} catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {check(true,message);} catch(ArgumentException) {check(true,message);} }
         try
         {
             foreach(string kind in new[]{"blocks","types"})

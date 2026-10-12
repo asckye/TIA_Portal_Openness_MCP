@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -7,8 +8,8 @@ namespace TiaMcp.Logic.V4
 {
     public class PlcImportContract : IBehaviorCandidateContract
     {
-        public static readonly string[] Entries = { "ImportPlcBlock", "ImportPlcType", "ImportPlcTagTable", "ImportPlcBlocksFromDirectory",
-            "ImportPlcTagTablesFromDirectory", "ImportPlcProgramFromDirectory", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "ImportPlcBlock", "ImportPlcType", "ImportPlcTagTable", "ImportPlcBlocksFromDirectory",
+            "ImportPlcTagTablesFromDirectory", "ImportPlcProgramFromDirectory", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments" });
         public static bool IsDirectory(string entry) => entry.EndsWith("FromDirectory", StringComparison.Ordinal) || entry == "ImportPlcBlocksDocuments";
         public static bool IsDocuments(string entry) => entry == "ImportPlcBlockDocuments" || entry == "ImportPlcBlocksDocuments";
         public static int MaximumItems(string entry, string release) => entry == "ImportPlcBlocksDocuments" ? 16 : IsDirectory(entry) ? 256 : 1;

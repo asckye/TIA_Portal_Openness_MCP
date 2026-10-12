@@ -70,7 +70,7 @@ namespace TiaMcpServer.ModelContextProtocol
             lock (Sync) { (sink as IDisposable)?.Dispose(); sink = write == null ? (IJournalSink)new FileJournalSink() : new CallbackJournalSink(write); correlationSource = correlation; }
         }
 
-        internal interface IJournalSink { void Write(Func<string> row, bool flush); }
+        internal interface IJournalSink { public void Write(Func<string> row, bool flush); }
         private sealed class CallbackJournalSink : IJournalSink
         {
             private readonly Action<string> write;
@@ -114,6 +114,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             public void Dispose() { currentPath = null; }
         }
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void RequireDiskFlush(string row, ref bool flush);
 
         internal static JsonLineObject HealthRow()

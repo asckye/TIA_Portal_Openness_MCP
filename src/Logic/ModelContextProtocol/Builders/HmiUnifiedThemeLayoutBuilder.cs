@@ -167,7 +167,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int GetInt(JsonObject obj, string name, string alias, string alias2, int fallback)
         {
             var node = obj[name] ?? obj[alias] ?? (string.IsNullOrWhiteSpace(alias2) ? null : obj[alias2]);
-            return node != null && int.TryParse(node.ToString(), out var value) ? value : fallback;
+            return node != null && int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value) ? value : fallback;
         }
 
         private static void CopyOptional(JsonObject source, JsonObject target, string name, string alias)

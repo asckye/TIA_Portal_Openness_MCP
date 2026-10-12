@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -5,7 +7,7 @@ namespace TiaMcp.Logic.V4
 {
     public class SaveCloseContract : IBehaviorCandidateContract
     {
-        public static readonly string[] Entries = { "SaveProject", "SaveProjectCopy", "CloseProject", "DisconnectPortal" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "SaveProject", "SaveProjectCopy", "CloseProject", "DisconnectPortal" });
         public const string Description = "[Project][CLOSE] Explicit save/close candidate. Default preview; apply requires confirm, expectedPlanHash and expectedProjectFile. Close defaults saveChanges=false/discardChanges=false, never saves and refuses borrowed projects. Dirty close needs an explicit save first, or fresh discard preview plus confirmDiscard. LocalSession uses local Save/Close; copy is ordinary projects only. Disconnect only detaches a non-owning attachment, with owned projects closed explicitly first. One native action, no retry; unknown requires session reset. Test/accepted behaviorPolicy=safe-v4.";
         protected virtual string Entry => "SaveProject";
         public JsonElement InputSchema => Schema(Entry);

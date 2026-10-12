@@ -7,8 +7,8 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal interface IHostToolServices
     {
-        Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token);
-        Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token);
+        public Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token);
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token);
     }
 
     // Host tools consume managed observations and adapter operations, never native objects.

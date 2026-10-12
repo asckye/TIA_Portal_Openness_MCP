@@ -592,7 +592,7 @@ namespace TiaMcpServer.Runtime
         {
             if (string.IsNullOrWhiteSpace(tiaAddress)) return null;
             string a = tiaAddress!.Trim();
-            if (!a.StartsWith("%")) return null;          // symbolic / non-absolute
+            if (!a.StartsWith("%", StringComparison.Ordinal)) return null;          // symbolic / non-absolute
             a = a.Substring(1).Trim();
 
             // Validate it parses as an absolute address before accepting.
@@ -627,7 +627,7 @@ namespace TiaMcpServer.Runtime
         {
             if (string.IsNullOrWhiteSpace(logicalAddress)) return null;
             string a = logicalAddress!.Trim();
-            if (!a.StartsWith("%")) return null;
+            if (!a.StartsWith("%", StringComparison.Ordinal)) return null;
             a = a.Substring(1).Trim();
 
             var probe = ParseSpec(a);

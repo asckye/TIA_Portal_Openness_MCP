@@ -39,7 +39,7 @@ internal static class ExportPublicationTests
             check(File.ReadAllText(good.FullName)==xml,"Successful no-overwrite publication preserves XML bytes");
             bool called=false;
             try { PlcExportPublication.Publish(good,f=>called=true); throw new Exception("Existing destination accepted"); }
-            catch(ArgumentException) { check(!called && File.ReadAllText(good.FullName)==xml,"Existing destination rejected before callback and unchanged"); }
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(!called && File.ReadAllText(good.FullName)==xml,"Existing destination rejected before callback and unchanged"); } catch(ArgumentException) { check(!called && File.ReadAllText(good.FullName)==xml,"Existing destination rejected before callback and unchanged"); }
 
             IOException Failure(string name,Action<FileInfo,FileInfo> callback,string phase)
             {

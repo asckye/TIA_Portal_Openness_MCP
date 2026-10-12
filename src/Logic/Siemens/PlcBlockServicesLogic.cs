@@ -15,8 +15,8 @@ namespace TiaMcpServer.Siemens
         internal static string WatchEntryAddressAttribute(string address)
         {
             var text = (address ?? "").Trim();
-            if (text.StartsWith("%")) return "Address";
-            if (text.StartsWith("\"")) return "Name";
+            if (text.StartsWith("%", StringComparison.Ordinal)) return "Address";
+            if (text.StartsWith("\"", StringComparison.Ordinal)) return "Name";
             return System.Text.RegularExpressions.Regex.IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? "Address" : "Name";
         }
 

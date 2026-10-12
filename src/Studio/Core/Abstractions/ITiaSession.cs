@@ -6,7 +6,7 @@ namespace TiaOpenness.Core.Abstractions
 {
     public interface IVciReadOnlySession
     {
-        SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile);
+        public SessionState AttachVciReadOnly(int processId, long startUtcTicks, string projectFile);
     }
     /// <summary>Reports progress of a long-running bridge operation back to the caller.</summary>
     /// <param name="current">Items finished so far.</param>
@@ -21,44 +21,44 @@ namespace TiaOpenness.Core.Abstractions
     /// </summary>
     public interface ITiaSession : IDisposable
     {
-        SessionMode Mode { get; }
-        bool IsConnected { get; }
-        bool HasProject { get; }
+        public SessionMode Mode { get; }
+        public bool IsConnected { get; }
+        public bool HasProject { get; }
 
         /// <summary>Attach to a running TIA Portal, or start one.</summary>
         /// <param name="withUserInterface">Show the TIA window. Headless is faster but cannot be watched.</param>
         /// <param name="attachToRunning">Prefer an already-running instance over starting a new one.</param>
         /// <param name="version">Openness version to bind, e.g. "21.0". Null picks the newest installed.</param>
-        SessionState Connect(bool withUserInterface, bool attachToRunning, string version);
+        public SessionState Connect(bool withUserInterface, bool attachToRunning, string version);
 
-        void Disconnect();
-        SessionState GetState();
+        public void Disconnect();
+        public SessionState GetState();
 
-        ProjectInfo OpenProject(string path);
-        ProjectInfo GetProjectInfo();
-        void SaveProject();
-        void CloseProject();
+        public ProjectInfo OpenProject(string path);
+        public ProjectInfo GetProjectInfo();
+        public void SaveProject();
+        public void CloseProject();
 
-        IReadOnlyList<DeviceInfo> ListDevices();
-        IReadOnlyList<BlockInfo> ListBlocks(string deviceId, bool includeSystemBlocks);
+        public IReadOnlyList<DeviceInfo> ListDevices();
+        public IReadOnlyList<BlockInfo> ListBlocks(string deviceId, bool includeSystemBlocks);
 
-        ExportResult ExportBlocks(string deviceId, IReadOnlyList<string> blockPaths, string outputDirectory,
+        public ExportResult ExportBlocks(string deviceId, IReadOnlyList<string> blockPaths, string outputDirectory,
             ExportFormat format, bool preserveFolders, ProgressCallback progress);
 
-        ExportResult ImportBlocks(string deviceId, IReadOnlyList<string> files, bool overwrite, ProgressCallback progress);
+        public ExportResult ImportBlocks(string deviceId, IReadOnlyList<string> files, bool overwrite, ProgressCallback progress);
 
-        IReadOnlyList<TagTableInfo> ListTagTables(string deviceId);
-        IReadOnlyList<TagInfo> ListTags(string deviceId, string tableName);
+        public IReadOnlyList<TagTableInfo> ListTagTables(string deviceId);
+        public IReadOnlyList<TagInfo> ListTags(string deviceId, string tableName);
 
-        CompileResult CompileDevice(string deviceId, bool softwareOnly);
+        public CompileResult CompileDevice(string deviceId, bool softwareOnly);
 
-        InspectionReport Inspect(string deviceId, InspectionOptions options);
+        public InspectionReport Inspect(string deviceId, InspectionOptions options);
 
         /// <summary>
         /// The project's Version Control Interface, or null when unavailable. Modelled as a nullable capability,
         /// so a front end can hide the feature instead of offering it and failing.
         /// </summary>
-        IVersionControl VersionControl { get; }
+        public IVersionControl VersionControl { get; }
     }
 
     /// <summary>Which inspection rules to run and how strict they are.</summary>
@@ -77,7 +77,7 @@ namespace TiaOpenness.Core.Abstractions
     /// <summary>Creates sessions. The bridge picks an implementation at startup.</summary>
     public interface ITiaSessionFactory
     {
-        SessionMode Mode { get; }
+        public SessionMode Mode { get; }
 
         /// <summary>
         /// Binds the process to one Openness version before any session exists. The CLR caches
@@ -85,8 +85,8 @@ namespace TiaOpenness.Core.Abstractions
         /// a second version needs a second bridge.
         /// </summary>
         /// <param name="opennessVersion">e.g. "21.0". Null selects the newest installed.</param>
-        void Configure(string opennessVersion);
+        public void Configure(string opennessVersion);
 
-        ITiaSession Create();
+        public ITiaSession Create();
     }
 }

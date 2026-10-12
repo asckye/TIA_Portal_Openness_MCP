@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,8 +8,8 @@ namespace TiaMcp.Logic.V4
     public class FallbackContract : IBehaviorCandidateContract
     {
         public const string Description = "[EXECUTE] Native fallback candidate. Empty-route preview discovers exact routes; select one verbatim for a reviewed plan. retryPolicy=never and refreshReadHandle=false. Apply requires confirmation, expectedPlanHash and expectedProjectFile. Failed configuration stops before download. No automatic offline transition, route switching or replay. A read handle can be refreshed once only with explicit permission and evidence of a read-only stale object before any execution. Unknown writes require session reset. Test/accepted behaviorPolicy=safe-v4.";
-        public static readonly string[] Entries = { "DownloadPlc", "DownloadPlcToFolder", "CompilePlcSoftware", "ExportPlcBlockDocuments", "ImportPlcBlockDocuments",
-            "ListVersionControlWorkspaces", "GetVersionControlStatus", "CreateVersionControlWorkspace", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace" };
+        public static readonly IReadOnlyList<string> Entries = Array.AsReadOnly(new string[] { "DownloadPlc", "DownloadPlcToFolder", "CompilePlcSoftware", "ExportPlcBlockDocuments", "ImportPlcBlockDocuments",
+            "ListVersionControlWorkspaces", "GetVersionControlStatus", "CreateVersionControlWorkspace", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace" });
         protected virtual string Entry => "DownloadPlc";
         public JsonElement InputSchema => Schema(Entry);
         public static JsonElement Schema(string entry)

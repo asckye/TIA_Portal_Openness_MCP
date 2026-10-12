@@ -91,7 +91,7 @@ namespace TiaMcp.FoundationHost
                 var type = ParameterType(parameter.ClrType);
                 if (type == null || !arguments.TryGetProperty(parameter.Name, out var value)) continue;
                 try { JsonSerializer.Deserialize(value.GetRawText(), type, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }); }
-                catch (InputRejection rejection) { return rejection.ToError(parameter.Name); }
+                catch (InputRejectionException rejection) { return rejection.ToError(parameter.Name); }
                 catch (Exception error) when (error is JsonException or ArgumentException or InvalidOperationException or OverflowException or NotSupportedException)
                 { return McpServer.InvalidInput(parameter.Name); }
             }

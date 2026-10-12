@@ -6,14 +6,14 @@ namespace TiaMcp.BuildCommon;
 public static class PortedFamilies
 {
     public sealed record Family(string Prefix, string[] Releases, string[] Tools, Dictionary<string, string[]> ToolReleases);
-    public static readonly string[] ReleaseKeys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
+    public static readonly IReadOnlyList<string> ReleaseKeys = Array.AsReadOnly(new string[] {"14sp1", "15.1", "16", "17", "18", "19", "20", "21"});
     public static Dictionary<string, Family> Load(string root) => Parse(Repository.ReadSource(Path.Combine(root, "src/Adapters.Contracts/PortedFamilies.cs")));
     public static HashSet<string> FoundationCandidates(string root) => ParseFoundationCandidates(Repository.ReadSource(Path.Combine(root, "src/Adapters.Contracts/PortedFamilies.cs")));
     public static HashSet<string> ParseFoundationCandidates(string source)
     {
-        var declarations = Regex.Matches(source, @"\bFoundationCandidates\s*=\s*\{([^}]+)\}\s*;");
+        var declarations = Regex.Matches(source, @"\bFoundationCandidates\s*=\s*(?:\{(?<body>[^}]+)\}|Array\.AsReadOnly\(new string\[\]\s*\{(?<body>[^}]+)\}\s*\))\s*;");
         Require(declarations.Count == 1 && Regex.Matches(source, @"\bFoundationCandidates\s*=").Count == 1, "Missing or unparsed reviewed Foundation candidate declarations");
-        var body = declarations[0].Groups[1].Value; var names = Strings(body);
+        var body = declarations[0].Groups["body"].Value; var names = Strings(body);
         Require(names.Length > 0 && names.Distinct(StringComparer.Ordinal).Count() == names.Length
             && Regex.IsMatch(body, "^\\s*\"[A-Za-z0-9]+\"(?:\\s*,\\s*\"[A-Za-z0-9]+\")*\\s*,?\\s*$"), "Invalid Foundation candidate declarations");
         var tools = Parse(source).Values.SelectMany(f => f.Tools).ToHashSet(StringComparer.Ordinal);

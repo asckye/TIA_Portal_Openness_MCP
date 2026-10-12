@@ -149,5 +149,5 @@ internal sealed class OperatorEndpoint : IAsyncDisposable
 
 internal interface IOperatorListener : IDisposable
 {
-    Task<Stream> Accept(CancellationToken token);
+    public Task<Stream> Accept(CancellationToken token);
 }

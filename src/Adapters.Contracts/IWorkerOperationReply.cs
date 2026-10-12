@@ -4,8 +4,8 @@ namespace TiaMcp.Adapters.Contracts
     // does not add JSON fields to an already released response.
     public interface IWorkerOperationReply
     {
-        bool RequiresSessionReset { get; }
-        bool MayHaveChanged { get; }
-        bool BlockReadsAfterUncertain { get; }
+        public bool RequiresSessionReset { get; }
+        public bool MayHaveChanged { get; }
+        public bool BlockReadsAfterUncertain { get; }
     }
 }

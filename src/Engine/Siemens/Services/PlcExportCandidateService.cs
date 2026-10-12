@@ -66,7 +66,7 @@ namespace TiaMcpServer.Siemens.Services
                 var error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
                     ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                         typed.ParamName, new Dictionary<string, System.Text.Json.JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message))
-                    : ex is PlcExportRejection rejected ? rejected.Error
+                    : ex is PlcExportRejectionException rejected ? rejected.Error
                     : new Error("The exact PLC export target is unavailable; no export was issued.", new PreconditionFailedDetails("plc-export-target", null));
                 return PlcExportSession.Result(release, tool, id, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }

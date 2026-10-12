@@ -2,25 +2,29 @@
 #if TIA_ENGINE_LOCAL_PRIMITIVES
 #define STUDIO_VCI
 #define STUDIO_VCI_MODERN
+#endif
+#if STUDIO_VCI
+using System.Collections.Generic;
+using System.IO;
+using global::Siemens.Engineering;
+using global::Siemens.Engineering.HW;
+using global::Siemens.Engineering.SW;
+using global::Siemens.Engineering.SW.Blocks;
+using global::Siemens.Engineering.SW.Tags;
+using global::Siemens.Engineering.SW.Types;
+using global::Siemens.Engineering.VersionControl;
+#if !STUDIO_VCI_MODERN
+using MappedObject = global::Siemens.Engineering.VersionControl.WorkspaceMapping;
+#endif
+#endif
+
+#if TIA_ENGINE_LOCAL_PRIMITIVES
 namespace TiaMcpServer.Siemens.LocalVci
 #else
 namespace TiaOpenness.Openness
 #endif
 {
 #if STUDIO_VCI
-    using System.Collections.Generic;
-    using System.IO;
-    using global::Siemens.Engineering;
-    using global::Siemens.Engineering.HW;
-    using global::Siemens.Engineering.SW;
-    using global::Siemens.Engineering.SW.Blocks;
-    using global::Siemens.Engineering.SW.Tags;
-    using global::Siemens.Engineering.SW.Types;
-    using global::Siemens.Engineering.VersionControl;
-#if !STUDIO_VCI_MODERN
-    using MappedObject = global::Siemens.Engineering.VersionControl.WorkspaceMapping;
-#endif
-
     // Raw VCI operations shared by the engine and Studio. This layer has no session,
     // response envelope, retry, exception translation, filtering or thread dispatch.
     public static class VersionControlPrimitives

@@ -14,13 +14,13 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal interface IHardwareAddressingService
     {
-        bool HasProject { get; }
-        IReadOnlyList<TiaMcp.Adapters.Contracts.IoAddressInfo>? GetDeviceItemAddresses(string path);
-        List<string> DescribeChildItemsWithAddresses(string path);
-        (bool ok, string message, TiaMcp.Adapters.Contracts.IoAddressInfo? before, TiaMcp.Adapters.Contracts.IoAddressInfo? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress);
-        ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson, int offset, int limit);
-        ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson, string attributesJson, string softwarePath, string processImageObName, bool dryRun);
-        JsonObject GetDeviceIpAddress(string path);
+        public bool HasProject { get; }
+        public IReadOnlyList<TiaMcp.Adapters.Contracts.IoAddressInfo>? GetDeviceItemAddresses(string path);
+        public List<string> DescribeChildItemsWithAddresses(string path);
+        public (bool ok, string message, TiaMcp.Adapters.Contracts.IoAddressInfo? before, TiaMcp.Adapters.Contracts.IoAddressInfo? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress);
+        public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson, int offset, int limit);
+        public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson, string attributesJson, string softwarePath, string processImageObName, bool dryRun);
+        public JsonObject GetDeviceIpAddress(string path);
     }
 
     [McpServerToolType]

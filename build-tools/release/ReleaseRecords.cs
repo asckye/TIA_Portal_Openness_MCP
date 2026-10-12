@@ -35,7 +35,7 @@ internal static class ReleaseRecords
     {
         var policy = SourceRoots.Load(root);
         var roots = kind == "multi" ? policy.Inventory("validation").Concat(policy.Inventory("validationMulti")) : policy.Inventory("validation");
-        var extensions = new HashSet<string>([".cs", ".csproj", ".props", ".targets", ".xml", ".json", ".xaml", ".py", ".toml", ".xsd", ".ttf", ".otf"], StringComparer.OrdinalIgnoreCase);
+        var extensions = new HashSet<string>([".cs", ".csproj", ".props", ".targets", ".xml", ".json", ".xaml", ".py", ".toml", ".xsd", ".ttf", ".otf", ".editorconfig"], StringComparer.OrdinalIgnoreCase);
         var files = new HashSet<string>([Path.Combine(root, "Version.props")], StringComparer.OrdinalIgnoreCase);
         foreach (var relative in roots)
         {

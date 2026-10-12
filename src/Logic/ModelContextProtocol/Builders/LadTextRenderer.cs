@@ -180,14 +180,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     var sec = Section(uid, pin);
                     if (sec != null) return sec.Equals("Output", StringComparison.OrdinalIgnoreCase);
                     return pin != null && (pin.Equals("out", StringComparison.OrdinalIgnoreCase)
-                        || pin.Equals("eno", StringComparison.OrdinalIgnoreCase) || pin == "Q" || pin.StartsWith("out"));
+                        || pin.Equals("eno", StringComparison.OrdinalIgnoreCase) || pin == "Q" || pin.StartsWith("out", StringComparison.Ordinal));
                 }
                 bool IsIn(string? uid, string? pin)
                 {
                     var sec = Section(uid, pin);
                     if (sec != null) return !sec.Equals("Output", StringComparison.OrdinalIgnoreCase);
                     return pin != null && (pin.Equals("in", StringComparison.OrdinalIgnoreCase)
-                        || pin.Equals("en", StringComparison.OrdinalIgnoreCase) || pin.Equals("pre", StringComparison.OrdinalIgnoreCase) || pin.StartsWith("in"));
+                        || pin.Equals("en", StringComparison.OrdinalIgnoreCase) || pin.Equals("pre", StringComparison.OrdinalIgnoreCase) || pin.StartsWith("in", StringComparison.Ordinal));
                 }
 
                 var sources = names.Where(t => IsOut(t.uid, t.pin)).ToList();
@@ -285,7 +285,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var branches = new List<string>();
                     foreach (var pin in p.Operands.Keys.Concat(new[] { "in1", "in2", "in3", "in4" }).Distinct())
                     {
-                        if (!pin.StartsWith("in")) continue;
+                        if (!pin.StartsWith("in", StringComparison.Ordinal)) continue;
                         if (flowSource.TryGetValue(uid + ":" + pin, out var src))
                             branches.Add(TraceChain(src, parts, flowSource, guard));
                     }
@@ -401,7 +401,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Memory" => "M",
                 _ => area
             };
-            if (!int.TryParse(address.Attribute("BitOffset")?.Value, out var bits)) return "%" + prefix + "?";
+            if (!int.TryParse(address.Attribute("BitOffset")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var bits)) return "%" + prefix + "?";
             var size = type switch
             {
                 "Bool" => "",
@@ -598,7 +598,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static int ParseNum(XElement e, int def)
-            => int.TryParse(e.Attribute("Num")?.Value, out var n) ? n : def;
+            => int.TryParse(e.Attribute("Num")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : def;
 
         private static string FirstMultilingual(XElement unit, string composition)
         {

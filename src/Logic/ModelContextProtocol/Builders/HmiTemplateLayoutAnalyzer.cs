@@ -224,8 +224,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int GetJsonInt(JsonNode? node, int fallback)
         {
             if (node == null) return fallback;
-            if (int.TryParse(node.ToString(), out var value)) return value;
-            if (double.TryParse(node.ToString(), out var doubleValue)) return (int)Math.Round(doubleValue);
+            if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value)) return value;
+            if (double.TryParse(node.ToString(), System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, System.Globalization.CultureInfo.InvariantCulture, out var doubleValue)) return (int)Math.Round(doubleValue);
             return fallback;
         }
 

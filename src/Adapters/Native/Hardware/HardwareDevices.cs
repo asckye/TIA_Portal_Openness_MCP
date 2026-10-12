@@ -83,7 +83,7 @@ namespace TiaMcp.Adapters
                 try
                 {
                     var parts = vNoV.Split('.');
-                    if (parts.Length > 0 && int.TryParse(parts[0], out var maj) && maj == 20)
+                    if (parts.Length > 0 && int.TryParse(parts[0], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var maj) && maj == 20)
                     {
                         versionVariants.Add("21.0.0.0");
                         versionVariants.Add("21.0.0.1");
@@ -774,7 +774,7 @@ namespace TiaMcp.Adapters
             if (NormalizeOrderNumber(text).IndexOf("6AV2128-", StringComparison.OrdinalIgnoreCase) < 0) return;
             var match = Regex.Match(text, @"/V?(\d+)\.(\d+)");
             if (!match.Success) return;
-            if (int.Parse(match.Groups[1].Value) != HardwareMajorVersion)
+            if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) != HardwareMajorVersion)
                 throw new HardwareAddressingException("InvalidParams", "WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + HardwareMajorVersion
                     + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + HardwareMajorVersion + ".0.0.0 (SearchHardwareCatalog).");
         }
@@ -1171,12 +1171,12 @@ namespace TiaMcp.Adapters
                 var oldType = oldValue.GetType();
                 if (oldType == typeof(string)) return value;
                 if (oldType == typeof(bool)) return bool.Parse(value);
-                if (oldType == typeof(int)) return int.Parse(value);
-                if (oldType == typeof(uint)) return uint.Parse(value);
-                if (oldType == typeof(short)) return short.Parse(value);
-                if (oldType == typeof(ushort)) return ushort.Parse(value);
-                if (oldType == typeof(long)) return long.Parse(value);
-                if (oldType == typeof(ulong)) return ulong.Parse(value);
+                if (oldType == typeof(int)) return int.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                if (oldType == typeof(uint)) return uint.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                if (oldType == typeof(short)) return short.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                if (oldType == typeof(ushort)) return ushort.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                if (oldType == typeof(long)) return long.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                if (oldType == typeof(ulong)) return ulong.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
                 if (oldType == typeof(float)) return float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
                 if (oldType == typeof(double)) return double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
                 if (oldType.IsEnum) return Enum.Parse(oldType, value, ignoreCase: true);
@@ -1184,8 +1184,8 @@ namespace TiaMcp.Adapters
 
             var dataType = HardwareTryProperty(attributeInfo, "DataType", "Type")?.ToString() ?? string.Empty;
             if (dataType.IndexOf("Boolean", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Bool", StringComparison.OrdinalIgnoreCase)) return bool.Parse(value);
-            if (dataType.IndexOf("Int32", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Int", StringComparison.OrdinalIgnoreCase)) return int.Parse(value);
-            if (dataType.IndexOf("UInt32", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("UInt", StringComparison.OrdinalIgnoreCase)) return uint.Parse(value);
+            if (dataType.IndexOf("Int32", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Int", StringComparison.OrdinalIgnoreCase)) return int.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+            if (dataType.IndexOf("UInt32", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("UInt", StringComparison.OrdinalIgnoreCase)) return uint.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
             if (dataType.IndexOf("Double", StringComparison.OrdinalIgnoreCase) >= 0 || dataType.Equals("Real", StringComparison.OrdinalIgnoreCase)) return double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 
             return value;
@@ -1265,7 +1265,7 @@ namespace TiaMcp.Adapters
             }
             return arr;
         }
-        private int HardwareMajorVersion => ReleaseKey == "14sp1" ? 14 : ReleaseKey == "15.1" ? 15 : int.Parse(ReleaseKey);
+        private int HardwareMajorVersion => ReleaseKey == "14sp1" ? 14 : ReleaseKey == "15.1" ? 15 : int.Parse(ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
 
         private static IEnumerable<(DeviceItem Item, string Path)> HardwareTraverseDeviceItems(DeviceItem root, string path)
         {
@@ -1274,7 +1274,7 @@ namespace TiaMcp.Adapters
             {
                 foreach (var nested in HardwareTraverseDeviceItems(child, path + "/" + child.Name))
                 {
-                      
+
       yield return nested;
                 }
             }

@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -170,7 +171,7 @@ internal static partial class ReleaseCommands
         foreach (var (prefix, evidence) in new[] { ("", engine.RootElement), ("adapter ", adapter.RootElement) })
         {
             var match = Regex.Match(text, "COMPLETE: (\\d+) " + prefix + "native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-            if (!match.Success || int.Parse(match.Groups[1].Value) + int.Parse(match.Groups[2].Value) != GetJsonInt(evidence, "count"))
+            if (!match.Success || int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(evidence, "count"))
                 throw new ReleaseException(prefix + "diagnostic wrapper JIT/inventory mismatch");
         }
         RequireCount("adapter journal", text, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");

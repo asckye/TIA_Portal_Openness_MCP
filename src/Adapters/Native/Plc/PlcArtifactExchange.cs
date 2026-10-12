@@ -23,7 +23,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public PlcBlock? ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
         {
-            
+
             _session.RecordExportPath(null);
 
             try
@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 var text = TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.ReadAllText(path, Encoding.UTF8));
 
                 var fixedText = text;
-                int major = int.Parse(_session.ReleaseKey == "14sp1" ? "14" : _session.ReleaseKey == "15.1" ? "15" : _session.ReleaseKey);
+                int major = int.Parse(_session.ReleaseKey == "14sp1" ? "14" : _session.ReleaseKey == "15.1" ? "15" : _session.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
                 if (major > 0)
                 {
                     fixedText = Regex.Replace(text,
@@ -98,7 +98,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public bool ImportBlock(string softwarePath, string groupPath, string importPath)
         {
-            
+
 
             try
             {
@@ -158,7 +158,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public bool ImportType(string softwarePath, string groupPath, string importPath)
         {
-            
+
 
             try
             {

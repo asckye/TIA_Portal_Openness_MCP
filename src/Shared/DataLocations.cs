@@ -225,7 +225,7 @@ namespace TiaOpenness.Shared
             for (var parent = new DirectoryInfo(directory); parent != null; parent = parent.Parent)
                 if ((parent.Attributes & FileAttributes.ReparsePoint) != 0) return;
             var files = Directory.GetFiles(directory, "*.log").Select(path => new { Path = path, Match = PlainLogName.Match(Path.GetFileName(path)) })
-                .Where(file => file.Match.Success && int.TryParse(file.Match.Groups["pid"].Value, out _)
+                .Where(file => file.Match.Success && int.TryParse(file.Match.Groups["pid"].Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _)
                     && DateTime.TryParseExact(file.Match.Groups["start"].Value, "yyyyMMdd-HHmmss-fffffff", CultureInfo.InvariantCulture,
                         DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out _));
             foreach (var purpose in files.GroupBy(file => file.Match.Groups["purpose"].Value))

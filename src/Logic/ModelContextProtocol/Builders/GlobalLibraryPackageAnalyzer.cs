@@ -391,7 +391,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string AppendDirectorySeparatorChar(string path)
         {
             if (string.IsNullOrEmpty(path)) return path;
-            return path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString())
+            return path.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString(), StringComparison.Ordinal)
                 ? path
                 : path + Path.DirectorySeparatorChar;
         }

@@ -142,7 +142,7 @@ public sealed class McpProjectClient : IProjectClient
         return new() { Name = name, Path = path, FolderPath = path.Contains('/') ? path[..path.LastIndexOf('/')] : "",
             Kind = kind.Contains("OB", StringComparison.Ordinal) ? BlockKind.OB : kind.Contains("FB", StringComparison.Ordinal) ? BlockKind.FB
                 : kind.Contains("FC", StringComparison.Ordinal) ? BlockKind.FC : kind.Contains("DB", StringComparison.Ordinal) ? BlockKind.DB : BlockKind.Unknown,
-            Number = int.TryParse(Attribute("Number"), out int number) ? number : null,
+            Number = int.TryParse(Attribute("Number"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int number) ? number : null,
             IsConsistent = (bool?)data["isConsistent"] == true, IsKnowHowProtected = (bool?)data["isKnowHowProtected"] == true,
             ProgrammingLanguage = (string?)data["programmingLanguage"] ?? "", HeaderAuthor = Attribute("HeaderAuthor") ?? "" };
     }

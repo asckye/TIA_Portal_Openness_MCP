@@ -20,12 +20,12 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 if (BehaviorCapabilities.Select(typeof(SessionCandidateTools).Assembly, McpServer.ReleaseKey, "P6-SESSION") != BehaviorPolicy.SafeV4)
-                    throw new SessionCandidateRejection(new Error("Session candidate is not selected.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "P6-SESSION", "candidate")));
+                    throw new SessionCandidateRejectionException(new Error("Session candidate is not selected.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, "P6-SESSION", "candidate")));
                 result = portal.RunSessionCandidate(tool, new SessionRequest { Action = SessionCandidateContract.Action(tool), ProcessId = processId,
                     ProcessStartUtc = SessionCandidateSession.Start(processStartUtc), ProjectPath = projectPath, StartNew = startNew, ReuseOpen = reuseOpen,
                     Upgrade = upgrade, CopyPath = copyPath }, mode, confirm, expectedPlanHash, expectedProjectFile, confirmUpgrade);
             }
-            catch (SessionCandidateRejection error)
+            catch (SessionCandidateRejectionException error)
             { result = SessionCandidateSession.Result(McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), null, error.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted); }
             var wire = McpResult.From(result);
             return new CallToolResult { IsError = wire.IsError, StructuredContent = JsonNode.Parse(wire.StructuredContent.GetRawText()), Content = new[] { new TextContentBlock { Text = wire.Content[0].Text } } };

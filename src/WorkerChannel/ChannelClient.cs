@@ -85,8 +85,8 @@ namespace TiaMcp.WorkerChannel
                 if (response.Failure != null) throw response.Failure;
                 return response.ResultJson;
             }
-            catch (ChannelFailure ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
-            catch (ChannelFailure) { throw; } // An answered unknown reply permits only an idle detach.
+            catch (ChannelFailureException ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
+            catch (ChannelFailureException) { throw; } // An answered unknown reply permits only an idle detach.
             catch (Exception ex) { throw Poison(ex); }
             finally { lock (gate) if (ReferenceEquals(pending, call)) pending = null; }
         }
@@ -173,17 +173,17 @@ namespace TiaMcp.WorkerChannel
 
         private void RequireUsable(string? method = null)
         {
-            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect") throw new ChannelFault("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
+            if (poisoned || disposed || recoveryOnly && method != "adapter.Disconnect") throw new ChannelFaultException("Previous native request has an unknown outcome. Inspect TIA before a new explicit session; requests are never replayed.", unknown);
         }
 
-        private ChannelFault Poison(Exception cause)
+        private ChannelFaultException Poison(Exception cause)
         {
             lock (gate)
             {
                 poisoned = true;
                 lastFault ??= cause;
                 unknown |= pending?.Dispatched == true;
-                var fault = new ChannelFault(cause.Message, unknown, cause);
+                var fault = new ChannelFaultException(cause.Message, unknown, cause);
                 hello.TrySetException(fault);
                 pending?.Completion.TrySetException(fault);
                 return fault;

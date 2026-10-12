@@ -106,13 +106,13 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface ISourceAdapter
     {
-        SourceObservation Observe();
-        void BeforeAction(SourceItem item);
-        SourceRow Import(SourceItem item, string[] declarations);
-        string[]? Generate(SourceRow source);
-        void Delete(SourceRow source);
+        public SourceObservation Observe();
+        public void BeforeAction(SourceItem item);
+        public SourceRow Import(SourceItem item, string[] declarations);
+        public string[]? Generate(SourceRow source);
+        public void Delete(SourceRow source);
     }
-    public interface ISourceBoundary { SourceAttempt Execute(SourceCheck check, IDictionary<string, Stream> locks); }
+    public interface ISourceBoundary { public SourceAttempt Execute(SourceCheck check, IDictionary<string, Stream> locks); }
     public static class SourceDigest
     {
         private static void Text(BinaryWriter w, string? value) { w.Write(value != null); if (value != null) w.Write(value); }

@@ -153,17 +153,17 @@ namespace TiaMcp.Logic.Generation
         public JsonObject Manage(string action, string id, string version, string sourcePath, string outputPath,
             string newId, string newVersion, bool dryRun, string expectedPlanHash)
         {
-            if (!new[] { "import", "export", "copy", "fork", "remove" }.Contains(action)) throw new ArgumentException("Unknown package action.", "action");
+            if (!new[] { "import", "export", "copy", "fork", "remove" }.Contains(action)) throw new ArgumentException("Unknown package action.", nameof(action));
             if (action == "import" && (id.Length != 0 || version.Length != 0 || newId.Length != 0 || newVersion.Length != 0 || outputPath.Length != 0)
                 || action != "import" && sourcePath.Length != 0 || action != "export" && outputPath.Length != 0
                 || action is not ("copy" or "fork") && (newId.Length != 0 || newVersion.Length != 0))
-                throw new ArgumentException("Arguments do not belong to this package action.", "action");
+                throw new ArgumentException("Arguments do not belong to this package action.", nameof(action));
             var entry = action == "import" ? null : Find(id, version);
             var package = entry?.Package ?? LoadSource(sourcePath);
             if (action is "copy" or "fork")
             {
                 if (newId == package.Manifest.Id || string.IsNullOrWhiteSpace(newId) || string.IsNullOrWhiteSpace(newVersion))
-                    throw new ArgumentException("Copy/fork requires a new package id and an explicit SemVer version.", "newId");
+                    throw new ArgumentException("Copy/fork requires a new package id and an explicit SemVer version.", nameof(newId));
                 package = Fork(package, newId, newVersion);
             }
             if (action != "remove") Effective(package);
@@ -173,7 +173,7 @@ namespace TiaMcp.Logic.Generation
             {
                 target = NewOutput(outputPath, ".zip");
                 using var stream = new MemoryStream(); package.WriteCanonicalZip(stream); zip = stream.ToArray();
-                if (zip.LongLength > new PackageLoadLimits().MaximumArchiveBytes) throw new ArgumentException("Export exceeds the import archive limit.", "outputPath");
+                if (zip.LongLength > new PackageLoadLimits().MaximumArchiveBytes) throw new ArgumentException("Export exceeds the import archive limit.", nameof(outputPath));
             }
             else if (action == "remove")
             {
@@ -213,16 +213,16 @@ namespace TiaMcp.Logic.Generation
         public JsonObject Machine(string action, string id, string version, string machineJson, string inputPath,
             string outputPath, string format, bool dryRun, string expectedPlanHash)
         {
-            if (!new[] { "validate", "import", "export", "exportTemplate" }.Contains(action)) throw new ArgumentException("Unknown machine action.", "action");
-            if (format != "json" && format != "csv") throw new ArgumentException("Only JSON and package-generated CSV are supported; xlsx is deferred.", "format");
+            if (!new[] { "validate", "import", "export", "exportTemplate" }.Contains(action)) throw new ArgumentException("Unknown machine action.", nameof(action));
+            if (format != "json" && format != "csv") throw new ArgumentException("Only JSON and package-generated CSV are supported; xlsx is deferred.", nameof(format));
             if (action == "import" && machineJson.Length != 0 || action != "import" && inputPath.Length != 0
                 || action == "exportTemplate" && machineJson.Length != 0 || action == "validate" && outputPath.Length != 0)
-                throw new ArgumentException("Arguments do not belong to this machine action.", "action");
+                throw new ArgumentException("Arguments do not belong to this machine action.", nameof(action));
             var package = Effective(Load(id, version));
             if (action == "import") machineJson = format == "json" ? ReadJson(inputPath) : MachineCsv.Import(package, inputPath);
             if (action == "exportTemplate")
             {
-                if (format != "csv") throw new ArgumentException("The spreadsheet template uses CSV.", "format");
+                if (format != "csv") throw new ArgumentException("The spreadsheet template uses CSV.", nameof(format));
                 machineJson = MachineCsv.EmptyMachine(package);
             }
             if (Encoding.UTF8.GetByteCount(machineJson) > 4 * 1024 * 1024) throw new ArgumentException("Machine JSON exceeds 4 MiB.", "machine");
@@ -410,7 +410,7 @@ namespace TiaMcp.Logic.Generation
         {
             for (var current = path; !string.IsNullOrEmpty(current); current = Path.GetDirectoryName(current))
                 if ((File.Exists(current) || Directory.Exists(current)) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
-                    throw new ArgumentException("Links and reparse points are prohibited.", "path");
+                    throw new ArgumentException("Links and reparse points are prohibited.", nameof(path));
         }
         private static bool Within(string path, string root) => path.Equals(root, StringComparison.OrdinalIgnoreCase)
             || path.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);

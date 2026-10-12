@@ -8,16 +8,16 @@ namespace TiaMcp.FoundationHost;
 
 internal interface IHostSession : IDisposable
 {
-    string SessionKey { get; }
-    string Instructions { get; }
-    bool OperatorOwned { get; }
-    CancellationToken Closed { get; }
-    IReadOnlyList<McpServerTool> Tools { get; }
-    IReadOnlyList<McpServerTool> OperatorTools { get; }
-    JsonObject Snapshot();
-    event Action? StateChanged;
-    void BindAi(IMcpServer server);
-    IDisposable AttachOperator();
+    public string SessionKey { get; }
+    public string Instructions { get; }
+    public bool OperatorOwned { get; }
+    public CancellationToken Closed { get; }
+    public IReadOnlyList<McpServerTool> Tools { get; }
+    public IReadOnlyList<McpServerTool> OperatorTools { get; }
+    public JsonObject Snapshot();
+    public event Action? StateChanged;
+    public void BindAi(IMcpServer server);
+    public IDisposable AttachOperator();
 }
 
 internal sealed class HostSession : IHostSession

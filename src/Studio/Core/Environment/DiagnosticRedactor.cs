@@ -104,7 +104,7 @@ namespace TiaOpenness.Core.Environment
                 text = Replace(text, @"\b(?:Bearer|Basic)\s+[^\s""'<>\\,;]+", "auth-scheme", m => (m.Value.StartsWith("Basic", StringComparison.OrdinalIgnoreCase) ? "Basic " : "Bearer ") + Mask);
                 var lines = text.Split('\n').Select(line =>
                 {
-                    if (!line.TrimStart().StartsWith("{")) return Plain(line);
+                    if (!line.TrimStart().StartsWith("{", StringComparison.Ordinal)) return Plain(line);
                     try { var node = JsonNode.Parse(line); if (node != null) Scrub(node); return Plain(node?.ToJsonString() ?? "null"); }
                     catch (JsonException) /* swallow(privacy): malformed JSON log lines are hidden entirely instead of exposing partial credentials */ { Count("unparseable-hidden"); return Mask; }
                 });

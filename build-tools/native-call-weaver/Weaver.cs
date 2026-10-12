@@ -6,16 +6,16 @@ using System.Text.Json;
 
 internal static class Weaver
 {
-    const string Generated = "TiaMcpServer.Diagnostics.GeneratedNativeCalls";
-    const string Runtime = "TiaMcpServer.ModelContextProtocol.NativeCallDiagnostics";
-    const string Resource = "TiaMcp.NativeCallCoverage.json";
-    static string Fingerprint => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(Weaver).Assembly.Location))).ToLowerInvariant();
+    private const string Generated = "TiaMcpServer.Diagnostics.GeneratedNativeCalls";
+    private const string Runtime = "TiaMcpServer.ModelContextProtocol.NativeCallDiagnostics";
+    private const string Resource = "TiaMcp.NativeCallCoverage.json";
+    private static string Fingerprint => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(Weaver).Assembly.Location))).ToLowerInvariant();
     internal sealed record Site(string id, string caller, int offset, string opcode, string member, string category, string wrapper);
-    static bool GeneratedType(TypeReference t) => t.FullName == Generated || t.Name.StartsWith("__TiaMcpNativeCall_", StringComparison.Ordinal);
-    static IEnumerable<MethodDefinition> Wrappers(ModuleDefinition m) => Program.Types(m).Where(GeneratedType).SelectMany(t => t.Methods);
-    static bool Excluded(TypeDefinition t) => GeneratedType(t) || t.FullName == Runtime || t.FullName.StartsWith(Runtime + "/", StringComparison.Ordinal) ||
+    private static bool GeneratedType(TypeReference t) => t.FullName == Generated || t.Name.StartsWith("__TiaMcpNativeCall_", StringComparison.Ordinal);
+    private static IEnumerable<MethodDefinition> Wrappers(ModuleDefinition m) => Program.Types(m).Where(GeneratedType).SelectMany(t => t.Methods);
+    private static bool Excluded(TypeDefinition t) => GeneratedType(t) || t.FullName == Runtime || t.FullName.StartsWith(Runtime + "/", StringComparison.Ordinal) ||
         t.FullName == "TiaMcpServer.ModelContextProtocol.InvocationJournal" || t.FullName.StartsWith("TiaMcpServer.ModelContextProtocol.InvocationJournal/", StringComparison.Ordinal);
-    static bool Selected(Instruction i) => i.Operand is MethodReference m && Program.Category(m) != null;
+    private static bool Selected(Instruction i) => i.Operand is MethodReference m && Program.Category(m) != null;
     internal static void Run(ModuleDefinition module, string path, bool weave, string? report)
     {
         if (module.Assembly.Name.HasPublicKey) throw new InvalidOperationException("Refusing to rewrite a signed assembly.");
@@ -53,7 +53,7 @@ internal static class Weaver
         if (report != null) { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(report))!); File.WriteAllBytes(report, resource.GetResourceData()); }
         Console.WriteLine($"Native diagnostic coverage verified: {Wrappers(module).Count()} call sites; no unwrapped supported boundary.");
     }
-    static void AuditDispatch(ModuleDefinition module)
+    private static void AuditDispatch(ModuleDefinition module)
     {
         foreach (var method in Program.Types(module).Where(t => !Excluded(t)).SelectMany(t => t.Methods).Where(m => m.HasBody))
         foreach (var i in method.Body.Instructions)
@@ -70,7 +70,7 @@ internal static class Weaver
                 throw new InvalidOperationException("Unreviewed dynamic native escape: " + method.FullName + " -> " + m.FullName);
         }
     }
-    static void Verify(ModuleDefinition module)
+    private static void Verify(ModuleDefinition module)
     {
         AuditDispatch(module);
         foreach (var method in Program.Types(module).Where(t => !Excluded(t)).SelectMany(t => t.Methods).Where(m => m.HasBody))
@@ -116,7 +116,7 @@ internal static class Weaver
         Reject(m => { var raw = Wrappers(m).SelectMany(x => x.Body.Instructions).First(i => i.Operand is MethodReference r && Program.Native(r.DeclaringType)); var owner = Program.Types(m).Where(t => !Excluded(t)).SelectMany(t => t.Methods).First(x => x.HasBody); owner.Body.Instructions.Insert(0, Instruction.Create(OpCodes.Call, (MethodReference)raw.Operand)); });
         Console.WriteLine("COMPLETE: " + checks + " diagnostic coverage rejection checks passed");
     }
-    static MethodReference Wrap(ModuleDefinition module, TypeDefinition container, MethodDefinition caller, Instruction instruction, Site site)
+    private static MethodReference Wrap(ModuleDefinition module, TypeDefinition container, MethodDefinition caller, Instruction instruction, Site site)
     {
         var target = (MethodReference)instruction.Operand;
         bool construct = instruction.OpCode == OpCodes.Newobj;
@@ -225,7 +225,7 @@ internal static class Weaver
         if (!wrapper.HasGenericParameters) return wrapper;
         var call = new GenericInstanceMethod(wrapper); foreach (var gp in parameters.Keys) call.GenericArguments.Add(gp); return call;
     }
-    static TypeReference Transform(TypeReference t, Func<GenericParameter, TypeReference> generic)
+    private static TypeReference Transform(TypeReference t, Func<GenericParameter, TypeReference> generic)
     {
         if (t is GenericParameter g) return generic(g);
         if (t is GenericInstanceType instance) { var copy = new GenericInstanceType(instance.ElementType); foreach (var a in instance.GenericArguments) copy.GenericArguments.Add(Transform(a, generic)); return copy; }

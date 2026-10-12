@@ -54,23 +54,23 @@ namespace TiaMcp.WorkerChannel
         }
     }
 
-    public sealed class ChannelFailure : Exception
+    public sealed class ChannelFailureException : Exception
     {
         public int Code { get; }
         public ChannelOutcome Outcome { get; }
         public string EvidenceJson { get; }
         public string? RpcErrorJson { get; }
-        public ChannelFailure(string message, int code, ChannelOutcome outcome, string evidenceJson = "null", string? rpcErrorJson = null) : base(message)
+        public ChannelFailureException(string message, int code, ChannelOutcome outcome, string evidenceJson = "null", string? rpcErrorJson = null) : base(message)
         {
             if (code != -32602 && code != -32603) throw new ArgumentOutOfRangeException(nameof(code));
             Code = code; Outcome = outcome; EvidenceJson = evidenceJson; RpcErrorJson = rpcErrorJson;
         }
     }
 
-    public sealed class ChannelFault : IOException
+    public sealed class ChannelFaultException : IOException
     {
         public bool OutcomeUnknown { get; }
-        public ChannelFault(string message, bool outcomeUnknown, Exception? inner = null) : base(message, inner) { OutcomeUnknown = outcomeUnknown; }
+        public ChannelFaultException(string message, bool outcomeUnknown, Exception? inner = null) : base(message, inner) { OutcomeUnknown = outcomeUnknown; }
     }
 
     public sealed class ChannelRequest
@@ -88,13 +88,13 @@ namespace TiaMcp.WorkerChannel
     public sealed class ChannelResponse
     {
         public string ResultJson { get; }
-        public ChannelFailure? Failure { get; }
+        public ChannelFailureException? Failure { get; }
         public string? OversizedResultJson { get; }
         public Func<string>? Spill { get; private set; }
-        private ChannelResponse(string resultJson, ChannelFailure? failure, string? oversizedResultJson = null)
+        private ChannelResponse(string resultJson, ChannelFailureException? failure, string? oversizedResultJson = null)
         { ResultJson = resultJson; Failure = failure; OversizedResultJson = oversizedResultJson; }
         public static ChannelResponse Success(string resultJson, string? oversizedResultJson = null) => new ChannelResponse(resultJson, null, oversizedResultJson);
         public static ChannelResponse WithSpill(string resultJson, Func<string> spill) => new ChannelResponse(resultJson, null) { Spill = spill };
-        public static ChannelResponse Error(ChannelFailure failure) => new ChannelResponse("null", failure);
+        public static ChannelResponse Error(ChannelFailureException failure) => new ChannelResponse("null", failure);
     }
 }

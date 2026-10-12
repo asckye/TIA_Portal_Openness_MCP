@@ -70,7 +70,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     throw new PortalException("InvalidState", "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
                 }
 
-                
+
 
                 var softwareContainer = _session.GetSoftwareContainer(softwarePath);
                 if (Documents.Software(softwareContainer) is PlcSoftware plcSoftware)
@@ -80,8 +80,8 @@ namespace TiaMcp.Adapters.Native.Plc
                         // Export code blocks as documents
                         // https://docs.tia.siemens.cloud/r/en-us/v20/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500
 
-                        var groupPath = blockPath.Contains("/") ? blockPath.Substring(0, blockPath.LastIndexOf("/")) : string.Empty;
-                        var blockName = blockPath.Contains("/") ? blockPath.Substring(blockPath.LastIndexOf("/") + 1) : blockPath;
+                        var groupPath = blockPath.Contains("/") ? blockPath.Substring(0, blockPath.LastIndexOf("/", StringComparison.Ordinal)) : string.Empty;
+                        var blockName = blockPath.Contains("/") ? blockPath.Substring(blockPath.LastIndexOf("/", StringComparison.Ordinal) + 1) : blockPath;
 
                         var group = _session.GetPlcBlockGroupByPath(softwarePath, groupPath);
 

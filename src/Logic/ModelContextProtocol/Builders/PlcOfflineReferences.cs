@@ -9,7 +9,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static class PlcOfflineReferences
     {
-        sealed class Entry
+        private sealed class Entry
         {
             public string Id = "", Name = "", Kind = "";
             public List<(string Name, int Network)> Calls = new List<(string, int)>();

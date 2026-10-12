@@ -10,13 +10,13 @@ namespace TiaMcp.Adapters
     public interface IBindingProcessObservationSource
     {
         // Null or exception means unknown. Must independently query the OS, never Siemens AcquisitionTime.
-        BindingProcessObservation? Read(int processId);
+        public BindingProcessObservation? Read(int processId);
     }
     public interface IBindingProjectObservationSource
     {
         // Fields are bookkeeping only. ReadProject must read the currently bound native object.
-        BindingCachedFields ReadFields();
-        BindingProjectObservation ReadProject();
+        public BindingCachedFields ReadFields();
+        public BindingProjectObservation ReadProject();
     }
     public static class BindingObservationPolicy
     {

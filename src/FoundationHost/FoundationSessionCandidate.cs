@@ -22,7 +22,7 @@ internal sealed partial class FoundationTool
                 Text("expectedPlanHash"), Text("expectedProjectFile"), Flag("confirmUpgrade"), cancellationToken));
             return FoundationV4Result.ImportCandidate(result);
         }
-        catch (SessionCandidateRejection error)
+        catch (SessionCandidateRejectionException error)
         { return FoundationV4Result.ImportCandidate(SessionCandidateSession.Result(release, tool, id, null, error.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted)); }
     }
 }

@@ -49,15 +49,15 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface ISaveCloseAdapter
     {
-        SaveCloseObservation Observe();
-        void BeforeAction();
-        void Save();
-        void SaveCopy(string directory);
-        void Close();
-        void Disconnect();
-        void MarkUncertain();
+        public SaveCloseObservation Observe();
+        public void BeforeAction();
+        public void Save();
+        public void SaveCopy(string directory);
+        public void Close();
+        public void Disconnect();
+        public void MarkUncertain();
     }
-    public interface ISaveCloseBoundary { SaveCloseAttempt Execute(SaveCloseCheck check); }
+    public interface ISaveCloseBoundary { public SaveCloseAttempt Execute(SaveCloseCheck check); }
     public static class SaveClosePrimitives
     {
         public static string Digest(SaveCloseCheck check)

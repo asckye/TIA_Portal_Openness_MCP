@@ -37,7 +37,7 @@ namespace TiaMcp.Adapters.Hardware
             else if (!string.IsNullOrEmpty(name) && action != "read") throw new ArgumentException("name applies to setDefault / update / delete / setServiceGroupName / createService / deleteService.");
             if (action == "createService")
             {
-                if (!uint.TryParse(name, out _)) throw new ArgumentException("createService: name is the new service Id (UInt32).");
+                if (!uint.TryParse(name, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _)) throw new ArgumentException("createService: name is the new service Id (UInt32).");
                 RequireKeys(properties, new[] { "ServiceGroupName", "ServiceType" }, "propertiesJson");
                 if (!properties.TryGetValue("ServiceGroupName", out var group) || group.Kind == "null" || !properties.TryGetValue("ServiceType", out var type) || type.Kind == "null") throw new ArgumentException("createService needs propertiesJson {ServiceGroupName, ServiceType} (CertificateSupportedServiceComposition.Create(id, serviceGroupName, serviceType)).");
                 if ((properties["ServiceGroupName"].Text).Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters.");
@@ -57,7 +57,7 @@ namespace TiaMcp.Adapters.Hardware
                 {
                     RequireKeys(properties, CertificateConfigurationProperties, "propertiesJson");
                     if (properties.TryGetValue("Usage", out var usage)) RequireOneOf(usage.Kind == "null" ? "" : usage.Text, CertificateConfigurationUsages, "Usage");
-                    if (properties.TryGetValue("RemainingCertificateLifetime", out var lifetime) && (lifetime.Kind != "number" || !long.TryParse(lifetime.Text, out var percent) || percent < 10 || percent > 90)) throw new ArgumentException("RemainingCertificateLifetime is a percentage 10..90 (official range).");
+                    if (properties.TryGetValue("RemainingCertificateLifetime", out var lifetime) && (lifetime.Kind != "number" || !long.TryParse(lifetime.Text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var percent) || percent < 10 || percent > 90)) throw new ArgumentException("RemainingCertificateLifetime is a percentage 10..90 (official range).");
                 }
             }
             else if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to update / setServiceGroupName / createService only.");

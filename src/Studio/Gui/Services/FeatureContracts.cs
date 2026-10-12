@@ -41,8 +41,8 @@ public sealed record ConnectionInfo(string Address, string Transport, string Con
 /// <summary>Snapshots and change notifications for the workbench journal; no native session is owned here.</summary>
 public interface ICallJournalService : INotifyPropertyChanged
 {
-    IReadOnlyList<CallRecord> Calls { get; }
-    ConnectionInfo Connection { get; }
+    public IReadOnlyList<CallRecord> Calls { get; }
+    public ConnectionInfo Connection { get; }
 }
 
 public sealed record AuditEvent(long Index, DateTimeOffset Time, AuditEventType Type, string ToolObject,
@@ -60,13 +60,13 @@ public sealed record AuditVerification(bool? Passed, int Count = 0, long? BreakI
 
 public interface IAuditLogService : INotifyPropertyChanged
 {
-    IReadOnlyList<AuditEvent> Events { get; }
-    int TotalCount { get; }
-    int FileSizeMb { get; set; }
-    int Copies { get; set; }
-    LocalizedText Coverage { get; }
-    AuditVerification Verify();
-    LocalizedText OpenFolder();
+    public IReadOnlyList<AuditEvent> Events { get; }
+    public int TotalCount { get; }
+    public int FileSizeMb { get; set; }
+    public int Copies { get; set; }
+    public LocalizedText Coverage { get; }
+    public AuditVerification Verify();
+    public LocalizedText OpenFolder();
 }
 
 public sealed record EnvironmentCheck(string Id, CheckStatus Status, LocalizedText Name, LocalizedText Result,
@@ -75,10 +75,10 @@ public sealed record EnvironmentGroup(LocalizedText Name, IReadOnlyList<Environm
 
 public interface IEnvironmentCheckService : INotifyPropertyChanged
 {
-    IReadOnlyList<EnvironmentGroup> Groups { get; }
-    IReadOnlyList<string> LogTail { get; }
-    LocalizedText Recheck();
-    LocalizedText Fix(string checkId);
+    public IReadOnlyList<EnvironmentGroup> Groups { get; }
+    public IReadOnlyList<string> LogTail { get; }
+    public LocalizedText Recheck();
+    public LocalizedText Fix(string checkId);
 }
 
 public sealed record DiagnosticProgress(DiagnosticState State, LocalizedText Step, int Percent = 0, string Path = "");

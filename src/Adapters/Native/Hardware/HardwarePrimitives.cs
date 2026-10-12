@@ -1,17 +1,19 @@
 #nullable disable
 #if TIA_ENGINE_LOCAL_PRIMITIVES
 #define PLC_HARDWARE_CATALOG_ENTRIES
+#endif
+using global::Siemens.Engineering;
+using global::Siemens.Engineering.HW;
+#if PLC_HARDWARE_CATALOG_ENTRIES
+using global::Siemens.Engineering.HW.HardwareCatalog;
+#endif
+
+#if TIA_ENGINE_LOCAL_PRIMITIVES
 namespace TiaMcpServer.Siemens.LocalHardware
 #else
 namespace TiaMcp.Adapters.Hardware
 #endif
 {
-    using global::Siemens.Engineering;
-    using global::Siemens.Engineering.HW;
-#if PLC_HARDWARE_CATALOG_ENTRIES
-    using global::Siemens.Engineering.HW.HardwareCatalog;
-#endif
-
     // Raw shared members only; hosts retain catalog selection, retries and creation policy.
     public static class HardwarePrimitives
     {

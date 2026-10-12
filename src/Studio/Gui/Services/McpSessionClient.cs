@@ -303,10 +303,10 @@ public sealed class McpSessionClient : IMcpSessionClient
 
 internal interface IOwnedOperatorHost : IDisposable
 {
-    int Id { get; }
-    bool HasExited { get; }
-    Task WaitForExitAsync(CancellationToken token);
-    void Terminate();
+    public int Id { get; }
+    public bool HasExited { get; }
+    public Task WaitForExitAsync(CancellationToken token);
+    public void Terminate();
 }
 internal sealed class OwnedOperatorHost(Process process) : IOwnedOperatorHost
 {

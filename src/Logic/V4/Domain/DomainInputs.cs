@@ -51,7 +51,7 @@ namespace TiaMcp.Logic.V4.Domain
             if (result.Error.Code == ErrorCode.InvalidArgument)
             {
                 try { Budget(typeof(T)).Check(V4Json.ParseInput(json)); }
-                catch (InputRejection rejection) when (!rejection.IsLimit) { throw new ArgumentException(message); }
+                catch (InputRejectionException rejection) when (!rejection.IsLimit) { throw new ArgumentException(message); }
                 catch (ArgumentException) { throw new ArgumentException(message); }
                 catch (JsonException) /* swallow(parse-fallback): malformed text retains the legacy JSON exception category */ { }
             }

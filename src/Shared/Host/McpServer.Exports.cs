@@ -61,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static int ResolvedMaxResponseChars()
         {
             var raw = Environment.GetEnvironmentVariable("TIA_MCP_MAX_RESPONSE_CHARS");
-            if (!string.IsNullOrWhiteSpace(raw) && int.TryParse(raw.Trim(), out var v)) return v;
+            if (!string.IsNullOrWhiteSpace(raw) && int.TryParse(raw.Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var v)) return v;
             return DefaultMaxResponseChars;
         }
 

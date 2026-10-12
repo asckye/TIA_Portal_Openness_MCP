@@ -9,10 +9,10 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.Logic.V4
 {
-    public sealed class PlcImportRejection : Exception
+    public sealed class PlcImportRejectionException : Exception
     {
         public Error Error { get; }
-        public PlcImportRejection(Error error) : base(error.Message) { Error = error; }
+        public PlcImportRejectionException(Error error) : base(error.Message) { Error = error; }
     }
 
     // The owning native thread serializes this session. Plans cannot cross sessions or be replayed.
@@ -146,13 +146,13 @@ namespace TiaMcp.Logic.V4
             catch (Exception ex)
             {
                 if (ex is CandidateObservationException observed) ex = CandidateHostMapping.Import(observed.Fault);
-                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.NativeResultException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException && (ex is not PlcImportRejection rejected
+                if (mode == "apply" && data == null && identity != null && ex is not TiaMcp.Adapters.Contracts.NativeResultException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException && (ex is not PlcImportRejectionException rejected
                     || rejected.Error.Code != ErrorCode.IdentityMismatch && rejected.Error.Code != ErrorCode.PlanStale))
-                    ex = new PlcImportRejection(new Error("The reviewed input can no longer be read or admitted.", new PlanStaleDetails(expectedPlanHash, "input-unavailable-or-changed")));
+                    ex = new PlcImportRejectionException(new Error("The reviewed input can no longer be read or admitted.", new PlanStaleDetails(expectedPlanHash, "input-unavailable-or-changed")));
                 Error error = ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed
                     ? HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                         typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message))
-                    : ex is PlcImportRejection refused ? refused.Error
+                    : ex is PlcImportRejectionException refused ? refused.Error
                     : new Error("Import preflight could not establish the reviewed target; no native import was issued for this item.",
                         ex is IOException || ex is UnauthorizedAccessException ? (ErrorDetails)new IoFailedDetails("read", null) : new PreconditionFailedDetails("plc-import-preflight", null));
                 if (issued)
@@ -253,6 +253,6 @@ namespace TiaMcp.Logic.V4
         public static void Unsupported(string release, string action) => Refuse("The release/object does not support the requested import capability.", new UnsupportedCapabilityDetails(release, "P6-IMPORT", action));
         public static void Stale(string hash, string reason) => Refuse("The import plan changed since preview.", new PlanStaleDetails(hash, reason));
         public static void IdentityMismatch() => Refuse("The process or project binding changed since preview.", new IdentityMismatchDetails("project-binding", null, null));
-        public static void Refuse(string message, ErrorDetails details) => throw new PlcImportRejection(new Error(message, details));
+        public static void Refuse(string message, ErrorDetails details) => throw new PlcImportRejectionException(new Error(message, details));
     }
 }

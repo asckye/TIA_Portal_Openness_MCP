@@ -6,13 +6,13 @@ namespace TiaOpenness.Gui.Services.Stubs;
 
 public interface IApprovalService : INotifyPropertyChanged
 {
-    bool Enabled { get; set; }
-    int TimeoutSeconds { get; set; }
-    int PendingCount { get; }
-    IReadOnlyList<ApprovalRequest> Requests { get; }
-    event EventHandler<ApprovalRequest>? NewRequest;
-    bool CanDecide(string requestId);
-    bool Approve(string requestId);
-    bool Deny(string requestId);
-    void Refresh();
+    public bool Enabled { get; set; }
+    public int TimeoutSeconds { get; set; }
+    public int PendingCount { get; }
+    public IReadOnlyList<ApprovalRequest> Requests { get; }
+    public event EventHandler<ApprovalRequest>? NewRequest;
+    public bool CanDecide(string requestId);
+    public bool Approve(string requestId);
+    public bool Deny(string requestId);
+    public void Refresh();
 }

@@ -72,7 +72,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public CompilerResult CompileSoftware(string softwarePath, string password = "")
         {
-            
+
 
             if (_session.IsProjectNull())
                 throw new PlcSoftwareException("InvalidState", "Project is null");

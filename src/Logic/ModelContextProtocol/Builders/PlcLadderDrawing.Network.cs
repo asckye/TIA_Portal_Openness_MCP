@@ -291,7 +291,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var pins = new List<string> { "en", "eno" };
             int count = node.Name.Equals("Move", StringComparison.OrdinalIgnoreCase) ? 1 : 2;
             var cardinality = node.Xml.Elements().FirstOrDefault(e => e.Name.LocalName == "TemplateValue" && (string?)e.Attribute("Type") == "Cardinality");
-            if (cardinality != null && int.TryParse(cardinality.Value, out int value)) count = value;
+            if (cardinality != null && int.TryParse(cardinality.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int value)) count = value;
             if (count < 1 || count > PlcProgramRenderer.MaxElements) throw new ArgumentException("Instruction pin cardinality exceeds the render budget.");
             if (node.Name.Equals("Move", StringComparison.OrdinalIgnoreCase))
             {

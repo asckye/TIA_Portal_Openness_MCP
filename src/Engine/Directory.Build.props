@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)../Shared/CodeAnalysis.props" Condition="'$(TiaMcpCodeAnalysisImported)' != 'true'" />
   <PropertyGroup>
     <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcp.Engine.V20'">20</TiaBuildVersion>
     <TiaBuildVersion Condition="'$(MSBuildProjectName)' == 'TiaMcp.Engine.V21'">21</TiaBuildVersion>

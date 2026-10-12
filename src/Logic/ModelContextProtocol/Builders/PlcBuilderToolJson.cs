@@ -513,7 +513,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (node is JsonValue value && value.TryGetValue<int>(out var intValue))
                     return intValue;
-                if (int.TryParse(node.ToString(), out var parsed))
+                if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
                     return parsed;
             }
 

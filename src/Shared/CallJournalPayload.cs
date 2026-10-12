@@ -118,14 +118,14 @@ namespace TiaOpenness.Shared
         private static bool Embedded(string text, out JsonNode? node)
         {
             node = null;
-            if (!text.TrimStart().StartsWith("{") && !text.TrimStart().StartsWith("[")) return false;
+            if (!text.TrimStart().StartsWith("{", StringComparison.Ordinal) && !text.TrimStart().StartsWith("[", StringComparison.Ordinal)) return false;
             try { node = JsonNode.Parse(text); return true; }
             catch (JsonException) /* swallow(privacy): malformed embedded JSON is hidden by the text boundary */ { return false; }
         }
 
         private static string Text(string text, HashSet<string> secrets, int depth)
         {
-            if (text.TrimStart().StartsWith("{") || text.TrimStart().StartsWith("["))
+            if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
             {
                 if (depth >= 16 || !Embedded(text, out var embedded)) return Hidden;
                 Scrub(embedded, secrets, depth + 1);

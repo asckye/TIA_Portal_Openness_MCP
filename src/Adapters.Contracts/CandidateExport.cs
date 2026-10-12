@@ -33,13 +33,13 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface IPlcExportAdapter
     {
-        CandidateIdentity ReadIdentity();
-        IReadOnlyList<PlcExportObject> ReadObjects(string tool, PlcExportRequest request);
-        bool SupportsOverwrite(string tool);
-        void BeforeExport(PlcExportObject item);
-        void Export(PlcExportObject item, string stagingPath, bool documents);
+        public CandidateIdentity ReadIdentity();
+        public IReadOnlyList<PlcExportObject> ReadObjects(string tool, PlcExportRequest request);
+        public bool SupportsOverwrite(string tool);
+        public void BeforeExport(PlcExportObject item);
+        public void Export(PlcExportObject item, string stagingPath, bool documents);
     }
-    public interface IExportCandidateBoundary { PlcExportAttempt Execute(PlcExportCheck check); }
+    public interface IExportCandidateBoundary { public PlcExportAttempt Execute(PlcExportCheck check); }
     public sealed class PlcExportCheck
     {
         public string Release { get; set; } = "";

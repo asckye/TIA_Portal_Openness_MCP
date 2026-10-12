@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Nodes;
 
 namespace TiaMcp.ReleaseTool;
@@ -8,7 +9,7 @@ internal static class FastSuites
     internal static int Positive(Options options, string name, int fallback)
     {
         if (options.Get(name) is not { } text) return fallback;
-        if (!int.TryParse(text, out var value) || value < 1) throw new ReleaseException("-" + name + " must be a positive integer", 64);
+        if (!int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value) || value < 1) throw new ReleaseException("-" + name + " must be a positive integer", 64);
         return value;
     }
 

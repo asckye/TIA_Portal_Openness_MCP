@@ -20,26 +20,29 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
 #if TIA_ENGINE_HOST
-        private static IToolCatalogView? _bridgeCatalog { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog = value; }
-        private static IToolInvoker? _bridgeInvoker { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker = value; }
-        private static Func<bool> _bridgeIsLiteProfile { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile = value; }
-        private static ISet<string> _bridgeLiteToolNames { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames = value; }
+        private static IToolCatalogView? BridgeCatalog { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog = value; }
+        private static IToolInvoker? BridgeInvoker { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.Invoker = value; }
+        private static Func<bool> BridgeIsLiteProfile { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.IsLiteProfile = value; }
+        private static ISet<string> BridgeLiteToolNames { get => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames; set => TiaMcp.FoundationHost.EngineHostConfiguration.Current.LiteToolNames = value; }
 #else
-        private static IToolCatalogView? _bridgeCatalog;
-        private static IToolInvoker? _bridgeInvoker;
-        private static Func<bool> _bridgeIsLiteProfile = () => false;
-        private static ISet<string> _bridgeLiteToolNames = new HashSet<string>(StringComparer.Ordinal);
+        private static IToolCatalogView? BridgeCatalog;
+        private static IToolInvoker? BridgeInvoker;
+        private static Func<bool> BridgeIsLiteProfile = () => false;
+        private static ISet<string> BridgeLiteToolNames = new HashSet<string>(StringComparer.Ordinal);
 #endif
 
         static McpServer() { ConfigureToolBridgeProfile(); }
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void ConfigureToolBridgeProfile();
 
         internal static void ConfigureToolBridge(IToolCatalogView catalog, IToolInvoker invoker, Func<bool> isLiteProfile, ISet<string> liteToolNames)
         {
-            _bridgeCatalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
-            _bridgeInvoker = invoker ?? throw new ArgumentNullException(nameof(invoker));
-            _bridgeIsLiteProfile = isLiteProfile ?? throw new ArgumentNullException(nameof(isLiteProfile));
-            _bridgeLiteToolNames = liteToolNames ?? throw new ArgumentNullException(nameof(liteToolNames));
+            BridgeCatalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+            BridgeInvoker = invoker ?? throw new ArgumentNullException(nameof(invoker));
+            BridgeIsLiteProfile = isLiteProfile ?? throw new ArgumentNullException(nameof(isLiteProfile));
+            BridgeLiteToolNames = liteToolNames ?? throw new ArgumentNullException(nameof(liteToolNames));
         }
 
         internal static string VersionToolProblem(string name)
@@ -223,12 +226,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     .OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal)
                     .Take(limit).ToList();
 
-                bool lite = _bridgeIsLiteProfile();
+                bool lite = BridgeIsLiteProfile();
                 var lines = new List<string>();
                 foreach (var h in hits)
                 {
                     var m = all[h.Value];
-                    bool listed = !lite || _bridgeLiteToolNames.Contains(h.Value);
+                    bool listed = !lite || BridgeLiteToolNames.Contains(h.Value);
                     lines.Add(m.Signature
                               + (listed ? "  [already listed - call it directly]" : "  [call via CallTool]"));
                     lines.Add("    " + ToolDescription(m));
@@ -651,6 +654,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         // Implemented in McpServer.Maintenance.cs (engine build); absent in the offline suite, where no portal exists.
+        // Optional partial hooks must stay erasable in assemblies without an implementation.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0040",
+            Justification = "Optional partial hooks require implicit accessibility to remain erasable.")]
         static partial void ReadSessionState(ref bool? connected, ref string? project);
 
         /// <summary>Build gate (TiaMcp.Engine.Harness generate-tools-list mode): every example in ToolExamples must fit a real tool, spelled exactly.</summary>

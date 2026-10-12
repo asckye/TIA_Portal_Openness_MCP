@@ -8,7 +8,7 @@ namespace TiaOpenness.Gui.Views;
 public partial class EngineeringOptionsView : UserControl
 {
     public EngineeringOptionsView() => InitializeComponent();
-    private MainViewModel _model => (MainViewModel)DataContext;
+    private MainViewModel Model => (MainViewModel)DataContext;
     internal void Show(string section)
     {
         foreach (var item in new[] { ProjectOptions, ExportOptions, InspectOptions, WorkspaceOptions })
@@ -29,13 +29,13 @@ public partial class EngineeringOptionsView : UserControl
     private void OnCloseOptions(object sender, RoutedEventArgs e) => Hide();
     private void OnDeviceSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        if (e.NewValue is ViewModels.DeviceNode { Device: not null } node) _model.Engineering.SelectedDevice = node.Device;
+        if (e.NewValue is ViewModels.DeviceNode { Device: not null } node) Model.Engineering.SelectedDevice = node.Device;
     }
 
-    private void OnBrowseProject(object sender, RoutedEventArgs e) => _model.Session.BrowseProject();
+    private void OnBrowseProject(object sender, RoutedEventArgs e) => Model.Session.BrowseProject();
 
-    private void OnBrowseOutput(object sender, RoutedEventArgs e) => _model.Engineering.BrowseOutput();
+    private void OnBrowseOutput(object sender, RoutedEventArgs e) => Model.Engineering.BrowseOutput();
 
-    private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => _model.VersionControl.BrowseWorkspaceFolder();
+    private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => Model.VersionControl.BrowseWorkspaceFolder();
 
 }

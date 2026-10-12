@@ -55,7 +55,7 @@ namespace TiaMcpConfigurator
         }
         public static void ValidateKey(string key)
         {
-            if (String.IsNullOrWhiteSpace(key) || key.Any(Char.IsControl)) throw new ArgumentException(Loc.Current["Config.InvalidSecret"]);
+            if (string.IsNullOrWhiteSpace(key) || key.Any(char.IsControl)) throw new ArgumentException(Loc.Current["Config.InvalidSecret"]);
         }
 
         // Windows CommandLineToArgvW/CRT quoting, including embedded quotes and trailing backslashes.
@@ -196,7 +196,7 @@ namespace TiaMcpConfigurator
         {
             ValidateKey(key);
             var root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot);
-            return String.Join(" ", new[] { "--bundle-root", root, VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings.TiaPath,
+            return string.Join(" ", new[] { "--bundle-root", root, VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings.TiaPath,
                 "--transport", "http", "--http-prefix", Prefix(settings.Address, settings.Port), "--http-api-key", key, "--logging", "1" }.Select(Quote));
         }
 

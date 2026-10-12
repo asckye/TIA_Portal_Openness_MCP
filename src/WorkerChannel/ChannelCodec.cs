@@ -131,7 +131,7 @@ namespace TiaMcp.WorkerChannel
                 original.GetProperty("code").GetInt32(); Text(original, "message"); original.GetProperty("data");
                 rpc = original.GetRawText();
             }
-            return ChannelResponse.Error(new ChannelFailure(Text(failure, "message"), code, (ChannelOutcome)Enum.Parse(typeof(ChannelOutcome), outcome), evidence.GetRawText(), rpc));
+            return ChannelResponse.Error(new ChannelFailureException(Text(failure, "message"), code, (ChannelOutcome)Enum.Parse(typeof(ChannelOutcome), outcome), evidence.GetRawText(), rpc));
         }
 
         internal static byte[] Progress(long id, int sequence, int percent, string? payload) => Encode(w =>

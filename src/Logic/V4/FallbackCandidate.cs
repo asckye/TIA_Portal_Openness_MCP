@@ -103,7 +103,7 @@ namespace TiaMcp.Logic.V4
                 }
                 if (boundaryEntered)
                     return Result(release, tool, id, data, new Error("The read boundary did not return valid native evidence.", new InternalErrorDetails(null)), Outcome.ReadFailed, Execution.ReadOnly);
-                var refusal = error is SessionCandidateRejection rejected ? rejected.Error : error is CandidateObservationException observed ? Map(observed.Fault, expectedPlanHash)
+                var refusal = error is SessionCandidateRejectionException rejected ? rejected.Error : error is CandidateObservationException observed ? Map(observed.Fault, expectedPlanHash)
                     : new Error("Fallback preflight could not establish the native state.", new PreconditionFailedDetails("fallback-preflight", null));
                 return Result(release, tool, id, data, refusal, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }
@@ -118,6 +118,6 @@ namespace TiaMcp.Logic.V4
             => Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, BehaviorPolicy.SafeV4,
                 outcome == Outcome.Unknown ? Completeness.Unknown : data != null ? Completeness.Complete : Completeness.None, null, Array.Empty<Warning>()));
-        private static void Refuse(ErrorDetails d) => throw new SessionCandidateRejection(new Error("Fallback prerequisites are not satisfied.", d));
+        private static void Refuse(ErrorDetails d) => throw new SessionCandidateRejectionException(new Error("Fallback prerequisites are not satisfied.", d));
     }
 }

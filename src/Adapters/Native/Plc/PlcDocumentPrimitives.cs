@@ -3,25 +3,27 @@
 #define PLC_DOCUMENT_EXPORT
 #define PLC_SOURCE_RESULTS
 #define PLC_SOURCE_TARGET
+#endif
+using System.Collections.Generic;
+using System.IO;
+using global::Siemens.Engineering;
+using global::Siemens.Engineering.HW;
+using global::Siemens.Engineering.HW.Features;
+using global::Siemens.Engineering.SW;
+using global::Siemens.Engineering.SW.Blocks;
+using global::Siemens.Engineering.SW.ExternalSources;
+using global::Siemens.Engineering.SW.Types;
+using global::Siemens.Engineering.Library.MasterCopies;
+#if PLC_DOCUMENT_EXPORT
+using global::Siemens.Engineering.SW.Units;
+#endif
+
+#if TIA_ENGINE_LOCAL_PRIMITIVES
 namespace TiaMcpServer.Siemens.LocalDocuments
 #else
 namespace TiaMcp.Adapters.Native.Plc
 #endif
 {
-    using System.Collections.Generic;
-    using System.IO;
-    using global::Siemens.Engineering;
-    using global::Siemens.Engineering.HW;
-    using global::Siemens.Engineering.HW.Features;
-    using global::Siemens.Engineering.SW;
-    using global::Siemens.Engineering.SW.Blocks;
-    using global::Siemens.Engineering.SW.ExternalSources;
-    using global::Siemens.Engineering.SW.Types;
-    using global::Siemens.Engineering.Library.MasterCopies;
-#if PLC_DOCUMENT_EXPORT
-    using global::Siemens.Engineering.SW.Units;
-#endif
-
     // Raw document and external-source operations. Hosts retain validation, options,
     // result handling, traversal, retries and the ownership of native handles/threads.
     public static class PlcDocumentPrimitives

@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <TiaMcpCodeAnalysisImported>true</TiaMcpCodeAnalysisImported>
+    <!-- SDK analyzers also apply to net48 and netstandard2.0; severities live in .editorconfig. -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>10.0</AnalysisLevel>
+    <AnalysisMode>Default</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Include the discovered editor configuration in incremental compilation and release cache keys. -->
+    <CustomAdditionalCompileInputs Include="$(MSBuildThisFileDirectory)../../.editorconfig" />
+  </ItemGroup>
+</Project>

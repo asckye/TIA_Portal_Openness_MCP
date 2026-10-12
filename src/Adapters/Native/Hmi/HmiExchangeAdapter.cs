@@ -246,8 +246,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var document = XDocument.Load(importPath);
                 var screen = document.Descendants().FirstOrDefault(e => e.Name.LocalName == "Hmi.Screen.Screen");
                 var attributes = screen?.Element("AttributeList");
-                if (int.TryParse(attributes?.Element("Width")?.Value, out var w)) xmlWidth = w;
-                if (int.TryParse(attributes?.Element("Height")?.Value, out var h)) xmlHeight = h;
+                if (int.TryParse(attributes?.Element("Width")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var w)) xmlWidth = w;
+                if (int.TryParse(attributes?.Element("Height")?.Value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var h)) xmlHeight = h;
             }
             catch (Exception) { /* swallow(parse-fallback): unrecognized screen XML is left to the native importer for diagnosis */ return; }                                              // not a screen document we understand - TIA reports its own error
             if (xmlWidth == null || xmlHeight == null) return;
@@ -308,7 +308,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (!string.Equals(entryIdentifier, typeIdentifier, StringComparison.OrdinalIgnoreCase)) continue;
                     var description = TryGetPropertyValue(entry, "Description")?.ToString() ?? "";
                     var match = Regex.Match(description, @"(\d{3,4})\s*[x×X]\s*(\d{3,4})");
-                    if (match.Success) return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+                    if (match.Success) return (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture), int.Parse(match.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture));
                 }
             }
             catch (Exception) { /* swallow(probe-optional): missing catalog resolution returns null so the screen-size guard refuses an unchecked import */ }

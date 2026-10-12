@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface IDeviceCandidateBoundary
     {
-        DeviceCreateAttempt Execute(DeviceCreateCheck check);
+        public DeviceCreateAttempt Execute(DeviceCreateCheck check);
     }
     public sealed class PlcImportCheck
     {
@@ -70,7 +70,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface IImportCandidateBoundary
     {
-        PlcImportAttempt Execute(PlcImportCheck check, IDictionary<string, Stream> locks);
+        public PlcImportAttempt Execute(PlcImportCheck check, IDictionary<string, Stream> locks);
     }
 
     // No plan, confirmation, envelope or retry state. Callers execute this entire

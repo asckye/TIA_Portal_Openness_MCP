@@ -150,21 +150,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static XElement BuildMember(PlcUdtMemberDefinition member, XNamespace InterfaceNs)
+        private static XElement BuildMember(PlcUdtMemberDefinition member, XNamespace interfaceNs)
         {
-            var element = new XElement(InterfaceNs + "Member",
+            var element = new XElement(interfaceNs + "Member",
                 new XAttribute("Name", member.Name),
                 new XAttribute("Datatype", member.Datatype),
-                new XElement(InterfaceNs + "AttributeList",
-                    new XElement(InterfaceNs + "BooleanAttribute",
+                new XElement(interfaceNs + "AttributeList",
+                    new XElement(interfaceNs + "BooleanAttribute",
                         new XAttribute("Name", "ExternalWritable"),
                         new XAttribute("SystemDefined", "true"),
                         member.ExternalWritable ? "true" : "false")));
 
             if (!string.IsNullOrWhiteSpace(member.CommentZhCn))
             {
-                element.Add(new XElement(InterfaceNs + "Comment",
-                    new XElement(InterfaceNs + "MultiLanguageText",
+                element.Add(new XElement(interfaceNs + "Comment",
+                    new XElement(interfaceNs + "MultiLanguageText",
                         new XAttribute("Lang", "zh-CN"),
                         member.CommentZhCn)));
             }

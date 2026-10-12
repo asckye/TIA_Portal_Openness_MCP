@@ -82,7 +82,7 @@ namespace TiaMcp.PlcWorker
                 if (reserved && !uncertain) ReleaseCleanly();
                 else lease?.CompleteRequest(uncertain);
                 var failure = WorkerFailurePolicy.Classify(error, entered, false);
-                return ChannelResponse.Error(new ChannelFailure(WorkerFailurePolicy.DiagnosticCause(error).Message,
+                return ChannelResponse.Error(new ChannelFailureException(WorkerFailurePolicy.DiagnosticCause(error).Message,
                     failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
             }
         }

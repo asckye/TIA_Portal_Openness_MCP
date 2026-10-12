@@ -8,8 +8,8 @@ namespace TiaOpenness.Gui.ControlChannel;
 
 internal interface IWorkbenchControlSurface
 {
-    WorkbenchSnapshot Snapshot { get; }
-    WorkbenchControlResponse Apply(WorkbenchControlRequest request);
+    public WorkbenchSnapshot Snapshot { get; }
+    public WorkbenchControlResponse Apply(WorkbenchControlRequest request);
 }
 
 // Frozen JSON owns its data. Readers receive private DTOs and never touch WPF or native objects.

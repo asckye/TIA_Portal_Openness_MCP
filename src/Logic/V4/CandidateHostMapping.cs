@@ -10,12 +10,12 @@ namespace TiaMcp.Logic.V4
         public static PlanIdentity Plan(CandidateIdentity i) => new PlanIdentity(i.ProcessId, i.ProcessStartUtc, i.ProjectFile, i.BindingEpoch, null, Array.Empty<PlanFile>());
         public static CandidateIdentity Identity(PlanIdentity i) => new CandidateIdentity(i.ProcessId, i.ProcessStartUtc, i.ProjectFile, i.BindingEpoch);
         public static CandidateFile[] Files(PlanFile[] files) => files.Select(f => new CandidateFile { Path = f.Path, Exists = f.Exists, ByteLength = f.ByteLength, Sha256 = f.Sha256 }).ToArray();
-        public static DeviceCreationRejection Device(CandidateFault fault, string? hash = null) => new DeviceCreationRejection(fault.Kind == "project"
+        public static DeviceCreationRejectionException Device(CandidateFault fault, string? hash = null) => new DeviceCreationRejectionException(fault.Kind == "project"
             ? new Error("No project is bound.", new ProjectNotBoundDetails()) : fault.Kind == "identity"
             ? new Error("The project or process binding changed since preview.", new IdentityMismatchDetails("project-binding", null, null))
             : fault.Kind == "stale" ? new Error("The catalog, inventory or arguments changed since preview.", new PlanStaleDetails(hash, "device-plan-changed"))
             : new Error("Preflight could not establish a complete device-creation plan. No Create was issued.", new PreconditionFailedDetails(fault.Subject == "complete-inventory" ? "complete-inventory" : "device-create-preflight", null)));
-        public static PlcImportRejection Import(CandidateFault fault, string? hash = null)
+        public static PlcImportRejectionException Import(CandidateFault fault, string? hash = null)
         {
             ErrorDetails details;
             string message;
@@ -32,7 +32,7 @@ namespace TiaMcp.Logic.V4
                 default: details = new PreconditionFailedDetails(fault.Subject == "complete-inventory" ? "complete-inventory" : "plc-import-preflight", null);
                     message = "Import preflight could not establish the reviewed target; no native import was issued for this item."; break;
             }
-            return new PlcImportRejection(new Error(message, details));
+            return new PlcImportRejectionException(new Error(message, details));
         }
         public static JsonObject DeviceResidue(DeviceResidue residue) => residue.Status == "checked"
             ? new JsonObject { ["status"] = "checked", ["added"] = JsonNode.Parse(V4Json.Serialize(residue.Added)), ["removed"] = JsonNode.Parse(V4Json.Serialize(residue.Removed)), ["changed"] = JsonNode.Parse(V4Json.Serialize(residue.Changed)) }

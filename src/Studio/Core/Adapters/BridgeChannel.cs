@@ -102,7 +102,7 @@ namespace TiaOpenness.Core.Rpc
             {
                 var outcome = !dispatcher.BackendEntered ? ChannelOutcome.RejectedBeforeNative :
                     BridgeChannel.IsReadOnly(request.Method) ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown;
-                return ChannelResponse.Error(new ChannelFailure(response.Error.Message, -32603, outcome,
+                return ChannelResponse.Error(new ChannelFailureException(response.Error.Message, -32603, outcome,
                     rpcErrorJson: BridgeJson.Serialize(response.Error)));
             }
             if (BridgeChannel.BindingChangeFor(request.Method) == BindingChange.Advance) epoch = checked(epoch + 1);

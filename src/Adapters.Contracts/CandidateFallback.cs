@@ -69,17 +69,17 @@ namespace TiaMcp.Adapters.Contracts.Candidates
     }
     public interface IFallbackAdapter
     {
-        bool Writes { get; }
-        bool NeedsConfiguration { get; }
-        bool RequiresOffline { get; }
-        FallbackObservation Observe();
-        void BeforeAction();
-        bool ApplyConfiguration(string route);
-        FallbackNativeResult Execute(FallbackRequest request, FallbackAttempt evidence);
-        void RefreshReadHandle();
-        void MarkUncertain();
+        public bool Writes { get; }
+        public bool NeedsConfiguration { get; }
+        public bool RequiresOffline { get; }
+        public FallbackObservation Observe();
+        public void BeforeAction();
+        public bool ApplyConfiguration(string route);
+        public FallbackNativeResult Execute(FallbackRequest request, FallbackAttempt evidence);
+        public void RefreshReadHandle();
+        public void MarkUncertain();
     }
-    public interface IFallbackBoundary { FallbackAttempt Execute(FallbackCheck check); }
+    public interface IFallbackBoundary { public FallbackAttempt Execute(FallbackCheck check); }
     // A boundary may provide this evidence only when it has not dispatched the primitive.
     public sealed class FallbackNotDispatchedException : Exception
     {

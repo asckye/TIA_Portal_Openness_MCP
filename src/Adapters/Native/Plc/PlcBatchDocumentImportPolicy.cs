@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters
             while(at<value.Length)
             {
                 int colon=value.IndexOf(':',at);int length;
-                if(colon<0 || !int.TryParse(value.Substring(at,colon-at),out length) || length<0 || length>value.Length-colon-1)throw new InvalidDataException("Malformed inventory identity.");
+                if(colon<0 || !int.TryParse(value.Substring(at,colon-at), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out length) || length<0 || length>value.Length-colon-1)throw new InvalidDataException("Malformed inventory identity.");
                 fields.Add(value.Substring(colon+1,length));at=colon+1+length;
             }
             if(fields.Count!=4)throw new InvalidDataException("Incomplete inventory identity.");return fields.ToArray();

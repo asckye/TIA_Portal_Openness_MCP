@@ -7,7 +7,7 @@ namespace TiaMcp.Adapters.Contracts
     {
         public static string? Unsupported(string release, string operation, string action = "", string family = "", int positionNumber = -1, int extendedPositionNumber = -1, bool hasPassword = false)
         {
-            int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
+            int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
             string name = operation.Substring(operation.LastIndexOf('.') + 1);
             if ((name == "ListCommunicationConnections" || name == "ManageCommunicationConnection"
                 || name == "HardwareReadCommunicationConnections" || name == "HardwareManageCommunicationConnection") && version < 21)

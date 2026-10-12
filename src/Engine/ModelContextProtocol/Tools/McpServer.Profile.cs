@@ -39,8 +39,8 @@ namespace TiaMcpServer.ModelContextProtocol
         static partial void ConfigureToolBridgeProfile()
         {
 #if !TIA_ENGINE_HOST
-            _bridgeIsLiteProfile = IsLiteProfile;
-            _bridgeLiteToolNames = LiteToolNames;
+            BridgeIsLiteProfile = IsLiteProfile;
+            BridgeLiteToolNames = LiteToolNames;
 #endif
         }
 

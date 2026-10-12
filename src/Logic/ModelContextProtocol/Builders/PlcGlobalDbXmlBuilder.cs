@@ -152,17 +152,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static XElement BuildMember(PlcDbMemberDefinition member, XNamespace InterfaceNs)
+        private static XElement BuildMember(PlcDbMemberDefinition member, XNamespace interfaceNs)
         {
-            var element = new XElement(InterfaceNs + "Member",
+            var element = new XElement(interfaceNs + "Member",
                 new XAttribute("Name", member.Name),
                 new XAttribute("Datatype", member.Datatype));
 
             var hasAttributes = member.ExternalWritable.HasValue;
             if (hasAttributes)
             {
-                element.Add(new XElement(InterfaceNs + "AttributeList",
-                    new XElement(InterfaceNs + "BooleanAttribute",
+                element.Add(new XElement(interfaceNs + "AttributeList",
+                    new XElement(interfaceNs + "BooleanAttribute",
                         new XAttribute("Name", "ExternalWritable"),
                         new XAttribute("SystemDefined", "true"),
                         member.ExternalWritable == true ? "true" : "false")));
@@ -170,13 +170,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (!string.IsNullOrWhiteSpace(member.StartValue))
             {
-                element.Add(new XElement(InterfaceNs + "StartValue", member.StartValue));
+                element.Add(new XElement(interfaceNs + "StartValue", member.StartValue));
             }
 
             if (!string.IsNullOrWhiteSpace(member.CommentZhCn))
             {
-                element.Add(new XElement(InterfaceNs + "Comment",
-                    new XElement(InterfaceNs + "MultiLanguageText",
+                element.Add(new XElement(interfaceNs + "Comment",
+                    new XElement(interfaceNs + "MultiLanguageText",
                         new XAttribute("Lang", "zh-CN"),
                         member.CommentZhCn)));
             }

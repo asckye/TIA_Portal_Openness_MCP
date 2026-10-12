@@ -26,9 +26,9 @@ var server = new ChannelServer(Console.OpenStandardInput(), output, identity, ()
     if (fault == "delay") Thread.Sleep(values["fixtureDelayMilliseconds"]?.GetValue<int>() ?? 0);
     if (fault == "broken-pipe") Environment.Exit(0);
     if (fault == "timeout" || fault == "timeout-attach" && operation == "Attach") Thread.Sleep(10000);
-    if (fault == "read-failed") return ChannelResponse.Error(new ChannelFailure("Fixture read failed", -32603, ChannelOutcome.ReadFailed, "{\"inputFile\":\"生产线\"}"));
-    if (fault == "rejected") return ChannelResponse.Error(new ChannelFailure("Fixture rejected", -32602, ChannelOutcome.RejectedBeforeNative));
-    if (fault == "session-fault") return ChannelResponse.Error(new ChannelFailure("Fixture outcome unknown", -32603, ChannelOutcome.Unknown));
+    if (fault == "read-failed") return ChannelResponse.Error(new ChannelFailureException("Fixture read failed", -32603, ChannelOutcome.ReadFailed, "{\"inputFile\":\"生产线\"}"));
+    if (fault == "rejected") return ChannelResponse.Error(new ChannelFailureException("Fixture rejected", -32602, ChannelOutcome.RejectedBeforeNative));
+    if (fault == "session-fault") return ChannelResponse.Error(new ChannelFailureException("Fixture outcome unknown", -32603, ChannelOutcome.Unknown));
     if (fault == "progress") { request.Progress(10); request.Progress(100); }
     JsonNode? result;
     switch (operation)
@@ -49,7 +49,7 @@ var server = new ChannelServer(Console.OpenStandardInput(), output, identity, ()
     return ChannelResponse.Success(result?.ToJsonString() ?? "null");
 });
 try { server.Run(); }
-catch (ChannelFault error) { Console.Error.WriteLine(error.Message); return 1; }
+catch (ChannelFaultException error) { Console.Error.WriteLine(error.Message); return 1; }
 finally { Record(new { stage = "exit", pid = Environment.ProcessId }); }
 return 0;
 

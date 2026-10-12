@@ -32,9 +32,9 @@ namespace TiaMcp.Logic.V4.Construction
                     }
                     return json;
                 }
-                catch (ArgumentException error) when (error.InnerException is InputRejection rejection) { throw rejection; }
+                catch (ArgumentException error) when (error.InnerException is InputRejectionException rejection) { throw rejection; }
                 catch (XmlException) /* swallow(privacy): invalid XML characters must not echo the supplied string */
-                { throw new InputRejection(); }
+                { throw new InputRejectionException(); }
             });
         }
 
@@ -44,7 +44,7 @@ namespace TiaMcp.Logic.V4.Construction
 
         private static void ValidateFoundationUnion(JsonElement json)
         {
-            InputRejection? budgetFailure = null;
+            InputRejectionException? budgetFailure = null;
             foreach (var member in PlcArtifactSpec.MemberTypes)
             {
                 try
@@ -53,11 +53,11 @@ namespace TiaMcp.Logic.V4.Construction
                     FoundationConstructionValidation.Validate((ConstructionSpec)ConstructionJson.Read(member, json));
                     return;
                 }
-                catch (InputRejection rejection) { if (rejection.IsLimit) budgetFailure = rejection; }
-                catch (ArgumentException error) when (error.InnerException is InputRejection rejection)
+                catch (InputRejectionException rejection) { if (rejection.IsLimit) budgetFailure = rejection; }
+                catch (ArgumentException error) when (error.InnerException is InputRejectionException rejection)
                 { if (rejection.IsLimit) budgetFailure = rejection; }
             }
-            throw budgetFailure ?? new InputRejection();
+            throw budgetFailure ?? new InputRejectionException();
         }
 
         private static InputResult<T> Map(InputResult<JsonElement> result) => new InputResult<T>(result.Presence,

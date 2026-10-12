@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Nodes;
 using System.Text;
 using System.Security.Cryptography;
@@ -56,7 +57,7 @@ internal static class BatchDocumentImportContract
     string Field(string value)=>value.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+value;
     var prefix=Field(preview["GroupPath"]!.GetValue<string>())+Field(name)+Field("GlobalDB");
     if(expectedInventory!.Except(postText,StringComparer.Ordinal).Any()||added.Length!=1||!added[0].StartsWith(prefix,StringComparison.Ordinal))throw new InvalidDataException("Unverified post-success delta.");
-    var tail=added[0].Substring(prefix.Length);var colon=tail.IndexOf(':');if(colon<1||!int.TryParse(tail.Substring(0,colon),out var length)||length<1||tail.Length-colon-1!=length)throw new InvalidDataException("Missing stable imported object identity.");
+    var tail=added[0].Substring(prefix.Length);var colon=tail.IndexOf(':');if(colon<1||!int.TryParse(tail.Substring(0,colon), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var length)||length<1||tail.Length-colon-1!=length)throw new InvalidDataException("Missing stable imported object identity.");
     expectedInventory=postText;succeeded++;
    }
   }

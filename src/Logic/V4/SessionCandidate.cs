@@ -9,10 +9,10 @@ using TiaMcp.Adapters.Contracts.Candidates;
 
 namespace TiaMcp.Logic.V4
 {
-    public sealed class SessionCandidateRejection : Exception
+    public sealed class SessionCandidateRejectionException : Exception
     {
         public Error Error { get; }
-        public SessionCandidateRejection(Error error) : base(error.Message) { Error = error; }
+        public SessionCandidateRejectionException(Error error) : base(error.Message) { Error = error; }
     }
     // The host owns plans and confirmation; native adapters own only handles and observations.
     public sealed class SessionCandidateSession
@@ -144,7 +144,7 @@ namespace TiaMcp.Logic.V4
                     return Result(release, tool, id, data, new Error(reason == null ? "Session outcome is unknown. Inspect the observed state and reset the session; do not replay." : SessionPrimitives.ConfirmationGuidance,
                         new OutcomeUnknownDetails("session-native-or-readback", evidence, reason)), Outcome.Unknown, Execution.Unknown);
                 }
-                var rejection = error is SessionCandidateRejection rejected ? rejected.Error
+                var rejection = error is SessionCandidateRejectionException rejected ? rejected.Error
                     : error is CandidateObservationException observed ? new Error("Session observation refused.", observed.Fault.Kind == "identity" ? (ErrorDetails)new IdentityMismatchDetails("session", null, null) : new PreconditionFailedDetails(observed.Fault.Subject, null))
                     : new Error("Session preflight failed; no native action was issued.", new PreconditionFailedDetails("session-preflight", null));
                 return Result(release, tool, id, data, rejection, Outcome.RejectedBeforeOperation, Execution.NotStarted);
@@ -186,6 +186,6 @@ namespace TiaMcp.Logic.V4
         private static void Invalid(string parameter) => Refuse(new InvalidArgumentDetails(parameter, Array.Empty<string>()));
         private static void Mismatch() => Refuse(new IdentityMismatchDetails("process-project-session", null, null));
         private static void Stale(string hash) => Refuse(new PlanStaleDetails(hash, "missing-consumed-or-changed-session-plan"));
-        private static void Refuse(ErrorDetails details, string message = "Session candidate preconditions are not satisfied.") => throw new SessionCandidateRejection(new Error(message, details));
+        private static void Refuse(ErrorDetails details, string message = "Session candidate preconditions are not satisfied.") => throw new SessionCandidateRejectionException(new Error(message, details));
     }
 }

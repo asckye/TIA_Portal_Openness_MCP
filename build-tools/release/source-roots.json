@@ -922,6 +922,33 @@
         "native-diagnostics",
         "http-concurrency"
       ]
+    },
+    {
+      "path": ".editorconfig",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation",
+        "validationMulti"
+      ]
+    },
+    {
+      "path": "Directory.Build.props",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation",
+        "validationMulti"
+      ]
+    },
+    {
+      "path": "src/Shared/CodeAnalysis.props",
+      "inventories": [
+        "engine",
+        "multi",
+        "validation",
+        "validationMulti"
+      ]
     }
   ],
   "requiredFiles": [
@@ -1440,6 +1467,33 @@
         "bundle",
         "package"
       ]
+    },
+    {
+      "path": ".editorconfig",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "C# analyzer configuration"
+    },
+    {
+      "path": "Directory.Build.props",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "C# analyzer configuration"
+    },
+    {
+      "path": "src/Shared/CodeAnalysis.props",
+      "consumers": [
+        "repository",
+        "bundle",
+        "package"
+      ],
+      "repositoryLabel": "C# analyzer configuration"
     }
   ]
 }

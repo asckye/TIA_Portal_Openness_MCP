@@ -54,14 +54,14 @@ internal static class V17ContractTests
             foreach(var selected in new[]{"Motor","folder/Motor","Folder/Motor/extra"})
             {
                 try { TiaMcp.Adapters.PlcExchangePolicy.Exact(candidates,s=>s,selected); throw new Exception("Fallback accepted"); }
-                catch(ArgumentException) { check(true,"No basename, case-fold or extra-segment fallback"); }
+                catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"No basename, case-fold or extra-segment fallback"); } catch(ArgumentException) { check(true,"No basename, case-fold or extra-segment fallback"); }
             }
             try { TiaMcp.Adapters.PlcExchangePolicy.Exact(new[]{"A","A"},s=>s,"A"); throw new Exception("Duplicate accepted"); }
-            catch(ArgumentException) { check(true,"Duplicate exact object identities rejected"); }
+            catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Duplicate exact object identities rejected"); } catch(ArgumentException) { check(true,"Duplicate exact object identities rejected"); }
             foreach(var path in new[]{"","../A","A//B","A/%2e%2e/B"})
             {
                 try { TiaMcp.Adapters.PlcExchangePolicy.ObjectPath(path); throw new Exception("Invalid path accepted"); }
-                catch(ArgumentException) { check(true,"Invalid single-object path rejected"); }
+                catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { check(true,"Invalid single-object path rejected"); } catch(ArgumentException) { check(true,"Invalid single-object path rejected"); }
             }
             foreach(var bad in new JsonNode?[]{null,new JsonArray(),new JsonObject(),new JsonObject{["Name"]=7,["TypeName"]="FB",["Attributes"]=new JsonArray()},new JsonObject{["Name"]="A",["TypeName"]="FB",["Attributes"]=new JsonObject()}})
             {

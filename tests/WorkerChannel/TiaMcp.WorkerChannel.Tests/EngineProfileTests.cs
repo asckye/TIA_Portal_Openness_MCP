@@ -51,7 +51,7 @@ public sealed class EngineProfileTests
         using var output = new MemoryStream();
         var server = new ChannelServer(Stream.Null, output, Identity, () => new(0, false), _ => ChannelResponse.Success("null"), ChannelProfile.Engine);
         server.WriteHello();
-        if (valid) server.Handle(Frame(method)); else Assert.Throws<ChannelFault>(() => server.Handle(Frame(method)));
+        if (valid) server.Handle(Frame(method)); else Assert.Throws<ChannelFaultException>(() => server.Handle(Frame(method)));
         Assert.Equal(!valid, server.Poisoned);
     }
 
@@ -64,7 +64,7 @@ public sealed class EngineProfileTests
         using var output = new MemoryStream(); long epoch = 0;
         var server = new ChannelServer(Stream.Null, output, Identity, () => new(epoch, false), _ => { epoch = next; return ChannelResponse.Success("null"); }, ChannelProfile.Engine);
         server.WriteHello();
-        if (valid) server.Handle(Frame(method, preview)); else Assert.Throws<ChannelFault>(() => server.Handle(Frame(method, preview)));
+        if (valid) server.Handle(Frame(method, preview)); else Assert.Throws<ChannelFaultException>(() => server.Handle(Frame(method, preview)));
         Assert.Equal(!valid, server.Poisoned);
     }
 
@@ -86,7 +86,7 @@ public sealed class EngineProfileTests
         }, ChannelProfile.Engine);
         server.WriteHello(); server.Handle(Frame("engine.invoke")); Assert.False(server.Poisoned);
         server.Handle(Frame("adapter.Disconnect", id: 2)); Assert.Equal(2, calls);
-        Assert.Throws<ChannelFault>(() => server.Handle(Frame("engine.status", id: 3)));
+        Assert.Throws<ChannelFaultException>(() => server.Handle(Frame("engine.status", id: 3)));
     }
 
     [Fact]

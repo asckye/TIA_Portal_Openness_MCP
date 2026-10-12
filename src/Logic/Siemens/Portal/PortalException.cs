@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TiaMcpServer.Siemens
 {
-    public class PortalException : Exception
+    public sealed class PortalException : Exception
     {
         public PortalErrorCode Code { get; }
 

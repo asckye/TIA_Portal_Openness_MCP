@@ -130,7 +130,7 @@ namespace TiaMcpServer.Siemens.Services
                     string operand = c?.ToString() ?? "";
                     if (operand.Length == 0) continue;
                     string key = CausalTraceParser.NormalizeOperand(operand);
-                    if (map.TryGetValue(key, out var hit) && hit.Address.StartsWith("%"))
+                    if (map.TryGetValue(key, out var hit) && hit.Address.StartsWith("%", StringComparison.Ordinal))
                     {
                         string? spec = S7LiveReader.TiaTagToSpec(hit.Address, hit.DataType);
                         if (spec != null)

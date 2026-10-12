@@ -21,7 +21,7 @@ namespace TiaMcp.Adapters.Native.Plc
         private readonly PlcFoundationEngine engine;
         private readonly PlcB5Request request;
         internal bool MayHaveChanged { get; private set; }
-        private int Version => _session.ReleaseKey == "14sp1" ? 14 : _session.ReleaseKey == "15.1" ? 15 : int.Parse(_session.ReleaseKey);
+        private int Version => _session.ReleaseKey == "14sp1" ? 14 : _session.ReleaseKey == "15.1" ? 15 : int.Parse(_session.ReleaseKey, System.Globalization.CultureInfo.InvariantCulture);
         internal PlcB5Adapter(IPlcOrganisationSession session, PlcFoundationEngine engine, PlcB5Request request)
         { _session = session; this.engine = engine; this.request = request; }
         private PlcB5Reply RunTool(string tool, Func<Dictionary<string, object?>, string> action)
@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     {
                         var cause = error.GetBaseException();
                         meta["v4FailureCode"] = cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
-                            : cause is ArgumentException ? "INVALID_ARGUMENT"
+                            : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT"
                             : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
                             : cause is PlcSoftwareException portal ? portal.Code == "InvalidState" ? "PRECONDITION_FAILED" : portal.Code
                             : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";
@@ -182,7 +182,7 @@ namespace TiaMcp.Adapters.Native.Plc
             meta["operationNotStarted"] = true;
             string? code = cause is PlcSoftwareException portal ? portal.Code switch {
                 "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND", "NotSupportedOnVersion" => "UNSUPPORTED_CAPABILITY", "InvalidState" => "PRECONDITION_FAILED", _ => null }
-                : cause is ArgumentException ? "INVALID_ARGUMENT" : cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
+                : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT" : cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
                 : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
                 : cause is IOException ? "IO_FAILED" : cause is InvalidOperationException ? "PRECONDITION_FAILED" : null;
             if (code != null) meta["rejectionCode"] = code;

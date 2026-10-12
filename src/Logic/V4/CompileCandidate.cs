@@ -92,7 +92,7 @@ namespace TiaMcp.Logic.V4
                     return Result(release, tool, id, data, new Error("Native compile state is unavailable; reset the session and do not replay.",
                         new OutcomeUnknownDetails("compile-channel-or-readback", Evidence(attempt))), Outcome.Unknown, Execution.Unknown, attempt);
                 }
-                var refusal = error is SessionCandidateRejection rejected ? rejected.Error : error is CandidateObservationException observed ? Map(observed.Fault, release, expectedPlanHash)
+                var refusal = error is SessionCandidateRejectionException rejected ? rejected.Error : error is CandidateObservationException observed ? Map(observed.Fault, release, expectedPlanHash)
                     : new Error("Compile preflight failed; no native action was issued.", new PreconditionFailedDetails("compile-preflight", null));
                 return Result(release, tool, id, data, refusal, Outcome.RejectedBeforeOperation, Execution.NotStarted);
             }
@@ -122,6 +122,6 @@ namespace TiaMcp.Logic.V4
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, BehaviorPolicy.SafeV4,
                 outcome == Outcome.Unknown ? Completeness.Unknown : data != null ? Completeness.Complete : Completeness.None, null, warnings));
         }
-        private static void Refuse(ErrorDetails details) => throw new SessionCandidateRejection(new Error("Compile candidate preconditions are not satisfied.", details));
+        private static void Refuse(ErrorDetails details) => throw new SessionCandidateRejectionException(new Error("Compile candidate preconditions are not satisfied.", details));
     }
 }

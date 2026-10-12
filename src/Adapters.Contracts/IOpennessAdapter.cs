@@ -33,81 +33,81 @@ namespace TiaMcp.Adapters.Contracts
     // Hosts still own engine lifetime, thread selection and wire error mapping.
     public interface IOpennessAdapter
     {
-        string ReleaseKey { get; }
-        string ApiIdentity { get; }
-        AdapterCapabilities Capabilities { get; }
-        IPortalSession? PortalSession { get; }
-        IPlcProgram? PlcProgram { get; }
-        IPlcData? PlcData { get; }
-        IHardware? Hardware { get; }
-        IVersionControl? VersionControl { get; }
-        IHmiExport? HmiExport { get; }
-        IStudioSession? StudioSession { get; }
+        public string ReleaseKey { get; }
+        public string ApiIdentity { get; }
+        public AdapterCapabilities Capabilities { get; }
+        public IPortalSession? PortalSession { get; }
+        public IPlcProgram? PlcProgram { get; }
+        public IPlcData? PlcData { get; }
+        public IHardware? Hardware { get; }
+        public IVersionControl? VersionControl { get; }
+        public IHmiExport? HmiExport { get; }
+        public IStudioSession? StudioSession { get; }
     }
 
     public interface IPortalSession
     {
-        PlcConnectionResult Attach(int processId);
-        PlcProjectDetails[] ListProjects();
-        void RequireProjectIdentity(string expectedProjectFile);
-        PlcMutationResult BindProject(string projectName,string expectedProjectFile);
-        PlcMutationResult OpenProject(string path, bool dryRun = true);
-        PlcMutationResult CreateProject(string directoryPath, string projectName, bool dryRun = true);
-        PlcMutationResult SaveProject(bool dryRun = true);
-        PlcMutationResult CloseProject(bool dryRun = true);
-        void UnbindProject();
-        string ReadProjectTree();
-        PlcRuntimeState ReadState();
-        PlcProcessQuery ReadPortalProcessProjects();
-        PlcConnectReadiness ReadPortalConnectReadiness(int processId);
-        PlcDisconnectResult Disconnect();
+        public PlcConnectionResult Attach(int processId);
+        public PlcProjectDetails[] ListProjects();
+        public void RequireProjectIdentity(string expectedProjectFile);
+        public PlcMutationResult BindProject(string projectName,string expectedProjectFile);
+        public PlcMutationResult OpenProject(string path, bool dryRun = true);
+        public PlcMutationResult CreateProject(string directoryPath, string projectName, bool dryRun = true);
+        public PlcMutationResult SaveProject(bool dryRun = true);
+        public PlcMutationResult CloseProject(bool dryRun = true);
+        public void UnbindProject();
+        public string ReadProjectTree();
+        public PlcRuntimeState ReadState();
+        public PlcProcessQuery ReadPortalProcessProjects();
+        public PlcConnectReadiness ReadPortalConnectReadiness(int processId);
+        public PlcDisconnectResult Disconnect();
     }
     public interface IPlcProgram
     {
-        PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true);
-        PlcExternalSourceDeleteResult DeletePlcExternalSource(string softwarePath,string groupPath,string externalSourceName,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
-        PlcDocumentExportResult ExportAsDocuments(string softwarePath,string blockPath,string exportPath,bool preservePath=false,string expectedPlanHash="",bool dryRun=true);
-        PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true);
-        PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true);
-        PlcBatchDocumentExportResult ExportBlocksAsDocuments(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,bool preservePath=false,string expectedPlanHash="",bool dryRun=true);
-        PlcSpecialExportResult ExportPlcWatchTable(string softwarePath,string watchTableName,string exportPath,string expectedPlanHash="",bool dryRun=true);
-        PlcSpecialExportResult ExportTechnologyObject(string softwarePath,string toName,string exportPath,string expectedPlanHash="",bool dryRun=true);
-        PlcExternalSourceGenerationResult GenerateBlocksFromExternalSource(string softwarePath,string externalSourceName,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
-        PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true);
-        PlcBatchImportResult ImportBlocksFromDirectory(string softwarePath,string groupPath,string dir,string regexName="",bool overwrite=false,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",int maxItems=128);
-        PlcBatchDocumentImportResult ImportBlocksFromDocuments(string softwarePath,string groupPath,string importPath,string[] fileNamesWithoutExtension,bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
-        PlcDocumentImportResult ImportFromDocuments(string softwarePath,string groupPath,string importPath,string fileNameWithoutExtension,bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
-        PlcExternalSourceImportResult ImportPlcExternalSource(string softwarePath,string groupPath,string filePath,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
-        PlcBatchImportResult ImportPlcProgramFromDirectory(string softwarePath,string sourceDir,string typeGroupPath="",string tagFolderPath="",string technologyFolderPath="",string blockGroupPath="",string regexName="",bool compileAfter=false,bool stopOnImportFailure=true,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",bool overwrite=false,int maxItems=128);
-        PlcObjectInfo[] ListBlocks(string plc);
-        PlcObjectInfo[] ListPlcs();
-        PlcExternalSourceImportPlan PlanPlcExternalSourceImport(string softwarePath,string groupPath,string filePath,string allowedFilePath,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
-        PlcBlockHierarchy ReadBlockHierarchy(string softwarePath);
-        PlcBlockDetails ReadBlockInfo(string softwarePath, string blockPath);
-        PlcBlockDetails[] ReadBlocks(string softwarePath, string regexName = "");
-        string[] ReadExternalSourceNames(string softwarePath);
-        PlcSoftwareDetails ReadSoftwareInfo(string softwarePath);
-        PlcSoftwareTreeDetails ReadSoftwareTree(string softwarePath);
-        PlcSupplementaryReadResult ReadTechnologyObjects(string softwarePath);
-        PlcSupplementaryReadResult ReadWatchTableNames(string softwarePath);
+        public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true);
+        public PlcExternalSourceDeleteResult DeletePlcExternalSource(string softwarePath,string groupPath,string externalSourceName,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcDocumentExportResult ExportAsDocuments(string softwarePath,string blockPath,string exportPath,bool preservePath=false,string expectedPlanHash="",bool dryRun=true);
+        public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true);
+        public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true);
+        public PlcBatchDocumentExportResult ExportBlocksAsDocuments(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,bool preservePath=false,string expectedPlanHash="",bool dryRun=true);
+        public PlcSpecialExportResult ExportPlcWatchTable(string softwarePath,string watchTableName,string exportPath,string expectedPlanHash="",bool dryRun=true);
+        public PlcSpecialExportResult ExportTechnologyObject(string softwarePath,string toName,string exportPath,string expectedPlanHash="",bool dryRun=true);
+        public PlcExternalSourceGenerationResult GenerateBlocksFromExternalSource(string softwarePath,string externalSourceName,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true);
+        public PlcBatchImportResult ImportBlocksFromDirectory(string softwarePath,string groupPath,string dir,string regexName="",bool overwrite=false,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",int maxItems=128);
+        public PlcBatchDocumentImportResult ImportBlocksFromDocuments(string softwarePath,string groupPath,string importPath,string[] fileNamesWithoutExtension,bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcDocumentImportResult ImportFromDocuments(string softwarePath,string groupPath,string importPath,string fileNameWithoutExtension,bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcExternalSourceImportResult ImportPlcExternalSource(string softwarePath,string groupPath,string filePath,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcBatchImportResult ImportPlcProgramFromDirectory(string softwarePath,string sourceDir,string typeGroupPath="",string tagFolderPath="",string technologyFolderPath="",string blockGroupPath="",string regexName="",bool compileAfter=false,bool stopOnImportFailure=true,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",bool overwrite=false,int maxItems=128);
+        public PlcObjectInfo[] ListBlocks(string plc);
+        public PlcObjectInfo[] ListPlcs();
+        public PlcExternalSourceImportPlan PlanPlcExternalSourceImport(string softwarePath,string groupPath,string filePath,string allowedFilePath,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
+        public PlcBlockHierarchy ReadBlockHierarchy(string softwarePath);
+        public PlcBlockDetails ReadBlockInfo(string softwarePath, string blockPath);
+        public PlcBlockDetails[] ReadBlocks(string softwarePath, string regexName = "");
+        public string[] ReadExternalSourceNames(string softwarePath);
+        public PlcSoftwareDetails ReadSoftwareInfo(string softwarePath);
+        public PlcSoftwareTreeDetails ReadSoftwareTree(string softwarePath);
+        public PlcSupplementaryReadResult ReadTechnologyObjects(string softwarePath);
+        public PlcSupplementaryReadResult ReadWatchTableNames(string softwarePath);
     }
     public interface IPlcData
     {
-        PlcObjectInfo[] ListTypes(string plc);
-        PlcObjectInfo[] ListTagTables(string plc);
-        PlcObjectInfo[] ListTags(string plc, string table);
-        PlcObjectInfo[] ListUserConstants(string plc, string table);
-        PlcObjectInfo[] ListSystemConstants(string plc, string table);
-        PlcTypeDetails ReadTypeInfo(string softwarePath, string typePath);
-        PlcTypeDetails[] ReadTypes(string softwarePath, string regexName = "");
-        string[] ReadTagTableNames(string softwarePath);
-        PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true);
-        PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true);
-        PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true);
-        PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true);
-        PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true);
-        PlcMutationResult CreateTagTable(string plc, string group, string name, bool dryRun = true);
-        PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true);
-        PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true);
+        public PlcObjectInfo[] ListTypes(string plc);
+        public PlcObjectInfo[] ListTagTables(string plc);
+        public PlcObjectInfo[] ListTags(string plc, string table);
+        public PlcObjectInfo[] ListUserConstants(string plc, string table);
+        public PlcObjectInfo[] ListSystemConstants(string plc, string table);
+        public PlcTypeDetails ReadTypeInfo(string softwarePath, string typePath);
+        public PlcTypeDetails[] ReadTypes(string softwarePath, string regexName = "");
+        public string[] ReadTagTableNames(string softwarePath);
+        public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true);
+        public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true);
+        public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true);
+        public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true);
+        public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true);
+        public PlcMutationResult CreateTagTable(string plc, string group, string name, bool dryRun = true);
+        public PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true);
+        public PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true);
     }
 }

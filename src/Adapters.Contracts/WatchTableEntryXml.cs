@@ -20,8 +20,8 @@ namespace TiaMcp.Adapters.Contracts
         // Which attribute a caller's "address" belongs to: absolute addresses go to Address, symbols to Name.
         public static string AttributeFor(string address) {
             var text = (address ?? "").Trim();
-            if (text.StartsWith("%")) return "Address";
-            if (text.StartsWith("\"")) return "Name";
+            if (text.StartsWith("%", StringComparison.Ordinal)) return "Address";
+            if (text.StartsWith("\"", StringComparison.Ordinal)) return "Name";
             return System.Text.RegularExpressions.Regex.IsMatch(text, @"^(DB\d+\.)?(DB[XBWD]|[IQMEA][BWD]?|P[IQ][BWD]?)\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? "Address" : "Name";
         }
 
@@ -29,7 +29,7 @@ namespace TiaMcp.Adapters.Contracts
         public static string QuoteSymbol(string symbol)
         {
             var text = (symbol ?? "").Trim();
-            if (text.Length == 0 || text.StartsWith("\"")) return text;
+            if (text.Length == 0 || text.StartsWith("\"", StringComparison.Ordinal)) return text;
             var dot = text.IndexOf('.');
             return dot < 0 ? "\"" + text + "\"" : "\"" + text.Substring(0, dot) + "\"" + text.Substring(dot);
         }
@@ -102,7 +102,7 @@ namespace TiaMcp.Adapters.Contracts
         // an imported row carrying ModifyIntention is refused ("'set_ModifyIntention' is not
         // supported by type PlcWatchTableEntry ... The property 'ModifyIntention' is read-only").
         // An export may carry it, so drop it from every row before import, not only from the edited one.
-        public static readonly string[] ReadOnlyEntryAttributes = { "ModifyIntention" };
+        public static readonly IReadOnlyList<string> ReadOnlyEntryAttributes = Array.AsReadOnly(new string[] { "ModifyIntention" });
 
         public static int StripReadOnlyAttributes(XDocument doc)
         {

@@ -46,6 +46,37 @@ public sealed class SourceRootsTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Theory]
+    [InlineData("engine")]
+    [InlineData("multi")]
+    public void Analyzer_configuration_is_required_packaged_and_hashed(string kind)
+    {
+        var root = Scratch();
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "Version.props"), "<Project />");
+            var names = new[] { ".editorconfig", "Directory.Build.props", "src/Shared/CodeAnalysis.props" };
+            var policy = SourceRoots.Load(Root);
+            var delivery = JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "scripts/operations/delivery-files.json")))!;
+            foreach (var name in names)
+            {
+                var path = Path.Combine(root, name);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.WriteAllText(path, "first");
+                var previous = ReleaseRecords.GetSources(root, kind).Single(row => row.Path == name).Sha256;
+                Assert.Contains(ReleaseRecords.GetValidationInputs(root, kind), row => row.Path == name && row.Sha256 == previous);
+                Assert.Contains(name, policy.RequiredPaths("repository"));
+                Assert.Contains(name, policy.RequiredPaths("bundle"));
+                Assert.Contains(name, policy.RequiredPaths("package"));
+                Assert.Contains(delivery["include"]!["files"]!.AsArray(), row => (string?)row == name);
+                File.WriteAllText(path, "second");
+                Assert.NotEqual(previous, ReleaseRecords.GetSources(root, kind).Single(row => row.Path == name).Sha256);
+                Assert.NotEqual(previous, ReleaseRecords.GetValidationInputs(root, kind).Single(row => row.Path == name).Sha256);
+            }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Fact]
     public void CompilerInputsUseTheSharedSourceRootPolicy()
     {

@@ -46,6 +46,6 @@ def additions(root, release):
 
 def foundation_candidates(root):
     source = (Path(root) / "src/Adapters.Contracts/PortedFamilies.cs").read_text("utf-8-sig")
-    match = re.search(r'FoundationCandidates\s*=\s*\{([^}]+)\}', source)
+    match = re.search(r'FoundationCandidates\s*=\s*(?:\{([^}]+)\}|Array\.AsReadOnly\(new string\[\]\s*\{([^}]+)\}\s*\))\s*;', source)
     assert match, "Missing reviewed Foundation candidate declarations"
-    return set(re.findall(r'"([^"\n]+)"', match[1]))
+    return set(re.findall(r'"([^"\n]+)"', (match[1] or match[2])))

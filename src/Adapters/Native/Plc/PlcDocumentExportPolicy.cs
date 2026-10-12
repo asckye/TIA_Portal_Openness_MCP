@@ -29,9 +29,9 @@ namespace TiaMcp.Adapters
         { if(release!="20" && release!="21") throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Document export preview is restricted by policy to exact V20/V21; older API applicability is not inferred.","export-plan",false); }
         internal static void Name(string value)
         {
-            if(string.IsNullOrWhiteSpace(value) || value.Length>120 || value.EndsWith(".") || value.EndsWith(" ") || value.Any(c=>c<32 || "<>:\"/\\|?*".Contains(c))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ordinary bounded Windows filename required.");
+            if(string.IsNullOrWhiteSpace(value) || value.Length>120 || value.EndsWith(".", StringComparison.Ordinal) || value.EndsWith(" ", StringComparison.Ordinal) || value.Any(c=>c<32 || "<>:\"/\\|?*".Contains(c))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ordinary bounded Windows filename required.");
             var stem=value.Split('.')[0].TrimEnd(' ','.').ToUpperInvariant();
-            if(new[]{"CON","PRN","AUX","NUL","CONIN$","CONOUT$"}.Contains(stem) || ((stem.StartsWith("COM") || stem.StartsWith("LPT")) && stem.Length==4 && "123456789¹²³".Contains(stem[3]))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Reserved device filename.");
+            if(new[]{"CON","PRN","AUX","NUL","CONIN$","CONOUT$"}.Contains(stem) || ((stem.StartsWith("COM", StringComparison.Ordinal) || stem.StartsWith("LPT", StringComparison.Ordinal)) && stem.Length==4 && "123456789¹²³".Contains(stem[3]))) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Reserved device filename.");
         }
         internal static DirectoryInfo Destination(string path)
         {

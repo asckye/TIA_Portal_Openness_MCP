@@ -371,7 +371,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 catch (Exception ex) {
                     var cause = ex.GetBaseException();
                     meta["v4FailureCode"] = cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
-                        : cause is ArgumentException ? "INVALID_ARGUMENT"
+                        : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT"
                         : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
                         : cause is PlcSoftwareException portal ? portal.Code == "InvalidState" ? "PRECONDITION_FAILED" : portal.Code
                         : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";

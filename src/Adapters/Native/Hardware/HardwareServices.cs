@@ -320,16 +320,16 @@ namespace TiaMcp.Adapters
                         CertificateSupportedServiceComposition services = configuration.CertificateSupportedServices;
                         CertificateSupportedService? service = null;
 #if !PLC_HARDWARE_LINKED_TAGS
-                        if (action == "createService" && services.Find(ushort.Parse(name)) != null) throw new InvalidOperationException("A certificate-supported service with Id " + name + " already exists.");
+                        if (action == "createService" && services.Find(ushort.Parse(name, System.Globalization.CultureInfo.InvariantCulture)) != null) throw new InvalidOperationException("A certificate-supported service with Id " + name + " already exists.");
                         if (action == "setServiceGroupName" || action == "deleteService")
                         {
-                            service = (ushort.TryParse(name, out var id) ? services.Find(id) : null)
+                            service = (ushort.TryParse(name, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var id) ? services.Find(id) : null)
                                 ?? throw new HardwareAddressingException("NotFound", "No certificate-supported service with Id " + name + " (V20: UInt16 Id, no Guid lookup).");
 #else
-                        if (action == "createService" && services.Find(uint.Parse(name)) != null) throw new InvalidOperationException("A certificate-supported service with Id " + name + " already exists.");
+                        if (action == "createService" && services.Find(uint.Parse(name, System.Globalization.CultureInfo.InvariantCulture)) != null) throw new InvalidOperationException("A certificate-supported service with Id " + name + " already exists.");
                         if (action == "setServiceGroupName" || action == "deleteService")
                         {
-                            service = (uint.TryParse(name, out var id) ? services.Find(id) : null) ?? (Guid.TryParse(name, out var guid) ? services.Find(guid) : null)
+                            service = (uint.TryParse(name, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var id) ? services.Find(id) : null) ?? (Guid.TryParse(name, out var guid) ? services.Find(guid) : null)
                                 ?? throw new HardwareAddressingException("NotFound", "No certificate-supported service with Id or Guid " + name + ".");
 #endif
                             meta["service"] = HardwareCertificateServiceRow(service);
@@ -348,9 +348,9 @@ namespace TiaMcp.Adapters
                                 // CertificateSupportedServiceComposition.Create(id, serviceGroupName, serviceType): name = new Id, propertiesJson carries the other two.
                                 int before = HardwareGroupOperations.Items(services).Count();
 #if !PLC_HARDWARE_LINKED_TAGS
-                                var created = services.Create(ushort.Parse(name), properties["ServiceGroupName"].Text, (CertificateSupportedServiceName)Enum.Parse(typeof(CertificateSupportedServiceName), properties["ServiceType"].Text));
+                                var created = services.Create(ushort.Parse(name, System.Globalization.CultureInfo.InvariantCulture), properties["ServiceGroupName"].Text, (CertificateSupportedServiceName)Enum.Parse(typeof(CertificateSupportedServiceName), properties["ServiceType"].Text));
 #else
-                                var created = services.Create(uint.Parse(name), properties["ServiceGroupName"].Text, (CertificateSupportedServiceName)Enum.Parse(typeof(CertificateSupportedServiceName), properties["ServiceType"].Text));
+                                var created = services.Create(uint.Parse(name, System.Globalization.CultureInfo.InvariantCulture), properties["ServiceGroupName"].Text, (CertificateSupportedServiceName)Enum.Parse(typeof(CertificateSupportedServiceName), properties["ServiceType"].Text));
 #endif
                                 meta["created"] = HardwareCertificateServiceRow(created);
                                 if (HardwareGroupOperations.Items(services).Count() != before + 1) throw new InvalidOperationException("Create returned but the service count did not grow by one."); break;

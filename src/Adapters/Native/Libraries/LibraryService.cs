@@ -360,7 +360,7 @@ namespace TiaMcp.Adapters
             string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure", string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", bool confirmDelete = false, bool dryRun = true)
             => RunEngineeringServicesStep("ManageLibraryType", meta => {
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["typePath"] = typePath; meta["libraryName"] = libraryName;
-                
+
                 LibraryPolicy.ValidateTypeRequest(action, properties, targetLibraryName, libraryName, scopePaths);
                 LibraryPolicy.RequireOneOf(deleteUnusedVersionsMode, LibraryPolicy.DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
                 LibraryPolicy.RequireOneOf(structureConflictResolutionMode, LibraryPolicy.StructureConflictResolutionModes, "structureConflictResolutionMode");
@@ -422,7 +422,7 @@ namespace TiaMcp.Adapters
             string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure",
             string[] harmonizeOptions = null!, string cleanUpMode = "PreserveDefaultVersionOfUnusedTypes", bool confirmChange = false, bool dryRun = true)
             => RunEngineeringServicesStep("SynchronizeLibrary", meta => {
-                
+
                 LibraryPolicy.ValidateSyncRequest(action, libraryName, targetLibraryName, scopePaths, selection, forceUpdateMode, deleteUnusedVersionsMode, structureConflictResolutionMode, cleanUpMode);
                 var harmonize = action == "harmonizeProject" ? LibraryPolicy.JoinHarmonizeOptions(harmonizeOptions) : "";
                 LibraryRequireConfirmation(confirmChange, "confirmChange", dryRun);
@@ -553,7 +553,7 @@ namespace TiaMcp.Adapters
                 if((targetGroupKind=="")!=string.IsNullOrEmpty(targetSoftwarePath))throw new ArgumentException("targetSoftwarePath and targetGroupKind go together (STEP 7 documents need a PlcBlockGroup/PlcTypeGroup target environment).");
                 var library=ExactOpenEngineeringLibrary(libraryName);
                 string basePath=Path.Combine(file.DirectoryName!,Path.GetFileNameWithoutExtension(file.Name));
-                LibraryPolicy.ValidateDocumentImportScope(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey), library is ProjectLibrary,
+                LibraryPolicy.ValidateDocumentImportScope(int.Parse(ReleaseKey == "14sp1" ? "14" : ReleaseKey == "15.1" ? "15" : ReleaseKey, System.Globalization.CultureInfo.InvariantCulture), library is ProjectLibrary,
                     importOptions, File.Exists(basePath+".xml"), File.Exists(basePath+".s7dcl"));
                 var options=(LibraryImportOptions)System.Enum.Parse(typeof(LibraryImportOptions),importOptions);var create=(CreateOptions)System.Enum.Parse(typeof(CreateOptions),createOptions);
                 string fileName=Path.GetFileNameWithoutExtension(file.Name);meta["fileName"]=fileName;meta["importOptions"]=importOptions;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
@@ -1219,8 +1219,7 @@ namespace TiaMcp.Adapters
                         if (!CanAssignParameter(ps, source))
                             continue;
 
-                        var args = BuildMasterCopyImportArgs(ps, source!, expectedName, left, top);
-                        if (args == null)
+                        if (!TryBuildMasterCopyImportArgs(ps, source!, expectedName, left, top, out var args))
                         {
                             attempts.Add($"Skip {target.GetType().Name}.{method.Name}: unsupported parameters ({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
                             continue;
@@ -1261,8 +1260,7 @@ namespace TiaMcp.Adapters
                     if (!CanAssignParameter(ps, target))
                         continue;
 
-                    var args = BuildMasterCopySourceArgs(ps, target, screen, screenItems, expectedName, left, top);
-                    if (args == null)
+                    if (!TryBuildMasterCopySourceArgs(ps, target, screen, screenItems, expectedName, left, top, out var args))
                     {
                         attempts.Add($"Skip source {masterCopy.GetType().Name}.{method.Name}: unsupported parameters ({string.Join(", ", ps.Select(p => p.ParameterType.Name))})");
                         continue;
@@ -1316,8 +1314,7 @@ namespace TiaMcp.Adapters
                 foreach (var target in targets)
                 foreach (var source in sources)
                 {
-                    var args = BuildMasterCopyExtensionArgs(ps, target, screen, screenItems, source!, expectedName, left, top);
-                    if (args == null)
+                    if (!TryBuildMasterCopyExtensionArgs(ps, target, screen, screenItems, source!, expectedName, left, top, out var args))
                         continue;
 
                     try
@@ -1398,8 +1395,9 @@ namespace TiaMcp.Adapters
             return parameters.Any(p => p.ParameterType.IsInstanceOfType(source));
         }
 
-        private static object[]? BuildMasterCopyImportArgs(ParameterInfo[] parameters, object source, string expectedName, int left, int top)
+        private static bool TryBuildMasterCopyImportArgs(ParameterInfo[] parameters, object source, string expectedName, int left, int top, out object[] result)
         {
+            result = Array.Empty<object>();
             var args = new object?[parameters.Length];
             var sourceUsed = false;
 
@@ -1451,15 +1449,18 @@ namespace TiaMcp.Adapters
                 }
                 else
                 {
-                    return null;
+                    return false;
                 }
             }
 
-            return sourceUsed ? Array.ConvertAll(args!, a => a!) : null;
+            if (!(sourceUsed)) return false;
+            result = Array.ConvertAll(args!, a => a!);
+            return true;
         }
 
-        private static object[]? BuildMasterCopyExtensionArgs(ParameterInfo[] parameters, object target, object screen, object screenItems, object source, string expectedName, int left, int top)
+        private static bool TryBuildMasterCopyExtensionArgs(ParameterInfo[] parameters, object target, object screen, object screenItems, object source, string expectedName, int left, int top, out object[] result)
         {
+            result = Array.Empty<object>();
             var args = new object?[parameters.Length];
             var targetUsed = false;
             var sourceUsed = false;
@@ -1527,15 +1528,18 @@ namespace TiaMcp.Adapters
                 }
                 else
                 {
-                    return null;
+                    return false;
                 }
             }
 
-            return targetUsed && sourceUsed ? Array.ConvertAll(args!, a => a!) : null;
+            if (!(targetUsed && sourceUsed)) return false;
+            result = Array.ConvertAll(args!, a => a!);
+            return true;
         }
 
-        private static object[]? BuildMasterCopySourceArgs(ParameterInfo[] parameters, object target, object screen, object screenItems, string expectedName, int left, int top)
+        private static bool TryBuildMasterCopySourceArgs(ParameterInfo[] parameters, object target, object screen, object screenItems, string expectedName, int left, int top, out object[] result)
         {
+            result = Array.Empty<object>();
             var args = new object?[parameters.Length];
             var targetUsed = false;
 
@@ -1597,11 +1601,13 @@ namespace TiaMcp.Adapters
                 }
                 else
                 {
-                    return null;
+                    return false;
                 }
             }
 
-            return targetUsed ? Array.ConvertAll(args!, a => a!) : null;
+            if (!(targetUsed)) return false;
+            result = Array.ConvertAll(args!, a => a!);
+            return true;
         }
 
         private List<string> ListNamedChildren(object collection, int limit)

@@ -8,7 +8,7 @@ namespace TiaOpenness.Gui.Views;
 public partial class LogView : UserControl
 {
     public LogView() => InitializeComponent();
-    private MainViewModel _model => (MainViewModel)DataContext;
+    private MainViewModel Model => (MainViewModel)DataContext;
     private void OnLogScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (e.OriginalSource is ScrollViewer scroll && e.ExtentHeightChange > 0
@@ -19,7 +19,7 @@ public partial class LogView : UserControl
     {
         try
         {
-            Clipboard.SetText(_model.Activity.Log);
+            Clipboard.SetText(Model.Activity.Log);
         }
         catch (System.Runtime.InteropServices.COMException) /* swallow(ui): another process can hold the clipboard; an unsuccessful log copy does not interrupt the workbench */
         {
@@ -28,6 +28,6 @@ public partial class LogView : UserControl
         }
     }
 
-    private void OnClearLog(object sender, RoutedEventArgs e) => _model.Activity.ClearLog();
+    private void OnClearLog(object sender, RoutedEventArgs e) => Model.Activity.ClearLog();
 
 }

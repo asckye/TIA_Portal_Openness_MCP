@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using TiaOpenness.Gui.ViewModels;
@@ -25,7 +26,6 @@ public partial class MainWindow : Window
         UpdateMcpStatus();
         Localization.Loc.Current.LanguageChanged += OnMcpLanguageChanged;
         Closing += (_, e) => { if (_model.Busy) e.Cancel = true; };
-        Closed += (_, _) => { Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged; DisposeShell(); DisposeConfiguration(); BlocksContent.Dispose(); ((Controls.ResultPresentation)Root.Tag).Dispose(); _model.Dispose(); };
         Loaded += async (_, _) => {
             if (!_loadExistingConfiguration) return;
             await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
@@ -40,6 +40,39 @@ public partial class MainWindow : Window
             if (System.Array.IndexOf(args, "--tab") >= 0) Navigate(_model.IsVcTab ? "VersionControl" : _model.IsLogTab ? "Log" : "Engineering");
             else ShowConfiguration();
         };
+    }
+
+    private bool _closePending;
+    private bool _closeReady;
+
+    protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // Let the configuration helper and every other close veto run before releasing any resources.
+        base.OnClosing(e);
+        if (_closeReady || e.Cancel) return;
+        e.Cancel = true;
+        if (_closePending) return;
+        _closePending = true;
+        IsEnabled = false;
+        try
+        {
+            Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged;
+            DisposeShell();
+            DisposeConfiguration();
+            BlocksContent.Dispose();
+            ((Controls.ResultPresentation)Root.Tag).Dispose();
+            await _model.DisposeAsync();
+        }
+        catch (Exception error)
+        {
+            App.ReportUiException(error);
+        }
+        finally
+        {
+            _closeReady = true;
+            // Post a fresh close after the current Closing event has returned.
+            Dispatcher.BeginInvoke(new Action(Close));
+        }
     }
 
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

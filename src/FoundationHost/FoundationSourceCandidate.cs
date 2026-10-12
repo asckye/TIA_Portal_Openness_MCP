@@ -58,7 +58,7 @@ internal sealed partial class FoundationCandidateSession
             SourceReply reply;
             try { reply = Call(new() { Request = request }, "preview"); }
             catch (WorkerOperationException ex) when (ex.KnownNoMutation)
-            { throw new SourceRejection(FoundationV4Result.WorkerRejection(ex)); }
+            { throw new SourceRejectionException(FoundationV4Result.WorkerRejection(ex)); }
             if (reply.Fault != null) throw new CandidateObservationException(reply.Fault);
             return reply.Observation!;
         }

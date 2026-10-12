@@ -247,7 +247,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static int ToInt(JsonNode? node)
         {
             if (node == null) return 0;
-            if (int.TryParse(node.ToString(), out var value)) return value;
+            if (int.TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value)) return value;
             return 0;
         }
     }

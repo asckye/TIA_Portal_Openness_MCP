@@ -30,7 +30,7 @@ namespace TiaMcpConfigurator
         private IReadOnlyList<LocalizedText>? detectionEvidence;
         public string Evidence
         {
-            get { return detectionEvidence == null ? evidence : detectionEvidence.Count == 0 ? Loc.Current["Config.ClientNotFound"] : String.Join(Loc.Current["Config.ReasonSeparator"], detectionEvidence.Select(x => x.Resolve())); }
+            get { return detectionEvidence == null ? evidence : detectionEvidence.Count == 0 ? Loc.Current["Config.ClientNotFound"] : string.Join(Loc.Current["Config.ReasonSeparator"], detectionEvidence.Select(x => x.Resolve())); }
             set { evidence = value; detectionEvidence = null; }
         }
         internal void SetDetectionEvidence(IReadOnlyList<LocalizedText> found) { detectionEvidence = found; }
@@ -82,9 +82,9 @@ namespace TiaMcpConfigurator
             string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string app = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string codex = Environment.GetEnvironmentVariable("CODEX_HOME");
-            if (String.IsNullOrWhiteSpace(codex)) codex = System.IO.Path.Combine(home, ".codex");
+            if (string.IsNullOrWhiteSpace(codex)) codex = System.IO.Path.Combine(home, ".codex");
             string kimi = Environment.GetEnvironmentVariable("KIMI_CODE_HOME");
-            if (String.IsNullOrWhiteSpace(kimi)) kimi = System.IO.Path.Combine(home, ".kimi-code");
+            if (string.IsNullOrWhiteSpace(kimi)) kimi = System.IO.Path.Combine(home, ".kimi-code");
             string opencode = System.IO.Path.Combine(home, ".config", "opencode", "opencode.json");
             // VS Code: the stable user folder, or Insiders when only that one exists on this machine.
             string vscodeUser = System.IO.Path.Combine(app, "Code", "User");
@@ -333,7 +333,7 @@ namespace TiaMcpConfigurator
                 if (!inside) return;
                 if (result.Length > 0 && result[result.Length - 1] != '\n') result.Append(newline);
                 if (!command) result.Append("command = " + TomlString(engine) + newline);
-                if (!args) result.Append("args = [" + String.Join(", ", arguments.Select(TomlString)) + "]" + newline);
+                if (!args) result.Append("args = [" + string.Join(", ", arguments.Select(TomlString)) + "]" + newline);
             };
             foreach (string line in Regex.Split(text, "(?<=\n)"))
             {
@@ -360,10 +360,10 @@ namespace TiaMcpConfigurator
                     }
                     else
                     {
-                        if (args || !value.StartsWith("[") || !Regex.IsMatch(value, @"\]\s*(?:#.*)?$"))
+                        if (args || !value.StartsWith("[", StringComparison.Ordinal) || !Regex.IsMatch(value, @"\]\s*(?:#.*)?$"))
                             throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
                         args = true;
-                        result.Append("args = [" + String.Join(", ", arguments.Select(TomlString)) + "]" + newline);
+                        result.Append("args = [" + string.Join(", ", arguments.Select(TomlString)) + "]" + newline);
                     }
                 }
                 else result.Append(line);
@@ -402,7 +402,7 @@ namespace TiaMcpConfigurator
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
-                if (!quoted && c == ',') { int j = i + 1; while (j < text.Length && Char.IsWhiteSpace(text[j])) j++; if (j < text.Length && (text[j] == '}' || text[j] == ']')) continue; }
+                if (!quoted && c == ',') { int j = i + 1; while (j < text.Length && char.IsWhiteSpace(text[j])) j++; if (j < text.Length && (text[j] == '}' || text[j] == ']')) continue; }
                 result.Append(c);
                 if (escaped) escaped = false; else if (quoted && c == '\\') escaped = true; else if (c == '"') quoted = !quoted;
             }
@@ -428,7 +428,7 @@ namespace TiaMcpConfigurator
             {
                 string trimmed = line.Trim();
                 if (multiline == null && header.IsMatch(trimmed)) { skipping = target.IsMatch(trimmed); inParent = Regex.IsMatch(trimmed, @"^\[\s*" + mcp + @"\s*\]\s*(?:#.*)?$"); }
-                if (multiline == null && (Regex.IsMatch(trimmed, @"^" + mcp + @"\s*(?:=|\.)") || (inParent && Regex.IsMatch(trimmed, "^" + token + @"\s*(?:=|\.)")) || trimmed.StartsWith("[[mcp_servers." + name)))
+                if (multiline == null && (Regex.IsMatch(trimmed, @"^" + mcp + @"\s*(?:=|\.)") || (inParent && Regex.IsMatch(trimmed, "^" + token + @"\s*(?:=|\.)")) || trimmed.StartsWith("[[mcp_servers." + name, StringComparison.Ordinal)))
                     throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
                 if (!skipping) kept.Append(line);
                 ScanTomlStrings(line, ref multiline);
@@ -444,7 +444,7 @@ namespace TiaMcpConfigurator
             else
             {
                 block.AppendLine("command = " + TomlString(engine));
-                block.AppendLine("args = [" + String.Join(", ", ConfigCore.LocalArguments(engine, version, tia).Select(TomlString)) + "]");
+                block.AppendLine("args = [" + string.Join(", ", ConfigCore.LocalArguments(engine, version, tia).Select(TomlString)) + "]");
             }
             block.AppendLine("startup_timeout_sec = 120"); block.AppendLine("tool_timeout_sec = 300");
             return kept.ToString() + (kept.Length > 0 ? Environment.NewLine : "") + block;

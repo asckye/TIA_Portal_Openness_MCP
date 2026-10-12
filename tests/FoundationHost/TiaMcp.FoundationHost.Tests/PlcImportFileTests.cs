@@ -52,7 +52,7 @@ public sealed class PlcImportFileTests
         if (error == "outside") request.ImportOrder = new[] { "../a.xml", "b.xml" };
         if (error == "limit") request.MaxItems = 1;
         var locks = new Dictionary<string, Stream>();
-        try { Assert.Throws<PlcImportRejection>(() => PlcImportFiles.Read("21", "ImportPlcBlocksFromDirectory", request, locks)); }
+        try { Assert.Throws<PlcImportRejectionException>(() => PlcImportFiles.Read("21", "ImportPlcBlocksFromDirectory", request, locks)); }
         finally { foreach (var stream in locks.Values) stream.Dispose(); }
     }
     [Fact]
@@ -63,7 +63,7 @@ public sealed class PlcImportFileTests
         try
         {
             Assert.Equal(new[] { "b.xml", "a.xml" }, PlcImportFiles.Read("21", "ImportPlcBlocksFromDirectory", request, locks).Select(i => Path.GetFileName(i.Path)));
-            Assert.Equal(ErrorCode.UnsupportedCapability, Assert.Throws<PlcImportRejection>(() => PlcImportFiles.Read("20", "ImportPlcBlocksFromDirectory", request, locks)).Error.Code);
+            Assert.Equal(ErrorCode.UnsupportedCapability, Assert.Throws<PlcImportRejectionException>(() => PlcImportFiles.Read("20", "ImportPlcBlocksFromDirectory", request, locks)).Error.Code);
         }
         finally { foreach (var stream in locks.Values) stream.Dispose(); }
         Assert.Equal(Xml("21", "SW.Blocks.FC"), File.ReadAllBytes(Path.Combine(root, "a.xml")));
@@ -108,7 +108,7 @@ public sealed class PlcImportFileTests
     {
         string root = Workspace(); File.WriteAllText(Path.Combine(root, "Object_1.s7dcl"), "DATA_BLOCK Object_1\nEND_DATA_BLOCK");
         var locks = new Dictionary<string, Stream>();
-        try { Assert.Throws<PlcImportRejection>(() => PlcImportFiles.Read("20", "ImportPlcBlockDocuments", new() { InputPath = root, FileNameWithoutExtension = "Object_1" }, locks)); }
+        try { Assert.Throws<PlcImportRejectionException>(() => PlcImportFiles.Read("20", "ImportPlcBlockDocuments", new() { InputPath = root, FileNameWithoutExtension = "Object_1" }, locks)); }
         finally { foreach (var stream in locks.Values) stream.Dispose(); }
         Assert.ThrowsAny<Exception>(() => PlcImportFiles.XmlHash(Encoding.UTF8.GetBytes("<!DOCTYPE Document [<!ENTITY x SYSTEM 'file:///not-read'>]><Document>&x;</Document>")));
         Assert.ThrowsAny<Exception>(() => PlcImportFiles.XmlHash(Encoding.UTF8.GetBytes("<Document><SW.Blocks.FC/><SW.Blocks.FB/></Document>")));
@@ -117,7 +117,7 @@ public sealed class PlcImportFileTests
     public void IllegalDocumentBasenameIsRefusedBeforeOpeningAnySource()
     {
         var locks = new Dictionary<string, Stream>();
-        var error = Assert.Throws<PlcImportRejection>(() => PlcImportFiles.Read("21", "ImportPlcBlockDocuments",
+        var error = Assert.Throws<PlcImportRejectionException>(() => PlcImportFiles.Read("21", "ImportPlcBlockDocuments",
             new() { InputPath = Workspace(), FileNameWithoutExtension = "../Other" }, locks));
         Assert.Equal(ErrorCode.InvalidArgument, error.Error.Code); Assert.Empty(locks);
     }

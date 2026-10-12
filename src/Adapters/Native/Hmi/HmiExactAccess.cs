@@ -13,7 +13,7 @@ namespace TiaMcp.Adapters.Native.Hmi
     internal static class HmiExactAccess
     {
         // Both worker restart and explicit project rebinding invalidate old preview hashes.
-        
+
         internal static object? Get(object value, string name) => value.GetType().GetProperty(name)?.GetValue(value);
         internal static List<object> Items(object? value)
         {
@@ -60,7 +60,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             if (string.IsNullOrWhiteSpace(nameOrPath))
                 throw new PlcSoftwareException("InvalidParams", "Screen name/path is required.");
-            if (!nameOrPath.StartsWith("/"))
+            if (!nameOrPath.StartsWith("/", StringComparison.Ordinal))
                 return Unique(Screens(software).Where(x => string.Equals(Get(x.Value,"Name") as string,
                     nameOrPath,StringComparison.OrdinalIgnoreCase)).Select(x=>x.Value).ToList(),nameOrPath);
 
@@ -81,7 +81,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static object Group(object software,string path)
         {
-            if (!path.StartsWith("/") || path == "/" || path.EndsWith("/")) throw new PlcSoftwareException("InvalidParams","Use an absolute group path such as /Folder/Subfolder; root cannot be deleted.");
+            if (!path.StartsWith("/", StringComparison.Ordinal) || path == "/" || path.EndsWith("/", StringComparison.Ordinal)) throw new PlcSoftwareException("InvalidParams","Use an absolute group path such as /Folder/Subfolder; root cannot be deleted.");
             object current = software;
             foreach(var part in path.Substring(1).Split('/'))
             {
@@ -92,15 +92,15 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
             return current;
         }
-        
-        
-        
+
+
+
         internal static void Delete(object value)
         {
             var method = value.GetType().GetMethod("Delete",Type.EmptyTypes)
                 ?? throw new PlcSoftwareException("NotSupportedOnVersion","Delete() unavailable.");
             method.Invoke(value,Array.Empty<object>());
         }
-        
+
     }
 }

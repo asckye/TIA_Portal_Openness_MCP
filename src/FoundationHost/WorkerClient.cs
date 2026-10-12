@@ -9,24 +9,24 @@ namespace TiaMcp.FoundationHost;
 
 internal interface IFoundationWorker : IDisposable
 {
-    Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken cancellationToken);
+    public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken cancellationToken);
 }
 internal interface IFoundationWorkerResult
 {
-    ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name);
+    public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name);
 }
 
 internal interface IFoundationSessionWorker : IFoundationWorker
 {
-    string ApprovalIdentity { get; }
-    bool Poisoned { get; }
-    bool Bundled { get; }
-    bool SharedSession { get; }
-    TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner { get; }
-    IDisposable? EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request);
-    Task<IDisposable?> AcquireLane(CancellationToken token);
-    void ActivateLane(IDisposable? lane);
-    void MarkUncertain();
+    public string ApprovalIdentity { get; }
+    public bool Poisoned { get; }
+    public bool Bundled { get; }
+    public bool SharedSession { get; }
+    public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner { get; }
+    public IDisposable? EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request);
+    public Task<IDisposable?> AcquireLane(CancellationToken token);
+    public void ActivateLane(IDisposable? lane);
+    public void MarkUncertain();
 }
 
 internal sealed class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string? timeoutConfig = null) : IFoundationSessionWorker
@@ -224,7 +224,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
                     firstAttach: firstAttach);
                 sent=true;
             }
-            catch(ChannelFailure failure)
+            catch(ChannelFailureException failure)
             {
                 sent=true;
                 throw WorkerOperationException.FromChannelFailure(failure);

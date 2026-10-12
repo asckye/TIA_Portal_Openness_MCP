@@ -28,7 +28,8 @@ public abstract class ObservableObject : INotifyPropertyChanged
 /// Portal, which is single-threaded and slow, so re-entrancy is a correctness issue rather
 /// than a nicety.
 /// </summary>
-public class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
+public class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null,
+    Action<Exception>? reportError = null) : ICommand
 {
     private bool _running;
     public bool IsRunning => _running;
@@ -46,6 +47,10 @@ public class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null) : I
         try
         {
             await execute();
+        }
+        catch (Exception error)
+        {
+            (reportError ?? App.ReportUiException)(error);
         }
         finally
         {

@@ -5,7 +5,7 @@ namespace TiaMcp.Logic.V4
 {
     public interface IBehaviorCandidateContract
     {
-        JsonElement InputSchema { get; }
+        public JsonElement InputSchema { get; }
     }
 
     public sealed class DeviceCreationContract : IBehaviorCandidateContract

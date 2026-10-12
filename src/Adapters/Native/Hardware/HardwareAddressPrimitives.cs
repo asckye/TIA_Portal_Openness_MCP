@@ -56,7 +56,7 @@ namespace TiaMcp.Adapters.Hardware
         {
             StartAddress = address.StartAddress, Length = address.Length, IoType = address.IoType.ToString(),
             Controllers = Items(address.AddressControllers).Select(HardwareOwnerPath).ToArray(),
-            Attributes = DynamicAttributes(address, HardwareAddressingPolicy.AddressAttributes)
+            Attributes = DynamicAttributes(address, HardwareAddressingPolicy.AddressAttributes.ToArray())
         }.ToEvidence();
 
         public static Dictionary<string, object?> HwIdentifierRow(HwIdentifier id) => new Dictionary<string, object?>

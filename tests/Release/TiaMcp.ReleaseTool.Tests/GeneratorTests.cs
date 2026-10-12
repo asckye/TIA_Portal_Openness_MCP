@@ -247,4 +247,15 @@ public sealed class GeneratorTests
         }
         finally { File.Delete(path); }
     }
+    [Fact]
+    public void Immutable_foundation_candidates_keep_exact_source_validation()
+    {
+        const string family = "new Family(\"F00\", \"F00\", new[] { \"21\" }, new[] { \"Tool\" })";
+        string source = family + "; FoundationCandidates = Array.AsReadOnly(new string[] { \"Tool\" });";
+        Assert.Equal(new[] { "Tool" }, PortedFamilies.ParseFoundationCandidates(source));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source.Replace("AsReadOnly", "Unknown")));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source.Replace("{ \"Tool\" });", "{ \"Tool\", \"Tool\" });")));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.ParseFoundationCandidates(source + " FoundationCandidates = { \"Tool\" };"));
+    }
+
 }

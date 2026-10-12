@@ -31,11 +31,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private const int MaxLineLength = 400;
         private const int MaxAnnotationText = 300;
 
-        public static readonly string[] DefaultMarkers = { "TODO", "FIXME", "HACK", "XXX", "NOTE", "BUG" };
-        public static readonly string[] DefaultExtensions = { ".xml", ".s7dcl", ".scl" };
+        public static readonly IReadOnlyList<string> DefaultMarkers = Array.AsReadOnly(new string[] { "TODO", "FIXME", "HACK", "XXX", "NOTE", "BUG" });
+        public static readonly IReadOnlyList<string> DefaultExtensions = Array.AsReadOnly(new string[] { ".xml", ".s7dcl", ".scl" });
 
-        public static readonly string[] NormalizationRules =
-        {
+        public static readonly IReadOnlyList<string> NormalizationRules = Array.AsReadOnly(new string[] {
             "xml: DocumentInfo (Created, ExportSetting, InstalledProducts) and Engineering version dropped",
             "xml: attributes ID, UId, IId, RefId removed on every element",
             "xml: elements Created, Modified, CompileDate, ModifiedDate, CreationDate, LastModified removed",
@@ -43,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "text: UTF-8 BOM stripped, CRLF normalized, lines trimmed, blank lines dropped",
             "text: GUIDs masked as <guid>, ISO-8601 date/time values masked as <timestamp>",
             "s7dcl: MLC_* resource ids replaced by the sibling .s7res text (or <mlc> when unresolved)",
-        };
+        });
 
         private static readonly HashSet<string> VolatileAttributes = new HashSet<string>(StringComparer.Ordinal) { "ID", "UId", "IId", "RefId" };
         private static readonly HashSet<string> VolatileElements = new HashSet<string>(StringComparer.Ordinal)
@@ -949,7 +948,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static string[] ParseMarkers(string markersJson)
         {
-            if (string.IsNullOrWhiteSpace(markersJson)) return DefaultMarkers;
+            if (string.IsNullOrWhiteSpace(markersJson)) return DefaultMarkers.ToArray();
             JsonNode? node;
             try { node = JsonNode.Parse(markersJson); } catch (JsonException ex) { throw new ArgumentException("markersJson must be a JSON string array: " + ex.Message); }
             if (node is not JsonArray array || array.Count == 0) throw new ArgumentException("markersJson must be a non-empty JSON string array, e.g. [\"TODO\",\"FIXME\"].");
@@ -965,7 +964,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static string[] ParseExtensions(string extensionsJson)
         {
-            if (string.IsNullOrWhiteSpace(extensionsJson)) return DefaultExtensions;
+            if (string.IsNullOrWhiteSpace(extensionsJson)) return DefaultExtensions.ToArray();
             JsonNode? node;
             try { node = JsonNode.Parse(extensionsJson); } catch (JsonException ex) { throw new ArgumentException("extensionsJson must be a JSON string array: " + ex.Message); }
             if (node is not JsonArray array || array.Count == 0) throw new ArgumentException("extensionsJson must be a non-empty JSON string array, e.g. [\".xml\",\".s7dcl\"].");

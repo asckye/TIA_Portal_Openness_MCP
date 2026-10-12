@@ -38,7 +38,7 @@ internal static class BatchDocumentExportTests
         PlcBatchDocumentExportResult Run(string output,IEnumerable<PlcBatchDocumentExportSource>? sources=null,bool dry=true,string hash="",string release="20",bool recursive=false,int max=128,Action<DirectoryInfo,DirectoryInfo>? move=null)=>PlcBatchDocumentExportPolicy.Run(release,"/project.ap"+release,"device/PLC","group",recursive,output,max,dry,hash,sources??new[]{Source("group/B"),Source("group/A")},()=>offline++,move);
         JsonObject Request(PlcBatchDocumentExportResult result,bool dry=true)=>new(){["softwarePath"]=result.SoftwarePath,["groupPath"]=result.GroupPath,["exportPath"]=result.OutputDirectory,["maxItems"]=result.MaxItems,["recursive"]=result.Recursive,["dryRun"]=dry,["expectedPlanHash"]=result.PlanHash,["expectedProjectFile"]=result.ProjectFile};
         JsonObject Wire(PlcBatchDocumentExportResult result)=>JsonSerializer.SerializeToNode(result)!.AsObject();
-        void Reject(Action action,string message){bool rejected=false;try{action();}catch(ArgumentException){rejected=true;}catch(NotSupportedException){rejected=true;}catch(IOException){rejected=true;}catch(InvalidDataException){rejected=true;}check(rejected,message);}
+        void Reject(Action action,string message){bool rejected=false;try{action();}catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {rejected=true;} catch(ArgumentException){rejected=true;}catch(NotSupportedException){rejected=true;}catch(IOException){rejected=true;}catch(InvalidDataException){rejected=true;}check(rejected,message);}
         void Validate(PlcBatchDocumentExportResult result,bool dry=true)=>BatchDocumentExportContract.Validate(Wire(result),Request(result,dry));
         try
         {

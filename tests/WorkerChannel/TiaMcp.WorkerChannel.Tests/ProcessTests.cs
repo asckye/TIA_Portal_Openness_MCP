@@ -13,9 +13,9 @@ public sealed class ProcessTests
     public async Task DuplicateHelloTerminal()
     {
         using var fixture=new Fixture("duplicate-hello");
-        try { await fixture.Client.ConnectAsync(Budget); } catch(ChannelFault) { /* The second hello may arrive in the same read. */ }
+        try { await fixture.Client.ConnectAsync(Budget); } catch(ChannelFaultException) { /* The second hello may arrive in the same read. */ }
         await Eventually(()=>fixture.Client.Poisoned);
-        await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call()); Assert.Equal(0,fixture.Calls);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call()); Assert.Equal(0,fixture.Calls);
     }
 
     [Theory]
@@ -25,7 +25,7 @@ public sealed class ProcessTests
     public async Task HandshakeFailedBeforeWrites(string mode)
     {
         using var fixture=new Fixture(mode);
-        await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Client.ConnectAsync(TimeSpan.FromMilliseconds(700)));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Client.ConnectAsync(TimeSpan.FromMilliseconds(700)));
         Assert.True(fixture.Client.Poisoned); Assert.False(fixture.Client.OutcomeUnknown); Assert.Equal(0,fixture.Calls);
     }
 
@@ -37,16 +37,16 @@ public sealed class ProcessTests
     public async Task TerminalAmbiguityNoReplay(string mode)
     {
         using var fixture=new Fixture(mode); await fixture.Client.ConnectAsync(Budget);
-        await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call(timeout:TimeSpan.FromMilliseconds(700)));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call(timeout:TimeSpan.FromMilliseconds(700)));
         Assert.True(fixture.Client.OutcomeUnknown);
-        await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call()); Assert.Equal(1,fixture.Calls);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call()); Assert.Equal(1,fixture.Calls);
     }
 
     [Fact]
     public async Task First_attach_timeout_explains_the_TIA_access_confirmation()
     {
         using var fixture=new Fixture("timeout"); await fixture.Client.ConnectAsync(Budget);
-        var fault=await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Client.CallAsync("adapter.Attach","{}",BindingChange.Advance,false,
+        var fault=await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Client.CallAsync("adapter.Attach","{}",BindingChange.Advance,false,
             TimeSpan.FromMilliseconds(700),firstAttach:true));
         Assert.True(fixture.Client.OutcomeUnknown);
         Assert.Contains("native outcome is unknown",fault.Message,StringComparison.Ordinal);
@@ -59,7 +59,7 @@ public sealed class ProcessTests
     {
         using var fixture=new Fixture("timeout-attach"); await fixture.Client.ConnectAsync(Budget);
         await fixture.Call();
-        var fault=await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Client.CallAsync("adapter.Attach",
+        var fault=await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Client.CallAsync("adapter.Attach",
             "{\"processId\":42}",BindingChange.Advance,false,TimeSpan.FromMilliseconds(700),firstAttach:true));
         Assert.True(fixture.Client.OutcomeUnknown);
         Assert.Contains("Yes to all",fault.Message,StringComparison.Ordinal);
@@ -70,9 +70,9 @@ public sealed class ProcessTests
     public async Task TrailingFramesPoisonIdlePeer(string mode)
     {
         using var fixture=new Fixture(mode); await fixture.Client.ConnectAsync(Budget);
-        try { await fixture.Call(); } catch(ChannelFault) { /* Expected if the receive loop wins the reply race. */ }
+        try { await fixture.Call(); } catch(ChannelFaultException) { /* Expected if the receive loop wins the reply race. */ }
         await Eventually(()=>fixture.Client.Poisoned);
-        await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call()); Assert.Equal(1,fixture.Calls);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call()); Assert.Equal(1,fixture.Calls);
     }
 
     [Theory]
@@ -82,9 +82,9 @@ public sealed class ProcessTests
     public async Task ReadFailureOutcomePreserved(string mode,ChannelOutcome outcome,bool poisoned)
     {
         using var fixture=new Fixture(mode); await fixture.Client.ConnectAsync(Budget);
-        var error=await Assert.ThrowsAsync<ChannelFailure>(()=>fixture.Call()); Assert.Equal(outcome,error.Outcome); Assert.Equal(poisoned,fixture.Client.Poisoned);
-        if(poisoned) await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call());
-        else await Assert.ThrowsAsync<ChannelFailure>(()=>fixture.Call());
+        var error=await Assert.ThrowsAsync<ChannelFailureException>(()=>fixture.Call()); Assert.Equal(outcome,error.Outcome); Assert.Equal(poisoned,fixture.Client.Poisoned);
+        if(poisoned) await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call());
+        else await Assert.ThrowsAsync<ChannelFailureException>(()=>fixture.Call());
         Assert.Equal(poisoned?1:2,fixture.Calls);
     }
 
@@ -110,7 +110,7 @@ public sealed class ProcessTests
     {
         using var fixture=new Fixture("timeout"); await fixture.Client.ConnectAsync(Budget);
         var pending=fixture.Call(); await Eventually(()=>fixture.Calls==1);
-        await Assert.ThrowsAsync<ChannelFault>(()=>fixture.Call()); await Assert.ThrowsAsync<ChannelFault>(()=>pending); Assert.Equal(1,fixture.Calls);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>fixture.Call()); await Assert.ThrowsAsync<ChannelFaultException>(()=>pending); Assert.Equal(1,fixture.Calls);
     }
 
     private sealed class Fixture : IDisposable

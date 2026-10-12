@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
@@ -128,7 +129,7 @@ internal static partial class ReleaseCommands
             {
                 var directory = Path.Combine(output, name);
                 var result = Python(name, "scripts/checks/Test-LocalStability.py", "--exe", engine(key), "--major", key, "--host-harness", harness,
-                    "--public-api", ResolveReleaseApi(null, api, int.Parse(key)), "--engine-worker", fixture(key), "--engine-catalog", fixtureCatalog(key),
+                    "--public-api", ResolveReleaseApi(null, api, int.Parse(key, System.Globalization.CultureInfo.InvariantCulture)), "--engine-worker", fixture(key), "--engine-catalog", fixtureCatalog(key),
                     "--rounds", "50", "--concurrency", c, "--transports", t, "--profiles", p, "--output", directory);
                 if (result.ExitCode == 0)
                 {
@@ -194,7 +195,7 @@ internal static partial class ReleaseCommands
         foreach (var release in new[] { "20", "21" })
         {
             var key = release;
-            var targetApi = ResolveReleaseApi(null, api, int.Parse(key));
+            var targetApi = ResolveReleaseApi(null, api, int.Parse(key, System.Globalization.CultureInfo.InvariantCulture));
             foreach (var mode in CheckAllHarnessModes(key))
             {
                 var selected = mode; var name = "harness-v" + key + "-" + (mode.Length == 0 ? "http" : mode);

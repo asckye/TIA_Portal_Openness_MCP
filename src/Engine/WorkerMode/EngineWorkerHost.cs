@@ -266,10 +266,10 @@ namespace TiaMcpServer.Worker
         private ChannelResponse DispatchFoundation(ChannelRequest request)
         {
             using var correlation = InvocationJournal.UseCorrelation(request.CorrelationId ?? InvocationJournal.CorrelationId);
-            if (foundationDispatch == null) return ChannelResponse.Error(new ChannelFailure(
+            if (foundationDispatch == null) return ChannelResponse.Error(new ChannelFailureException(
                 OpennessReadiness.Cause + " " + OpennessReadiness.FixEn, -32603, ChannelOutcome.RejectedBeforeNative));
             bool disconnect = request.Method == "adapter.Disconnect";
-            if (nativeFault != null && !disconnect) return ChannelResponse.Error(new ChannelFailure(
+            if (nativeFault != null && !disconnect) return ChannelResponse.Error(new ChannelFailureException(
                 TiaOpenness.Shared.SessionBehavior.Recovery, -32603, ChannelOutcome.RejectedBeforeNative));
             bool reserved = false, dispatched = false;
             try
@@ -303,7 +303,7 @@ namespace TiaMcpServer.Worker
                     // A typed family reply retains before/after evidence while the
                     // shared session is latched. Channel failures have no such reply.
                     if (response.Failure != null || !WorkerOperations.IsFamilyOperation(request.Method.Substring("adapter.".Length)))
-                        response = ChannelResponse.Error(new ChannelFailure(nativeFault, -32603, ChannelOutcome.Unknown,
+                        response = ChannelResponse.Error(new ChannelFailureException(nativeFault, -32603, ChannelOutcome.Unknown,
                             response.Failure?.EvidenceJson ?? "null"));
                 }
                 else if (response.Failure != null && reserved)
@@ -332,7 +332,7 @@ namespace TiaMcpServer.Worker
                 else if (reserved) { processLease?.ReleaseCleanly(); processLease = null; processStartTicks = 0; RefreshFromFoundation(); }
                 processLease?.CompleteRequest(nativeFault != null);
                 var failure = WorkerFailurePolicy.Classify(error, nativeFault != null, false);
-                return ChannelResponse.Error(new ChannelFailure(WorkerFailurePolicy.DiagnosticCause(error).Message,
+                return ChannelResponse.Error(new ChannelFailureException(WorkerFailurePolicy.DiagnosticCause(error).Message,
                     failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
             }
         }
@@ -379,7 +379,7 @@ namespace TiaMcpServer.Worker
                 }
                 catch (Exception observationError)
                 {
-                    return ChannelResponse.Error(new ChannelFailure(observationError.Message, -32603, ChannelOutcome.ReadFailed));
+                    return ChannelResponse.Error(new ChannelFailureException(observationError.Message, -32603, ChannelOutcome.ReadFailed));
                 }
             }
             string? fixtureFault = WorkerFaultInjection.Mode(typeof(EngineWorkerHost).Assembly);
@@ -392,7 +392,7 @@ namespace TiaMcpServer.Worker
                     () => WorkerReplySpill.Write(DataLocations.Current.WorkerSpillsDirectory, response.ResultJson));
             }
             if (request.Method != "engine.invoke")
-                return ChannelResponse.Error(new ChannelFailure("Unknown engine operation.", -32602, ChannelOutcome.RejectedBeforeNative));
+                return ChannelResponse.Error(new ChannelFailureException("Unknown engine operation.", -32602, ChannelOutcome.RejectedBeforeNative));
             using var document = JsonDocument.Parse(request.ArgumentsJson);
             var args = document.RootElement;
             string id = args.GetProperty("requestId").GetString()!;

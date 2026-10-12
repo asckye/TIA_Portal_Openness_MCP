@@ -13,9 +13,9 @@ public sealed class ProtocolTests
     {
         using var wire = new Wire(); await wire.Connect();
         wire.Output.OnWrite = _ => wire.Input.Feed(Reply(payload: "\"error\":{\"code\":-32603,\"message\":\"unknown\",\"data\":{\"outcome\":\"Unknown\",\"evidence\":null}}"));
-        await Assert.ThrowsAsync<ChannelFailure>(() => wire.Call(readOnly: false));
+        await Assert.ThrowsAsync<ChannelFailureException>(() => wire.Call(readOnly: false));
         Assert.True(wire.Client.Poisoned); Assert.True(wire.Client.CanDisconnect);
-        await Assert.ThrowsAsync<ChannelFault>(() => wire.Call());
+        await Assert.ThrowsAsync<ChannelFaultException>(() => wire.Call());
         Assert.Single(wire.Output.Writes);
         wire.Output.OnWrite = _ => wire.Input.Feed(Reply(2, payload: "\"result\":{\"detached\":true}"));
         Assert.Equal("{\"detached\":true}", await wire.Client.CallAsync("adapter.Disconnect", "{}", BindingChange.MayAdvance, false, Budget));
@@ -41,7 +41,7 @@ public sealed class ProtocolTests
     public async Task FreshUnboundHelloRequired()
     {
         using var wire=new Wire();
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call());
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
         Assert.True(wire.Client.Poisoned); Assert.False(wire.Client.OutcomeUnknown); Assert.Empty(wire.Output.Writes);
     }
 
@@ -54,8 +54,8 @@ public sealed class ProtocolTests
         using var wire=new Wire(); var hello=JsonNode.Parse(Hello)!;
         hello["params"]![field]=System.Text.Json.JsonSerializer.SerializeToNode(value);
         wire.Input.Feed(hello.ToJsonString());
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Client.ConnectAsync(Budget));
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call());
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(Budget));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
         Assert.Empty(wire.Output.Writes); Assert.False(wire.Client.OutcomeUnknown);
     }
 
@@ -63,7 +63,7 @@ public sealed class ProtocolTests
     public async Task DuplicateHelloTerminal()
     {
         using var wire=new Wire(); wire.Input.Feed(Hello+"\n"+Hello);
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Client.ConnectAsync(Budget));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(Budget));
         Assert.Empty(wire.Output.Writes);
     }
 
@@ -71,7 +71,7 @@ public sealed class ProtocolTests
     public async Task MissingHelloHasNoSentOperation()
     {
         using var wire=new Wire();
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));
         Assert.Empty(wire.Output.Writes); Assert.False(wire.Client.OutcomeUnknown);
     }
 
@@ -84,9 +84,9 @@ public sealed class ProtocolTests
     {
         using var wire=new Wire(); await wire.Connect();
         int validated=0; wire.Output.OnWrite=_=>wire.Input.Feed(frame);
-        await Assert.ThrowsAsync<ChannelFault>(async()=>{ await wire.Call(); validated++; });
+        await Assert.ThrowsAsync<ChannelFaultException>(async()=>{ await wire.Call(); validated++; });
         Assert.Equal(0,validated); Assert.True(wire.Client.OutcomeUnknown);
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); Assert.Single(wire.Output.Writes);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.Single(wire.Output.Writes);
     }
 
     [Theory]
@@ -96,13 +96,13 @@ public sealed class ProtocolTests
         using var wire=new Wire(); await wire.Connect();
         if(request)
         {
-            await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call("{\"text\":\""+new string('汉',400000)+"\"}"));
+            await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call("{\"text\":\""+new string('汉',400000)+"\"}"));
             Assert.Empty(wire.Output.Writes); Assert.False(wire.Client.OutcomeUnknown);
         }
         else
         {
             wire.Output.OnWrite=_=>wire.Input.Feed(new string('x',16*1024*1024+1));
-            var fault=await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call());
+            var fault=await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
             Assert.Contains("byte limit",fault.Message); Assert.True(fault.OutcomeUnknown);
         }
         Assert.True(wire.Client.Poisoned);
@@ -131,7 +131,7 @@ public sealed class ProtocolTests
     public async Task ConcurrentEndpointPoisoned()
     {
         using var wire=new Wire(); await wire.Connect(); var first=wire.Call();
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); await Assert.ThrowsAsync<ChannelFault>(()=>first);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); await Assert.ThrowsAsync<ChannelFaultException>(()=>first);
         Assert.True(wire.Client.OutcomeUnknown); Assert.Single(wire.Output.Writes);
     }
 
@@ -146,9 +146,9 @@ public sealed class ProtocolTests
             if(fault=="cancel") cts.Cancel();
             if(fault=="session") wire.Client.Invalidate(new IOException("session fault"));
         };
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call(token:cts.Token,timeout:TimeSpan.FromMilliseconds(40)));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call(token:cts.Token,timeout:TimeSpan.FromMilliseconds(40)));
         Assert.True(wire.Client.OutcomeUnknown);
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); Assert.Single(wire.Output.Writes);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.Single(wire.Output.Writes);
     }
 
     [Theory]
@@ -156,7 +156,7 @@ public sealed class ProtocolTests
     public async Task UnknownReplyIdOrBindingEpochPoisons(long id,long before,long after)
     {
         using var wire=new Wire(); await wire.Connect(); wire.Output.OnWrite=_=>wire.Input.Feed(Reply(id,before,after));
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); Assert.True(wire.Client.OutcomeUnknown);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.True(wire.Client.OutcomeUnknown);
     }
 
     [Theory]
@@ -166,7 +166,7 @@ public sealed class ProtocolTests
         using var wire=new Wire(); await wire.Connect(); wire.Output.OnWrite=_=>wire.Input.Feed(Reply()); await wire.Call();
         wire.Input.Feed(kind=="hello" ? Hello : kind=="progress" ? Progress() : Reply());
         await Eventually(()=>wire.Client.Poisoned);
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call()); Assert.Single(wire.Output.Writes);
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call()); Assert.Single(wire.Output.Writes);
     }
 
     [Theory]
@@ -174,14 +174,14 @@ public sealed class ProtocolTests
     public async Task InvalidProgressTerminal(long id,int sequence,int percent)
     {
         using var wire=new Wire(); await wire.Connect(); wire.Output.OnWrite=_=>wire.Input.Feed(Progress(id,sequence,percent));
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call());
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call());
     }
 
     [Fact]
     public async Task BudgetNeverResetsOnProgressOrCleanup()
     {
         using var wire=new Wire(); await wire.Connect(); wire.Output.OnWrite=_=>wire.Input.Feed(Progress());
-        await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call(timeout:TimeSpan.FromMilliseconds(40)));
+        await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call(timeout:TimeSpan.FromMilliseconds(40)));
         Assert.True(wire.Client.OutcomeUnknown);
     }
 
@@ -192,10 +192,10 @@ public sealed class ProtocolTests
     {
         using var wire=new Wire(); await wire.Connect();
         wire.Output.OnWrite=_=>wire.Input.Feed(Reply(payload:"\"error\":{\"code\":-32603,\"message\":\"failed\",\"data\":{\"outcome\":\""+outcome+"\",\"evidence\":{\"inputFile\":\"生产线\"}}}"));
-        if(outcome=="ReadFailed" && !readOnly) await Assert.ThrowsAsync<ChannelFault>(()=>wire.Call(readOnly:readOnly));
+        if(outcome=="ReadFailed" && !readOnly) await Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Call(readOnly:readOnly));
         else
         {
-            var error=await Assert.ThrowsAsync<ChannelFailure>(()=>wire.Call(readOnly:readOnly));
+            var error=await Assert.ThrowsAsync<ChannelFailureException>(()=>wire.Call(readOnly:readOnly));
             Assert.Equal(outcome,error.Outcome.ToString()); Assert.Equal(-32603,error.Code); Assert.Equal("{\"inputFile\":\"生产线\"}",error.EvidenceJson);
         }
         Assert.Equal(poisoned,wire.Client.Poisoned);

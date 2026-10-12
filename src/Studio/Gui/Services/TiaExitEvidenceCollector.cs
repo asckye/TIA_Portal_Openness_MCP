@@ -17,9 +17,9 @@ internal sealed record TiaEvidenceDump(string Path, long Bytes, DateTimeOffset M
 
 internal interface ITiaExitEvidenceSource
 {
-    IReadOnlyList<TiaEvidenceEvent> ReadEvents(TiaEvidenceQuery query, DateTimeOffset sinceUtc, int maximum);
-    IReadOnlyList<TiaEvidenceProcess> ReadProcesses();
-    IReadOnlyList<TiaEvidenceDump> ReadDumps(string dumpDirectory, DateTimeOffset sinceUtc, int maximum);
+    public IReadOnlyList<TiaEvidenceEvent> ReadEvents(TiaEvidenceQuery query, DateTimeOffset sinceUtc, int maximum);
+    public IReadOnlyList<TiaEvidenceProcess> ReadProcesses();
+    public IReadOnlyList<TiaEvidenceDump> ReadDumps(string dumpDirectory, DateTimeOffset sinceUtc, int maximum);
 }
 
 internal static class TiaExitEvidenceCollector

@@ -109,7 +109,7 @@ namespace TiaMcp.Adapters
                 return null;
             }
 
-            // Split the device path by '/' to get each device name  
+            // Split the device path by '/' to get each device name
             var pathSegments = deviceItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             DeviceItem? deviceItem = null;

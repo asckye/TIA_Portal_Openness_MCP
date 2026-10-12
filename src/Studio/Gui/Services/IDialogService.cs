@@ -7,7 +7,7 @@ public enum DialogResult { OK, Yes, No, Cancel }
 /// <summary>The workbench's confirmation and file/folder choices, independent of WPF dialogs.</summary>
 public interface IDialogService
 {
-    DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon);
-    string[]? OpenFiles(string title, string filter, bool multiselect = false);
-    string? OpenFolder(string title);
+    public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon);
+    public string[]? OpenFiles(string title, string filter, bool multiselect = false);
+    public string? OpenFolder(string title);
 }

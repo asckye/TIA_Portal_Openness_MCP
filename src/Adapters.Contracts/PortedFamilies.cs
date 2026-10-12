@@ -244,9 +244,9 @@ namespace TiaMcp.Adapters.Contracts
         public static bool IsMigratedDeclaration(string tool) => Contains(tool) && ForTool(tool).Name != "F00";
         // These ports retain the existing Foundation candidate declaration.
         // The relocated raw engine callbacks are not their product contract.
-        public static readonly string[] FoundationCandidates = {
+        public static readonly IReadOnlyList<string> FoundationCandidates = Array.AsReadOnly(new string[] {
             "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"
-        };
+        });
         public static bool UsesFoundationCandidate(string tool) => FoundationCandidates.Contains(tool, StringComparer.Ordinal);
         public static bool Available(string release, string tool) => ForTool(tool).Available(release)
             && (!ToolReleases.TryGetValue(tool, out var releases) || releases.Contains(release, StringComparer.Ordinal));

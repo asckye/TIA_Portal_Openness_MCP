@@ -20,14 +20,14 @@ namespace TiaMcp.Logic.Generation
         public GenerationArtifacts(string root) { this.root = Path.GetFullPath(root); }
         public JsonObject Manage(string action, string artifactId, bool preview, string expectedHash)
         {
-            if (action != "list" && action != "cleanup") throw new ArgumentException("Choose list or cleanup.", "action");
-            if (action == "list" && artifactId.Length != 0) throw new ArgumentException("list has no artifactId.", "artifactId");
-            if (action == "cleanup" && !Regex.IsMatch(artifactId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Exact artifactId returned by list required.", "artifactId");
+            if (action != "list" && action != "cleanup") throw new ArgumentException("Choose list or cleanup.", nameof(action));
+            if (action == "list" && artifactId.Length != 0) throw new ArgumentException("list has no artifactId.", nameof(artifactId));
+            if (action == "cleanup" && !Regex.IsMatch(artifactId, @"\Agen-[0-9a-f]{64}\z")) throw new ArgumentException("Exact artifactId returned by list required.", nameof(artifactId));
             GenerationRecordFile.RejectLinks(Staging);
             var entries = List();
             var selected = action == "list" ? entries : new JsonArray(entries.OfType<JsonObject>().Where(e => (string?)e["artifactId"] == artifactId).Select(e => (JsonNode?)e.DeepClone()).ToArray());
-            if (action == "cleanup" && selected.Count != 1) throw new ArgumentException("Unknown artifactId.", "artifactId");
-            if (action == "cleanup" && selected[0]!["runs"]!.AsArray().Any(r => (bool?)r!["active"] == true)) throw new ArgumentException("Artifacts referenced by an active/interrupted run must be retained.", "artifactId");
+            if (action == "cleanup" && selected.Count != 1) throw new ArgumentException("Unknown artifactId.", nameof(artifactId));
+            if (action == "cleanup" && selected[0]!["runs"]!.AsArray().Any(r => (bool?)r!["active"] == true)) throw new ArgumentException("Artifacts referenced by an active/interrupted run must be retained.", nameof(artifactId));
             var data = new JsonObject { ["action"] = action, ["items"] = selected, ["wouldChange"] = action == "cleanup", ["executed"] = false };
             string hash = CanonicalJson.Hash(CanonicalJson.Parse(data.ToJsonString())).Substring(7);
             data["planHash"] = hash;

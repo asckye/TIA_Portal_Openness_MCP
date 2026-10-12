@@ -227,7 +227,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 PlcChecksumProvider? provider = plc.GetService<PlcChecksumProvider>();
                 meta["supported"] = provider != null;
                 if (provider == null) { meta["software"] = null; meta["textLists"] = null; return "PlcChecksumProvider unavailable: this PLC does not support checksum calculation (GetService returned null)."; }
-                meta["software"] = provider.Software; 
+                meta["software"] = provider.Software;
 #if PLC_DOCUMENT_EXPORT
                 meta["textLists"] = provider.TextLists;
 #else

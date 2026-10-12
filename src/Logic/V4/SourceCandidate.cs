@@ -8,10 +8,10 @@ using TiaMcp.Adapters.Contracts.Candidates;
 
 namespace TiaMcp.Logic.V4
 {
-    public sealed class SourceRejection : Exception
+    public sealed class SourceRejectionException : Exception
     {
         public Error Error { get; }
-        public SourceRejection(Error error) : base(error.Message) { Error = error; }
+        public SourceRejectionException(Error error) : base(error.Message) { Error = error; }
     }
     public sealed class SourceSession
     {
@@ -158,7 +158,7 @@ namespace TiaMcp.Logic.V4
             if (ex is TiaMcp.Adapters.Contracts.AdapterPreconditionException typed)
                 return HostBehavior.FailureError(typed.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.Precondition,
                     typed.ParamName, new Dictionary<string, JsonElement>(), HostBehavior.SafeDiagnostic(typed.Message));
-            if (ex is SourceRejection r) return r.Error;
+            if (ex is SourceRejectionException r) return r.Error;
             if (ex is PlcPathException p) return new Error(p.Message, p.Ambiguous ? (ErrorDetails)new TargetAmbiguousDetails(p.Path, p.Candidates) : new NotFoundDetails(p.Path));
             if (ex is CandidateObservationException e)
                 return new Error("External-source precondition was not established.", e.Fault.Kind == "not-found" ? (ErrorDetails)new NotFoundDetails(e.Fault.Subject)
@@ -167,7 +167,7 @@ namespace TiaMcp.Logic.V4
                     : new PreconditionFailedDetails(e.Fault.Subject, null));
             return new Error("The source preflight failed; no native call was issued for this item.", ex is IOException || ex is UnauthorizedAccessException ? (ErrorDetails)new IoFailedDetails("read-source", null) : new PreconditionFailedDetails("source-preflight", null));
         }
-        private static void Refuse(ErrorDetails details) => throw new SourceRejection(new Error("The reviewed external-source operation is refused.", details));
+        private static void Refuse(ErrorDetails details) => throw new SourceRejectionException(new Error("The reviewed external-source operation is refused.", details));
         public static Envelope Result(string release, string tool, string id, JsonObject? data, Error? error, Outcome outcome, Execution execution)
             => Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, BehaviorPolicy.SafeV4,

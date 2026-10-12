@@ -24,12 +24,12 @@ namespace TiaMcp.Adapters.Contracts.Candidates
 
     public interface IDeviceCreationAdapter
     {
-        CandidateIdentity ReadIdentity();
-        IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string typeIdentifier);
-        IReadOnlyList<DeviceInventoryItem> ReadInventory();
-        string RootId { get; }
-        void BeforeCreate();
-        DeviceInventoryItem Create(string typeIdentifier, string deviceName);
+        public CandidateIdentity ReadIdentity();
+        public IReadOnlyList<DeviceCatalogEntry> ReadCatalog(string typeIdentifier);
+        public IReadOnlyList<DeviceInventoryItem> ReadInventory();
+        public string RootId { get; }
+        public void BeforeCreate();
+        public DeviceInventoryItem Create(string typeIdentifier, string deviceName);
     }
 
     public sealed class PlcImportRequest
@@ -71,15 +71,15 @@ namespace TiaMcp.Adapters.Contracts.Candidates
 
     public interface IPlcImportAdapter
     {
-        CandidateIdentity ReadIdentity();
-        IReadOnlyList<PlcImportInput> ReadInputs(string release, string tool, PlcImportRequest request, IDictionary<string, Stream> locks);
-        IReadOnlyList<PlcImportObject> ReadInventory();
-        string TargetGroupIdentity(PlcImportObject target);
-        bool SupportsOverwrite(PlcImportInput input);
-        void BeforeImport(PlcImportInput input);
-        PlcImportObject Import(PlcImportInput input, bool overwrite);
+        public CandidateIdentity ReadIdentity();
+        public IReadOnlyList<PlcImportInput> ReadInputs(string release, string tool, PlcImportRequest request, IDictionary<string, Stream> locks);
+        public IReadOnlyList<PlcImportObject> ReadInventory();
+        public string TargetGroupIdentity(PlcImportObject target);
+        public bool SupportsOverwrite(PlcImportInput input);
+        public void BeforeImport(PlcImportInput input);
+        public PlcImportObject Import(PlcImportInput input, bool overwrite);
         // Export/read the actual returned native object on this same release and native thread.
-        string ReadContent(PlcImportInput input, PlcImportObject imported);
+        public string ReadContent(PlcImportInput input, PlcImportObject imported);
     }
 
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
@@ -606,9 +607,9 @@ internal static partial class ReleaseCommands
         var adapterCoverage = adapterDoc.RootElement;
         var nativeJitText = RunBuildSpec("native-diagnostics-jit", harness, [exe, "native-diagnostics-only", api], outputDirectory, runTemp, cliHome, apiRoot, major);
         var nativeJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-        if (!nativeJit.Success || int.Parse(nativeJit.Groups[1].Value) + int.Parse(nativeJit.Groups[2].Value) != GetJsonInt(coverage, "count")) throw new ReleaseException("Diagnostic wrapper JIT/inventory mismatch");
+        if (!nativeJit.Success || int.Parse(nativeJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(nativeJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(coverage, "count")) throw new ReleaseException("Diagnostic wrapper JIT/inventory mismatch");
         var adapterJit = Regex.Match(nativeJitText, "COMPLETE: (\\d+) adapter native diagnostic wrappers JIT prepared; (\\d+) open generic wrappers");
-        if (!adapterJit.Success || int.Parse(adapterJit.Groups[1].Value) + int.Parse(adapterJit.Groups[2].Value) != GetJsonInt(adapterCoverage, "count")) throw new ReleaseException("Adapter diagnostic wrapper JIT/inventory mismatch");
+        if (!adapterJit.Success || int.Parse(adapterJit.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) + int.Parse(adapterJit.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) != GetJsonInt(adapterCoverage, "count")) throw new ReleaseException("Adapter diagnostic wrapper JIT/inventory mismatch");
         var adapterJournal = RequireCount("adapter journal", nativeJitText, "COMPLETE: (\\d+) adapter integration diagnostic checks passed", "adapterJournal");
         var nativeJournal = RequireCount("native journal", nativeJitText, "COMPLETE: (\\d+) native journal reader checks passed", "nativeJournalReader");
 

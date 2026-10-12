@@ -485,7 +485,7 @@ public sealed class PlcWorkerRobustnessTests
         string shortBudget = "{\"default\":2,\"compile\":0.2}";
         using var scope = new PlcTimeoutScope("19", environmentOverride ? "{\"compile\":15}" : shortBudget, environmentOverride ? shortBudget : null);
         await scope.Worker.Call("ReadState", new(), CancellationToken.None);
-        var error = await Assert.ThrowsAsync<ChannelFault>(() => scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = false, ["fixtureDelayMilliseconds"] = 1300 }, CancellationToken.None));
+        var error = await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("CompileSoftware", new() { ["dryRun"] = false, ["fixtureDelayMilliseconds"] = 1300 }, CancellationToken.None));
         Assert.Equal(true, error.Data["foundationRequestSent"]);
         Assert.Equal(true, error.Data["foundationSessionPoisoned"]);
         Assert.True(scope.Worker.Poisoned);
@@ -506,7 +506,7 @@ public sealed class PlcWorkerRobustnessTests
         var args = new JsonObject { ["processId"] = Environment.ProcessId, ["fixtureDelayMilliseconds"] = 1300 };
         await scope.Worker.Call("Attach", args, CancellationToken.None);
         Assert.False(scope.Worker.Poisoned);
-        await Assert.ThrowsAsync<ChannelFault>(() => scope.Worker.Call("Attach", args, CancellationToken.None));
+        await Assert.ThrowsAsync<ChannelFaultException>(() => scope.Worker.Call("Attach", args, CancellationToken.None));
         var restart = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restart["restarted"]);
         await scope.Worker.Call("ReadState", new(), CancellationToken.None);

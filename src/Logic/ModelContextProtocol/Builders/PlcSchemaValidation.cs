@@ -14,14 +14,14 @@ namespace TiaMcpServer.ModelContextProtocol
     // PublicAPI ships fragment schemas, not a complete SimaticML Document schema.
     public static class PlcSchemaValidation
     {
-        static XDocument Read(byte[] bytes)
+        private static XDocument Read(byte[] bytes)
         {
             if (bytes.Length > 16 * 1024 * 1024) throw new ArgumentException("XML exceeds 16 MiB.");
             using var stream = new MemoryStream(bytes);
             using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 });
             return XDocument.Load(reader, LoadOptions.SetLineInfo);
         }
-        static void RegularPath(string path)
+        private static void RegularPath(string path)
         {
             if (!Path.IsPathRooted(path)) throw new ArgumentException("Absolute paths required.");
             if (new Uri(Path.GetFullPath(path)).IsUnc) throw new ArgumentException("Network paths refused; local files required.");
@@ -29,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
                  current = current is FileInfo file ? file.Directory : ((DirectoryInfo)current).Parent)
                 if (current.Exists && (current.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse paths refused.");
         }
-        static byte[] ReadBounded(string path, int maximum)
+        private static byte[] ReadBounded(string path, int maximum)
         {
             using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             using var output = new MemoryStream();
@@ -41,7 +41,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return output.ToArray();
         }
-        sealed class LocalSchemas : XmlResolver
+        private sealed class LocalSchemas : XmlResolver
         {
             public readonly Dictionary<string, byte[]> Files = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
             public override ICredentials Credentials { set { } }

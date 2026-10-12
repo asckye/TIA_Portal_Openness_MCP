@@ -91,6 +91,11 @@ namespace TiaOpenness.Core.Rpc
 
         private static int SessionFailureCode(InvalidOperationException error)
         {
+#if TIA_SHARED_ADAPTER_PATHS
+            // Preserve the bridge's existing code for adapter rejections after the base-type correction.
+            if (error is TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+                return RpcErrorCodes.InvalidParams;
+#endif
             if (error is SessionPreconditionException local)
                 return local.Reason == SessionFailureReason.NotConnected ? RpcErrorCodes.NotConnected : RpcErrorCodes.NoProjectOpen;
 #if TIA_SHARED_ADAPTER_PATHS

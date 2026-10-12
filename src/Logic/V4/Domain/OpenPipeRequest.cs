@@ -45,9 +45,9 @@ namespace TiaMcp.Logic.V4.Domain
                     tags.Add(new JsonObject { ["Name"] = tag.Name, ["Value"] = JsonNode.Parse(V4Json.Serialize(tag.Value)) });
                 parameters["Tags"] = tags;
             }
-            var request = new JsonObject { ["Message"] = Message };
-            if (HasParams) request["Params"] = parameters;
-            request["ClientCookie"] = string.IsNullOrWhiteSpace(ClientCookie) ? generatedCookie : ClientCookie;
+            var request = new JsonObject { [nameof(Message)] = Message };
+            if (HasParams) request[nameof(Params)] = parameters;
+            request[nameof(ClientCookie)] = string.IsNullOrWhiteSpace(ClientCookie) ? generatedCookie : ClientCookie;
             string wire = RuntimeChannelsLogic.PrepareRawRequest(RuntimeChannelsLogic.ToWireJson(request)).line;
             var validation = OpenPipeLimits.Wire.Read(wire, "request");
             if (validation.Error != null) throw new JsonException(V4Json.Serialize(validation.Error));

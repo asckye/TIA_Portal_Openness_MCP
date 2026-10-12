@@ -126,7 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (string.IsNullOrWhiteSpace(nameSpec))
                 throw new ArgumentException("An SCL variable name must not be empty.", nameof(nameSpec));
             var trimmed = nameSpec.Trim();
-            if (trimmed.StartsWith("#")) trimmed = trimmed.Substring(1);
+            if (trimmed.StartsWith("#", StringComparison.Ordinal)) trimmed = trimmed.Substring(1);
             var hasQuote = trimmed.Contains('"');
             // 去除所有引号，再按 . 分段
             var stripped = trimmed.Replace("\"", "");

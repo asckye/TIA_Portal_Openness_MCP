@@ -27,16 +27,16 @@ namespace TiaMcpServer.ModelContextProtocol
     // It consumes explicit verdicts and evidence, never success words in a message.
     internal static class PlcToolContract
     {
-        private sealed class Rejection : Exception
+        private sealed class RejectionException : Exception
         {
             internal Error Error { get; }
-            internal Rejection(Error error) => Error = error;
+            internal RejectionException(Error error) => Error = error;
         }
 
         internal static T Input<T>(InputContract<T> contract, T value, string parameter)
         {
             var result = contract.Validate(value, parameter);
-            if (result.Error != null) throw new Rejection(result.Error);
+            if (result.Error != null) throw new RejectionException(result.Error);
             return result.Value!;
         }
 
@@ -68,7 +68,7 @@ namespace TiaMcpServer.ModelContextProtocol
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
                 if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence && NativeResultState.TryUnsuccessful(nativeEvidence, writes, out var nativeOutcome, out var nativeError, tool))
                     return Result(tool, new JsonObject { ["evidence"] = nativeEvidence.DeepClone() }, nativeError, nativeOutcome, Completeness.Unknown, current, writes);
-            if (exception is Rejection rejection)
+            if (exception is RejectionException rejection)
                 return Result(tool, null, rejection.Error, Outcome.RejectedBeforeOperation, Completeness.None, current);
             #if !TIA_ENGINE_HOST
             if (exception is PlcBlockVerificationException)

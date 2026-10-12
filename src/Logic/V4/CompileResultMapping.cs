@@ -12,7 +12,7 @@ namespace TiaMcp.Logic.V4
         public static Error? Errors(JsonObject data)
         {
             var evidence = data["evidence"] as JsonObject;
-            int Count(string key, string root) => int.TryParse((data[key] ?? evidence?["rootCounts"]?[root])?.ToString(), out int value) ? Math.Max(0, value) : 0;
+            int Count(string key, string root) => int.TryParse((data[key] ?? evidence?["rootCounts"]?[root])?.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int value) ? Math.Max(0, value) : 0;
             int errors = Count("errorCount", "errors"), warnings = Count("warningCount", "warnings");
             string state = (data["state"] ?? evidence?["effectiveState"] ?? evidence?["rootState"])?.ToString() ?? "";
             var messages = new List<CompileErrorMessage>();
