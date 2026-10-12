@@ -20,6 +20,32 @@ public sealed class OfflineReadinessTests
                 .Where(name => TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "OFFLINE")
                 .Select(name => new object[] { release, name }));
 
+    // DecodePlcSimaticMl runs the plug-in ecosystem Python. Without that environment it must refuse with its own prerequisite
+    // (IO_FAILED ecosystem-python) before any work - never with the TIA readiness refusal; with it, it must succeed.
+    private static void AssertRanWithoutReadiness(string name, JsonNode? content)
+    {
+        Assert.NotEqual("RESOURCE_UNAVAILABLE", (string?)content?["error"]?["code"]);
+        if (name == "DecodePlcSimaticMl" && !EcosystemPythonAvailable())
+        {
+            Assert.True((bool?)content?["ok"] == false, name + ": " + content);
+            Assert.Equal("IO_FAILED", (string?)content?["error"]?["code"]);
+            Assert.Equal("ecosystem-python", (string?)content?["error"]?["details"]?["operation"]);
+            Assert.Equal("not-started", (string?)content?["meta"]?["execution"]);
+            return;
+        }
+        Assert.True((bool?)content?["ok"] == true, name + ": " + content);
+        Assert.Null(content?["error"]);
+    }
+
+    // Same resolution as DataLocations.EcosystemPython: the configured executable, else the per-user environment.
+    private static bool EcosystemPythonAvailable()
+    {
+        string? configured = Environment.GetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON");
+        if (configured != null) return Path.IsPathRooted(configured) && File.Exists(configured);
+        string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        return local.Length > 0 && File.Exists(Path.Combine(local, "TiaMcp", "ecosystem-python", "Scripts", "python.exe"));
+    }
+
     [Theory, MemberData(nameof(Cases))]
     public async Task Every_registered_offline_tool_runs_without_SDK_or_readiness(string release, string name)
     {
@@ -37,13 +63,11 @@ public sealed class OfflineReadinessTests
         fixture.Bind(name, arguments);
         var loadedBefore = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetName().Name!.StartsWith("Siemens.")).ToArray();
         var result = await target.InvokeAsync(Request(name, arguments));
-        Assert.True((bool?)result.StructuredContent?["ok"] == true, name + ": " + result.StructuredContent);
-        Assert.Null(result.StructuredContent?["error"]);
+        AssertRanWithoutReadiness(name, result.StructuredContent);
         fixture.ResetOutput(arguments);
         var bridged = await pipeline.AllTools.Single(t => t.ProtocolTool.Name == "CallTool").InvokeAsync(
             Request("CallTool", new JsonObject { ["name"] = name, ["arguments"] = arguments.DeepClone() }));
-        Assert.True((bool?)bridged.StructuredContent?["ok"] == true, name + ": " + bridged.StructuredContent);
-        Assert.Null(bridged.StructuredContent?["error"]);
+        AssertRanWithoutReadiness(name, bridged.StructuredContent);
         Assert.Equal(0, worker.Calls);
         Assert.Equal(loadedBefore, AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetName().Name!.StartsWith("Siemens.")).ToArray());
     }
