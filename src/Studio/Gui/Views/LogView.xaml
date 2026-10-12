@@ -2,30 +2,31 @@
   <Border x:Name="LogCard" Style="{StaticResource Primer.Container}">
     <Grid>
       <Grid.RowDefinitions>
-        <RowDefinition Height="32"/>
+        <RowDefinition Height="Auto" MinHeight="32"/>
         <RowDefinition Height="12"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Button Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-          <Button Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}"/>
+          <Button AutomationProperties.Name="{l:Tr Log.Copy}" Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+          <Button AutomationProperties.Name="{l:Tr Log.Clear}" Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-          <TextBlock Text="{l:Tr Log.Title}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <TextBlock Text="{Binding Tag.LogCount,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="12" Margin="12,0,0,0"/>
+          <TextBlock Text="{l:Tr Log.Title}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
+          <TextBlock Text="{Binding Tag.LogCount,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="12,0,0,0"/>
         </StackPanel>
       </DockPanel>
-      <ListBox x:Name="LogList" Grid.Row="2" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
+      <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Grid.Row="2" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Tag.LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
         <ListBox.ItemTemplate>
           <DataTemplate>
             <Grid Margin="10,5">
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="82"/>
+                <ColumnDefinition Width="82"/><ColumnDefinition Width="100"/>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="11.5"/>
-              <TextBlock Grid.Column="1" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="11.5" Style="{StaticResource Primer.LogLevelText}"/>
+              <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+              <TextBlock Grid.Column="1" Style="{StaticResource Primer.Mono}"><TextBlock.Text><MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="logLevel"><Binding Path="Level"/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/></MultiBinding></TextBlock.Text></TextBlock>
+              <TextBlock Grid.Column="2" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.LogLevelText}"/>
             </Grid>
           </DataTemplate>
         </ListBox.ItemTemplate>

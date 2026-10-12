@@ -176,9 +176,15 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     private async Task DisconnectAsync() => await _activity.Guarded("Pages.Disconnecting", async () =>
     {
-        if (_client is McpProjectClient project && _dialogs.ShowMessage(
+        if (_client is McpProjectClient project)
+        {
+            var decision = _dialogs.ShowMessage(
                 Loc.Current.T("Session.DisconnectWarning", (string?)project.Session.State?["participants"]?["mcpClient"] ?? "MCP"),
-                Loc.Current["Pages.Disconnect"], DialogButtons.OKCancel, DialogIcon.Warning) != DialogResult.OK) return;
+                Loc.Current["Pages.Disconnect"], DialogButtons.OKCancel, DialogIcon.Warning,
+                new(ConfirmationAction.EndSharedSession));
+            if (decision == DialogResult.Detach) { await project.Session.DetachAsync(); return; }
+            if (decision != DialogResult.OK) return;
+        }
         await _client.DisconnectAsync();
         IsConnected = false;
         ProjectName = string.Empty;

@@ -6,17 +6,17 @@
   <SolidColorBrush x:Key="Primer.cardBorder" Color="#30363D"/>
   <SolidColorBrush x:Key="Primer.divider" Color="#21262D"/>
   <SolidColorBrush x:Key="Primer.input" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.inputBorder" Color="#30363D"/>
+  <SolidColorBrush x:Key="Primer.inputBorder" Color="#768390"/>
   <SolidColorBrush x:Key="Primer.pill" Color="#21262D"/>
   <SolidColorBrush x:Key="Primer.pillHover" Color="#30363D"/>
   <SolidColorBrush x:Key="Primer.menuBg" Color="#161B22"/>
   <SolidColorBrush x:Key="Primer.text" Color="#E6EDF3"/>
-  <SolidColorBrush x:Key="Primer.textMuted" Color="#8D96A0"/>
-  <SolidColorBrush x:Key="Primer.textFaint" Color="#6E7681"/>
-  <SolidColorBrush x:Key="Primer.checkBorder" Color="#6E7681"/>
+  <SolidColorBrush x:Key="Primer.textMuted" Color="#9CA5AF"/>
+  <SolidColorBrush x:Key="Primer.textFaint" Color="#9CA5AF"/>
+  <SolidColorBrush x:Key="Primer.checkBorder" Color="#768390"/>
   <SolidColorBrush x:Key="Primer.accent" Color="#4FC3E0"/>
   <SolidColorBrush x:Key="Primer.onAccent" Color="#0D1117"/>
-  <SolidColorBrush x:Key="Primer.primaryBg" Color="#238636"/>
+  <SolidColorBrush x:Key="Primer.primaryBg" Color="#1A7F37"/>
   <SolidColorBrush x:Key="Primer.warn" Color="#D29922"/>
   <SolidColorBrush x:Key="Primer.warnBg" Color="#26D29922"/>
   <SolidColorBrush x:Key="Primer.ok" Color="#3FB950"/>
@@ -28,4 +28,11 @@
   <SolidColorBrush x:Key="Primer.codeText" Color="#E6EDF3"/>
   <SolidColorBrush x:Key="Primer.diffGreen" Color="#3FB950"/>
   <SolidColorBrush x:Key="Primer.diffRed" Color="#F85149"/>
+  <SolidColorBrush x:Key="Primer.primaryText" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.warningText" Color="#0D1117"/>
+  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#26D29922"/>
+  <SolidColorBrush x:Key="Primer.focusOuter" Color="#E6EDF3"/>
+  <SolidColorBrush x:Key="Primer.focusInner" Color="#161B22"/>
+  <SolidColorBrush x:Key="Primer.selectedText" Color="#E6EDF3"/>
+  <SolidColorBrush x:Key="Primer.hoverText" Color="#E6EDF3"/>
 </ResourceDictionary>

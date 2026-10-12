@@ -67,9 +67,9 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             Check("text", "pill");
             Check("accent", "cardSel", 3);
             // The handoff uses lighter semantic colors and faint labels; assert their exact tokens separately.
-            foreach (string text in new[] { "ok", "diffRed", "warn" }) Check(text, "card", 2.5);
-            Check("textFaint", "card", 2);
-            Check("warn", "warnBg", 2.5);
+            foreach (string text in new[] { "ok", "diffRed", "warn" }) Check(text, "card", 4.5);
+            Check("textFaint", "card", 4.5);
+            Check("warn", "warnBg", 4.5);
             Check("text", "cardSel");
             Check("onAccent", "accent");
         });

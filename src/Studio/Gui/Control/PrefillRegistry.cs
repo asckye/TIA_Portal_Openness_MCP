@@ -56,4 +56,5 @@ internal sealed class PrefillRegistry
         }
     }
     internal void ClearByHuman() { _pending.Clear(); _order.Clear(); }
+    internal void ClearByHuman(WorkbenchPrefillForm form) { _pending.Remove(form); _order.Remove(form); }
 }

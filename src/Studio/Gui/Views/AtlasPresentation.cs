@@ -47,6 +47,8 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
         : Done ? Loc.Current["Pages.AtlasDone"] : Loc.Current["Pages.AtlasFailed"];
     public string Detail => _detail;
     public double Percent => _total == 0 ? 0 : 100.0 * _completed / _total;
+    public bool Indeterminate => Running && _total <= 0;
+    internal void Cancel() => _generation?.Cancel();
 
     internal async Task GenerateAsync(bool singleBlock)
     {
@@ -86,9 +88,17 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) /* swallow(teardown): closing or disconnecting cancels only the view's offline atlas work */
         {
+            _state = "Idle"; _detail = ""; Raise(null);
         }
         catch (Exception ex) { Fail(ex.Message); }
-        finally { if (ReferenceEquals(_generation, generation)) _generation = null; }
+        finally
+        {
+            if (ReferenceEquals(_generation, generation))
+            {
+                _generation = null;
+                if (token.IsCancellationRequested) { _state = "Idle"; _detail = ""; Raise(null); }
+            }
+        }
     }
 
     internal void Open()

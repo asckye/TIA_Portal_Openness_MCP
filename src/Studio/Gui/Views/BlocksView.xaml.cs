@@ -14,12 +14,17 @@ public sealed partial class BlocksView : UserControl, IDisposable
         nameof(Atlas), typeof(AtlasPresentation), typeof(BlocksView));
     public AtlasPresentation? Atlas { get => (AtlasPresentation?)GetValue(AtlasProperty); private set => SetValue(AtlasProperty, value); }
     private MainViewModel Model => (MainViewModel)DataContext;
+    private ListBoxItem? _pressedRow;
 
     public BlocksView()
     {
         InitializeComponent();
         BlocksList.SelectionChanged += (_, _) => ControlSelectionChanged?.Invoke(this, EventArgs.Empty);
-        BlocksList.AddHandler(PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnBlockRowClick));
+        BlocksList.AddHandler(MouseLeftButtonUpEvent, new MouseButtonEventHandler(OnBlockRowClick));
+        BlocksList.PreviewMouseLeftButtonDown += (_, e) =>
+            _pressedRow = ItemsControl.ContainerFromElement(BlocksList, e.OriginalSource as DependencyObject) as ListBoxItem;
+        BlocksList.PreviewKeyDown += OnBlockKey;
+        Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
         DataContextChanged += (_, _) =>
         {
             Atlas?.Dispose();
@@ -33,7 +38,9 @@ public sealed partial class BlocksView : UserControl, IDisposable
         Atlas = new AtlasPresentation(Model, service);
     }
     internal void HideOptions() => Options.Hide();
+    internal bool OptionsOpen => Options.IsOpen;
     internal event EventHandler? ControlSelectionChanged;
+    internal event EventHandler<string>? ClearPrefillRequested;
     internal BlockRow? ControlFocusedBlock => BlocksList.SelectedItem as BlockRow;
     internal void LocateControlBlock(BlockRow row)
     {
@@ -42,8 +49,15 @@ public sealed partial class BlocksView : UserControl, IDisposable
     }
     internal void SetControlPrefillMarker(bool filter, bool selection)
     {
-        ControlFilter.ToolTip = filter ? Localization.Loc.Current["Control.Prefilled"] : null;
-        BlocksList.ToolTip = selection ? Localization.Loc.Current["Control.Prefilled"] : null;
+        FilterMarker.SetPending(filter);
+        SelectionMarker.SetPending(selection);
+    }
+    private void OnClearPrefill(object? sender, EventArgs e)
+        => ClearPrefillRequested?.Invoke(this, (string)((FrameworkElement)sender!).Tag);
+    private void OnBlockKey(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Space || e.OriginalSource is CheckBox || BlocksList.SelectedItem is not BlockRow row) return;
+        row.Selected = !row.Selected; e.Handled = true;
     }
     private void OnExportOptions(object sender, RoutedEventArgs e) => Options.Show("Export");
     private void OnExport(object sender, RoutedEventArgs e)
@@ -56,7 +70,8 @@ public sealed partial class BlocksView : UserControl, IDisposable
     private void OnBlockRowClick(object sender, MouseButtonEventArgs e)
     {
         var item = ItemsControl.ContainerFromElement(BlocksList, e.OriginalSource as DependencyObject) as ListBoxItem;
-        if (item == null) return;
+        if (item == null || item != _pressedRow) { _pressedRow = null; return; }
+        _pressedRow = null;
         for (var source = e.OriginalSource as DependencyObject; source != null && source != item; source = VisualTreeHelper.GetParent(source))
             if (source is CheckBox) return;
         var row = (BlockRow)item.DataContext;
@@ -65,6 +80,7 @@ public sealed partial class BlocksView : UserControl, IDisposable
     private async void OnViewLadder(object sender, RoutedEventArgs e) { if (Atlas != null) await Atlas.GenerateAsync(true); }
     private async void OnGenerateAtlas(object sender, RoutedEventArgs e) { if (Atlas != null) await Atlas.GenerateAsync(false); }
     private void OnOpenAtlas(object sender, RoutedEventArgs e) => Atlas?.Open();
+    private void OnCancelAtlas(object sender, RoutedEventArgs e) => Atlas?.Cancel();
     public void Dispose()
     {
         Atlas?.Dispose();

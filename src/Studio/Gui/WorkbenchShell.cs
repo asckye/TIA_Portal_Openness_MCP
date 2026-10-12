@@ -17,6 +17,7 @@ public partial class MainWindow
     private string _page = "Engineering";
     private string? _drawer;
     private bool _shellQueued;
+    private Controls.ModalPane? _drawerFocus, _confirmFocus;
     private bool HasProject => _model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.ProjectName);
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
@@ -31,6 +32,7 @@ public partial class MainWindow
         _model.Session.PropertyChanged += OnShellSessionChanged;
         _model.Engineering.PropertyChanged += OnShellSessionChanged;
         Loc.Current.LanguageChanged += OnShellLanguageChanged;
+        UpdateLanguage();
         UpdateShell();
         Navigate("Engineering");
         InitializeControl();
@@ -38,6 +40,8 @@ public partial class MainWindow
 
     private void DisposeShell()
     {
+        _confirmFocus?.Dispose();
+        _drawerFocus?.Dispose();
         DisposeControl();
         DisposeFeaturePages();
         SettingsContent.Dispose();
@@ -65,14 +69,19 @@ public partial class MainWindow
         UpdateMcpStatus();
         CommandManager.InvalidateRequerySuggested();
     }
-    private void OnShellLanguageChanged(object? sender, EventArgs e) => UpdateShell();
+    private void OnShellLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); UpdateShell(); }
+    private void UpdateLanguage() => Language = System.Windows.Markup.XmlLanguage.GetLanguage(
+        Loc.Current.Language == AppLanguage.Chinese ? "zh-CN" : "en-US");
     private void UpdateShell()
     {
         if (_featuresDisposed) return;
         PendingBadge.Content = Loc.Current.T("Shell.Pending", Approvals.PendingCount);
+        System.Windows.Automation.AutomationProperties.SetName(PendingBadge, (string)PendingBadge.Content);
         PendingBadge.Visibility = Approvals.PendingCount > 0 ? Visibility.Visible : Visibility.Collapsed;
-        ApprovalOffPill.Visibility = Approvals.Enabled ? Visibility.Collapsed : Visibility.Visible;
-        McpApprovalSwitch.IsChecked = Approvals.Enabled;
+        var approvalVisibility = Approvals.Enabled ? Visibility.Collapsed : Visibility.Visible;
+        if (ApprovalOffPill.Visibility != approvalVisibility && approvalVisibility == Visibility.Visible)
+            Controls.AccessibleStatus.Announce(ApprovalOffText);
+        ApprovalOffPill.Visibility = approvalVisibility;
         UpdateMcpStatus();
         RailBlocks.IsEnabled = RailVersionControl.IsEnabled = HasProject;
         RailVersionControl.Visibility = _model.VersionControlPageVisible ? Visibility.Visible : Visibility.Collapsed;
@@ -148,6 +157,7 @@ public partial class MainWindow
 
     private void OpenDrawer(string name)
     {
+        _drawerFocus?.Dispose();
         _drawer = name;
         Features.SetVisibility(_page == "Calls", _page == "Audit", name == "Approvals", name == "CallDetail");
         DrawerCount.Visibility = name == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
@@ -160,6 +170,7 @@ public partial class MainWindow
         SettingsButton.SetResourceReference(Control.BackgroundProperty, name == "Settings" ? "Primer.accent" : "Primer.pill");
         SettingsButton.SetResourceReference(Control.ForegroundProperty, name == "Settings" ? "Primer.onAccent" : "Primer.text");
         UpdateShell();
+        _drawerFocus = new Controls.ModalPane(DrawerOverlay, DrawerTitle, CloseDrawer);
     }
 
     private void OnSettings(object sender, RoutedEventArgs e)
@@ -176,20 +187,25 @@ public partial class MainWindow
         _drawer = null;
         Features.SetVisibility(_page == "Calls", _page == "Audit", false);
         DrawerOverlay.Visibility = Visibility.Collapsed;
+        _drawerFocus?.Dispose(); _drawerFocus = null;
         QueueControlSnapshot();
         SettingsButton.SetResourceReference(Control.BackgroundProperty, "Primer.pill");
         SettingsButton.SetResourceReference(Control.ForegroundProperty, "Primer.text");
     }
-    private void OnDisableApprovalRequested(object? sender, EventArgs e) => ConfirmOverlay.Visibility = Visibility.Visible;
-    private void OnMcpMenu(object sender, MouseButtonEventArgs e) { ((FrameworkElement)sender).ContextMenu.IsOpen = true; e.Handled = true; }
-    private async void OnApprovalMenu(object sender, RoutedEventArgs e)
+    private void OnDisableApprovalRequested(object? sender, EventArgs e)
     {
-        if (Approvals.Enabled) OnDisableApprovalRequested(sender, EventArgs.Empty);
-        else await SetApprovalEnabled(true);
-        McpApprovalSwitch.IsChecked = Approvals.Enabled;
+        ConfirmOverlay.Visibility = Visibility.Visible;
+        _confirmFocus?.Dispose();
+        _confirmFocus = new Controls.ModalPane(ConfirmOverlay, CancelApprovalOff, CancelApprovalConfirmation);
     }
-    private void OnCancelApprovalOff(object sender, RoutedEventArgs e) { ConfirmOverlay.Visibility = Visibility.Collapsed; SettingsContent.UpdateApproval(); }
-    private async void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { await SetApprovalEnabled(false); ConfirmOverlay.Visibility = Visibility.Collapsed; }
+    private void CancelApprovalConfirmation()
+    {
+        ConfirmOverlay.Visibility = Visibility.Collapsed;
+        _confirmFocus?.Dispose(); _confirmFocus = null;
+        SettingsContent.UpdateApproval();
+    }
+    private void OnCancelApprovalOff(object sender, RoutedEventArgs e) => CancelApprovalConfirmation();
+    private async void OnConfirmApprovalOff(object sender, RoutedEventArgs e) { await SetApprovalEnabled(false); CancelApprovalConfirmation(); }
     private async Task SetApprovalEnabled(bool enabled)
     {
         try { await Task.Run(() => Approvals.Enabled = enabled); }
@@ -201,5 +217,5 @@ public partial class MainWindow
         Features.Export();
     }
     private void OnDismissToast(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
-    private void OnToastClick(object sender, MouseButtonEventArgs e) { Toast.Visibility = Visibility.Collapsed; if (_approvalToast != null) OpenDrawer("Approvals"); else Navigate("Environment"); }
+    private void OnToastClick(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; if (_approvalToast != null) OpenDrawer("Approvals"); else Navigate("Environment"); }
 }

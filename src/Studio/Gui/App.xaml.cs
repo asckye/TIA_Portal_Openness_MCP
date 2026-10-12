@@ -30,7 +30,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             if (Environment.GetEnvironmentVariable("TIA_OPENNESS_NETWORK_NO_DIALOG") == "1") Console.Error.WriteLine(ex.Message);
-            else MessageBox.Show(ex.Message, "TIA Portal", MessageBoxButton.OK, MessageBoxImage.Error);
+            else MessageBox.Show(ex.Message, Localization.Loc.Current["Common.PortalName"], MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(ex is ArgumentException ? 64 : 70);
             return;
         }
@@ -82,7 +82,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             if (Environment.GetEnvironmentVariable("TIA_OPENNESS_NETWORK_NO_DIALOG") == "1") Console.Error.WriteLine(ex.Message);
-            else MessageBox.Show(ex.Message, "TIA Portal", MessageBoxButton.OK, MessageBoxImage.Error);
+            else MessageBox.Show(ex.Message, Localization.Loc.Current["Common.PortalName"], MessageBoxButton.OK, MessageBoxImage.Error);
             return 1;
         }
     }
@@ -129,7 +129,7 @@ public partial class App : Application
         }
         catch (Exception logError)
         {
-            details = "IO_FAILED: " + logError.Message;
+            details = Localization.Loc.Current.T("Common.IoFailed", logError.Message);
             TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaOpenness.crash", logError);
         }
 

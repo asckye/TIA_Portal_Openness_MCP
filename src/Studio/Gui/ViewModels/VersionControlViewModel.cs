@@ -271,7 +271,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     {
         if (!VcDryRun && _dialogs.ShowMessage(
                 Loc.Current["Dialog.Pull.Text"], Loc.Current["Dialog.Pull.Caption"],
-                DialogButtons.OKCancel, DialogIcon.Warning) != DialogResult.OK)
+                DialogButtons.OKCancel, DialogIcon.Warning, new(ConfirmationAction.OverwriteProject)) != DialogResult.OK)
         {
             return;
         }

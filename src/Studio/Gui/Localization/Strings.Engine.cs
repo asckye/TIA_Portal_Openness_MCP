@@ -8,7 +8,7 @@ internal static partial class Strings
         ("Engine.Error.LimitExceeded", "An input limit was exceeded.", "输入超出限制。"),
         ("Engine.Error.UnsupportedCapability", "This capability is not supported.", "不支持此功能。"),
         ("Engine.Error.ToolNotFound", "The tool is not available in this release.", "此版本中没有该工具。"),
-        ("Engine.Error.ProjectNotBound", "No project is bound.", "尚未绑定工程。"),
+        ("Engine.Error.ProjectNotBound", "No project is bound.", "尚未绑定项目。"),
         ("Engine.Error.NotFound", "The requested object or file was not found.", "找不到指定的对象或文件。"),
         ("Engine.Error.TargetAmbiguous", "More than one target matches.", "存在多个匹配目标。"),
         ("Engine.Error.IdentityMismatch", "The target identity has changed.", "目标身份已改变。"),

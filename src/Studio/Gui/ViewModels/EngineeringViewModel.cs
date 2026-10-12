@@ -229,7 +229,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         var overwrite = !string.IsNullOrWhiteSpace(ImportPathsText) ? (ImportOverwrite ? DialogResult.Yes : DialogResult.No) : _dialogs.ShowMessage(
             Loc.Current["Dialog.Import.Text"], Loc.Current["Dialog.Import.Caption"],
-            DialogButtons.YesNoCancel, DialogIcon.Question);
+            DialogButtons.YesNoCancel, DialogIcon.Question, new(ConfirmationAction.ImportBlocks));
         if (overwrite == DialogResult.Cancel) return;
 
         var result = await _client.ImportBlocksAsync(
@@ -282,7 +282,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     {
         if (_dialogs.ShowMessage(
                 Loc.Current["Dialog.Save.Text"], Loc.Current["Dialog.Save.Caption"],
-                DialogButtons.OKCancel, DialogIcon.Warning) != DialogResult.OK)
+                DialogButtons.OKCancel, DialogIcon.Warning, new(ConfirmationAction.SaveProject)) != DialogResult.OK)
         {
             return;
         }

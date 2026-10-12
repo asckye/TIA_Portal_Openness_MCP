@@ -10,6 +10,7 @@ public partial class VersionControlView : UserControl
     public VersionControlView() => InitializeComponent();
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void HideOptions() => Options.Hide();
+    internal bool OptionsOpen => Options.IsOpen;
     private void OnWorkspaceAction(object sender, RoutedEventArgs e)
     {
         if (Model.VersionControl.SelectedWorkspace == null) { Options.Show("Workspace"); return; }

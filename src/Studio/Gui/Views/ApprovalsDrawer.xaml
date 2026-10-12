@@ -2,11 +2,11 @@
   <Grid Margin="22,14,22,22">
     <Border Padding="16,24" Visibility="{Binding RequestsEmpty, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Inset}">
       <StackPanel>
-        <TextBlock Text="{l:Tr Shell.NoPending}" FontSize="13" FontWeight="SemiBold"/>
-        <TextBlock Text="{l:Tr Shell.NoPendingDescription}" Style="{StaticResource Primer.Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,0"/>
+        <TextBlock Text="{l:Tr Shell.NoPending}" FontSize="{DynamicResource Ui.FontSize.SmallTitle}" FontWeight="SemiBold"/>
+        <TextBlock Text="{l:Tr Shell.NoPendingDescription}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,10,0,0"/>
       </StackPanel>
     </Border>
-    <ListBox x:Name="RequestList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Requests}">
+    <ListBox AutomationProperties.Name="{l:Tr Shell.PendingTitle}" x:Name="RequestList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Requests}">
       <ListBox.ItemTemplate>
         <DataTemplate>
           <Border Padding="16,14" Margin="0,0,0,12" Style="{StaticResource Primer.PendingRequest}">
@@ -16,12 +16,12 @@
                   <TextBlock Text="{Binding State}" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                  <TextBlock Text="{Binding Client}" FontSize="13" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding Client}" FontSize="{DynamicResource Ui.FontSize.SmallTitle}" FontWeight="SemiBold"/>
                   <Border Padding="6,2" Margin="8,0" Style="{StaticResource Primer.Chip}">
-                    <TextBlock Text="{Binding Request.Transport}" Style="{StaticResource Primer.Mono}" FontSize="9"/>
+                    <TextBlock Text="{Binding Request.Transport}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
                   </Border>
                 </StackPanel>
-                <TextBlock Text="{Binding Request.Host}" Style="{StaticResource Primer.Muted}" FontSize="10.5" ToolTip="{Binding Request.Host}"/>
+                <TextBlock Text="{Binding Request.Host}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" ToolTip="{Binding Request.Host}"/>
               </DockPanel>
               <Grid Margin="0,8,0,8">
                 <Grid.ColumnDefinitions>
@@ -29,13 +29,13 @@
                   <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                  <RowDefinition Height="18"/>
-                  <RowDefinition Height="18"/>
+                  <RowDefinition MinHeight="24"/>
+                  <RowDefinition MinHeight="24"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="{l:Tr Approval.Project}" Style="{StaticResource Primer.Muted}"/>
-                <TextBlock Grid.Column="1" Text="{Binding Request.Project}" Style="{StaticResource Primer.Mono.text}" FontSize="10.5" ToolTip="{Binding Request.Project}"/>
-                <TextBlock Grid.Row="1" Text="PLC" Style="{StaticResource Primer.Muted}"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Request.Plc}" Style="{StaticResource Primer.Text}" FontSize="11"/>
+                <TextBlock Grid.Column="1" Text="{Binding Request.Project}" Style="{StaticResource Primer.Mono.text}" FontSize="{DynamicResource Ui.FontSize.Caption}" ToolTip="{Binding Request.Project}"/>
+                <TextBlock Grid.Row="1" Text="{l:Tr Common.Plc}" Style="{StaticResource Primer.Muted}"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Request.Plc}" Style="{StaticResource Primer.Text}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
               </Grid>
               <Border Padding="10,6" Style="{StaticResource Primer.InputSurface}" Visibility="{Binding IsToolRequest, Converter={StaticResource BoolToVisibility}}">
                 <ScrollViewer MaxHeight="118" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -48,9 +48,9 @@
                             <ColumnDefinition/>
                             <ColumnDefinition Width="106"/>
                           </Grid.ColumnDefinitions>
-                          <TextBlock Text="{Binding Action}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Style="{StaticResource Primer.Text.warn}"/>
-                          <TextBlock Grid.Column="1" Text="{Binding Object}" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip="{Binding Object}"/>
-                          <TextBlock Grid.Column="2" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="10" ToolTip="{Binding Tool}"/>
+                          <TextBlock Text="{Binding Action}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Style="{StaticResource Primer.Text.warn}"/>
+                          <TextBlock Grid.Column="1" Text="{Binding Object}" FontSize="{DynamicResource Ui.FontSize.Caption}" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip="{Binding Object}"/>
+                          <TextBlock Grid.Column="2" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="{DynamicResource Ui.FontSize.Caption}" ToolTip="{Binding Tool}"/>
                         </Grid>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -58,26 +58,27 @@
                 </ScrollViewer>
               </Border>
               <StackPanel Margin="0,8,0,0" Visibility="{Binding IsGenerationPlan, Converter={StaticResource BoolToVisibility}}">
-                <TreeView ItemsSource="{Binding GenerationDifferences}" MaxHeight="180" Background="Transparent" BorderThickness="0">
+                <TreeView AutomationProperties.Name="{l:Tr Approval.CompletePlan}" ItemsSource="{Binding GenerationDifferences}" MaxHeight="180" Background="Transparent" BorderThickness="0">
                   <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Children}"><TextBlock Text="{Binding Text}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/></HierarchicalDataTemplate>
                   </TreeView.ItemTemplate>
                 </TreeView>
-                <DataGrid ItemsSource="{Binding GenerationSteps}" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="200" Margin="0,6,0,0">
+                <DataGrid AutomationProperties.Name="{l:Tr Approval.CompletePlan}" ItemsSource="{Binding GenerationSteps}" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" MaxHeight="200" Margin="0,6,0,0">
                   <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70"/>
+                    <DataGridTextColumn Header="{l:Tr Common.Id}" Binding="{Binding Id}" Width="70"/>
                     <DataGridTextColumn Header="{l:Tr Approval.Phase}" Binding="{Binding Phase}" Width="100"/>
                     <DataGridTextColumn Header="{l:Tr Calls.Target}" Binding="{Binding Key}" Width="*"/>
                     <DataGridTextColumn Header="{l:Tr Calls.Tool}" Binding="{Binding Tool}" Width="180"/>
                   </DataGrid.Columns>
                 </DataGrid>
-                <Button Content="{l:Tr Approval.CompletePlan}" Style="{StaticResource Primer.Quiet}" Click="OnPlan"/>
+                <Button AutomationProperties.Name="{l:Tr Approval.CompletePlan}" Content="{l:Tr Approval.CompletePlan}" Style="{StaticResource Primer.Quiet}" Click="OnPlan"/>
                 <Border Padding="12" Margin="0,8,0,0" Style="{StaticResource Primer.CodeBlock}" Visibility="{Binding PlanOpen, Converter={StaticResource BoolToVisibility}}">
-                  <TextBox Text="{Binding CompletePlan, Mode=OneWay}" IsReadOnly="True" MaxHeight="300" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Style="{StaticResource Primer.Input}"/>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=AccessibleField1}" x:Name="AccessibleLabel1" Content="{l:Tr Approval.CompletePlan}" Target="{Binding ElementName=AccessibleField1}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" x:Name="AccessibleField1" AutomationProperties.Name="{l:Tr Approval.CompletePlan}" Text="{Binding CompletePlan, Mode=OneWay}" IsReadOnly="True" MaxHeight="300" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Style="{StaticResource Primer.Input}"/></StackPanel>
                 </Border>
               </StackPanel>
               <DockPanel Margin="0,12,0,0">
-                <TextBlock DockPanel.Dock="Right" Text="{Binding Metadata}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="9.5" Margin="4,0,0,0"/>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Metadata}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="4,0,0,0"/>
                 <ItemsControl ItemsSource="{Binding Request.Risks}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -87,7 +88,7 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Border Padding="7,3" Margin="0,0,5,4" Style="{StaticResource Primer.WarningBadge}">
-                        <TextBlock Text="{Binding}" FontSize="10.5" FontWeight="SemiBold" Style="{StaticResource Primer.Text.warn}"/>
+                        <TextBlock Text="{Binding}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Style="{StaticResource Primer.Text.warn}"/>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -95,17 +96,17 @@
               </DockPanel>
               <StackPanel Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}" Margin="0,8,0,0">
                 <DockPanel>
-                  <TextBlock DockPanel.Dock="Right" Text="{Binding Remaining, StringFormat={}{0}s}" Style="{StaticResource Primer.ToneText}" Tag="{Binding CountdownTone}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11"/>
+                  <TextBlock DockPanel.Dock="Right" Text="{Binding RemainingText}" Style="{StaticResource Primer.ToneText}" Tag="{Binding CountdownTone}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
                   <TextBlock Text="{l:Tr Approval.AutoReject}" Style="{StaticResource Primer.Muted}"/>
                 </DockPanel>
                 <ProgressBar Style="{StaticResource Primer.Progress}" Value="{Binding Percent, Mode=OneWay}" Tag="{Binding CountdownTone}" Margin="0,6,0,10"/>
               </StackPanel>
               <DockPanel>
-                <Button DockPanel.Dock="Right" Content="{l:Tr Approval.Parameters}" Style="{StaticResource Primer.Quiet}" Click="OnParameters"/>
-                <StackPanel Orientation="Horizontal" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
-                  <Button x:Name="ApproveRequest" Content="{l:Tr Approval.Approve}" Style="{StaticResource Primer.Run}" IsEnabled="{Binding CanDecide}" Click="OnApprove"/>
-                  <Button Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.Secondary}" IsEnabled="{Binding CanDecide}" Margin="8,0,0,0" Click="OnDeny"/>
-                </StackPanel>
+                <Button AutomationProperties.Name="{l:Tr Approval.Parameters}" DockPanel.Dock="Right" Content="{l:Tr Approval.Parameters}" Style="{StaticResource Primer.Quiet}" Click="OnParameters"/>
+                <Grid Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                  <Button AutomationProperties.Name="{l:Tr Approval.Approve}" x:Name="ApproveRequest" Grid.Column="0" Content="{l:Tr Approval.Approve}" Style="{StaticResource Primer.Run}" IsEnabled="{Binding CanDecide}" Click="OnApprove"/>
+                  <Button AutomationProperties.Name="{l:Tr Approval.Deny}" Grid.Column="2" Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.Secondary}" IsEnabled="{Binding CanDecide}" Click="OnDeny"/>
+                </Grid>
               </DockPanel>
               <Border Padding="10,8" Margin="0,8,0,0" Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Inset}">
                 <TextBlock Text="{Binding Note}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>

@@ -8,13 +8,13 @@
           <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-          <RowDefinition Height="24"/>
-          <RowDefinition Height="24"/>
-          <RowDefinition Height="24"/>
-          <RowDefinition Height="24"/>
-          <RowDefinition Height="24"/>
-          <RowDefinition Height="24"/>
-          <RowDefinition Height="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
         </Grid.RowDefinitions>
         <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.Muted}"/>
         <TextBlock Grid.Column="1" Text="{Binding Record.Time, StringFormat=yyyy-MM-dd HH:mm:ss zzz}" Style="{StaticResource Primer.Mono}"/>
@@ -32,7 +32,7 @@
         <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Record.McpSession}" ToolTip="{Binding Record.McpSession}" Style="{StaticResource Primer.Mono}"/>
       </Grid>
       <DockPanel Margin="0,0,0,8">
-        <Button DockPanel.Dock="Right" Content="{l:Tr Feature.Copy}" Style="{StaticResource Primer.Quiet}" Click="OnCopy"/>
+        <Button AutomationProperties.Name="{l:Tr Feature.Copy}" DockPanel.Dock="Right" Content="{l:Tr Feature.Copy}" Style="{StaticResource Primer.Quiet}" Click="OnCopy"/>
         <TextBlock Text="{l:Tr Calls.Parameters}" Style="{StaticResource Primer.ContainerTitle}"/>
       </DockPanel>
       <Border Padding="12" Style="{StaticResource Primer.CodeBlock}">
@@ -42,7 +42,7 @@
       </Border>
       <TextBlock Text="{l:Tr Calls.Summary}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,20,0,8"/>
       <Border Padding="12,10" Style="{StaticResource Primer.Inset}">
-        <TextBlock Text="{Binding Summary}" FontSize="12" TextWrapping="Wrap"/>
+        <TextBlock Text="{Binding Summary}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap"/>
       </Border>
       <TextBlock Text="{l:Tr Calls.ResultJson}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,20,0,8"/>
       <Border Padding="12" Style="{StaticResource Primer.CodeBlock}">
@@ -53,13 +53,13 @@
       <TextBlock Text="{Binding PreviewNote}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,10,0,0"/>
       <Border Padding="12" Margin="0,16,0,0" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.WarningSurface}">
         <StackPanel>
-          <TextBlock Text="{l:Tr Calls.Error}" FontSize="12" FontWeight="SemiBold" Style="{StaticResource Primer.Text.warn}"/>
-          <TextBlock Text="{Binding Error}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" Style="{StaticResource Primer.Text.warn}"/>
+          <TextBlock Text="{l:Tr Calls.Error}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Style="{StaticResource Primer.Text.warn}"/>
+          <TextBlock Text="{Binding Error}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,8,0,0" Style="{StaticResource Primer.Text.warn}"/>
         </StackPanel>
       </Border>
       <TextBlock Text="{l:Tr Calls.ApprovalRecord}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,20,0,8"/>
       <Border Padding="12,10" Style="{StaticResource Primer.Inset}">
-        <TextBlock Text="{Binding Approval}" Style="{StaticResource Primer.Muted}" FontSize="12" TextWrapping="Wrap"/>
+        <TextBlock Text="{Binding Approval}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap"/>
       </Border>
     </StackPanel>
   </ScrollViewer>

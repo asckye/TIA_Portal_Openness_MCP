@@ -22,7 +22,7 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
-        VersionText.Text = "TIA Workbench " + MainViewModel.AppVersion.TrimStart('v');
+        VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
     }
 
     internal void Initialize(IApprovalService approvals)

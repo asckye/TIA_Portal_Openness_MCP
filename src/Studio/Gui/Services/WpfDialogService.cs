@@ -4,6 +4,14 @@ namespace TiaOpenness.Gui.Services;
 
 public sealed class WpfDialogService : IDialogService
 {
+    public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon, ConfirmationLabels labels)
+        => Controls.WorkbenchMessageBox.Show(text, caption,
+            buttons == DialogButtons.OKCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNoCancel,
+            icon == DialogIcon.Warning ? MessageBoxImage.Warning : MessageBoxImage.Question, labels) switch
+        {
+            MessageBoxResult.OK => DialogResult.OK, MessageBoxResult.Yes => DialogResult.Yes,
+            MessageBoxResult.No => labels.Detach ? DialogResult.Detach : DialogResult.No, _ => DialogResult.Cancel,
+        };
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon)
         => TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(text, caption,
             buttons == DialogButtons.OKCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNoCancel,

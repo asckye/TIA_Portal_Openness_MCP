@@ -227,13 +227,19 @@ namespace TiaMcpConfigurator
             ShowKey.Content = Loc.Current[ShowKey.IsChecked == true ? "Mcp.Hide" : "Config.Show"];
             UpdateLink();
         }
+        private void OnClientGuidanceKey(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key is not (System.Windows.Input.Key.Enter or System.Windows.Input.Key.Space)) return;
+            TiaOpenness.Gui.Controls.WorkbenchMessageBox.Show(Window, (string)ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+            e.Handled = true;
+        }
         private void UpdateLink()
         {
             bool remote = Remote;
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? Loc.Current["Config.NoSelection"] : Loc.Current.T("Config.Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = string.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName));
-            Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
+            Find<TextBlock>("LinkServer").Text = Loc.Current.T("Common.McpPortal", TiaVersionCatalog.Get(SelectedVersion).DisplayName);
             bool running = DisplayRunning;
             string address = Text("ServerAddress");
             Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");

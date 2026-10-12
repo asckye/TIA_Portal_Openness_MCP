@@ -411,6 +411,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     public bool Pending => Request.State == ApprovalState.Pending;
     public bool CanDecide => Pending && owner.Approvals.CanDecide(Request.Id);
     public int Remaining => owner.Remaining(Request);
+    public string RemainingText => Loc.Current.T("Common.Seconds", Remaining);
     public double Percent => 100.0 * Remaining / Request.TimeoutSeconds;
     public FeatureTone CountdownTone => Remaining < 20 ? FeatureTone.Warning : FeatureTone.Accent;
     public bool JsonOpen { get => _jsonOpen; set => Set(ref _jsonOpen, value); }
@@ -475,7 +476,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     }
     public void RefreshCountdown()
     {
-        foreach (string name in new[] { nameof(Remaining), nameof(Percent), nameof(CountdownTone), nameof(CanDecide) }) Raise(name);
+        foreach (string name in new[] { nameof(Remaining), nameof(RemainingText), nameof(Percent), nameof(CountdownTone), nameof(CanDecide) }) Raise(name);
     }
 }
 

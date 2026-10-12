@@ -1,5 +1,5 @@
-<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" x:Class="TiaMcpConfigurator.ConfigurationView" Foreground="{DynamicResource Primer.text}" FontFamily="{DynamicResource Ui.Font}" FontSize="12" UseLayoutRounding="True">
-  <Grid x:Name="Panes">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" x:Class="TiaMcpConfigurator.ConfigurationView" Foreground="{DynamicResource Primer.text}" FontFamily="{DynamicResource Ui.Font}" FontSize="{DynamicResource Ui.FontSize.Caption}" UseLayoutRounding="True">
+  <Grid x:Name="Panes" ux:ResponsiveLayout.Enabled="True">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="20"/>
@@ -7,9 +7,9 @@
     </Grid.ColumnDefinitions>
     <Grid>
       <Grid.RowDefinitions>
-        <RowDefinition Height="58"/>
+        <RowDefinition Height="Auto" MinHeight="58"/>
         <RowDefinition Height="14"/>
-        <RowDefinition Height="166"/>
+        <RowDefinition Height="Auto" MinHeight="166"/>
         <RowDefinition Height="14"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
@@ -19,14 +19,14 @@
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <StackPanel Margin="0">
-          <ux:TrackedTextBlock Tracking="0.14" x:Name="PageStep" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" Foreground="{DynamicResource Primer.accent}" Visibility="Collapsed"/>
-          <ux:TrackedTextBlock Tracking="-0.02" x:Name="PageTitle" Height="26" LineHeight="29" LineStackingStrategy="BlockLineHeight" FontSize="20" FontWeight="SemiBold" Margin="0"/>
-          <TextBlock x:Name="PageSubtitle" Height="18" LineHeight="18" LineStackingStrategy="BlockLineHeight" FontSize="13" Margin="0,3,0,0" Style="{StaticResource Primer.Text.textMuted}"/>
+          <ux:TrackedTextBlock Tracking="0.14" x:Name="PageStep" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Foreground="{DynamicResource Primer.accent}" Visibility="Collapsed"/>
+          <ux:TrackedTextBlock Tracking="-0.02" x:Name="PageTitle" Height="26" LineHeight="29" LineStackingStrategy="BlockLineHeight" FontSize="{DynamicResource Ui.FontSize.Subtitle}" FontWeight="SemiBold" Margin="0"/>
+          <TextBlock x:Name="PageSubtitle" MinHeight="24" LineHeight="24" LineStackingStrategy="BlockLineHeight" FontSize="{DynamicResource Ui.FontSize.SmallTitle}" Margin="0,3,0,0" Style="{StaticResource Primer.Text.textMuted}"/>
         </StackPanel>
         <Border Grid.Column="1" Style="{StaticResource Primer.SegmentGroup}">
           <StackPanel Orientation="Horizontal">
-            <RadioButton x:Name="RemoteNav" Style="{StaticResource Primer.Segment}" IsChecked="True" Content="{l:Tr Config.RemoteMode}" ToolTip="{l:Tr Config.RemoteNote}"/>
-            <RadioButton x:Name="LocalNav" Style="{StaticResource Primer.Segment}" Content="{l:Tr Config.LocalMode}" ToolTip="{l:Tr Config.LocalNote}"/>
+            <RadioButton AutomationProperties.Name="{l:Tr Config.RemoteMode}" x:Name="RemoteNav" Style="{StaticResource Primer.Segment}" IsChecked="True" Content="{l:Tr Config.RemoteMode}" ToolTip="{l:Tr Config.RemoteNote}"/>
+            <RadioButton AutomationProperties.Name="{l:Tr Config.LocalMode}" x:Name="LocalNav" Style="{StaticResource Primer.Segment}" Content="{l:Tr Config.LocalMode}" ToolTip="{l:Tr Config.LocalNote}"/>
           </StackPanel>
         </Border>
       </Grid>
@@ -39,11 +39,11 @@
           <Border x:Name="InstallationCard" Style="{StaticResource Primer.InstallationHalf}" Grid.Column="0">
             <Grid>
               <Grid.RowDefinitions>
-                <RowDefinition Height="24"/>
+                <RowDefinition Height="Auto" MinHeight="24"/>
                 <RowDefinition Height="6"/>
-                <RowDefinition Height="52"/>
+                <RowDefinition Height="Auto" MinHeight="52"/>
                 <RowDefinition Height="10"/>
-                <RowDefinition Height="30"/>
+                <RowDefinition Height="Auto" MinHeight="30"/>
               </Grid.RowDefinitions>
               <DockPanel>
                 <ContentControl x:Name="DetectionChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
@@ -58,28 +58,28 @@
                   <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                  <TextBlock Text="{l:Tr Config.Version}" Style="{StaticResource Primer.InputLabel}" Margin="0,0,0,4"/>
-                  <ComboBox x:Name="Version" Tag="FilledTriangle" ItemContainerStyle="{StaticResource Primer.SelectItem}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"/>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=Version}" x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldConfigVersion}" Target="{Binding ElementName=Version}" Style="{StaticResource Primer.FormLabel}"/>
+<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Config.Version}" x:Name="Version" Tag="FilledTriangle" ItemContainerStyle="{StaticResource Primer.SelectItem}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"/></StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                  <TextBlock Text="{l:Tr Config.InstallPath}" Style="{StaticResource Primer.InputLabel}" Margin="0,0,0,4"/>
-                  <TextBox x:Name="TiaPath" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}" Style="{StaticResource Primer.MonoInput}"/>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=TiaPath}" x:Name="AccessibleLabel2" Content="{l:Tr Access.FieldConfigInstallPath}" Target="{Binding ElementName=TiaPath}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" AutomationProperties.Name="{l:Tr Config.InstallPath}" x:Name="TiaPath" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
                 </StackPanel>
               </Grid>
               <StackPanel Grid.Row="4" Orientation="Horizontal">
-                <Button x:Name="BrowseTia" Content="{l:Tr Config.Browse}" Margin="0,0,8,0" Style="{StaticResource Primer.Secondary}"/>
-                <Button x:Name="DetectTia" Content="{l:Tr Config.AutoDetect}" Style="{StaticResource Primer.Secondary}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Browse}" x:Name="BrowseTia" Content="{l:Tr Config.Browse}" Margin="0,0,8,0" Style="{StaticResource Primer.Secondary}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.AutoDetect}" x:Name="DetectTia" Content="{l:Tr Config.AutoDetect}" Style="{StaticResource Primer.Secondary}"/>
               </StackPanel>
             </Grid>
           </Border>
           <Border x:Name="ServerPane" Grid.Column="1" Style="{StaticResource Primer.ServerHalf}">
             <Grid>
               <Grid.RowDefinitions>
-                <RowDefinition Height="24"/>
+                <RowDefinition Height="Auto" MinHeight="24"/>
                 <RowDefinition Height="6"/>
-                <RowDefinition Height="52"/>
+                <RowDefinition Height="Auto" MinHeight="52"/>
                 <RowDefinition Height="10"/>
-                <RowDefinition Height="30"/>
+                <RowDefinition Height="Auto" MinHeight="30"/>
               </Grid.RowDefinitions>
               <DockPanel>
                 <ContentControl x:Name="ServiceStateChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
@@ -94,12 +94,12 @@
                   <ColumnDefinition Width="90"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                  <TextBlock Text="{l:Tr Config.Ipv4}" Style="{StaticResource Primer.InputLabel}" Margin="0,0,0,4"/>
-                  <TextBox x:Name="ServerAddress" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ServerAddress}" x:Name="AccessibleLabel3" Content="{l:Tr Access.FieldConfigIpv4}" Target="{Binding ElementName=ServerAddress}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Config.Ipv4}" x:Name="ServerAddress" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                  <TextBlock Text="{l:Tr Config.Port}" Style="{StaticResource Primer.InputLabel}" Margin="0,0,0,4"/>
-                  <TextBox x:Name="ServerPort" Text="8765" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ServerPort}" x:Name="AccessibleLabel4" Content="{l:Tr Access.FieldConfigPort}" Target="{Binding ElementName=ServerPort}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Config.Port}" x:Name="ServerPort" Text="8765" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
                 </StackPanel>
               </Grid>
               <Grid x:Name="ServerActions" Grid.Row="4">
@@ -109,10 +109,10 @@
                   <ColumnDefinition Width="Auto"/>
                   <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="Network" Content="{l:Tr Config.Network}" Style="{StaticResource Primer.Secondary}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Network}" x:Name="Network" Content="{l:Tr Config.Network}" Style="{StaticResource Primer.Secondary}"/>
                 <Grid Grid.Column="2">
-                  <Button x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Primer.Run}"/>
-                  <Button x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Primer.Secondary}" IsEnabled="False" Visibility="Collapsed"/>
+                  <Button AutomationProperties.Name="{l:Tr Config.Start}" x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Primer.Run}"/>
+                  <Button AutomationProperties.Name="{l:Tr Config.Stop}" x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Primer.Secondary}" IsEnabled="False" Visibility="Collapsed"/>
                 </Grid>
               </Grid>
             </Grid>
@@ -134,12 +134,12 @@
               </Grid.ColumnDefinitions>
               <DockPanel>
                 <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,4,0"/>
-                <TextBlock x:Name="ClientSelection" Style="{StaticResource Primer.Muted}" FontSize="12" Cursor="Hand"/>
+                <TextBlock x:Name="ClientSelection" Focusable="True" AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" KeyDown="OnClientGuidanceKey" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" Cursor="Hand"/>
               </DockPanel>
-              <TextBlock Grid.Column="1" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="10.5"/>
+              <TextBlock Grid.Column="1" Text="{l:Tr Mcp.ClientsNote}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
             </Grid>
           </Border>
-          <ListBox x:Name="ClientChoices" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.ClientRow}" ItemTemplate="{StaticResource Primer.ClientContent}" Margin="0" Padding="0" VerticalAlignment="Top">
+          <ListBox x:Name="ClientChoices" AutomationProperties.Name="{l:Tr Mcp.Clients}" Grid.Row="1" Style="{StaticResource Primer.List}" SelectionMode="Multiple" ItemContainerStyle="{StaticResource Primer.ClientRow}" ItemTemplate="{StaticResource Primer.ClientContent}" Margin="0" Padding="0" VerticalAlignment="Top">
             <ListBox.ItemsPanel>
               <ItemsPanelTemplate>
                 <UniformGrid Columns="3"/>
@@ -149,9 +149,9 @@
           <Border x:Name="SecretBand" Grid.Row="2" Style="{StaticResource Primer.FooterStrip}">
             <Grid>
               <Grid.RowDefinitions>
-                <RowDefinition Height="32"/>
+                <RowDefinition Height="Auto" MinHeight="32"/>
                 <RowDefinition Height="10"/>
-                <RowDefinition Height="32"/>
+                <RowDefinition Height="Auto" MinHeight="32"/>
               </Grid.RowDefinitions>
               <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
@@ -160,14 +160,15 @@
                   <ColumnDefinition Width="Auto"/>
                   <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{l:Tr Mcp.SecretTitle}" Style="{StaticResource Primer.InputLabel}" Margin="0,0,12,0"/>
                 <Grid x:Name="SecretField" Grid.Column="1" ToolTip="{l:Tr Mcp.SecretNote}">
-                  <PasswordBox x:Name="Key" Style="{StaticResource Primer.SecretInput}"/>
-                  <TextBox x:Name="KeyVisible" FontFamily="{DynamicResource Ui.FontMono}" Visibility="Collapsed" Style="{StaticResource Primer.MonoInput}"/>
-                  <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Mcp.NoSecret}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11" Margin="12,0" IsHitTestVisible="False" Style="{StaticResource Primer.Text.textFaint}"/>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=Key}" x:Name="AccessibleLabel5" Content="{l:Tr Access.FieldMcpSecretTitle}" Target="{Binding ElementName=Key}" Style="{StaticResource Primer.FormLabel}"/>
+<PasswordBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel5}" AutomationProperties.Name="{l:Tr Mcp.SecretTitle}" x:Name="Key" Style="{StaticResource Primer.SecretInput}"/></StackPanel>
+                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=KeyVisible}" x:Name="AccessibleLabel6" Content="{l:Tr Access.FieldMcpSecretTitle}" Target="{Binding ElementName=KeyVisible}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel6}" AutomationProperties.Name="{l:Tr Mcp.SecretTitle}" x:Name="KeyVisible" FontFamily="{DynamicResource Ui.FontMono}" Visibility="Collapsed" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
+                  <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Mcp.NoSecret}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="12,0" IsHitTestVisible="False" Style="{StaticResource Primer.Text.textFaint}"/>
                 </Grid>
-                <Button x:Name="GenerateKey" Grid.Column="2" Content="{l:Tr Config.Generate}" Margin="8,0,0,0" Style="{StaticResource Primer.Secondary}"/>
-                <CheckBox x:Name="ShowKey" Grid.Column="3" Content="{l:Tr Config.Show}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Generate}" x:Name="GenerateKey" Grid.Column="2" Content="{l:Tr Config.Generate}" Margin="8,0,0,0" Style="{StaticResource Primer.Secondary}"/>
+                <CheckBox AutomationProperties.Name="{l:Tr Config.Show}" x:Name="ShowKey" Grid.Column="3" Content="{l:Tr Config.Show}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
               </Grid>
               <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
@@ -176,10 +177,10 @@
                   <ColumnDefinition Width="Auto"/>
                   <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="SaveBoth" Content="{l:Tr Config.SaveBoth}" Style="{StaticResource Primer.Secondary}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.SaveBoth}" x:Name="SaveBoth" Content="{l:Tr Config.SaveBoth}" Style="{StaticResource Primer.Secondary}"/>
                 <TextBlock x:Name="WriteTargets" Grid.Column="1" Style="{StaticResource Primer.Muted}" Margin="12,0" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
-                <Button x:Name="TestClient" Grid.Column="2" Content="{l:Tr Config.Test}" Style="{StaticResource Primer.OutlinedAccent}"/>
-                <Button x:Name="SaveClient" Grid.Column="3" Content="{l:Tr Config.Write}" ToolTip="{l:Tr Config.Write}" Margin="8,0,0,0" Style="{StaticResource Primer.Primary}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Test}" x:Name="TestClient" Grid.Column="2" Content="{l:Tr Config.Test}" Style="{StaticResource Primer.OutlinedAccent}"/>
+                <Button AutomationProperties.Name="{l:Tr Config.Write}" x:Name="SaveClient" Grid.Column="3" Content="{l:Tr Config.Write}" ToolTip="{l:Tr Config.Write}" Margin="8,0,0,0" Style="{StaticResource Primer.Primary}"/>
               </Grid>
             </Grid>
           </Border>
@@ -247,22 +248,22 @@
           </StackPanel>
         </Border>
         <Border Style="{StaticResource Primer.Note}" Margin="0,12,0,0">
-          <TextBlock x:Name="LastTest" FontSize="11" Style="{StaticResource Primer.Text.text}"/>
+          <TextBlock x:Name="LastTest" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.Text.text}"/>
         </Border>
       </StackPanel>
       <Grid Grid.Row="2">
         <Grid.RowDefinitions>
-          <RowDefinition Height="24"/>
+          <RowDefinition Height="Auto" MinHeight="24"/>
           <RowDefinition Height="8"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <DockPanel>
-          <Button x:Name="ClearLog" Content="{l:Tr Primer.Clear}" DockPanel.Dock="Right" Style="{StaticResource Primer.Quiet}" Margin="12,0,0,0"/>
-          <TextBlock x:Name="LogCount" DockPanel.Dock="Right" Style="{StaticResource Primer.Muted}" FontSize="10.5"/>
+          <Button AutomationProperties.Name="{l:Tr Primer.Clear}" x:Name="ClearLog" Content="{l:Tr Primer.Clear}" DockPanel.Dock="Right" Style="{StaticResource Primer.Quiet}" Margin="12,0,0,0"/>
+          <TextBlock x:Name="LogCount" DockPanel.Dock="Right" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
           <TextBlock Text="{l:Tr Mcp.ActivityLog}" Style="{StaticResource Primer.SectionLabel}"/>
         </DockPanel>
         <Border x:Name="ConfigurationLogCard" Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
-          <controls:WorkbenchLogView x:Name="ActivityLog" Style="{StaticResource Primer.LogDocument}"/>
+          <controls:WorkbenchLogView AutomationProperties.Name="{l:Tr Mcp.ActivityLog}" x:Name="ActivityLog" Style="{StaticResource Primer.LogDocument}"/>
         </Border>
       </Grid>
     </Grid>

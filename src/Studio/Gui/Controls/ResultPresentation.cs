@@ -32,6 +32,7 @@ public sealed class DisplayValueConverter : IValueConverter, IMultiValueConverte
         if (value == null || value == System.Windows.DependencyProperty.UnsetValue || value == Binding.DoNothing) return Binding.DoNothing;
         return (string)parameter switch
         {
+            "logLevel" => AccessibleNameConverter.Level((LogLevel)value),
             "group" => GroupPath(value.ToString() ?? ""),
             "version" => value.ToString()!.Replace("TIA V", "V"),
             "export" => (bool)value ? Loc.Current["Primer.ExportSource"] : Loc.Current["Primer.ExportXml"],
@@ -110,7 +111,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool HasCompile => Errors != "—";
     public bool HasInspection => InspectionTime.Length > 0;
     public string ProjectKind => model.Session.UseMock ? Loc.Current["Toolbar.Mock"] : Loc.Current["Pages.RealProject"];
-    public string BlocksSubtitle => model.Session.ProjectName + " · " + model.Engineering.SelectedDevice?.Name + " · Software";
+    public string BlocksSubtitle => model.Session.ProjectName + " · " + model.Engineering.SelectedDevice?.Name + Loc.Current["Common.SoftwareSuffix"];
     public string SelectedSummary => HasProject ? Loc.Current.T("Pages.Selected", model.Engineering.Blocks.Count(b => b.Selected)) : Loc.Current["Pages.NotRun"];
     public string ReadyState => HasProject ? Loc.Current["Pages.Ready"] : Loc.Current["Pages.NeedConnection"];
     public string CompileOperationState => OperationState(model.Engineering.Compile.IsRunning, HasCompile);

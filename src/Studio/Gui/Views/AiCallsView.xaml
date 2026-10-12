@@ -1,5 +1,5 @@
-<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView">
-  <Grid>
+<UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView">
+  <Grid ux:ResponsiveLayout.Enabled="True">
     <Grid.ColumnDefinitions>
       <ColumnDefinition/>
       <ColumnDefinition Width="20"/>
@@ -14,23 +14,24 @@
       <Border Style="{StaticResource Primer.Container}">
         <StackPanel>
           <DockPanel Height="30">
-            <Button x:Name="FollowButton" DockPanel.Dock="Right" Content="{Binding FollowLabel}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnFollow"/>
+            <Button AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" DockPanel.Dock="Right" Content="{Binding FollowLabel}" Style="{StaticResource Primer.OutlinedAccent}" Click="OnFollow"/>
             <StackPanel Orientation="Horizontal">
-              <TextBlock Text="{l:Tr Shell.Calls}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock Text="{l:Tr Shell.Calls}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold" VerticalAlignment="Center" AutomationProperties.HeadingLevel="Level1"/>
               <TextBlock Text="{Binding CallsCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
             </StackPanel>
           </DockPanel>
           <DockPanel Margin="0,10,0,0">
-            <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="170" Height="30" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
+            <StackPanel DockPanel.Dock="Right"><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SearchBox}" x:Name="AccessibleLabel1" Content="{l:Tr Calls.Search}" Target="{Binding ElementName=SearchBox}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" Width="170" Height="30" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/></StackPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <ToggleButton x:Name="WriteFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}" Margin="0,0,6,0"/>
-              <ToggleButton x:Name="FailFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}" Margin="0,0,6,0"/>
-              <ToggleButton x:Name="ReleaseFilter" Style="{StaticResource Primer.Filter}" Content="{Binding ReleaseFilter}" IsChecked="{Binding ReleaseOnly}"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.WriteOnly}" x:Name="WriteFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}" Margin="0,0,6,0"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.FailOnly}" x:Name="FailFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}" Margin="0,0,6,0"/>
+              <ToggleButton AutomationProperties.Name="{Binding ReleaseFilter}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Filter}" Content="{Binding ReleaseFilter}" IsChecked="{Binding ReleaseOnly}"/>
             </StackPanel>
           </DockPanel>
           <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <ToggleButton x:Name="HumanFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.HumanOnly}" IsChecked="{Binding HumanOnly}" Margin="0,0,6,0"/>
-            <ToggleButton x:Name="AiFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.AiOnly}" IsChecked="{Binding AiOnly}"/>
+            <ToggleButton AutomationProperties.Name="{l:Tr Calls.HumanOnly}" x:Name="HumanFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.HumanOnly}" IsChecked="{Binding HumanOnly}" Margin="0,0,6,0"/>
+            <ToggleButton AutomationProperties.Name="{l:Tr Calls.AiOnly}" x:Name="AiFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.AiOnly}" IsChecked="{Binding AiOnly}"/>
           </StackPanel>
         </StackPanel>
       </Border>
@@ -71,10 +72,10 @@
               </Grid>
             </Grid>
           </Border>
-          <ListBox x:Name="CallList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}">
+          <ListBox AutomationProperties.Name="{l:Tr Shell.Calls}" x:Name="CallList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <Button Style="{StaticResource Primer.TableButton}" Click="OnCall" ToolTip="{Binding Tool}">
+                <Button AutomationProperties.Name="{Binding Tool}" Style="{StaticResource Primer.TableButton}" Click="OnCall" ToolTip="{Binding Tool}">
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="62"/>
@@ -97,8 +98,8 @@
                     <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
                     <TextBlock Grid.Column="4" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="6" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
-                    <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="10.5" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
-                    <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="10.5"/>
+                    <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
+                    <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
                     <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Target}"/>
                     <TextBlock Grid.Column="14" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
                   </Grid>
@@ -128,9 +129,9 @@
               <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-              <RowDefinition Height="26"/>
-              <RowDefinition Height="26"/>
-              <RowDefinition Height="26"/>
+              <RowDefinition Height="Auto" MinHeight="26"/>
+              <RowDefinition Height="Auto" MinHeight="26"/>
+              <RowDefinition Height="Auto" MinHeight="26"/>
             </Grid.RowDefinitions>
             <TextBlock Text="{l:Tr Feature.Address}" Style="{StaticResource Primer.Muted}"/>
             <TextBlock Grid.Column="1" Text="{Binding Address}" Style="{StaticResource Primer.ListMonoValue}" ToolTip="{Binding Address}"/>
@@ -144,7 +145,7 @@
               <TextBlock x:Name="ConnectionCode" Text="{Binding ConnectionJson}" Style="{StaticResource Primer.CodeText}"/>
             </ScrollViewer>
           </Border>
-          <Button Content="{l:Tr Calls.CopyConnection}" Style="{StaticResource Primer.Secondary}" Click="OnCopyConnection"/>
+          <Button AutomationProperties.Name="{l:Tr Calls.CopyConnection}" Content="{l:Tr Calls.CopyConnection}" Style="{StaticResource Primer.Secondary}" Click="OnCopyConnection"/>
           <TextBlock Text="{l:Tr Calls.SecretPlaceholder}" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,12,0,0"/>
         </StackPanel>
       </Border>
@@ -156,8 +157,8 @@
             </Border>
             <TextBlock Text="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.ContainerTitle}"/>
           </DockPanel>
-          <TextBlock Text="{Binding PendingSummary}" Style="{StaticResource Primer.Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,12"/>
-          <Button Content="{l:Tr Calls.OpenPending}" Style="{StaticResource Primer.Secondary}" Tag="" Click="OnApprovals"/>
+          <TextBlock Text="{Binding PendingSummary}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,10,0,12"/>
+          <Button AutomationProperties.Name="{l:Tr Calls.OpenPending}" Content="{l:Tr Calls.OpenPending}" Style="{StaticResource Primer.Secondary}" Tag="" Click="OnApprovals"/>
         </StackPanel>
       </Border>
     </Grid>

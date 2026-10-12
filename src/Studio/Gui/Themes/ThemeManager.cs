@@ -44,6 +44,13 @@ public sealed class ThemeManager : INotifyPropertyChanged
     private static readonly Uri LightPalette = new(PackPrefix + "Palette.Light.xaml", UriKind.Absolute);
     private static readonly Uri DarkPalette = new(PackPrefix + "Palette.Dark.xaml", UriKind.Absolute);
 
+    private static readonly Uri HighContrastPalette = new(PackPrefix + "Palette.HighContrast.xaml", UriKind.Absolute);
+    private bool? _highContrastOverride;
+    public bool EffectivelyHighContrast => _highContrastOverride ?? SystemParameters.HighContrast;
+    public Color SelectionColor => SystemColors.HighlightColor;
+    public Color SelectionTextColor => SystemColors.HighlightTextColor;
+    internal bool? HighContrastOverride { get => _highContrastOverride; set { _highContrastOverride = value; Apply(); } }
+
     private AppTheme _theme = AppTheme.Auto;
     private bool _systemIsDark;
     private LowEffectsMode _lowEffects;
@@ -91,7 +98,11 @@ public sealed class ThemeManager : INotifyPropertyChanged
     private void OnRenderingChanged(object? sender, EventArgs e) => Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
     { ApplyEffects(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseLowEffects))); }));
     private void OnSystemParametersChanged(object? sender, PropertyChangedEventArgs e)
-    { if (e.PropertyName == nameof(SystemParameters.IsRemoteSession)) OnRenderingChanged(sender, EventArgs.Empty); }
+    {
+        if (e.PropertyName == nameof(SystemParameters.IsRemoteSession)) OnRenderingChanged(sender, EventArgs.Empty);
+        if (e.PropertyName == nameof(SystemParameters.HighContrast))
+            Application.Current?.Dispatcher.BeginInvoke(new Action(Apply));
+    }
     private static bool DetectVirtualMachine()
     {
         try
@@ -158,13 +169,14 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     private void OnUserPreferenceChanged(object sender, Microsoft.Win32.UserPreferenceChangedEventArgs e)
     {
-        if (e.Category != Microsoft.Win32.UserPreferenceCategory.General) return;
+        if (e.Category is not (Microsoft.Win32.UserPreferenceCategory.General or Microsoft.Win32.UserPreferenceCategory.Color
+            or Microsoft.Win32.UserPreferenceCategory.Accessibility or Microsoft.Win32.UserPreferenceCategory.VisualStyle)) return;
 
         var dark = ReadSystemIsDark();
-        if (dark == _systemIsDark) return;
+        if (dark == _systemIsDark && !EffectivelyHighContrast) return;
 
         _systemIsDark = dark;
-        if (_theme != AppTheme.Auto) return;
+        if (_theme != AppTheme.Auto && !EffectivelyHighContrast) return;
 
         // The notification arrives on a system thread.
         Application.Current?.Dispatcher.Invoke(Apply);
@@ -175,13 +187,16 @@ public sealed class ThemeManager : INotifyPropertyChanged
         var application = Application.Current;
         if (application is null) return;
 
-        var wanted = EffectivelyDark ? DarkPalette : LightPalette;
+        var wanted = EffectivelyHighContrast ? HighContrastPalette : EffectivelyDark ? DarkPalette : LightPalette;
         var merged = application.Resources.MergedDictionaries;
 
         var palette = new ResourceDictionary { Source = wanted };
         if (merged.Count > PaletteSlot) merged[PaletteSlot] = palette;
         else merged.Insert(PaletteSlot, palette);
         ApplyEffects();
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectivelyHighContrast)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectionColor)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectionTextColor)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectivelyDark)));
     }
 

@@ -25,7 +25,16 @@ public partial class MainWindow : Window
         InitializeShell(approvals, diagnostics);
         UpdateMcpStatus();
         Localization.Loc.Current.LanguageChanged += OnMcpLanguageChanged;
-        Closing += (_, e) => { if (_model.Busy) e.Cancel = true; };
+        Closing += (_, e) =>
+        {
+            if (!_model.Busy) return;
+            e.Cancel = true;
+            _approvalToast = null;
+            _featureTitle = Localization.LocalizedText.Key("Shell.BusyTitle");
+            _featureFeedback = Localization.LocalizedText.Key("Shell.BusyClose", _model.Activity.Status);
+            UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
+            Controls.AccessibleStatus.Announce(ToastTitle);
+        };
         Loaded += async (_, _) => {
             if (!_loadExistingConfiguration) return;
             await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
@@ -78,6 +87,19 @@ public partial class MainWindow : Window
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
     private void OnMaximize(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     private void OnClose(object sender, RoutedEventArgs e) => Close();
+    protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+    {
+        base.OnPreviewKeyDown(e);
+        bool modal = DrawerOverlay.Visibility == Visibility.Visible || ConfirmOverlay.Visibility == Visibility.Visible
+            || OperationsContent.OptionsOpen || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen;
+        if (modal && System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control)
+            && e.Key is System.Windows.Input.Key.O or System.Windows.Input.Key.S or System.Windows.Input.Key.B
+                or System.Windows.Input.Key.D1 or System.Windows.Input.Key.D2 or System.Windows.Input.Key.D3
+                or System.Windows.Input.Key.D4 or System.Windows.Input.Key.D5 or System.Windows.Input.Key.D6
+                or System.Windows.Input.Key.D7 or System.Windows.Input.Key.D8) e.Handled = true;
+        if (!modal && e.Key == System.Windows.Input.Key.Escape && Toast.Visibility == Visibility.Visible)
+        { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
+    }
     private void OnOpenExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
     {
         if (_model.OfflineDemo) return;

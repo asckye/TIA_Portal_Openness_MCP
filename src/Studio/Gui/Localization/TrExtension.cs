@@ -24,7 +24,27 @@ public sealed class TrExtension : MarkupExtension
     public string? StringFormat { get; set; }
 
     public override object ProvideValue(IServiceProvider serviceProvider)
-        => CreateBinding(Key, StringFormat).ProvideValue(serviceProvider);
+    {
+        var binding = CreateBinding(Key, StringFormat);
+        if (serviceProvider.GetService(typeof(IProvideValueTarget)) is IProvideValueTarget target
+            && target.TargetProperty == System.Windows.Automation.AutomationProperties.NameProperty)
+            binding = NameBinding(binding);
+        return binding.ProvideValue(serviceProvider);
+    }
+
+    internal static Binding NameBinding(Binding label) => new(label.Path.Path)
+    {
+        Source = label.Source, Mode = BindingMode.OneWay, Converter = AccessName.Instance,
+    };
+
+    private sealed class AccessName : IValueConverter
+    {
+        internal static readonly AccessName Instance = new();
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            => value is string text ? text.Replace("__", "\u0001").Replace("_", "").Replace("\u0001", "_") : "";
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            => throw new NotSupportedException();
+    }
 
     /// <summary>Exposed so the tests can exercise the same path parsing the UI relies on.</summary>
     public static Binding CreateBinding(string key, string? stringFormat = null) => new("[" + key + "]")

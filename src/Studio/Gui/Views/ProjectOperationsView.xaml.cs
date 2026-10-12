@@ -7,13 +7,24 @@ namespace TiaOpenness.Gui.Views;
 
 public partial class ProjectOperationsView : UserControl
 {
-    public ProjectOperationsView() => InitializeComponent();
+    public ProjectOperationsView()
+    {
+        InitializeComponent();
+        Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
+    }
+    internal bool OptionsOpen => Options.IsOpen;
+    internal event EventHandler<string>? ClearPrefillRequested;
     internal event EventHandler? EnvironmentRequested;
     private void OnEnvironment(object sender, RoutedEventArgs e) => EnvironmentRequested?.Invoke(this, EventArgs.Empty);
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void ShowProjectOptions() => Options.Show("Project");
     internal void ShowTransferOptions() => Options.Show("Export");
-    internal void SetMcpPrefillMarkers(bool project, bool export, bool import) => Options.SetMcpPrefillMarkers(project, export, import);
+    internal void SetMcpPrefillMarkers(bool project, bool export, bool import)
+    {
+        Options.SetMcpPrefillMarkers(project, export, import);
+        ProjectPathMarker.SetPending(project);
+    }
+    private void OnClearProjectPrefill(object? sender, EventArgs e) => ClearPrefillRequested?.Invoke(this, "ConnectProject");
     internal void ShowControlInspectionRules() => Options.Show("Inspect");
     internal void SetControlPrefillMarker(bool pending) => Options.SetControlPrefillMarker(pending);
     internal void HideOptions() => Options.Hide();

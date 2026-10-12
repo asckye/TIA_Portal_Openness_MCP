@@ -46,6 +46,8 @@ public partial class MainWindow
         BlocksContent.ControlSelectionChanged += OnControlSelectionChanged;
         ObserveControlRows();
         SettingsContent.ControlEnabledChanged += OnControlEnabledChanged;
+        OperationsContent.ClearPrefillRequested += OnClearFieldPrefill;
+        BlocksContent.ClearPrefillRequested += OnClearFieldPrefill;
         PreviewMouseDown += OnControlMouseDown;
         PreviewMouseUp += OnControlMouseUp;
         PreviewMouseMove += OnControlMouseMove;
@@ -245,6 +247,9 @@ public partial class MainWindow
         {
             ControlGuard.UiChanged(); _lastControl = request; _lastControlUtc = DateTimeOffset.UtcNow;
             _controlHintTimer.Start(); UpdateControlHint();
+            Controls.AccessibleStatus.Announce(ControlStatus);
+            if (Keyboard.FocusedElement is not UIElement { IsVisible: true }
+                && DrawerOverlay.Visibility != Visibility.Visible && !OperationsContent.OptionsOpen) CurrentPageTitle.Focus();
             ControlSurface.Publish(CaptureControlSnapshot());
         }
         return response;
@@ -379,6 +384,12 @@ public partial class MainWindow
         foreach (var restore in _prefillRestore.Values) restore();
         ConfirmControlPrefill();
     }
+    private void OnClearFieldPrefill(object? sender, string formName)
+    {
+        if (!Enum.TryParse<WorkbenchPrefillForm>(formName, out var form)) return;
+        if (_prefillRestore.Remove(form, out var restore)) restore();
+        _prefills.ClearByHuman(form); UpdateControlPrefill(); QueueControlSnapshot();
+    }
     private void OnConfirmControlPrefill(object sender, RoutedEventArgs e) => ConfirmControlPrefill();
     private void ConfirmControlPrefill() { _prefillRestore.Clear(); _prefills.ClearByHuman(); UpdateControlPrefill(); QueueControlSnapshot(); }
     private void OnControlEnabledChanged(object? sender, EventArgs e) => QueueControlSnapshot();
@@ -389,15 +400,19 @@ public partial class MainWindow
     private void OnControlKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key is Key.Enter or Key.Space && (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject) || ControlGuard.ClickGuardActive)) e.Handled = true;
+        if (ControlGuard.ClickGuardActive && (e.Key == Key.System || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))) e.Handled = true;
+        if (ControlGuard.ClickGuardActive && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.B) e.Handled = true;
         ControlGuard.HumanInput();
     }
     private void OnControlHintTick(object? sender, EventArgs e) => UpdateControlHint();
     private void OnControlLanguageChanged(object? sender, EventArgs e) { UpdateControlHint(); UpdateControlPrefill(); UpdateControlDetail(); }
     private void UpdateControlHint()
     {
-        ControlStatus.Text = _controlUnavailable ? Loc.Current["Control.Unavailable"] : _lastControl == null ? ""
+        var text = _controlUnavailable ? Loc.Current["Control.Unavailable"] : _lastControl == null ? ""
             : Loc.Current.T("Control.Activity", ControlTool(_lastControl.Operation), _lastControl.Origin.ClientName,
                 Math.Max(0, (int)(DateTimeOffset.UtcNow - _lastControlUtc).TotalSeconds));
+        // The age changes each second; only the operation itself needs a live announcement.
+        ControlStatus.Text = text;
     }
     private static string ControlTool(WorkbenchControlOperation operation) => operation switch
     {
@@ -419,6 +434,8 @@ public partial class MainWindow
         _model.Engineering.Blocks.CollectionChanged -= OnControlBlocksChanged;
         BlocksContent.ControlSelectionChanged -= OnControlSelectionChanged;
         SettingsContent.ControlEnabledChanged -= OnControlEnabledChanged;
+        OperationsContent.ClearPrefillRequested -= OnClearFieldPrefill;
+        BlocksContent.ClearPrefillRequested -= OnClearFieldPrefill;
         PreviewMouseDown -= OnControlMouseDown; PreviewMouseUp -= OnControlMouseUp;
         PreviewMouseMove -= OnControlMouseMove; PreviewMouseWheel -= OnControlMouseWheel; PreviewKeyDown -= OnControlKeyDown;
     }

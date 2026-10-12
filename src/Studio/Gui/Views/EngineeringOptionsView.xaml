@@ -1,69 +1,77 @@
-<UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.EngineeringOptionsView" x:Name="PageRoot">
-  <Grid x:Name="OptionsOverlay" Visibility="Collapsed" Background="{DynamicResource Primer.text}">
+<UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.EngineeringOptionsView" x:Name="PageRoot">
+  <Grid x:Name="OptionsOverlay" Visibility="Collapsed" AutomationProperties.Name="{Binding Text,ElementName=OptionsTitle}">
+    <Border Style="{StaticResource Primer.Overlay}"/>
     <Border x:Name="OptionsPanel" Style="{StaticResource Primer.Container}" Width="400" HorizontalAlignment="Right" Margin="0,0,0,0" VerticalAlignment="Stretch">
       <Grid>
         <Grid.RowDefinitions>
-          <RowDefinition Height="32"/>
+          <RowDefinition Height="Auto" MinHeight="32"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="OptionsTitle" Style="{StaticResource Primer.ContainerTitle}"/>
-        <Button Content="" Click="OnCloseOptions" Style="{StaticResource Primer.CaptionButton}" HorizontalAlignment="Right"/>
-        <StackPanel Grid.Row="1">
+        <TextBlock x:Name="OptionsTitle" Focusable="True" FocusVisualStyle="{StaticResource Primer.Focus}" KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1" Style="{StaticResource Primer.ContainerTitle}"/>
+        <Button Content="" AutomationProperties.Name="{l:Tr Access.CloseOptions}" Click="OnCloseOptions" Style="{StaticResource Primer.CaptionButton}" HorizontalAlignment="Right"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
           <StackPanel x:Name="ProjectOptions">
-            <ComboBox x:Name="ReleasePicker" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Primer.Select}" Width="110" HorizontalAlignment="Left"/>
-            <TextBlock Text="{l:Tr Session.ProcessId}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
-            <TextBox Text="{Binding Session.ProcessId,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
-            <TextBlock Text="{l:Tr Project.Label}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
+            <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ReleasePicker}" x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldConfigVersion}" Target="{Binding ElementName=ReleasePicker}" Style="{StaticResource Primer.FormLabel}"/>
+<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Config.Version}" x:Name="ReleasePicker" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Primer.Select}" Width="110" HorizontalAlignment="Left"/></StackPanel>
+            <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=AccessibleField2}" x:Name="AccessibleLabel2" Content="{l:Tr Access.FieldSessionProcessId}" Target="{Binding ElementName=AccessibleField2}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" x:Name="AccessibleField2" AutomationProperties.Name="{l:Tr Session.ProcessId}" Text="{Binding Session.ProcessId,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/></StackPanel>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-              <TextBox x:Name="ControlProjectPath" Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Browse}" DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+              <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlProjectPath}" x:Name="AccessibleLabel3" Content="{l:Tr Project.Label}" Target="{Binding ElementName=ControlProjectPath}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Project.Label}" x:Name="ControlProjectPath" Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}"/></StackPanel>
             </DockPanel>
+            <ux:PrefillMarker x:Name="ProjectMarker" Target="{Binding ElementName=ControlProjectPath}" Tag="ConnectProject" ClearRequested="OnClearPrefill"/>
             <WrapPanel Margin="0,12" Visibility="{Binding LegacyDemoAvailable,Converter={StaticResource BoolToVisibility}}">
-              <CheckBox Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Primer.Checkbox}" Margin="0,0,20,0"/>
-              <CheckBox Content="{l:Tr Toolbar.Headless}" ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Session.Headless}" Style="{StaticResource Primer.Checkbox}"/>
+              <CheckBox AutomationProperties.Name="{l:Tr Toolbar.Mock}" Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Primer.Checkbox}" Margin="0,0,20,0"/>
+              <CheckBox AutomationProperties.Name="{l:Tr Toolbar.Headless}" Content="{l:Tr Toolbar.Headless}" ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Session.Headless}" Style="{StaticResource Primer.Checkbox}"/>
             </WrapPanel>
-            <StackPanel Orientation="Horizontal">
-              <Button Content="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-              <Button Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}" Command="{Binding Session.RunDoctor}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-              <Button Content="{l:Tr Toolbar.Connect}" ToolTip="{l:Tr Toolbar.Connect.Tip}" Command="{Binding Session.Connect}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
-              <Button Content="{l:Tr Common.Open}" Command="{Binding Session.OpenProject}" Style="{StaticResource Primer.Run}"/>
-            </StackPanel>
+            <WrapPanel>
+              <Button AutomationProperties.Name="{l:Tr Common.Reload}" Content="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Toolbar.Doctor}" Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}" Command="{Binding Session.RunDoctor}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Toolbar.Connect}" Content="{l:Tr Toolbar.Connect}" ToolTip="{l:Tr Toolbar.Connect.Tip}" Command="{Binding Session.Connect}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Open}" Content="{l:Tr Common.Open}" Command="{Binding Session.OpenProject}" Style="{StaticResource Primer.Run}"/>
+            </WrapPanel>
             <TextBlock Text="{l:Tr Sidebar.Devices}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,20,0,8"/>
             <TextBlock Text="{l:Tr Sidebar.Empty}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Visibility="{Binding Engineering.HasDevices,Converter={StaticResource NotBoolToVisibility}}"/>
-            <TreeView ItemsSource="{Binding Engineering.DeviceTree}" SelectedItemChanged="OnDeviceSelected" MaxHeight="200" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource Ui.DeviceNodeTemplate}"/>
+            <TreeView AutomationProperties.Name="{l:Tr Sidebar.Devices}" ItemsSource="{Binding Engineering.DeviceTree}" SelectedItemChanged="OnDeviceSelected" MaxHeight="200" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource Ui.DeviceNodeTemplate}"/>
           </StackPanel>
           <StackPanel x:Name="ExportOptions">
-            <TextBlock Text="{l:Tr Blocks.ExportTo}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseOutput" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-              <TextBox x:Name="ControlOutputDirectory" Text="{Binding Engineering.OutputDirectory,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Browse}" DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseOutput" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+              <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlOutputDirectory}" x:Name="AccessibleLabel4" Content="{l:Tr Blocks.ExportTo}" Target="{Binding ElementName=ControlOutputDirectory}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Blocks.ExportTo}" x:Name="ControlOutputDirectory" Text="{Binding Engineering.OutputDirectory,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/></StackPanel>
             </DockPanel>
-            <CheckBox Content="{l:Tr Blocks.SourceFormat}" ToolTip="{l:Tr Blocks.SourceFormat.Tip}" IsChecked="{Binding Engineering.SourceFormat}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
-            <TextBlock Text="{l:Tr Dialog.Import.Title}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
-            <TextBox x:Name="ControlImportPaths" Text="{Binding Engineering.ImportPathsText,UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="60" Style="{StaticResource Primer.Input}"/>
-            <CheckBox Content="{l:Tr Blocks.Overwrite}" IsChecked="{Binding Engineering.ImportOverwrite}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
-            <StackPanel Orientation="Horizontal">
-              <Button Content="{l:Tr Blocks.Export}" Command="{Binding Engineering.Export}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
-              <Button Content="{l:Tr Toolbar.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Secondary}"/>
-            </StackPanel>
+            <ux:PrefillMarker x:Name="OutputMarker" Target="{Binding ElementName=ControlOutputDirectory}" Tag="ExportBlocks" ClearRequested="OnClearPrefill"/>
+            <CheckBox x:Name="ControlSourceFormat" AutomationProperties.Name="{l:Tr Blocks.SourceFormat}" Content="{l:Tr Blocks.SourceFormat}" ToolTip="{l:Tr Blocks.SourceFormat.Tip}" IsChecked="{Binding Engineering.SourceFormat}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
+            <ux:PrefillMarker x:Name="FormatMarker" Target="{Binding ElementName=ControlSourceFormat}" Tag="ExportBlocks" ClearRequested="OnClearPrefill"/>
+            <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlImportPaths}" x:Name="AccessibleLabel5" Content="{l:Tr Dialog.Import.Title}" Target="{Binding ElementName=ControlImportPaths}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel5}" AutomationProperties.Name="{l:Tr Dialog.Import.Title}" x:Name="ControlImportPaths" Text="{Binding Engineering.ImportPathsText,UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="60" Style="{StaticResource Primer.Input}"/></StackPanel>
+            <ux:PrefillMarker x:Name="ImportMarker" Target="{Binding ElementName=ControlImportPaths}" Tag="ImportBlocks" ClearRequested="OnClearPrefill"/>
+            <CheckBox x:Name="ControlOverwrite" AutomationProperties.Name="{l:Tr Blocks.Overwrite}" Content="{l:Tr Blocks.Overwrite}" IsChecked="{Binding Engineering.ImportOverwrite}" Style="{StaticResource Primer.Checkbox}" Margin="0,12"/>
+            <ux:PrefillMarker x:Name="OverwriteMarker" Target="{Binding ElementName=ControlOverwrite}" Tag="ImportBlocks" ClearRequested="OnClearPrefill"/>
+            <WrapPanel>
+              <Button AutomationProperties.Name="{l:Tr Blocks.Export}" Content="{l:Tr Blocks.Export}" Command="{Binding Engineering.Export}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Toolbar.Import}" Content="{l:Tr Toolbar.Import}" Command="{Binding Engineering.Import}" Style="{StaticResource Primer.Secondary}"/>
+            </WrapPanel>
           </StackPanel>
           <StackPanel x:Name="InspectOptions">
-            <TextBlock Text="{l:Tr Primer.NamingPattern}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
-            <TextBox x:Name="ControlNamePattern" Text="{Binding Engineering.NamePattern,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
-            <Button Content="{l:Tr Toolbar.Inspect}" Command="{Binding Engineering.Inspect}" Style="{StaticResource Primer.Run}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+            <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlNamePattern}" x:Name="AccessibleLabel6" Content="{l:Tr Access.FieldPrimerNamingPattern}" Target="{Binding ElementName=ControlNamePattern}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel6}" AutomationProperties.Name="{l:Tr Primer.NamingPattern}" x:Name="ControlNamePattern" Text="{Binding Engineering.NamePattern,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/></StackPanel>
+            <ux:PrefillMarker x:Name="PatternMarker" Target="{Binding ElementName=ControlNamePattern}" Tag="InspectionRules" ClearRequested="OnClearPrefill"/>
+            <Button AutomationProperties.Name="{l:Tr Toolbar.Inspect}" Content="{l:Tr Toolbar.Inspect}" Command="{Binding Engineering.Inspect}" Style="{StaticResource Primer.Run}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
           </StackPanel>
           <StackPanel x:Name="WorkspaceOptions">
-            <TextBlock Text="{l:Tr Vc.New}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,6"/>
-            <TextBox Text="{Binding VersionControl.NewWorkspaceName,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/>
-            <TextBlock Text="{l:Tr Vc.In}" Style="{StaticResource Primer.Muted}" Margin="0,12,0,6"/>
+            <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=AccessibleField7}" x:Name="AccessibleLabel7" Content="{l:Tr Vc.New}" Target="{Binding ElementName=AccessibleField7}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel7}" x:Name="AccessibleField7" AutomationProperties.Name="{l:Tr Vc.New}" Text="{Binding VersionControl.NewWorkspaceName,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.Input}"/></StackPanel>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseWorkspace" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-              <TextBox Text="{Binding VersionControl.NewWorkspaceFolder,UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:Tr Vc.Folder.Tip}" Style="{StaticResource Primer.Input}"/>
+              <Button AutomationProperties.Name="{l:Tr Common.Browse}" DockPanel.Dock="Right" Content="{l:Tr Common.Browse}" Click="OnBrowseWorkspace" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
+              <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=AccessibleField8}" x:Name="AccessibleLabel8" Content="{l:Tr Vc.In}" Target="{Binding ElementName=AccessibleField8}" Style="{StaticResource Primer.FormLabel}"/>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel8}" x:Name="AccessibleField8" AutomationProperties.Name="{l:Tr Vc.In}" Text="{Binding VersionControl.NewWorkspaceFolder,UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:Tr Vc.Folder.Tip}" Style="{StaticResource Primer.Input}"/></StackPanel>
             </DockPanel>
-            <Button Content="{l:Tr Vc.Create}" Command="{Binding VersionControl.VcCreate}" Style="{StaticResource Primer.Run}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+            <Button AutomationProperties.Name="{l:Tr Vc.Create}" Content="{l:Tr Vc.Create}" Command="{Binding VersionControl.VcCreate}" Style="{StaticResource Primer.Run}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
           </StackPanel>
           <TextBlock Text="{Binding Activity.Status}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,16,0,0"/>
-        </StackPanel>
+        </StackPanel></ScrollViewer>
       </Grid>
     </Border>
   </Grid>

@@ -33,7 +33,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public WorkbenchActivity() => Loc.Current.LanguageChanged += OnLanguageChanged;
 
-    public bool Busy { get => _busy; private set => Set(ref _busy, value); }
+    public bool Busy { get => _busy; private set { if (Set(ref _busy, value)) Raise(nameof(ProgressIndeterminate)); } }
 
     public string Status => _status.Resolve();
 
@@ -54,7 +54,9 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public int ProgressValue { get => _progressValue; private set => Set(ref _progressValue, value); }
 
-    public int ProgressMax { get => _progressMax; private set => Set(ref _progressMax, value); }
+    public int ProgressMax { get => _progressMax; private set { if (Set(ref _progressMax, value)) Raise(nameof(ProgressIndeterminate)); } }
+
+    public bool ProgressIndeterminate => Busy && ProgressMax <= 0;
 
     public bool HasLog => Log.Length > 0;
 

@@ -6,18 +6,18 @@
   <SolidColorBrush x:Key="Primer.cardBorder" Color="#D0D7DE"/>
   <SolidColorBrush x:Key="Primer.divider" Color="#D8DEE4"/>
   <SolidColorBrush x:Key="Primer.input" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="Primer.inputBorder" Color="#D0D7DE"/>
+  <SolidColorBrush x:Key="Primer.inputBorder" Color="#808891"/>
   <SolidColorBrush x:Key="Primer.pill" Color="#F6F8FA"/>
   <SolidColorBrush x:Key="Primer.pillHover" Color="#EAEEF2"/>
   <SolidColorBrush x:Key="Primer.menuBg" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.text" Color="#1F2328"/>
-  <SolidColorBrush x:Key="Primer.textMuted" Color="#656D76"/>
-  <SolidColorBrush x:Key="Primer.textFaint" Color="#8C959F"/>
-  <SolidColorBrush x:Key="Primer.checkBorder" Color="#8C959F"/>
-  <SolidColorBrush x:Key="Primer.accent" Color="#0B7A99"/>
+  <SolidColorBrush x:Key="Primer.textMuted" Color="#626A73"/>
+  <SolidColorBrush x:Key="Primer.textFaint" Color="#626A73"/>
+  <SolidColorBrush x:Key="Primer.checkBorder" Color="#808891"/>
+  <SolidColorBrush x:Key="Primer.accent" Color="#086D89"/>
   <SolidColorBrush x:Key="Primer.onAccent" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="Primer.primaryBg" Color="#1F883D"/>
-  <SolidColorBrush x:Key="Primer.warn" Color="#9A6700"/>
+  <SolidColorBrush x:Key="Primer.primaryBg" Color="#1A7F37"/>
+  <SolidColorBrush x:Key="Primer.warn" Color="#916000"/>
   <SolidColorBrush x:Key="Primer.warnBg" Color="#FFF8C5"/>
   <SolidColorBrush x:Key="Primer.ok" Color="#1A7F37"/>
   <SolidColorBrush x:Key="Primer.okBg" Color="#DAFBE1"/>
@@ -28,4 +28,11 @@
   <SolidColorBrush x:Key="Primer.codeText" Color="#1F2328"/>
   <SolidColorBrush x:Key="Primer.diffGreen" Color="#1A7F37"/>
   <SolidColorBrush x:Key="Primer.diffRed" Color="#CF222E"/>
+  <SolidColorBrush x:Key="Primer.primaryText" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.warningText" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#FFF1E5"/>
+  <SolidColorBrush x:Key="Primer.focusOuter" Color="#1F2328"/>
+  <SolidColorBrush x:Key="Primer.focusInner" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.selectedText" Color="#1F2328"/>
+  <SolidColorBrush x:Key="Primer.hoverText" Color="#1F2328"/>
 </ResourceDictionary>

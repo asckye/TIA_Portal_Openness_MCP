@@ -17,7 +17,7 @@ public sealed class WindowsApprovalNotification : IApprovalNotification
     {
         if (_icon == null)
         {
-            _icon = new NotifyIcon { Icon = System.Drawing.SystemIcons.Warning, Text = "TIA Workbench", Visible = true };
+            _icon = new NotifyIcon { Icon = System.Drawing.SystemIcons.Warning, Text = Localization.Loc.Current["Common.WorkbenchName"], Visible = true };
             _icon.BalloonTipClicked += OnActivate;
             _icon.Click += OnActivate;
         }

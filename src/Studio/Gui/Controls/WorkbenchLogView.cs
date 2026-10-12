@@ -29,7 +29,7 @@ namespace TiaOpenness.Gui.Controls
             Padding = new Thickness(0);
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
             SetResourceReference(FontFamilyProperty, "Ui.FontMono");
-            FontSize = 11;
+            SetResourceReference(FontSizeProperty, "Ui.FontSize.Caption");
             Document.PagePadding = new Thickness(0);
             Document.ColumnWidth = double.PositiveInfinity;
         }
@@ -91,7 +91,7 @@ namespace TiaOpenness.Gui.Controls
                 string time = timed ? line.Substring(0, 8) : "";
                 string message = timed ? line.Substring(8).TrimStart() : line;
                 var stamp = new Paragraph(new Run(time)) { Margin = new Thickness(0), LineHeight = 17 };
-                stamp.SetResourceReference(TextElement.ForegroundProperty, "Primer.textFaint");
+                stamp.SetResourceReference(TextElement.ForegroundProperty, "Primer.textMuted");
                 var body = new Paragraph(new Run(message)) { Margin = new Thickness(0), LineHeight = 17 };
                 var row = new TableRow();
                 var timeCell = new TableCell(stamp) { Padding = new Thickness(14, 9, 12, 9), BorderThickness = new Thickness(0, 0, 0, 1) };
