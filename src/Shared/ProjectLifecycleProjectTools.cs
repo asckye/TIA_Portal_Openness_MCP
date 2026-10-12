@@ -33,7 +33,7 @@ internal sealed class ProjectLifecycleProjectTools
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
 
             JsonNode root;
-            try { root = JsonNode.Parse(spec) ?? throw new Exception("spec parsed to null"); }
+            try { root = JsonNode.Parse(spec) ?? throw new JsonException("spec parsed to null"); }
             catch (Exception ex) { throw new McpException($"BuildProjectScaffold: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
 
             string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }

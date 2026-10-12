@@ -18,7 +18,7 @@ internal sealed class ProjectLifecyclePortService
     private JsonObject State => call("ReadState", new JsonObject())!.AsObject();
     internal bool HasProject => hasProject();
     internal bool IsConnected => (bool?)State["IsAttached"] == true;
-    internal bool IsLocalSession => (bool?)State["IsLocalSession"] == true;
+    internal bool IsLocalSession => (bool?)State[nameof(IsLocalSession)] == true;
     private T Invoke<T>(string operation, JsonObject arguments)
         => JsonSerializer.Deserialize<T>((call("project-lifecycle." + operation, arguments)
             ?? throw new InvalidOperationException("Missing project lifecycle worker reply.")).ToJsonString())!;

@@ -304,23 +304,6 @@
       "column": 54,
       "endLine": 31,
       "endColumn": 79,
-      "message": "This call site is reachable on all platforms. \u0027Process.ProcessorAffinity\u0027 is only supported on: \u0027linux\u0027, \u0027windows\u0027.",
-      "member": "TiaMcp . FoundationHost/LocalStabilityTelemetry/Sample( )",
-      "anchor": "process . ProcessorAffinity ",
-      "fingerprint": "6fdd75bdbe7aac760923707ff978912d0fd68889f927f40ed150b78be6a6c255",
-      "reason": "windows-platform-boundary",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
-      ]
-    },
-    {
-      "rule": "CA1416",
-      "path": "src/FoundationHost/LocalStabilityTelemetry.cs",
-      "line": 31,
-      "column": 54,
-      "endLine": 31,
-      "endColumn": 79,
       "message": "This call site is reachable on all platforms. \u0027Process.ProcessorAffinity\u0027 is supported on: \u0027linux\u0027, \u0027windows\u0027.",
       "member": "TiaMcp . FoundationHost/LocalStabilityTelemetry/Sample( )",
       "anchor": "process . ProcessorAffinity ",
@@ -1469,26 +1452,6 @@
       "contexts": [
         "ordinary|tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
         "variants|tests/Release/TiaMcp.ReleaseTool.Tests/TiaMcp.ReleaseTool.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2201",
-      "path": "src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs",
-      "line": 246,
-      "column": 56,
-      "endLine": 246,
-      "endColumn": 92,
-      "message": "Exception type System.Exception is not sufficiently specific",
-      "member": "TiaMcpServer . ModelContextProtocol/ProjectSessionTools/ScaffoldProject( [ Description ( \u0022spec: JSON object describing the project to generate. See tool description for keys.\u0022 ) ] string spec , [ Description ( \u0022dryRun: DEFAULT true \u2014 validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).\u0022 ) ] bool dryRun = true )",
-      "anchor": "new Exception ( \u0022spec parsed to null\u0022 ) ",
-      "fingerprint": "c74443719a7e28051c198887ad880bf08590ae6a84c7b6ae794847534470403c",
-      "reason": "contract-exception-type",
-      "retirement": "B8",
-      "contexts": [
-        "ordinary|src/Engine/TiaMcp.Engine.V20.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PLC_HMI_UNIFIED,PLC_SOFTWARE_CROSS_REFERENCES,PLC_SOFTWARE_PROTECTION,PLC_SOURCE_RESULTS,PLC_SOURCE_TARGET,RELEASE,TIA_ENGINE_LOCAL_PRIMITIVES,TIA_ENGINE_PORTED,TIA_V20,TRACE",
-        "ordinary|src/Engine/TiaMcp.Engine.V21.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PLC_EXTERNAL_SOURCE_GROUP_RENAME,PLC_HMI_UNIFIED,PLC_SOFTWARE_CROSS_REFERENCES,PLC_SOFTWARE_PROTECTION,PLC_SOURCE_RESULTS,PLC_SOURCE_TARGET,RELEASE,TIA_ENGINE_LOCAL_PRIMITIVES,TIA_ENGINE_PORTED,TRACE",
-        "variants|src/Engine/TiaMcp.Engine.V20.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PLC_HMI_UNIFIED,PLC_SOFTWARE_CROSS_REFERENCES,PLC_SOFTWARE_PROTECTION,PLC_SOURCE_RESULTS,PLC_SOURCE_TARGET,RELEASE,TIA_ENGINE_LOCAL_PRIMITIVES,TIA_ENGINE_PORTED,TIA_V20,TRACE",
-        "variants|src/Engine/TiaMcp.Engine.V21.csproj|net48|,NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,PLC_EXTERNAL_SOURCE_GROUP_RENAME,PLC_HMI_UNIFIED,PLC_SOFTWARE_CROSS_REFERENCES,PLC_SOFTWARE_PROTECTION,PLC_SOURCE_RESULTS,PLC_SOURCE_TARGET,RELEASE,TIA_ENGINE_LOCAL_PRIMITIVES,TIA_ENGINE_PORTED,TRACE"
       ]
     },
     {
