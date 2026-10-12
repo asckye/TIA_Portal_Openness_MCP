@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "c0be892dec9fa9807baadd7e097689668c033940b41a1e2345e615ff4506a592",
+  "catalogSha256": "25067aa61aaafbf3b45163c5f9ccecf89e71b55460e4cd8b278c97e8a7d4c217",
   "uniqueTools": 516,
   "documents": 89,
-  "versionToolPairs": 2815,
+  "versionToolPairs": 2839,
   "offlineCallExecutions": 79,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -21085,11 +21085,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 335,
-      "checkedToolCount": 335,
+      "registeredToolCount": 360,
+      "checkedToolCount": 360,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 298,
+      "operationExampleCount": 306,
       "programmingExampleCount": 25,
       "callSequenceCount": 36,
       "offlineBuilderExamplesExecuted": 0,
@@ -21194,6 +21194,30 @@
           "operations": []
         },
         {
+          "toolName": "ApplyUnifiedHmiLayout",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyUnifiedHmiScreenDesign",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ApplyUnifiedHmiTheme",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ArchiveSavedProject",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21232,6 +21256,14 @@
         },
         {
           "toolName": "AuditEngineeringExports",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "BindUnifiedHmiTagDynamization",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -21761,6 +21793,14 @@
           "operations": []
         },
         {
+          "toolName": "DeleteEmptyUnifiedHmiScreenGroup",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "DeleteExportHandle",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21821,6 +21861,22 @@
           "documents": [
             "guides/skills/plc-data-types/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "DeleteUnifiedHmiButtonEvent",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "DeleteUnifiedHmiDynamization",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -21918,6 +21974,22 @@
           "operations": []
         },
         {
+          "toolName": "DescribeUnifiedHmiButtonEventScript",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "DescribeUnifiedScreenItemType",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "DisconnectPortal",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -21953,6 +22025,70 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiButtonAction",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiButtonEventHandler",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiConnection",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiDynamization",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiScreen",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiScreenItem",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiTag",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "EnsureUnifiedHmiTagTable",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -22910,6 +23046,30 @@
           "operations": []
         },
         {
+          "toolName": "GetUnifiedHmiButtonEvent",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedHmiDynamization",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetUnifiedHmiTexts",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "GetV21EcosystemCatalog",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -23550,6 +23710,14 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/HardwareCatalogSnippets.cs",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TransferAreaSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ListUnifiedHmiApiTypes",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -25487,6 +25655,64 @@
           ]
         },
         {
+          "toolName": "ManageUnifiedHmiGroup",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "rename",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteEmpty",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
+          "toolName": "ManageUnifiedScreenItem",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManageWatchForceTableWebAccess",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26026,6 +26252,22 @@
           "operations": []
         },
         {
+          "toolName": "SetUnifiedHmiButtonEventScriptCode",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "SetUnifiedHmiRuntimeState",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
           "toolName": "ShowObjectInEditor",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26183,8 +26425,8 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 504,
-      "checkedToolCount": 504,
+      "registeredToolCount": 503,
+      "checkedToolCount": 503,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 504,
@@ -26360,14 +26602,6 @@
         },
         {
           "toolName": "AuditEngineeringExports",
-          "usageProfile": "full-engine",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
-          "toolName": "BindUnifiedHmiButtonPressedTag",
           "usageProfile": "full-engine",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",

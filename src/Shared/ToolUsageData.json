@@ -40579,8 +40579,8 @@
             "dryRun": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             },
             "onlyIfEmpty": {
@@ -40603,8 +40603,8 @@
             "dryRun": true
           },
           "parameters": {
-            "expectedToken": {
-              "exampleValue": "<expectedToken from this operation's target or user input>",
+            "previewToken": {
+              "exampleValue": "<previewToken from this operation's target or user input>",
               "requiresBinding": true
             }
           },

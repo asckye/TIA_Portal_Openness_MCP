@@ -4,6 +4,6 @@ namespace TiaMcp.Adapters.Native.Hmi
 {
     internal interface IUnifiedHmiInspectionSession : IHmiInspectionSession
     {
-        IDisposable AcquireHmiEditAccess();
+        public IDisposable AcquireHmiEditAccess();
     }
 }
