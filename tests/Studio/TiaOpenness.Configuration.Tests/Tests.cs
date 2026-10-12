@@ -204,7 +204,7 @@ namespace TiaMcpConfigurator
                 {
                     string Content(string name) => ((System.Windows.Controls.ContentControl)(window.FindName(name) ?? settings.FindName(name))).Content.ToString();
                     var labels = new (Func<string> Read, string En, string Zh)[] {
-                        (() => Content("RailEngineering"), "Project operations", "工程操作"),
+                        (() => Content("RailEngineering"), "Project operations", "项目操作"),
                         (() => Content("RailMcp"), "MCP & clients", "MCP 与客户端"),
                         (() => Content("SettingsButton"), "Engine & MCP settings…", "引擎 & MCP 设置…"),
                         (() => Content("CheckUpdate"), "Check updates", "检查更新"),
@@ -292,7 +292,7 @@ namespace TiaMcpConfigurator
                 form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
                 window.Width = window.MinWidth; window.Height = window.MinHeight;
                 form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
-                Assert(window.MinWidth == 1200 && window.MinHeight == 780 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
+                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
                     "minimum window size keeps the three-column client layout");
                 window.Width = 1200; window.Height = 780;
                 var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigurationView).Assembly.GetName().Name + ";component/"), "./Fonts/#Noto Sans SC");
