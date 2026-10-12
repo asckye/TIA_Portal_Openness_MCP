@@ -61,6 +61,7 @@
     <Compile Include="../Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
     <Compile Include="../Logic/Siemens/TiaVersionCatalog.cs" Link="Shared/TiaVersionCatalog.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerJson.cs" Link="WorkerJson.cs" />
+    <Compile Include="../Shared/UnifiedHmiPropertyAdmission.cs" Link="Shared/UnifiedHmiPropertyAdmission.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />

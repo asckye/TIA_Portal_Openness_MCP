@@ -1495,7 +1495,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 335,
+      "toolCount": 360,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1504,10 +1504,14 @@
         "AnalyzeUnifiedHmiTemplateLayout",
         "ApplyGenerationPlan",
         "ApplyToolBatch",
+        "ApplyUnifiedHmiLayout",
+        "ApplyUnifiedHmiScreenDesign",
+        "ApplyUnifiedHmiTheme",
         "ArchiveSavedProject",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
+        "BindUnifiedHmiTagDynamization",
         "BuildAndImportPlcArtifact",
         "BuildClassicHmiScreen",
         "BuildDeviceAmlDocument",
@@ -1556,12 +1560,15 @@
         "CreateProject",
         "CreateVersionControlWorkspace",
         "DeleteEmptyPlcBlockGroup",
+        "DeleteEmptyUnifiedHmiScreenGroup",
         "DeleteExportHandle",
         "DeleteHmiTag",
         "DeletePlcBlock",
         "DeletePlcExternalSource",
         "DeletePlcTagTable",
         "DeletePlcType",
+        "DeleteUnifiedHmiButtonEvent",
+        "DeleteUnifiedHmiDynamization",
         "DescribeHmiScreen",
         "DescribeHmiScreenItem",
         "DescribeHmiSoftware",
@@ -1572,9 +1579,19 @@
         "DescribePlcBlockLogic",
         "DescribeService",
         "DescribeStandardPackage",
+        "DescribeUnifiedHmiButtonEventScript",
+        "DescribeUnifiedScreenItemType",
         "DisconnectPortal",
         "EnsureOpennessUserGroup",
         "EnsureSubnet",
+        "EnsureUnifiedHmiButtonAction",
+        "EnsureUnifiedHmiButtonEventHandler",
+        "EnsureUnifiedHmiConnection",
+        "EnsureUnifiedHmiDynamization",
+        "EnsureUnifiedHmiScreen",
+        "EnsureUnifiedHmiScreenItem",
+        "EnsureUnifiedHmiTag",
+        "EnsureUnifiedHmiTagTable",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
         "ExchangePlcSupervisions",
@@ -1656,6 +1673,9 @@
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
+        "GetUnifiedHmiButtonEvent",
+        "GetUnifiedHmiDynamization",
+        "GetUnifiedHmiTexts",
         "GetV21EcosystemCatalog",
         "GetVersionControlStatus",
         "GetWorkbenchSelection",
@@ -1717,6 +1737,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListUnifiedHmiApiTypes",
         "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
@@ -1765,6 +1786,8 @@
         "ManageTransferArea",
         "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
+        "ManageUnifiedHmiGroup",
+        "ManageUnifiedScreenItem",
         "ManageWatchForceTableWebAccess",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
@@ -1817,6 +1840,8 @@
         "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
+        "SetUnifiedHmiButtonEventScriptCode",
+        "SetUnifiedHmiRuntimeState",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -1836,7 +1861,7 @@
     },
     "20": {
       "profile": "full-engine",
-      "toolCount": 504,
+      "toolCount": 503,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1852,7 +1877,6 @@
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
-        "BindUnifiedHmiButtonPressedTag",
         "BindUnifiedHmiTagDynamization",
         "BuildAndImportPlcArtifact",
         "BuildClassicHmiMinimalPackage",
@@ -2869,8 +2893,8 @@
   },
   "groupCounts": {
     "all-releases": 248,
-    "shared-subset": 256,
-    "release-only": 12
+    "shared-subset": 255,
+    "release-only": 13
   },
   "tools": [
     {
@@ -2976,6 +3000,7 @@
     {
       "name": "ApplyUnifiedHmiLayout",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2985,6 +3010,7 @@
     {
       "name": "ApplyUnifiedHmiScreenDesign",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -2994,6 +3020,7 @@
     {
       "name": "ApplyUnifiedHmiTheme",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -3062,15 +3089,15 @@
     {
       "name": "BindUnifiedHmiButtonPressedTag",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "BindUnifiedHmiTagDynamization",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -3885,6 +3912,7 @@
     {
       "name": "DeleteEmptyUnifiedHmiScreenGroup",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -3984,6 +4012,7 @@
     {
       "name": "DeleteUnifiedHmiButtonEvent",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -3993,6 +4022,7 @@
     {
       "name": "DeleteUnifiedHmiDynamization",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4152,6 +4182,7 @@
     {
       "name": "DescribeUnifiedHmiButtonEventScript",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4161,6 +4192,7 @@
     {
       "name": "DescribeUnifiedScreenItemType",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4251,6 +4283,7 @@
     {
       "name": "EnsureUnifiedHmiButtonAction",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4260,6 +4293,7 @@
     {
       "name": "EnsureUnifiedHmiButtonEventHandler",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4269,6 +4303,7 @@
     {
       "name": "EnsureUnifiedHmiConnection",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4278,6 +4313,7 @@
     {
       "name": "EnsureUnifiedHmiDynamization",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4287,6 +4323,7 @@
     {
       "name": "EnsureUnifiedHmiScreen",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4296,6 +4333,7 @@
     {
       "name": "EnsureUnifiedHmiScreenItem",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4305,6 +4343,7 @@
     {
       "name": "EnsureUnifiedHmiTag",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -4314,6 +4353,7 @@
     {
       "name": "EnsureUnifiedHmiTagTable",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -5796,6 +5836,7 @@
     {
       "name": "GetUnifiedHmiButtonEvent",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -5805,6 +5846,7 @@
     {
       "name": "GetUnifiedHmiDynamization",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -5814,6 +5856,7 @@
     {
       "name": "GetUnifiedHmiTexts",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -6961,6 +7004,7 @@
     {
       "name": "ListUnifiedHmiApiTypes",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7998,6 +8042,7 @@
     {
       "name": "ManageUnifiedHmiGroup",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8052,6 +8097,7 @@
     {
       "name": "ManageUnifiedScreenItem",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8927,6 +8973,7 @@
     {
       "name": "SetUnifiedHmiButtonEventScriptCode",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -8936,6 +8983,7 @@
     {
       "name": "SetUnifiedHmiRuntimeState",
       "releases": [
+        "19",
         "20",
         "21"
       ],

@@ -164,7 +164,18 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/ClassicHmiTemporaryImportPreflightSuite.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDesignBuilder.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/CapabilitySelfTestLogic.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiGroupsTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedScreenItemsTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiGroupsService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedScreenItemsService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiPropertyPolicy.cs" />
     <Compile Include="@(EngineHostSource)" Link="EngineHost/%(Filename)%(Extension)" Condition="'$(MSBuildProjectName)' == 'TiaMcp.EngineHost'" />
     <Compile Update="@(EngineHostSource)" Link="EngineHost/%(Filename)%(Extension)" Condition="'$(MSBuildProjectName)' != 'TiaMcp.EngineHost'" />
   </ItemGroup>
+
 </Project>

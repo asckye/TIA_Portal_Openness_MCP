@@ -163,6 +163,12 @@ namespace TiaMcpServer.Worker
             foundation.EngineeringReflectionLookupPaths = () => engineering.PlcLookupPathsSuffix;
             foundation.RenderEngineeringReflectionValue = value => JsonSerializer.Deserialize<object>(JsonSerializer.Serialize(value, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false }));
             foundation.ResolveEngineeringHmiSoftware = engineering.ResolveHmiSoftwareOrThrow;
+            foundation.ResolveUnifiedHmiDeviceItem = engineering.GetDeviceItemByPath;
+            foundation.HmiContentToken = (scope, content) => HmiExactAccess.Token(scope, JsonSerializer.SerializeToNode(content)!);
+            foundation.UnifiedPropertyAdmission = (type, input) => {
+                var error = UnifiedHmiPropertyPolicy.ValidateProperties(type, TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Inputs.CompositeAttributeMap>(input));
+                return error == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(TiaMcp.Logic.V4.V4Json.Serialize(error));
+            };
             foundation.HmiBindingIdentity = () => JsonSerializer.Deserialize<Dictionary<string, object?>>(engineering.GetBindingIdentity().ToJsonString());
             foundation.WriteEngineeringHmiTrace = TiaMcpServer.Siemens.HmiReadTrace.WriteLine;
             foundation.HmiReadFault = values => {

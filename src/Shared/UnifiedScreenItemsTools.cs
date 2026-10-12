@@ -52,28 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string propertiesJson="{}", int depth=2, bool confirmDelete=false, int offset=0, int limit=100, bool dryRun=true, string containedType="")
             => _service.ManageUnifiedScreenItem(softwarePath,screenPath,action,itemName,itemType,propertiesJson,depth,confirmDelete,offset,limit,dryRun,containedType);
 
-        // Domain admission uses only metadata from the resolved host type; it never reads a native property.
-        // Value conversions and multilingual culture handling remain in the existing service before any write.
         internal static Error? ValidateProperties(Type type, CompositeAttributeMap properties)
-        {
-            IReadOnlyDictionary<string, AttributeRule> Scalars(Type owner) => UnifiedUiModelLogic.PublicProperties(owner)
-                .Where(p => UnifiedScreenItemLogic.Kind(p) == "scalar" || UnifiedScreenItemLogic.Kind(p) == "color")
-                .ToDictionary(p => p.Name, p => new AttributeRule(InputSchema.Scalar(), p.SetMethod?.IsPublic == true), StringComparer.Ordinal);
-            var parts = new Dictionary<string, IReadOnlyDictionary<string, AttributeRule>>(StringComparer.Ordinal);
-            foreach (var property in UnifiedUiModelLogic.PublicProperties(type))
-            {
-                if (UnifiedScreenItemLogic.Kind(property) == "part") parts.Add(property.Name, Scalars(property.PropertyType));
-                else if (UnifiedScreenItemLogic.Kind(property) == "multilingual")
-                {
-                    var cultures = new Dictionary<string, AttributeRule>(StringComparer.Ordinal);
-                    if (properties.TryGetValue(property.Name, out var value) && value.Json.ValueKind == JsonValueKind.Object)
-                        foreach (var culture in value.Json.EnumerateObject())
-                            if (!string.IsNullOrWhiteSpace(culture.Name) && culture.Name.Length <= 16)
-                                cultures.Add(culture.Name, new AttributeRule(InputSchema.String()));
-                    parts.Add(property.Name, cultures);
-                }
-            }
-            return CompositeAttributeMapValidator.ScreenItem(Scalars(type), parts).Validate(properties, "properties").Error;
-        }
+            => UnifiedHmiPropertyPolicy.ValidateProperties(type, properties);
     }
 }

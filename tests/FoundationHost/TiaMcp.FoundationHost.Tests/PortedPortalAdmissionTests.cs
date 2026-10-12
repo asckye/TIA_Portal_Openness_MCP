@@ -12,6 +12,59 @@ using Xunit;
 
 public sealed class PortedPortalAdmissionTests
 {
+    [Theory]
+    [InlineData("EnsureUnifiedHmiScreenItem", false)]
+    [InlineData("EnsureUnifiedHmiScreenItem", true)]
+    [InlineData("ManageUnifiedScreenItem", false)]
+    [InlineData("ManageUnifiedScreenItem", true)]
+    [InlineData("DescribeUnifiedScreenItemType", false)]
+    [InlineData("DescribeUnifiedScreenItemType", true)]
+    [InlineData("ApplyUnifiedHmiScreenDesign", false)]
+    [InlineData("ApplyUnifiedHmiScreenDesign", true)]
+    [InlineData("ApplyUnifiedHmiLayout", false)]
+    [InlineData("ApplyUnifiedHmiLayout", true)]
+    [InlineData("EnsureUnifiedHmiDynamization", false)]
+    [InlineData("EnsureUnifiedHmiDynamization", true)]
+    public async Task Unavailable_or_unadmitted_Unified_type_never_dispatches_a_native_operation(string name, bool combined)
+    {
+        foreach (var release in new[] { "19", "20" })
+        {
+            using var approval = new DisabledApproval();
+            using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+            using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+            using var lifetime = new Host.ImportStagingHostLifetime();
+            var tools = LegacyHostToolRegistry.Create(worker, release, false);
+            var catalog = new Catalog(release);
+            var tool = tools.Single(t => t.ProtocolTool.Name == name);
+            var arguments = Arguments(name, tool.ProtocolTool.InputSchema);
+            if (name == "EnsureUnifiedHmiDynamization")
+            {
+                arguments["dynamizationType"] = release == "19" ? "ExpressionDynamization" : "TagDynamization";
+            }
+            if (name == "ManageUnifiedScreenItem") arguments["action"] = "create";
+            if (name is "ApplyUnifiedHmiScreenDesign" or "ApplyUnifiedHmiLayout")
+                arguments[name == "ApplyUnifiedHmiScreenDesign" ? "design" : "layout"] = new JsonObject {
+                    ["items"] = new JsonArray(new JsonObject { ["name"] = "Missing", ["type"] = "HmiAlarmLineControl" }) };
+            else if (name != "EnsureUnifiedHmiDynamization") arguments["itemType"] = "HmiAlarmLineControl";
+            var invoker = new Engine.WorkerToolInvoker(catalog, worker, lifetime, tools);
+            using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
+            var validation = invoker.ValidateArguments(catalog.All[name], JsonSerializer.SerializeToElement(arguments), tool.ProtocolTool.InputSchema);
+            bool unadmittedDesign = name is "ApplyUnifiedHmiScreenDesign" or "ApplyUnifiedHmiLayout";
+            if (unadmittedDesign) Assert.NotNull(validation);
+            else Assert.Null(validation);
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
+            var entry = combined ? Host.McpServer.WrapTools(new[] { invoker.CreateTool(catalog.All[name]) }).Single() : tool;
+            var result = await entry.InvokeAsync(request);
+            var body = result.StructuredContent!.AsObject();
+            bool portalNeeded = name == "EnsureUnifiedHmiDynamization" && release == "20";
+            Assert.Equal(unadmittedDesign ? "INVALID_ARGUMENT" : portalNeeded ? "PRECONDITION_FAILED" : "UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Equal(portalNeeded ? 1 : 0, worker.Calls);
+        }
+    }
+
     public static IEnumerable<object[]> Cases =>
         from release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         from family in PortedToolContract.Families(release)
@@ -207,11 +260,13 @@ public sealed class PortedPortalAdmissionTests
     private static JsonNode? Sample(JsonElement schema)
     {
         if (schema.ValueKind != JsonValueKind.Object) return new JsonObject();
+        if (schema.TryGetProperty("const", out var constant)) return JsonNode.Parse(constant.GetRawText());
         if (schema.TryGetProperty("enum", out var values)) return JsonNode.Parse(values[0].GetRawText());
         if (schema.TryGetProperty("anyOf", out var options)) return Sample(options[0]);
+        if (schema.TryGetProperty("oneOf", out var alternatives)) return Sample(alternatives[0]);
         if (!schema.TryGetProperty("type", out var type)) return new JsonObject();
         return type.GetString() switch {
-            "string" => JsonValue.Create("Fixture"), "integer" => JsonValue.Create(0), "number" => JsonValue.Create(0),
+            "string" => JsonValue.Create("Fixture"), "integer" or "number" => schema.TryGetProperty("minimum", out var minimum) ? JsonNode.Parse(minimum.GetRawText()) : JsonValue.Create(0),
             "boolean" => JsonValue.Create(true), "array" => new JsonArray(Sample(schema.GetProperty("items"))),
             "object" => ObjectSample(schema), _ => null };
     }

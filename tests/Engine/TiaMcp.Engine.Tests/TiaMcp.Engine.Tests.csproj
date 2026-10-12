@@ -127,15 +127,15 @@
     <Compile Include="../../../src/Shared/HmiExchangeResponses.cs" Link="Shared/HmiExchangeResponses.cs" />
     <Compile Include="../../../src/Shared/HmiTagDeletionService.cs" Link="Shared/HmiTagDeletionService.cs" />
     <Compile Include="../../../src/Shared/HmiTagDeletionTools.cs" Link="Shared/HmiTagDeletionTools.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Services/HmiInspectionService.cs" Link="HmiInspectionService.cs" />
+    <Compile Include="../../../src/Shared/HmiInspectionService.cs" Link="HmiInspectionService.cs" />
     <Compile Include="../../../src/Engine/Siemens/IHmiToolSession.cs" Link="IHmiToolSession.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/HmiInspectionTools.cs" Link="HmiInspectionTools.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/HmiEventAccess.cs" Link="HmiEventAccess.cs" />
+    <Compile Include="../../../src/Shared/HmiInspectionTools.cs" Link="HmiInspectionTools.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiEventAccess.cs" Link="HmiEventAccess.cs" />
     <Compile Include="../../../src/Engine/Siemens/PropertyPathReader.cs" Link="PropertyPathReader.cs" />
     <Compile Include="../../../src/Engine/Siemens/EngineeringExport.cs" Link="EngineeringExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/EngineeringFileExport.cs" Link="EngineeringFileExport.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
     <Compile Include="../../../src/Shared/Host/McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.Approval.cs" Link="McpServer.Approval.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" Link="McpServer.CallDiscipline.cs" />
@@ -171,8 +171,8 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="../../../src/Engine/Siemens/StartdriveLogic.cs" Link="StartdriveLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
-    <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/Hmi/UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
     <Compile Include="../../../src/Engine/Siemens/MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="../../../src/Engine/Runtime/PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
@@ -197,8 +197,8 @@
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/DccTools.cs" Link="DccTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/StartdriveTools.cs" Link="StartdriveTools.cs" />
     <Compile Include="../../../src/Shared/TeamcenterTools.cs" Link="TeamcenterTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedHmiGroupsTools.cs" Link="UnifiedHmiGroupsTools.cs" />
+    <Compile Include="../../../src/Shared/UnifiedScreenItemsTools.cs" Link="UnifiedScreenItemsTools.cs" />
     <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/UnifiedUiModelTools.cs" Link="UnifiedUiModelTools.cs" />
     <Compile Include="../../../src/Shared/AlarmsTools.cs" Link="AlarmsTools.cs" />
     <Compile Include="../../../src/Shared/EngineeringToolContract.cs" Link="EngineeringToolContract.cs" />
@@ -289,5 +289,15 @@
     <Compile Include="../../../src/Shared/DocumentsPortService.cs" Link="DocumentsPortService.cs" />
     <Compile Include="../../../src/Shared/DocumentsResponses.cs" Link="DocumentsResponses.cs" />
     <Compile Include="../../../src/Shared/DocumentsTools.cs" Link="DocumentsTools.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../src/Shared/UnifiedHmiManagedValues.cs" /><Compile Include="../../../src/Shared/UnifiedHmiPropertyPolicy.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/Shared/UnifiedHmiPortService.cs" />
+    <Compile Include="../../../src/Shared/UnifiedHmiPropertyAdmission.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/IUnifiedHmiInspectionSession.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedHmiInspectionAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedHmiExactAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Reflection/PropertyPathReader.cs" />
+    <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionSession.cs" />
   </ItemGroup>
 </Project>

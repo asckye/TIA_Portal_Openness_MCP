@@ -1238,6 +1238,12 @@
     },
     {
       "releaseKey": "19",
+      "family": "F26",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
       "family": "F25",
       "state": "current",
       "l5": "NOT RUN"
@@ -17400,6 +17406,301 @@
     },
     {
       "releaseKey": "19",
+      "entry": "ApplyUnifiedHmiLayout",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "layout": {
+          "columns": 1,
+          "cellWidth": 160,
+          "cellHeight": 40,
+          "items": [
+            {
+              "name": "StatusText",
+              "type": "Text",
+              "row": 0,
+              "col": 0,
+              "text": "Ready"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ApplyUnifiedHmiScreenDesign",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "design": {
+          "screen": {
+            "name": "Overview",
+            "width": 800,
+            "height": 480
+          },
+          "items": [
+            {
+              "type": "Text",
+              "name": "StatusText",
+              "left": 20,
+              "top": 20,
+              "width": 160,
+              "height": 40,
+              "text": "Ready"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ApplyUnifiedHmiTheme",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "theme": {
+          "name": "Example",
+          "palette": {
+            "Page": "0xFFFFFFFF",
+            "Surface": "0xFFF4F6F8",
+            "Text": "0xFF202020",
+            "Border": "0xFF808080"
+          }
+        }
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "BindUnifiedHmiTagDynamization",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "itemName": "StatusText",
+        "propertyName": "Visible",
+        "tagName": "Ready"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeleteEmptyUnifiedHmiScreenGroup",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "groupPath": "Examples",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeleteUnifiedHmiButtonEvent",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "screenPath": "Overview",
+        "buttonName": "StartButton",
+        "eventType": "Down",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DeleteUnifiedHmiDynamization",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "screenPath": "Overview",
+        "itemName": "StatusText",
+        "propertyName": "Visible",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DescribeUnifiedHmiButtonEventScript",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "buttonName": "StartButton",
+        "eventType": "Down"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "DescribeUnifiedScreenItemType",
+      "family": "F26",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiButtonAction",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "buttonName": "StartButton",
+        "eventType": "Down",
+        "actionKind": "set-bit",
+        "targetTag": "Ready"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiButtonEventHandler",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "buttonName": "StartButton",
+        "eventType": "Down"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiConnection",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiDynamization",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "itemName": "StatusText",
+        "propertyName": "Visible"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiScreen",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiScreenItem",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "itemName": "StatusText"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiTag",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "tagTableName": "Default tag table",
+        "tagName": "Ready"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureUnifiedHmiTagTable",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "tagTableName": "Default tag table"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedHmiButtonEvent",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "screenPath": "Overview",
+        "buttonName": "StartButton",
+        "eventType": "Down"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedHmiDynamization",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "screenPath": "Overview",
+        "itemName": "StatusText",
+        "propertyName": "Visible"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetUnifiedHmiTexts",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "itemName": "StatusText"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListUnifiedHmiApiTypes",
+      "family": "F26",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedHmiGroup",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "family": "screens",
+        "groupPath": "Examples",
+        "action": "create",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUnifiedScreenItem",
+      "family": "F26",
+      "example": {
+        "softwarePath": "HMI_RT_1",
+        "screenPath": "Overview",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read",
+        "itemName": "StatusText"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedHmiButtonEventScriptCode",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1",
+        "screenName": "Overview",
+        "buttonName": "StartButton",
+        "eventType": "Down",
+        "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetUnifiedHmiRuntimeState",
+      "family": "F26",
+      "example": {
+        "hmiSoftwarePath": "HMI_RT_1"
+      }
+    },
+    {
+      "releaseKey": "19",
       "entry": "GetClassicHmiScreenTree",
       "family": "F25",
       "example": {
@@ -19043,21 +19344,6 @@
         ],
         "arguments": {
           "directoryPath": "C:\\Examples"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BindUnifiedHmiButtonPressedTag",
-        "currentName": "BindUnifiedHmiButtonPressedTag",
-        "sourceName": "BindUnifiedHmiButtonPressedTag",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "buttonName": "StartButton",
-          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -63044,6 +63330,86 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ApplyUnifiedHmiLayout",
+        "currentName": "ApplyUnifiedHmiLayout",
+        "sourceName": "ApplyUnifiedHmiLayout",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "layout": {
+            "columns": 1,
+            "cellWidth": 160,
+            "cellHeight": 40,
+            "items": [
+              {
+                "name": "StatusText",
+                "type": "Text",
+                "row": 0,
+                "col": 0,
+                "text": "Ready"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyUnifiedHmiScreenDesign",
+        "currentName": "ApplyUnifiedHmiScreenDesign",
+        "sourceName": "ApplyUnifiedHmiScreenDesignJson",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "design": {
+            "screen": {
+              "name": "Overview",
+              "width": 800,
+              "height": 480
+            },
+            "items": [
+              {
+                "type": "Text",
+                "name": "StatusText",
+                "left": 20,
+                "top": 20,
+                "width": 160,
+                "height": 40,
+                "text": "Ready"
+              }
+            ]
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ApplyUnifiedHmiTheme",
+        "currentName": "ApplyUnifiedHmiTheme",
+        "sourceName": "ApplyUnifiedHmiTheme",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "theme": {
+            "name": "Example",
+            "palette": {
+              "Page": "0xFFFFFFFF",
+              "Surface": "0xFFF4F6F8",
+              "Text": "0xFF202020",
+              "Border": "0xFF808080"
+            }
+          }
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ArchiveSavedProject",
         "currentName": "ArchiveSavedProject",
         "sourceName": "ArchiveSavedProject",
@@ -63092,6 +63458,22 @@
         ],
         "arguments": {
           "directoryPath": "C:\\Examples"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "BindUnifiedHmiTagDynamization",
+        "currentName": "BindUnifiedHmiTagDynamization",
+        "sourceName": "BindUnifiedHmiTagDynamization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "itemName": "StatusText",
+          "propertyName": "Visible",
+          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },
@@ -63729,6 +64111,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DeleteEmptyUnifiedHmiScreenGroup",
+        "currentName": "DeleteEmptyUnifiedHmiScreenGroup",
+        "sourceName": "DeleteEmptyUnifiedHmiScreenGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "groupPath": "Examples",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "DeleteExportHandle",
         "currentName": "DeleteExportHandle",
         "sourceName": "DeleteExport",
@@ -63810,6 +64206,38 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "typePath": "UDT_Status",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeleteUnifiedHmiButtonEvent",
+        "currentName": "DeleteUnifiedHmiButtonEvent",
+        "sourceName": "DeleteUnifiedHmiButtonEvent",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "screenPath": "Overview",
+          "buttonName": "StartButton",
+          "eventType": "Down",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DeleteUnifiedHmiDynamization",
+        "currentName": "DeleteUnifiedHmiDynamization",
+        "sourceName": "DeleteUnifiedHmiDynamization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "screenPath": "Overview",
+          "itemName": "StatusText",
+          "propertyName": "Visible",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -63948,6 +64376,31 @@
         "envelopeVersion": 4
       },
       {
+        "name": "DescribeUnifiedHmiButtonEventScript",
+        "currentName": "DescribeUnifiedHmiButtonEventScript",
+        "sourceName": "DescribeUnifiedHmiButtonEventScript",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "buttonName": "StartButton",
+          "eventType": "Down"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "DescribeUnifiedScreenItemType",
+        "currentName": "DescribeUnifiedScreenItemType",
+        "sourceName": "DescribeUnifiedScreenItemType",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetPortalConnectionReadiness",
         "currentName": "GetPortalConnectionReadiness",
         "sourceName": "DiagnosePortalConnectReadiness",
@@ -64004,6 +64457,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetUnifiedHmiRuntimeState",
+        "currentName": "SetUnifiedHmiRuntimeState",
+        "sourceName": "EnsureStartStopUnifiedHmi",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "EnsureSubnet",
         "currentName": "EnsureSubnet",
         "sourceName": "EnsureSubnet",
@@ -64014,6 +64479,119 @@
           "anchorDeviceItemPath": "PLC_1/CPU_1",
           "subnetType": "System:Subnet.Ethernet",
           "subnetName": "PN_IE_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiButtonAction",
+        "currentName": "EnsureUnifiedHmiButtonAction",
+        "sourceName": "EnsureUnifiedHmiButtonAction",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "buttonName": "StartButton",
+          "eventType": "Down",
+          "actionKind": "set-bit",
+          "targetTag": "Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiButtonEventHandler",
+        "currentName": "EnsureUnifiedHmiButtonEventHandler",
+        "sourceName": "EnsureUnifiedHmiButtonEventHandler",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "buttonName": "StartButton",
+          "eventType": "Down"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiConnection",
+        "currentName": "EnsureUnifiedHmiConnection",
+        "sourceName": "EnsureUnifiedHmiConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiDynamization",
+        "currentName": "EnsureUnifiedHmiDynamization",
+        "sourceName": "EnsureUnifiedHmiDynamization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "itemName": "StatusText",
+          "propertyName": "Visible"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiScreen",
+        "currentName": "EnsureUnifiedHmiScreen",
+        "sourceName": "EnsureUnifiedHmiScreen",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiScreenItem",
+        "currentName": "EnsureUnifiedHmiScreenItem",
+        "sourceName": "EnsureUnifiedHmiScreenItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "itemName": "StatusText"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiTag",
+        "currentName": "EnsureUnifiedHmiTag",
+        "sourceName": "EnsureUnifiedHmiTag",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "tagTableName": "Default tag table",
+          "tagName": "Ready"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureUnifiedHmiTagTable",
+        "currentName": "EnsureUnifiedHmiTagTable",
+        "sourceName": "EnsureUnifiedHmiTagTable",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "tagTableName": "Default tag table"
         },
         "envelopeVersion": 4
       },
@@ -65425,6 +66003,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ListUnifiedHmiApiTypes",
+        "currentName": "ListUnifiedHmiApiTypes",
+        "sourceName": "ListUnifiedHmiApiTypes",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -66696,6 +67284,39 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedHmiGroup",
+        "currentName": "ManageUnifiedHmiGroup",
+        "sourceName": "ManageUnifiedHmiGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "family": "screens",
+          "groupPath": "Examples",
+          "action": "create",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageUnifiedScreenItem",
+        "currentName": "ManageUnifiedScreenItem",
+        "sourceName": "ManageUnifiedScreenItem",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "screenPath": "Overview",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read",
+          "itemName": "StatusText"
         },
         "envelopeVersion": 4
       },
@@ -68017,6 +68638,50 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetUnifiedHmiButtonEvent",
+        "currentName": "GetUnifiedHmiButtonEvent",
+        "sourceName": "ReadUnifiedHmiButtonEvent",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "screenPath": "Overview",
+          "buttonName": "StartButton",
+          "eventType": "Down"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedHmiDynamization",
+        "currentName": "GetUnifiedHmiDynamization",
+        "sourceName": "ReadUnifiedHmiDynamization",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "screenPath": "Overview",
+          "itemName": "StatusText",
+          "propertyName": "Visible"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetUnifiedHmiTexts",
+        "currentName": "GetUnifiedHmiTexts",
+        "sourceName": "ReadUnifiedHmiTexts",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "itemName": "StatusText"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetV21EcosystemCatalog",
         "currentName": "GetV21EcosystemCatalog",
         "sourceName": "ReadV21EcosystemCatalog",
@@ -68386,6 +69051,22 @@
         ],
         "arguments": {
           "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SetUnifiedHmiButtonEventScriptCode",
+        "currentName": "SetUnifiedHmiButtonEventScriptCode",
+        "sourceName": "SetUnifiedHmiButtonEventScriptCode",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "Overview",
+          "buttonName": "StartButton",
+          "eventType": "Down",
+          "scriptCode": "HMIRuntime.Tags(\"Ready\").Read();"
         },
         "envelopeVersion": 4
       },
@@ -68914,21 +69595,6 @@
         ],
         "arguments": {
           "directoryPath": "C:\\Examples"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "BindUnifiedHmiButtonPressedTag",
-        "currentName": "BindUnifiedHmiButtonPressedTag",
-        "sourceName": "BindUnifiedHmiButtonPressedTag",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "buttonName": "StartButton",
-          "tagName": "Ready"
         },
         "envelopeVersion": 4
       },

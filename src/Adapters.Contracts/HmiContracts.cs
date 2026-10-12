@@ -66,6 +66,7 @@ namespace TiaMcp.Adapters.Contracts
     }
     public sealed class HmiDescribe
     {
+        public Dictionary<string, object?>? Meta { get; set; }
         public string? Message { get; set; }
         public string? ObjectKind { get; set; }
         public string? ObjectPath { get; set; }

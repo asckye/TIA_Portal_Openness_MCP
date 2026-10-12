@@ -76,8 +76,8 @@ namespace TiaMcp.Engine.Tests
         {
             // 这两个文件依赖 Siemens.Engineering / MCP SDK，链不进这个套件，只能读源码盯形状。
             // Unified HMI 族由 UnifiedHmiService / UnifiedHmiTools 提供。
-            var portalSource = FindSource(Path.Combine("Siemens", "Services", "UnifiedHmiService.cs"));
-            var toolSource = FindSource(Path.Combine("ModelContextProtocol", "Tools", "UnifiedHmiTools.cs"));
+            var portalSource = FindSource(Path.Combine("Adapters", "Native", "Hmi", "UnifiedHmiAdapter.cs"));
+            var toolSource = FindSource(Path.Combine("Shared", "UnifiedHmiTools.cs"));
 
             if (portalSource == null || toolSource == null)
             {
@@ -116,7 +116,7 @@ namespace TiaMcp.Engine.Tests
             var dir = AppDomain.CurrentDomain.BaseDirectory;
             for (var i = 0; i < 10 && dir != null; i++)
             {
-                var candidate = Path.Combine(dir, "src", "Engine", relative);
+                var candidate = Path.Combine(dir, "src", relative);
                 if (File.Exists(candidate))
                 {
                     return candidate;

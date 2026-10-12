@@ -256,17 +256,16 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ValidateStandardPackage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `WritePlcSclSourceFile` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (256)
+## Shared by some releases (255)
 
 | Tool | Release keys |
 |---|---|
 | `AnalyzeUnifiedHmiTemplateLayout` | 19, 20, 21 |
-| `ApplyUnifiedHmiLayout` | 20, 21 |
-| `ApplyUnifiedHmiScreenDesign` | 20, 21 |
-| `ApplyUnifiedHmiTheme` | 20, 21 |
+| `ApplyUnifiedHmiLayout` | 19, 20, 21 |
+| `ApplyUnifiedHmiScreenDesign` | 19, 20, 21 |
+| `ApplyUnifiedHmiTheme` | 19, 20, 21 |
 | `ArchiveSavedProject` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `BindUnifiedHmiButtonPressedTag` | 20, 21 |
-| `BindUnifiedHmiTagDynamization` | 20, 21 |
+| `BindUnifiedHmiTagDynamization` | 19, 20, 21 |
 | `BuildClassicHmiMinimalPackage` | 20, 21 |
 | `BuildClassicHmiScreen` | 18, 19, 20, 21 |
 | `BuildClassicHmiTagTable` | 20, 21 |
@@ -295,23 +294,23 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `CreatePlcInstanceDb` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `CreateVersionControlWorkspace` | 16, 17, 18, 19, 20, 21 |
 | `DecodePlcSimaticMl` | 20, 21 |
-| `DeleteEmptyUnifiedHmiScreenGroup` | 20, 21 |
-| `DeleteUnifiedHmiButtonEvent` | 20, 21 |
-| `DeleteUnifiedHmiDynamization` | 20, 21 |
-| `DescribeUnifiedHmiButtonEventScript` | 20, 21 |
-| `DescribeUnifiedScreenItemType` | 20, 21 |
+| `DeleteEmptyUnifiedHmiScreenGroup` | 19, 20, 21 |
+| `DeleteUnifiedHmiButtonEvent` | 19, 20, 21 |
+| `DeleteUnifiedHmiDynamization` | 19, 20, 21 |
+| `DescribeUnifiedHmiButtonEventScript` | 19, 20, 21 |
+| `DescribeUnifiedScreenItemType` | 19, 20, 21 |
 | `DisconnectOnlinePlc` | 20, 21 |
 | `DisconnectOnlinePlcs` | 20, 21 |
 | `DownloadPlc` | 20, 21 |
 | `DownloadPlcToFolder` | 20, 21 |
-| `EnsureUnifiedHmiButtonAction` | 20, 21 |
-| `EnsureUnifiedHmiButtonEventHandler` | 20, 21 |
-| `EnsureUnifiedHmiConnection` | 20, 21 |
-| `EnsureUnifiedHmiDynamization` | 20, 21 |
-| `EnsureUnifiedHmiScreen` | 20, 21 |
-| `EnsureUnifiedHmiScreenItem` | 20, 21 |
-| `EnsureUnifiedHmiTag` | 20, 21 |
-| `EnsureUnifiedHmiTagTable` | 20, 21 |
+| `EnsureUnifiedHmiButtonAction` | 19, 20, 21 |
+| `EnsureUnifiedHmiButtonEventHandler` | 19, 20, 21 |
+| `EnsureUnifiedHmiConnection` | 19, 20, 21 |
+| `EnsureUnifiedHmiDynamization` | 19, 20, 21 |
+| `EnsureUnifiedHmiScreen` | 19, 20, 21 |
+| `EnsureUnifiedHmiScreenItem` | 19, 20, 21 |
+| `EnsureUnifiedHmiTag` | 19, 20, 21 |
+| `EnsureUnifiedHmiTagTable` | 19, 20, 21 |
 | `ExchangeCfcCharts` | 20, 21 |
 | `ExchangeMotionCamData` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExchangePlcAlarmTextLists` | 16, 17, 18, 19, 20, 21 |
@@ -365,9 +364,9 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `GetUnifiedFaceplateInstance` | 20, 21 |
 | `GetUnifiedGlobalScript` | 20, 21 |
 | `GetUnifiedGraphicSelection` | 20, 21 |
-| `GetUnifiedHmiButtonEvent` | 20, 21 |
-| `GetUnifiedHmiDynamization` | 20, 21 |
-| `GetUnifiedHmiTexts` | 20, 21 |
+| `GetUnifiedHmiButtonEvent` | 19, 20, 21 |
+| `GetUnifiedHmiDynamization` | 19, 20, 21 |
+| `GetUnifiedHmiTexts` | 19, 20, 21 |
 | `GetUnifiedLibraryType` | 20, 21 |
 | `GetUnifiedObjectEvents` | 20, 21 |
 | `GetUnifiedObjectProperties` | 20, 21 |
@@ -408,7 +407,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ListTransferRoutes` | 20, 21 |
 | `ListUnifiedEngineeringObjects` | 20, 21 |
 | `ListUnifiedGlobalScripts` | 20, 21 |
-| `ListUnifiedHmiApiTypes` | 20, 21 |
+| `ListUnifiedHmiApiTypes` | 19, 20, 21 |
 | `ListUnifiedLibraryFolderEntries` | 20, 21 |
 | `ListUnifiedTagDefinitions` | 20, 21 |
 | `ListVersionControlWorkspaces` | 16, 17, 18, 19, 20, 21 |
@@ -465,13 +464,13 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageUnifiedDynamization` | 20, 21 |
 | `ManageUnifiedEngineeringObject` | 20, 21 |
 | `ManageUnifiedEvent` | 20, 21 |
-| `ManageUnifiedHmiGroup` | 20, 21 |
+| `ManageUnifiedHmiGroup` | 19, 20, 21 |
 | `ManageUnifiedListEntries` | 20, 21 |
 | `ManageUnifiedLoggingTag` | 20, 21 |
 | `ManageUnifiedObjectParts` | 20, 21 |
 | `ManageUnifiedOpcUaAlarmType` | 20, 21 |
 | `ManageUnifiedPlantNode` | 20, 21 |
-| `ManageUnifiedScreenItem` | 20, 21 |
+| `ManageUnifiedScreenItem` | 19, 20, 21 |
 | `ManageUnifiedScreenLayout` | 20, 21 |
 | `ManageWatchForceTableWebAccess` | 16, 17, 18, 19, 20, 21 |
 | `MonitorPlcWatchTableS7` | 15.1, 16, 17, 18, 19, 20, 21 |
@@ -498,8 +497,8 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `SetPlcWatchTableModifyValue` | 17, 18, 19, 20, 21 |
 | `SetPlcWebOperatingMode` | 20, 21 |
 | `SetUnifiedGlobalScript` | 20, 21 |
-| `SetUnifiedHmiButtonEventScriptCode` | 20, 21 |
-| `SetUnifiedHmiRuntimeState` | 20, 21 |
+| `SetUnifiedHmiButtonEventScriptCode` | 19, 20, 21 |
+| `SetUnifiedHmiRuntimeState` | 19, 20, 21 |
 | `SetUnifiedLogDuration` | 20, 21 |
 | `SetUnifiedMultilingualProperty` | 20, 21 |
 | `SetUnifiedObjectProperties` | 20, 21 |
@@ -517,10 +516,11 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `WritePlcWebVars` | 20, 21 |
 | `WriteUnifiedRuntimeTags` | 20, 21 |
 
-## One release only (12)
+## One release only (13)
 
 | Tool | Release keys |
 |---|---|
+| `BindUnifiedHmiButtonPressedTag` | 21 |
 | `GetClassicHmiGlobalization` | 21 |
 | `ListCommunicationConnections` | 21 |
 | `ListSafetyActivationTests` | 21 |

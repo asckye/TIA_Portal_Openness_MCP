@@ -1,11 +1,23 @@
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using UnifiedObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
+using UnifiedArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
+using UnifiedNode = System.Object;
+using UnifiedScalar = TiaMcp.Adapters.Native.Hmi.HmiScalar;
+using UnifiedGroups = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
+using UnifiedValues = TiaMcp.Adapters.Native.Hmi.HmiValues;
+using UnifiedAccess = TiaMcp.Adapters.Native.Hmi.UnifiedHmiAccess;
+#endif
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json.Nodes;
 
+#if !TIA_ADAPTER_INTERNAL_VERSIONING
 namespace TiaMcpServer.Siemens
+#else
+namespace TiaMcp.Adapters.Native.Hmi
+#endif
 {
     // No Siemens dependency: item types are resolved by reflection against whatever assembly the caller
     // hands over, so the offline suite runs the same code on fakes shaped like the official UI model.
@@ -19,7 +31,7 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] Actions = { "read", "list", "create", "update", "delete" };
         private static readonly string[] BackLinks = { "Parent", "Owner", "Project", "Portal", "Site", "Container", "Device", "AssignedHmiDevice" };
 
-        internal static bool ValidateRequest(string action, string itemName, string itemType, JsonObject changes, bool confirmDelete, bool dryRun, string containedType = "")
+        internal static bool ValidateRequest(string action, string itemName, string itemType, UnifiedObject changes, bool confirmDelete, bool dryRun, string containedType = "")
         {
             if (!Actions.Contains(action)) throw new ArgumentException("action must be read/list/create/update/delete.");
             if (action != "create" && !string.IsNullOrEmpty(containedType)) throw new ArgumentException("containedType is only used by create (faceplate / custom widget containers).");
@@ -34,10 +46,10 @@ namespace TiaMcpServer.Siemens
             return true;
         }
 
-        internal static JsonObject ParseProperties(string propertiesJson)
+        internal static UnifiedObject ParseProperties(string propertiesJson)
         {
             if (string.IsNullOrWhiteSpace(propertiesJson) || propertiesJson.Length > 65536) throw new ArgumentException("propertiesJson must be a JSON object (<= 64 KB).");
-            return JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be a JSON object.");
+            return UnifiedAccess.Parse(propertiesJson) as UnifiedObject ?? throw new ArgumentException("propertiesJson must be a JSON object.");
         }
 
         // Concrete screen item types: public classes under the four UI namespaces deriving from HmiScreenItemBase.
@@ -76,11 +88,11 @@ namespace TiaMcpServer.Siemens
         }
 
         internal static string Group(Type type) => type.Namespace != null && type.Namespace.StartsWith(UiNamespace, StringComparison.Ordinal) ? type.Namespace.Substring(UiNamespace.Length) : type.Namespace ?? "";
-        internal static JsonArray Features(Type type)
-            => new JsonArray(type.GetInterfaces().Where(i => i.Namespace == UiNamespace + "Features").Select(i => i.Name).OrderBy(n => n, StringComparer.Ordinal).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray());
-        internal static JsonArray BaseChain(Type type)
+        internal static UnifiedArray Features(Type type)
+            => new UnifiedArray(type.GetInterfaces().Where(i => i.Namespace == UiNamespace + "Features").Select(i => i.Name).OrderBy(n => n, StringComparer.Ordinal).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray());
+        internal static UnifiedArray BaseChain(Type type)
         {
-            var chain = new JsonArray();
+            var chain = new UnifiedArray();
             for (var t = type.BaseType; t != null && t != typeof(object) && t.Namespace?.StartsWith("Siemens.Engineering", StringComparison.Ordinal) == true; t = t.BaseType) chain.Add(t.Name);
             return chain;
         }
@@ -90,34 +102,34 @@ namespace TiaMcpServer.Siemens
         {
             var t = p.PropertyType;
             if (UnifiedUiModelLogic.IsColor(t)) return "color";
-            if (EngineeringScalarProperties.Scalar(t) || t == typeof(object)) return "scalar";
+            if (UnifiedScalar.Scalar(t) || t == typeof(object)) return "scalar";
             if (t.Name == "MultilingualText") return "multilingual";
             if (typeof(IEnumerable).IsAssignableFrom(t) && t != typeof(string)) return t.Name.EndsWith("Composition", StringComparison.Ordinal) || t.Name.EndsWith("Association", StringComparison.Ordinal) ? "collection" : "enumerable";
             if (t.Namespace == UiNamespace + "Parts" || t.Name.EndsWith("Part", StringComparison.Ordinal)) return "part";
             return "reference";
         }
 
-        internal static JsonObject PropertySchema(PropertyInfo p, int depth)
+        internal static UnifiedObject PropertySchema(PropertyInfo p, int depth)
         {
             var kind = Kind(p);
-            var row = new JsonObject { ["name"] = p.Name, ["kind"] = kind, ["type"] = p.PropertyType.Name, ["writable"] = p.SetMethod?.IsPublic == true };
+            var row = new UnifiedObject { ["name"] = p.Name, ["kind"] = kind, ["type"] = p.PropertyType.Name, ["writable"] = p.SetMethod?.IsPublic == true };
             var t = p.PropertyType;
-            if (t.IsEnum) row["enumValues"] = new JsonArray(Enum.GetNames(t).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray());
+            if (t.IsEnum) row["enumValues"] = new UnifiedArray(Enum.GetNames(t).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray());
             if (kind == "collection" || kind == "enumerable")
             {
                 var element = t.GetProperty("Item")?.PropertyType;
                 row["elementType"] = element?.Name;
                 var creates = t.GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(m => m.Name == "Create")
                     .Select(m => "Create" + (m.IsGenericMethodDefinition ? "<T>" : "") + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
-                row["create"] = new JsonArray(creates.Select(c => (JsonNode)JsonValue.Create(c)!).ToArray());
+                row["create"] = new UnifiedArray(creates.Select(c => (UnifiedNode)UnifiedValues.Value(c)!).ToArray());
             }
             if (kind == "part" && depth > 0) row["properties"] = Schema(t, depth - 1);
             if (kind == "multilingual") row["edit"] = "SetUnifiedMultilingualProperty or propertiesJson {\"" + p.Name + "\": {\"<culture>\": \"text\"}}";
             return row;
         }
-        internal static JsonArray Schema(Type type, int depth = 2)
+        internal static UnifiedArray Schema(Type type, int depth = 2)
         {
-            var rows = new JsonArray();
+            var rows = new UnifiedArray();
             foreach (var p in UnifiedUiModelLogic.PublicProperties(type))
             {
                 if (BackLinks.Contains(p.Name, StringComparer.OrdinalIgnoreCase)) continue;
@@ -125,20 +137,20 @@ namespace TiaMcpServer.Siemens
             }
             return rows;
         }
-        internal static JsonObject TypeDescription(Type type, int depth = 2)
+        internal static UnifiedObject TypeDescription(Type type, int depth = 2)
         {
             var events = UnifiedUiModelLogic.FindProperty(type, "EventHandlers")?.PropertyType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType.IsEnum)?.GetParameters()[0].ParameterType;
-            return new JsonObject
+            return new UnifiedObject
             {
                 ["type"] = type.FullName, ["name"] = type.Name, ["group"] = Group(type), ["baseTypes"] = BaseChain(type), ["features"] = Features(type),
                 ["hasDynamizations"] = UnifiedUiModelLogic.FindProperty(type, "Dynamizations") != null, ["hasEventHandlers"] = UnifiedUiModelLogic.FindProperty(type, "EventHandlers") != null,
-                ["eventTypes"] = events == null ? null : new JsonArray(Enum.GetNames(events).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray()),
+                ["eventTypes"] = events == null ? null : new UnifiedArray(Enum.GetNames(events).Select(n => (UnifiedNode)UnifiedValues.Value(n)!).ToArray()),
                 ["deletable"] = type.GetMethod("Delete", Type.EmptyTypes) != null,
                 ["properties"] = Schema(type, depth)
             };
         }
-        internal static JsonArray Catalog(Assembly assembly)
-            => new JsonArray(ItemTypes(assembly).Select(t => (JsonNode)new JsonObject { ["name"] = t.Name, ["group"] = Group(t), ["type"] = t.FullName, ["features"] = Features(t) }).ToArray());
+        internal static UnifiedArray Catalog(Assembly assembly)
+            => new UnifiedArray(ItemTypes(assembly).Select(t => (UnifiedNode)new UnifiedObject { ["name"] = t.Name, ["group"] = Group(t), ["type"] = t.FullName, ["features"] = Features(t) }).ToArray());
 
         internal sealed class TextEdit
         {
@@ -149,41 +161,42 @@ namespace TiaMcpServer.Siemens
         // Splits propertiesJson into nested scalar/color edits (UnifiedUiModelLogic.PrepareNested) and multilingual
         // text edits {"Text": {"en-US": "Start"}} at any depth ({"Title": {"Text": {...}}} for text parts); a plain
         // string on a MultilingualText property is refused so a caller cannot write one language believing all were set.
-        internal static (JsonObject Plain, List<TextEdit> Texts) SplitProperties(Type type, JsonObject changes)
+        internal static (UnifiedObject Plain, List<TextEdit> Texts) SplitProperties(Type type, UnifiedObject changes)
         {
             var texts = new List<TextEdit>();
             var plain = SplitTexts(type, changes, Array.Empty<string>(), texts);
             if (texts.Count > 50) throw new ArgumentException("At most 50 multilingual entries per request.");
             return (plain, texts);
         }
-        private static JsonObject SplitTexts(Type type, JsonObject changes, string[] path, List<TextEdit> texts)
+        private static UnifiedObject SplitTexts(Type type, UnifiedObject changes, string[] path, List<TextEdit> texts)
         {
             if (path.Length > 6) throw new ArgumentException("Nested property depth exceeds 6.");
-            var plain = new JsonObject();
+            var plain = new UnifiedObject();
             foreach (var change in changes)
             {
                 var property = UnifiedUiModelLogic.FindProperty(type, change.Key);
                 var name = string.Join(".", path.Concat(new[] { change.Key }));
                 if (property?.PropertyType.Name == "MultilingualText")
                 {
-                    var languages = change.Value as JsonObject ?? throw new ArgumentException(name + " is a MultilingualText: pass {\"<culture>\": \"text\"} per language.");
+                    var languages = change.Value as UnifiedObject ?? throw new ArgumentException(name + " is a MultilingualText: pass {\"<culture>\": \"text\"} per language.");
                     if (languages.Count == 0) throw new ArgumentException(name + " needs at least one culture entry.");
                     foreach (var language in languages)
                     {
                         if (string.IsNullOrWhiteSpace(language.Key) || language.Key.Length > 16) throw new ArgumentException("Culture name required for " + name + ".");
-                        var text = language.Value is JsonValue v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException(name + "." + language.Key + " must be a string (empty clears).");
+                        var text = UnifiedAccess.TryString(language.Value, out var s) ? s : throw new ArgumentException(name + "." + language.Key + " must be a string (empty clears).");
                         texts.Add(new TextEdit { Path = path, Property = change.Key, Culture = language.Key, Text = text });
                     }
                     continue;
                 }
                 // Descend into parts so texts nested in Title/Label/Caption parts are split out too; the rest stays a nested edit.
-                if (property != null && change.Value is JsonObject nested && Kind(property) == "part")
+                if (property != null && change.Value is UnifiedObject nested && Kind(property) == "part")
                 {
                     var rest = SplitTexts(property.PropertyType, nested, path.Concat(new[] { change.Key }).ToArray(), texts);
                     if (rest.Count > 0) plain[change.Key] = rest;
                     continue;
                 }
                 plain[change.Key] = change.Value?.DeepClone();
+                UnifiedAccess.CopyScalar(changes, plain, change.Key);
             }
             return plain;
         }
@@ -197,9 +210,9 @@ namespace TiaMcpServer.Siemens
         }
 
         // Compact list row: identity plus the geometry every visible item shares.
-        internal static JsonObject ListRow(object item, int index)
+        internal static UnifiedObject ListRow(object item, int index)
         {
-            var row = new JsonObject { ["index"] = index, ["name"] = UnifiedUiModelLogic.FindProperty(item.GetType(), "Name")?.GetValue(item)?.ToString(), ["type"] = item.GetType().Name, ["group"] = Group(item.GetType()) };
+            var row = new UnifiedObject { ["index"] = index, ["name"] = UnifiedUiModelLogic.FindProperty(item.GetType(), "Name")?.GetValue(item)?.ToString(), ["type"] = item.GetType().Name, ["group"] = Group(item.GetType()) };
             foreach (var name in new[] { "Left", "Top", "Width", "Height", "Visible", "Enabled", "TabIndex" })
             {
                 var p = UnifiedUiModelLogic.FindProperty(item.GetType(), name);

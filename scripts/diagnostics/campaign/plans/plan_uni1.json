@@ -416,6 +416,10 @@
 "buttonName": "Btn",
 "tagName": "MCP_Run"
 },
+"applicability": {
+"20": {"applicable": false, "reason": "The official V20 HmiButton API has no PressedStateTags member."},
+"21": {"applicable": true, "reason": "The official V21 HmiButton API exposes PressedStateTags."}
+},
 "note": "",
 "expect": "any",
 "keys": []

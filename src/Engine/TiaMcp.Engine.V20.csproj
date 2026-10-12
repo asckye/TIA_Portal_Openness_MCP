@@ -199,4 +199,23 @@
     <Compile Include="../Shared/Host/ExportTools.cs" Link="Shared/Host/ExportTools.cs" />
     <Compile Include="../Shared/PlcToolContract.cs" Link="Shared/PlcToolContract.cs" />
   </ItemGroup>
+<ItemGroup>
+    <Compile Include="../Shared/UnifiedHmiTools.cs" />
+    <Compile Include="../Shared/UnifiedHmiGroupsTools.cs" />
+    <Compile Include="../Shared/UnifiedScreenItemsTools.cs" />
+    <Compile Include="../Shared/HmiInspectionTools.cs" />
+    <Compile Include="../Shared/UnifiedHmiService.cs" />
+    <Compile Include="../Shared/UnifiedHmiGroupsService.cs" />
+    <Compile Include="../Shared/UnifiedScreenItemsService.cs" />
+    <Compile Include="../Shared/HmiInspectionService.cs" />
+    <Compile Include="../Shared/UnifiedHmiPortService.cs" />
+    <Compile Include="../Shared/UnifiedHmiPropertyPolicy.cs" />
+</ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Adapters/Native/Hmi/UnifiedMultilingualText.cs" />
+    <Compile Include="../Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" />
+    <Compile Include="../Adapters/Native/Hmi/UnifiedUiModelLogic.cs" />
+    <Compile Include="../Adapters/Native/Hmi/HmiEventAccess.cs" />
+    <Compile Include="../Shared/UnifiedHmiManagedValues.cs" />
+  </ItemGroup>
 </Project>

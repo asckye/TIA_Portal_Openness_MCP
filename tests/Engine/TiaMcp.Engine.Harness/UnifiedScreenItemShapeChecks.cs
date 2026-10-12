@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Web.Script.Serialization;
 
-// Native members used by the Unified screen item family (Siemens/Services/UnifiedScreenItemsService.cs), verified against the installed
+// Native members used by the Unified screen item family (Adapters/Native/Hmi/UnifiedScreenItemsAdapter.cs), verified against the installed
 // API, plus the engine's own reflective catalog run against that API so every concrete item type is accounted for.
 // Native catalog nodes are read through ToJsonString(); registered tools expose the shared V4 envelope.
 internal static class UnifiedScreenItemShapeChecks

@@ -30,9 +30,17 @@ internal static class UnifiedHmiDomainShapeChecks
             var toolTarget = provider.GetService(tools);
             check(target != null && toolTarget != null && ReferenceEquals(target, provider.GetService(service))
                 && ReferenceEquals(toolTarget, provider.GetService(tools)), domain.Name + " singleton registration");
-            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+            bool ported = new[] { "UnifiedHmi", "UnifiedHmiGroups", "UnifiedScreenItems" }.Contains(domain.Name);
+            var bridge = server.GetType("TiaMcpServer.ModelContextProtocol.HardwareAddressWorkerBridge", true)!;
+            check((ported ? service.BaseType!.GetField("_call", all)!.GetValue(target) is Delegate call
+                    && Equals(call, bridge.GetField("Call", all)!.GetValue(null))
+                    && service.BaseType!.GetField("_identity", all)!.GetValue(target) is Delegate identity
+                    && Equals(identity, bridge.GetField("ProjectIdentity", all)!.GetValue(null))
+                    && !service.GetFields(all).Any(field => field.FieldType == contract)
+                    : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                 && ReferenceEquals(tools.GetField("_service", all)!.GetValue(toolTarget), target),
-                domain.Name + " tools share the kernel through their service");
+                domain.Name + (ported ? " tools share the typed worker bridge through their service"
+                    : " tools share the kernel through their service"));
             foreach (var type in new[] { service, tools })
                 check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
                     type.Name + " is sealed and non-disposable");

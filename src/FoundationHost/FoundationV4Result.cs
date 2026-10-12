@@ -174,10 +174,10 @@ internal static class FoundationV4Result
         IReadOnlyDictionary<string, JsonElement>? args = null)
     {
         string? usageName = (string?)raw?["usage"]?["toolName"];
-        bool hostUsage = usageName != null && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(usageName)
+        bool portedUsage = usageName != null && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(usageName)
             && TiaMcpServer.ModelContextProtocol.ToolExecution.Table.TryGetValue(usageName, out var execution)
-            && execution == "host";
-        var data = name == "GetToolUsage" && ((string?)raw?["usage"]?["profile"] == "full-engine" || hostUsage)
+            && (execution == "host" || execution == "foundation");
+        var data = name == "GetToolUsage" && ((string?)raw?["usage"]?["profile"] == "full-engine" || portedUsage)
             ? raw!.DeepClone().AsObject() : Object(raw);
         // Collapse the legacy wrapper while retaining all domain and candidate evidence.
         if (data["data"] is JsonObject nested)

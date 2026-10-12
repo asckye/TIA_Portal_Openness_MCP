@@ -1,4 +1,5 @@
 using ProjectArchive = TiaMcp.Adapters.Native.Session.ProjectArchive;
+using HmiEventAccess = TiaMcpServer.Siemens.HmiEventAccess;
 using TiaMcp.Adapters.Native.Hmi;
 using System;
 using System.IO;

@@ -5992,6 +5992,38 @@
         ]
       },
       {
+        "family": "F26",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyUnifiedHmiLayout",
+          "ApplyUnifiedHmiScreenDesign",
+          "ApplyUnifiedHmiTheme",
+          "BindUnifiedHmiTagDynamization",
+          "DeleteEmptyUnifiedHmiScreenGroup",
+          "DeleteUnifiedHmiButtonEvent",
+          "DeleteUnifiedHmiDynamization",
+          "DescribeUnifiedHmiButtonEventScript",
+          "DescribeUnifiedScreenItemType",
+          "EnsureUnifiedHmiButtonAction",
+          "EnsureUnifiedHmiButtonEventHandler",
+          "EnsureUnifiedHmiConnection",
+          "EnsureUnifiedHmiDynamization",
+          "EnsureUnifiedHmiScreen",
+          "EnsureUnifiedHmiScreenItem",
+          "EnsureUnifiedHmiTag",
+          "EnsureUnifiedHmiTagTable",
+          "GetUnifiedHmiButtonEvent",
+          "GetUnifiedHmiDynamization",
+          "GetUnifiedHmiTexts",
+          "ListUnifiedHmiApiTypes",
+          "ManageUnifiedHmiGroup",
+          "ManageUnifiedScreenItem",
+          "SetUnifiedHmiButtonEventScriptCode",
+          "SetUnifiedHmiRuntimeState"
+        ]
+      },
+      {
         "family": "F25",
         "state": "current",
         "l5": "NOT RUN",

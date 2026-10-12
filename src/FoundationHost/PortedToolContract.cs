@@ -26,7 +26,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
+        PortedFamilies.All.Where(family => (family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release));
     internal static McpServerTool Wrap(FoundationTool tool)
     {
         string? candidate = tool.ProtocolTool.Name switch {
@@ -116,6 +116,8 @@ internal static class PortedToolContract
         "RunToolTransaction" => new[] { "engineering-services.BeginEngineeringTransaction", "engineering-services.ReadEngineeringTransaction", "engineering-services.CommitEngineeringTransaction", "engineering-services.DisposeEngineeringTransaction", "ReadState" },
         "ManageProjectLanguage" or "ExportProjectTexts" or "ImportProjectTexts" or "CompareLibraries" or "CompareProjects" or "GetProjectSettings" or "GetObjectIdentifier" or "ShowObjectInEditor" or "ManageProjectCompilationSettings" => new[] { "engineering-services.ExecuteEngineeringServices", "ReadState" },
         "GetHmiProgramInfo" or "DescribeHmiSoftware" or "DescribeHmiScreen" or "DescribeHmiTagTable" or "DescribeHmiTag" or "DescribeHmiScreenItem" or "ListHmiScreens" or "ListHmiTagTables" or "ListHmiTags" or "ListHmiConnections" or "ExportHmiScreen" or "ExportHmiTagTable" or "ExportHmiConnection" or "ExportHmiProgram" or "ImportHmiScreen" or "ImportHmiTagTable" or "ImportHmiConnection" or "ImportHmiScreensFromDirectory" or "ImportHmiTagTablesFromDirectory" or "GetHmiScreenSnapshot" or "ListHmiScreenPaths" or "DeleteHmiTag" => new[] { "hmi-generic.ExecuteHmi", "ReadState" },
+        "ApplyUnifiedHmiLayout" or "ApplyUnifiedHmiScreenDesign" or "ApplyUnifiedHmiTheme" or "BindUnifiedHmiButtonPressedTag" or "BindUnifiedHmiTagDynamization" or "DeleteEmptyUnifiedHmiScreenGroup" or "DeleteUnifiedHmiButtonEvent" or "DeleteUnifiedHmiDynamization" or "DescribeUnifiedHmiButtonEventScript" or "EnsureUnifiedHmiButtonAction" or "EnsureUnifiedHmiButtonEventHandler" or "EnsureUnifiedHmiConnection" or "EnsureUnifiedHmiDynamization" or "EnsureUnifiedHmiScreen" or "EnsureUnifiedHmiScreenItem" or "EnsureUnifiedHmiTag" or "EnsureUnifiedHmiTagTable" or "GetUnifiedHmiButtonEvent" or "GetUnifiedHmiDynamization" or "GetUnifiedHmiTexts" or "ManageUnifiedHmiGroup" or "ManageUnifiedScreenItem" or "SetUnifiedHmiButtonEventScriptCode" or "SetUnifiedHmiRuntimeState" => new[] { "hmi-unified.ExecuteUnifiedHmi", "ReadState" },
+        "ListUnifiedHmiApiTypes" or "DescribeUnifiedScreenItemType" => new[] { "hmi-unified.ExecuteUnifiedHmiMetadata" },
         "GetClassicHmiScreenTree" or "ManageClassicHmiScreenObject" or "ManageClassicHmiFolder" or "ManageClassicHmiGraphic" or "ListClassicHmiScripts" or "ManageClassicHmiScript" or "ManageClassicHmiCycle" or "ManageClassicHmiTextGraphicList" or "GetClassicHmiGlobalization" or "ListClassicHmiFaceplates" => new[] { "hmi-classic.ExecuteHmi", "ReadState" },
         "DescribeObject" or "DescribeObjectProperty" or "DescribeService" or "GetObjectProperty" or "ListObjectChildren" or "InvokeObject" or "InvokeService" => new[] { "openness-reflection.ExecuteOpennessReflection", "ReadState" },
         "CreatePlcBlockGroup" or "CreatePlcTypeGroup" or "DeleteEmptyPlcBlockGroup" or "DeletePlcBlock" or "DeletePlcTagTable" or "DeletePlcType" or "ManagePlcBlockProtection" or "ManagePlcUserGroup" or "MovePlcBlockToGroup" or "ListPlcSystemGroups" => new[] { "plc-organisation.ExecutePlcOrganisation", "ReadState" },
@@ -209,6 +211,19 @@ internal sealed partial class FoundationTool
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         var b4 = new PlcSoftwareRequest { Operation = tool.Name, Action = actionName };
         string Text(string name) => arguments.TryGetValue(name, out var value) ? value.GetString() ?? "" : "";
+        if (family.Name == "F26")
+        {
+            if (UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, Text("itemType"), Text("dynamizationType")) != null)
+                return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            foreach (var name in new[] { "design", "layout" })
+                if (arguments.TryGetValue(name, out var design) && design.ValueKind == JsonValueKind.Object
+                    && design.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
+                    foreach (var item in items.EnumerateArray())
+                        if (item.ValueKind == JsonValueKind.Object && item.TryGetProperty("type", out var type)
+                            && type.ValueKind == JsonValueKind.String
+                            && UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, type.GetString()!) != null)
+                            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        }
         if (family.Name == "F07" && SecurityCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             tool.Name == "ManageSyslogServers" ? (Text("scope").Length == 0 ? "project" : Text("scope")) : scope,
             Text("category"), Text("filePath")) != null)
@@ -249,7 +264,8 @@ internal sealed partial class FoundationTool
         // the same lane as the eventual request so approval cannot race a rebind.
         using var lane = await AcquireLane(token);
         ActivateLane(lane);
-        var state = (tool.Name == "ManagePlcGitRepository" || tool.Name == "BuildDeviceAmlDocument" || tool.Name == "PlanHardwareNetworkConfiguration" || tool.Name == "PlanOnlineReadOnlyMonitoring" || tool.Name == "PlanOnlineReadOnlyDataProvider") ? null : await worker.Call("ReadState", new JsonObject(), token);
+        var state = PortedToolContract.WiredOperations(tool.Name).Contains("ReadState", StringComparer.Ordinal)
+            ? await worker.Call("ReadState", new JsonObject(), token) : null;
         Func<bool> hasProject = () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]);
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
         bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject();
@@ -299,6 +315,10 @@ internal sealed partial class FoundationTool
             "HmiDescribeTools" => new HmiDescribeTools(new HmiDescribeService(call, identity)),
             "HmiExchangeTools" => new HmiExchangeTools(new HmiExchangeService(call, identity)),
             "HmiInspectionPortTools" => new HmiInspectionPortTools(new HmiInspectionPortService(call, identity)),
+            "UnifiedHmiTools" => new UnifiedHmiTools(new UnifiedHmiService(call, identity)),
+            "UnifiedHmiGroupsTools" => new UnifiedHmiGroupsTools(new UnifiedHmiGroupsService(call, identity)),
+            "UnifiedScreenItemsTools" => new UnifiedScreenItemsTools(new UnifiedScreenItemsService(call, identity)),
+            "HmiInspectionTools" => new HmiInspectionTools(new HmiInspectionService(call, identity)),
             "HmiTagDeletionTools" => new HmiTagDeletionTools(new HmiTagDeletionService(call, identity)),
             "ClassicHmiFoldersTools" => new ClassicHmiFoldersTools(new ClassicHmiFoldersService(call, identity)),
             "MotionProDiagClassicHmiTools" => new MotionProDiagClassicHmiTools(new MotionProDiagClassicHmiService(call, identity)),

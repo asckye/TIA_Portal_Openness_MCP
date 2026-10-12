@@ -134,6 +134,8 @@ namespace TiaMcp.WorkerChannel
             ["hardware-network.ReadHardwareOwnerCandidates"] = "default",
             ["hardware-network.ReadHardwareWhitelistedServices"] = "default",
             ["hmi-classic.ExecuteHmi"] = "default",
+            ["hmi-unified.ExecuteUnifiedHmi"] = "default",
+            ["hmi-unified.ExecuteUnifiedHmiMetadata"] = "default",
             ["hmi-generic.ExecuteHmi"] = "default",
             ["libraries.ExecuteLibrary"] = "default",
             ["openness-reflection.ExecuteOpennessReflection"] = "default",

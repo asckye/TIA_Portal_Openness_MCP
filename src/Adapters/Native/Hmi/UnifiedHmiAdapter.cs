@@ -1,28 +1,14 @@
-using UnifiedHmiPlcPartnerInfo = TiaMcpServer.Siemens.Portal.UnifiedHmiPlcPartnerInfo;
-using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
-using Microsoft.Extensions.Logging;
+#if HMI_UNIFIED
 using Siemens.Engineering;
-using Siemens.Engineering.Cax;
-using Siemens.Engineering.Compiler;
-using Siemens.Engineering.Connection;
-using Siemens.Engineering.Download;
-using Siemens.Engineering.Download.Configurations;
-using Siemens.Engineering.Hmi;
-using Siemens.Engineering.Online;
-using Siemens.Engineering.Online.Configurations;
-using Siemens.Engineering.SW.Alarm;
-using Siemens.Engineering.SW.OpcUa;
-using Siemens.Engineering.HmiUnified;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.Multiuser;
-using Siemens.Engineering.Safety;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.HmiUnified;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Plc;
+using static TiaMcp.Adapters.Native.Hmi.UnifiedHmiAccess;
+using System.Collections;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -32,33 +18,31 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Text.Json.Nodes;
 using System.Xml.Linq;
-using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Adapters.Native.Hmi
 {
-    internal sealed class UnifiedHmiService
+    internal sealed class UnifiedHmiAdapter
     {
-        private readonly IEngineeringSession _session;
+        private readonly HmiSession _session;
 
-        public UnifiedHmiService(IEngineeringSession session) => _session = session;
+        public UnifiedHmiAdapter(HmiSession session) => _session = session;
 
-        public ResponseMessage EnsureStartStopUnifiedHmi(
+        public HmiMessage EnsureStartStopUnifiedHmi(
             string hmiSoftwarePath,
             string screenName = "Main",
-            string tagTableName = "默认变量表",
+            string tagTableName = UnifiedHmiDefaults.DefaultTagTableName,
             string plcName = "PLC_1",
             string connectionName = "HMI_Connection_1")
         {
-            var meta = ResponseMeta.Basic(DateTime.Now, false);
+            var meta = HmiMeta.Basic(false);
 
-            var steps = new JsonArray();
+            var steps = new HmiArray();
             meta["steps"] = steps;
 
             void Step(string name, bool ok, string? detail = null)
             {
-                var o = new JsonObject
+                var o = new HmiObject
                 {
                     ["step"] = name,
                     ["ok"] = ok
@@ -97,7 +81,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     meta["v4Rejection"] = "PROJECT_NOT_BOUND";
                     Step("precheck", false, "Project is null");
-                    return new ResponseMessage { Message = "Project is null", Meta = meta };
+                    return new HmiMessage { Message = "Project is null", Meta = meta };
                 }
 
                 var sc = _session.GetSoftwareContainer(hmiSoftwarePath);
@@ -105,7 +89,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     meta["v4Rejection"] = "NOT_FOUND";
                     Step("resolveSoftware", false, $"SoftwareContainer not found at '{hmiSoftwarePath}'");
-                    return new ResponseMessage { Message = "HMI software not found", Meta = meta };
+                    return new HmiMessage { Message = "HMI software not found", Meta = meta };
                 }
 
                 var sw = sc.Software;
@@ -117,7 +101,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     meta["v4Rejection"] = "NOT_FOUND";
                     Step("findScreen", false, $"Screen '{screenName}' not found");
-                    return new ResponseMessage { Message = "Screen not found", Meta = meta };
+                    return new HmiMessage { Message = "Screen not found", Meta = meta };
                 }
                 Step("findScreen", true, screen.GetType().FullName);
 
@@ -126,7 +110,7 @@ namespace TiaMcpServer.Siemens.Services
                 {
                     meta["v4Rejection"] = "NOT_FOUND";
                     Step("findTagTable", false, $"TagTable '{tagTableName}' not found");
-                    return new ResponseMessage { Message = "Tag table not found", Meta = meta };
+                    return new HmiMessage { Message = "Tag table not found", Meta = meta };
                 }
                 Step("findTagTable", true, tagTable.GetType().FullName);
 
@@ -149,7 +133,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (tagsComp == null)
                 {
                     Step("resolveTagComposition", false, "tagTable.Tags not found");
-                    return new ResponseMessage { Message = "Tag composition not found", Meta = meta };
+                    return new HmiMessage { Message = "Tag composition not found", Meta = meta };
                 }
                 Step("resolveTagComposition", true, tagsComp.GetType().FullName);
 
@@ -159,7 +143,7 @@ namespace TiaMcpServer.Siemens.Services
                     if (TimedOut())
                     {
                         Step("timeout", false, "Timeout during tag ensure");
-                        return new ResponseMessage { Message = "Timeout", Meta = meta };
+                        return new HmiMessage { Message = "Timeout", Meta = meta };
                     }
                     try
                     {
@@ -168,7 +152,7 @@ namespace TiaMcpServer.Siemens.Services
                         var exists = FindExistingByName(tagsComp, tn);
                         if (exists != null)
                         {
-                            var wr = new JsonArray();
+                            var wr = new HmiArray();
                             BindUnifiedHmiTagToPlcSymbol(exists, connName, plcName, tn, "Bool", wr);
                             Step($"tag:{tn}", true, "exists");
                             continue;
@@ -196,7 +180,7 @@ namespace TiaMcpServer.Siemens.Services
                                 var existing = FindExistingByName(tagsComp, tn);
                                 if (existing != null)
                                 {
-                                    var wrU = new JsonArray();
+                                    var wrU = new HmiArray();
                                     BindUnifiedHmiTagToPlcSymbol(existing, connName, plcName, tn, "Bool", wrU);
                                     Step($"tag:{tn}", true, "exists");
                                     continue;
@@ -213,7 +197,7 @@ namespace TiaMcpServer.Siemens.Services
                         }
 
                         _session.TrySetProperty(tagObj, "Name", tn);
-                        var wrNew = new JsonArray();
+                        var wrNew = new HmiArray();
                         BindUnifiedHmiTagToPlcSymbol(tagObj, connName, plcName, tn, "Bool", wrNew);
 
                         Step($"tag:{tn}", true, "created");
@@ -229,7 +213,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (itemsComp == null)
                 {
                     Step("resolveScreenItems", false, "screen.ScreenItems not found");
-                    return new ResponseMessage { Message = "ScreenItems not found", Meta = meta };
+                    return new HmiMessage { Message = "ScreenItems not found", Meta = meta };
                 }
                 Step("resolveScreenItems", true, itemsComp.GetType().FullName);
 
@@ -637,7 +621,7 @@ namespace TiaMcpServer.Siemens.Services
 
                 // envelope: legacy-single-verdict
                 meta["success"] = true;
-                return new ResponseMessage
+                return new HmiMessage
                 {
                     Message = "Unified HMI start/stop skeleton created (best-effort).",
                     Meta = meta
@@ -646,11 +630,11 @@ namespace TiaMcpServer.Siemens.Services
             catch (Exception ex)
             {
                 Step("exception", false, ex.ToString());
-                return new ResponseMessage { Message = "Failed creating HMI skeleton", Meta = meta };
+                return new HmiMessage { Message = "Failed creating HMI skeleton", Meta = meta };
             }
         }
 
-        public ResponseMessage EnsureUnifiedHmiScreen(string hmiSoftwarePath, string screenName, uint width = 0, uint height = 0)
+        public HmiMessage EnsureUnifiedHmiScreen(string hmiSoftwarePath, string screenName, uint width = 0, uint height = 0)
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiScreen", meta =>
             {
@@ -678,7 +662,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         }
 
-        public ResponseMessage EnsureUnifiedHmiTagTable(string hmiSoftwarePath, string tagTableName)
+        public HmiMessage EnsureUnifiedHmiTagTable(string hmiSoftwarePath, string tagTableName)
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiTagTable", meta =>
             {
@@ -711,7 +695,7 @@ namespace TiaMcpServer.Siemens.Services
             string plcName,
             string plcTagSymbol,
             string hmiDataType,
-            JsonArray writeResults,
+            HmiArray writeResults,
             string address = "")
         {
             bool Set(string label, object? value, params string[] names)
@@ -780,7 +764,7 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        private void TrySetUnifiedHmiTagRuntimeAddress(object tag, string runtimeAddress, JsonArray writeResults)
+        private void TrySetUnifiedHmiTagRuntimeAddress(object tag, string runtimeAddress, HmiArray writeResults)
         {
             var addressNames = new[]
             {
@@ -844,7 +828,7 @@ namespace TiaMcpServer.Siemens.Services
         /// WinCC Unified HMI tags expose addressing mode as enums; writing display strings (e.g. "SymbolicAccess")
         /// via generic SetProperty fails silently and leaves the UI on default Absolute with empty Address/PLC tag.
         /// </summary>
-        private void TrySetUnifiedHmiTagAddressingModeEnum(object tag, bool symbolic, JsonArray writeResults)
+        private void TrySetUnifiedHmiTagAddressingModeEnum(object tag, bool symbolic, HmiArray writeResults)
         {
             var ok = TrySetUnifiedHmiTagAccessModeByEnumScan(tag, symbolic);
             if (!ok)
@@ -921,7 +905,7 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        private void TryBindUnifiedHmiTagPlcSymbolicPaths(object tag, string normalizedTag, JsonArray writeResults)
+        private void TryBindUnifiedHmiTagPlcSymbolicPaths(object tag, string normalizedTag, HmiArray writeResults)
         {
             if (string.IsNullOrWhiteSpace(normalizedTag)) return;
             var names = new[]
@@ -1000,7 +984,7 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        public ResponseMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "PLC_1", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
+        public HmiMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "PLC_1", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiTag", meta =>
             {
@@ -1020,7 +1004,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
 
                 if (tag == null) throw new InvalidOperationException("Tag create/find returned null.");
-                var writeResults = new JsonArray();
+                var writeResults = new HmiArray();
                 var targetPlcTag = string.IsNullOrWhiteSpace(plcTag) ? tagName : plcTag;
                 BindUnifiedHmiTagToPlcSymbol(tag, connectionName, plcName, targetPlcTag, hmiDataType, writeResults, address);
 
@@ -1045,7 +1029,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe EnsureUnifiedHmiConnection(string hmiSoftwarePath, string connectionName = "HMI_Connection_1", string plcName = "PLC_1")
+        public HmiDescribe EnsureUnifiedHmiConnection(string hmiSoftwarePath, string connectionName = "HMI_Connection_1", string plcName = "PLC_1")
         {
             var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
             var connections = TryGetPropertyValue(sw, "Connections");
@@ -1070,7 +1054,7 @@ namespace TiaMcpServer.Siemens.Services
             TryConfigureUnifiedHmiCommunicationDriver(connection, plcName);
             ValidateUnifiedHmiCommunicationDriver(connection, partner.Family);
 
-            return new ModelContextProtocol.ResponseObjectDescribe
+            return new HmiDescribe
             {
                 ObjectKind = "HmiConnection",
                 ObjectPath = $"{hmiSoftwarePath}:{connectionName}",
@@ -1080,7 +1064,7 @@ namespace TiaMcpServer.Siemens.Services
             };
         }
 
-        public ResponseMessage EnsureUnifiedHmiScreenItem(string hmiSoftwarePath, string screenName, string itemName, string itemType = "Button", int left = 0, int top = 0, uint width = 120, uint height = 40, string text = "")
+        public HmiMessage EnsureUnifiedHmiScreenItem(string hmiSoftwarePath, string screenName, string itemName, string itemType = "Button", int left = 0, int top = 0, uint width = 120, uint height = 40, string text = "")
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiScreenItem", meta =>
             {
@@ -1114,7 +1098,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         }
 
-        public ResponseMessage ReadUnifiedHmiTexts(string hmiSoftwarePath, string screenName, string itemName, string textProperty)
+        public HmiMessage ReadUnifiedHmiTexts(string hmiSoftwarePath, string screenName, string itemName, string textProperty)
         {
             return _session.RunHmiStepTool("GetUnifiedHmiTexts", meta =>
             {
@@ -1128,7 +1112,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         }
 
-        public ResponseMessage ApplyUnifiedHmiScreenDesignJson(string hmiSoftwarePath, string screenName, string designJson, bool strict = true)
+        public HmiMessage ApplyUnifiedHmiScreenDesignJson(string hmiSoftwarePath, string screenName, string designJson, bool strict = true)
         {
             return _session.RunHmiStepTool("ApplyUnifiedHmiScreenDesign", meta =>
             {
@@ -1137,32 +1121,32 @@ namespace TiaMcpServer.Siemens.Services
                     throw new InvalidOperationException("designJson is empty.");
                 }
 
-                var root = JsonNode.Parse(designJson) as JsonObject
+                var root = UnifiedHmiAccess.Parse(designJson) as HmiObject
                     ?? throw new InvalidOperationException("designJson root must be a JSON object.");
 
                 var screen = _session.ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
                 var items = TryGetPropertyValue(screen, "ScreenItems")
                     ?? throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
-                var changed = new JsonArray();
-                var itemResults = new JsonArray();
+                var changed = new HmiArray();
+                var itemResults = new HmiArray();
                 meta["itemResults"] = itemResults;
-                var failed = new JsonArray();
-                var textReadback = new JsonArray();
+                var failed = new HmiArray();
+                var textReadback = new HmiArray();
                 meta["textReadback"] = textReadback;
                 meta["persistence"] = "Not saved by this tool; partial changes may remain in the open project on failure.";
 
-                if (root["screen"] is JsonObject screenProps)
+                if (root["screen"] is HmiObject screenProps)
                 {
                     ApplyJsonProperties(screen, screenProps, failed, "screen");
                 }
 
-                var itemArray = root["items"] as JsonArray
+                var itemArray = root["items"] as HmiArray
                     ?? throw new InvalidOperationException("designJson.items must be an array.");
 
-                foreach (var itemNode in itemArray.OfType<JsonObject>())
+                foreach (var itemNode in itemArray.OfType<HmiObject>())
                 {
-                    var name = JsonString(itemNode, "name");
+                    var name = HmiString(itemNode, "name");
                     if (string.IsNullOrWhiteSpace(name))
                     {
                         failed.Add("item without name skipped");
@@ -1171,13 +1155,13 @@ namespace TiaMcpServer.Siemens.Services
 
                     var failuresBeforeItem = failed.Count;
                     // envelope: legacy-verdict-last
-                    var itemStatus = new JsonObject { ["name"] = name, ["created"] = false, ["mayHaveChanged"] = false, ["success"] = false };
+                    var itemStatus = new HmiObject { ["name"] = name, ["created"] = false, ["mayHaveChanged"] = false, ["success"] = false };
                     itemResults.Add(itemStatus);
                     try
                     {
                         var hasText = UnifiedMultilingualText.ReadRequest(itemNode, out var text);
-                        if (hasText) System.Globalization.CultureInfo.GetCultureInfo(JsonString(itemNode, "culture") ?? "zh-CN");
-                        var typeHint = JsonString(itemNode, "type");
+                        if (hasText) System.Globalization.CultureInfo.GetCultureInfo(HmiString(itemNode, "culture") ?? "zh-CN");
+                        var typeHint = HmiString(itemNode, "type");
                         if (string.IsNullOrWhiteSpace(typeHint)) typeHint = "Rectangle";
 
                         var item = _session.FindExistingByName(items, name!);
@@ -1194,25 +1178,25 @@ namespace TiaMcpServer.Siemens.Services
                         if (item == null) throw new InvalidOperationException($"Create/find returned null for '{name}'.");
 
                         if (hasText)
-                            UnifiedMultilingualText.Validate(item, JsonString(itemNode, "textProperty") is string tp && !string.IsNullOrWhiteSpace(tp) ? tp : "Text",
-                                JsonString(itemNode, "culture") ?? "zh-CN");
+                            UnifiedMultilingualText.Validate(item, HmiString(itemNode, "textProperty") is string tp && !string.IsNullOrWhiteSpace(tp) ? tp : "Text",
+                                HmiString(itemNode, "culture") ?? "zh-CN");
 
                         itemStatus["mayHaveChanged"] = true;
-                        if (itemNode["left"] != null) _session.TrySetProperty(item, "Left", JsonObjectValue(itemNode["left"]));
-                        if (itemNode["top"] != null) _session.TrySetProperty(item, "Top", JsonObjectValue(itemNode["top"]));
-                        if (itemNode["width"] != null) _session.TrySetProperty(item, "Width", JsonObjectValue(itemNode["width"]));
-                        if (itemNode["height"] != null) _session.TrySetProperty(item, "Height", JsonObjectValue(itemNode["height"]));
+                        if (itemNode["left"] != null) _session.TrySetProperty(item, "Left", HmiObjectValue(itemNode["left"]));
+                        if (itemNode["top"] != null) _session.TrySetProperty(item, "Top", HmiObjectValue(itemNode["top"]));
+                        if (itemNode["width"] != null) _session.TrySetProperty(item, "Width", HmiObjectValue(itemNode["width"]));
+                        if (itemNode["height"] != null) _session.TrySetProperty(item, "Height", HmiObjectValue(itemNode["height"]));
 
-                        if (itemNode["properties"] is JsonObject props)
+                        if (itemNode["properties"] is HmiObject props)
                         {
                             ApplyJsonProperties(item, props, failed, name!, typeHint ?? string.Empty);
                         }
 
                         if (hasText)
                         {
-                            var textTarget = JsonString(itemNode, "textProperty");
+                            var textTarget = HmiString(itemNode, "textProperty");
                             if (string.IsNullOrWhiteSpace(textTarget)) textTarget = "Text";
-                            var readback = UnifiedMultilingualText.WriteDetailed(item, textTarget!, text, JsonString(itemNode, "culture") ?? "zh-CN");
+                            var readback = UnifiedMultilingualText.WriteDetailed(item, textTarget!, text, HmiString(itemNode, "culture") ?? "zh-CN");
                             readback["name"] = name;
                             readback["languages"] = readback["after"]?.DeepClone();
                             textReadback.Add(readback);
@@ -1220,21 +1204,21 @@ namespace TiaMcpServer.Siemens.Services
                                 throw new InvalidOperationException(readback["error"]?.ToString() ?? "Text verification failed.");
                         }
 
-                        if (itemNode["font"] is JsonObject font)
+                        if (itemNode["font"] is HmiObject font)
                         {
                             var fontPart = TryGetPropertyValue(item, "Font");
                             if (fontPart != null) ApplyJsonProperties(fontPart, font, failed, name + ".Font");
                             else failed.Add($"{name}.Font: part not found");
                         }
 
-                        if (itemNode["content"] is JsonObject content)
+                        if (itemNode["content"] is HmiObject content)
                         {
                             var contentPart = TryGetPropertyValue(item, "Content");
                             if (contentPart != null) ApplyJsonProperties(contentPart, content, failed, name + ".Content");
                             else failed.Add($"{name}.Content: part not found");
                         }
 
-                        if (itemNode["padding"] is JsonObject padding)
+                        if (itemNode["padding"] is HmiObject padding)
                         {
                             var paddingPart = TryGetPropertyValue(item, "Padding");
                             if (paddingPart != null) ApplyJsonProperties(paddingPart, padding, failed, name + ".Padding");
@@ -1247,7 +1231,7 @@ namespace TiaMcpServer.Siemens.Services
                     catch (Exception ex)
                     {
                         itemStatus["error"] = (ex.InnerException ?? ex).Message;
-                        failed.Add($"{name} (textProperty={JsonString(itemNode, "textProperty") ?? "Text"}, culture={JsonString(itemNode, "culture") ?? "zh-CN"}): {ex.GetType().Name}: {ex.Message}");
+                        failed.Add($"{name} (textProperty={HmiString(itemNode, "textProperty") ?? "Text"}, culture={HmiString(itemNode, "culture") ?? "zh-CN"}): {ex.GetType().Name}: {ex.Message}");
                     }
                 }
 
@@ -1264,7 +1248,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         }
 
-        public ResponseMessage BindUnifiedHmiButtonPressedTag(string hmiSoftwarePath, string screenName, string buttonName, string tagName)
+        public HmiMessage BindUnifiedHmiButtonPressedTag(string hmiSoftwarePath, string screenName, string buttonName, string tagName)
         {
             return _session.RunHmiStepTool("BindUnifiedHmiButtonPressedTag", meta =>
             {
@@ -1350,7 +1334,7 @@ namespace TiaMcpServer.Siemens.Services
             return result;
         }
 
-        public ResponseMessage EnsureUnifiedHmiButtonEventHandler(string hmiSoftwarePath, string screenName, string buttonName, string eventType)
+        public HmiMessage EnsureUnifiedHmiButtonEventHandler(string hmiSoftwarePath, string screenName, string buttonName, string eventType)
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiButtonEventHandler", meta =>
             {
@@ -1394,36 +1378,36 @@ namespace TiaMcpServer.Siemens.Services
             static string eventValueToText(object value) => value.ToString() ?? string.Empty;
         }
 
-        public ModelContextProtocol.ResponseObjectDescribe DescribeUnifiedHmiButtonEventScript(string hmiSoftwarePath, string screenName, string buttonName, string eventType, int maxMembers = 200)
+        public HmiDescribe DescribeUnifiedHmiButtonEventScript(string hmiSoftwarePath, string screenName, string buttonName, string eventType, int maxMembers = 200)
         {
             try
             {
                 if (_session.IsProjectNull())
                 {
-                    throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
+                    throw new PlcSoftwareException("InvalidState", "Project is null");
                 }
 
                 var handler = ResolveHmiButtonEventHandlerOrThrow(hmiSoftwarePath, screenName, buttonName, eventType, createIfMissing: false);
                 var scriptProp = handler.GetType().GetProperty("Script", BindingFlags.Public | BindingFlags.Instance);
                 var script = scriptProp?.GetValue(handler);
 
-                var members = new List<ModelContextProtocol.ObjectMember>
+                var members = new List<OpennessMember>
                 {
-                    new ModelContextProtocol.ObjectMember
+                    new OpennessMember
                     {
                         Name = "HandlerType",
                         Kind = "Info",
                         Type = handler.GetType().FullName ?? handler.GetType().Name,
                         Signature = null
                     },
-                    new ModelContextProtocol.ObjectMember
+                    new OpennessMember
                     {
                         Name = "ScriptProperty",
                         Kind = "Info",
                         Type = scriptProp == null ? "missing" : $"{scriptProp.PropertyType.FullName}; CanRead={scriptProp.CanRead}; CanWrite={scriptProp.CanWrite}",
                         Signature = null
                     },
-                    new ModelContextProtocol.ObjectMember
+                    new OpennessMember
                     {
                         Name = "ScriptValue",
                         Kind = "Info",
@@ -1442,7 +1426,7 @@ namespace TiaMcpServer.Siemens.Services
                         {
                             foreach (var info in en.Cast<object>().Take(100))
                             {
-                                members.Add(new ModelContextProtocol.ObjectMember
+                                members.Add(new OpennessMember
                                 {
                                     Name = $"AttributeInfo:{TryGetPropertyValue(info, "Name") ?? info}",
                                     Kind = "AttributeInfo",
@@ -1464,7 +1448,7 @@ namespace TiaMcpServer.Siemens.Services
                         {
                             foreach (var info in en.Cast<object>().Take(100))
                             {
-                                members.Add(new ModelContextProtocol.ObjectMember
+                                members.Add(new OpennessMember
                                 {
                                     Name = $"HandlerAttributeInfo:{TryGetPropertyValue(info, "Name") ?? info}",
                                     Kind = "AttributeInfo",
@@ -1477,10 +1461,10 @@ namespace TiaMcpServer.Siemens.Services
                     catch /* swallow(probe-optional): Unavailable invocation metadata leaves the other script member descriptions intact. */ { }
                 }
 
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "OK",
-                    Meta = ResponseMeta.Unstamped(true, ("operationSuccess", true), ("exists", true)),
+                    Meta = UnifiedHmiAccess.Unstamped(true, ("operationSuccess", true), ("exists", true)),
                     ObjectKind = "HmiButtonEventScript",
                     ObjectPath = $"{hmiSoftwarePath}:{screenName}:{buttonName}:{eventType}.Script",
                     TypeName = script == null ? scriptProp?.PropertyType.FullName : script.GetType().FullName,
@@ -1489,21 +1473,21 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception ex)
             {
-                return new ModelContextProtocol.ResponseObjectDescribe
+                return new HmiDescribe
                 {
                     Message = "Event script read failed",
                     // envelope: legacy-multiple-dynamic-fields
-                    Meta = new JsonObject { ["success"] = false, ["operationSuccess"] = false,
-                        ["status"] = ex is PortalException pex ? pex.Code.ToString() : "ReadFailed",
+                    Meta = new HmiObject { ["success"] = false, ["operationSuccess"] = false,
+                        ["status"] = ex is PlcSoftwareException pex ? pex.Code : "ReadFailed",
                         ["error"] = (ex.InnerException ?? ex).Message },
                     ObjectKind = "HmiButtonEventScript",
                     ObjectPath = $"{hmiSoftwarePath}:{screenName}:{buttonName}:{eventType}.Script",
-                    Members = Array.Empty<ModelContextProtocol.ObjectMember>()
+                    Members = Array.Empty<OpennessMember>()
                 };
             }
         }
 
-        public ResponseMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath, string screenName, string buttonName, string eventType, string scriptCode, string globalDefinitionAreaScriptCode = "", bool async = false, bool syntaxCheck = false)
+        public HmiMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath, string screenName, string buttonName, string eventType, string scriptCode, string globalDefinitionAreaScriptCode = "", bool async = false, bool syntaxCheck = false)
         {
             return _session.RunHmiStepTool("SetUnifiedHmiButtonEventScriptCode", meta =>
             {
@@ -1558,8 +1542,8 @@ namespace TiaMcpServer.Siemens.Services
                             meta["syntaxCheckStatus"] = "ran";
                             meta["syntaxResultType"] = syntaxResult.GetType().FullName;
                             meta["syntaxResult"] = syntaxResult.ToString();
-                            meta["syntaxErrors"] = _session.ToJsonArray(syntaxErrors);
-                            meta["syntaxWarnings"] = _session.ToJsonArray(syntaxWarnings);
+                            meta["syntaxErrors"] = _session.ToHmiArray(syntaxErrors);
+                            meta["syntaxWarnings"] = _session.ToHmiArray(syntaxWarnings);
                             meta["syntaxErrorCount"] = syntaxErrors.Count;
                             meta["syntaxWarningCount"] = syntaxWarnings.Count;
                             meta["syntaxPropertyName"] = TryGetPropertyValue(syntaxResult, "PropertyName")?.ToString() ?? string.Empty;
@@ -1580,7 +1564,7 @@ namespace TiaMcpServer.Siemens.Services
 
                         // NonRecoverableException 不是「这一步没做成」，是 Portal 进程已经没了。
                         // 刚写进去的 ScriptCode 没保存就随进程消失，这时候再返回 Success 是在撒谎。
-                        if (ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(real))
+                        if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(real))
                         {
                             throw new InvalidOperationException(
                                 "SyntaxCheck killed the TIA Portal process (" + real.GetType().Name + "). " +
@@ -1596,7 +1580,7 @@ namespace TiaMcpServer.Siemens.Services
             });
         }
 
-        public ResponseMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string dynamizationType = "")
+        public HmiMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string dynamizationType = "")
         {
             return _session.RunHmiStepTool("EnsureUnifiedHmiDynamization", meta =>
             {
@@ -1669,7 +1653,7 @@ namespace TiaMcpServer.Siemens.Services
             return false;
         }
 
-        public ResponseMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName, string dataType = "Bool", string plcTag = "", string address = "")
+        public HmiMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName, string dataType = "Bool", string plcTag = "", string address = "")
         {
             return _session.RunHmiStepTool("BindUnifiedHmiTagDynamization", meta =>
             {
@@ -1726,13 +1710,13 @@ namespace TiaMcpServer.Siemens.Services
             var items = TryGetPropertyValue(screen, "ScreenItems");
             if (items == null)
             {
-                throw new PortalException(PortalErrorCode.NotFound, $"ScreenItems collection not found on screen '{screenName}'.");
+                throw new PlcSoftwareException("NotFound", $"ScreenItems collection not found on screen '{screenName}'.");
             }
 
             var item = HmiExactAccess.Named(items, itemName);
             if (item == null)
             {
-                throw new PortalException(PortalErrorCode.NotFound, $"Screen item '{itemName}' not found on screen '{screenName}'.");
+                throw new PlcSoftwareException("NotFound", $"Screen item '{itemName}' not found on screen '{screenName}'.");
             }
 
             return item;
@@ -1742,7 +1726,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var button = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, buttonName);
             var handlers = button.GetType().GetProperty("EventHandlers")?.GetValue(button)
-                ?? throw new PortalException(PortalErrorCode.NotFound, "EventHandlers not found on " + buttonName);
+                ?? throw new PlcSoftwareException("NotFound", "EventHandlers not found on " + buttonName);
             return HmiEventAccess.Resolve(handlers, eventType, createIfMissing);
         }
 
@@ -2540,7 +2524,7 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        private void ApplyJsonProperties(object target, JsonObject props, JsonArray failed, string path, string typeHint = "")
+        private void ApplyJsonProperties(object target, HmiObject props, HmiArray failed, string path, string typeHint = "")
         {
             foreach (var kv in props)
             {
@@ -2551,7 +2535,7 @@ namespace TiaMcpServer.Siemens.Services
                     continue;
                 }
 
-                var value = JsonObjectValue(kv.Value);
+                var value = HmiObjectValue(kv.Value);
                 if (_session.TrySetProperty(target, kv.Key, value)) continue;
                 if (TrySetEngineeringAttribute(target, kv.Key, value)) continue;
                 failed.Add($"{path}.{kv.Key}: property/attribute write failed");
@@ -2612,29 +2596,9 @@ namespace TiaMcpServer.Siemens.Services
             }
         }
 
-        private static string? JsonString(JsonObject obj, string propertyName)
-        {
-            var node = obj[propertyName];
-            if (node == null) return null;
-            if (node is JsonValue v && v.TryGetValue<string>(out var s)) return s;
-            return node.ToJsonString();
-        }
-
-        private static object? JsonObjectValue(JsonNode? node)
-        {
-            if (node == null) return null;
-            if (node is JsonValue value)
-            {
-                if (value.TryGetValue<string>(out var s)) return s;
-                if (value.TryGetValue<bool>(out var b)) return b;
-                if (value.TryGetValue<int>(out var i)) return i;
-                if (value.TryGetValue<long>(out var l)) return l;
-                if (value.TryGetValue<double>(out var d)) return d;
-                return value.ToJsonString();
-            }
-
-            return node.ToJsonString();
-        }
+        private static string? HmiString(HmiObject obj, string propertyName)
+            => obj[propertyName] is string text ? text : obj[propertyName] == null ? null : UnifiedHmiAccess.SerializeValue(obj[propertyName]);
+        private static object? HmiObjectValue(object? node) => node is HmiObject || node is HmiArray ? UnifiedHmiAccess.SerializeValue(node) : node;
 
         private static IEnumerable<string> TryGetEnumerableStrings(object target, string propertyName)
         {
@@ -2655,3 +2619,5 @@ namespace TiaMcpServer.Siemens.Services
         }
     }
 }
+
+#endif

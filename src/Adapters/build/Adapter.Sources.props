@@ -53,6 +53,20 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiSnapshot.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiTagDeletion.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiTagDeletionAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedScreenItemsAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiGroupsAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiInspectionAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiWorker.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiAccess.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/IUnifiedHmiInspectionSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiExactAccess.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedHmiHardware.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedMultilingualText.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiEventAccess.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/HmiWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/MotionProDiagClassicHmiAdapter.cs" />
 

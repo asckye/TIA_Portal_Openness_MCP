@@ -24,7 +24,6 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class UnifiedHmiTools
     {
-        private const string DefaultTagTableName = "默认变量表";
         private readonly UnifiedHmiService _service;
 
         public UnifiedHmiTools(UnifiedHmiService service) => _service = service;
@@ -33,14 +32,14 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult EnsureStartStopUnifiedHmiV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("screenName: target screen name (default 'Main')")] string screenName = "Main",
-            [Description("tagTableName: target HMI tag table name (default '默认变量表')")] string tagTableName = DefaultTagTableName,
+            [Description("tagTableName: target HMI tag table name (default '默认变量表')")] string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
             [Description("plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')")] string plcName = "PLC_1",
             [Description("connectionName: Unified HMI connection object name (default 'HMI_Connection_1')")] string connectionName = "HMI_Connection_1")
             => UnifiedHmiContract.Run("SetUnifiedHmiRuntimeState", true, true, () => EnsureStartStopUnifiedHmi(hmiSoftwarePath, screenName, tagTableName, plcName, connectionName));
 
         public ResponseMessage EnsureStartStopUnifiedHmi(string hmiSoftwarePath,
             string screenName = "Main",
-            string tagTableName = DefaultTagTableName,
+            string tagTableName = TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
             string plcName = "PLC_1",
             string connectionName = "HMI_Connection_1")
         {

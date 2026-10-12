@@ -1,20 +1,32 @@
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using UnifiedObject = TiaMcp.Adapters.Native.Hmi.HmiObject;
+using UnifiedArray = TiaMcp.Adapters.Native.Hmi.HmiArray;
+using UnifiedNode = System.Object;
+using UnifiedScalar = TiaMcp.Adapters.Native.Hmi.HmiScalar;
+using UnifiedGroups = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
+using UnifiedValues = TiaMcp.Adapters.Native.Hmi.HmiValues;
+using UnifiedAccess = TiaMcp.Adapters.Native.Hmi.UnifiedHmiAccess;
+#endif
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Security;
-using System.Text.Json.Nodes;
 
+#if !TIA_ADAPTER_INTERNAL_VERSIONING
 namespace TiaMcpServer.Siemens
+#else
+namespace TiaMcp.Adapters.Native.Hmi
+#endif
 {
     // No Siemens dependency: tests exercise the same reflection path as the live server.
     internal static class UnifiedMultilingualText
     {
-        internal static bool ReadRequest(JsonObject item, out string text)
+        internal static bool ReadRequest(UnifiedObject item, out string text)
         {
             text = string.Empty;
-            if (!item.TryGetPropertyValue("text", out var node)) return false;
-            if (node is not JsonValue value || !value.TryGetValue<string>(out var input))
+            if (!item.TryGetValue("text", out var node)) return false;
+            if (!UnifiedAccess.TryString(node, out var input))
                 throw new InvalidOperationException("text must be a string; omit to preserve, use \"\" to clear; null is invalid.");
             text = input;
             return true;
@@ -45,20 +57,20 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
-        internal static JsonArray Read(object multilingual)
+        internal static UnifiedArray Read(object multilingual)
         {
-            var result = new JsonArray();
+            var result = new UnifiedArray();
             foreach (var row in Snapshot(multilingual))
-                result.Add(new JsonObject { ["culture"] = row.Culture, ["text"] = row.Text });
+                result.Add(new UnifiedObject { ["culture"] = row.Culture, ["text"] = row.Text });
             return result;
         }
 
-        internal static JsonArray Write(object item, string property, string text, string culture)
+        internal static UnifiedArray Write(object item, string property, string text, string culture)
         {
             var result = WriteDetailed(item, property, text, culture);
             if (!result["verified"]!.GetValue<bool>())
                 throw new InvalidOperationException(property + " culture=" + culture + ": " + result["error"]);
-            return (JsonArray)result["after"]!.DeepClone();
+            return (UnifiedArray)result["after"]!.DeepClone();
         }
 
         internal static void Validate(object item, string property, string culture)
@@ -69,9 +81,9 @@ namespace TiaMcpServer.Siemens
                 throw new InvalidOperationException(property + " target language not found: " + culture + "; available cultures: " + string.Join(", ", rows.Select(x => x.Culture)));
         }
 
-        internal static JsonObject WriteDetailed(object item, string property, string text, string culture)
+        internal static UnifiedObject WriteDetailed(object item, string property, string text, string culture)
         {
-            var result = new JsonObject {
+            var result = new UnifiedObject {
                 ["property"] = property, ["culture"] = culture, ["requestedText"] = text,
                 ["verified"] = false, ["setterInvoked"] = false, ["setterCompleted"] = false,
                 ["mayHaveChanged"] = false, ["state"] = "NotWritten", ["targetMatched"] = null,
@@ -118,10 +130,10 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
-        private static JsonArray Rows(List<(object Item, string Culture, string Text)> rows)
+        private static UnifiedArray Rows(List<(object Item, string Culture, string Text)> rows)
         {
-            var result = new JsonArray();
-            foreach (var row in rows) result.Add(new JsonObject { ["culture"] = row.Culture, ["text"] = row.Text });
+            var result = new UnifiedArray();
+            foreach (var row in rows) result.Add(new UnifiedObject { ["culture"] = row.Culture, ["text"] = row.Text });
             return result;
         }
     }

@@ -10,7 +10,7 @@ using System.Text;
 
 namespace TiaMcp.Adapters.Native.Hmi
 {
-    internal static class HmiExactAccess
+    internal static partial class HmiExactAccess
     {
         // Both worker restart and explicit project rebinding invalidate old preview hashes.
 

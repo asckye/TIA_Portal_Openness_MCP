@@ -23,6 +23,7 @@ namespace TiaMcpServer.Siemens
                 ["ManageDriveSafetyAcceptanceTest"] = "SafetyAcceptanceTestProvider",
                 ["ManageSivarcScreenLayout"] = "SiVArc LayoutData",
                 ["ManageClassicHmiGraphic"] = "GraphicsProvider",
+                ["BindUnifiedHmiButtonPressedTag"] = "HmiButton.PressedStateTags",
                 ["GetClassicHmiGlobalization"] = "GraphicsProvider"
             };
 

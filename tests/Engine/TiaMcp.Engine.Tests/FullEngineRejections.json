@@ -405,39 +405,6 @@
         }
       },
       {
-        "name": "BindUnifiedHmiButtonPressedTag",
-        "parameters": {
-          "hmiSoftwarePath": {
-            "type": "string",
-            "default": null,
-            "description": "hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')"
-          },
-          "screenName": {
-            "type": "string",
-            "default": null,
-            "description": "screenName: target screen name"
-          },
-          "buttonName": {
-            "type": "string",
-            "default": null,
-            "description": "buttonName: HMI button item name"
-          },
-          "tagName": {
-            "type": "string",
-            "default": null,
-            "description": "tagName: HMI tag name to write while pressed"
-          }
-        },
-        "arguments": {
-          "hmiSoftwarePath": "HMI_RT_1",
-          "screenName": "Overview",
-          "buttonName": "StartButton",
-          "tagName": "Ready"
-        },
-        "renamedFrom": [],
-        "typedParameters": {}
-      },
-      {
         "name": "BindUnifiedHmiTagDynamization",
         "parameters": {
           "hmiSoftwarePath": {
@@ -18144,7 +18111,7 @@
           },
           "tagTableName": {
             "type": "string",
-            "default": "DefaultTagTableName",
+            "default": "TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName",
             "description": "tagTableName: target HMI tag table name (default '默认变量表')",
             "value": "默认变量表"
           },
@@ -38059,7 +38026,7 @@
           },
           "tagTableName": {
             "type": "string",
-            "default": "DefaultTagTableName",
+            "default": "TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName",
             "description": "tagTableName: target HMI tag table name (default '默认变量表')",
             "value": "默认变量表"
           },

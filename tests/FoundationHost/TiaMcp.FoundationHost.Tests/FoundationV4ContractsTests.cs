@@ -25,8 +25,24 @@ public sealed class FoundationV4ContractsTests
         LegacyHostToolRegistry.Create(worker ?? new FakeWorker(), release, false).Single(t => t.ProtocolTool.Name == name);
 
     [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Ported_usage_preserves_the_listed_schema_and_named_palette_keys(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var roster = LegacyHostToolRegistry.Create(worker, release, false);
+        var target = roster.Single(t => t.ProtocolTool.Name == "ApplyUnifiedHmiTheme");
+        var usage = roster.Single(t => t.ProtocolTool.Name == "GetToolUsage");
+        var data = Body(await usage.InvokeAsync(Request("GetToolUsage", "{\"toolName\":\"ApplyUnifiedHmiTheme\"}")))["data"]!;
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse(target.ProtocolTool.InputSchema.GetRawText()), data["inputSchema"]));
+        Assert.NotNull(data["inputSchema"]!["properties"]!["theme"]!["properties"]!["palette"]!["properties"]!["Page"]);
+    }
+
+    [Theory]
     [InlineData("14sp1", 248)] [InlineData("15.1", 277)] [InlineData("16", 299)]
-    [InlineData("17", 311)] [InlineData("18", 325)] [InlineData("19", 335)]
+    [InlineData("17", 311)] [InlineData("18", 325)] [InlineData("19", 360)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

@@ -12,7 +12,7 @@ using TiaMcp.Adapters.Reflection;
 
 namespace TiaMcp.Adapters.Native.Hmi
 {
-    internal sealed class HmiSession : IHmiInspectionSession
+    internal sealed partial class HmiSession : IHmiInspectionSession
     {
         private readonly PlcFoundationEngine engine;
         private readonly IPlcOrganisationSession session;

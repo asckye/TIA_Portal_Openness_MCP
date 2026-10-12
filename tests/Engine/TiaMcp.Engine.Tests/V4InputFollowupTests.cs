@@ -82,8 +82,8 @@ namespace TiaMcp.Engine.Tests
                     ["Bold"] = new AttributeRule(InputSchema.Boolean()),
                     ["ReadOnly"] = new AttributeRule(InputSchema.String(), false) } });
 
-        // src/Engine/Siemens/Hmi/UnifiedScreenItemLogic.cs:36-40,152-157 and
-        // src/Engine/Siemens/Hmi/UnifiedUiModelLogic.cs:117-138. Reuse the existing
+        // src/Adapters/Native/Hmi/UnifiedScreenItemLogic.cs:36-40,152-157 and
+        // src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs:117-138. Reuse the existing
         // screen-item fakes; compare flattened prepared edits, without invoking SDKs.
         [Theory]
         [InlineData("{}")]

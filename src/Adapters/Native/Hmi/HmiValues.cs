@@ -33,7 +33,11 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static object? DeepClone(this object value)
         {
             if (value is IDictionary<string, object?> fields)
-                return new HmiObject(fields.ToDictionary(p => p.Key, p => p.Value?.DeepClone()));
+                return new HmiObject(fields.ToDictionary(p => p.Key, p => p.Value?.DeepClone()))
+                {
+                    ScalarInputs = value is HmiObject source && source.ScalarInputs != null
+                        ? new Dictionary<string, HardwareScalar>(source.ScalarInputs) : null
+                };
             if (value is IList items) return new HmiArray(items.Cast<object?>().Select(v => v?.DeepClone()).ToArray());
             return value;
         }

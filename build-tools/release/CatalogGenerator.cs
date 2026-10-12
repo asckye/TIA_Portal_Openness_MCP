@@ -140,7 +140,11 @@ internal static class CatalogGenerator
         }
         var runtime = new JsonObject { ["schemaVersion"] = 1, ["contractVersion"] = 4, ["foundationLite"] = true, ["behaviorPolicies"] = policies, ["behaviorEntries"] = entries, ["releases"] = releases, ["engineSourceReleases"] = engineReleases };
         var rejections = new JsonObject { ["contractVersion"] = 4, ["releases"] = new JsonObject() };
-        var defaultSources = string.Join('\n', Repository.GitFiles(root, "src/Engine", "src/Logic").Where(p => p.EndsWith(".cs", StringComparison.Ordinal) && File.Exists(Path.Combine(root, p))).Select(p => Source(root, p)));
+        var defaultSources = string.Join('\n', Repository.GitFiles(root, "src/Engine", "src/Logic")
+            .Where(p => p.EndsWith(".cs", StringComparison.Ordinal) && File.Exists(Path.Combine(root, p)))
+            .Select(p => Source(root, p))
+            .Concat(Directory.GetFiles(Path.Combine(root, "src/Shared"), "*.cs").Select(Repository.ReadSource))
+            .Concat(Directory.GetFiles(Path.Combine(root, "src/Adapters.Contracts"), "*.cs").Select(Repository.ReadSource)));
         foreach (var key in Keys.Skip(6))
         {
             var rows = new JsonArray(); var typedCount = 0;

@@ -173,6 +173,7 @@ namespace TiaMcp.Adapters
                 project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase)) ?? throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile");
             lifecycle.Bound(full,false,session);
             hmiReadFault = null;
+            _hmiTokenGeneration = Guid.NewGuid().ToString("N");
             return Mutation("BindProject",false);
         }
         public PlcMutationResult OpenProject(string path, bool dryRun = true)

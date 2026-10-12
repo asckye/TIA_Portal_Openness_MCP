@@ -71,6 +71,7 @@ internal static class Program
         using (var engine = new PlcFoundationEngine(releaseKey, api))
         {
             engine.OrganisationEvidenceJson = evidence => JsonSerializer.Serialize(evidence);
+            engine.UnifiedPropertyAdmission = TiaMcp.Shared.UnifiedHmiPropertyAdmission.Validate;
             engine.PlcB5DocumentPreflight = text => JsonSerializer.Deserialize<object>(TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(text, int.Parse(releaseKey, System.Globalization.CultureInfo.InvariantCulture), null).ToJsonString())!;
 #if !OPCUA_NO_EXTENSION
             engine.PlcB5GenerateModelled = request => JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, object?>>(new TiaMcpServer.Siemens.OpcUaModelledNative(engine.PlcB5Session).GenerateOpcUaModelledInterface(request.SoftwarePath, request.InterfaceName, request.NamespaceUri, request.OutputPath, request.UnitName, request.KeepFolderStructure, request.KeepEmptyDataBlocks, request.AccessLevelsJson, request.DryRun).ToJsonString())!;
