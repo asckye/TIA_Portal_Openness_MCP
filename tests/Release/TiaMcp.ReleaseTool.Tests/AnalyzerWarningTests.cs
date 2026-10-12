@@ -19,6 +19,24 @@ public sealed class AnalyzerWarningTests
     private static AnalyzerWarningCollection Collection(params AnalyzerWarning[] entries) => new(entries, new HashSet<string> { "src/C.cs" });
 
     [Fact]
+    public void ReportDirectoriesMayLeaveTheCheckoutButMustBeLocal()
+    {
+        // check-all -Clean builds in a detached checkout and writes its reports into the caller's output directory.
+        using var tree = new StaticTree(); using var outside = new StaticTree();
+        var reports = Path.Combine(outside.Root, "check-all", "build", "analyzer-warnings");
+        Assert.Equal(Path.GetFullPath(reports), AnalyzerWarnings.LocalDirectory(reports));
+        AnalyzerWarnings.RememberDirectory(tree.Root, reports);
+        Assert.Equal(Path.GetFullPath(reports), AnalyzerWarnings.DefaultDirectory(tree.Root));
+        var inside = Path.Combine(tree.Root, "bin-build", "analyzer-warnings", "observed");
+        AnalyzerWarnings.RememberDirectory(tree.Root, inside);
+        Assert.Equal("bin-build/analyzer-warnings/observed\n", File.ReadAllText(Path.Combine(tree.Root, "bin-build/analyzer-warnings/last-directory.txt")));
+        Assert.Throws<ReleaseException>(() => AnalyzerWarnings.LocalDirectory(@"\\server\share\reports"));
+        Assert.Throws<ReleaseException>(() => AnalyzerWarnings.LocalDirectory("https://example.invalid/reports"));
+        // Source paths and reviewed data stay inside the repository.
+        Assert.Throws<ReleaseException>(() => AnalyzerWarnings.RepositoryPath(tree.Root, reports));
+    }
+
+    [Fact]
     public void NewWarningFailsAndDisappearanceRequiresBaselineUpdate()
     {
         using var tree = new StaticTree(); tree.Write("src/C.cs", Source);

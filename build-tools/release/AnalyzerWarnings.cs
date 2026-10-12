@@ -29,9 +29,23 @@ internal static class AnalyzerWarnings
 
     internal static void RememberDirectory(string root, string directory)
     {
-        var relative = RepositoryPath(root, directory);
+        var full = LocalDirectory(directory);
+        var prefix = Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+        var relative = full.StartsWith(prefix, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)
+            ? RepositoryPath(root, full) : full;
         Directory.CreateDirectory(Path.Combine(root, "bin-build/analyzer-warnings"));
         File.WriteAllText(Path.Combine(root, "bin-build/analyzer-warnings/last-directory.txt"), relative + "\n");
+    }
+
+    // Report directories may sit outside the checkout (check-all -Clean writes into the caller's output directory); they only
+    // have to be local. Source paths, the baseline and review data stay inside the repository (RepositoryPath).
+    internal static string LocalDirectory(string value)
+    {
+        if (Uri.TryCreate(value, UriKind.Absolute, out var uri) && !uri.IsFile) throw new ReleaseException("Analyzer directory is not local: " + value);
+        var full = Path.GetFullPath(uri is { IsFile: true } ? uri.LocalPath : value);
+        if (full.StartsWith(@"\\", StringComparison.Ordinal) || full.StartsWith("//", StringComparison.Ordinal))
+            throw new ReleaseException("Analyzer directory is not local: " + value);
+        return full;
     }
 
     internal static string RepositoryPath(string root, string value)
@@ -115,7 +129,7 @@ internal static class AnalyzerWarnings
 
     internal static AnalyzerWarningCollection Collect(string root, string directory)
     {
-        RepositoryPath(root, directory);
+        directory = LocalDirectory(directory);
         if (!Directory.Exists(directory)) throw new ReleaseException("Analyzer reports missing; run the existing build first: " + directory);
         var reports = Directory.GetFiles(directory, "*.sarif").Order(StringComparer.Ordinal).ToArray();
         if (reports.Length == 0) throw new ReleaseException("No compiler analyzer reports: " + directory);
