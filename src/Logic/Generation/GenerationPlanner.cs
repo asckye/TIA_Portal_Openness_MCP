@@ -138,7 +138,7 @@ namespace TiaMcp.Logic.Generation
                 var seed = CanonicalJson.Hash(JsonSerializer.SerializeToElement(new { package = package.ContentHash, machine = machineHash,
                     observed = ProjectModelComparison.Index(this.observed).OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => ProjectModelComparison.Properties(p.Value), StringComparer.Ordinal),
                     identity = this.observed.ProjectIdentity, options }));
-                plan = new GenerationPlan { Schema = "tiamcp.plan/1", PlanId = "gen-" + seed.Substring(7), PlanHash = "sha256:" + new string('0', 64),
+                plan = new GenerationPlan { Schema = "tiamcp.plan/1", PlanId = "gen-" + seed.Substring(7), PlanHash = new string('0', 64),
                     Package = new GenerationPlanPackage { Id = manifest.Id, Version = manifest.Version, Hash = package.ContentHash }, MachineHash = machineHash,
                     Target = new GenerationPlanTarget { Release = machine.Target.Release, Mode = machine.Target.Project.Mode,
                         ProjectIdentity = machine.Target.Project.Mode == "new" ? GenerationProjectPath.CreationFile(machine.Target.Release, machine.Target.Project.Directory!, machine.Target.Project.Name!) : machine.Target.Project.ProjectIdentity!,

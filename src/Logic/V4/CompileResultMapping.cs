@@ -40,7 +40,7 @@ namespace TiaMcp.Logic.V4
                         string severity = (node["state"] ?? node["State"])?.ToString() ?? "";
                         string description = (node["description"] ?? node["Description"])?.ToString() ?? "";
                         if (severity.Equals("Error", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(description))
-                            yield return new CompileErrorMessage(path, description);
+                            yield return new CompileErrorMessage(string.IsNullOrWhiteSpace(path) ? "<unavailable>" : path, description);
                     }
                 }
             }
@@ -51,7 +51,8 @@ namespace TiaMcp.Logic.V4
                     string Field(string name) => Regex.Match(text, @"(?:^|; )" + name + @"=(.*?)(?=; (?:Path|DateTime|ErrorCount|WarningCount|Description|State)=|$)").Groups[1].Value;
                     string description = Field("Description");
                     if (description == "" && text.StartsWith("State=", StringComparison.Ordinal)) continue;
-                    messages.Add(new CompileErrorMessage(Field("Path"), description != "" ? description : text));
+                    string path = Field("Path");
+                    messages.Add(new CompileErrorMessage(string.IsNullOrWhiteSpace(path) ? "<unavailable>" : path, description != "" ? description : text));
                 }
             if (errors == 0 && state != "Error" && messages.Count == 0) return null;
             errors = Math.Max(errors, messages.Count);

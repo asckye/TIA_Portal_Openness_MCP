@@ -15,17 +15,7 @@ internal static class FoundationV4Result
         return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
             Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
     }
-    internal static readonly JsonElement Schema = JsonSerializer.Deserialize<JsonElement>("""
-        {"type":"object","additionalProperties":false,"required":["schemaVersion","ok","data","error","meta"],"properties":{
-          "schemaVersion":{"type":"integer","const":4},"ok":{"type":"boolean"},
-          "data":{"type":["object","null"]},"error":{"type":["object","null"]},
-          "meta":{"type":"object","additionalProperties":false,"required":["timestamp","releaseKey","tool","requestId","outcome","execution","requiresSessionReset","behaviorPolicy","completeness","paging","warnings"],"properties":{
-            "timestamp":{"type":"string"},"releaseKey":{"type":["string","null"]},"tool":{"type":"string"},"requestId":{"type":"string"},
-            "outcome":{"enum":["succeeded","rejected-before-operation","read-failed","failed","partial","unknown"]},
-            "execution":{"enum":["not-started","read-only","completed","partial","unknown"]},"requiresSessionReset":{"type":"boolean"},
-            "behaviorPolicy":{"enum":["not-applicable","current","safe-v4"]},"completeness":{"enum":["complete","partial","none","unknown"]},
-            "paging":{"type":["object","null"]},"warnings":{"type":"array","items":{"type":"object"}}}}}}
-        """);
+    internal static readonly JsonElement Schema = EnvelopeSchema.Value;
     private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
     internal static Error Invalid(string parameter) => new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
@@ -93,10 +83,12 @@ internal static class FoundationV4Result
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
         var details = HostBehavior.FailureEvidence(exceptionType, exception.Message);
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
-        return Wire(release, name, id, data, HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
+        bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
+        return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
+            readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
                 HostBehavior.AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType),
-                reason), true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
+                reason, dispatched ? "tool-call" : "tool-queue"), true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
@@ -216,6 +208,10 @@ internal static class FoundationV4Result
             data.Remove("offset"); data.Remove("nextOffset"); data.Remove("nextToolOffset");
         }
         var success = !isError && (Flag(data, "success") ?? Flag(data, "ok") ?? Flag(data, "valid") ?? Flag(data["checks"] as JsonObject, "passed") ?? name == "GetToolUsage");
+        if (name == "CheckProductUpdate" && !success && args != null && args.TryGetValue("repository", out var repository)
+            && !TiaMcpServer.ModelContextProtocol.UpdateLogic.IsValidRepository(repository.GetString()))
+            return Reject(release, name, id, new Error("The operation did not establish success; inspect the returned result.",
+                new InvalidArgumentDetails("repository", Array.Empty<string>())));
         return Wire(release, name, id, data, success ? Outcome.Succeeded : Outcome.ReadFailed, Execution.ReadOnly,
             name is "InitializeEnvironment" or "RunCapabilitySelfTest" ? Completeness.Partial : Completeness.Complete,
             success ? null : NativeFailure(data), false, false, candidate, paging);
@@ -251,6 +247,8 @@ internal static class FoundationV4Result
         Execution execution, Completeness completeness, Error? error, bool current, bool reset, bool candidate = false, Paging? paging = null)
     {
         var warnings = new List<Warning>();
+        if (error?.Code == ErrorCode.UnsupportedCapability)
+            warnings.Add(new Warning(WarningCode.NativeCapabilityLimit, "The selected release or native API does not provide this capability.", Empty));
         if (data != null && name is "CompilePlcSoftware" or "CompilePlcDiagnostics" && data["state"]?.ToString() == "Warning")
             warnings.AddRange(NativeResultState.Warnings(new JsonObject { ["nativeState"] = "Warning",
                 ["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Compiler }));

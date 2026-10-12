@@ -47,7 +47,7 @@ namespace TiaMcpServer.Cli
             {
                 Console.Error.WriteLine("ERROR: " + ex.Message);
                 if (ex is TiaOpenness.Shared.BundleResourceUnavailableException) return 70;
-                return 2;
+                return 3;
             }
         }
 

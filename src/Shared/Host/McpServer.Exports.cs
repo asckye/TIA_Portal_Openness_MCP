@@ -42,12 +42,9 @@ namespace TiaMcpServer.ModelContextProtocol
         // 分页工具自身不能被这一层处理：它们的输出本来就是按 offset 夹紧过的，
         // 再包一层只会套娃出一个永远翻不到底的句柄。
         //
-        // 比较器必须是 OrdinalIgnoreCase，不能是 Ordinal：CallTool 的工具名映射建在
-        // OrdinalIgnoreCase 上（McpServer.ToolBridge.cs 的 AllToolMethods），所以
-        // CallTool(name="getexportcontent") 会**成功派发**到 GetExportContent；这里若按大小写敏感匹配
-        // 就漏判，正好给分页结果再套一层句柄。
+        // 工具名与 CallTool 的目录查找一致，使用精确的大小写。
         private static readonly HashSet<string> ExportToolNames =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            new HashSet<string>(StringComparer.Ordinal)
             {
                 "GetExportContent", "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles"
             };
@@ -220,11 +217,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 using (var hash = System.Security.Cryptography.SHA256.Create())
                     sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
                 var entry = ExportStore.Get(id);
-                var data = new JsonObject { ["content"] = head.Text,
-                    ["export"] = JsonNode.Parse(V4Json.Serialize(new ExportHandle(id, "application/json", bytes.LongLength, sha256,
-                        entry == null ? (DateTimeOffset?)null : new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()).AddHours(ExportStore.DefaultTtlHours)))) };
+                var data = new JsonObject { ["text"] = head.Text, ["export"] = PlcExchangeContract.DescribeExport(entry!) };
                 var m = original.Meta;
-                var paging = McpServer.OffsetPage(0, limit, head.TotalLength);
+                var paging = new Paging(PagingMode.Offset, 0, Math.Max(1, head.Returned), head.NextOffset, null, null,
+                    head.TotalLength, head.Eof, PagingUnit.Utf16);
                 var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
                     m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
                 var mapped = McpResult.From(Envelope.Create(data, original.Error, pageMeta));

@@ -1,3 +1,11 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
+using ProgressHeartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
+#else
+using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
+using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
+#endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol;
@@ -172,7 +180,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = FoundationV4Result.Schema };
     }
 
-    public override Tool ProtocolTool => tool;
+    public override Tool ProtocolTool => DeclaredToolMetadata.V4(tool, foundation: true);
     private bool Candidate => deviceCandidate || importCandidate || exportCandidate || sessionCandidate || saveCloseCandidate || sourceCandidate || compileCandidate;
     private bool IsApprovalWrite(JsonObject args)
     {
@@ -185,6 +193,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
+        using var heartbeat = ProgressHeartbeat.Begin(request);
         using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request.Server?.SessionId, request.Server);
         if (inner is WorkbenchControlTool control)
         {
@@ -213,8 +222,15 @@ internal sealed class FoundationV4Tool : McpServerTool
                 tool.Description ?? "", JsonNode.Parse(tool.InputSchema.GetRawText())!.AsObject(), operation: operation)["example"] as JsonObject : null))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
-        if (TiaOpenness.Shared.SessionBehavior.LocksSession(write, (string?)body?["meta"]?["outcome"] == "unknown", write) && inner is FoundationTool uncertain)
+        if ((string?)body?["meta"]?["outcome"] == "unknown" && inner is FoundationTool { IsNative: true } uncertain
+            && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE"))
             uncertain.MarkSessionUncertain();
+        if ((string?)body?["meta"]?["outcome"] == "unknown")
+        {
+            body = EnvelopeMutation.SessionReset(body!, inner is FoundationTool { SessionRequiresReset: true });
+            result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+        }
         if (body != null && (approval != null || write && !settings.Enabled))
         {
             body = TiaOpenness.Shared.ApprovalResult.Decorate(body, write && !settings.Enabled, approval?.Request.RequestId);

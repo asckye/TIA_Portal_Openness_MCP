@@ -30,8 +30,8 @@ namespace TiaMcp.FoundationHost
         internal SharedToolCatalog(IToolCatalogView engine, IReadOnlyList<McpServerTool> shared, ISet<string> essentials)
         {
             BehaviorCapabilities = engine.BehaviorCapabilities;
-            var all = engine.All.Where(p => !SharedToolPolicy.Removed.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-            var unavailable = engine.IncludingUnavailable.Where(p => !SharedToolPolicy.Removed.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+            var all = engine.All.Where(p => !SharedToolPolicy.Removed.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+            var unavailable = engine.IncludingUnavailable.Where(p => !SharedToolPolicy.Removed.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
             foreach (var implementation in shared)
             {
                 var tool = implementation.ProtocolTool;

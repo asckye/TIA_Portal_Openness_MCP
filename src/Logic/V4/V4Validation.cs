@@ -105,9 +105,9 @@ namespace TiaMcp.Logic.V4
             if (value.Error?.Code == ErrorCode.SessionResetRequired)
                 Require(outcome == Outcome.RejectedBeforeOperation && value.Meta.RequiresSessionReset,
                     "SESSION_RESET_REQUIRED must reject the operation and require a reset.");
-            if (value.Error?.Code == ErrorCode.Timeout)
+            if (value.Error?.Code == ErrorCode.Timeout || value.Error?.Code == ErrorCode.Cancelled)
                 Require(outcome == Outcome.ReadFailed || outcome == Outcome.RejectedBeforeOperation,
-                    "TIMEOUT may only represent a read or an operation that has not started.");
+                    "TIMEOUT and CANCELLED may only represent a read or an operation that has not started.");
         }
 
         internal static void Meta(Meta value)
@@ -130,7 +130,6 @@ namespace TiaMcp.Logic.V4
             };
             Require(value.Execution == expected && (value.Outcome != Outcome.Succeeded
                 || value.Execution == Execution.ReadOnly || value.Execution == Execution.Completed), "execution must agree with outcome.");
-            Require(value.Outcome != Outcome.Unknown || value.RequiresSessionReset, "Unknown writes require a session reset.");
             Require(value.Outcome != Outcome.Succeeded || value.Completeness != Completeness.Partial
                 || value.Warnings.Count > 0, "Partial successful observations require a warning.");
             Require(value.BehaviorPolicy != BehaviorPolicy.Current
@@ -141,6 +140,16 @@ namespace TiaMcp.Logic.V4
         {
             switch (value)
             {
+                case InvalidArgumentDetails argument:
+                    Text(argument.Parameter, "parameter");
+                    Require(argument.Parameters.Count > 0, "Invalid arguments require parameter names.");
+                    foreach (var parameter in argument.Parameters) Text(parameter, "parameter");
+                    break;
+                case CompileErrorsDetails compile:
+                    Require(compile.ErrorCount >= 0 && compile.WarningCount >= 0 && compile.Errors.Count <= 10,
+                        "Compiler counts must be nonnegative and at most ten errors may be retained.");
+                    foreach (var error in compile.Errors) { Text(error.Path, "path"); Text(error.Description, "description"); }
+                    break;
                 case LimitExceededDetails limit:
                     Require((limit.Limit == null || limit.Limit >= 0) && (limit.Actual == null || limit.Actual >= 0),
                         "Limit and actual must be nonnegative.");
@@ -176,6 +185,7 @@ namespace TiaMcp.Logic.V4
         internal static void Paging(Paging value)
         {
             Defined(value.Mode);
+            Defined(value.Unit);
             Require(value.Limit > 0 && (value.Total == null || value.Total >= 0), "Invalid page limit or total.");
             if (value.Mode == PagingMode.Offset)
             {

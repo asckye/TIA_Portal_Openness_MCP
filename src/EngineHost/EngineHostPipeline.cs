@@ -258,13 +258,18 @@ namespace TiaMcpServer.ModelContextProtocol
             var token = request?.Params?.ProgressToken;
             if (token == null) return null;
             var progressToken = JsonSerializer.SerializeToNode(token, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+            var capturedSender = ProgressHeartbeat.CaptureSender();
+            long fallbackProgress = 0;
             return json => {
                 try
                 {
                     var payload = JsonNode.Parse(json)!.AsObject();
                     payload["progressToken"] = progressToken!.DeepClone();
+                    payload["progress"] = Interlocked.Increment(ref fallbackProgress);
+                    payload.Remove("total");
                     // A cancelled/disconnected MCP client cannot poison the native pipe.
-                    _ = request!.Server.SendNotificationAsync("notifications/progress", payload, cancellationToken: CancellationToken.None)
+                    _ = (capturedSender != null ? capturedSender(payload)
+                        : request!.Server.SendNotificationAsync("notifications/progress", payload, cancellationToken: CancellationToken.None))
                         .ContinueWith(t => { _ = t.Exception; }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
                 }
                 catch (Exception error)
@@ -282,6 +287,8 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static void ObserveWorkerReply(string name, TiaMcp.FoundationHost.EngineReply reply)
         {
+            if (reply.NativeFault != null && ToolTaxonomy.UsesOpennessLane(name))
+                SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;
             if (reply.NativeCallIssued && (bool?)reply.Result.StructuredContent?["data"]?["nativeOutcomeUnknown"] == true
                 && ToolTaxonomy.UsesOpennessLane(name))
                 SessionFaults.GetValue(Worker.SessionKey, _ => new SessionFault()).Unknown = true;

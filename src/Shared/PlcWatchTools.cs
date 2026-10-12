@@ -486,7 +486,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
             [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
             [Description("expectModuleContains: optional identity guard (e.g. '1211C'); aborts on a positive module-type mismatch.")] string expectModuleContains = "")
-            => PlcToolContract.Run("MonitorPlcWatchTableS7", true, true, () => MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains));
+            => PlcToolContract.Run("MonitorPlcWatchTableS7", false, true, () => MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains));
 
         public ResponseJsonReport MonitorWatchTableLiveS7(
             string softwarePath,

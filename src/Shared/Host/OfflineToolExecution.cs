@@ -53,6 +53,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (cause is TiaOpenness.Shared.BundleResourceUnavailableException) throw;
                 if (cause is TiaOpenness.Shared.DataLocationIOException) throw;
                 meta["error"] = cause.ToString();
+                if (cause is ArgumentException || cause is JsonException)
+                    meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";
                 ResponseMeta.Failed(meta);
                 meta["status"] = cause is PortalException pex ? pex.Code.ToString()
                     : cause is ArgumentException || cause is FileNotFoundException || cause is DirectoryNotFoundException || cause is JsonException ? "InvalidParams"

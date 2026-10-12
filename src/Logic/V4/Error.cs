@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -36,9 +37,16 @@ namespace TiaMcp.Logic.V4
         internal override ErrorCode Code => ErrorCode.InvalidArgument;
         [JsonPropertyOrder(0)] public string? Parameter { get; }
         [JsonPropertyOrder(1)] public IReadOnlyList<string> AllowedValues { get; }
-        public InvalidArgumentDetails(string? parameter, IReadOnlyList<string> allowedValues)
+        [JsonPropertyOrder(2)] public IReadOnlyList<string> Parameters { get; }
+        internal bool WholeArgumentValidation { get; set; }
+        public InvalidArgumentDetails(string? parameter, IReadOnlyList<string> allowedValues, IReadOnlyList<string>? parameters = null)
         {
-            Parameter = parameter;
+            string target = string.IsNullOrWhiteSpace(parameter) ? "arguments" : parameter!;
+            var fields = parameters ?? (target.StartsWith("/", System.StringComparison.Ordinal) ? new[] { target }
+                : target.Split(new[] { ',', '/' }, System.StringSplitOptions.RemoveEmptyEntries)
+                    .Select(p => p.Trim()).Where(p => p.Length > 0).Distinct(System.StringComparer.Ordinal).ToArray());
+            Parameters = V4Validation.List(fields.Count > 0 ? fields : new[] { "arguments" });
+            Parameter = Parameters.FirstOrDefault() ?? "arguments";
             AllowedValues = V4Validation.List(allowedValues);
             V4Validation.Details(this);
         }
@@ -52,7 +60,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(2)] public long? Actual { get; }
         public LimitExceededDetails(string? parameter, long? limit, long? actual)
         {
-            Parameter = parameter;
+            Parameter = string.IsNullOrWhiteSpace(parameter) ? "arguments" : parameter;
             Limit = limit;
             Actual = actual;
             V4Validation.Details(this);
@@ -157,7 +165,7 @@ namespace TiaMcp.Logic.V4
         [JsonConstructor]
         public ConfirmationRequiredDetails(string reason, string? planHash, string? requestId)
         {
-            Reason = reason;
+            Reason = DiagnosticVocabulary.Key(reason);
             PlanHash = planHash;
             RequestId = requestId;
             V4Validation.Details(this);
@@ -169,10 +177,12 @@ namespace TiaMcp.Logic.V4
         internal override ErrorCode Code => ErrorCode.PlanStale;
         [JsonPropertyOrder(0)] public string? PlanHash { get; }
         [JsonPropertyOrder(1)] public string? Reason { get; }
-        public PlanStaleDetails(string? planHash, string? reason)
+        [JsonPropertyOrder(2)] public string? PreviewToken { get; }
+        public PlanStaleDetails(string? planHash, string? reason, string? previewToken = null)
         {
             PlanHash = planHash;
-            Reason = reason;
+            Reason = DiagnosticVocabulary.Key(reason);
+            PreviewToken = previewToken;
             V4Validation.Details(this);
         }
     }
@@ -182,10 +192,10 @@ namespace TiaMcp.Logic.V4
         internal override ErrorCode Code => ErrorCode.PreconditionFailed;
         [JsonPropertyOrder(0)] public string? Condition { get; }
         [JsonPropertyOrder(1)] public string? Target { get; }
-        [JsonPropertyOrder(2), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Parameter { get; }
+        [JsonPropertyOrder(2)] public string? Parameter { get; }
         public PreconditionFailedDetails(string? condition, string? target, string? parameter = null)
         {
-            Condition = condition;
+            Condition = DiagnosticVocabulary.Key(condition);
             Target = target;
             Parameter = parameter;
             V4Validation.Details(this);
@@ -221,7 +231,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(1)] public string? Target { get; }
         public AccessDeniedDetails(string? operation, string? target)
         {
-            Operation = operation;
+            Operation = DiagnosticVocabulary.Key(operation);
             Target = target;
             V4Validation.Details(this);
         }
@@ -233,7 +243,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? Reason { get; }
         public SessionResetRequiredDetails(string? reason)
         {
-            Reason = reason;
+            Reason = DiagnosticVocabulary.Key(reason);
             V4Validation.Details(this);
         }
     }
@@ -244,7 +254,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? Resource { get; }
         public ResourceUnavailableDetails(string? resource)
         {
-            Resource = resource;
+            Resource = DiagnosticVocabulary.Key(resource);
             V4Validation.Details(this);
         }
     }
@@ -256,7 +266,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(1)] public string? Path { get; }
         public IoFailedDetails(string? operation, string? path)
         {
-            Operation = operation;
+            Operation = DiagnosticVocabulary.Key(operation);
             Path = path;
             V4Validation.Details(this);
         }
@@ -279,20 +289,26 @@ namespace TiaMcp.Logic.V4
 
     public sealed class CompileErrorMessage
     {
-        public string Path { get; }
-        public string Description { get; }
-        public CompileErrorMessage(string path, string description) { Path = path; Description = description; }
+        [JsonPropertyOrder(0)] public string Path { get; }
+        [JsonPropertyOrder(1)] public string Description { get; }
+        public CompileErrorMessage(string path, string description)
+        {
+            V4Validation.Text(path, nameof(path));
+            V4Validation.Text(description, nameof(description));
+            Path = path; Description = description;
+        }
     }
     public sealed class CompileErrorsDetails : ErrorDetails
     {
         internal override ErrorCode Code => ErrorCode.CompileErrors;
-        public int ErrorCount { get; }
-        public int WarningCount { get; }
-        public IReadOnlyList<CompileErrorMessage> Errors { get; }
+        [JsonPropertyOrder(0)] public int ErrorCount { get; }
+        [JsonPropertyOrder(1)] public int WarningCount { get; }
+        [JsonPropertyOrder(2)] public IReadOnlyList<CompileErrorMessage> Errors { get; }
         public CompileErrorsDetails(int errorCount, int warningCount, IReadOnlyList<CompileErrorMessage> errors)
         {
             V4Validation.Require(errorCount >= 0 && warningCount >= 0, "Compiler counts must be nonnegative.");
             ErrorCount = errorCount; WarningCount = warningCount; Errors = V4Validation.List(errors);
+            V4Validation.Details(this);
         }
     }
 
@@ -302,7 +318,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? Stage { get; }
         public CancelledDetails(string? stage)
         {
-            Stage = stage;
+            Stage = DiagnosticVocabulary.Key(stage);
             V4Validation.Details(this);
         }
     }
@@ -313,7 +329,7 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? Stage { get; }
         public TimeoutDetails(string? stage)
         {
-            Stage = stage;
+            Stage = DiagnosticVocabulary.Key(stage);
             V4Validation.Details(this);
         }
     }
@@ -349,13 +365,13 @@ namespace TiaMcp.Logic.V4
         internal override ErrorCode Code => ErrorCode.OutcomeUnknown;
         [JsonPropertyOrder(0)] public string? Stage { get; }
         [JsonPropertyOrder(1)] public IReadOnlyDictionary<string, JsonElement> Evidence { get; }
-        [JsonPropertyOrder(2), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Reason { get; }
+        [JsonPropertyOrder(2)] public string? Reason { get; }
         public OutcomeUnknownDetails(string? stage, IReadOnlyDictionary<string, JsonElement> evidence, string? reason = null)
         {
-            Stage = stage;
+            Stage = DiagnosticVocabulary.Key(stage);
             Evidence = V4Validation.Object(evidence);
             if (reason != null && reason != "awaiting-openness-confirmation") throw new System.ArgumentException("Unknown session timeout reason.");
-            Reason = reason;
+            Reason = DiagnosticVocabulary.Key(reason);
             V4Validation.Details(this);
         }
     }

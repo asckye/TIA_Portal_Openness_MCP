@@ -99,7 +99,17 @@ namespace TiaMcp.Logic.V4.Inputs
         public Error? Validate(JsonElement value, string parameter)
         {
             try { new InputBudget().Check(value); Check(value); return null; }
-            catch (InputRejectionException ex) { return ex.ToError(parameter); }
+            catch (InputRejectionException ex)
+            {
+                var error = ex.ToError(parameter);
+                if (parameter == "arguments" && value.ValueKind == JsonValueKind.Object && error.Details is InvalidArgumentDetails details)
+                {
+                    var fields = ValidateFields(value).SelectMany(e => e.Details is InvalidArgumentDetails field ? field.Parameters : System.Array.Empty<string>()).ToArray();
+                    if (fields.Length > 0) return new Error(error.Message,
+                        new InvalidArgumentDetails(fields[0], details.AllowedValues, fields) { WholeArgumentValidation = true });
+                }
+                return error;
+            }
             catch (Exception ex) when (ex is ArgumentException || ex is JsonException || ex is InvalidOperationException || ex is RegexMatchTimeoutException)
             { return InputGuard.Invalid(parameter); }
         }

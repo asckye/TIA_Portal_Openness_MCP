@@ -16,6 +16,68 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal static class DeclaredToolMetadata
     {
+        internal static Tool V4(Tool tool, bool foundation = false)
+        {
+            var category = ToolMetadata.Find(tool.Name);
+            if (category == null) return tool;
+            var properties = tool.InputSchema.GetProperty("properties");
+            bool Has(string name) => properties.TryGetProperty(name, out _);
+            bool read = category.ReadOnlyHint ?? category.Operation is "READ" or "OFFLINE" or "ONLINE";
+            bool destructive = category.DestructiveHint ?? false;
+            bool idempotent = category.IdempotentHint ?? read;
+            bool open = category.OpenWorldHint ?? category.Operation is "ONLINE" or "ONLINE-WRITE";
+            if (category.ReadOnlyHint == null)
+            {
+                if (category.Operation == "SESSION") read = tool.Name is "GetSessionState" or "ListPortalProcessProjects" or "InitializeEnvironment" or "CheckProductUpdate";
+                if (category.Operation == "EXECUTE") { read = tool.Name is "RunCapabilitySelfTest" or "RunHmiActionScriptRecipeSafetySelfTest" or "RunOnlineMonitoringSafetySelfTest"; idempotent = true; }
+                if (category.Operation == "UI") { read = tool.Annotations?.ReadOnlyHint == true; idempotent = false; }
+                if (tool.Name == "ConnectOnlinePlc") { read = false; idempotent = false; }
+                // Mutation hints are the worst case of the descriptor's actions and
+                // overwrite options. Pure creation and collision-refusing exports
+                // do not inherit a destructive category default.
+                var actions = properties.TryGetProperty("action", out var action) && action.TryGetProperty("enum", out var values)
+                    ? values.EnumerateArray().Select(v => v.ToString()).ToArray() : Array.Empty<string>();
+                destructive = Has("overwrite") || Has("confirmDelete") || Has("deleteAtTarget") || Has("allowWrite")
+                    || actions.Any(a => new[] { "delete", "remove", "replace", "clear", "load", "import", "set", "write", "update", "reset" }
+                        .Any(verb => a.StartsWith(verb, StringComparison.OrdinalIgnoreCase)))
+                    || tool.Name.StartsWith("Delete", StringComparison.Ordinal) || tool.Name.StartsWith("Set", StringComparison.Ordinal)
+                    || tool.Name.StartsWith("Import", StringComparison.Ordinal) || tool.Name.StartsWith("EnsureUnified", StringComparison.Ordinal)
+                    || tool.Name is "ClearExportHandles" or "ApplyToolBatch" or "ApplyGenerationPlan" or "ManagePlcDataBlockSnapshot" or "RunPlcCompanionTool";
+                idempotent = read || tool.Name.StartsWith("Ensure", StringComparison.Ordinal) || tool.Name.StartsWith("Set", StringComparison.Ordinal)
+                    || tool.Name.StartsWith("Compile", StringComparison.Ordinal);
+                if (category.Operation == "ONLINE-WRITE") { destructive = true; open = true; }
+            }
+            if (Has("dryRun")) read = false;
+            if (!foundation && tool.Name is "CloseProject" or "OpenProject" or "DisconnectPortal" or "CompilePlcSoftware") destructive = true;
+            if (!foundation && tool.Name == "RunCapabilitySelfTest" && Has("connectIfNeeded")) read = false;
+            if (read) destructive = false;
+            tool.Annotations = new ToolAnnotations { ReadOnlyHint = read, DestructiveHint = destructive, IdempotentHint = idempotent, OpenWorldHint = open };
+            tool.OutputSchema = EnvelopeSchema.Value;
+            string description = tool.Description ?? "";
+            var prefix = System.Text.RegularExpressions.Regex.Match(description, @"^(?:\[[^\]\r\n]+\])+");
+            tool.Description = prefix.Success
+                ? System.Text.RegularExpressions.Regex.Replace(prefix.Value, @"\[(?:UI|SESSION|READ|WRITE|FILE|OFFLINE|ONLINE|ONLINE-WRITE|EXECUTE)\]", "")
+                    + "[" + category.Operation + "]" + description.Substring(prefix.Length)
+                : "[" + category.Layer + "][" + category.Domain + "][" + category.Operation + "] " + description;
+            ValidateV4(tool);
+            return tool;
+        }
+
+        internal static void ValidateV4(Tool tool)
+        {
+            var category = ToolMetadata.Find(tool.Name) ?? throw new InvalidOperationException("Missing tool classification: " + tool.Name);
+            var hint = tool.Annotations ?? throw new InvalidOperationException("Missing tool annotations: " + tool.Name);
+            var prefix = System.Text.RegularExpressions.Regex.Match(tool.Description ?? "", @"^(?:\[[^\]\r\n]+\])+").Value;
+            if (!prefix.EndsWith("[" + category.Operation + "]", StringComparison.Ordinal))
+                throw new InvalidOperationException("Annotation category differs from description: " + tool.Name);
+            if (tool.InputSchema.GetProperty("properties").TryGetProperty("dryRun", out _) && hint.ReadOnlyHint != false)
+                throw new InvalidOperationException("A preview-capable tool cannot be annotated read-only: " + tool.Name);
+            if (category.Operation is "WRITE" or "ONLINE-WRITE" or "FILE" or "UI" && hint.ReadOnlyHint == true)
+                throw new InvalidOperationException("Mutation category cannot be annotated read-only: " + tool.Name);
+            if (hint.ReadOnlyHint == null || hint.DestructiveHint == null || hint.IdempotentHint == null || hint.OpenWorldHint == null)
+                throw new InvalidOperationException("All annotation hints must be explicit: " + tool.Name);
+        }
+
         internal static McpServerTool CreateToolCore(MethodInfo method, McpServerToolCreateOptions? options, Func<RequestContext<CallToolRequestParams>, object> target)
         {
             // Exclude custom input contracts from SDK inference before it serializes
@@ -69,12 +131,12 @@ namespace TiaMcpServer.ModelContextProtocol
             var candidate = method.GetCustomAttribute<BehaviorCandidateAttribute>();
             if (candidate != null)
                 schema = JsonNode.Parse(((IBehaviorCandidateContract)Activator.CreateInstance(candidate.Contract)!).InputSchema.GetRawText())!.AsObject();
-            return new SchemaHintedTool(tool, new Tool
+            return new SchemaHintedTool(tool, V4(new Tool
             {
                 Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,
                 InputSchema = JsonSerializer.SerializeToElement(McpServer.InlineSchema(schema)),
                 OutputSchema = protocol.OutputSchema, Annotations = protocol.Annotations, Meta = protocol.Meta,
-            });
+            }));
         }
 
         private static void RebaseReferences(JsonNode node, string root)

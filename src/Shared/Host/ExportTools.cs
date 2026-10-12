@@ -25,36 +25,38 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class ExportTools
     {
-        [McpServerTool(Name = "GetExportContent"), Description("[L1][Exports][READ] Read a character slice of a parked response. Concatenate data.text pages before parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its SHA-256. Handles last 24 hours in this engine session.")]
+        [McpServerTool(Name = "GetExportContent"), Description("[L1][Exports][READ] Read a UTF-16 code-unit slice of a parked response with offset/limit. Concatenate data.text pages before parsing. Use meta.paging.nextOffset until complete. data.export identifies the full content and its UTF-8 byteLength and SHA-256. Handles last 24 hours in this V4 session.")]
         public CallToolResult GetExport(
             [Description("Opaque export handle from this engine session.")] string exportId,
-            [Description("Zero-based character offset.")] int offset = 0,
-            [Description("Requested characters; 0 uses the response limit, capped at 20000.")] int length = 0)
+            [Description("Zero-based UTF-16 code-unit offset.")] int offset = 0,
+            [Description("Requested UTF-16 code units; 0 uses the response limit, capped at 20000.")] int limit = 0)
         {
             const string tool = "GetExportContent";
-            if (offset < 0 || length < 0) return PlcExchangeContract.Reject(tool, InvalidInput("offset/length"), current: false);
+            if (offset < 0 || limit < 0) return PlcExchangeContract.Reject(tool, InvalidInput("offset/limit"), current: false);
             var entry = ExportStore.Get(exportId);
             if (entry == null) return Missing(tool, exportId);
             if (offset > entry.Length) return PlcExchangeContract.Reject(tool, InvalidInput("offset"), current: false);
-            if (length == 0) length = ResolvedMaxResponseChars();
-            length = length <= 0 ? ExportStore.MaxSliceChars : Math.Min(length, ExportStore.MaxSliceChars);
-            var slice = ExportStore.Slice(exportId, offset, length);
+            if (limit == 0) limit = ResolvedMaxResponseChars();
+            limit = limit <= 0 ? ExportStore.MaxSliceChars : Math.Min(limit, ExportStore.MaxSliceChars);
+            var slice = ExportStore.Slice(exportId, offset, limit);
             if (slice.Error != null) return Missing(tool, exportId);
             return PlcExchangeContract.Result(tool, new JsonObject { ["text"] = slice.Text, ["export"] = Describe(entry) },
-                paging: OffsetPage(offset, length, slice.TotalLength));
+                paging: new Paging(PagingMode.Offset, offset, Math.Max(1, slice.Returned), slice.NextOffset, null, null,
+                    slice.TotalLength, slice.Eof, PagingUnit.Utf16));
         }
 
         [McpServerTool(Name = "ListExportHandles"), Description("[L1][Exports][READ] List this engine session's parked responses with content identity and SHA-256. Empty is a complete result. limit caps the returned handles.")]
-        public CallToolResult ListExports(string? tool = null, int limit = 20)
+        public CallToolResult ListExports(string? tool = null, int limit = 20, int offset = 0)
         {
-            if (limit < 1) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput("limit"), current: false);
+            if (limit < 1 || offset < 0) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput(limit < 1 ? "limit" : "offset"), current: false);
             var matches = ExportStore.List(tool, int.MaxValue);
-            var entries = matches.Take(limit).ToArray();
+            if (offset > matches.Count) return PlcExchangeContract.Reject("ListExportHandles", InvalidInput("offset"), current: false);
+            var entries = matches.Skip(offset).Take(limit).ToArray();
             var (count, chars) = ExportStore.Stats();
             return PlcExchangeContract.Result("ListExportHandles", new JsonObject {
                 ["items"] = new JsonArray(entries.Select(e => (JsonNode)new JsonObject { ["export"] = Describe(e) }).ToArray()),
                 ["count"] = count, ["totalCharacters"] = chars, ["matchingCount"] = matches.Count,
-                ["returnedCount"] = entries.Length }, completeness: entries.Length < matches.Count ? Completeness.Partial : Completeness.Complete);
+                ["returnedCount"] = entries.Length }, paging: OffsetPage(offset, limit, matches.Count));
         }
 
         [McpServerTool(Name = "SaveExportContent"), Description("[L1][Exports][FILE] Save a parked response as UTF-8 with BOM. raw=true preserves its full text; otherwise write its payload. Existing files require overwrite=true. A failed write can leave partial file content. V4 envelope; export behavior remains current.")]
@@ -111,16 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static CallToolResult Missing(string tool, string id, bool current = false) => PlcExchangeContract.Reject(tool,
             new Error("Export handle is missing, expired or evicted in this engine session.", new NotFoundDetails(id)), current: current);
-        private static JsonObject Describe(ExportEntry entry)
-        {
-            using var hash = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(entry.Content);
-            return new JsonObject { ["id"] = entry.Id, ["tool"] = entry.Tool, ["target"] = entry.Target,
-                ["createdUtc"] = entry.CreatedUtc.ToUniversalTime().ToString("O"), ["totalLength"] = entry.Length,
-                ["mediaType"] = "text/plain", ["byteLength"] = (long)bytes.Length,
-                ["expiresUtc"] = entry.CreatedUtc.ToUniversalTime().AddHours(ExportStore.DefaultTtlHours).ToString("O"),
-                ["sha256"] = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant() };
-        }
+        private static JsonObject Describe(ExportEntry entry) => PlcExchangeContract.DescribeExport(entry);
         private static string Payload(string content, out bool unwrapped)
         {
             try
@@ -145,6 +138,19 @@ namespace TiaMcpServer.ModelContextProtocol
     // their original calls; the scoped observations record already-known stages.
     internal static class PlcExchangeContract
     {
+        internal static JsonObject DescribeExport(ExportEntry entry)
+        {
+            using var hash = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(entry.Content);
+            string mediaType = "text/plain";
+            try { using var document = JsonDocument.Parse(entry.Content); mediaType = "application/json"; }
+            catch (JsonException) /* swallow(parse-fallback): a parked plain-text response keeps its text media type */ { }
+            return JsonNode.Parse(V4Json.Serialize(new ExportHandle(entry.Id, mediaType, bytes.LongLength,
+                BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(),
+                new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()).AddHours(ExportStore.DefaultTtlHours),
+                entry.Tool, entry.Target, new DateTimeOffset(entry.CreatedUtc.ToUniversalTime()), entry.Length)))!.AsObject();
+        }
+
         internal sealed class Observation
         {
             internal int Issued, Confirmed;

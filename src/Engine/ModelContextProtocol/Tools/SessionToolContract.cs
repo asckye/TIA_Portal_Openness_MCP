@@ -57,9 +57,11 @@ namespace TiaMcpServer.ModelContextProtocol
             string? reason = new[] { "ConnectPortal", "ConnectProject", "AttachOpenProject" }.Contains(tool, StringComparer.Ordinal)
                 ? TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception) : null;
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
+            bool readCancelled = !writes && nativeCallIssued && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
             return Result(tool, new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) },
-                HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception), reason),
-                HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), writes, current);
+                HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception), reason,
+                    nativeCallIssued ? "tool-call" : "tool-queue"),
+                readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), writes, current);
         }
 
         private static bool ContainsInvalidPortalState(Exception exception)
@@ -106,6 +108,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, new Error("Worker restart preconditions are not satisfied.",
                     new PreconditionFailedDetails("worker-enabled-and-idle", null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (tool == "EnsureOpennessUserGroup" && success == false) knownFailure = true;
+            if (tool == "CheckProductUpdate" && success == false && data["releaseApiUrl"] == null)
+                return Result(tool, data, new Error("The operation did not establish success.", new InvalidArgumentDetails("repository", Array.Empty<string>())),
+                    Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             // A returned report contains both completed file writes, even when
             // the diagnostic verdict recorded in those files is a failure.
             if (tool == "GenerateAcceptanceReport" && data["markdownPath"] != null && data["jsonPath"] != null)
@@ -140,7 +145,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (success != true)
             {
                 var outcome = before ? Outcome.RejectedBeforeOperation : writes ? Outcome.Failed : Outcome.ReadFailed;
-                var error = before ? McpServer.InvalidInput("arguments")
+                var error = before ? new Error("Input does not satisfy the declared contract.", new PreconditionFailedDetails("session-operation", null))
                     : new Error("The operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
                 return Result(tool, data, error, outcome, incomplete ? Completeness.Partial : Completeness.None, writes, current);
             }

@@ -151,7 +151,7 @@ RELEASES = ('14sp1', '15.1', '16', '17', '18', '19', '20', '21')
 FORMAT_VERSION = 1
 CONTRACT_FIELDS = {'formatVersion', 'release', 'profile', 'tools', 'behaviorCapabilities'}
 ENGINE_CONTRACT_FIELDS = CONTRACT_FIELDS | {'liteTools'}
-TOOL_FIELDS = {'name', 'inputSchema', 'outputSchema', 'descriptionSha256'}
+TOOL_FIELDS = {'name', 'inputSchema', 'outputSchema', 'descriptionSha256', 'annotations'}
 CAPABILITY_FIELDS = {'family', 'state', 'l5', 'entries'}
 FOUNDATION_UNAVAILABLE_BELOW_20 = {
     'ExportPlcBlockDocuments', 'ExportPlcBlocksDocuments',
@@ -186,6 +186,11 @@ def validate_contract_snapshot(snapshot, path):
             raise ValueError(f'{path}: {tool["name"]} inputSchema must be an object')
         if tool['outputSchema'] is not None and not isinstance(tool['outputSchema'], dict):
             raise ValueError(f'{path}: {tool["name"]} outputSchema must be an object or null')
+        annotations = tool['annotations']
+        if not isinstance(annotations, dict) or set(annotations) != {'readOnlyHint', 'destructiveHint', 'idempotentHint', 'openWorldHint'} or any(type(v) is not bool for v in annotations.values()):
+            raise ValueError(f'{path}: {tool["name"]} requires four explicit annotation hints')
+        if 'dryRun' in tool['inputSchema'].get('properties', {}) and annotations['readOnlyHint']:
+            raise ValueError(f'{path}: {tool["name"]} has dryRun but is annotated read-only')
         if not isinstance(tool['descriptionSha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', tool['descriptionSha256']):
             raise ValueError(f'{path}: {tool["name"]} descriptionSha256 must be lowercase SHA-256')
     for row in snapshot['behaviorCapabilities']:
@@ -208,7 +213,7 @@ def tool_records(tools):
     names = [tool['name'] for tool in tools]
     if not names or len(names) != len(set(names)):
         raise ValueError('Tool catalog must be nonempty with unique names')
-    return sorted(({'name': tool['name'], 'inputSchema': tool['inputSchema'], 'outputSchema': tool.get('outputSchema'),
+    return sorted(({'name': tool['name'], 'inputSchema': tool['inputSchema'], 'outputSchema': tool.get('outputSchema'), 'annotations': tool.get('annotations'),
                     'descriptionSha256': hashlib.sha256(
                         tool.get('description', '').encode('utf-8')).hexdigest()}
                    for tool in tools), key=lambda tool: tool['name'])
@@ -437,6 +442,8 @@ def compare(args):
                         changes.append(('info', name + ': outputSchema recorded'))
                     elif a[name].get('outputSchema') != b[name].get('outputSchema'):
                         changes.append(('breaking', name + ': outputSchema changed'))
+                    if a[name].get('annotations') != b[name].get('annotations'):
+                        changes.append(('breaking', name + ': annotations changed'))
                     if a[name]['descriptionSha256'] != b[name]['descriptionSha256']:
                         changes.append(('info', name + ': description hash changed'))
             for name in sorted(set(old.get('liteTools', [])) - set(new.get('liteTools', []))):

@@ -55,7 +55,7 @@ namespace TiaMcp.Logic.V4
             if (!IsBatchImport(tool) || body?["ok"]?.GetValue<bool>() != true) return null;
             string? key = (string?)body["data"]?["projectFile"] != (string?)args["expectedProjectFile"] ? "expectedProjectFile"
                 : (string?)body["data"]?["planHash"] != (string?)args["expectedPlanHash"] ? "expectedPlanHash" : null;
-            return key == null ? null : new Error("Plan or project changed; review a fresh preview before applying.", new InvalidArgumentDetails(key, Array.Empty<string>()));
+            return key == null ? null : new Error("Plan or project changed; review a fresh preview before applying.", new PlanStaleDetails((string?)args["expectedPlanHash"], key));
         }
 
         internal static bool PreviewHasNoEffect(JsonNode? body)
@@ -86,12 +86,12 @@ namespace TiaMcp.Logic.V4
         }
 
         internal static Error FailureError(HostFailureKind kind, string? parameter,
-            IReadOnlyDictionary<string, JsonElement> evidence, string? nativeMessage = null, string? reason = null)
+            IReadOnlyDictionary<string, JsonElement> evidence, string? nativeMessage = null, string? reason = null, string stage = "approval-precheck")
             => kind switch
             {
                 HostFailureKind.Argument => new Error(nativeMessage ?? "The request argument was refused before operation.", new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
                 HostFailureKind.Precondition => new Error(nativeMessage ?? "The request precondition failed before operation.", new PreconditionFailedDetails("native-admission", null, parameter)),
-                HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails("approval-precheck")),
+                HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown => new Error("The operation outcome is unknown; inspect the retained evidence before a new session.", new OutcomeUnknownDetails("tool-call", evidence, reason)),
                 HostFailureKind.InternalError => new Error("The host operation could not be completed.", new InternalErrorDetails(null)),
                 _ => new Error("The native read could not be completed.", new NativeOperationFailedDetails(null, nativeMessage, evidence))
@@ -141,7 +141,8 @@ namespace TiaMcp.Logic.V4
 
         internal static Error SessionReset() => new Error(SessionBehavior.Recovery, new SessionResetRequiredDetails("previous-outcome-unknown"));
         internal static Error Confirmation(string reason, string? hash, string? id)
-            => new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(reason, hash, id));
+            => reason == "cancelled" ? new Error("Request cancelled before operation.", new CancelledDetails("approval-wait"))
+                : new Error("Workbench confirmation is required before this write.", new ConfirmationRequiredDetails(reason, hash, id));
         internal static Outcome OutcomeOf(HostFailureKind kind) => kind == HostFailureKind.Unknown ? Outcome.Unknown
             : kind is HostFailureKind.ReadFailed or HostFailureKind.InternalError ? Outcome.ReadFailed : Outcome.RejectedBeforeOperation;
         internal static Execution ExecutionOf(HostFailureKind kind) => kind == HostFailureKind.Unknown ? Execution.Unknown

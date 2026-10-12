@@ -1,3 +1,9 @@
+#if !TIA_GENERATION_PLANNER
+extern alias PlcRendering;
+using EnvelopeMutation = PlcRendering::TiaMcp.Logic.V4.EnvelopeMutation;
+#else
+using EnvelopeMutation = TiaMcp.Logic.V4.EnvelopeMutation;
+#endif
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,16 +19,7 @@ namespace TiaOpenness.Shared
         internal const string Recovery = SessionBehavior.Recovery;
         internal static System.Text.Json.Nodes.JsonNode Mark(System.Text.Json.Nodes.JsonNode body, string? requestId)
         {
-            body = body.DeepClone();
-            var meta = body["meta"]!;
-            if (requestId != null) meta["requestId"] = requestId;
-            meta["outcome"] = "rejected-before-operation";
-            meta["execution"] = "not-started";
-            meta["completeness"] = "none";
-            meta["warnings"]!.AsArray().Add(new System.Text.Json.Nodes.JsonObject {
-                ["code"] = "APPROVAL_PRECHECK_REFUSED", ["message"] = "The write was refused by the approval precheck; no approval was requested.",
-                ["details"] = new System.Text.Json.Nodes.JsonObject { ["stage"] = "approval-precheck" } });
-            return body;
+            return EnvelopeMutation.Precheck(body, requestId);
         }
     }
     internal static class ApprovalPipe
@@ -111,7 +108,7 @@ namespace TiaOpenness.Shared
                             : !limit.IsCancellationRequested && decision.Matches(request) ? decision.Decision == "granted" ? null : "denied" : "denied";
                     }
                 }
-                catch (OperationCanceledException) /* swallow(privacy): cancellation before execution becomes a bounded approval refusal */ { reason = cancellation.IsCancellationRequested ? "denied" : connected ? "timeout" : "workbench-unavailable"; }
+                catch (OperationCanceledException) /* swallow(privacy): cancellation before execution becomes a bounded approval refusal */ { reason = cancellation.IsCancellationRequested ? "cancelled" : connected ? "timeout" : "workbench-unavailable"; }
                 catch (Exception ex)
                 { Trace.TraceInformation("Approval channel unavailable: " + ex.GetType().Name + ": " + ex.Message); reason = DateTimeOffset.UtcNow >= request.Deadline ? "timeout" : "workbench-unavailable"; }
             }

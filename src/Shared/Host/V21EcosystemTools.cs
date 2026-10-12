@@ -51,8 +51,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("inspect | build. inspect or build.")] string action = "inspect",
             [Description("New absolute ZIP path using the suggested GUID filename; only used for build execution.")] string outputPath = "",
             [Description("True previews only; false builds when action=build.")] bool dryRun = true,
-            [Description("packageFingerprint from the matching inspect/preview.")] string expectedFingerprint = "")
-            => OfflineContracts.Run("ManageUnifiedCwcPackage", () => ManageUnifiedCwcPackage(directory, action, outputPath, dryRun, expectedFingerprint), writes: action == "build" && !dryRun, current: HardwareContract.ReleaseKey is "17" or "18");
+            [Description("packageFingerprint from the matching inspect/preview.")] string expectedPackageHash = "")
+            => OfflineContracts.Run("ManageUnifiedCwcPackage", () => ManageUnifiedCwcPackage(directory, action, outputPath, dryRun, expectedPackageHash), writes: action == "build" && !dryRun, current: HardwareContract.ReleaseKey is "17" or "18");
 
         public ResponseMessage ManageUnifiedCwcPackage([Description("Absolute CWC source folder containing manifest.json and control files; <=1024 files /64 MiB.")] string directory,
             [Description("inspect | build. inspect or build.")] string action = "inspect", [Description("New absolute ZIP path using the suggested GUID filename; only used for build execution.")] string outputPath = "",

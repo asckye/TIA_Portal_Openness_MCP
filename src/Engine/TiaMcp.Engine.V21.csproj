@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup Condition="'$(TiaSharedAdapterPaths)' != 'true'"><Compile Include="../Adapters/Native/Vci/VciFallbackAdapter.cs" Link="Native/Vci/VciFallbackAdapter.cs" /></ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
+  <ItemGroup><Compile Include="../Shared/ProgressHeartbeat.cs" Link="Shared/ProgressHeartbeat.cs" /></ItemGroup>
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>

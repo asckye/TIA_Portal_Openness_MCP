@@ -28,6 +28,7 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/VersionControlPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TeamcenterPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/Host/GitWorkflowTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProgressHeartbeat.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeResponses.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDescribeTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiExchangeTools.cs" />

@@ -34,7 +34,7 @@ namespace TiaMcp.FoundationHost
             var unavailable = root["unavailableTools"]?.AsArray() ?? new JsonArray();
             var tools = root["tools"]!.AsArray().Concat(unavailable.Select(t => t!["tool"]))
                 .Select(t => JsonSerializer.Deserialize<Tool>(t!.ToJsonString(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!).ToDictionary(t => t.Name, StringComparer.Ordinal);
-            var descriptors = new Dictionary<string, ToolDescriptor>(StringComparer.OrdinalIgnoreCase);
+            var descriptors = new Dictionary<string, ToolDescriptor>(StringComparer.Ordinal);
             foreach (var node in root["descriptors"]!.AsArray().Concat(unavailable.Select(t => t!["descriptor"])))
             {
                 var d = node!.AsObject();
@@ -63,12 +63,12 @@ namespace TiaMcp.FoundationHost
                 DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
                 descriptors.Add(name, descriptor);
             }
-            descriptors = descriptors.OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+            descriptors = descriptors.OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
             IncludingUnavailable = descriptors;
-            All = root["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => descriptors[(string)t!["name"]!], StringComparer.OrdinalIgnoreCase);
+            All = root["tools"]!.AsArray().ToDictionary(t => (string)t!["name"]!, t => descriptors[(string)t!["name"]!], StringComparer.Ordinal);
             All = All.Concat(descriptors.Where(p => TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(p.Key)
                     && TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, p.Key)))
-                .OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                .OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
             Lite = root["liteTools"]!.AsArray().Select(n => descriptors[(string)n!]).ToArray();
             Instructions = (string)root["serverInstructions"]!;
         }

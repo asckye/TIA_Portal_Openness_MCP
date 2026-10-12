@@ -128,12 +128,13 @@ internal sealed class CatalogData
         foreach (var key in new[] { "20", "21" }) { Rosters[key].ExceptWith(Removed); Rosters[key].UnionWith(Rosters["19"]); Rosters[key].UnionWith(extras); Rosters[key].ExceptWith(PortedFamilies.Withheld(Families, key)); }
         foreach (var roster in Rosters.Values) roster.UnionWith(HostOnly.Keys);
         foreach (var key in CatalogJson.Keys) Rosters[key].ExceptWith(PortedFamilies.Withheld(Families, key));
+        foreach (var name in Rosters.Values.SelectMany(r => r).Distinct(StringComparer.Ordinal)) ValidateName(name);
     }
 
     internal static void ValidateReviewedData(JsonObject additions, Dictionary<string, string> renames, HashSet<string> archived)
     {
         CatalogJson.Require(CatalogJson.Set(renames.Keys).SetEquals(archived), "Frozen rename table must cover the archive exactly");
-        var verbs = "Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage Synchronize Trace Upgrade Upload Validate Write".Split(' ');
+        var verbs = "Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Prefill Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage Synchronize Trace Upgrade Upload Validate Write".Split(' ');
         foreach (var (old, target) in renames)
             CatalogJson.Require(Regex.IsMatch(target, "^[A-Z][A-Za-z0-9]+$") && verbs.Contains(Regex.Match(target, "^[A-Z][a-z]*").Value) && !new[] { "Json", "Xml", "Xlsx", "SiVArc" }.Any(target.Contains), "Unreviewed rename: " + old);
         foreach (var group in renames.GroupBy(p => p.Value, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
@@ -148,11 +149,16 @@ internal sealed class CatalogData
         foreach (var (name, node) in additions)
         {
             var row = node!.AsObject(); var owner = CatalogJson.Text(row["owner"]); var operation = CatalogJson.Text(row["operation"]);
-            CatalogJson.Require(!archived.Contains(name) && Regex.IsMatch(name, "^[A-Z][A-Za-z0-9]+$") && CatalogJson.Set(row.Select(p => p.Key)).SetEquals(new[] { "owner", "operation", "releases" }), "Invalid new V4 entry: " + name);
+            CatalogJson.Require(!archived.Contains(name) && Regex.IsMatch(name, "^[A-Z][A-Za-z0-9]+$") && verbs.Contains(Regex.Match(name, "^[A-Z][a-z]*").Value) && CatalogJson.Set(row.Select(p => p.Key)).SetEquals(new[] { "owner", "operation", "releases" }), "Invalid new V4 entry: " + name);
             CatalogJson.Require(CatalogJson.Strings(row["releases"]).SequenceEqual(CatalogJson.Keys), "Unreviewed new V4 release list: " + name);
             CatalogJson.Require(reviewed.TryGetValue(name, out var expected) ? expected == (owner, operation) : owner is "P8-31d" or "P8-31e" && operation is "READ" or "FILE" or "OFFLINE" or "WRITE", "Unreviewed owner/operation: " + name);
         }
         CatalogJson.Require(reviewed.Keys.All(additions.ContainsKey), "Missing reviewed new V4 entry");
+    }
+    private static void ValidateName(string name)
+    {
+        var verbs = "Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Prefill Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage Synchronize Trace Upgrade Upload Validate Write".Split(' ');
+        CatalogJson.Require(Regex.IsMatch(name, "^[A-Z][A-Za-z0-9]+$") && verbs.Contains(Regex.Match(name, "^[A-Z][a-z]*").Value), "Unreviewed V4 tool name: " + name);
     }
     internal static Dictionary<string, string> Resolve(IEnumerable<string> baseline, HashSet<string> registered, Dictionary<string, string> targets, bool merged = false)
     {

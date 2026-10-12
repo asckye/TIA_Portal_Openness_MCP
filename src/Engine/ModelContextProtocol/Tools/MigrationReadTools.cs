@@ -19,8 +19,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public MigrationReadTools(MigrationReadService service) => _migrationRead = service;
 
         [McpServerTool(Name = "ListUnifiedGlobalScripts"), Description("[L2][HMI-Unified][READ]Page global script module names only. Names are NOT proof of body acquisition. Exact expectedProject and HMI path required. Resume with identical arguments and nextCursor.")]
-        public CallToolResult ListUnifiedGlobalScriptsV4(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => HmiInspectionContract.Run("ListUnifiedGlobalScripts", false, false, () => ListUnifiedGlobalScripts(softwarePath, expectedProject, cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+        public CallToolResult ListUnifiedGlobalScriptsV4(string softwarePath, string expectedProject, string cursor = "", int limit = 100, int budgetMs = 5000)
+            => HmiInspectionContract.Run("ListUnifiedGlobalScripts", false, false, () => ListUnifiedGlobalScripts(softwarePath, expectedProject, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ListUnifiedGlobalScripts(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ListUnifiedGlobalScripts(softwarePath, expectedProject, cursor, pageSize, budgetMs);
@@ -30,9 +30,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string expectedProject,
             [Description("moduleName: exact name of the global script module.")] string moduleName,
             string cursor = "",
-            int pageSize = 50,
+            int limit = 50,
             int budgetMs = 5000)
-            => HmiInspectionContract.Run("GetUnifiedGlobalScript", false, false, () => ReadUnifiedGlobalScript(softwarePath, expectedProject, moduleName, cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+            => HmiInspectionContract.Run("GetUnifiedGlobalScript", false, false, () => ReadUnifiedGlobalScript(softwarePath, expectedProject, moduleName, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedGlobalScript(
             string softwarePath,
@@ -42,9 +42,9 @@ namespace TiaMcpServer.ModelContextProtocol
             int pageSize = 50,
             int budgetMs = 5000)
         => _migrationRead.ReadUnifiedGlobalScript(softwarePath, expectedProject, moduleName, cursor, pageSize, budgetMs);
-        [McpServerTool(Name = "ListUnifiedTagDefinitions"), Description("[L2][HMI-Unified][READ]Resume recursive root/table/group/UDT/array member definitions. Returns path-addressed records, own API fields and separately labelled root source inference. Unknown bounds remain gaps. pageSize counts evidence records, not tags. Follow nextCursor until null; inspect cumulative failures.")]
-        public CallToolResult ReadUnifiedTagDefinitionsV4(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => HmiInspectionContract.Run("ListUnifiedTagDefinitions", false, false, () => ReadUnifiedTagDefinitions(softwarePath, expectedProject, cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+        [McpServerTool(Name = "ListUnifiedTagDefinitions"), Description("[L2][HMI-Unified][READ]Resume recursive root/table/group/UDT/array member definitions. Returns path-addressed records, own API fields and separately labelled root source inference. Unknown bounds remain gaps. limit counts evidence records, not tags. Follow nextCursor until null; inspect cumulative failures.")]
+        public CallToolResult ReadUnifiedTagDefinitionsV4(string softwarePath, string expectedProject, string cursor = "", int limit = 100, int budgetMs = 5000)
+            => HmiInspectionContract.Run("ListUnifiedTagDefinitions", false, false, () => ReadUnifiedTagDefinitions(softwarePath, expectedProject, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedTagDefinitions(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedTagDefinitions(softwarePath, expectedProject, cursor, pageSize, budgetMs);
@@ -56,11 +56,11 @@ namespace TiaMcpServer.ModelContextProtocol
             string itemName = "",
             [Description("branch: exact property, attribute, nonnegative index or name selection steps.")] BranchStep[] branch = null!,
             string cursor = "",
-            int pageSize = 100,
+            int limit = 100,
             int budgetMs = 5000)
             => HmiInspectionContract.Run("GetUnifiedScreenBranch", false, false,
                 () => ReadUnifiedScreenBranch(softwarePath, expectedProject, screenPath, itemName,
-                    V4Json.Serialize(branch ?? Array.Empty<BranchStep>()), cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+                    V4Json.Serialize(branch ?? Array.Empty<BranchStep>()), cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedScreenBranch(
             string softwarePath,
@@ -73,20 +73,20 @@ namespace TiaMcpServer.ModelContextProtocol
             int budgetMs = 5000)
             => _migrationRead.ReadUnifiedScreenBranch(softwarePath, expectedProject, screenPath, itemName, branchJson, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "GetUnifiedLibraryType"), Description("[L2][HMI-Unified][READ]Read/native-export ONE exact project-library type AND version. typePath=/Folder/Type, version exact (never default). Uses advertised document format; non-script types with no document formats use the separate official Export(FileInfo, WithReadOnly) XML action once. XML file acquisition is separate from unverified internal-content coverage. No guessed formats, edit mode, instantiation, whole-library traversal or automatic retry after failure. Direct dependency identifiers, original files, hashes and explicit gaps are returned.")]
-        public CallToolResult ReadUnifiedLibraryTypeV4(string softwarePath, string expectedProject, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => HmiInspectionContract.Run("GetUnifiedLibraryType", false, false, () => ReadUnifiedLibraryType(softwarePath, expectedProject, typePath, version, cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+        public CallToolResult ReadUnifiedLibraryTypeV4(string softwarePath, string expectedProject, string typePath, string version, string cursor = "", int limit = 100, int budgetMs = 5000)
+            => HmiInspectionContract.Run("GetUnifiedLibraryType", false, false, () => ReadUnifiedLibraryType(softwarePath, expectedProject, typePath, version, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedLibraryType(string softwarePath, string expectedProject, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedLibraryType(softwarePath, expectedProject, typePath, version, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "GetUnifiedFaceplateInstance"), Description("[L2][HMI-Unified][READ]Trace one exact screen faceplate instance to its caller-selected library type/version. Reads interface assignments, events and property bindings; verifies native library-version GUID before exporting internals. Mismatch or unavailable version service is an explicit gap; never substitutes a default version or scans other types.")]
-        public CallToolResult ReadUnifiedFaceplateInstanceV4(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => HmiInspectionContract.Run("GetUnifiedFaceplateInstance", false, false, () => ReadUnifiedFaceplateInstance(softwarePath, expectedProject, screenPath, itemName, typePath, version, cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+        public CallToolResult ReadUnifiedFaceplateInstanceV4(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath, string version, string cursor = "", int limit = 100, int budgetMs = 5000)
+            => HmiInspectionContract.Run("GetUnifiedFaceplateInstance", false, false, () => ReadUnifiedFaceplateInstance(softwarePath, expectedProject, screenPath, itemName, typePath, version, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedFaceplateInstance(softwarePath, expectedProject, screenPath, itemName, typePath, version, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "ListUnifiedLibraryFolderEntries"), Description("[L2][HMI-Unified][READ]Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path.")]
-        public CallToolResult ListUnifiedLibraryFolderV4(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100, int budgetMs = 5000)
-            => HmiInspectionContract.Run("ListUnifiedLibraryFolderEntries", false, false, () => ListUnifiedLibraryFolder(softwarePath, expectedProject, folderPath, cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+        public CallToolResult ListUnifiedLibraryFolderV4(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int limit = 100, int budgetMs = 5000)
+            => HmiInspectionContract.Run("ListUnifiedLibraryFolderEntries", false, false, () => ListUnifiedLibraryFolder(softwarePath, expectedProject, folderPath, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ListUnifiedLibraryFolder(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ListUnifiedLibraryFolder(softwarePath, expectedProject, folderPath, cursor, pageSize, budgetMs);

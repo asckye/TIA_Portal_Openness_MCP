@@ -120,7 +120,7 @@ namespace TiaOpenness.Shared
             ValidateAttribution();
             if (string.IsNullOrWhiteSpace(RequestId) || string.IsNullOrWhiteSpace(Host)
                 || string.IsNullOrWhiteSpace(ReleaseKey) || string.IsNullOrWhiteSpace(Tool)
-                || !(IsHash(PlanHash) || Kind == "plan" && PlanHash.StartsWith("sha256:", StringComparison.Ordinal) && IsHash(PlanHash.Substring(7))) || !IsHash(ArgumentDigest)
+                || !IsHash(PlanHash) || !IsHash(ArgumentDigest)
                 || TimeoutSeconds < 1 || TimeoutSeconds > 3600 || Deadline <= DateTimeOffset.UtcNow
                 || Deadline > DateTimeOffset.UtcNow.AddSeconds(TimeoutSeconds + 5) || Operations.Length == 0 || Operations.Length > (Kind == "plan" ? 10000 : 50)
                 || Kind == "plan" && (Tool != "ApplyGenerationPlan" || PlanJson == null))

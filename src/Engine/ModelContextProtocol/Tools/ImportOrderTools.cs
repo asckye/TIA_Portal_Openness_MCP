@@ -146,7 +146,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (totalField != null)
                 {
                     paging = McpServer.OffsetPage(offset, limit, Count(evidence, totalField));
-                    incomplete |= !paging.Complete;
                     data.Remove("offset"); data.Remove("limit"); data.Remove("nextOffset");
                 }
             }
@@ -176,14 +175,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, new Error("Some items failed or were not completed.", new PartialFailureDetails(Math.Max(1, succeeded), Math.Max(1, failed), 0)),
                     Outcome.Partial, Completeness.Partial, current);
             string? status = (string?)evidence["status"];
-            Error? rejection = status == "InvalidParams" ? McpServer.InvalidInput("arguments")
+            Error? rejection = status == "InvalidParams" ? McpServer.InvalidInput((string?)evidence["parameter"] ?? "arguments")
                 : status == "NotConnected" || status == "NoProject" ? new Error("No project is bound.", new ProjectNotBoundDetails())
                 : status == "InvalidState" ? new Error("The session prerequisite is not satisfied.", new PreconditionFailedDetails("session", null))
                 : status == "NotFound" ? new Error("The requested resource was not found.", new NotFoundDetails(null)) : null;
             if (rejection != null && !mayWrite)
                 return Result(tool, data, rejection, Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (writes && (mayWrite || success == null)) return Result(tool, data, Unknown(data), Outcome.Unknown, Completeness.Unknown, current);
-            return Result(tool, data, new Error("The operation did not satisfy its completion criteria.", new InternalErrorDetails(null)),
+            return Result(tool, data, new Error("The operation did not satisfy its completion criteria.", new NativeOperationFailedDetails(null, null,
+                data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value)))),
                 writes ? Outcome.Failed : Outcome.ReadFailed, incomplete ? Completeness.Partial : Completeness.Complete, current);
         }
 

@@ -3,6 +3,7 @@
     <Compile Include="../../../src/Shared/ProjectUserManagementTools.cs" />
     <Compile Include="../../../src/Shared/ProjectProtectionTools.cs" />
     <Compile Include="../../../src/Shared/DriveToolContract.cs" Link="DriveToolContract.cs" />
+    <Compile Include="../../../src/Shared/ProgressHeartbeat.cs" Link="Shared/ProgressHeartbeat.cs" />
     <Compile Remove="Fixtures/PlcRender/generate.cs" />
   </ItemGroup>
   <Import Project="../../Shared/Xunit.props" />

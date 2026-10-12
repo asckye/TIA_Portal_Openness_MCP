@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -189,6 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             using var actor = TiaOpenness.Shared.ActorScope.EnterCall(request?.Server?.SessionId, request?.Server);
             using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
+            using var heartbeat = ProgressHeartbeat.Begin(request);
             string? correlation = null;
             // The call projection starts at the transport boundary. The tool's BEFORE row is written inside its lane,
             // after approval, so journal BEFORE/terminal pairs never overlap on the Openness lane.

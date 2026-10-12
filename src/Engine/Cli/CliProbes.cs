@@ -45,7 +45,7 @@ namespace TiaMcpServer
 
             if (result.Ok != true)
             {
-                Environment.ExitCode = 2;
+                Environment.ExitCode = 3;
             }
         }
 

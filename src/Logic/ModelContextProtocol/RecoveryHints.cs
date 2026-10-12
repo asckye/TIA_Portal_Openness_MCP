@@ -51,7 +51,16 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 ["exampleArguments"] = bounded ? compact : null, ["exampleOmitted"] = !bounded,
                 ["validation"] = verified?["validation"]?.DeepClone(),
                 ["bindingMeaning"] = "Example values are placeholders and sample targets. Resolve and review them against this session; this hint does not authorize a write." };
-            warnings.Add(new JsonObject { ["code"] = "RECOVERY_GUIDANCE", ["message"] = RecoveryCode(code).Trim(), ["details"] = details });
+            var guidance = new TiaMcp.Logic.V4.Warning(TiaMcp.Logic.V4.WarningCode.RecoveryGuidance, RecoveryCode(code).Trim(),
+                System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>>(details.ToJsonString())!);
+            if (body["schemaVersion"]?.GetValue<int?>() != 4)
+            {
+                warnings.Add(JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(guidance)));
+                return true;
+            }
+            var validated = TiaMcp.Logic.V4.EnvelopeMutation.AddWarning(body, guidance).AsObject();
+            body.AsObject().Clear();
+            foreach (var pair in validated) body.AsObject().Add(pair.Key, pair.Value?.DeepClone());
             return true;
         }
         private static string Tip(string text) => "  ▶ RECOVERY: " + text;

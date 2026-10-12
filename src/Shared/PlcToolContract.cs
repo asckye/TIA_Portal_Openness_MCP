@@ -160,7 +160,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 Outcome outcome = HostBehavior.OperationOutcome(false, false, before || tool.StartsWith("PlanOnline", StringComparison.Ordinal),
                     !preview, succeeded > 0 && failed > 0);
-                Error error = outcome == Outcome.RejectedBeforeOperation ? McpServer.InvalidInput("arguments")
+                Error error = outcome == Outcome.RejectedBeforeOperation ? new Error("Input does not satisfy the declared contract.",
+                    new PreconditionFailedDetails("plc-operation", null))
                     : outcome == Outcome.Partial ? new Error("Some PLC operations did not complete.", new PartialFailureDetails(succeeded, failed, 0))
                     : new Error("The PLC operation did not establish success.", new NativeOperationFailedDetails(null, null, Evidence(evidence)));
                 return Result(tool, root, error, outcome, incomplete ? Completeness.Partial : Completeness.None, current);

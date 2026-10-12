@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 
 namespace TiaMcp.Logic.V4
 {
@@ -28,6 +29,7 @@ namespace TiaMcp.Logic.V4
             options.Converters.Add(new ClosedEnumConverter<Completeness>(JsonNamingPolicy.CamelCase));
             options.Converters.Add(new ClosedEnumConverter<BehaviorPolicy>(JsonNamingPolicy.KebabCaseLower));
             options.Converters.Add(new ClosedEnumConverter<PagingMode>(JsonNamingPolicy.CamelCase));
+            options.Converters.Add(new ClosedEnumConverter<PagingUnit>(JsonNamingPolicy.CamelCase));
             options.Converters.Add(new ClosedEnumConverter<ErrorCode>(JsonNamingPolicy.SnakeCaseUpper));
             options.Converters.Add(new ClosedEnumConverter<WarningCode>(JsonNamingPolicy.SnakeCaseUpper));
             options.Converters.Add(new UtcOffsetConverter());
@@ -53,6 +55,12 @@ namespace TiaMcp.Logic.V4
             V4Validation.Json(document.RootElement);
             return document.RootElement.Deserialize<T>(Options)
                 ?? throw new JsonException("A V4 value must not be null.");
+        }
+
+        public static ConsumerEnvelope DeserializeConsumer(string json)
+        {
+            using var document = JsonDocument.Parse(json);
+            return new ConsumerEnvelope(document.RootElement);
         }
 
         internal const int MaximumInputDepth = 64;
@@ -92,7 +100,9 @@ namespace TiaMcp.Logic.V4
             using var document = JsonDocument.Parse(SerializeUtf8(value));
             if (document.RootElement.ValueKind == JsonValueKind.Null) return null;
             V4Validation.Require(document.RootElement.ValueKind == JsonValueKind.Object, "data must be an object or null.");
-            return document.RootElement.Clone();
+            var normalized = JsonNode.Parse(document.RootElement.GetRawText());
+            NormalizeTimes(normalized);
+            return JsonSerializer.SerializeToElement(normalized);
         }
 
         public static T ReadData<T>(Envelope envelope) => envelope.Data.HasValue
@@ -117,8 +127,23 @@ namespace TiaMcp.Logic.V4
             return data;
         }
 
-        private static string Timestamp(DateTimeOffset value) =>
-            value.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'", CultureInfo.InvariantCulture);
+        public static string Timestamp(DateTimeOffset value) =>
+            value.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'", CultureInfo.InvariantCulture);
+
+        private static void NormalizeTimes(JsonNode? node)
+        {
+            if (node is JsonArray array)
+                foreach (var child in array) NormalizeTimes(child);
+            if (node is not JsonObject obj) return;
+            foreach (var pair in new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, JsonNode?>>(obj))
+            {
+                if ((pair.Key.EndsWith("Utc", StringComparison.OrdinalIgnoreCase) || pair.Key.Equals("timestamp", StringComparison.OrdinalIgnoreCase))
+                    && pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
+                    && text != null && text.Contains("T") && DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var stamp))
+                    obj[pair.Key] = Timestamp(stamp);
+                else NormalizeTimes(pair.Value);
+            }
+        }
 
         private sealed class ClosedEnumConverter<T> : JsonConverter<T> where T : struct, Enum
         {

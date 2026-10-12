@@ -255,7 +255,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private readonly ConcurrentDictionary<string, Lazy<(ToolDescriptor Descriptor, McpServerTool Tool)>> descriptors =
-            new ConcurrentDictionary<string, Lazy<(ToolDescriptor, McpServerTool)>>(StringComparer.OrdinalIgnoreCase);
+            new ConcurrentDictionary<string, Lazy<(ToolDescriptor, McpServerTool)>>(StringComparer.Ordinal);
         private (ToolDescriptor Descriptor, McpServerTool Tool) DescriptorEntry(string name)
             => descriptors.GetOrAdd(name, key => new Lazy<(ToolDescriptor, McpServerTool)>(() =>
             {
@@ -272,11 +272,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public IReadOnlyDictionary<string, ToolDescriptor> IncludingUnavailable => includingUnavailable.Value;
         private IReadOnlyDictionary<string, ToolDescriptor> View(bool includeUnavailable)
             => Methods.Where(pair => includeUnavailable || McpServer.VersionToolProblem(pair.Key).Length == 0)
-                .ToDictionary(pair => pair.Key, pair => DescriptorEntry(pair.Key).Descriptor, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(pair => pair.Key, pair => DescriptorEntry(pair.Key).Descriptor, StringComparer.Ordinal);
         public IReadOnlyList<ToolDescriptor> Lite => lite.Value;
         public ToolDescriptor? Find(string name, bool includeUnavailable = false)
         {
-            var entry = Methods.FirstOrDefault(pair => string.Equals(pair.Key, name, StringComparison.OrdinalIgnoreCase));
+            var entry = Methods.FirstOrDefault(pair => string.Equals(pair.Key, name, StringComparison.Ordinal));
             return entry.Key == null || !includeUnavailable && McpServer.VersionToolProblem(entry.Key).Length != 0 ? null : DescriptorEntry(entry.Key).Descriptor;
         }
         public JsonArray BehaviorCapabilities => (JsonArray)behaviorCapabilities.Value.DeepClone();

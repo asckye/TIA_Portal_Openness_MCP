@@ -13,7 +13,8 @@
       "maxLength": 4096
     },
     "planHash": {
-      "$ref": "common.schema.json#/$defs/hash"
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     },
     "package": {
       "type": "object",

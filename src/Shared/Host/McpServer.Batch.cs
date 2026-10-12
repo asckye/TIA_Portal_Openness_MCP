@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
 
 #if !TIA_ENGINE_PORTED
-        [McpServerTool(Name = "PreviewToolBatch"), Description("[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute token bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage.")]
+        [McpServerTool(Name = "PreviewToolBatch"), Description("[L2][Meta][READ] Preview 1..50 explicit [WRITE] tools with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage.")]
         public static CallToolResult PreviewToolBatch(
             [Description("Ordered calls with name and an arguments object; 1..50 operations.")] ToolCall[] operations,
             [Description("Exact bound project name.")] string expectedProject)
@@ -79,8 +79,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 if (BatchState(expectedProject) != plan.State)
                     return V4Reject(tool, new Error("Connection changed during preview.", new PreconditionFailedDetails("batch-identity", expectedProject)));
-                string token = BatchPlans.Add(plan, DateTime.UtcNow);
-                return V4Result(tool, new JsonObject { ["token"] = token, ["expiresUtc"] = plan.Expires.ToString("O"),
+                string previewToken = BatchPlans.Add(plan, DateTime.UtcNow);
+                return V4Result(tool, new JsonObject { ["token"] = previewToken, ["expiresUtc"] = V4Json.Timestamp(new DateTimeOffset(plan.Expires.ToUniversalTime())),
                     ["operations"] = plan.Operations.DeepClone(), ["items"] = rows,
                     ["executed"] = false, ["scope"] = "Revalidates native previews, not all engineering state. External edits can occur between calls." });
             }
@@ -89,13 +89,13 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
 
 #if !TIA_ENGINE_PORTED
-        [McpServerTool(Name = "ApplyToolBatch"), Description("[L2][Meta][WRITE] Consume a PreviewToolBatch token once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download.")]
-        public static CallToolResult ApplyToolBatch([Description("Single-use token from PreviewToolBatch; expires after 10 minutes.")] string token)
+        [McpServerTool(Name = "ApplyToolBatch"), Description("[L2][Meta][WRITE] Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download.")]
+        public static CallToolResult ApplyToolBatch([Description("Single-use previewToken from PreviewToolBatch; expires after 10 minutes.")] string previewToken)
         {
             const string tool = "ApplyToolBatch";
             BatchPlanStore.Plan plan;
-            try { plan = BatchPlans.Take(token, DateTime.UtcNow); }
-            catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Preview token is missing, expired or already consumed.", new NotFoundDetails(token))); }
+            try { plan = BatchPlans.Take(previewToken, DateTime.UtcNow); }
+            catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Preview token is missing, expired or already consumed.", new NotFoundDetails(previewToken))); }
             foreach (var operation in plan.Operations.OfType<JsonObject>())
                 if (CatalogView.Find((string)operation["name"]!, includeUnavailable: true)?.Classification.Operation == "UI")
                     return V4Reject(tool, new Error("UI operations cannot run in a batch.",
@@ -103,13 +103,13 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 using var approvalPreview = BeginReadOnlyApprovalPreview();
-                if (BatchState(plan.Project) != plan.State) return V4Reject(tool, new Error("Batch identity changed.", new PlanStaleDetails(token, "identity")));
+                if (BatchState(plan.Project) != plan.State) return V4Reject(tool, new Error("Batch identity changed.", new PlanStaleDetails(null, "identity", previewToken)));
                 int index = 0;
                 foreach (var op in plan.Operations.OfType<JsonObject>())
                 {
                     var result = CallTool((string)op["name"]!, new ToolArguments(JsonSerializer.SerializeToElement(op["arguments"])));
                     if (ResultSucceeded(ResultBody(result)) != true || StablePreview(ResultBody(result)) != StablePreview(plan.Previews[index++]))
-                        return V4Reject(tool, new Error("A stored preview changed.", new PlanStaleDetails(token, "preview")));
+                        return V4Reject(tool, new Error("A stored preview changed.", new PlanStaleDetails(null, "preview", previewToken)));
                 }
             }
             catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */ { return V4Reject(tool, new Error("Cannot revalidate batch identity and previews.", new PreconditionFailedDetails("batch-revalidation", plan.Project))); }
@@ -219,10 +219,14 @@ namespace TiaMcpServer.ModelContextProtocol
             if (succeeded == rows.Count) return V4Result(tool, data, completed: write, current: current);
             if (partial || succeeded > 0) return V4Result(tool, data, new Error("The batch contains partial results.",
                 succeeded > 0 ? new PartialFailureDetails(succeeded, failed, skipped) : new PartialFailureDetails(0, 0, 0)), Outcome.Partial, Execution.Partial, Completeness.Partial, current: current);
+            var cause = rows.FirstOrDefault(row => ResultSucceeded(row!["result"]) != true
+                && (string?)row!["result"]?["error"]?["code"] != "NOT_EXECUTED") ?? rows[0];
+            data["causeIndex"] = cause!["index"]?.DeepClone();
+            var causeError = V4Json.Deserialize<Envelope>(cause["result"]!.ToJsonString()).Error!;
             if (rows.All(row => (string?)row!["result"]?["meta"]?["execution"] == "not-started"))
-                return V4Result(tool, data, new Error("Every batch item was rejected before execution.", new PreconditionFailedDetails("batch-results", null)),
+                return V4Result(tool, data, causeError,
                     Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current);
-            return V4Result(tool, data, new Error("No batch item succeeded; inspect the retained target results.", new PreconditionFailedDetails("batch-results", null)),
+            return V4Result(tool, data, causeError,
                 write ? Outcome.Failed : Outcome.ReadFailed, write ? Execution.Completed : Execution.ReadOnly, Completeness.None, current: current);
         }
         private static string BatchState(string project)

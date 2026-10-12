@@ -1,3 +1,9 @@
+#if !TIA_GENERATION_PLANNER
+extern alias PlcRendering;
+using EnvelopeMutation = PlcRendering::TiaMcp.Logic.V4.EnvelopeMutation;
+#else
+using EnvelopeMutation = TiaMcp.Logic.V4.EnvelopeMutation;
+#endif
 using System.Text.Json.Nodes;
 
 namespace TiaOpenness.Shared
@@ -8,14 +14,7 @@ namespace TiaOpenness.Shared
         {
             var copy = body.DeepClone();
             if (copy["schemaVersion"]?.GetValue<int?>() != 4 || copy["meta"] is not JsonObject meta) return copy;
-            if (requestId != null) meta["requestId"] = requestId;
-            if (disabled && meta["warnings"] is JsonArray warnings)
-            {
-                foreach (var warning in warnings) if ((string?)warning?["code"] == "APPROVAL_DISABLED") return copy;
-                warnings.Add(new JsonObject { ["code"] = "APPROVAL_DISABLED", ["message"] = "Workbench approval is disabled for this MCP write call.",
-                    ["details"] = new JsonObject { ["enabled"] = false } });
-            }
-            return copy;
+            return EnvelopeMutation.Decorate(copy, disabled, requestId);
         }
     }
 }

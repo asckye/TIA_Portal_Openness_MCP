@@ -46,15 +46,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Partial offline reference query completed. Inspect failures, unresolvedCalls and scope; never use it alone to justify deletion.";
             });
 
-        [McpServerTool(Name = "PatchPlcBlockDocument"), Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedFingerprint from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
+        [McpServerTool(Name = "PatchPlcBlockDocument"), Description("[L2][PLC-Builders][FILE] Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged.")]
         public CallToolResult PatchPlcBlockDocumentV4(
             [Description("Absolute existing single-block SimaticML XML file.")] string filePath,
             [Description("JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"}].")] BlockEdit[] changes,
-            [Description("documentFingerprint returned by GetPlcBlockEditCapabilities for this input.")] string expectedFingerprint,
+            [Description("documentFingerprint returned by GetPlcBlockEditCapabilities for this input.")] string expectedDocumentHash,
             [Description("New absolute output file; existing parent directory required when dryRun=false.")] string outputPath = "",
             [Description("Preview only by default; false writes a new file, never imports into TIA.")] bool dryRun = true)
             => PlcToolContract.Run("PatchPlcBlockDocument", !dryRun, false, () =>
-                PatchPlcBlockDocument(filePath, V4Json.Serialize(changes), expectedFingerprint, outputPath, dryRun));
+                PatchPlcBlockDocument(filePath, V4Json.Serialize(changes), expectedDocumentHash, outputPath, dryRun));
 
         public ResponseMessage PatchPlcBlockDocument(
             string filePath,

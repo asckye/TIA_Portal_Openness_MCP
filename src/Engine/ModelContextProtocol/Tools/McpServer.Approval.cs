@@ -51,14 +51,19 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write, bool nativeCallIssued)
         {
             var body = ResultBody(result);
-            if ((string?)body?["meta"]?["outcome"] != "unknown" || !ToolTaxonomy.UsesOpennessLane(name)) return result;
+            if ((string?)body?["meta"]?["outcome"] != "unknown") return result;
             var data = body?["data"] as JsonObject;
             bool True(JsonNode? value) => value is JsonValue flag && flag.TryGetValue<bool>(out var truth) && truth;
             bool nativeIssued = nativeCallIssued || True((data?["evidence"] as JsonObject)?["nativeOutcomeUnknown"]) || True(data?["nativeIssued"]);
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
-            var key = SessionBehavior.LocksSession(nativeIssued, (string?)body?["meta"]?["outcome"] == "unknown", mutation) ? CurrentApprovalSession() : null;
+            var sessionKey = CurrentApprovalSession();
+            var key = ToolTaxonomy.UsesOpennessLane(name) && SessionBehavior.LocksSession(nativeIssued, true, mutation) ? sessionKey : null;
             if (key != null) SessionFaults.GetValue(key, _ => new SessionFault()).Unknown = true;
-            return result;
+            bool locked = ToolTaxonomy.UsesOpennessLane(name) && sessionKey != null
+                && SessionFaults.GetValue(sessionKey, _ => new SessionFault()).Unknown;
+            var mapped = EnvelopeMutation.SessionReset(body!, locked);
+            return new CallToolResult { IsError = result.IsError, StructuredContent = mapped,
+                Content = new[] { new TextContentBlock { Text = mapped.ToJsonString() } } };
         }
         internal static CallToolResult? GenerationFenceRefusal(string name, string arguments, bool dispatched = false, bool? write = null)
         {
@@ -187,7 +192,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult ApprovalRefusal(ApprovalOutcome approval)
             => FinishApproval(V4Reject(approval.Request.Tool, new Error(approval.Request.Tool == "SaveExportContent"
                 ? "MCP cannot write Workbench approval settings." : "Workbench confirmation is required before this write.",
-                new ConfirmationRequiredDetails(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId))), approval);
+                approval.Reason == "cancelled" ? (ErrorDetails)new CancelledDetails("approval-wait")
+                    : new ConfirmationRequiredDetails(approval.Reason!, approval.Request.PlanHash, approval.Request.RequestId))), approval);
         internal static CallToolResult ChangedApprovalRefusal(ApprovalOutcome approval)
         {
             ApprovalClient.Complete(approval, "rejected-before-operation").GetAwaiter().GetResult();

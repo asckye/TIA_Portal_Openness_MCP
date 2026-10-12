@@ -26,9 +26,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("action: the operation to perform - read | create | update | delete.")] string action="read",
             string propertyName="",
             [Description("scriptProperties: Object of script properties to set.")] AttributeMap<Scalar> scriptProperties = null!,
-            string expectedToken="",
+            string previewToken="",
             bool dryRun=true)
-            => HmiInspectionContract.Run("ManageUnifiedEvent", action != "read" && !dryRun, true, () => ManageUnifiedEvent(softwarePath, V4Json.Serialize(objectPath), eventType, action, propertyName, V4Json.Serialize(scriptProperties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>())), expectedToken, dryRun));
+            => HmiInspectionContract.Run("ManageUnifiedEvent", action != "read" && !dryRun, true, () => ManageUnifiedEvent(softwarePath, V4Json.Serialize(objectPath), eventType, action, propertyName, V4Json.Serialize(scriptProperties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>())), previewToken, dryRun));
 
         public ResponseMessage ManageUnifiedEvent(
             string softwarePath,

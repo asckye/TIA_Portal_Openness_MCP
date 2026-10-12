@@ -96,7 +96,7 @@
       ],
       "meaning": "Use the intended device address from the selected route/discovery."
     },
-    "expectedToken": {
+    "previewToken": {
       "tools": [],
       "meaning": "Copy the token from this same tool's preview with the same target and proposed content."
     },

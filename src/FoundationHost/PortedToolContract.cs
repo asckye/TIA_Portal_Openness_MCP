@@ -157,6 +157,7 @@ internal sealed partial class FoundationTool
     {
         this.worker = worker; portedMethod = method; portedRelease = release;
         var declaration = DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
+        DeclaredToolMetadata.V4(declaration.ProtocolTool, foundation: true);
         portedDescriptor = descriptor; tool = declaration.ProtocolTool;
         definition = new Definition(name, PortedFamilies.ForTool(name).OperationPrefix, descriptor.RawDescription,
             descriptor.Parameters.Select(p => new Argument(p.Name, p.FriendlyType, p.Required)).ToArray(), PortedFamilies.ForTool(name).Name);

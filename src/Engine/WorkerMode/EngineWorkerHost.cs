@@ -477,6 +477,12 @@ namespace TiaMcpServer.Worker
             if (nativeCalls.NativeCallIssued && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
                 processLease?.CompleteRequest(true);
             if (nativeFault != null) lifecycle?.Lock(nativeFault);
+            if ((string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
+            {
+                var body = EnvelopeMutation.SessionReset(result.StructuredContent!, lifecycle?.Fault != null || nativeFault != null);
+                result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
+                    Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+            }
             Observe();
             var reply = Status();
             reply["nativeCallIssued"] = nativeCalls.NativeCallIssued;

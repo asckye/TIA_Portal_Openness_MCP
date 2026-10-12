@@ -307,7 +307,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
                 return AuditBridgeResult(audit, rejected, disabled);
             }
-            if (string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, "CallTool", StringComparison.Ordinal))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;
             try { return AuditBridgeResult(audit, ApprovedBridgeCall(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
@@ -347,8 +347,10 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var retained in HostBehavior.RetainedRecoveryEvidence(error)) data[retained.Key] = retained.Value?.DeepClone();
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(error);
             string? message = HostBehavior.AdmissionDiagnostic(error);
-            return V4Result(tool, data, HostBehavior.FailureError(kind, parameter, evidence, message),
-                HostBehavior.OutcomeOf(kind), HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind), current: issued);
+            bool readCancelled = issued && readOnly && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
+            return V4Result(tool, data, HostBehavior.FailureError(kind, parameter, evidence, message, stage: issued ? "tool-call" : "tool-queue"),
+                readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind), readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind),
+                HostBehavior.CompletenessOf(kind), current: issued);
         }
 
 #if TIA_ENGINE_HOST
@@ -373,7 +375,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static Error TargetInputError(string name, ToolArguments arguments, Error error)
         {
             var target = CatalogView.Find(name);
-            if (target == null || error.Details is not InvalidArgumentDetails { Parameter: "arguments" }) return error;
+            if (target == null || error.Details is not InvalidArgumentDetails argument
+                || argument.Parameter != "arguments" && !argument.WholeArgumentValidation) return error;
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (arguments.Json.EnumerateObject().Any(p => !names.Add(p.Name))) return error;
             var fields = new InputSchema(target.Tool.InputSchema).ValidateFields(arguments.Json);
@@ -396,7 +399,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             && name.ValueKind == JsonValueKind.String) targets.Add(name.GetString()!);
             }
             return targets.Any(target => ToolBehaviorPolicy(
-                AllToolDescriptors(true).Keys.FirstOrDefault(n => string.Equals(n, target, StringComparison.OrdinalIgnoreCase)) ?? target,
+                AllToolDescriptors(true).Keys.FirstOrDefault(n => string.Equals(n, target, StringComparison.Ordinal)) ?? target,
                 BehaviorPolicy.NotApplicable) == BehaviorPolicy.Current);
         }
         internal static CallToolResult DiscloseTargets(CallToolResult result, string tool, JsonElement arguments)
@@ -438,7 +441,8 @@ namespace TiaMcpServer.ModelContextProtocol
             data["summary"] = response.Message;
             if (response is ResponseStringList list) data["items"] = new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
             return reportOnly || response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
-                : V4Reject(tool, InvalidInput("arguments"), data);
+                : V4Result(tool, data, new Error("Input does not satisfy the declared contract.",
+                    new InternalErrorDetails(null)), Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
         }
         internal static CallToolResult ToolResult(object? result)
         {

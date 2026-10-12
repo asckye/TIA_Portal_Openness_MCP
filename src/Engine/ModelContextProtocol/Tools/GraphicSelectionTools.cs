@@ -25,9 +25,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string screenPath,
             [Description("itemNames: Array of screen item names.")] string[] itemNames,
             string cursor = "",
-            int pageSize = 20,
+            int limit = 20,
             int budgetMs = 5000)
-            => HmiInspectionContract.Run("GetUnifiedGraphicSelection", false, false, () => ReadUnifiedGraphicSelection(softwarePath, expectedProject, screenPath, V4Json.Serialize(itemNames), cursor, pageSize, budgetMs), cursor: cursor, pageSize: pageSize);
+            => HmiInspectionContract.Run("GetUnifiedGraphicSelection", false, false, () => ReadUnifiedGraphicSelection(softwarePath, expectedProject, screenPath, V4Json.Serialize(itemNames), cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedGraphicSelection(
             string softwarePath,

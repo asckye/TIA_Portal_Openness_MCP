@@ -52,7 +52,7 @@ namespace TiaMcp.Logic.Generation
                     if (property.Name != "planHash") property.WriteTo(writer);
                 writer.WriteEndObject();
             }
-            return CanonicalJson.Hash(CanonicalJson.Parse(stream.ToArray()));
+            return CanonicalJson.HashBytes(CanonicalJson.Encode(CanonicalJson.Parse(stream.ToArray())));
         }
 
         internal static T Deserialize<T>(JsonElement value)

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 namespace TiaMcp.Logic.V4
 {
     public enum PagingMode { Offset, Cursor }
+    public enum PagingUnit { Items, Utf16 }
 
     public sealed class Paging
     {
@@ -15,9 +16,10 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(5)] public string? NextCursor { get; }
         [JsonPropertyOrder(6)] public int? Total { get; }
         [JsonPropertyOrder(7)] public bool Complete { get; }
+        [JsonPropertyOrder(8)] public PagingUnit Unit { get; }
 
         public Paging(PagingMode mode, int? offset, int limit, int? nextOffset, string? cursor,
-            string? nextCursor, int? total, bool complete)
+            string? nextCursor, int? total, bool complete, PagingUnit unit = PagingUnit.Items)
         {
             Mode = mode;
             Offset = offset;
@@ -27,6 +29,7 @@ namespace TiaMcp.Logic.V4
             NextCursor = nextCursor;
             Total = total;
             Complete = complete;
+            Unit = unit;
             V4Validation.Paging(this);
         }
     }
@@ -67,8 +70,13 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(2)] public long ByteLength { get; }
         [JsonPropertyOrder(3)] public string Sha256 { get; }
         [JsonPropertyOrder(4)] public DateTimeOffset? ExpiresUtc { get; }
+        [JsonPropertyOrder(5)] public string? Tool { get; }
+        [JsonPropertyOrder(6)] public string? Target { get; }
+        [JsonPropertyOrder(7)] public DateTimeOffset? CreatedUtc { get; }
+        [JsonPropertyOrder(8)] public int? TotalLength { get; }
 
-        public ExportHandle(string id, string mediaType, long byteLength, string sha256, DateTimeOffset? expiresUtc)
+        public ExportHandle(string id, string mediaType, long byteLength, string sha256, DateTimeOffset? expiresUtc,
+            string? tool = null, string? target = null, DateTimeOffset? createdUtc = null, int? totalLength = null)
         {
             V4Validation.Text(id, nameof(id));
             V4Validation.Text(mediaType, nameof(mediaType));
@@ -79,6 +87,11 @@ namespace TiaMcp.Logic.V4
             ByteLength = byteLength;
             Sha256 = sha256;
             ExpiresUtc = expiresUtc?.ToUniversalTime();
+            Tool = tool;
+            Target = target;
+            CreatedUtc = createdUtc?.ToUniversalTime();
+            V4Validation.Require(totalLength == null || totalLength >= 0, "Export text length must be nonnegative.");
+            TotalLength = totalLength;
         }
     }
 }

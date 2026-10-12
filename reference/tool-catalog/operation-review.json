@@ -42,8 +42,63 @@
     ],
     "RenderPlcBlockDocument": [
       "OFFLINE",
+      "FILE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "ExportPlcProDiagInfo": [
       "READ",
-      "The blockPath branch exports the bound PLC block through Openness before rendering; filePath remains local (P8-65 code and IL audit, maintainer 2026-10-11)."
+      "FILE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "ExportScadaData": [
+      "READ",
+      "FILE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "GetOnlineState": [
+      "ONLINE",
+      "READ",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "GetPlcRunStateS7": [
+      "READ",
+      "ONLINE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "PlanOnlineReadOnlyDataProvider": [
+      "ONLINE",
+      "OFFLINE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "PlanOnlineReadOnlyMonitoring": [
+      "ONLINE",
+      "OFFLINE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "ProbePlcMonitorOnlineCapabilities": [
+      "ONLINE",
+      "READ",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "ProbeS7CpuIdentity": [
+      "READ",
+      "ONLINE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "ValidateClassicHmiMinimalPackageFiles": [
+      "READ",
+      "OFFLINE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "ValidateClassicHmiMinimalPackagePlcSync": [
+      "READ",
+      "OFFLINE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
+    ],
+    "WritePlcSclSourceFile": [
+      "OFFLINE",
+      "FILE",
+      "P8-60 reviewed annotation classification; actual project/device/file effects determine the operation category."
     ]
   },
   "NEW_FOUNDATION_TOOLS": {
