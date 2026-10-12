@@ -37,6 +37,7 @@
     {
       "entries": [
         "AttachOpenProject",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
         "OpenProject"
       ],
@@ -87,6 +88,25 @@
     {
       "entries": [],
       "family": "F00",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ConnectIsolatedPortal",
+        "EnsureOpennessUserGroup",
+        "GetPortalInfo",
+        "ValidateAutomationContext"
+      ],
+      "family": "F05",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ManagePlcGitRepository"
+      ],
+      "family": "F33",
       "l5": "NOT RUN",
       "state": "current"
     },
@@ -4500,6 +4520,16 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "b01f3fafd0dbc870a43d5c9530c9f15d14d66da30da67ffd48c1ef6b7cca6e33",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ConnectIsolatedPortal",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "b532af353e204f185187a720eac0e9093de735db0a495ffdf21d9e58490fb16f",
       "inputSchema": {
         "additionalProperties": false,
@@ -6370,6 +6400,16 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "c8600af70a640b2637783b9262b9c9f6f52f5e65001674d3c3731b446ff005e5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "EnsureOpennessUserGroup",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "40d3994ca7d9b8cebf9b94f18c1531bdeeae38a28f5d3160974fa9fbadb3ca39",
@@ -9257,6 +9297,41 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "07a6990cf788e7a91c143ac90542ec98df01029dd5dc8a28a09a5d02f2ac87a5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeProcesses": {
+            "default": true,
+            "description": "includeProcesses: list the TIA Portal processes on the machine.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "includeProducts": {
+            "default": true,
+            "description": "includeProducts: list the installed TIA products / option packages (TiaPortalProduct).",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeSessions": {
+            "default": true,
+            "description": "includeSessions: list the sessions of the bound portal.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetPortalInfo",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "fdde66b749f68030ade532c9587db197e1f81ebe6bd1333c2f3b2fb76256dcbd",
@@ -16018,6 +16093,65 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "843d35a1f5f4431d4fdf3774a6e1b4231b3cf49d98ebf55f404999e956f7921f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "status",
+            "description": "status | history | diff | show | stage | commit. status/history/diff/show/stage/commit.",
+            "enum": [
+              "status",
+              "history",
+              "diff",
+              "show",
+              "stage",
+              "commit"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "true previews without executing the requested write/action; false executes.",
+            "type": "boolean"
+          },
+          "files": {
+            "description": "files: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 30,
+            "description": "Maximum returned items; see tool limits.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "message": {
+            "default": "",
+            "description": "Commit message; required for commit.",
+            "type": "string"
+          },
+          "repositoryPath": {
+            "description": "Existing absolute Git working tree directory for exported PLC files.",
+            "type": "string"
+          },
+          "revision": {
+            "default": "HEAD",
+            "description": "Git revision used by show, default HEAD.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "repositoryPath"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcGitRepository",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "01c041debddd36c3cede1feaaefea9c6c552d3da45f451b0f93b6146fd67bb8f",
       "inputSchema": {
         "additionalProperties": false,
@@ -20934,6 +21068,33 @@
         "type": "object"
       },
       "name": "TraceTagCauseLive",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "7ce12fbc49c5f8d5c2be2e33c079df17d608c15cf4c8f8704b3d7713bedbd536",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedHmiSoftwarePath": {
+            "default": "HMI_RT_1",
+            "description": "expectedHmiSoftwarePath: expected HMI software path, empty to skip",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "expectedPlcSoftwarePath": {
+            "default": "PLC_1",
+            "description": "expectedPlcSoftwarePath: expected PLC software path, empty to skip",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ValidateAutomationContext",
       "outputSchema": null
     },
     {

@@ -58,6 +58,4 @@ public static class PortedFamilies
         .SelectMany(f => f.Tools.Where(t => !f.ToolReleases.GetValueOrDefault(t, f.Releases).Contains(release))).ToHashSet(StringComparer.Ordinal);
     public static HashSet<string> Additions(Dictionary<string, Family> families, string release) => families.Values
         .Where(f => f.Releases.Contains(release)).SelectMany(f => f.Tools.Where(t => f.ToolReleases.GetValueOrDefault(t, f.Releases).Contains(release))).ToHashSet(StringComparer.Ordinal);
-    public static HashSet<string> Withheld(Dictionary<string, Family> families, string release) => families.Values
-        .SelectMany(f => f.Tools).Except(Additions(families, release), StringComparer.Ordinal).ToHashSet(StringComparer.Ordinal);
 }

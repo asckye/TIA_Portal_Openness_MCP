@@ -33,17 +33,31 @@ internal static class SessionToolChecks
                         server.GetType("TiaMcpServer.ModelContextProtocol.DevicesTools", true)!,
                         server.GetType("TiaMcpServer.ModelContextProtocol.DocumentsTools", true)! } : new[] { contract }),
                 domain.Name + " tools declare their session and tool dependencies");
-            var methods = type.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
+            var portedType = domain.Name is "Session" or "ProjectSession"
+                ? server.GetType("TiaMcpServer.ModelContextProtocol.ProjectLifecycle" + (domain.Name == "Session" ? "Session" : "Project") + "Tools", true) : null;
+            var types = portedType == null ? new[] { type } : new[] { type, portedType };
+            var methods = types.SelectMany(item => item.GetMethods(all)).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
             check(methods.Length == domain.Count, domain.Name + " tool count");
             foreach (var method in methods)
             {
+                var methodTarget = provider.GetService(method.DeclaringType!);
+                bool ported = method.DeclaringType == portedType;
                 var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
-                check(!method.IsStatic && surface.Tool(name) == method && ReferenceEquals(target, surface.Target(method)),
+                check(!method.IsStatic && surface.Tool(name) == method && ReferenceEquals(methodTarget, surface.Target(method)),
                     name + " resolves to the instance tool");
+                if (ported)
+                {
+                    var service = method.DeclaringType!.GetField("_service", all)!.GetValue(methodTarget)!;
+                    check(method.DeclaringType.IsSealed && !typeof(IDisposable).IsAssignableFrom(method.DeclaringType)
+                        && ReferenceEquals(methodTarget, provider.GetService(method.DeclaringType))
+                        && service.GetType().GetField("call", all)!.GetValue(service) is Delegate
+                        && !service.GetType().GetFields(all).Any(field => field.FieldType == contract),
+                        name + " shares the typed lifecycle worker service singleton");
+                }
                 var forwarder = facade.GetMethod(method.Name, all, null, method.GetParameters().Select(p => p.ParameterType).ToArray(), null)!;
                 check(forwarder == null && ReferenceEquals(surface.Target(method), provider.GetService(method.DeclaringType!)),
                     name + " resolves directly through EngineServices without a static compatibility forwarder");
-                check(((System.Collections.Generic.IReadOnlyDictionary<string, string>)Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.ToolExecution").GetField("Table", all)!.GetValue(null)!)[name] == "worker", name + " remains assigned to the engine worker");
+                check(((System.Collections.Generic.IReadOnlyDictionary<string, string>)Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.ToolExecution").GetField("Table", all)!.GetValue(null)!)[name] == (ported ? "foundation" : "worker"), name + " retains its execution owner");
 
             }
         }

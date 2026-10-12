@@ -37,6 +37,7 @@
     {
       "entries": [
         "AttachOpenProject",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
         "OpenProject"
       ],
@@ -48,7 +49,8 @@
       "entries": [
         "CloseProject",
         "DisconnectPortal",
-        "SaveProject"
+        "SaveProject",
+        "SaveProjectCopy"
       ],
       "family": "P6-CLOSE",
       "l5": "NOT RUN",
@@ -89,6 +91,47 @@
         "ExportPlcWatchTable"
       ],
       "family": "F00",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ArchiveSavedProject",
+        "ConnectIsolatedPortal",
+        "EnsureOpennessUserGroup",
+        "GetPortalInfo",
+        "RetrieveProjectArchive",
+        "SaveProjectCopy",
+        "ValidateAutomationContext"
+      ],
+      "family": "F05",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "GetPlcPutGetAccess",
+        "GetProjectProtection",
+        "ManageDeviceUsers",
+        "ManagePlcCertificate",
+        "ManagePlcProtection",
+        "ManageWatchForceTableWebAccess",
+        "SetPlcPutGetAccess"
+      ],
+      "family": "F07",
+      "l5": "NOT RUN",
+      "state": "current"
+    },
+    {
+      "entries": [
+        "ConnectProjectToWorkspace",
+        "CreateVersionControlWorkspace",
+        "GetVersionControlStatus",
+        "ListVersionControlWorkspaces",
+        "ManagePlcGitRepository",
+        "SynchronizeVersionControlWorkspace"
+      ],
+      "family": "F33",
       "l5": "NOT RUN",
       "state": "current"
     },
@@ -793,6 +836,29 @@
         "type": "object"
       },
       "name": "ApplyToolBatch",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "fbc004ae2770f1224eeb9b4e1fca42412ab32dfd34be59e4ccc47c80307d8818",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "archivePath": {
+            "description": "archivePath: full path of the project archive (.zap2x) on the TIA machine.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archivePath"
+        ],
+        "type": "object"
+      },
+      "name": "ArchiveSavedProject",
       "outputSchema": null
     },
     {
@@ -4538,6 +4604,16 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "b01f3fafd0dbc870a43d5c9530c9f15d14d66da30da67ffd48c1ef6b7cca6e33",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ConnectIsolatedPortal",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "b532af353e204f185187a720eac0e9093de735db0a495ffdf21d9e58490fb16f",
       "inputSchema": {
         "additionalProperties": false,
@@ -4668,6 +4744,42 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "f9fe7ccac30116cfa6b6400d1e81529b85403fcf7e335da19d69d4acc5925da2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceFilter": {
+            "default": "",
+            "description": "deviceFilter: map only this device (exact name, e.g. 'PLC_1'). Empty = the whole project.",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: DEFAULT true - reports what would be mapped and changes nothing. Pass false to actually map.",
+            "type": "boolean"
+          },
+          "maxObjects": {
+            "default": 3000,
+            "description": "maxObjects: safety cap on how many tree nodes are visited. Default 3000.",
+            "type": "integer"
+          },
+          "walkTrace": {
+            "default": false,
+            "description": "walkTrace: write one stderr line per visited node. Diagnostic only.",
+            "type": "boolean"
+          },
+          "workspaceName": {
+            "default": "",
+            "description": "workspaceName: which workspace to map into. Empty = the first one in the project.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ConnectProjectToWorkspace",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "a6a9bf5656795d9dddf89d112d1cbf22f22c9e753a59704d79d9e0c9d3e6e994",
@@ -5524,6 +5636,29 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "aabcc06eefc52ceecb599305d3a466c38abd07fd228f7f0d1f180ee5c7477cb5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "folderPath": {
+            "description": "folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree.",
+            "type": "string"
+          },
+          "workspaceName": {
+            "description": "workspaceName: name shown in the TIA project tree, e.g. 'git'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceName",
+          "folderPath"
+        ],
+        "type": "object"
+      },
+      "name": "CreateVersionControlWorkspace",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "ef04611dceb97f30c76c7228e5d898e95fc281ae89ba02856be05fb43105022d",
@@ -6456,6 +6591,16 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "c8600af70a640b2637783b9262b9c9f6f52f5e65001674d3c3731b446ff005e5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "EnsureOpennessUserGroup",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "40d3994ca7d9b8cebf9b94f18c1531bdeeae38a28f5d3160974fa9fbadb3ca39",
@@ -9757,6 +9902,24 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "a6283f9e23d11a8c54b4e1aa4135bcc1f5e2365513bfa9bbc4a0eb5271754820",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcPutGetAccess",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "4c5d0949c2ef35ef159ec27cc197a369b735637a6f90a78aad6a3debf78e2091",
       "inputSchema": {
         "additionalProperties": false,
@@ -10113,6 +10276,41 @@
       }
     },
     {
+      "descriptionSha256": "07a6990cf788e7a91c143ac90542ec98df01029dd5dc8a28a09a5d02f2ac87a5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "includeProcesses": {
+            "default": true,
+            "description": "includeProcesses: list the TIA Portal processes on the machine.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "includeProducts": {
+            "default": true,
+            "description": "includeProducts: list the installed TIA products / option packages (TiaPortalProduct).",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeSessions": {
+            "default": true,
+            "description": "includeSessions: list the sessions of the bound portal.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetPortalInfo",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "fdde66b749f68030ade532c9587db197e1f81ebe6bd1333c2f3b2fb76256dcbd",
       "inputSchema": {
         "additionalProperties": false,
@@ -10236,6 +10434,16 @@
         ],
         "type": "object"
       }
+    },
+    {
+      "descriptionSha256": "11471692f35787e41e87385bc97df1c4aec5a211729b6020b6d7ebfc7deb1380",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetProjectProtection",
+      "outputSchema": null
     },
     {
       "descriptionSha256": "de68a740838706ea5ddfa546785ae7c828c2adac9b76a6286ebc3a1d8ab6bfcd",
@@ -11038,6 +11246,27 @@
         "type": "object"
       },
       "name": "GetV21EcosystemCatalog",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "a48c699bf9ede9b17b5dc76315884528752a94e10d81c5c06a3d38a0ed9a77ea",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "changedOnly": {
+            "default": true,
+            "description": "changedOnly: default true — list only objects that are NOT in sync. false lists every mapped object.",
+            "type": "boolean"
+          },
+          "workspaceName": {
+            "default": "",
+            "description": "workspaceName: which workspace. Empty = the first one in the project.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetVersionControlStatus",
       "outputSchema": null
     },
     {
@@ -15524,6 +15753,16 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "870f0373c607d5eeb1942a4427dcdc4f878d7885d4a5809c03fc5edf95e62153",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "ListVersionControlWorkspaces",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "f3e01ee47d99b7769b14bc73a7fea92f3dfab4014dc5da0012746b363e85aaec",
       "inputSchema": {
         "additionalProperties": false,
@@ -15966,6 +16205,94 @@
         "type": "object"
       },
       "name": "ManageDeviceUserGroup",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "e3b9d7e717c3581f1ef151c79df258584a90f20474eb7f88e7c271d5001e5b53",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "read",
+            "description": "action: the operation to perform - read | create | delete | setPassword | setPermissions | setActive | rename.",
+            "enum": [
+              "read",
+              "create",
+              "delete",
+              "setPassword",
+              "setPermissions",
+              "setActive",
+              "rename"
+            ],
+            "type": "string"
+          },
+          "active": {
+            "default": true,
+            "description": "active: true activates, false deactivates.",
+            "type": "boolean"
+          },
+          "confirmDelete": {
+            "default": false,
+            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
+            "type": "boolean"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "family": {
+            "description": "family: webserver | simpleWebserver | opcUa.",
+            "enum": [
+              "webserver",
+              "simpleWebserver",
+              "opcUa"
+            ],
+            "type": "string"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "newName": {
+            "default": "",
+            "description": "newName: the new name (rename actions).",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "password: password when the object is protected; never logged.",
+            "type": "string"
+          },
+          "permissions": {
+            "description": "permissions: array of permission names (see the tool description).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "userName": {
+            "default": "",
+            "description": "userName: user name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath",
+          "family"
+        ],
+        "type": "object"
+      },
+      "name": "ManageDeviceUsers",
       "outputSchema": null
     },
     {
@@ -17409,6 +17736,146 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "759c48583f31232948c62d3d1ca1b6e53ce9fe466d3e5515e1395b1d8544ac89",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "list | read | template | create | import | export | delete | assign | unassign. ",
+            "enum": [
+              "list",
+              "read",
+              "template",
+              "create",
+              "import",
+              "export",
+              "delete",
+              "assign",
+              "unassign"
+            ],
+            "type": "string"
+          },
+          "assignment": {
+            "default": "",
+            "description": "assignment: assignment kind as the read action lists it.",
+            "type": "string"
+          },
+          "assignmentItemPath": {
+            "description": "assignmentItemPath: array of exact device-item names; omission uses the selected owner.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "certificateId": {
+            "default": "",
+            "description": "certificateId: certificate id from the read action.",
+            "type": "string"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "filePath": {
+            "default": "",
+            "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
+            "type": "string"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "password": {
+            "default": "",
+            "description": "password: password when the object is protected; never logged.",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "minLength": 0,
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "subjectAlternativeNames": {
+            "description": "subjectAlternativeNames: up to 64 closed {type, value} entries; type is Dns, Email, IP or Uri and value has 1..255 characters. Duplicate values of the same type are refused case-insensitively.",
+            "items": {
+              "additionalProperties": false,
+              "minProperties": 0,
+              "properties": {
+                "type": {
+                  "enum": [
+                    "Dns",
+                    "Email",
+                    "IP",
+                    "Uri"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "value": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "value"
+              ],
+              "type": "object"
+            },
+            "maxItems": 64,
+            "minItems": 0,
+            "type": "array"
+          },
+          "usage": {
+            "default": "",
+            "description": "usage: Tls | WebServer | OpcUaServer | OpcUaClient | OpcUaClientServer.",
+            "enum": [
+              "Tls",
+              "WebServer",
+              "OpcUaServer",
+              "OpcUaClient",
+              "OpcUaClientServer",
+              ""
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath",
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcCertificate",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "70f9fdd87262511a5d3fe525c532031d5861fbc7235510c2b1ac6f3cf44b881b",
       "inputSchema": {
         "additionalProperties": false,
@@ -17543,6 +18010,157 @@
         "type": "object"
       },
       "name": "ManagePlcExternalSources",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "843d35a1f5f4431d4fdf3774a6e1b4231b3cf49d98ebf55f404999e956f7921f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "default": "status",
+            "description": "status | history | diff | show | stage | commit. status/history/diff/show/stage/commit.",
+            "enum": [
+              "status",
+              "history",
+              "diff",
+              "show",
+              "stage",
+              "commit"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "true previews without executing the requested write/action; false executes.",
+            "type": "boolean"
+          },
+          "files": {
+            "description": "files: string[]. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "default": 30,
+            "description": "Maximum returned items; see tool limits.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "message": {
+            "default": "",
+            "description": "Commit message; required for commit.",
+            "type": "string"
+          },
+          "repositoryPath": {
+            "description": "Existing absolute Git working tree directory for exported PLC files.",
+            "type": "string"
+          },
+          "revision": {
+            "default": "HEAD",
+            "description": "Git revision used by show, default HEAD.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "repositoryPath"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcGitRepository",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "c37477857236d7c1d3844b19b4fe7694bd8c10efcf7c536553ca2fbf951a9462",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "accessLevel": {
+            "default": "",
+            "description": "accessLevel: for setAccessLevel / setAccessPassword / resetAccessPassword - FullAccess | ReadAccess | HMIAccess | NoAccess | FullAccessIncludingFailsafe.",
+            "enum": [
+              "FullAccess",
+              "ReadAccess",
+              "HMIAccess",
+              "NoAccess",
+              "FullAccessIncludingFailsafe",
+              ""
+            ],
+            "type": "string"
+          },
+          "action": {
+            "default": "read",
+            "description": "action: read | setAccessLevel | setAccessPassword | resetAccessPassword | protectMasterSecret | changeMasterSecret | unprotectMasterSecret | resetMasterSecret | protectAllConfiguration | unprotectAllConfiguration.",
+            "enum": [
+              "read",
+              "setAccessLevel",
+              "setAccessPassword",
+              "resetAccessPassword",
+              "protectMasterSecret",
+              "changeMasterSecret",
+              "unprotectMasterSecret",
+              "resetMasterSecret",
+              "protectAllConfiguration",
+              "unprotectAllConfiguration"
+            ],
+            "examples": [
+              "read"
+            ],
+            "type": "string"
+          },
+          "confirmChange": {
+            "default": false,
+            "description": "confirmChange: must be true together with dryRun=false for every action except read.",
+            "examples": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "devicePath": {
+            "description": "devicePath: array naming the station, e.g. [\"PLC_1\"] (or [group, ..., station]).",
+            "examples": [
+              [
+                "PLC_1"
+              ]
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false applies the change.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "itemPath": {
+            "description": "itemPath: array of device-item names down to the CPU; [] (default) resolves the station's CPU.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "newPassword": {
+            "default": "",
+            "description": "newPassword: the new password for changeMasterSecret.",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "password: the password to set (setAccessPassword, protectMasterSecret) or the current one (changeMasterSecret); never logged.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcProtection",
       "outputSchema": null
     },
     {
@@ -18542,6 +19160,82 @@
         "type": "object"
       },
       "name": "ManageTransferArea",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "7a702a818245bf8a08f63e086feeb6d38c46b2ab555f0de3aecb5a6d09486dd3",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "access": {
+            "default": "Read",
+            "description": "access: None | Read | Write.",
+            "enum": [
+              "None",
+              "Read",
+              "Write"
+            ],
+            "type": "string"
+          },
+          "action": {
+            "default": "read",
+            "description": "action: the operation to perform - read | assign | unassign.",
+            "enum": [
+              "read",
+              "assign",
+              "unassign"
+            ],
+            "type": "string"
+          },
+          "confirmChange": {
+            "default": false,
+            "description": "confirmChange: must be true together with dryRun=false to apply the change; keep false until the user agreed.",
+            "type": "boolean"
+          },
+          "devicePath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "type": "boolean"
+          },
+          "itemPath": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "softwarePath": {
+            "default": "",
+            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "tableKind": {
+            "default": "watch",
+            "description": "tableKind: watch | force.",
+            "enum": [
+              "watch",
+              "force"
+            ],
+            "type": "string"
+          },
+          "tablePath": {
+            "default": "",
+            "description": "tablePath: 'Group/Table' path of the table as the read tools show it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "devicePath",
+          "itemPath"
+        ],
+        "type": "object"
+      },
+      "name": "ManageWatchForceTableWebAccess",
       "outputSchema": null
     },
     {
@@ -20987,6 +21681,39 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "ff4ac7e5c7690dc5db1740353471d82e3ea6c6ae34683a8602a540d8cd8addbc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "archivePath": {
+            "description": "archivePath: full path of the project archive (.zap2x) on the TIA machine.",
+            "type": "string"
+          },
+          "destinationDirectory": {
+            "description": "destinationDirectory: absolute path of a new directory on the TIA machine; existing directories are refused (no merge or overwrite).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.",
+            "type": "boolean"
+          },
+          "upgrade": {
+            "default": false,
+            "description": "upgrade: true opens with an upgrade to the current TIA version when the file is older.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "archivePath",
+          "destinationDirectory"
+        ],
+        "type": "object"
+      },
+      "name": "RetrieveProjectArchive",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "1018bb7fcf7cfcd2ddcd2452e41945449ec5c135975bb5af9335bc282b1b3ef4",
       "inputSchema": {
         "additionalProperties": false,
@@ -21446,6 +22173,24 @@
       }
     },
     {
+      "descriptionSha256": "5355f889ce9ff6490f09f611707d38aadbcc8b5ee59e8a325c6ed20b117c1ce8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "newProjectPath": {
+            "description": "newProjectPath: destination project directory for TIA Save As; switches the open project and MCP binding.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "newProjectPath"
+        ],
+        "type": "object"
+      },
+      "name": "SaveProjectCopy",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "cc77a36949e90b175e9d0901ea08036a8d53120fd84ec8b16a4de4c035158666",
       "inputSchema": {
         "additionalProperties": false,
@@ -21877,6 +22622,29 @@
         "type": "object"
       },
       "name": "SetPlcCpuSettings",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "fbfab70fa50d86ffbba3bc033829c55535ffb684c5fac30b2df7fe3e20efa81b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "devicePath": {
+            "description": "devicePath: device name from GetProjectTree, e.g. 'PLC_1'.",
+            "type": "string"
+          },
+          "enable": {
+            "default": true,
+            "description": "enable: true to permit remote PUT/GET access, false to forbid it.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "devicePath"
+        ],
+        "type": "object"
+      },
+      "name": "SetPlcPutGetAccess",
       "outputSchema": null
     },
     {
@@ -22978,6 +23746,37 @@
       "outputSchema": null
     },
     {
+      "descriptionSha256": "3f9f1091ab8c849f32686db3fb1b096b678db95894d34e1fce521ebf0e06f177",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "changedOnly": {
+            "default": true,
+            "description": "changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.",
+            "type": "boolean"
+          },
+          "direction": {
+            "default": "ProjectToWorkspace",
+            "description": "direction: 'ProjectToWorkspace' (export, for committing) or 'WorkspaceToProject' (import, for restoring).",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.",
+            "type": "boolean"
+          },
+          "workspaceName": {
+            "default": "",
+            "description": "workspaceName: which workspace. Empty = the first one in the project.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "SynchronizeVersionControlWorkspace",
+      "outputSchema": null
+    },
+    {
       "descriptionSha256": "989958949605cb37a418748efba7f382e6bc86a7a90b397e0f4a4502ad3aa4a3",
       "inputSchema": {
         "additionalProperties": false,
@@ -23051,6 +23850,33 @@
         "type": "object"
       },
       "name": "TraceTagCauseLive",
+      "outputSchema": null
+    },
+    {
+      "descriptionSha256": "7ce12fbc49c5f8d5c2be2e33c079df17d608c15cf4c8f8704b3d7713bedbd536",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedHmiSoftwarePath": {
+            "default": "HMI_RT_1",
+            "description": "expectedHmiSoftwarePath: expected HMI software path, empty to skip",
+            "examples": [
+              ""
+            ],
+            "type": "string"
+          },
+          "expectedPlcSoftwarePath": {
+            "default": "PLC_1",
+            "description": "expectedPlcSoftwarePath: expected PLC software path, empty to skip",
+            "examples": [
+              "PLC_1"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ValidateAutomationContext",
       "outputSchema": null
     },
     {

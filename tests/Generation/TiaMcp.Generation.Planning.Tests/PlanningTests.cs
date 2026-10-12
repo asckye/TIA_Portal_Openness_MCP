@@ -35,6 +35,23 @@ namespace TiaMcp.Generation.Planning.Tests
         }
 
         [Theory]
+        [InlineData("15.1", ".zap15_1")]
+        [InlineData("16", ".zap16")]
+        [InlineData("17", ".zap17")]
+        [InlineData("18", ".zap18")]
+        [InlineData("19", ".zap19")]
+        [InlineData("20", ".zap20")]
+        [InlineData("21", ".zap21")]
+        public void Existing_project_backups_use_the_registered_tool_and_native_archive_extension(string release, string extension)
+        {
+            var result = new PlanningFixture(release).Build();
+            var backup = Assert.Single(result.Plan.Steps.Where(step => step.Key == "project/backup"));
+            Assert.Equal("ArchiveSavedProject", backup.Tool);
+            Assert.EndsWith(extension, backup.Arguments["archivePath"].GetString());
+            Assert.All(result.Plan.Steps.Where(step => step != backup), step => Assert.Contains(backup.Id, step.DependsOn));
+        }
+
+        [Theory]
         [InlineData("14sp1")]
         [InlineData("17")]
         [InlineData("19")]

@@ -15,7 +15,8 @@ internal static class ToolDescriptorChecks
         var executionType = Assembly.Load("TiaMcp.Logic").GetType("TiaMcpServer.ModelContextProtocol.ToolExecution", true)!;
         var execution = (IDictionary)executionType.GetField("Table", flags)!.GetValue(null)!;
         var generation = new[] { "ListStandardPackages", "ManageStandardPackage", "ValidateStandardPackage", "DescribeStandardPackage", "ManageMachineDescription" };
-        var host = EngineSurface.HostTools(engine).Concat(generation).ToArray();
+        // ManagePlcGitRepository runs git.exe on the host for all eight releases (B8), outside the engine catalog.
+        var host = EngineSurface.HostTools(engine).Concat(generation).Concat(new[] { "ManagePlcGitRepository" }).ToArray();
         CheckCoverage(complete.Keys.Cast<string>().ToArray(), host, execution, check);
         foreach (var name in host) check(execution.Contains(name), name + " host declaration has an explicit execution entry");
         check(complete.Keys.Cast<string>().Intersect(host, StringComparer.Ordinal).Count() == 0,

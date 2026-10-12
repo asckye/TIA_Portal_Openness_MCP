@@ -9,8 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="check-build/**" />
-    <ProjectReference Include="check-build/TiaMcp.CheckBuild.csproj" ReferenceOutputAssembly="false" OutputItemType="_CheckBuildTask" />
-    <None Include="check-build/bin/$(Configuration)/net10.0/TiaMcp.CheckBuild.dll" TargetPath="TiaMcp.CheckBuild.dll" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="check-build/TiaMcp.CheckBuild.csproj" OutputItemType="_CheckBuildTask" />
     <EmbeddedResource Include="dead-reference-policy.json" />
     <ProjectReference Include="../common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

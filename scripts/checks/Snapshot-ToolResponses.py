@@ -1474,6 +1474,17 @@ class RawResponseTests(unittest.TestCase):
         self.assertIsNone(sdk_only_harness(args, '20'))
         self.assertIsNone(sdk_only_harness(args, '21'))
 
+    def test_packaged_no_tia_never_inherits_sdk_fixture_readiness(self):
+        args = argparse.Namespace(packaged_no_tia=True)
+        inherited = {'TIA_MCP_ENGINE_WORKER_SDK_READY': '1'}
+        self.assertNotIn('TIA_MCP_ENGINE_WORKER_SDK_READY',
+                         contracts.engine_host_environment(args, '20', {'20': Path('worker.exe')}, inherited))
+        args.packaged_no_tia = False
+        self.assertEqual(contracts.engine_host_environment(args, '20', {'20': Path('worker.exe')}, inherited)
+                         ['TIA_MCP_ENGINE_WORKER_SDK_READY'], '1')
+        self.assertNotIn('TIA_MCP_ENGINE_WORKER_SDK_READY',
+                         contracts.engine_host_environment(args, '21', {}, inherited))
+
     def test_frozen_snapshot_fields(self):
         root = Path(__file__).resolve().parents[2]
         snapshot = json.loads((root / 'manifest/contracts/v4/responses/21.json').read_text(encoding='utf-8'))

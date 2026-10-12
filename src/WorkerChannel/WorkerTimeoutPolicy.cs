@@ -149,6 +149,24 @@ namespace TiaMcp.WorkerChannel
             ["plc-sources.ExecutePlcOrganisation"] = "default",
             ["plc-technology.ExecutePlcOrganisation"] = "default",
             ["plc-watch.ExecutePlcOrganisation"] = "default",
+            ["project-lifecycle.ReadPortalInfo"] = "default",
+            ["project-lifecycle.ConnectIsolatedPortal"] = "default",
+            ["project-lifecycle.EnsureOpennessUserGroup"] = "default",
+            ["project-lifecycle.ReadProjectLifecycleBinding"] = "default",
+            ["project-lifecycle.ArchiveSaveProjectCopy"] = "archive",
+            ["project-lifecycle.ArchiveSavedProject"] = "archive",
+            ["project-lifecycle.RetrieveProjectArchive"] = "archive",
+            ["project-lifecycle.ExecuteMultiuserSession"] = "default",
+            ["project-lifecycle.ValidateAutomationContext"] = "default",
+            ["project-lifecycle.ExecuteProjectScaffoldPrimitive"] = "default",
+            ["project-security.ReadProjectProtection"] = "default",
+            ["project-security.ExecuteProjectUsers"] = "default",
+            ["project-security.ExecuteCertificate"] = "default",
+            ["project-security.ExecuteSecurityDeep"] = "default",
+            ["project-security.ExecuteDeviceUsers"] = "default",
+            ["project-security.ExecuteHardwareSecurity"] = "default",
+            ["version-control.ExecuteVersionControl"] = "default",
+            ["version-control.ExecuteTeamcenter"] = "default",
         };
         public TimeSpan ForPlc(string operation, System.Text.Json.Nodes.JsonObject arguments, bool firstAttach = false)
             => budgets[firstAttach ? "firstAttach" : PlcFamily(operation, arguments)];
@@ -166,6 +184,13 @@ namespace TiaMcp.WorkerChannel
             }
             if (request != null)
             {
+                if (operation == "project-lifecycle.ExecuteProjectScaffoldPrimitive")
+                    return (string?)request["Kind"] switch
+                    {
+                        "compile" or "sclGenerate" => "compile",
+                        "lad" or "sclImport" => "importExport",
+                        _ => "default"
+                    };
                 string name = (string?)request["Operation"] ?? operation;
                 string action = (string?)request["Action"] ?? "";
                 if (name == "CheckLibraryUpdates") return "default";
@@ -208,7 +233,7 @@ namespace TiaMcp.WorkerChannel
             if (operation.IndexOf("Compile", StringComparison.OrdinalIgnoreCase) >= 0) return "compile";
             if (operation.IndexOf("Download", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Upload", StringComparison.OrdinalIgnoreCase) >= 0) return "transfer";
             if (operation.IndexOf("Import", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Export", StringComparison.OrdinalIgnoreCase) >= 0) return "importExport";
-            if (operation.IndexOf("Archive", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Retrieve", StringComparison.OrdinalIgnoreCase) >= 0) return "archive";
+            if (operation == "SaveProjectCopy" || operation.IndexOf("Archive", StringComparison.OrdinalIgnoreCase) >= 0 || operation.IndexOf("Retrieve", StringComparison.OrdinalIgnoreCase) >= 0) return "archive";
             if (operation.IndexOf("Update", StringComparison.OrdinalIgnoreCase) >= 0 && operation.IndexOf("Librar", StringComparison.OrdinalIgnoreCase) >= 0) return "libraryUpdate";
             return "default";
         }

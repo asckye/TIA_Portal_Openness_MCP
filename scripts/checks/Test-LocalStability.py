@@ -169,6 +169,10 @@ def cases(major, source):
         ('state', 'GetSessionState', {}, 'state'),
         ('compatibility', 'GetOpennessCompatibility', {}, 'compatibility'),
         ('format_preflight', 'InspectSimaticSdCompatibility', {'filePath': str(source), 'tiaMajor': major}, 'success'),
+        # B8 moved the remaining project-security read to Foundation. Keep a
+        # real engine dispatch in this local-only soak: the CFC read refuses
+        # the unbound project before provider access.
+        ('cfc_project_refused', 'ManageCfcChartProtection', {'softwarePath': '__soak_no_plc__', 'chartName': '__soak_missing__', 'action': 'read', 'dryRun': True}, 'project_refused'),
         ('xref_block_refused', 'GetPlcCrossReferences', xref, 'xref'),
         ('xref_tag_refused', 'GetPlcCrossReferences', dict(xref, objectKind='Tag'), 'xref'),
         ('xref_unit_refused', 'GetPlcCrossReferences', dict(xref, unitName='__unit__'), 'xref'),

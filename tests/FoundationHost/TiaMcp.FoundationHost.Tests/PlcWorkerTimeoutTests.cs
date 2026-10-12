@@ -145,9 +145,57 @@ public sealed class PlcWorkerRobustnessTests
         ["plc-sources.ExecutePlcOrganisation"] = "default",
         ["plc-technology.ExecutePlcOrganisation"] = "default",
         ["plc-watch.ExecutePlcOrganisation"] = "default",
+        ["project-lifecycle.ReadPortalInfo"] = "default",
+        ["project-lifecycle.ConnectIsolatedPortal"] = "default",
+        ["project-lifecycle.EnsureOpennessUserGroup"] = "default",
+        ["project-lifecycle.ReadProjectLifecycleBinding"] = "default",
+        ["project-lifecycle.ArchiveSaveProjectCopy"] = "archive",
+        ["project-lifecycle.ArchiveSavedProject"] = "archive",
+        ["project-lifecycle.RetrieveProjectArchive"] = "archive",
+        ["project-lifecycle.ExecuteMultiuserSession"] = "default",
+        ["project-lifecycle.ValidateAutomationContext"] = "default",
+        ["project-lifecycle.ExecuteProjectScaffoldPrimitive"] = "default",
+        ["project-security.ReadProjectProtection"] = "default",
+        ["project-security.ExecuteProjectUsers"] = "default",
+        ["project-security.ExecuteCertificate"] = "default",
+        ["project-security.ExecuteSecurityDeep"] = "default",
+        ["project-security.ExecuteDeviceUsers"] = "default",
+        ["project-security.ExecuteHardwareSecurity"] = "default",
+        ["version-control.ExecuteVersionControl"] = "default",
+        ["version-control.ExecuteTeamcenter"] = "default",
     };
     private static readonly IReadOnlyDictionary<string, string> PortedCategories = new Dictionary<string, string>(StringComparer.Ordinal)
     {
+        ["ArchiveSavedProject"] = "archive",
+        ["BuildProjectScaffold"] = "default",
+        ["ConnectIsolatedPortal"] = "default",
+        ["ConnectProjectToWorkspace"] = "default",
+        ["CreateVersionControlWorkspace"] = "default",
+        ["EnsureOpennessUserGroup"] = "default",
+        ["GetPlcPutGetAccess"] = "default",
+        ["GetPortalInfo"] = "default",
+        ["GetProjectProtection"] = "default",
+        ["GetProjectUserManagement"] = "default",
+        ["GetVersionControlStatus"] = "default",
+        ["ListVersionControlWorkspaces"] = "default",
+        ["ManageDeviceUsers"] = "default",
+        ["ManageMultiuserSession"] = "default",
+        ["ManagePasswordPolicy"] = "default",
+        ["ManagePlcCertificate"] = "default",
+        ["ManagePlcGitRepository"] = "default",
+        ["ManagePlcProtection"] = "default",
+        ["ManageProjectUserManagement"] = "default",
+        ["ManageSyslogServers"] = "default",
+        ["ManageTeamcenterConnection"] = "default",
+        ["ManageTeamcenterDataset"] = "default",
+        ["ManageTeamcenterWorkflow"] = "default",
+        ["ManageUmcUsers"] = "default",
+        ["ManageWatchForceTableWebAccess"] = "default",
+        ["RetrieveProjectArchive"] = "archive",
+        ["SaveProjectCopy"] = "archive",
+        ["SetPlcPutGetAccess"] = "default",
+        ["SynchronizeVersionControlWorkspace"] = "default",
+        ["ValidateAutomationContext"] = "default",
         ["AttachDeviceNodeToSubnet"] = "default",
         ["BuildAndImportPlcArtifact"] = "importExport",
         ["BuildDeviceAmlDocument"] = "default",
@@ -400,6 +448,21 @@ public sealed class PlcWorkerRobustnessTests
         Assert.Equal(expected, WorkerTimeoutPolicy.PlcFamily(operation, args));
         args["request"]!["DryRun"] = true;
         Assert.Equal("default", WorkerTimeoutPolicy.PlcFamily(operation, args));
+    }
+
+    [Theory]
+    [InlineData("compile", "compile")]
+    [InlineData("sclGenerate", "compile")]
+    [InlineData("lad", "importExport")]
+    [InlineData("sclImport", "importExport")]
+    [InlineData("hmiInfo", "default")]
+    [InlineData("save", "default")]
+    public void Scaffold_primitives_use_the_existing_operation_categories(string kind, string expected)
+    {
+        var args = new JsonObject { ["request"] = new JsonObject { ["Kind"] = kind } };
+        Assert.Equal(expected, WorkerTimeoutPolicy.PlcFamily("project-lifecycle.ExecuteProjectScaffoldPrimitive", args));
+        args["dryRun"] = true;
+        Assert.Equal("default", WorkerTimeoutPolicy.PlcFamily("project-lifecycle.ExecuteProjectScaffoldPrimitive", args));
     }
 
     private sealed class PlcTimeoutScope : IDisposable

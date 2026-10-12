@@ -116,7 +116,7 @@ internal sealed class EngineWorkerClient(HostOptions options, string workerHash,
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             await Start(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
-            bool attach = operation == "Attach" || operation == WorkerOperations.SessionCandidate
+            bool attach = operation == "Attach" || operation == "project-lifecycle.ConnectIsolatedPortal" || operation == WorkerOperations.SessionCandidate
                 && (string?)arguments["mode"] == "apply" && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
             bool firstAttach = attach && !attachAttempted;
             if (attach) attachAttempted = true;

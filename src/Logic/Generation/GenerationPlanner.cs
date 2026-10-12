@@ -873,7 +873,7 @@ namespace TiaMcp.Logic.Generation
                 else if (steps.Count > 0 && GenerationAvailability.Get(machine.Target.Release, "ArchiveSavedProject").Tool == "present")
                 {
                     var key = "project/backup";
-                    var path = options.BackupPath ?? options.ArtifactRoot.TrimEnd('/', '\\').Replace('\\', '/') + "/backups/" + plan.PlanId + ".zap" + machine.Target.Release;
+                    var path = options.BackupPath ?? options.ArtifactRoot.TrimEnd('/', '\\').Replace('\\', '/') + "/backups/" + plan.PlanId + ".zap" + (machine.Target.Release == "15.1" ? "15_1" : machine.Target.Release);
                     steps.Add(key, Step(key, "project", "execute", "ArchiveSavedProject", Args(("archivePath", path), ("dryRun", false)), "GetSessionState"));
                     foreach (var step in steps.Values.Where(s => s.Key != key)) step.DependsOn.Add(key);
                 }

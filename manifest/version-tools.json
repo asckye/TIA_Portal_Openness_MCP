@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 243,
+      "toolCount": 248,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -39,6 +39,7 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
         "CreateDevice",
         "CreateGsdDevice",
@@ -67,6 +68,7 @@
         "DescribeService",
         "DescribeStandardPackage",
         "DisconnectPortal",
+        "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExportDeviceAml",
         "ExportHmiConnection",
@@ -118,6 +120,7 @@
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPortalConnectionReadiness",
+        "GetPortalInfo",
         "GetProjectInfo",
         "GetProjectSettings",
         "GetProjectTopology",
@@ -192,6 +195,7 @@
         "ManageMachineDescription",
         "ManageMotionAxis",
         "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
@@ -247,6 +251,7 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
@@ -254,7 +259,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 265,
+      "toolCount": 277,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -262,6 +267,7 @@
         "AnalyzePlcSclSource",
         "ApplyGenerationPlan",
         "ApplyToolBatch",
+        "ArchiveSavedProject",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
@@ -288,6 +294,7 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
         "CreateDevice",
         "CreateGsdDevice",
@@ -317,6 +324,7 @@
         "DescribeService",
         "DescribeStandardPackage",
         "DisconnectPortal",
+        "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExportDeviceAml",
@@ -373,11 +381,14 @@
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
+        "GetPlcPutGetAccess",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPortalConnectionReadiness",
+        "GetPortalInfo",
         "GetProjectInfo",
+        "GetProjectProtection",
         "GetProjectSettings",
         "GetProjectTopology",
         "GetProjectTree",
@@ -458,6 +469,8 @@
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
         "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
         "ManagePlcUserGroup",
@@ -492,6 +505,7 @@
         "RenderPlcVisualDiff",
         "RepairAndReimportPlcBlock",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
@@ -499,6 +513,7 @@
         "RunToolTransaction",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SeedProjectFromReference",
@@ -508,6 +523,7 @@
         "SetDeviceItemIoAddress",
         "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
+        "SetPlcPutGetAccess",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
         "ShowWorkbenchBlock",
@@ -518,6 +534,7 @@
         "SynchronizeLibrary",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
@@ -525,7 +542,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 279,
+      "toolCount": 299,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -533,6 +550,7 @@
         "AnalyzePlcSclSource",
         "ApplyGenerationPlan",
         "ApplyToolBatch",
+        "ArchiveSavedProject",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
@@ -559,7 +577,9 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
+        "ConnectProjectToWorkspace",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateLibraryMasterCopy",
@@ -570,6 +590,7 @@
         "CreatePlcTypeGroup",
         "CreatePlcUserConstant",
         "CreateProject",
+        "CreateVersionControlWorkspace",
         "DeleteEmptyPlcBlockGroup",
         "DeleteExportHandle",
         "DeleteHmiTag",
@@ -588,6 +609,7 @@
         "DescribeService",
         "DescribeStandardPackage",
         "DisconnectPortal",
+        "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
@@ -648,11 +670,14 @@
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
+        "GetPlcPutGetAccess",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPortalConnectionReadiness",
+        "GetPortalInfo",
         "GetProjectInfo",
+        "GetProjectProtection",
         "GetProjectSettings",
         "GetProjectTopology",
         "GetProjectTree",
@@ -662,6 +687,7 @@
         "GetTechnologyObjectTree",
         "GetToolUsage",
         "GetV21EcosystemCatalog",
+        "GetVersionControlStatus",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportAlarmTextLists",
@@ -719,12 +745,14 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
         "ManageDeviceUserGroup",
+        "ManageDeviceUsers",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -739,7 +767,10 @@
         "ManageNetworkDomain",
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
+        "ManagePlcCertificate",
         "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
         "ManagePlcSoftwareUnit",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
@@ -750,6 +781,7 @@
         "ManageStandardPackage",
         "ManageTechnologyObject",
         "ManageTransferArea",
+        "ManageWatchForceTableWebAccess",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -776,6 +808,7 @@
         "RenderPlcVisualDiff",
         "RepairAndReimportPlcBlock",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
@@ -783,6 +816,7 @@
         "RunToolTransaction",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SeedProjectFromReference",
@@ -792,6 +826,7 @@
         "SetDeviceItemIoAddress",
         "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
+        "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "ShowObjectInEditor",
         "ShowWorkbenchAtlas",
@@ -801,8 +836,10 @@
         "ShowWorkbenchPage",
         "StageImportFiles",
         "SynchronizeLibrary",
+        "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
@@ -810,7 +847,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 287,
+      "toolCount": 311,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -818,6 +855,7 @@
         "AnalyzePlcSclSource",
         "ApplyGenerationPlan",
         "ApplyToolBatch",
+        "ArchiveSavedProject",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
@@ -844,7 +882,9 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
+        "ConnectProjectToWorkspace",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateLibraryMasterCopy",
@@ -855,6 +895,7 @@
         "CreatePlcTypeGroup",
         "CreatePlcUserConstant",
         "CreateProject",
+        "CreateVersionControlWorkspace",
         "DeleteEmptyPlcBlockGroup",
         "DeleteExportHandle",
         "DeleteHmiTag",
@@ -873,6 +914,7 @@
         "DescribeService",
         "DescribeStandardPackage",
         "DisconnectPortal",
+        "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
@@ -937,20 +979,25 @@
         "GetPlcChecksums",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
+        "GetPlcPutGetAccess",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPortalConnectionReadiness",
+        "GetPortalInfo",
         "GetProjectInfo",
+        "GetProjectProtection",
         "GetProjectSettings",
         "GetProjectTopology",
         "GetProjectTree",
+        "GetProjectUserManagement",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
         "GetV21EcosystemCatalog",
+        "GetVersionControlStatus",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportAlarmClasses",
@@ -1009,12 +1056,14 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
         "ManageClassicHmiScript",
         "ManageClassicHmiTextGraphicList",
         "ManageDeviceUserGroup",
+        "ManageDeviceUsers",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -1026,10 +1075,14 @@
         "ManageLibraryTypeVersion",
         "ManageMachineDescription",
         "ManageMotionAxis",
+        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOpcUaInterface",
         "ManagePlcBlockProtection",
+        "ManagePlcCertificate",
         "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
@@ -1038,10 +1091,13 @@
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
+        "ManageProjectUserManagement",
         "ManageStandardPackage",
         "ManageTechnologyObject",
         "ManageTransferArea",
+        "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
+        "ManageWatchForceTableWebAccess",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -1068,6 +1124,7 @@
         "RenderPlcVisualDiff",
         "RepairAndReimportPlcBlock",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
@@ -1075,6 +1132,7 @@
         "RunToolTransaction",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanPlcSourceAnnotations",
         "SearchInstalledGsdDevices",
         "SeedProjectFromReference",
@@ -1084,6 +1142,7 @@
         "SetDeviceItemIoAddress",
         "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
+        "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
         "ShowObjectInEditor",
@@ -1094,8 +1153,10 @@
         "ShowWorkbenchPage",
         "StageImportFiles",
         "SynchronizeLibrary",
+        "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
@@ -1103,7 +1164,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 297,
+      "toolCount": 325,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1111,6 +1172,7 @@
         "AnalyzePlcSclSource",
         "ApplyGenerationPlan",
         "ApplyToolBatch",
+        "ArchiveSavedProject",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
@@ -1140,7 +1202,9 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
+        "ConnectProjectToWorkspace",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -1153,6 +1217,7 @@
         "CreatePlcTypeGroup",
         "CreatePlcUserConstant",
         "CreateProject",
+        "CreateVersionControlWorkspace",
         "DeleteEmptyPlcBlockGroup",
         "DeleteExportHandle",
         "DeleteHmiTag",
@@ -1171,6 +1236,7 @@
         "DescribeService",
         "DescribeStandardPackage",
         "DisconnectPortal",
+        "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
@@ -1236,20 +1302,25 @@
         "GetPlcCrossReferences",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
+        "GetPlcPutGetAccess",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPortalConnectionReadiness",
+        "GetPortalInfo",
         "GetProjectInfo",
+        "GetProjectProtection",
         "GetProjectSettings",
         "GetProjectTopology",
         "GetProjectTree",
+        "GetProjectUserManagement",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
         "GetV21EcosystemCatalog",
+        "GetVersionControlStatus",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportAlarmClasses",
@@ -1308,6 +1379,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
@@ -1315,6 +1387,7 @@
         "ManageClassicHmiTextGraphicList",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
+        "ManageDeviceUsers",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -1326,11 +1399,16 @@
         "ManageLibraryTypeVersion",
         "ManageMachineDescription",
         "ManageMotionAxis",
+        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOpcUaInterface",
+        "ManagePasswordPolicy",
         "ManagePlcAlarmTextList",
         "ManagePlcBlockProtection",
+        "ManagePlcCertificate",
         "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
@@ -1339,10 +1417,16 @@
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
+        "ManageProjectUserManagement",
         "ManageStandardPackage",
+        "ManageTeamcenterConnection",
+        "ManageTeamcenterDataset",
+        "ManageTeamcenterWorkflow",
         "ManageTechnologyObject",
         "ManageTransferArea",
+        "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
+        "ManageWatchForceTableWebAccess",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -1369,6 +1453,7 @@
         "RenderPlcVisualDiff",
         "RepairAndReimportPlcBlock",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunOfflineReleaseValidationSuite",
         "RunOnlineMonitoringSafetySelfTest",
@@ -1376,6 +1461,7 @@
         "RunToolTransaction",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
         "SearchInstalledGsdDevices",
@@ -1387,6 +1473,7 @@
         "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcProgram",
+        "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
         "ShowObjectInEditor",
@@ -1397,8 +1484,10 @@
         "ShowWorkbenchPage",
         "StageImportFiles",
         "SynchronizeLibrary",
+        "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
@@ -1406,7 +1495,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 306,
+      "toolCount": 335,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1415,6 +1504,7 @@
         "AnalyzeUnifiedHmiTemplateLayout",
         "ApplyGenerationPlan",
         "ApplyToolBatch",
+        "ArchiveSavedProject",
         "AttachDeviceNodeToSubnet",
         "AttachOpenProject",
         "AuditEngineeringExports",
@@ -1449,7 +1539,9 @@
         "CompilePlcSoftware",
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolatedPortal",
         "ConnectPortal",
+        "ConnectProjectToWorkspace",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -1462,6 +1554,7 @@
         "CreatePlcTypeGroup",
         "CreatePlcUserConstant",
         "CreateProject",
+        "CreateVersionControlWorkspace",
         "DeleteEmptyPlcBlockGroup",
         "DeleteExportHandle",
         "DeleteHmiTag",
@@ -1480,6 +1573,7 @@
         "DescribeService",
         "DescribeStandardPackage",
         "DisconnectPortal",
+        "EnsureOpennessUserGroup",
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
@@ -1545,20 +1639,25 @@
         "GetPlcCrossReferences",
         "GetPlcObjectFingerprints",
         "GetPlcOpcUaConfiguration",
+        "GetPlcPutGetAccess",
         "GetPlcTagTableConstants",
         "GetPlcTypeInfo",
         "GetPlcWatchTableCurrentValuesReadOnly",
         "GetPortalConnectionReadiness",
+        "GetPortalInfo",
         "GetProjectInfo",
+        "GetProjectProtection",
         "GetProjectSettings",
         "GetProjectTopology",
         "GetProjectTree",
+        "GetProjectUserManagement",
         "GetSessionState",
         "GetSoftwareInfo",
         "GetSoftwareTree",
         "GetTechnologyObjectTree",
         "GetToolUsage",
         "GetV21EcosystemCatalog",
+        "GetVersionControlStatus",
         "GetWorkbenchSelection",
         "GetWorkbenchState",
         "ImportAlarmClasses",
@@ -1618,6 +1717,7 @@
         "ListTechnologyObjects",
         "ListToolCategories",
         "ListTransferAreas",
+        "ListVersionControlWorkspaces",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiScreenObject",
@@ -1625,6 +1725,7 @@
         "ManageClassicHmiTextGraphicList",
         "ManageDeviceServiceObjects",
         "ManageDeviceUserGroup",
+        "ManageDeviceUsers",
         "ManageGenerationArtifacts",
         "ManageGlobalLibrary",
         "ManageHardwareObject",
@@ -1636,11 +1737,16 @@
         "ManageLibraryTypeVersion",
         "ManageMachineDescription",
         "ManageMotionAxis",
+        "ManageMultiuserSession",
         "ManageNetworkDomain",
         "ManageOpcUaInterface",
+        "ManagePasswordPolicy",
         "ManagePlcAlarmTextList",
         "ManagePlcBlockProtection",
+        "ManagePlcCertificate",
         "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
         "ManagePlcSoftwareUnit",
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
@@ -1649,10 +1755,17 @@
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
         "ManageProjectLanguage",
+        "ManageProjectUserManagement",
         "ManageStandardPackage",
+        "ManageSyslogServers",
+        "ManageTeamcenterConnection",
+        "ManageTeamcenterDataset",
+        "ManageTeamcenterWorkflow",
         "ManageTechnologyObject",
         "ManageTransferArea",
+        "ManageUmcUsers",
         "ManageUnifiedCwcPackage",
+        "ManageWatchForceTableWebAccess",
         "MonitorPlcWatchTableS7",
         "MovePlcBlockToGroup",
         "OpenProject",
@@ -1679,6 +1792,7 @@
         "RenderPlcVisualDiff",
         "RepairAndReimportPlcBlock",
         "RestartOpennessWorker",
+        "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
         "RunHmiActionScriptRecipeSafetySelfTest",
         "RunHmiTemplatePlcSyncPrecheckSuite",
@@ -1688,6 +1802,7 @@
         "RunToolTransaction",
         "SaveExportContent",
         "SaveProject",
+        "SaveProjectCopy",
         "ScanPlcSourceAnnotations",
         "SearchHardwareCatalog",
         "SearchInstalledGsdDevices",
@@ -1699,6 +1814,7 @@
         "SetOpcUaInterfaceEnabled",
         "SetPlcCpuSettings",
         "SetPlcProgram",
+        "SetPlcPutGetAccess",
         "SetPlcUnitObjectAccess",
         "SetPlcWatchTableModifyValue",
         "ShowObjectInEditor",
@@ -1709,8 +1825,10 @@
         "ShowWorkbenchPage",
         "StageImportFiles",
         "SynchronizeLibrary",
+        "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
+        "ValidateAutomationContext",
         "ValidatePlcDocumentSchemas",
         "ValidateStandardPackage",
         "WritePlcSclSourceFile"
@@ -2750,8 +2868,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 243,
-    "shared-subset": 261,
+    "all-releases": 248,
+    "shared-subset": 256,
     "release-only": 12
   },
   "tools": [
@@ -2885,6 +3003,11 @@
     {
       "name": "ArchiveSavedProject",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -3502,10 +3625,16 @@
     {
       "name": "ConnectIsolatedPortal",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3535,6 +3664,10 @@
     {
       "name": "ConnectProjectToWorkspace",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -3715,6 +3848,10 @@
     {
       "name": "CreateVersionControlWorkspace",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -4084,10 +4221,16 @@
     {
       "name": "EnsureOpennessUserGroup",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5296,6 +5439,11 @@
     {
       "name": "GetPlcPutGetAccess",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5400,10 +5548,16 @@
     {
       "name": "GetPortalInfo",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -5424,6 +5578,11 @@
     {
       "name": "GetProjectProtection",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5478,6 +5637,9 @@
     {
       "name": "GetProjectUserManagement",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -5748,6 +5910,10 @@
     {
       "name": "GetVersionControlStatus",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -6822,6 +6988,10 @@
     {
       "name": "ListVersionControlWorkspaces",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7011,6 +7181,10 @@
     {
       "name": "ManageDeviceUsers",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7229,6 +7403,9 @@
     {
       "name": "ManageMultiuserSession",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7283,6 +7460,8 @@
     {
       "name": "ManagePasswordPolicy",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7334,6 +7513,10 @@
     {
       "name": "ManagePlcCertificate",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7376,15 +7559,26 @@
     {
       "name": "ManagePlcGitRepository",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
       "name": "ManagePlcProtection",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7524,6 +7718,9 @@
     {
       "name": "ManageProjectUserManagement",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7660,6 +7857,7 @@
     {
       "name": "ManageSyslogServers",
       "releases": [
+        "19",
         "20",
         "21"
       ],
@@ -7669,6 +7867,8 @@
     {
       "name": "ManageTeamcenterConnection",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7678,6 +7878,8 @@
     {
       "name": "ManageTeamcenterDataset",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7687,6 +7889,8 @@
     {
       "name": "ManageTeamcenterWorkflow",
       "releases": [
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7743,6 +7947,9 @@
     {
       "name": "ManageUmcUsers",
       "releases": [
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -7863,6 +8070,10 @@
     {
       "name": "ManageWatchForceTableWebAccess",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8287,6 +8498,11 @@
     {
       "name": "RetrieveProjectArchive",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8475,6 +8691,11 @@
     {
       "name": "SaveProjectCopy",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8649,6 +8870,11 @@
     {
       "name": "SetPlcPutGetAccess",
       "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8884,6 +9110,10 @@
     {
       "name": "SynchronizeVersionControlWorkspace",
       "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
@@ -8950,10 +9180,16 @@
     {
       "name": "ValidateAutomationContext",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

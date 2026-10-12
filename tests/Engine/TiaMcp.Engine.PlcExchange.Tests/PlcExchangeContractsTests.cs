@@ -81,6 +81,8 @@ namespace PlcExchangeTests
             .Concat(HostType("TiaMcpServer.ModelContextProtocol.ExportTools").GetMethods())
             .Concat(HostType("TiaMcpServer.ModelContextProtocol.PlcOfflineTools").GetMethods()
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == "WritePlcSclSourceFile"))
+            .Concat(HostType("TiaMcpServer.ModelContextProtocol.ProjectLifecycleInspectionTools").GetMethods()
+                .Where(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == "ArchiveSavedProject"))
             .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null)
             .ToDictionary(m => m.GetCustomAttribute<McpServerToolAttribute>()!.Name!, m => m);
         // These admission cases must return before using either injected native

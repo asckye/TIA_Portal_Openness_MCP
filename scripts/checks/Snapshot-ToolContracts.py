@@ -38,6 +38,14 @@ def engine_overrides(values, option):
     return result
 
 
+def engine_host_environment(args, release, workers, env_overrides):
+    environment = dict(os.environ, **env_overrides)
+    environment.pop('TIA_MCP_ENGINE_WORKER_SDK_READY', None)
+    if release in workers and not getattr(args, 'packaged_no_tia', False):
+        environment['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
+    return environment
+
+
 @contextmanager
 def engine_host_server(args, release, portal_root, profile, env_overrides):
     workers = engine_overrides(args.engine_worker, '--engine-worker')
@@ -60,9 +68,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
         command += ['--tia-portal-location', str(portal_root)]
     if transport == 'http':
         command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
-    environment = dict(os.environ, **env_overrides)
-    if release in workers:
-        environment['TIA_MCP_ENGINE_WORKER_SDK_READY'] = '1'
+    environment = engine_host_environment(args, release, workers, env_overrides)
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                text=True, encoding='utf-8', env=environment, creationflags=subprocess.CREATE_NO_WINDOW)
     output, errors = queue.Queue(), []

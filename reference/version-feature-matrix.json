@@ -3321,6 +3321,7 @@
         "l5": "NOT RUN",
         "entries": [
           "AttachOpenProject",
+          "ConnectIsolatedPortal",
           "ConnectPortal",
           "OpenProject"
         ]
@@ -3370,6 +3371,25 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": []
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ManagePlcGitRepository"
+        ]
       },
       {
         "family": "F01",
@@ -3733,6 +3753,7 @@
         "l5": "NOT RUN",
         "entries": [
           "AttachOpenProject",
+          "ConnectIsolatedPortal",
           "ConnectPortal",
           "OpenProject"
         ]
@@ -3744,7 +3765,8 @@
         "entries": [
           "CloseProject",
           "DisconnectPortal",
-          "SaveProject"
+          "SaveProject",
+          "SaveProjectCopy"
         ]
       },
       {
@@ -3783,6 +3805,39 @@
         "l5": "NOT RUN",
         "entries": [
           "ExportPlcWatchTable"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "ManagePlcProtection",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ManagePlcGitRepository"
         ]
       },
       {
@@ -4169,6 +4224,7 @@
         "l5": "NOT RUN",
         "entries": [
           "AttachOpenProject",
+          "ConnectIsolatedPortal",
           "ConnectPortal",
           "OpenProject"
         ]
@@ -4180,7 +4236,8 @@
         "entries": [
           "CloseProject",
           "DisconnectPortal",
-          "SaveProject"
+          "SaveProject",
+          "SaveProjectCopy"
         ]
       },
       {
@@ -4219,6 +4276,47 @@
         "l5": "NOT RUN",
         "entries": [
           "ExportPlcWatchTable"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "ManageDeviceUsers",
+          "ManagePlcCertificate",
+          "ManagePlcProtection",
+          "ManageWatchForceTableWebAccess",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "ManagePlcGitRepository",
+          "SynchronizeVersionControlWorkspace"
         ]
       },
       {
@@ -4619,6 +4717,7 @@
         "l5": "NOT RUN",
         "entries": [
           "AttachOpenProject",
+          "ConnectIsolatedPortal",
           "ConnectPortal",
           "OpenProject"
         ]
@@ -4630,7 +4729,8 @@
         "entries": [
           "CloseProject",
           "DisconnectPortal",
-          "SaveProject"
+          "SaveProject",
+          "SaveProjectCopy"
         ]
       },
       {
@@ -4669,6 +4769,51 @@
         "l5": "NOT RUN",
         "entries": [
           "ExportPlcWatchTable"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "ManageMultiuserSession",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "GetProjectUserManagement",
+          "ManageDeviceUsers",
+          "ManagePlcCertificate",
+          "ManagePlcProtection",
+          "ManageProjectUserManagement",
+          "ManageUmcUsers",
+          "ManageWatchForceTableWebAccess",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "ManagePlcGitRepository",
+          "SynchronizeVersionControlWorkspace"
         ]
       },
       {
@@ -5079,6 +5224,7 @@
         "l5": "NOT RUN",
         "entries": [
           "AttachOpenProject",
+          "ConnectIsolatedPortal",
           "ConnectPortal",
           "OpenProject"
         ]
@@ -5090,7 +5236,8 @@
         "entries": [
           "CloseProject",
           "DisconnectPortal",
-          "SaveProject"
+          "SaveProject",
+          "SaveProjectCopy"
         ]
       },
       {
@@ -5131,6 +5278,55 @@
           "CreateHardwareDevice",
           "ExportPlcWatchTable",
           "SearchHardwareCatalog"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "ManageMultiuserSession",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "GetProjectUserManagement",
+          "ManageDeviceUsers",
+          "ManagePasswordPolicy",
+          "ManagePlcCertificate",
+          "ManagePlcProtection",
+          "ManageProjectUserManagement",
+          "ManageUmcUsers",
+          "ManageWatchForceTableWebAccess",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "ManagePlcGitRepository",
+          "ManageTeamcenterConnection",
+          "ManageTeamcenterDataset",
+          "ManageTeamcenterWorkflow",
+          "SynchronizeVersionControlWorkspace"
         ]
       },
       {
@@ -5549,6 +5745,7 @@
         "l5": "NOT RUN",
         "entries": [
           "AttachOpenProject",
+          "ConnectIsolatedPortal",
           "ConnectPortal",
           "OpenProject"
         ]
@@ -5560,7 +5757,8 @@
         "entries": [
           "CloseProject",
           "DisconnectPortal",
-          "SaveProject"
+          "SaveProject",
+          "SaveProjectCopy"
         ]
       },
       {
@@ -5601,6 +5799,56 @@
           "CreateHardwareDevice",
           "ExportPlcWatchTable",
           "SearchHardwareCatalog"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "ManageMultiuserSession",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "GetProjectUserManagement",
+          "ManageDeviceUsers",
+          "ManagePasswordPolicy",
+          "ManagePlcCertificate",
+          "ManagePlcProtection",
+          "ManageProjectUserManagement",
+          "ManageSyslogServers",
+          "ManageUmcUsers",
+          "ManageWatchForceTableWebAccess",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "ManagePlcGitRepository",
+          "ManageTeamcenterConnection",
+          "ManageTeamcenterDataset",
+          "ManageTeamcenterWorkflow",
+          "SynchronizeVersionControlWorkspace"
         ]
       },
       {

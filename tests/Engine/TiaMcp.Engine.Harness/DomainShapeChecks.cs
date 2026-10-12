@@ -223,10 +223,11 @@ internal static class DomainShapeChecks
                 name + " stays on the kernel and is exposed through IEngineeringSession");
         check(surface.Method("ExactDriveObject", all, new[] { typeof(string), typeof(string), typeof(ushort), typeof(int) }).DeclaringType == portal
             && contract.GetMethod("ExactDriveObject") != null, "Shared drive resolution stays on the kernel");
-        var teamcenter = server.GetType("TiaMcpServer.Siemens.Services.TeamcenterPortService", true)!;
+        var teamcenter = surface.Adapter!.GetType("TiaMcp.Adapters.Native.Collaboration.TeamcenterAdapter", true)!;
         foreach (var name in new[] { "_teamcenterConnection", "_teamcenterConnectionLabel" })
-            check(surface.Field(name, all).DeclaringType == teamcenter && portal.GetField(name, all) == null,
-                name + " is private Teamcenter service state");
+            check(teamcenter.GetField(name, all)?.DeclaringType == teamcenter && teamcenter.GetField(name, all)!.IsPrivate
+                && portal.GetField(name, all) == null && server.GetType("TiaMcpServer.Siemens.Services.TeamcenterPortService", true)!.GetField(name, all) == null,
+                name + " is private Teamcenter adapter state");
         foreach (var name in new[] { "LibraryRef", "EngineeringLibraryFolder", "ExactMasterCopyPlcSource", "LibraryPathOf",
             "OptionPackageLibraryTypeKind", "ExactEngineeringDevice", "ExactDeviceItem", "ResolveHmiScreenOrThrow",
             "ExactNameList", "RequireSivarc", "SivarcShape" })
@@ -235,12 +236,16 @@ internal static class DomainShapeChecks
         check(surface.Method("Family", all).DeclaringType == portal && contract.GetMethod("GetSivarcFamily") != null,
             "SiVArc families remain shared with the optional-engineering reader");
 
-        var vci = server.GetType("TiaMcpServer.Siemens.Services.VersionControlPortService", true)!;
-        var first = provider.GetService(vci)!;
-        var second = Activator.CreateInstance(vci, new[] { session })!;
+        var vci = surface.Adapter!.GetType("TiaMcp.Adapters.Native.Vci.VersionControlAdapter", true)!;
+        var constructor = vci.GetConstructors(all).Single();
+        var projectType = constructor.GetParameters()[0].ParameterType.GetGenericArguments()[0];
+        var noProject = System.Linq.Expressions.Expression.Lambda(constructor.GetParameters()[0].ParameterType,
+            System.Linq.Expressions.Expression.Constant(null, projectType)).Compile();
+        var first = constructor.Invoke(new object[] { noProject });
+        var second = constructor.Invoke(new object[] { noProject });
         foreach (var name in new[] { "_vciOwnerProject", "_vciCached", "_vciKeepAlive" })
             check(vci.GetField(name, all) is FieldInfo field && !field.IsStatic,
-                "VCI state belongs to the service instance: " + name);
+                "VCI state belongs to the adapter instance: " + name);
         var rootsField = vci.GetField("_vciKeepAlive", all)!;
         var roots = (System.Collections.IList)rootsField.GetValue(first)!;
         var otherRoots = (System.Collections.IList)rootsField.GetValue(second)!;

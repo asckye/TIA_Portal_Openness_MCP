@@ -410,6 +410,18 @@
     },
     {
       "releaseKey": "14sp1",
+      "family": "F05",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
+      "family": "F33",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "14sp1",
       "family": "F01",
       "state": "current",
       "l5": "NOT RUN"
@@ -543,6 +555,24 @@
     {
       "releaseKey": "15.1",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F05",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F07",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "15.1",
+      "family": "F33",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -681,6 +711,24 @@
     {
       "releaseKey": "16",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F05",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F07",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "16",
+      "family": "F33",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -819,6 +867,24 @@
     {
       "releaseKey": "17",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F05",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F07",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "17",
+      "family": "F33",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -957,6 +1023,24 @@
     {
       "releaseKey": "18",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F05",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F07",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "18",
+      "family": "F33",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -1095,6 +1179,24 @@
     {
       "releaseKey": "19",
       "family": "F00",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F05",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F07",
+      "state": "current",
+      "l5": "NOT RUN"
+    },
+    {
+      "releaseKey": "19",
+      "family": "F33",
       "state": "current",
       "l5": "NOT RUN"
     },
@@ -1310,6 +1412,20 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -1719,6 +1835,20 @@
     },
     {
       "releaseKey": "15.1",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
       "entry": "ConnectPortal",
       "family": "P6-SESSION",
       "example": {
@@ -2051,6 +2181,16 @@
       }
     },
     {
+      "releaseKey": "15.1",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+      }
+    },
+    {
       "releaseKey": "16",
       "entry": "AttachOpenProject",
       "family": "P6-SESSION",
@@ -2124,6 +2264,20 @@
         "offlinePolicy": "require",
         "softwarePath": "PLC_1",
         "password": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -2460,6 +2614,16 @@
       }
     },
     {
+      "releaseKey": "16",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+      }
+    },
+    {
       "releaseKey": "17",
       "entry": "AttachOpenProject",
       "family": "P6-SESSION",
@@ -2533,6 +2697,20 @@
         "offlinePolicy": "require",
         "softwarePath": "PLC_1",
         "password": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -2866,6 +3044,16 @@
       "example": {
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
       }
     },
     {
@@ -2942,6 +3130,20 @@
         "offlinePolicy": "require",
         "softwarePath": "PLC_1",
         "password": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -3302,6 +3504,16 @@
       }
     },
     {
+      "releaseKey": "18",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
+      }
+    },
+    {
       "releaseKey": "19",
       "entry": "AttachOpenProject",
       "family": "P6-SESSION",
@@ -3375,6 +3587,20 @@
         "offlinePolicy": "require",
         "softwarePath": "PLC_1",
         "password": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConnectIsolatedPortal",
+      "family": "P6-SESSION",
+      "example": {
+        "processId": 1234,
+        "processStartUtc": "2026-10-03T00:00:00Z",
+        "startNew": false,
+        "reuseOpen": false,
+        "upgrade": "reject",
+        "mode": "preview",
+        "confirm": false
       }
     },
     {
@@ -3732,6 +3958,16 @@
       "example": {
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SaveProjectCopy",
+      "family": "P6-CLOSE",
+      "example": {
+        "mode": "preview",
+        "confirm": false,
+        "newProjectPath": "C:\\authorized-project-copy\\NewProject"
       }
     },
     {
@@ -5004,6 +5240,47 @@
         "refreshReadHandle": false,
         "mode": "preview",
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ConnectIsolatedPortal",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "EnsureOpennessUserGroup",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "GetPortalInfo",
+      "family": "F05",
+      "example": {
+        "includeProcesses": true,
+        "includeSessions": true,
+        "includeProducts": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ValidateAutomationContext",
+      "family": "F05",
+      "example": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": ""
+      }
+    },
+    {
+      "releaseKey": "14sp1",
+      "entry": "ManagePlcGitRepository",
+      "family": "F33",
+      "example": {
+        "repositoryPath": "C:\\Examples\\git",
+        "dryRun": true,
+        "action": "status"
       }
     },
     {
@@ -6713,6 +6990,109 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ArchiveSavedProject",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ConnectIsolatedPortal",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "EnsureOpennessUserGroup",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPortalInfo",
+      "family": "F05",
+      "example": {
+        "includeProcesses": true,
+        "includeSessions": true,
+        "includeProducts": false
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RetrieveProjectArchive",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "destinationDirectory": "C:\\Examples\\restored",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SaveProjectCopy",
+      "family": "F05",
+      "example": {
+        "newProjectPath": "C:\\Examples\\Copy"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ValidateAutomationContext",
+      "family": "F05",
+      "example": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": ""
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcProtection",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ],
+        "action": "read",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "SetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetProjectProtection",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcGitRepository",
+      "family": "F33",
+      "example": {
+        "repositoryPath": "C:\\Examples\\git",
+        "dryRun": true,
+        "action": "status"
       }
     },
     {
@@ -8637,6 +9017,194 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ArchiveSavedProject",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConnectIsolatedPortal",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "EnsureOpennessUserGroup",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPortalInfo",
+      "family": "F05",
+      "example": {
+        "includeProcesses": true,
+        "includeSessions": true,
+        "includeProducts": false
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RetrieveProjectArchive",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "destinationDirectory": "C:\\Examples\\restored",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SaveProjectCopy",
+      "family": "F05",
+      "example": {
+        "newProjectPath": "C:\\Examples\\Copy"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ValidateAutomationContext",
+      "family": "F05",
+      "example": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcProtection",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ],
+        "action": "read",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageWatchForceTableWebAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManageDeviceUsers",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webserver",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetProjectProtection",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcCertificate",
+      "family": "F07",
+      "example": {
+        "action": "list",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConnectProjectToWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "CreateVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "workspaceName": "Engineering",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetVersionControlStatus",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ListVersionControlWorkspaces",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcGitRepository",
+      "family": "F33",
+      "example": {
+        "repositoryPath": "C:\\Examples\\git",
+        "dryRun": true,
+        "action": "status"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "SynchronizeVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -10695,6 +11263,231 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ArchiveSavedProject",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConnectIsolatedPortal",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "EnsureOpennessUserGroup",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPortalInfo",
+      "family": "F05",
+      "example": {
+        "includeProcesses": true,
+        "includeSessions": true,
+        "includeProducts": false
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageMultiuserSession",
+      "family": "F05",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RetrieveProjectArchive",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "destinationDirectory": "C:\\Examples\\restored",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SaveProjectCopy",
+      "family": "F05",
+      "example": {
+        "newProjectPath": "C:\\Examples\\Copy"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ValidateAutomationContext",
+      "family": "F05",
+      "example": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcProtection",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ],
+        "action": "read",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageWatchForceTableWebAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageDeviceUsers",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webserver",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetProjectProtection",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetProjectUserManagement",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageProjectUserManagement",
+      "family": "F07",
+      "example": {
+        "action": "createRole",
+        "name": "ExampleRole",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcCertificate",
+      "family": "F07",
+      "example": {
+        "action": "list",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManageUmcUsers",
+      "family": "F07",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConnectProjectToWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "CreateVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "workspaceName": "Engineering",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetVersionControlStatus",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ListVersionControlWorkspaces",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcGitRepository",
+      "family": "F33",
+      "example": {
+        "repositoryPath": "C:\\Examples\\git",
+        "dryRun": true,
+        "action": "status"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "SynchronizeVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -12858,6 +13651,271 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ArchiveSavedProject",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConnectIsolatedPortal",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "EnsureOpennessUserGroup",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPortalInfo",
+      "family": "F05",
+      "example": {
+        "includeProcesses": true,
+        "includeSessions": true,
+        "includeProducts": false
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageMultiuserSession",
+      "family": "F05",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RetrieveProjectArchive",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "destinationDirectory": "C:\\Examples\\restored",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SaveProjectCopy",
+      "family": "F05",
+      "example": {
+        "newProjectPath": "C:\\Examples\\Copy"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ValidateAutomationContext",
+      "family": "F05",
+      "example": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcProtection",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ],
+        "action": "read",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageWatchForceTableWebAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageDeviceUsers",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webserver",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetProjectProtection",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetProjectUserManagement",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageProjectUserManagement",
+      "family": "F07",
+      "example": {
+        "action": "createRole",
+        "name": "ExampleRole",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcCertificate",
+      "family": "F07",
+      "example": {
+        "action": "list",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePasswordPolicy",
+      "family": "F07",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageUmcUsers",
+      "family": "F07",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConnectProjectToWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "CreateVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "workspaceName": "Engineering",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetVersionControlStatus",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ListVersionControlWorkspaces",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcGitRepository",
+      "family": "F33",
+      "example": {
+        "repositoryPath": "C:\\Examples\\git",
+        "dryRun": true,
+        "action": "status"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTeamcenterConnection",
+      "family": "F33",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTeamcenterDataset",
+      "family": "F33",
+      "example": {
+        "action": "search",
+        "itemId": "&lt;Teamcenter item id&gt;",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManageTeamcenterWorkflow",
+      "family": "F33",
+      "example": {
+        "action": "readCustomAttributes",
+        "itemType": "T4TiaProject",
+        "confirmSave": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "SynchronizeVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -15120,6 +16178,281 @@
         "exportPath": "C:\\Examples\\exports\\Watch_1.xml",
         "dryRun": true,
         "confirm": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ArchiveSavedProject",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConnectIsolatedPortal",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "EnsureOpennessUserGroup",
+      "family": "F05",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPortalInfo",
+      "family": "F05",
+      "example": {
+        "includeProcesses": true,
+        "includeSessions": true,
+        "includeProducts": false
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageMultiuserSession",
+      "family": "F05",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RetrieveProjectArchive",
+      "family": "F05",
+      "example": {
+        "archivePath": "C:\\Examples\\Archive.zap{major}",
+        "destinationDirectory": "C:\\Examples\\restored",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SaveProjectCopy",
+      "family": "F05",
+      "example": {
+        "newProjectPath": "C:\\Examples\\Copy"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ValidateAutomationContext",
+      "family": "F05",
+      "example": {
+        "expectedPlcSoftwarePath": "PLC_1",
+        "expectedHmiSoftwarePath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcProtection",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "PLC_1"
+        ],
+        "action": "read",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SetPlcPutGetAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": "PLC_1"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageWatchForceTableWebAccess",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageDeviceUsers",
+      "family": "F07",
+      "example": {
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ],
+        "family": "webserver",
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetProjectProtection",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetProjectUserManagement",
+      "family": "F07",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageProjectUserManagement",
+      "family": "F07",
+      "example": {
+        "action": "createRole",
+        "name": "ExampleRole",
+        "confirmChange": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcCertificate",
+      "family": "F07",
+      "example": {
+        "action": "list",
+        "dryRun": true,
+        "devicePath": [
+          "&lt;exact device name from GetProjectTree&gt;"
+        ],
+        "itemPath": [
+          "&lt;exact device item from GetProjectTree&gt;"
+        ]
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageSyslogServers",
+      "family": "F07",
+      "example": {
+        "confirmDelete": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePasswordPolicy",
+      "family": "F07",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageUmcUsers",
+      "family": "F07",
+      "example": {
+        "confirmChange": false,
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConnectProjectToWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "CreateVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "workspaceName": "Engineering",
+        "folderPath": ""
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetVersionControlStatus",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ListVersionControlWorkspaces",
+      "family": "F33",
+      "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcGitRepository",
+      "family": "F33",
+      "example": {
+        "repositoryPath": "C:\\Examples\\git",
+        "dryRun": true,
+        "action": "status"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTeamcenterConnection",
+      "family": "F33",
+      "example": {
+        "dryRun": true,
+        "action": "read"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTeamcenterDataset",
+      "family": "F33",
+      "example": {
+        "action": "search",
+        "itemId": "&lt;Teamcenter item id&gt;",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManageTeamcenterWorkflow",
+      "family": "F33",
+      "example": {
+        "action": "readCustomAttributes",
+        "itemType": "T4TiaProject",
+        "confirmSave": false,
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "SynchronizeVersionControlWorkspace",
+      "family": "F33",
+      "example": {
+        "dryRun": true
       }
     },
     {
@@ -36196,6 +37529,16 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreateLibraryMasterCopy",
         "currentName": "CreateLibraryMasterCopy",
         "sourceName": "CreateLibraryMasterCopy",
@@ -36580,6 +37923,16 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureOpennessUserGroup",
+        "currentName": "EnsureOpennessUserGroup",
+        "sourceName": "EnsureOpennessUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -38425,6 +39778,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcGitRepository",
+        "currentName": "ManagePlcGitRepository",
+        "sourceName": "ManagePlcGitRepository",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "repositoryPath": "C:\\Examples\\git",
+          "dryRun": true,
+          "action": "status"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcTagDefinition",
         "currentName": "ManagePlcTagDefinition",
         "sourceName": "ManagePlcTagDefinition",
@@ -39640,6 +41007,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPortalInfo",
+        "currentName": "GetPortalInfo",
+        "sourceName": "ReadPortalInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeProcesses": true,
+          "includeSessions": true,
+          "includeProducts": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetProjectSettings",
         "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
@@ -40071,6 +41452,19 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "sourceName": "ValidateAutomationContext",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": ""
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ValidatePlcDocumentSchemas",
         "currentName": "ValidatePlcDocumentSchemas",
         "sourceName": "ValidatePlcXmlSchemas",
@@ -40301,6 +41695,19 @@
         ],
         "arguments": {
           "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "sourceName": "ArchiveSavedProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -40666,6 +42073,16 @@
           "secondRootPath": "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1",
           "subnetName": "PN_IE_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -41068,6 +42485,16 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureOpennessUserGroup",
+        "currentName": "EnsureOpennessUserGroup",
+        "sourceName": "EnsureOpennessUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -41754,6 +43181,18 @@
           "plc-foundation"
         ],
         "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetPlcPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
+        "sourceName": "GetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
         "envelopeVersion": 4
       },
       {
@@ -43080,6 +44519,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcGitRepository",
+        "currentName": "ManagePlcGitRepository",
+        "sourceName": "ManagePlcGitRepository",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "repositoryPath": "C:\\Examples\\git",
+          "dryRun": true,
+          "action": "status"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcProtection",
+        "currentName": "ManagePlcProtection",
+        "sourceName": "ManagePlcProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ],
+          "action": "read",
+          "confirmChange": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -44405,6 +45875,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPortalInfo",
+        "currentName": "GetPortalInfo",
+        "sourceName": "ReadPortalInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeProcesses": true,
+          "includeSessions": true,
+          "includeProducts": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectProtection",
+        "currentName": "GetProjectProtection",
+        "sourceName": "ReadProjectProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetProjectSettings",
         "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
@@ -44561,6 +46055,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -44617,6 +46125,18 @@
               }
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },
@@ -44745,6 +46265,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
+        "sourceName": "SetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ShowObjectInEditor",
         "currentName": "ShowObjectInEditor",
         "sourceName": "ShowObjectInEditor",
@@ -44863,6 +46395,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "sourceName": "ValidateAutomationContext",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": ""
         },
         "envelopeVersion": 4
       },
@@ -45097,6 +46642,19 @@
         ],
         "arguments": {
           "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "sourceName": "ArchiveSavedProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -45465,6 +47023,28 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectProjectToWorkspace",
+        "currentName": "ConnectProjectToWorkspace",
+        "sourceName": "ConnectProjectToWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreateLibraryMasterCopy",
         "currentName": "CreateLibraryMasterCopy",
         "sourceName": "CreateLibraryMasterCopy",
@@ -45584,6 +47164,19 @@
           "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateVersionControlWorkspace",
+        "currentName": "CreateVersionControlWorkspace",
+        "sourceName": "CreateVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceName": "Engineering",
+          "folderPath": ""
         },
         "envelopeVersion": 4
       },
@@ -45864,6 +47457,16 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureOpennessUserGroup",
+        "currentName": "EnsureOpennessUserGroup",
+        "sourceName": "EnsureOpennessUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -46611,6 +48214,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
+        "sourceName": "GetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetSoftwareInfo",
         "currentName": "GetSoftwareInfo",
         "sourceName": "GetSoftwareInfo",
@@ -46691,6 +48306,26 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetVersionControlStatus",
+        "currentName": "GetVersionControlStatus",
+        "sourceName": "GetVersionControlStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListVersionControlWorkspaces",
+        "currentName": "ListVersionControlWorkspaces",
+        "sourceName": "GetVersionControlWorkspaces",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -47242,6 +48877,27 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUsers",
+        "currentName": "ManageDeviceUsers",
+        "sourceName": "ManageDeviceUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webserver",
+          "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
@@ -47997,6 +49653,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcCertificate",
+        "currentName": "ManagePlcCertificate",
+        "sourceName": "ManagePlcCertificate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -48010,6 +49685,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcGitRepository",
+        "currentName": "ManagePlcGitRepository",
+        "sourceName": "ManagePlcGitRepository",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "repositoryPath": "C:\\Examples\\git",
+          "dryRun": true,
+          "action": "status"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcProtection",
+        "currentName": "ManagePlcProtection",
+        "sourceName": "ManagePlcProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ],
+          "action": "read",
+          "confirmChange": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -48177,6 +49883,26 @@
           "positionNumber": 0,
           "confirmDelete": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageWatchForceTableWebAccess",
+        "currentName": "ManageWatchForceTableWebAccess",
+        "sourceName": "ManageWatchForceTableWebAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -49386,6 +51112,30 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPortalInfo",
+        "currentName": "GetPortalInfo",
+        "sourceName": "ReadPortalInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeProcesses": true,
+          "includeSessions": true,
+          "includeProducts": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectProtection",
+        "currentName": "GetProjectProtection",
+        "sourceName": "ReadProjectProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetProjectSettings",
         "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
@@ -49542,6 +51292,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -49598,6 +51362,18 @@
               }
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },
@@ -49743,6 +51519,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
+        "sourceName": "SetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ShowObjectInEditor",
         "currentName": "ShowObjectInEditor",
         "sourceName": "ShowObjectInEditor",
@@ -49769,6 +51557,18 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeVersionControlWorkspace",
+        "currentName": "SynchronizeVersionControlWorkspace",
+        "sourceName": "SyncVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -49861,6 +51661,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "sourceName": "ValidateAutomationContext",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": ""
         },
         "envelopeVersion": 4
       },
@@ -50095,6 +51908,19 @@
         ],
         "arguments": {
           "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "sourceName": "ArchiveSavedProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -50463,6 +52289,28 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectProjectToWorkspace",
+        "currentName": "ConnectProjectToWorkspace",
+        "sourceName": "ConnectProjectToWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreateLibraryMasterCopy",
         "currentName": "CreateLibraryMasterCopy",
         "sourceName": "CreateLibraryMasterCopy",
@@ -50582,6 +52430,19 @@
           "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateVersionControlWorkspace",
+        "currentName": "CreateVersionControlWorkspace",
+        "sourceName": "CreateVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceName": "Engineering",
+          "folderPath": ""
         },
         "envelopeVersion": 4
       },
@@ -50862,6 +52723,16 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureOpennessUserGroup",
+        "currentName": "EnsureOpennessUserGroup",
+        "sourceName": "EnsureOpennessUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -51667,6 +53538,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
+        "sourceName": "GetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetSoftwareInfo",
         "currentName": "GetSoftwareInfo",
         "sourceName": "GetSoftwareInfo",
@@ -51747,6 +53630,26 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetVersionControlStatus",
+        "currentName": "GetVersionControlStatus",
+        "sourceName": "GetVersionControlStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListVersionControlWorkspaces",
+        "currentName": "ListVersionControlWorkspaces",
+        "sourceName": "GetVersionControlWorkspaces",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -52311,6 +54214,27 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageDeviceUsers",
+        "currentName": "ManageDeviceUsers",
+        "sourceName": "ManageDeviceUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webserver",
+          "confirmDelete": false,
           "dryRun": true,
           "action": "read"
         },
@@ -53018,6 +54942,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMultiuserSession",
+        "currentName": "ManageMultiuserSession",
+        "sourceName": "ManageMultiuserSession",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -53066,6 +55004,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcCertificate",
+        "currentName": "ManagePlcCertificate",
+        "sourceName": "ManagePlcCertificate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -53079,6 +55036,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcGitRepository",
+        "currentName": "ManagePlcGitRepository",
+        "sourceName": "ManagePlcGitRepository",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "repositoryPath": "C:\\Examples\\git",
+          "dryRun": true,
+          "action": "status"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcProtection",
+        "currentName": "ManagePlcProtection",
+        "sourceName": "ManagePlcProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ],
+          "action": "read",
+          "confirmChange": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -53209,6 +55197,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageProjectUserManagement",
+        "currentName": "ManageProjectUserManagement",
+        "sourceName": "ManageProjectUserManagement",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "createRole",
+          "name": "ExampleRole",
+          "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -53265,6 +55268,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageUmcUsers",
+        "currentName": "ManageUmcUsers",
+        "sourceName": "ManageUmcUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageUnifiedCwcPackage",
         "currentName": "ManageUnifiedCwcPackage",
         "sourceName": "ManageUnifiedCwcPackage",
@@ -53275,6 +55292,26 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageWatchForceTableWebAccess",
+        "currentName": "ManageWatchForceTableWebAccess",
+        "sourceName": "ManageWatchForceTableWebAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -54484,9 +56521,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPortalInfo",
+        "currentName": "GetPortalInfo",
+        "sourceName": "ReadPortalInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeProcesses": true,
+          "includeSessions": true,
+          "includeProducts": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectProtection",
+        "currentName": "GetProjectProtection",
+        "sourceName": "ReadProjectProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetProjectSettings",
         "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectUserManagement",
+        "currentName": "GetProjectUserManagement",
+        "sourceName": "ReadProjectUserManagement",
         "profiles": [
           "plc-foundation"
         ],
@@ -54640,6 +56711,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -54696,6 +56781,18 @@
               }
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },
@@ -54841,6 +56938,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
+        "sourceName": "SetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcWatchTableModifyValue",
         "currentName": "SetPlcWatchTableModifyValue",
         "sourceName": "SetWatchTableModifyValue",
@@ -54883,6 +56992,18 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeVersionControlWorkspace",
+        "currentName": "SynchronizeVersionControlWorkspace",
+        "sourceName": "SyncVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -54975,6 +57096,19 @@
             "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
           },
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "sourceName": "ValidateAutomationContext",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": ""
         },
         "envelopeVersion": 4
       },
@@ -55239,6 +57373,19 @@
         ],
         "arguments": {
           "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "sourceName": "ArchiveSavedProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -55660,6 +57807,28 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectProjectToWorkspace",
+        "currentName": "ConnectProjectToWorkspace",
+        "sourceName": "ConnectProjectToWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreateLibraryMasterCopy",
         "currentName": "CreateLibraryMasterCopy",
         "sourceName": "CreateLibraryMasterCopy",
@@ -55779,6 +57948,19 @@
           "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateVersionControlWorkspace",
+        "currentName": "CreateVersionControlWorkspace",
+        "sourceName": "CreateVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceName": "Engineering",
+          "folderPath": ""
         },
         "envelopeVersion": 4
       },
@@ -56059,6 +58241,16 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureOpennessUserGroup",
+        "currentName": "EnsureOpennessUserGroup",
+        "sourceName": "EnsureOpennessUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -56879,6 +59071,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
+        "sourceName": "GetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetSoftwareInfo",
         "currentName": "GetSoftwareInfo",
         "sourceName": "GetSoftwareInfo",
@@ -56959,6 +59163,26 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetVersionControlStatus",
+        "currentName": "GetVersionControlStatus",
+        "sourceName": "GetVersionControlStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListVersionControlWorkspaces",
+        "currentName": "ListVersionControlWorkspaces",
+        "sourceName": "GetVersionControlWorkspaces",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -57550,6 +59774,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceUsers",
+        "currentName": "ManageDeviceUsers",
+        "sourceName": "ManageDeviceUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webserver",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGenerationArtifacts",
         "currentName": "ManageGenerationArtifacts",
         "sourceName": "ManageGenerationArtifacts",
@@ -58251,6 +60496,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMultiuserSession",
+        "currentName": "ManageMultiuserSession",
+        "sourceName": "ManageMultiuserSession",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -58279,6 +60538,20 @@
           "interfaceName": "Server interface_1",
           "action": "read",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePasswordPolicy",
+        "currentName": "ManagePasswordPolicy",
+        "sourceName": "ManagePasswordPolicy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -58314,6 +60587,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcCertificate",
+        "currentName": "ManagePlcCertificate",
+        "sourceName": "ManagePlcCertificate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -58327,6 +60619,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcGitRepository",
+        "currentName": "ManagePlcGitRepository",
+        "sourceName": "ManagePlcGitRepository",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "repositoryPath": "C:\\Examples\\git",
+          "dryRun": true,
+          "action": "status"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcProtection",
+        "currentName": "ManagePlcProtection",
+        "sourceName": "ManagePlcProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ],
+          "action": "read",
+          "confirmChange": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -58457,6 +60780,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageProjectUserManagement",
+        "currentName": "ManageProjectUserManagement",
+        "sourceName": "ManageProjectUserManagement",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "createRole",
+          "name": "ExampleRole",
+          "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -58469,6 +60807,48 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTeamcenterConnection",
+        "currentName": "ManageTeamcenterConnection",
+        "sourceName": "ManageTeamcenterConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTeamcenterDataset",
+        "currentName": "ManageTeamcenterDataset",
+        "sourceName": "ManageTeamcenterDataset",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "search",
+          "itemId": "&lt;Teamcenter item id&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTeamcenterWorkflow",
+        "currentName": "ManageTeamcenterWorkflow",
+        "sourceName": "ManageTeamcenterWorkflow",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "readCustomAttributes",
+          "itemType": "T4TiaProject",
+          "confirmSave": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -58513,6 +60893,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageUmcUsers",
+        "currentName": "ManageUmcUsers",
+        "sourceName": "ManageUmcUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageUnifiedCwcPackage",
         "currentName": "ManageUnifiedCwcPackage",
         "sourceName": "ManageUnifiedCwcPackage",
@@ -58523,6 +60917,26 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageWatchForceTableWebAccess",
+        "currentName": "ManageWatchForceTableWebAccess",
+        "sourceName": "ManageWatchForceTableWebAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -59732,9 +62146,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPortalInfo",
+        "currentName": "GetPortalInfo",
+        "sourceName": "ReadPortalInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeProcesses": true,
+          "includeSessions": true,
+          "includeProducts": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectProtection",
+        "currentName": "GetProjectProtection",
+        "sourceName": "ReadProjectProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetProjectSettings",
         "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectUserManagement",
+        "currentName": "GetProjectUserManagement",
+        "sourceName": "ReadProjectUserManagement",
         "profiles": [
           "plc-foundation"
         ],
@@ -59888,6 +62336,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -59944,6 +62406,18 @@
               }
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },
@@ -60101,6 +62575,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
+        "sourceName": "SetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcWatchTableModifyValue",
         "currentName": "SetPlcWatchTableModifyValue",
         "sourceName": "SetWatchTableModifyValue",
@@ -60143,6 +62629,18 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeVersionControlWorkspace",
+        "currentName": "SynchronizeVersionControlWorkspace",
+        "sourceName": "SyncVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -60249,6 +62747,19 @@
           "softwarePath": "PLC_1",
           "confirmUpdate": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "sourceName": "ValidateAutomationContext",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": ""
         },
         "envelopeVersion": 4
       },
@@ -60525,6 +63036,19 @@
         ],
         "arguments": {
           "token": "&lt;token from PreviewToolBatch&gt;"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "sourceName": "ArchiveSavedProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -61029,6 +63553,28 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ConnectIsolatedPortal",
+        "currentName": "ConnectIsolatedPortal",
+        "sourceName": "ConnectIsolated",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ConnectProjectToWorkspace",
+        "currentName": "ConnectProjectToWorkspace",
+        "sourceName": "ConnectProjectToWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "CreateLibraryMasterCopy",
         "currentName": "CreateLibraryMasterCopy",
         "sourceName": "CreateLibraryMasterCopy",
@@ -61148,6 +63694,19 @@
           "projectName": "&lt;fresh caller-selected project name&gt;",
           "dryRun": true,
           "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "CreateVersionControlWorkspace",
+        "currentName": "CreateVersionControlWorkspace",
+        "sourceName": "CreateVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "workspaceName": "Engineering",
+          "folderPath": ""
         },
         "envelopeVersion": 4
       },
@@ -61428,6 +63987,16 @@
         "arguments": {
           "devicePath": "PLC_1"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "EnsureOpennessUserGroup",
+        "currentName": "EnsureOpennessUserGroup",
+        "sourceName": "EnsureOpennessUserGroup",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -62248,6 +64817,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPlcPutGetAccess",
+        "currentName": "GetPlcPutGetAccess",
+        "sourceName": "GetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetSoftwareInfo",
         "currentName": "GetSoftwareInfo",
         "sourceName": "GetSoftwareInfo",
@@ -62328,6 +64909,26 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetVersionControlStatus",
+        "currentName": "GetVersionControlStatus",
+        "sourceName": "GetVersionControlStatus",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ListVersionControlWorkspaces",
+        "currentName": "ListVersionControlWorkspaces",
+        "sourceName": "GetVersionControlWorkspaces",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4
       },
       {
@@ -62934,6 +65535,27 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageDeviceUsers",
+        "currentName": "ManageDeviceUsers",
+        "sourceName": "ManageDeviceUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "family": "webserver",
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageGenerationArtifacts",
         "currentName": "ManageGenerationArtifacts",
         "sourceName": "ManageGenerationArtifacts",
@@ -63635,6 +66257,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageMultiuserSession",
+        "currentName": "ManageMultiuserSession",
+        "sourceName": "ManageMultiuserSession",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageNetworkDomain",
         "currentName": "ManageNetworkDomain",
         "sourceName": "ManageNetworkDomain",
@@ -63663,6 +66299,20 @@
           "interfaceName": "Server interface_1",
           "action": "read",
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePasswordPolicy",
+        "currentName": "ManagePasswordPolicy",
+        "sourceName": "ManagePasswordPolicy",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -63698,6 +66348,25 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManagePlcCertificate",
+        "currentName": "ManagePlcCertificate",
+        "sourceName": "ManagePlcCertificate",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list",
+          "dryRun": true,
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ]
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManagePlcExternalSources",
         "currentName": "ManagePlcExternalSources",
         "sourceName": "ManagePlcExternalSources",
@@ -63711,6 +66380,37 @@
           "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcGitRepository",
+        "currentName": "ManagePlcGitRepository",
+        "sourceName": "ManagePlcGitRepository",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "repositoryPath": "C:\\Examples\\git",
+          "dryRun": true,
+          "action": "status"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManagePlcProtection",
+        "currentName": "ManagePlcProtection",
+        "sourceName": "ManagePlcProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "PLC_1"
+          ],
+          "action": "read",
+          "confirmChange": false,
+          "dryRun": true
         },
         "envelopeVersion": 4
       },
@@ -63841,6 +66541,21 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageProjectUserManagement",
+        "currentName": "ManageProjectUserManagement",
+        "sourceName": "ManageProjectUserManagement",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "createRole",
+          "name": "ExampleRole",
+          "confirmChange": false,
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageStandardPackage",
         "currentName": "ManageStandardPackage",
         "sourceName": "ManageStandardPackage",
@@ -63853,6 +66568,62 @@
           "version": "1.0.0",
           "newId": "example.basic",
           "newVersion": "1.0.0",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageSyslogServers",
+        "currentName": "ManageSyslogServers",
+        "sourceName": "ManageSyslogServers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmDelete": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTeamcenterConnection",
+        "currentName": "ManageTeamcenterConnection",
+        "sourceName": "ManageTeamcenterConnection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTeamcenterDataset",
+        "currentName": "ManageTeamcenterDataset",
+        "sourceName": "ManageTeamcenterDataset",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "search",
+          "itemId": "&lt;Teamcenter item id&gt;",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageTeamcenterWorkflow",
+        "currentName": "ManageTeamcenterWorkflow",
+        "sourceName": "ManageTeamcenterWorkflow",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "readCustomAttributes",
+          "itemType": "T4TiaProject",
+          "confirmSave": false,
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -63897,6 +66668,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ManageUmcUsers",
+        "currentName": "ManageUmcUsers",
+        "sourceName": "ManageUmcUsers",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ManageUnifiedCwcPackage",
         "currentName": "ManageUnifiedCwcPackage",
         "sourceName": "ManageUnifiedCwcPackage",
@@ -63907,6 +66692,26 @@
           "directory": "C:\\Examples\\exports",
           "dryRun": true,
           "action": "inspect"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ManageWatchForceTableWebAccess",
+        "currentName": "ManageWatchForceTableWebAccess",
+        "sourceName": "ManageWatchForceTableWebAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": [
+            "&lt;exact device name from GetProjectTree&gt;"
+          ],
+          "itemPath": [
+            "&lt;exact device item from GetProjectTree&gt;"
+          ],
+          "confirmChange": false,
+          "dryRun": true,
+          "action": "read"
         },
         "envelopeVersion": 4
       },
@@ -65116,9 +67921,43 @@
         "envelopeVersion": 4
       },
       {
+        "name": "GetPortalInfo",
+        "currentName": "GetPortalInfo",
+        "sourceName": "ReadPortalInfo",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "includeProcesses": true,
+          "includeSessions": true,
+          "includeProducts": false
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectProtection",
+        "currentName": "GetProjectProtection",
+        "sourceName": "ReadProjectProtection",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
         "name": "GetProjectSettings",
         "currentName": "GetProjectSettings",
         "sourceName": "ReadProjectSettings",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4
+      },
+      {
+        "name": "GetProjectUserManagement",
+        "currentName": "GetProjectUserManagement",
+        "sourceName": "ReadProjectUserManagement",
         "profiles": [
           "plc-foundation"
         ],
@@ -65272,6 +68111,20 @@
         "envelopeVersion": 4
       },
       {
+        "name": "RetrieveProjectArchive",
+        "currentName": "RetrieveProjectArchive",
+        "sourceName": "RetrieveProjectArchive",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "archivePath": "C:\\Examples\\Archive.zap{major}",
+          "destinationDirectory": "C:\\Examples\\restored",
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "RunCapabilitySelfTest",
         "currentName": "RunCapabilitySelfTest",
         "sourceName": "RunCapabilitySelfTest",
@@ -65352,6 +68205,18 @@
               }
             }
           ]
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SaveProjectCopy",
+        "currentName": "SaveProjectCopy",
+        "sourceName": "SaveAsProject",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "newProjectPath": "C:\\Examples\\Copy"
         },
         "envelopeVersion": 4
       },
@@ -65509,6 +68374,18 @@
         "envelopeVersion": 4
       },
       {
+        "name": "SetPlcPutGetAccess",
+        "currentName": "SetPlcPutGetAccess",
+        "sourceName": "SetPutGetAccess",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "devicePath": "PLC_1"
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "SetPlcWatchTableModifyValue",
         "currentName": "SetPlcWatchTableModifyValue",
         "sourceName": "SetWatchTableModifyValue",
@@ -65551,6 +68428,18 @@
               "content": "FUNCTION \"FC_Add\" : Int\nVAR_INPUT\n    A : Int;\n    B : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #A + #B;\nEND_FUNCTION\n"
             }
           ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "SynchronizeVersionControlWorkspace",
+        "currentName": "SynchronizeVersionControlWorkspace",
+        "sourceName": "SyncVersionControlWorkspace",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -65657,6 +68546,19 @@
           "softwarePath": "PLC_1",
           "confirmUpdate": false,
           "dryRun": true
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "sourceName": "ValidateAutomationContext",
+        "profiles": [
+          "plc-foundation"
+        ],
+        "arguments": {
+          "expectedPlcSoftwarePath": "PLC_1",
+          "expectedHmiSoftwarePath": ""
         },
         "envelopeVersion": 4
       },

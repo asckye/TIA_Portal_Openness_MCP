@@ -214,7 +214,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             string response;
             try
             {
-                bool attach = operation == "Attach" || operation == WorkerOperations.SessionCandidate
+                bool attach = operation == "Attach" || operation == "project-lifecycle.ConnectIsolatedPortal" || operation == WorkerOperations.SessionCandidate
                     && (string?)arguments["mode"] == "apply" && (string?)arguments["candidate"]?["Check"]?["Request"]?["Action"] == "attach";
                 bool firstAttach = attach && !attachAttempted;
                 token.ThrowIfCancellationRequested();

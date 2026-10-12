@@ -142,7 +142,12 @@ namespace PlcExchangeTests
         }
 
         private static object SaveAsTool(SaveAsFake fake)
-            => Activator.CreateInstance(EngineType("ModelContextProtocol.ProjectSessionTools"), fake, null, null, null, null)!;
+        {
+            var service = Activator.CreateInstance(EngineType("Siemens.Services.ProjectLifecyclePortService"),
+                BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] {
+                    (Func<string, JsonObject, JsonNode?>)fake.ProjectCall, (Func<bool>)(() => true), (Func<string>)(() => fake.Previous) }, null)!;
+            return Activator.CreateInstance(EngineType("ModelContextProtocol.ProjectLifecycleProjectTools"), service)!;
+        }
 
         [Theory]
         [InlineData(false)]
@@ -189,6 +194,25 @@ namespace PlcExchangeTests
             public bool LocalSession, MissingBefore, MissingAfter;
             public string Previous = Path.Combine(Path.GetTempPath(), "Original.ap21");
             public string New = Path.Combine(Path.GetTempPath(), "Copy", "NativeObserved.ap21");
+            internal JsonNode? ProjectCall(string operation, JsonObject arguments)
+            {
+                switch (operation)
+                {
+                    case "ReadState": return new JsonObject { ["IsLocalSession"] = LocalSession };
+                    case "project-lifecycle.ReadProjectLifecycleBinding":
+                        BindingReads++;
+                        return new JsonObject { ["identity"] = SaveCalls == 0 && MissingBefore || SaveCalls != 0 && MissingAfter ? null
+                            : new JsonObject { ["projectPath"] = SaveCalls == 0 ? Previous : New } };
+                    case "project-lifecycle.ArchiveSaveProjectCopy":
+                        Assert.False((bool)arguments["dryRun"]!);
+                        Assert.True((bool)arguments["confirm"]!);
+                        Assert.Equal(Previous, (string?)arguments["expectedProjectFile"]);
+                        EngineType("ModelContextProtocol.InvocationJournal").GetMethod("NativeCallStarted", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, null);
+                        SaveCalls++;
+                        return JsonValue.Create(true);
+                    default: throw new Exception("Unexpected project lifecycle operation: " + operation);
+                }
+            }
             protected override object? Invoke(MethodInfo? method, object?[]? args)
             {
                 switch (method!.Name)

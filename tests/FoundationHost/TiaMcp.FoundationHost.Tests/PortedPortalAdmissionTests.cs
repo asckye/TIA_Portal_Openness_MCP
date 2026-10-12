@@ -25,9 +25,10 @@ public sealed class PortedPortalAdmissionTests
     {
         using var approval = new DisabledApproval();
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var admissionWorker = new PortalAdmissionWorker(worker, name);
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
         using var lifetime = new Host.ImportStagingHostLifetime();
-        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        var tools = LegacyHostToolRegistry.Create(admissionWorker, release, false);
         var catalog = new Catalog(release);
         var tool = tools.Single(t => t.ProtocolTool.Name == name);
         var arguments = Arguments(name, tool.ProtocolTool.InputSchema);
@@ -89,6 +90,27 @@ public sealed class PortedPortalAdmissionTests
             Assert.Equal(0, worker.Calls);
         }
         Assert.True(worker.Calls <= (name == "SearchInstalledGsdDevices" ? 2 : 1), "A missing portal must not dispatch a native operation: " + name);
+        Assert.Equal(name is "ConnectIsolatedPortal" or "EnsureOpennessUserGroup" or "GetPortalInfo" or "ValidateAutomationContext" ? 1 : 0, admissionWorker.GlobalOperations);
+    }
+
+    private sealed class PortalAdmissionWorker(IFoundationWorker worker, string tool) : IFoundationWorker
+    {
+        internal int GlobalOperations;
+        public void Dispose() { }
+        public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            string? expected = tool switch {
+                "ConnectIsolatedPortal" => "ConnectIsolatedPortal", "EnsureOpennessUserGroup" => "EnsureOpennessUserGroup",
+                "GetPortalInfo" => "ReadPortalInfo", "ValidateAutomationContext" => "ValidateAutomationContext", _ => null };
+            if (expected == null) return await worker.Call(operation, arguments, token);
+            if (operation == "ReadState") return await worker.Call(operation, arguments, token);
+            Assert.Equal("project-lifecycle." + expected, operation);
+            Assert.NotNull(expected);
+            GlobalOperations++;
+            // These global entries may dispatch without a portal. Refuse the
+            // synthetic operation before native access or Windows group edits.
+            throw new InvalidOperationException("Synthetic global operation refused before native access.");
+        }
     }
 
     private sealed class DisabledApproval : IDisposable

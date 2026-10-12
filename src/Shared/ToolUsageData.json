@@ -39109,6 +39109,1331 @@
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Inspect data.outputReleaseKey=21 and data.xml; CANDIDATE_ONLY and validation flags retain their meaning. This V21 candidate is not an import artifact for the selected V14-V19 project."
           ]
+        },
+        "ArchiveSavedProject": {
+          "arguments": {
+            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "dryRun": true
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ConnectIsolatedPortal": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-SESSION is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ]
+        },
+        "EnsureOpennessUserGroup": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetPortalInfo": {
+          "arguments": {
+            "includeProcesses": true,
+            "includeSessions": true,
+            "includeProducts": false
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true
+        },
+        "ManageMultiuserSession": {
+          "arguments": {
+            "confirmChange": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "serverName": {
+              "exampleValue": "<serverName from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "projectName": {
+              "exampleValue": "Example"
+            },
+            "protocol": {
+              "exampleValue": "Https"
+            },
+            "host": {
+              "exampleValue": "192.0.2.10"
+            },
+            "port": {
+              "exampleValue": 0
+            },
+            "commitComment": {
+              "exampleValue": "<commitComment from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "listServerProjects": {
+              "arguments": {
+                "action": "listServerProjects",
+                "serverName": "<serverName from this operation's target or user input>"
+              }
+            },
+            "readLockState": {
+              "arguments": {
+                "action": "readLockState"
+              }
+            },
+            "listLocalSessions": {
+              "arguments": {
+                "action": "listLocalSessions"
+              }
+            },
+            "connectServer": {
+              "arguments": {
+                "action": "connectServer",
+                "serverName": "<serverName from this operation's target or user input>",
+                "protocol": "Https",
+                "host": "192.0.2.10",
+                "port": 0
+              }
+            },
+            "disconnectServer": {
+              "arguments": {
+                "action": "disconnectServer"
+              }
+            },
+            "commit": {
+              "arguments": {
+                "action": "commit",
+                "commitComment": "<commitComment from this operation's target or user input>"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "RetrieveProjectArchive": {
+          "arguments": {
+            "archivePath": "C:\\Examples\\Archive.zap{major}",
+            "destinationDirectory": "C:\\Examples\\restored",
+            "dryRun": true
+          },
+          "parameters": {
+            "upgrade": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "SaveProjectCopy": {
+          "arguments": {
+            "newProjectPath": "C:\\Examples\\Copy"
+          },
+          "parameters": {
+            "newProjectPath": {
+              "meaning": "Destination project directory for TIA Save As. This switches the open project and MCP binding; unsaved changes are saved into the new copy and the original file keeps its last saved state."
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-CLOSE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
+            "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED.",
+            "This is TIA Save As (Project.SaveAs), approval-gated like SaveProject and CloseProject. The open project and MCP binding switch to the new location; unsaved changes are saved into the new copy. The original project file keeps its last saved state.",
+            "Read data.previousProjectFile and data.newProjectFile; data.evidence.binding.identity.projectPath is the captured new location. Verify GetSessionState data.projectFile equals newProjectFile before further operations. Native acceptance remains NOT RUN."
+          ]
+        },
+        "ValidateAutomationContext": {
+          "arguments": {
+            "expectedPlcSoftwarePath": "PLC_1",
+            "expectedHmiSoftwarePath": ""
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "resultReading": [
+            "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. If outcome=unknown or error.code=OUTCOME_UNKNOWN, stop, inspect the actual target, reset the session when required and never replay the write automatically. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
+            "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. OUTCOME_UNKNOWN requires session reset and target inspection before further writes."
+          ]
+        },
+        "ManagePlcProtection": {
+          "arguments": {
+            "devicePath": [
+              "PLC_1"
+            ],
+            "action": "read",
+            "confirmChange": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "itemPath": {
+              "exampleValue": [
+                "<exact device item from GetProjectTree>"
+              ],
+              "requiresBinding": true
+            },
+            "accessLevel": {
+              "exampleValue": "FullAccess"
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "newPassword": {
+              "exampleValue": "<new password supplied for this target>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "setAccessLevel": {
+              "arguments": {
+                "action": "setAccessLevel",
+                "accessLevel": "FullAccess"
+              }
+            },
+            "setAccessPassword": {
+              "arguments": {
+                "action": "setAccessPassword",
+                "accessLevel": "FullAccess",
+                "password": "<password supplied for this target>"
+              }
+            },
+            "resetAccessPassword": {
+              "arguments": {
+                "action": "resetAccessPassword",
+                "accessLevel": "FullAccess",
+                "password": "<password supplied for this target>"
+              }
+            },
+            "protectMasterSecret": {
+              "arguments": {
+                "action": "protectMasterSecret",
+                "password": "<password supplied for this target>"
+              }
+            },
+            "changeMasterSecret": {
+              "arguments": {
+                "action": "changeMasterSecret",
+                "password": "<password supplied for this target>",
+                "newPassword": "<new password supplied for this target>"
+              }
+            },
+            "unprotectMasterSecret": {
+              "arguments": {
+                "action": "unprotectMasterSecret",
+                "password": "<password supplied for this target>"
+              }
+            },
+            "resetMasterSecret": {
+              "arguments": {
+                "action": "resetMasterSecret"
+              }
+            },
+            "protectAllConfiguration": {
+              "arguments": {
+                "action": "protectAllConfiguration"
+              }
+            },
+            "unprotectAllConfiguration": {
+              "arguments": {
+                "action": "unprotectAllConfiguration"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "inline": true,
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetPlcPutGetAccess": {
+          "arguments": {
+            "devicePath": "PLC_1"
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "SetPlcPutGetAccess": {
+          "arguments": {
+            "devicePath": "PLC_1"
+          },
+          "parameters": {
+            "enable": {
+              "exampleValue": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageWatchForceTableWebAccess": {
+          "arguments": {
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "confirmChange": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "devicePath": {
+              "requiresBinding": true
+            },
+            "itemPath": {
+              "requiresBinding": true
+            },
+            "softwarePath": {
+              "exampleValue": "PLC_1"
+            },
+            "tableKind": {
+              "exampleValue": "watch"
+            },
+            "tablePath": {
+              "exampleValue": "Default tag table"
+            },
+            "access": {
+              "exampleValue": "Read"
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "assign": {
+              "arguments": {
+                "action": "assign"
+              }
+            },
+            "unassign": {
+              "arguments": {
+                "action": "unassign"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageDeviceUsers": {
+          "arguments": {
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ],
+            "family": "webserver",
+            "confirmDelete": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "devicePath": {
+              "requiresBinding": true
+            },
+            "itemPath": {
+              "requiresBinding": true
+            },
+            "userName": {
+              "exampleValue": "ExampleUser"
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "permissions": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "requiresBinding": true
+            },
+            "active": {
+              "exampleValue": true
+            },
+            "newName": {
+              "exampleValue": "Example_2"
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "create": {
+              "arguments": {
+                "action": "create",
+                "userName": "ExampleUser",
+                "password": "<password supplied for this device user>"
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete",
+                "userName": "ExampleUser"
+              }
+            },
+            "setPassword": {
+              "arguments": {
+                "action": "setPassword",
+                "password": "<password supplied for this target>",
+                "userName": "ExampleUser"
+              }
+            },
+            "setPermissions": {
+              "arguments": {
+                "action": "setPermissions",
+                "permissions": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
+                "userName": "ExampleUser"
+              }
+            },
+            "setActive": {
+              "arguments": {
+                "action": "setActive",
+                "active": true,
+                "userName": "ExampleUser"
+              }
+            },
+            "rename": {
+              "arguments": {
+                "action": "rename",
+                "newName": "Example_2",
+                "userName": "ExampleUser"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetProjectProtection": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "GetProjectUserManagement": {
+          "arguments": {},
+          "parameters": {
+            "category": {
+              "exampleValue": "users"
+            },
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "devicePathJson": {
+              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+              "requiresBinding": true
+            },
+            "itemPathJson": {
+              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ManageProjectUserManagement": {
+          "arguments": {
+            "action": "createRole",
+            "name": "ExampleRole",
+            "confirmChange": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "roleName": {
+              "exampleValue": "Operator"
+            },
+            "rightName": {
+              "exampleValue": "<right name returned by ReadProjectUserManagement>",
+              "requiresBinding": true
+            },
+            "comment": {
+              "exampleValue": "<comment from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "group": {
+              "exampleValue": ""
+            },
+            "devicePathJson": {
+              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+              "requiresBinding": true
+            },
+            "itemPathJson": {
+              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "createUser": {
+              "arguments": {
+                "action": "createUser",
+                "password": "<password supplied for this project user>"
+              }
+            },
+            "deleteUser": {
+              "arguments": {
+                "action": "deleteUser"
+              }
+            },
+            "setUserPassword": {
+              "arguments": {
+                "action": "setUserPassword",
+                "password": "<password supplied for this target>"
+              }
+            },
+            "activateUser": {
+              "arguments": {
+                "action": "activateUser"
+              }
+            },
+            "deactivateUser": {
+              "arguments": {
+                "action": "deactivateUser"
+              }
+            },
+            "assignRole": {
+              "arguments": {
+                "action": "assignRole",
+                "roleName": "Operator"
+              }
+            },
+            "unassignRole": {
+              "arguments": {
+                "action": "unassignRole",
+                "roleName": "Operator"
+              }
+            },
+            "createRole": {
+              "arguments": {}
+            },
+            "deleteRole": {
+              "arguments": {
+                "action": "deleteRole"
+              }
+            },
+            "assignEngineeringRight": {
+              "arguments": {
+                "action": "assignEngineeringRight",
+                "rightName": "<right name returned by ReadProjectUserManagement>"
+              }
+            },
+            "unassignEngineeringRight": {
+              "arguments": {
+                "action": "unassignEngineeringRight",
+                "rightName": "<right name returned by ReadProjectUserManagement>"
+              }
+            },
+            "assignDeviceRight": {
+              "arguments": {
+                "action": "assignDeviceRight",
+                "rightName": "<right name returned by ReadProjectUserManagement>",
+                "devicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "itemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
+              }
+            },
+            "unassignDeviceRight": {
+              "arguments": {
+                "action": "unassignDeviceRight",
+                "rightName": "<right name returned by ReadProjectUserManagement>",
+                "devicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "itemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
+              }
+            },
+            "createDeviceRight": {
+              "arguments": {
+                "action": "createDeviceRight"
+              }
+            },
+            "deleteDeviceRight": {
+              "arguments": {
+                "action": "deleteDeviceRight"
+              }
+            },
+            "activateAnonymousUser": {
+              "arguments": {
+                "action": "activateAnonymousUser"
+              }
+            },
+            "deactivateAnonymousUser": {
+              "arguments": {
+                "action": "deactivateAnonymousUser"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManagePlcCertificate": {
+          "arguments": {
+            "action": "list",
+            "dryRun": true,
+            "devicePath": [
+              "<exact device name from GetProjectTree>"
+            ],
+            "itemPath": [
+              "<exact device item from GetProjectTree>"
+            ]
+          },
+          "parameters": {
+            "certificateId": {
+              "exampleValue": "<id from ManagePlcCertificate list>",
+              "requiresBinding": true
+            },
+            "filePath": {
+              "exampleValue": "C:\\Examples\\exports\\Main.xml"
+            },
+            "usage": {
+              "exampleValue": "Tls"
+            },
+            "assignment": {
+              "exampleValue": "<assignment from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "devicePath": {
+              "requiresBinding": true
+            },
+            "itemPath": {
+              "requiresBinding": true
+            },
+            "properties": {
+              "exampleValue": {
+                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              },
+              "requiresBinding": true
+            },
+            "assignmentItemPath": {
+              "exampleValue": [
+                "<exact assignment owner device item>"
+              ],
+              "requiresBinding": true
+            },
+            "subjectAlternativeNames": {
+              "exampleValue": [
+                {
+                  "type": "Dns",
+                  "value": "plc.example.test"
+                }
+              ],
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "list": {
+              "arguments": {}
+            },
+            "read": {
+              "arguments": {
+                "action": "read"
+              }
+            },
+            "template": {
+              "arguments": {
+                "action": "template",
+                "usage": "Tls"
+              }
+            },
+            "create": {
+              "arguments": {
+                "action": "create",
+                "usage": "Tls",
+                "properties": {
+                  "SubjectCommonName": "plc.example.test",
+                  "Signature": "Sha256RSA"
+                },
+                "subjectAlternativeNames": [
+                  {
+                    "type": "Dns",
+                    "value": "plc.example.test"
+                  }
+                ]
+              }
+            },
+            "import": {
+              "arguments": {
+                "action": "import",
+                "filePath": "C:\\Examples\\exports\\Main.xml"
+              }
+            },
+            "export": {
+              "arguments": {
+                "action": "export",
+                "filePath": "C:\\Examples\\exports\\Main.xml"
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete"
+              }
+            },
+            "assign": {
+              "arguments": {
+                "action": "assign"
+              }
+            },
+            "unassign": {
+              "arguments": {
+                "action": "unassign"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageSyslogServers": {
+          "arguments": {
+            "confirmDelete": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "scope": {
+              "exampleValue": "project"
+            },
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "propertiesJson": {
+              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "requiresBinding": true
+            },
+            "attributesJson": {
+              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "requiresBinding": true
+            },
+            "devicePathJson": {
+              "exampleValue": "[\"<exact device name from GetProjectTree>\"]",
+              "requiresBinding": true
+            },
+            "itemPathJson": {
+              "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
+              "requiresBinding": true
+            },
+            "serverAddress": {
+              "exampleValue": "192.0.2.20"
+            },
+            "serverPort": {
+              "exampleValue": 6514
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "create": {
+              "arguments": {
+                "action": "create",
+                "name": "Example_1"
+              }
+            },
+            "update": {
+              "arguments": {
+                "action": "update",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                },
+                "name": "Example_1"
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete",
+                "name": "Example_1"
+              }
+            },
+            "assignModule": {
+              "arguments": {
+                "action": "assignModule",
+                "devicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "itemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
+              }
+            },
+            "unassignModule": {
+              "arguments": {
+                "action": "unassignModule",
+                "devicePath": [
+                  "<exact device name from GetProjectTree>"
+                ],
+                "itemPath": [
+                  "<exact device item from GetProjectTree>"
+                ]
+              }
+            },
+            "createServer": {
+              "arguments": {
+                "action": "createServer",
+                "serverAddress": "192.0.2.20",
+                "serverPort": 6514
+              }
+            },
+            "deleteServer": {
+              "arguments": {
+                "action": "deleteServer",
+                "serverAddress": "192.0.2.20"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManagePasswordPolicy": {
+          "arguments": {
+            "confirmChange": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "target": {
+              "exampleValue": "umac"
+            },
+            "propertiesJson": {
+              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "update": {
+              "arguments": {
+                "action": "update",
+                "properties": {
+                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                }
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageUmcUsers": {
+          "arguments": {
+            "confirmChange": false,
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "kind": {
+              "exampleValue": "user"
+            },
+            "name": {
+              "exampleValue": "Example_1"
+            },
+            "newName": {
+              "exampleValue": "Example_2"
+            },
+            "roleName": {
+              "exampleValue": "Operator"
+            },
+            "serverUserName": {
+              "exampleValue": "<serverUserName from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "serverPassword": {
+              "exampleValue": "<serverPassword from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "offset": {
+              "exampleValue": 0
+            },
+            "limit": {
+              "exampleValue": 100
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "checkConsistency": {
+              "arguments": {
+                "action": "checkConsistency"
+              }
+            },
+            "synchronize": {
+              "arguments": {
+                "action": "synchronize"
+              }
+            },
+            "createOffline": {
+              "arguments": {
+                "action": "createOffline"
+              }
+            },
+            "importFromServer": {
+              "arguments": {
+                "action": "importFromServer"
+              }
+            },
+            "rename": {
+              "arguments": {
+                "action": "rename",
+                "newName": "Example_2"
+              }
+            },
+            "activate": {
+              "arguments": {
+                "action": "activate"
+              }
+            },
+            "deactivate": {
+              "arguments": {
+                "action": "deactivate"
+              }
+            },
+            "delete": {
+              "arguments": {
+                "action": "delete",
+                "name": "Example_1"
+              }
+            },
+            "assignRole": {
+              "arguments": {
+                "action": "assignRole",
+                "roleName": "Operator"
+              }
+            },
+            "unassignRole": {
+              "arguments": {
+                "action": "unassignRole",
+                "roleName": "Operator"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ConnectProjectToWorkspace": {
+          "arguments": {
+            "dryRun": true
+          },
+          "parameters": {
+            "workspaceName": {
+              "exampleValue": "Engineering"
+            },
+            "deviceFilter": {
+              "exampleValue": "<deviceFilter from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "maxObjects": {
+              "exampleValue": 3000
+            },
+            "walkTrace": {
+              "exampleValue": false
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ],
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "CreateVersionControlWorkspace": {
+          "arguments": {
+            "workspaceName": "Engineering",
+            "folderPath": ""
+          },
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ],
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "GetVersionControlStatus": {
+          "arguments": {},
+          "parameters": {
+            "workspaceName": {
+              "exampleValue": "Engineering"
+            },
+            "changedOnly": {
+              "exampleValue": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ]
+        },
+        "ListVersionControlWorkspaces": {
+          "arguments": {},
+          "parameters": {},
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ]
+        },
+        "ManagePlcGitRepository": {
+          "arguments": {
+            "repositoryPath": "C:\\Examples\\git",
+            "dryRun": true,
+            "action": "status"
+          },
+          "parameters": {
+            "filesJson": {
+              "exampleValue": "[\"C:\\\\Examples\\\\AlarmTexts.csv\"]"
+            },
+            "revision": {
+              "exampleValue": "HEAD"
+            },
+            "message": {
+              "exampleValue": "<message from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "limit": {
+              "exampleValue": 30
+            }
+          },
+          "operations": {
+            "status": {
+              "arguments": {}
+            },
+            "history": {
+              "arguments": {
+                "action": "history",
+                "limit": 30
+              }
+            },
+            "diff": {
+              "arguments": {
+                "action": "diff"
+              }
+            },
+            "show": {
+              "arguments": {
+                "action": "show",
+                "revision": "HEAD"
+              }
+            },
+            "stage": {
+              "arguments": {
+                "action": "stage",
+                "filesJson": "[\"PLC_1/FC_Ready.scl\"]"
+              }
+            },
+            "commit": {
+              "arguments": {
+                "action": "commit",
+                "message": "<message from this operation's target or user input>"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+        },
+        "ManageTeamcenterConnection": {
+          "arguments": {
+            "dryRun": true,
+            "action": "read"
+          },
+          "parameters": {
+            "userName": {
+              "exampleValue": "ExampleUser"
+            },
+            "password": {
+              "exampleValue": "<password supplied for this target>",
+              "requiresBinding": true
+            },
+            "group": {
+              "exampleValue": ""
+            },
+            "role": {
+              "exampleValue": "<role from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "hostUrl": {
+              "exampleValue": "<hostUrl from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "instance": {
+              "exampleValue": "<instance from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "loginUrl": {
+              "exampleValue": "<loginUrl from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "applicationId": {
+              "exampleValue": "<applicationId from this operation's target or user input>",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "read": {
+              "arguments": {}
+            },
+            "connect": {
+              "arguments": {
+                "action": "connect",
+                "userName": "<Teamcenter user>",
+                "password": "<Teamcenter password>",
+                "hostUrl": "<configured Teamcenter host URL>",
+                "group": "<Teamcenter group>",
+                "role": "<Teamcenter role>"
+              }
+            },
+            "connectSso": {
+              "arguments": {
+                "action": "connectSso",
+                "hostUrl": "<configured Teamcenter host URL>",
+                "loginUrl": "<configured SSO login URL>",
+                "applicationId": "<configured application ID>"
+              }
+            },
+            "disconnect": {
+              "arguments": {
+                "action": "disconnect"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageTeamcenterDataset": {
+          "arguments": {
+            "action": "search",
+            "itemId": "<Teamcenter item id>",
+            "dryRun": true
+          },
+          "parameters": {
+            "itemId": {
+              "requiresBinding": true
+            },
+            "revisionId": {
+              "exampleValue": "<Teamcenter revision id>",
+              "requiresBinding": true
+            },
+            "datasetType": {
+              "exampleValue": "T4TiaProjectDataset"
+            },
+            "datasetName": {
+              "exampleValue": "<datasetName from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "itemType": {
+              "exampleValue": "Project"
+            },
+            "tiaObjectName": {
+              "exampleValue": "<tiaObjectName from this operation's target or user input>",
+              "requiresBinding": true
+            },
+            "itemName": {
+              "exampleValue": "StatusText"
+            },
+            "localCacheOption": {
+              "exampleValue": "Overwrite"
+            }
+          },
+          "operations": {
+            "checkout": {
+              "arguments": {
+                "action": "checkout",
+                "itemId": "<Teamcenter item id>",
+                "revisionId": "<Teamcenter revision id>"
+              }
+            },
+            "checkin": {
+              "arguments": {
+                "action": "checkin",
+                "itemId": "<Teamcenter item id>",
+                "revisionId": "<Teamcenter revision id>"
+              }
+            },
+            "cancelCheckout": {
+              "arguments": {
+                "action": "cancelCheckout",
+                "itemId": "<Teamcenter item id>",
+                "revisionId": "<Teamcenter revision id>"
+              }
+            },
+            "search": {
+              "arguments": {}
+            },
+            "download": {
+              "arguments": {
+                "action": "download",
+                "itemId": "<Teamcenter item id>",
+                "revisionId": "<Teamcenter revision id>",
+                "datasetName": "<exact dataset name>",
+                "datasetType": "<dataset type>"
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "ManageTeamcenterWorkflow": {
+          "arguments": {
+            "action": "readCustomAttributes",
+            "itemType": "T4TiaProject",
+            "confirmSave": false,
+            "dryRun": true
+          },
+          "parameters": {
+            "target": {
+              "exampleValue": "project"
+            },
+            "libraryName": {
+              "exampleValue": ""
+            },
+            "itemId": {
+              "exampleValue": "<Teamcenter item id>",
+              "requiresBinding": true
+            },
+            "revisionId": {
+              "exampleValue": "<Teamcenter revision id>",
+              "requiresBinding": true
+            },
+            "localCacheOption": {
+              "exampleValue": "Overwrite"
+            },
+            "itemDetails": {
+              "exampleValue": "{\"itemName\":\"Example\",\"teamcenterItemType\":\"T4TiaProject\"}"
+            },
+            "revisionDetails": {
+              "exampleValue": "{\"revisionId\":\"B\",\"comment\":\"Example revision\"}"
+            },
+            "customAttributes": {
+              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "requiresBinding": true
+            }
+          },
+          "operations": {
+            "readCustomAttributes": {
+              "arguments": {}
+            },
+            "save": {
+              "arguments": {
+                "action": "save",
+                "libraryName": ""
+              }
+            },
+            "saveWithProxyObject": {
+              "arguments": {
+                "action": "saveWithProxyObject"
+              }
+            },
+            "saveToItem": {
+              "arguments": {
+                "action": "saveToItem",
+                "itemId": "<Teamcenter item id>",
+                "revisionId": "<Teamcenter revision id>"
+              }
+            },
+            "saveToItemWithProxyObject": {
+              "arguments": {
+                "action": "saveToItemWithProxyObject",
+                "itemId": "<Teamcenter item id>",
+                "revisionId": "<Teamcenter revision id>"
+              }
+            },
+            "saveAsNewItem": {
+              "arguments": {
+                "action": "saveAsNewItem",
+                "itemDetails": {
+                  "itemName": "Example",
+                  "teamcenterItemType": "T4TiaProject"
+                }
+              }
+            },
+            "saveAsNewItemWithProxyObject": {
+              "arguments": {
+                "action": "saveAsNewItemWithProxyObject",
+                "itemDetails": {
+                  "itemName": "Example",
+                  "teamcenterItemType": "T4TiaProject"
+                }
+              }
+            },
+            "saveAsNewRevision": {
+              "arguments": {
+                "action": "saveAsNewRevision",
+                "revisionDetails": {
+                  "revisionId": "B",
+                  "comment": "Example revision"
+                }
+              }
+            },
+            "saveAsNewRevisionWithProxyObject": {
+              "arguments": {
+                "action": "saveAsNewRevisionWithProxyObject",
+                "revisionDetails": {
+                  "revisionId": "B",
+                  "comment": "Example revision"
+                }
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        },
+        "SynchronizeVersionControlWorkspace": {
+          "arguments": {
+            "dryRun": true
+          },
+          "parameters": {
+            "direction": {
+              "exampleValue": "ProjectToWorkspace"
+            },
+            "workspaceName": {
+              "exampleValue": "Engineering"
+            },
+            "changedOnly": {
+              "exampleValue": true
+            }
+          },
+          "operations": {},
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "resultReading": [
+            "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
+          ],
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
         }
       },
       "full-engine": {
