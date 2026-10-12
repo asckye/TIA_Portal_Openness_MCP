@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 import shutil
+import time
 import uuid
 
 
@@ -15,4 +16,13 @@ def fixture_directory(prefix='offline-fixture-'):
         yield str(directory)
     finally:
         if directory.resolve().parent != parent: raise ValueError('Unsafe offline fixture cleanup path')
-        shutil.rmtree(directory)
+        # A worker started by a stopped host can still hold fixture files for a moment while it exits; wait a bounded
+        # time for the handles to close, then fail loudly if they stay open.
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                shutil.rmtree(directory)
+                break
+            except PermissionError:
+                if time.monotonic() >= deadline: raise
+                time.sleep(0.5)
