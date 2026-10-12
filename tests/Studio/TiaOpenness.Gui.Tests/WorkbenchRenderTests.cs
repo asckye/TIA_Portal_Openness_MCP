@@ -99,12 +99,33 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         metrics.Add($"Log: {log.ActualWidth}, padding {log.Padding}, document padding {log.Document.PagePadding}, page width {log.Document.PageWidth}");
                         Assert.Equal(new Thickness(0), log.Document.PagePadding);
                         var table = (System.Windows.Documents.Table)log.Document.Blocks.FirstBlock;
-                        var message = table.RowGroups[0].Rows[0].Cells[1].Blocks.FirstBlock;
+                        var messageCell = table.RowGroups[0].Rows[0].Cells[1];
+                        var message = messageCell.Blocks.FirstBlock;
                         Assert.Equal(90, table.Columns[0].Width.Value);
                         Assert.Equal(12, table.RowGroups[0].Rows[0].Cells[0].Padding.Right);
                         double textHeight = message.ContentEnd.GetCharacterRect(LogicalDirection.Backward).Bottom
                             - message.ContentStart.GetCharacterRect(LogicalDirection.Forward).Top;
-                        Assert.InRange(textHeight, 10, 45);
+                        const int expectedMessageLines = 3;
+                        Assert.Equal(12, log.FontSize);
+                        Assert.Equal(17, message.LineHeight);
+                        Assert.Equal(new Thickness(0, 9, 14, 9), messageCell.Padding);
+                        Assert.Equal(new Thickness(0), message.Margin);
+                        int renderedLines = 0;
+                        for (TextPointer? line = message.ContentStart.GetLineStartPosition(0);
+                            line != null && line.CompareTo(message.ContentEnd) < 0; line = line.GetLineStartPosition(1))
+                            renderedLines++;
+                        Assert.Equal(expectedMessageLines, renderedLines);
+                        // Three 17 epx lines plus the existing 9 + 9 epx cell padding: 69 epx per row.
+                        // Character rectangles exclude cell padding, so their strict bound is 69 - 18 = 51 epx.
+                        double verticalPadding = messageCell.Padding.Top + messageCell.Padding.Bottom;
+                        double maximumRowHeight = message.LineHeight * expectedMessageLines + verticalPadding;
+                        double maximumTextHeight = maximumRowHeight - verticalPadding;
+                        metrics.Add($"First log message height: {textHeight}, line height: {message.LineHeight}, lines: {renderedLines}, font size: {message.FontSize}, cell padding: {messageCell.Padding}");
+                        metrics.Add($"Log height bounds: text {maximumTextHeight}, row {maximumRowHeight}; padded measured height: {textHeight + verticalPadding}");
+                        SaveRender(host, Path.Combine(output, "mcp-log-height-inspection.png"));
+                        File.WriteAllLines(Path.Combine(output, "log-height-inspection.txt"), metrics);
+                        Assert.InRange(textHeight, 10, maximumTextHeight);
+                        Assert.InRange(textHeight + verticalPadding, 10 + verticalPadding, maximumRowHeight);
                         metrics.Add($"First log message height: {textHeight}");
                         foreach (string name in new[] { "LinkClient", "LinkServer", "LinkEndpoint", "Transport" })
                         {

@@ -15,27 +15,32 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     public void Colors_live_in_the_palettes_and_the_vocabulary_warning_count_variant()
     {
         var literal = new Regex(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+");
-        // The authoritative count-badge vocabulary specifies peach separately from the 29 palette tokens.
-        const string countVariant = "<SolidColorBrush x:Key=\"Primer.CountWarningLight\" Color=\"#FFF1E5\"/>";
-        var vocabulary = SourceScan.Markup.Single(file => file.Name.EndsWith(".Themes.Primer.xaml", StringComparison.Ordinal));
-        Assert.Single(Regex.Matches(vocabulary.Text, Regex.Escape(countVariant)));
+        // The warning-count colour stays exact; its brush is defined in the light palette.
+        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#FFF1E5\"/>";
+        var lightPalette = SourceScan.Markup.Single(file => file.Name.EndsWith(".Themes.Palette.Light.xaml", StringComparison.Ordinal));
+        Assert.Single(Regex.Matches(lightPalette.Text, Regex.Escape(countVariant)));
+        var brushesOutsidePalettes = SourceScan.Markup
+            .Where(file => !file.Name.Contains(".Themes.Palette.", StringComparison.Ordinal))
+            .SelectMany(file => System.Xml.Linq.XDocument.Parse(file.Text).Descendants()
+                .Where(element => element.Name.LocalName.EndsWith("Brush", StringComparison.Ordinal)));
+        Assert.Empty(brushesOutsidePalettes);
         // Transparent carries no hue and intentionally lets the active palette show through.
         var violations = SourceScan.Markup.Concat(SourceScan.Code)
             .Where(file => !file.Name.Contains(".Themes.Palette.", StringComparison.Ordinal))
-            .SelectMany(file => literal.Matches(file.Name == vocabulary.Name ? file.Text.Replace(countVariant, "") : file.Text)
+            .SelectMany(file => literal.Matches(file.Text)
                 .Select(match => file.Name + ": " + match.Value));
         Assert.Empty(violations);
     }
 
     [Theory]
-    [InlineData("Light", "#F6F8FA #FFFFFF #F6F8FA #F0F8FA #D0D7DE #D8DEE4 #FFFFFF #D0D7DE #F6F8FA #EAEEF2 #FFFFFF #1F2328 #656D76 #8C959F #8C959F #0B7A99 #FFFFFF #1F883D #9A6700 #FFF8C5 #1A7F37 #DAFBE1 #DDF4FF #6654AEFF #0969DA #F6F8FA #1F2328 #1A7F37 #CF222E")]
-    [InlineData("Dark", "#0D1117 #161B22 #0D1117 #1A2730 #30363D #21262D #0D1117 #30363D #21262D #30363D #161B22 #E6EDF3 #8D96A0 #6E7681 #6E7681 #4FC3E0 #0D1117 #238636 #D29922 #26D29922 #3FB950 #263FB950 #26388BFD #66388BFD #58A6FF #0D1117 #E6EDF3 #3FB950 #F85149")]
+    [InlineData("Light", "#F6F8FA #FFFFFF #F6F8FA #F0F8FA #D0D7DE #D8DEE4 #FFFFFF #808891 #F6F8FA #EAEEF2 #FFFFFF #1F2328 #626A73 #626A73 #808891 #086D89 #FFFFFF #1A7F37 #916000 #FFF8C5 #1A7F37 #DAFBE1 #DDF4FF #6654AEFF #0969DA #F6F8FA #1F2328 #1A7F37 #CF222E #FFFFFF #FFFFFF #FFF1E5 #1F2328 #FFFFFF #1F2328 #1F2328")]
+    [InlineData("Dark", "#0D1117 #161B22 #0D1117 #1A2730 #30363D #21262D #0D1117 #768390 #21262D #30363D #161B22 #E6EDF3 #9CA5AF #9CA5AF #768390 #4FC3E0 #0D1117 #1A7F37 #D29922 #26D29922 #3FB950 #263FB950 #26388BFD #66388BFD #58A6FF #0D1117 #E6EDF3 #3FB950 #F85149 #FFFFFF #0D1117 #26D29922 #E6EDF3 #161B22 #E6EDF3 #E6EDF3")]
     public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
         {
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
-            string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed"];
+            string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText"];
             string[] expected = colors.Split(' ');
             Assert.Equal(keys.Length, palette.Count);
             for (int i = 0; i < keys.Length; i++)

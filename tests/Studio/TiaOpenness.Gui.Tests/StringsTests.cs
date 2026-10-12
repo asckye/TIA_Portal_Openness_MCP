@@ -121,6 +121,11 @@ public class StringsTests(WpfContext wpf)
             "Lang.English", "Lang.Chinese", "Status.Working", "Settings.English", "Settings.Chinese", "Settings.EngineVersion", "Settings.Releases", "Config.Local",
             // Product names, protocol identifiers and units stay the same in both languages.
             "Shell.McpStatus", "Shell.SessionStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50", "Actor.AI",
+            "Common.Plc", // Standard abbreviation: programmable logic controller.
+            "Common.Id", // Standard abbreviation: identifier.
+            "Common.PortalName", // Product name: Siemens TIA Portal.
+            "Common.McpPortal", // Standard abbreviation MCP and product name TIA Portal, with a version placeholder.
+            "Common.IoFailed", // Fixed error identifier using the standard I/O abbreviation, not prose.
         ];
 
         var untranslated = Strings.Catalogue
@@ -130,6 +135,25 @@ public class StringsTests(WpfContext wpf)
             .ToList();
 
         Assert.Empty(untranslated);
+    }
+
+    [Theory]
+    [InlineData("Common.SoftwareSuffix", " · Software", " · 软件")]
+    [InlineData("Common.Seconds", "{0}s", "{0} 秒")]
+    [InlineData("Settings.Timeout60", "60s", "60 秒")]
+    [InlineData("Settings.Timeout120", "120s", "120 秒")]
+    [InlineData("Settings.Timeout300", "300s", "300 秒")]
+    [InlineData("Common.WorkbenchVersion", "TIA Workbench {0}", "TIA 工作台 {0}")]
+    [InlineData("Common.WorkbenchName", "TIA Workbench", "TIA 工作台")]
+    [InlineData("Common.Plc", "PLC", "PLC")]
+    [InlineData("Common.Id", "ID", "ID")]
+    [InlineData("Common.PortalName", "TIA Portal", "TIA Portal")]
+    [InlineData("Common.McpPortal", "MCP · TIA Portal {0}", "MCP · TIA Portal {0}")]
+    [InlineData("Common.IoFailed", "IO_FAILED: {0}", "IO_FAILED: {0}")]
+    public void Common_words_are_translated_without_changing_English(string key, string english, string chinese)
+    {
+        Assert.Equal(english, Strings.English[key]);
+        Assert.Equal(chinese, Strings.Chinese[key]);
     }
 
     /// <summary>
