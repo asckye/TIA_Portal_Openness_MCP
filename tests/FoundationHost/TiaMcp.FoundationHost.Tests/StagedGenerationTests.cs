@@ -309,8 +309,9 @@ public sealed class StagedGenerationTests
     {
         using var f = new Fixture(release); f.PreviewRefused = true; var plan = f.Plan(); var result = f.Apply(plan);
         Assert.Equal("rejected-before-operation", (string?)result["data"]!["status"]); Assert.Equal(0, f.Worker.Writes);
-        // V20/V21's earlier backup is an executed step, so its plan remains consumed.
-        if (release is "20" or "21") return;
+        // Where the planner adds the backup step (ArchiveSavedProject available), that executed step consumes the plan;
+        // without a backup the refused first preview leaves the plan reusable.
+        if (TiaMcp.Logic.Generation.GenerationAvailability.Get(release, "ArchiveSavedProject").Tool == "present") return;
         f.PreviewRefused = false; Assert.True((bool?)f.Apply(plan)["ok"]);
     }
     [Theory, MemberData(nameof(Releases))]
