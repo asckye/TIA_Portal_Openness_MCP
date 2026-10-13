@@ -38,11 +38,11 @@ internal static class CfcShapeChecks
         var portal=EngineSurface.For(server);
         foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(portal.Method(tool)!=null,"CfcService."+tool+" exists");
         check(portal.Method("ExchangeCfcCharts")!.GetParameters().Any(p=>p.Name=="chartNamesJson"),"ExchangeCfcCharts takes chartNamesJson (SelectiveExport, 2.7.42 typed retrofit)");
-        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(Equals(portal.Method(tool)!.GetParameters().Single(p=>p.Name=="skipChartPreflight").DefaultValue,false),tool+" runs the CompleteExport preflight by default (2.7.43: TIA V21 crashed on a PLC without charts)");
+        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(Equals(portal.Method(tool)!.GetParameters().Single(p=>p.Name=="skipChartPreflight").DefaultValue,false),tool+" retains skipChartPreflight=false; the shared V18-and-later crash guard refuses unsafe inventory calls (2.7.43: TIA V21 crashed on a PLC without charts)");
         check(Program.FindServerType(server, "TiaMcpServer.Siemens.CfcLogic").GetMethod("InspectExport",BindingFlags.NonPublic|BindingFlags.Static)!=null,"CfcLogic.InspectExport parses the exchange ZIP (chart inventory)");
 
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-        var service = server.GetType("TiaMcpServer.Siemens.Services.CfcService", true)!;
+        var service = server.GetType("TiaMcp.Shared.CfcPortService", true)!;
         var tools = server.GetType("TiaMcpServer.ModelContextProtocol.CfcTools", true)!;
         foreach (var type in new[] { service, tools })
             check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
@@ -59,9 +59,11 @@ internal static class CfcShapeChecks
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
                 && ReferenceEquals(target, portal.Target(method)) && ReferenceEquals(portal.Target(tool), portal.Target(tool)),
                 "CFC surface resolves the service and tool singletons: " + name);
-            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+            var managedPort = service.GetField("_port", all)!.GetValue(target)!;
+            check(managedPort.GetType().GetField("_call", all)!.GetValue(managedPort) is Delegate
+                && !service.GetFields(all).Any(field => field.FieldType.FullName == "TiaMcpServer.Siemens.IEngineeringSession")
                 && ReferenceEquals(tools.GetField("_cfc", all)!.GetValue(portal.Target(tool)), target),
-                "CFC tool uses the service with the shared session: " + name);
+                "CFC tool uses the managed port without a native session: " + name);
             bool callsService = EngineSurface.MethodFamily(tool).Where(callback =>
                 callback.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal)).Any(callback => {
                     var il = callback.GetMethodBody()!.GetILAsByteArray()!;

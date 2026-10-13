@@ -118,4 +118,23 @@
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTIONAL_READ_PARAMETERS;SIVARC_UPGRADER</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);CFC_CHARTS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_TEST_SUITE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_SYSTEM_TEST</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_SINUMERIK_ARCHIVE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_SINUMERIK_SAFETY</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_SINUMERIK_ALARMS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_SIMOTION</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_SCADA</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);CFC_INSTRUCTION_EXPORT</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_TEST_SETS</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_TEST_SCOPE</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_ARCHIVE_DEVICE_RESULT</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_ARCHIVE_PASSWORD</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_ARCHIVE_RETRIEVE_PASSWORD</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|16|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);OPTION_ARCHIVE_F_ADDRESS</DefineConstants>
+  </PropertyGroup>
 </Project>

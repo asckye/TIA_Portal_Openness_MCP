@@ -273,6 +273,14 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/PlcNavigator.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Studio/StudioAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Policy/StudioThreadGuard.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/CfcAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/CfcInventory.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductEvidence.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductFiles.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductsAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/OptionalProductWorker.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Options/TestSuiteAdapter.cs" />
     <Compile Include="@(AdapterSource);@(TiaSharedNativePrimitive)" Link="NativeShared/%(Filename)%(Extension)" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeCallDiagnostics.Journal.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
@@ -288,6 +296,8 @@
       <HintPath>%(Reference.Identity)</HintPath><Private>false</Private><SpecificVersion>true</SpecificVersion>
     </Reference>
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(AdapterReleaseKey)</_Parameter2></AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>AdapterIntegration</_Parameter1><_Parameter2>standalone-worker-preview</_Parameter2></AssemblyAttribute>

@@ -95,12 +95,14 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Theory]
+        [InlineData(18)]
+        [InlineData(19)]
         [InlineData(20)]
         [InlineData(21)]
         public void CfcGuardDoesNotRunUnsafeInventoryOrChartCalls(int major)
         {
             foreach (string action in new[] { "read", "add", "change", "remove", "export", "selectiveExport", "exportInstructionData" })
-                Assert.Throws<NotSupportedException>(() => CfcLogic.RequireSafeChartInventory(major, action));
+                Assert.Throws<NotSupportedException>(() => TiaMcp.Adapters.Contracts.CfcSafetyPolicy.RequireSafeChartInventory(major, action));
         }
 
         [Fact]

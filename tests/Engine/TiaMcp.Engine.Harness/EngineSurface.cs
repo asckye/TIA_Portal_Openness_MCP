@@ -18,9 +18,9 @@ internal sealed class EngineSurface
     // Do not scan arbitrary Siemens helpers or SDK types as services.
     private static readonly string[] serviceTypeNames = {
         "TiaMcpServer.Siemens.Services.PlcB5PortService",
-        "TiaMcpServer.Siemens.Services.CfcService",
-        "TiaMcpServer.Siemens.Services.TestSuiteService",
-        "TiaMcpServer.Siemens.Services.V20OptionsService",
+        "TiaMcp.Shared.CfcPortService",
+        "TiaMcp.Shared.TestSuitePortService",
+        "TiaMcp.Shared.OptionalProductsPortService",
         "TiaMcpServer.Siemens.Services.OptionalEngineeringService",
         "TiaMcpServer.Siemens.Services.DccService",
         "TiaMcpServer.Siemens.Services.TeamcenterPortService",
@@ -283,6 +283,16 @@ internal sealed class EngineSurface
     {
         if (method.IsStatic) return method.Invoke(null, arguments);
         var type = method.DeclaringType!;
+        if (type.Namespace == "TiaMcp.Shared" && new[] { "CfcPortService", "TestSuitePortService", "OptionalProductsPortService" }.Contains(type.Name))
+        {
+            var constructor = type.GetConstructors(All).Single(item => item.GetParameters().Length == 2);
+            var port = constructor.Invoke(new object[] {
+                new Func<string, System.Text.Json.Nodes.JsonObject, System.Text.Json.Nodes.JsonNode?>((_, __) =>
+                    new System.Text.Json.Nodes.JsonObject { ["Message"] = "Project is null", ["Meta"] = new System.Text.Json.Nodes.JsonObject {
+                        ["success"] = false, ["status"] = "InvalidState", ["error"] = "Project is null", ["operationSuccess"] = false } }),
+                new Func<string>(() => "") });
+            return method.Invoke(port, arguments);
+        }
         var target = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
         var session = type.GetField("_session", BindingFlags.NonPublic | BindingFlags.Instance);
         if (session?.FieldType.FullName == "TiaMcpServer.Siemens.IEngineeringSession")

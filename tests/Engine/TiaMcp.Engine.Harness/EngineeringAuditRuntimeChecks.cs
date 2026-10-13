@@ -78,8 +78,11 @@ internal static class EngineeringAuditRuntimeChecks
         }
         else
         {
-            var result = portalType.Invoke(portalType.Method("InitializeSimotionScripting"), new object[] { true })!;
-            check(result.GetType().GetProperty("Meta")!.GetValue(result)!.ToString()!.Contains("absent from the supplied V21 SDK"), "V21 option refusal precedes project resolution");
+            bool refused = false;
+            try { portalType.Invoke(portalType.Method("InitializeSimotionScripting"), new object[] { true }); }
+            catch (TargetInvocationException error) when (error.InnerException is NotSupportedException)
+            { refused = error.InnerException.Message.Contains("has no API on this release"); }
+            check(refused, "V21 option refusal precedes project resolution");
         }
     }
 }

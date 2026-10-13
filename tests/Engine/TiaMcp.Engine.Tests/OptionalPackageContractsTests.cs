@@ -15,6 +15,7 @@ using TiaMcp.Logic.V4.Inputs;
 using TiaMcp.Logic.V4.Domain;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
+using TiaMcp.Shared;
 using TiaMcpServer.Siemens.Services;
 using Xunit;
 
@@ -22,9 +23,9 @@ namespace TiaMcp.Engine.Tests
 {
     public sealed class OptionalPackageContractsTests : IDisposable
     {
-        private readonly CfcService cfc = new CfcService();
-        private readonly TestSuiteService suite = new TestSuiteService();
-        private readonly V20OptionsService options = new V20OptionsService();
+        private readonly CfcPortService cfc = new CfcPortService();
+        private readonly TestSuitePortService suite = new TestSuitePortService();
+        private readonly OptionalProductsPortService options = new OptionalProductsPortService();
         private readonly OptionalEngineeringService optional = new OptionalEngineeringService();
         private readonly SpecializedExchangeService exchange = new SpecializedExchangeService();
         private readonly ToolCatalog catalog;
@@ -270,9 +271,9 @@ namespace TiaMcp.Engine.Tests
 }
 
 // Only the application service boundary is replaced; registered tools and admission are production code.
-namespace TiaMcpServer.Siemens.Services
+namespace TiaMcp.Shared
 {
-    internal sealed class CfcService
+    internal sealed class CfcPortService
     {
         internal int Calls;
         internal string[] Arguments = Array.Empty<string>();
@@ -287,7 +288,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = true } };
         }
     }
-    internal sealed class TestSuiteService
+    internal sealed class TestSuitePortService
     {
         internal int Calls;
         internal string[] Arguments = Array.Empty<string>();
@@ -312,7 +313,7 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = true } };
         }
     }
-    internal sealed class V20OptionsService
+    internal sealed class OptionalProductsPortService
     {
         internal int Calls;
         internal string[] Arguments = Array.Empty<string>();
@@ -342,6 +343,10 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Message = "fixture", Meta = new JsonObject { ["success"] = true } };
         }
     }
+}
+
+namespace TiaMcpServer.Siemens.Services
+{
     internal sealed class OptionalEngineeringService
     {
         internal int Calls;

@@ -5,7 +5,10 @@ namespace TiaMcp.BuildCommon;
 // Read the same reviewed table compiled by the host and workers; fail on unknown row syntax.
 public static class PortedFamilies
 {
-    public sealed record Family(string Prefix, string[] Releases, string[] Tools, Dictionary<string, string[]> ToolReleases);
+    public sealed record Family(string Prefix, string[] Releases, string[] Tools, Dictionary<string, string[]> ToolReleases)
+    {
+        public Dictionary<string, string> UnavailableReasons { get; } = new(StringComparer.Ordinal);
+    }
     public static readonly IReadOnlyList<string> ReleaseKeys = Array.AsReadOnly(new string[] {"14sp1", "15.1", "16", "17", "18", "19", "20", "21"});
     public static Dictionary<string, Family> Load(string root) => Parse(Repository.ReadSource(Path.Combine(root, "src/Adapters.Contracts/PortedFamilies.cs")));
     public static HashSet<string> FoundationCandidates(string root) => ParseFoundationCandidates(Repository.ReadSource(Path.Combine(root, "src/Adapters.Contracts/PortedFamilies.cs")));
@@ -51,6 +54,19 @@ public static class PortedFamilies
                 Require(owner.ToolReleases.TryAdd(tool, releases), "Duplicate per-tool availability override");
             }
         }
+        var reasons = Regex.Match(source, @"\bUnavailableReasons\s*=\s*new Dictionary<string, string>\([^)]*\)\s*\{(.*?)\n\s*\};", RegexOptions.Singleline);
+        Require(reasons.Success || !Regex.IsMatch(source, @"\bUnavailableReasons\s*="), "Unparsed availability reasons");
+        if (reasons.Success)
+        {
+            var entries = Regex.Matches(reasons.Groups[1].Value, "\\[\"([^\"/]+)/([^\"]+)\"\\]\\s*=\\s*\"([^\"\\n]+)\"");
+            Require(entries.Count == reasons.Groups[1].Value.Count(c => c == '='), "Unparsed availability reason");
+            foreach (Match row in entries)
+            {
+                var family = row.Groups[1].Value; var release = row.Groups[2].Value;
+                Require(result.ContainsKey(family) && ReleaseKeys.Contains(release), "Unknown availability reason owner");
+                Require(result[family].UnavailableReasons.TryAdd(release, row.Groups[3].Value), "Duplicate availability reason");
+            }
+        }
         return result;
     }
     // Ported tools the reviewed table withholds on a release: no supported action there, so the release does not list them.
@@ -58,4 +74,10 @@ public static class PortedFamilies
         .SelectMany(f => f.Tools.Where(t => !f.ToolReleases.GetValueOrDefault(t, f.Releases).Contains(release))).ToHashSet(StringComparer.Ordinal);
     public static HashSet<string> Additions(Dictionary<string, Family> families, string release) => families.Values
         .Where(f => f.Releases.Contains(release)).SelectMany(f => f.Tools.Where(t => f.ToolReleases.GetValueOrDefault(t, f.Releases).Contains(release))).ToHashSet(StringComparer.Ordinal);
+    public static string WithheldReason(Dictionary<string, Family> families, string release, string tool)
+    {
+        Require(Withheld(families, release).Contains(tool), "Availability reason requested for a registered tool");
+        return families.Values.Single(family => family.Tools.Contains(tool)).UnavailableReasons.GetValueOrDefault(release,
+            "no supported action on this release");
+    }
 }

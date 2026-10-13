@@ -17,7 +17,10 @@ internal static class CatalogAudits
         var input = inputsRoot ?? Path.Combine(root, "bin-build"); var full = Read(root, "manifest/tools-list.json");
         var policy = Source(root, "src/Logic/Siemens/ToolVersionPolicy.cs").Split("internal static string ToolProblem", 2)[0];
         var only21 = Set(Matches(policy, "\\[\"([^\"]+)\"\\]\\s*=")); var names = Set(full["tools"]!.AsArray().Select(t => Text(t!["name"]))); Require(only21.IsSubsetOf(names), "V21 admission policy names absent from built roster");
-        var catalogs = Keys.Take(6).ToDictionary(k => k, k => Set(Read(input, $"multi-version/tools-{k}.json")["tools"]!.AsArray().Select(t => Text(t!["name"])))); catalogs["20"] = Set(names.Except(only21)); catalogs["21"] = names;
+        var families = PortedFamilies.Load(root);
+        var catalogs = Keys.Take(6).ToDictionary(k => k, k => Set(Read(input, $"multi-version/tools-{k}.json")["tools"]!.AsArray().Select(t => Text(t!["name"]))));
+        catalogs["20"] = Set(names.Except(only21).Except(PortedFamilies.Withheld(families, "20")));
+        catalogs["21"] = Set(names.Except(PortedFamilies.Withheld(families, "21")));
         var expected = new CatalogData(root).Rosters; foreach (var key in Keys) Require(catalogs[key].SetEquals(expected[key]), "Built/source catalog mismatch: " + key);
         var results = new Dictionary<string, string>(); var statistics = new JsonArray();
         foreach (var key in Keys)

@@ -413,10 +413,34 @@ internal static class DeveloperChecks
         Check(recipeErrors.Length == 0, recipeErrors.Length == 0 ? "ToolRecipes.ValidateAgainst accepts every recipe" : string.Join("; ", recipeErrors));
 
         using var product = ProductCatalog(server, foundationHost, bundleRoot, outputPath);
-        var productTools = product.RootElement.GetProperty("tools");
+        var productTools = product.RootElement.GetProperty("tools").EnumerateArray().ToList();
+        var supplementary = new HashSet<string>(StringComparer.Ordinal);
+        var families = Program.FindReferencedType(server, "TiaMcp.Adapters.Contracts.PortedFamilies");
+        var contains = families.GetMethod("Contains")!;
+        var available = families.GetMethod("Available")!;
+        var supplementalParameters = new List<object>();
+        int supplementalEnumTools = 0, supplementalUndocumentedTools = 0;
+        if (release == "21")
+        {
+            foreach (DictionaryEntry entry in engineDescriptors)
+            {
+                var name = (string)entry.Key;
+                if (!(bool)contains.Invoke(null, new object[] { name })!) continue;
+                if (!new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Any(key => (bool)available.Invoke(null, new object[] { key, name })!)
+                    || (bool)available.Invoke(null, new object[] { "21", name })!) continue;
+                var descriptor = entry.Value!;
+                productTools.Add(JsonSerializer.SerializeToElement(Get(descriptor, "Tool")));
+                supplementary.Add(name);
+                var parameters = ((IEnumerable)Get(descriptor, "Parameters")!).Cast<object>().ToArray();
+                supplementalParameters.AddRange(parameters);
+                if (parameters.Any(parameter => ((IEnumerable)Get(parameter, "AllowedValues")!).Cast<object>().Any())) supplementalEnumTools++;
+                if (parameters.Any(parameter => string.IsNullOrWhiteSpace((string)Get(parameter, "Description")!))) supplementalUndocumentedTools++;
+            }
+        }
         var disciplineRoot = product.RootElement.GetProperty("callDiscipline");
         var previousUndocumented = ReadPreviousUndocumented(outputPath, out var previousProduct);
-        var undocumented = disciplineRoot.GetProperty("parametersUndocumented").GetInt32();
+        var undocumented = disciplineRoot.GetProperty("parametersUndocumented").GetInt32()
+            + supplementalParameters.Count(parameter => string.IsNullOrWhiteSpace((string)Get(parameter, "Description")!));
         // Compare like rosters during the migration from a raw engine manifest.
         var comparableUndocumented = previousProduct ? undocumented
             : ((JsonObject)type.GetMethod("SchemaHintStatistics", All)!.Invoke(null, null)!)["parametersUndocumented"]!.GetValue<int>();
@@ -432,9 +456,14 @@ internal static class DeveloperChecks
         var usageType = logic.GetType("TiaOpenness.Shared.ToolUsageCatalog", true)!;
         var profiles = (IEnumerable)usageType.GetMethod("ProfileEntries", All)!.Invoke(null, new object[] { release, 4, false })!;
         var profileRows = profiles.Cast<JsonObject>().ToDictionary(row => (string)row["currentName"]!, StringComparer.Ordinal);
-        var productNames = productTools.EnumerateArray().Select(entry => entry.GetProperty("name").GetString()!).ToArray();
+        var supplementaryProfiles = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
+        foreach (string key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            foreach (var row in ((IEnumerable)usageType.GetMethod("ProfileEntries", All)!.Invoke(null, new object[] { key, 4, false })!).Cast<JsonObject>())
+                if (supplementary.Contains((string)row["currentName"]!)) supplementaryProfiles[(string)row["currentName"]!] = row;
+        foreach (var row in supplementaryProfiles.Values) profileRows.Add((string)row["currentName"]!, row);
+        var productNames = productTools.Select(entry => entry.GetProperty("name").GetString()!).ToArray();
         var rows = new List<(string Name, JsonObject Value)>();
-        foreach (var entry in productTools.EnumerateArray())
+        foreach (var entry in productTools)
         {
             var name = entry.GetProperty("name").GetString()!;
             var description = entry.GetProperty("description").GetString()!;
@@ -443,7 +472,7 @@ internal static class DeveloperChecks
             var profile = profileRows[name];
             bool shared = profile["profiles"]!.AsArray().Any(value => (string?)value == "plc-foundation");
             var usage = (JsonObject)usageType.GetMethod("Describe", All)!.Invoke(null, new object?[] {
-                name, release, shared ? "plc-foundation" : "full-engine", description,
+                name, supplementary.Contains(name) ? "20" : release, shared ? "plc-foundation" : "full-engine", description,
                 JsonNode.Parse(schema.GetRawText())!.AsObject(), null, null, "", productNames, null, null
             })!;
             var example = usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
@@ -494,7 +523,7 @@ internal static class DeveloperChecks
         {
             ["package"] = packageName,
             ["generatedAt"] = DateTimeOffset.UtcNow.ToString("o"),
-            ["source"] = "FoundationHost V" + release + " full product catalog; shared Foundation implementations and engine-only tools; no worker or TIA started",
+            ["source"] = "FoundationHost V" + release + " full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
             ["fileVersion"] = FileVersionInfo.GetVersionInfo(foundationHost).FileVersion,
             ["exeSha256"] = Sha256(foundationHost),
             ["workerSha256"] = Sha256(server.Location),
@@ -502,13 +531,13 @@ internal static class DeveloperChecks
             ["note"] = "Full product roster. Lite advertises the V19 shared tools plus the engine discovery bridge. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
             ["callDiscipline"] = new JsonObject
             {
-                ["parameters"] = disciplineRoot.GetProperty("parameters").GetInt32(),
+                ["parameters"] = disciplineRoot.GetProperty("parameters").GetInt32() + supplementalParameters.Count,
                 ["parametersUndocumented"] = undocumented,
-                ["parametersFromVocabulary"] = disciplineRoot.GetProperty("parametersFromVocabulary").GetInt32(),
-                ["toolsWithUndocumentedParameters"] = disciplineRoot.GetProperty("toolsWithUndocumentedParameters").GetInt32(),
-                ["toolsWithEnumHints"] = disciplineRoot.GetProperty("toolsWithEnumHints").GetInt32(),
-                ["enumHints"] = disciplineRoot.GetProperty("enumHints").GetInt32(),
-                ["defaultHints"] = disciplineRoot.GetProperty("defaultHints").GetInt32(),
+                ["parametersFromVocabulary"] = disciplineRoot.GetProperty("parametersFromVocabulary").GetInt32() + supplementalParameters.Count(parameter => (bool)Get(parameter, "Synthesized")!),
+                ["toolsWithUndocumentedParameters"] = disciplineRoot.GetProperty("toolsWithUndocumentedParameters").GetInt32() + supplementalUndocumentedTools,
+                ["toolsWithEnumHints"] = disciplineRoot.GetProperty("toolsWithEnumHints").GetInt32() + supplementalEnumTools,
+                ["enumHints"] = disciplineRoot.GetProperty("enumHints").GetInt32() + supplementalParameters.Count(parameter => ((IEnumerable)Get(parameter, "AllowedValues")!).Cast<object>().Any()),
+                ["defaultHints"] = disciplineRoot.GetProperty("defaultHints").GetInt32() + supplementalParameters.Count(parameter => Get(parameter, "DefaultJson") != null),
                 ["examplesCurated"] = curatedCount,
                 ["recipes"] = recipeCount
             },

@@ -139,14 +139,12 @@ TiaMcp.Engine.Harness 的 `engineering-api-only` 检查真实实例归属、单�
 
 ### Portal 领域迁移样板
 
-CFC 是第一个样板：[CfcService](../../src/Engine/Siemens/Services/CfcService.cs)
-放在 `Siemens/Services/`，命名空间为 `TiaMcpServer.Siemens.Services`，类名以 `Service` 结尾；
-[CfcTools](../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs) 保持在工具目录平铺。
-服务通过构造器接收 `IEngineeringSession`，原方法体只把 `RunHmiStepTool`、`AcquireHmiEditAccess`、
-`ExactPlcForEngineering` 改为接口调用，静态辅助继续用 `EngineeringSessionHelpers`，纯逻辑保留在 Logic。
-本次没有新增内核接口成员，也没有直接写会话字段或 CLI 转发。`EngineRegistration` 在包含会话时按上述
-命名空间和类名约定注册非抽象服务，`IEngineeringSession` 解析为已注册的 `Portal` 单例；隔离父进程不注册
-会话或领域服务。工具仍由 `ToolCatalog` 发现。服务和工具都为非 `IDisposable` 的单例。
+CFC 的现行实现为 [CfcAdapter](../../src/Adapters/Native/Options/CfcAdapter.cs)，命名空间为
+`TiaMcp.Adapters.Native.Options`，通过 `OptionalProductSession` 复用会话的 worker lane 和工程访问。
+[CfcTools](../../src/Shared/CfcTools.cs) 与 [CfcPortService](../../src/Shared/CfcPortService.cs) 在 Shared；
+托管 port 持有 worker delegate，不持有原生 `IEngineeringSession`。请求/返回为 Contracts DTO，
+宿主按 release 注册工具并投影通用 missing-portal 拒绝。工具与 port 保持非 `IDisposable` 单例，
+无静态 CLI 转发。V18 及以后由共享 `CfcSafetyPolicy` 在 provider 访问前拒绝不安全的导出和保护操作，导入保留。
 
 迁移前先单独补吞异常原因并缩减基线，保存注释补丁，以去注释代码和 Release EXE 字节一致性验收。
 随后原样移动方法，将服务加入 TiaMcp.Engine.Harness 的 `EngineSurface` 服务名单；`CfcShapeChecks` 和
@@ -368,8 +366,8 @@ OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具�
 
 | 领域 | 服务 / 工具类 | 工具数 |
 |---|---|---|
-| TestSuite | [TestSuiteService](../../src/Engine/Siemens/Services/TestSuiteService.cs) / [TestSuiteTools](../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs) | 4 |
-| V20Options | [V20OptionsService](../../src/Engine/Siemens/Services/V20OptionsService.cs) / [V20OptionsTools](../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs) | 5 |
+| TestSuite | [TestSuiteAdapter](../../src/Adapters/Native/Options/TestSuiteAdapter.cs) + [TestSuitePortService](../../src/Shared/TestSuitePortService.cs) / [TestSuiteTools](../../src/Shared/TestSuiteTools.cs) | 4 |
+| V20Options | [OptionalProductsAdapter](../../src/Adapters/Native/Options/OptionalProductsAdapter.cs) + [OptionalProductsPortService](../../src/Shared/OptionalProductsPortService.cs) / [V20OptionsTools](../../src/Shared/V20OptionsTools.cs) | 5 |
 | OptionalEngineering | [OptionalEngineeringPortService](../../src/Shared/OptionalEngineeringPortService.cs) / [OptionalEngineeringTools](../../src/Shared/OptionalEngineeringTools.cs)，原生实现 [OptionalEngineeringAdapter](../../src/Adapters/Native/Optional/OptionalEngineeringAdapter.cs) | 2 |
 | SpecializedExchange | [SpecializedExchangeService](../../src/Shared/PlcB5Services.cs) / [SpecializedExchangeTools](../../src/Shared/SpecializedExchangeTools.cs) | 1 |
 | SoftwareUnitDeep | [SoftwareUnitDeepService](../../src/Shared/PlcB5Services.cs) / [SoftwareUnitDeepTools](../../src/Shared/SoftwareUnitDeepTools.cs) | 7 |

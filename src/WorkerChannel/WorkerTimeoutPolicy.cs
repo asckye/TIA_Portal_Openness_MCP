@@ -138,6 +138,8 @@ namespace TiaMcp.WorkerChannel
             ["hardware-network.HardwareUpdateDeviceItemChannel"] = "default",
             ["hardware-network.ReadHardwareOwnerCandidates"] = "default",
             ["hardware-network.ReadHardwareWhitelistedServices"] = "default",
+            ["cfc-charts.ExecuteOptionalProduct"] = "default",
+            ["optional-products.ExecuteOptionalProduct"] = "default",
             ["hmi-classic.ExecuteHmi"] = "default",
             ["hmi-unified.ExecuteUnifiedHmi"] = "default",
             ["hmi-unified.ExecuteUnifiedHmiMetadata"] = "default",

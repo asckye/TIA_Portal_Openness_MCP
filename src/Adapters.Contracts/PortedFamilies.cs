@@ -40,6 +40,8 @@ namespace TiaMcp.Adapters.Contracts
             new Family("F00", "foundation",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "CreateHardwareDevice", "SearchHardwareCatalog", "ExportPlcWatchTable", "BuildPlcLadFcBlock", "BuildPlcFcBlock", "BuildPlcFbBlock", "BuildFlgNetCall", "BuildStructuredText", "BuildPlcTagTable" }),
+            new Family("F32", "cfc-charts", new[] { "18", "19", "20", "21" }, new[] { "ExchangeCfcCharts", "ManageCfcChartProtection" }),
+            new Family("F34", "optional-products", new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, new[] { "ListTestSuiteCases", "ManageTestSuiteCase", "ExchangeTestSuiteCase", "RunTestSuiteCase", "ExportScadaData", "ImportSinumerikAlarmTexts", "ManageSinumerikArchive", "ManageSinumerikSafetyMode", "InitializeSimotionScripting" }),
             new Family("F05", "project-lifecycle", new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, new[] { "ArchiveSavedProject", "BuildProjectScaffold", "ConnectIsolatedPortal", "EnsureOpennessUserGroup", "GetPortalInfo", "ManageMultiuserSession", "RetrieveProjectArchive", "SaveProjectCopy", "ValidateAutomationContext" }),
             new Family("F07", "project-security", new[] { "15.1", "16", "17", "18", "19", "20", "21" }, new[] { "ManagePlcProtection", "GetPlcPutGetAccess", "SetPlcPutGetAccess", "ManageWatchForceTableWebAccess", "ManageDeviceUsers", "GetProjectProtection", "GetProjectUserManagement", "ManageProjectUserManagement", "ManagePlcCertificate", "ManageSyslogServers", "ManagePasswordPolicy", "ManageUmcUsers" }),
             new Family("F33", "version-control",
@@ -112,6 +114,12 @@ namespace TiaMcp.Adapters.Contracts
             new Family("F19", "hardware-addressing",
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
                 new[] { "GetDeviceAddressing", "GetDeviceIpAddress", "GetDeviceItemIoAddresses", "SetDeviceAddress", "SetDeviceItemIoAddress" })
+        };
+
+        // Family/release evidence applies only to tools withheld by the per-tool table.
+        public static readonly IReadOnlyDictionary<string, string> UnavailableReasons = new Dictionary<string, string>(StringComparer.Ordinal) {
+            ["F34/21"] = "no API in the supplied V21 SDK",
+            ["F34/16"] = "no API in the supplied V16 SDK"
         };
 
         public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
@@ -188,6 +196,17 @@ namespace TiaMcp.Adapters.Contracts
             ["GetSafetyBlockSignatures"] = new[] { "17", "18", "19", "20", "21" },
             ["ManagePlcSafety"] = new[] { "17", "18", "19", "20", "21" },
             ["ManageSafetyGlobalSettings"] = new[] { "16", "17", "18", "19", "20", "21" },
+            ["ExchangeCfcCharts"] = new[] { "18", "19", "20", "21" },
+            ["ManageCfcChartProtection"] = new[] { "18", "19", "20", "21" },
+            ["ListTestSuiteCases"] = new[] { "17", "18", "19", "20", "21" },
+            ["ManageTestSuiteCase"] = new[] { "17", "18", "19", "20", "21" },
+            ["ExchangeTestSuiteCase"] = new[] { "17", "18", "19", "20", "21" },
+            ["RunTestSuiteCase"] = new[] { "17", "18", "19", "20", "21" },
+            ["ExportScadaData"] = new[] { "17", "18", "19", "20" },
+            ["ImportSinumerikAlarmTexts"] = new[] { "18", "19", "20" },
+            ["ManageSinumerikArchive"] = new[] { "16", "17", "18", "19", "20" },
+            ["ManageSinumerikSafetyMode"] = new[] { "16", "17", "18", "19", "20" },
+            ["InitializeSimotionScripting"] = new[] { "14sp1", "15.1", "17", "18", "19", "20" },
             ["CreateHardwareDevice"] = new[] { "18", "19", "20", "21" },
             ["SearchHardwareCatalog"] = new[] { "18", "19", "20", "21" },
             ["ExportPlcWatchTable"] = new[] { "15.1", "16", "17", "18", "19", "20", "21" },

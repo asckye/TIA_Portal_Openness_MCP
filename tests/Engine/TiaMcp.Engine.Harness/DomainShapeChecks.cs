@@ -69,7 +69,12 @@ internal static class DomainShapeChecks
         };
         foreach (var domain in domains)
         {
-            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + (domain.Name is "Library" or "VersionControl" or "Teamcenter" ? "PortService" : "Service"), true)!;
+            bool optionalPort = domain.Name is "TestSuite" or "V20Options";
+            var serviceName = domain.Name switch {
+                "TestSuite" => "TiaMcp.Shared.TestSuitePortService",
+                "V20Options" => "TiaMcp.Shared.OptionalProductsPortService",
+                _ => "TiaMcpServer.Siemens.Services." + domain.Name + (domain.Name is "Library" or "VersionControl" or "Teamcenter" ? "PortService" : "Service") };
+            var service = server.GetType(serviceName, true)!;
             var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
             foreach (var type in new[] { service, tools })
                 check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
@@ -96,7 +101,29 @@ internal static class DomainShapeChecks
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
                 var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
-                var selected = ((IReadOnlyDictionary<string, MethodInfo>)facade.GetMethod("AllToolMethods", all)!.Invoke(null, new object[] { true })!)[name];
+                var selectedMethods = (IReadOnlyDictionary<string, MethodInfo>)facade.GetMethod("AllToolMethods", all)!.Invoke(null, new object[] { true })!;
+                var release = server.GetName().Name!.EndsWith(".V21", StringComparison.Ordinal) ? "21" : "20";
+                if (optionalPort && !(bool)Program.FindReferencedType(server, "TiaMcp.Adapters.Contracts.PortedFamilies")
+                    .GetMethod("Available")!.Invoke(null, new object[] { release, name })!)
+                {
+                    var declaration = provider.GetService(tools);
+                    check(!EngineSurface.PortedTools(server, release).Contains(name, StringComparer.Ordinal)
+                        && (declaration == null || ReferenceEquals(declaration, provider.GetService(tools))),
+                        name + " is unavailable; any retained declaration uses its singleton");
+                    var port = provider.GetService(service);
+                    check(port != null && ReferenceEquals(port, provider.GetService(service))
+                        && !service.GetFields(all).Any(field => field.FieldType == contract),
+                        name + " keeps a managed port without a native session");
+                    var withheldMethod = service.GetMethod(name, all)!;
+                    bool callsPort = EngineSurface.MethodFamily(tool).Where(callback => callback.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal))
+                        .Any(callback => { var body = callback.GetMethodBody()!.GetILAsByteArray()!;
+                            return Enumerable.Range(0, Math.Max(0, body.Length - 4)).Any(index =>
+                                (body[index] == 0x28 || body[index] == 0x6f) && BitConverter.ToInt32(body, index + 1) == withheldMethod.MetadataToken); });
+                    EngineSurface.CheckIl(check, callsPort, domain.Name + " withheld declaration calls its managed port: " + name, tool, withheldMethod);
+                    check(facade.GetMethod(name, all) == null, name + " has no static CLI forwarder");
+                    continue;
+                }
+                var selected = selectedMethods[name];
                 var policy = selected.GetCustomAttributes().SingleOrDefault(a => a.GetType().Name == "BehaviorCandidateAttribute");
                 if (policy != null && (string?)policy.GetType().GetProperty("Family")!.GetValue(policy) == "P6-FALLBACK")
                 {
@@ -119,26 +146,26 @@ internal static class DomainShapeChecks
                     continue;
                 }
                 var implementation = tool;
-                var serviceName = name == "ListTestSuiteCases" ? "ReadTestSuiteCases" : name == "ListSivarcRules" ? "ReadSiVArcRules" : name == "ManageSivarcRule" ? "ManageSiVArcRule" : name;
+                var serviceMethodName = name == "ListTestSuiteCases" ? "ReadTestSuiteCases" : name == "ListSivarcRules" ? "ReadSiVArcRules" : name == "ManageSivarcRule" ? "ManageSiVArcRule" : name;
                 var driveContract = domain.Name == "Dcc" || domain.Name == "Startdrive" || domain.Name == "Teamcenter";
                 if (driveContract)
                 {
                     check(tool.ReturnType.Name == "CallToolResult", name + " exposes the V4 envelope boundary");
-                    serviceName = tool.Name;
+                    serviceMethodName = tool.Name;
                 }
                 if (domain.Name == "SoftwareUnitDeep" || domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl" || domain.Name == "OnlineDownload")
                 {
                     check(tool.Name.EndsWith("V4", StringComparison.Ordinal) && tool.ReturnType.Name == "CallToolResult",
                         name + " exposes the V4 envelope boundary");
-                    serviceName = tool.Name.Substring(0, tool.Name.Length - "V4".Length);
+                    serviceMethodName = tool.Name.Substring(0, tool.Name.Length - "V4".Length);
                     if (domain.Name == "Library" || domain.Name == "Sivarc" || domain.Name == "VersionControl")
-                        serviceName = serviceName switch {
+                        serviceMethodName = serviceMethodName switch {
                             "GetLibraryOverview" => "ReadLibraryOverview", "GetLibraryType" => "ReadLibraryType",
                             "GetSivarcRuleTree" => "ReadSivarcRuleTree", "ListSivarcBlockDefinitions" => "ReadSivarcBlockDefinitions",
                             "GenerateSivarc" => "GenerateSiVArc", "ListVersionControlWorkspaces" => "GetVersionControlWorkspaces",
-                            "SynchronizeVersionControlWorkspace" => "SyncVersionControlWorkspace", _ => serviceName
+                            "SynchronizeVersionControlWorkspace" => "SyncVersionControlWorkspace", _ => serviceMethodName
                         };
-                    implementation = tools.GetMethod(serviceName, all)!;
+                    implementation = tools.GetMethod(serviceMethodName, all)!;
                     check(implementation.GetCustomAttribute<McpServerToolAttribute>() == null,
                         name + " retains its unregistered service implementation without an alias");
                     var callbacks = EngineSurface.MethodFamily(tool).Where(method =>
@@ -152,8 +179,8 @@ internal static class DomainShapeChecks
                 }
                 // Tool and service signatures may differ (casts in the tool); parameter types only separate overloads.
                 MethodInfo method;
-                try { method = surface.Method(serviceName); }
-                catch (AmbiguousMatchException) { method = surface.Method(serviceName, implementation.GetParameters().Select(parameter => parameter.ParameterType).ToArray()); }
+                try { method = surface.Method(serviceMethodName); }
+                catch (AmbiguousMatchException) { method = surface.Method(serviceMethodName, implementation.GetParameters().Select(parameter => parameter.ParameterType).ToArray()); }
                 if (driveContract)
                     implementation = EngineSurface.MethodFamily(tool).FirstOrDefault(callback => {
                         if (!callback.Name.StartsWith("<" + tool.Name + ">", StringComparison.Ordinal)) return false;
@@ -168,9 +195,10 @@ internal static class DomainShapeChecks
                     && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(toolTarget, surface.Target(tool)),
                     domain.Name + " singleton ownership: " + name);
                 bool optionalPorted = domain.Name is "OptionalEngineering" or "Sivarc" or "Dcc" or "Startdrive";
-                bool ported = optionalPorted || domain.Name is "Library" or "VersionControl" or "Teamcenter" or "OnlineDownload";
-                var bridge = optionalPorted ? service.GetField("_port", all)!.GetValue(target) : target;
-                check((ported ? (optionalPorted ? bridge!.GetType().GetField("_call", all)!.GetValue(bridge) : service.GetField(domain.Name == "OnlineDownload" ? "_call" : "call", all)!.GetValue(target)) is Delegate
+                bool viaPort = optionalPort || optionalPorted;
+                bool ported = viaPort || domain.Name is "Library" or "VersionControl" or "Teamcenter" or "OnlineDownload";
+                var bridge = viaPort ? service.GetField("_port", all)!.GetValue(target) : target;
+                check((ported ? (viaPort ? bridge!.GetType().GetField("_call", all)!.GetValue(bridge) : service.GetField(domain.Name == "OnlineDownload" ? "_call" : "call", all)!.GetValue(target)) is Delegate
                         && !service.GetFields(all).Any(f => f.FieldType == contract)
                         : ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session))
                     && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(toolTarget), target),

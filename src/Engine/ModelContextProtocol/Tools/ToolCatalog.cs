@@ -120,7 +120,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "AlarmsService",
             "PlcB5PortService",
             "CertificateManagementPortService",
-            "CfcService",
+            "TiaMcp.Shared.CfcPortService",
             "ClassicHmiFoldersService",
             "DccService",
             "DevicesService",
@@ -173,7 +173,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "ProjectProtectionPortService",
             "ProjectUserManagementPortService",
             "TechnologyObjectsService",
-            "TestSuiteService",
+            "TiaMcp.Shared.TestSuitePortService",
             "TypesService",
             "UnifiedEngineeringService",
             "UnifiedEventsService",
@@ -183,7 +183,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "UnifiedObjectServicesService",
             "UnifiedScreenItemsService",
             "UnifiedUiModelService",
-            "V20OptionsService",
+            "TiaMcp.Shared.OptionalProductsPortService",
             "VersionControlPortService",
         };
         internal static bool UsesRegistrationMetadata => typeof(ToolCatalog).Assembly.GetName().Name is "TiaMcp.Engine.V20" or "TiaMcp.Engine.V21";

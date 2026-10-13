@@ -172,7 +172,7 @@ def cases(major, source):
         # B8 moved the remaining project-security read to Foundation. Keep a
         # real engine dispatch in this local-only soak: the CFC read refuses
         # the unbound project before provider access.
-        ('cfc_project_refused', 'ManageCfcChartProtection', {'softwarePath': '__soak_no_plc__', 'chartName': '__soak_missing__', 'action': 'read', 'dryRun': True}, 'project_refused'),
+        ('cfc_project_refused', 'ManageCfcChartProtection', {'softwarePath': '__soak_no_plc__', 'chartName': '__soak_missing__', 'action': 'read', 'dryRun': True}, 'ported_project_refused'),
         ('xref_block_refused', 'GetPlcCrossReferences', xref, 'xref'),
         ('xref_tag_refused', 'GetPlcCrossReferences', dict(xref, objectKind='Tag'), 'xref'),
         ('xref_unit_refused', 'GetPlcCrossReferences', dict(xref, unitName='__unit__'), 'xref'),
@@ -263,6 +263,12 @@ def run_profile(args, transport, profile, run_dir):
                         and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
                         and value['data']['queried'] is False and value['data']['complete'] is False,
                         label + ': refusal reported as completed/empty')
+            elif expectation == 'ported_project_refused':
+                require(value.get('ok') is False and value['error']['code'] == 'PRECONDITION_FAILED'
+                        and value['error']['details']['condition'] == 'connect-portal'
+                        and meta['execution'] == 'not-started' and meta['completeness'] == 'none'
+                        and meta['outcome'] == 'rejected-before-operation' and meta['requiresSessionReset'] is False,
+                        label + ': ported read must retain its generic missing-portal refusal: ' + json.dumps(value))
             elif expectation == 'project_refused':
                 require(value.get('ok') is False and value['error']['code'] == 'PROJECT_NOT_BOUND'
                         and meta['execution'] == 'not-started' and meta['completeness'] == 'none'

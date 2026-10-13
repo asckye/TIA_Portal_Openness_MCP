@@ -24,6 +24,13 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SafetyValidationPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SafetyManagementTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/SafetyManagementPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/CfcTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TestSuiteTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/V20OptionsTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/CfcPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/TestSuitePortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OptionalProductsPortService.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/OptionalProductPort.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectSecurityTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleSessionTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/ProjectLifecycleProjectTools.cs" />

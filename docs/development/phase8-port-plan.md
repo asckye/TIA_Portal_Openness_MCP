@@ -176,7 +176,7 @@ F01–F03 保持已有格式分段；F08/F09/F11/F17/F18–F21 的本次调整�
 | F30 | `SafetyValidation` 命名空间、`Safety.SafetyBaseIdProvider` 仅 21（5 个 V21 独有工具） | SafetyManagementService 2、SafetyValidationService 2 |
 | F31 | `MC.Drives.DriveItemHardwareModule`、`SafetyAcceptanceTestProvider`、`Dcc.DcbLibraryImporter` 仅 21 | StartdriveService 6、DccService 1、Portal.Startdrive 1 |
 | F33 | V20 同有 `WorkspaceMapping` 与 `MappedObject`，V21 仅 `MappedObject`（适配器已有 `STUDIO_VCI_INITIAL/legacy/MODERN` 三分） | — |
-| F34 | SCADA Export、SINUMERIK、SIMOTION 在 V21 SDK 中无对应类型（V21 路由拒绝） | V20OptionsService 6 |
+| F34 | 供给的 V21 SDK 未包含 SCADA Export、SINUMERIK、SIMOTION API；五个工具不注册。`Base.dll`/`Step7.dll` 声明友元 `Siemens.Engineering.Simotion`、`.Sinumerik`、`.ScadaExporter`，但 SDK 拷贝缺这些 option DLL；不能推断安装版 V21 没有 API（U10） | OptionalProductsAdapter |
 | 全部 HMI/可选族 | V21 SDK 拆分程序集：`Adapter.21` 目前只引用 `Base/Step7/Safety`（`src/Adapters/V21/Release.props`）；HMI 需 `WinCC.dll`/`WinCCUnified.dll`，可选族需 `Startdrive/DCC/CFC/Sivarc/TestSuite/TeamcenterGateway/SafetyValidation.dll`（已核对类型所在程序集）。V14 SP1–V20 均在单一 `Siemens.Engineering.dll` | — |
 
 ## 2. 旧版 API 可用性矩阵
@@ -439,7 +439,8 @@ F19 原生比较：核心加被内联的三个共享调用点为 V20 32、V21 34
 | U6 | 各 VM 的可选产品安装与许可 | 台账记录 |
 | U7 | 成功路径响应在 DTO 重构后的逐字节一致性 | R2 的 golden 对照 |
 | U8 | F01 桥接/批处理与 lite 是否在 14sp1–19 发布 | 已决定（2026-10-08）：F01 全八版；旧版暂用完整目录、不启用 lite；超过 256 个工具时须先调整有界注册检查或引入 lite |
-| U9 | F34 SIMOTION 在 V16 SDK 中缺失（`T:Simotion.SimotionProvider` 14sp1/15.1/17–20 有、16 无；`sdk/TIA_V16_PublicAPI/V16` 也是唯一没有 `Siemens.MC.Simotion.Scripting.dll` 的目录）是否为 SDK 拷贝不全 | 对照安装版 V16 Openness |
+| U9 | 供给的 V16 主 API 和其中的 V15.1 兼容 DLL 均无 `SimotionProvider`；V15.1 SDK 自身 DLL 有。V17/V18/V19 SDK 的 V16 兼容 DLL 均有该类型；本轮逐字检查 V17 的 V16 XML 得到 5 个 Simotion member id（审查记录称 7，原始列表和哈希留证）。可能是 V16 拷贝较早，当前 V16 保持关闭 | 检查安装版 V16 的程序集、类型和 scripting DLL，当前 NOT RUN |
+| U10 | V21 `Base.dll`/`Step7.dll` 的友元声明指向供给 SDK 缺失的 Simotion/Sinumerik/ScadaExporter option DLL。五个工具保持不注册，原因是 no API in the supplied V21 SDK | 检查安装版 V21 三个 option 程序集及每个 provider/member；若存在，后续任务重新开放，当前 NOT RUN |
 
 ## 附录 A：工具 → 族（全部 431 个）
 

@@ -12,9 +12,11 @@ using TiaMcp.Logic.V4;
 #if TIA_FOUNDATION_TEST_HOST
 using enginehost::TiaMcpServer.ModelContextProtocol;
 using enginehost::TiaMcpServer.Siemens.Services;
+using OptionalPorts = enginehost::TiaMcp.Shared;
 #else
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens.Services;
+using OptionalPorts = TiaMcp.Shared;
 #endif
 
 namespace TiaMcp.FoundationHost;
@@ -26,7 +28,7 @@ internal static class PortedToolContract
     // V20/V21 B1 declarations belong to the full EngineHost catalog. The
     // bounded plc-foundation profile includes F18/F19/F20/F21 hardware ports.
     internal static IEnumerable<PortedFamilies.Family> Families(string release) =>
-        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F29" || family.Name == "F30" || family.Name == "F31" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
+        PortedFamilies.All.Where(family => (family.Name == "F04" || family.Name == "F22" || family.Name == "F29" || family.Name == "F30" || family.Name == "F31" || family.Name == "F32" || family.Name == "F34" || family.Name == "F05" || family.Name == "F07" || family.Name == "F33" || family.Name == "F24" || family.Name == "F25" || family.Name == "F26" || family.Name == "F10" || family.Name == "F14" || family.Name == "F15" || family.Name == "F23" || family.Name == "F06" || family.Name == "F35" || family.Name == "F08" || family.Name == "F09" || family.Name == "F11" || family.Name == "F12" || family.Name == "F13" || family.Name == "F16" || family.Name == "F17" || family.Name == "F18" || family.Name == "F19" || family.Name == "F20" || family.Name == "F21") && family.Available(release))
             .Select(family => new PortedFamilies.Family(family.Name, family.OperationPrefix, family.Releases,
                 TiaMcp.PlcWorker.WorkerOperations.FamilyTools(family), family.Actions));
     internal static McpServerTool Wrap(FoundationTool tool)
@@ -58,6 +60,8 @@ internal static class PortedToolContract
         "GetPortalInfo" => new[] { "project-lifecycle.ReadPortalInfo", "ReadState" },
         "ManageMultiuserSession" => new[] { "project-lifecycle.ExecuteMultiuserSession", "ReadState" },
         "RetrieveProjectArchive" => new[] { "project-lifecycle.RetrieveProjectArchive", "ReadState" },
+        "ExchangeCfcCharts" or "ManageCfcChartProtection" => new[] { "cfc-charts.ExecuteOptionalProduct", "ReadState" },
+        "ListTestSuiteCases" or "ManageTestSuiteCase" or "ExchangeTestSuiteCase" or "RunTestSuiteCase" or "ExportScadaData" or "ImportSinumerikAlarmTexts" or "ManageSinumerikArchive" or "ManageSinumerikSafetyMode" or "InitializeSimotionScripting" => new[] { "optional-products.ExecuteOptionalProduct", "ReadState" },
         "SaveProjectCopy" => new[] { "project-lifecycle.ArchiveSaveProjectCopy", "ReadState" },
         "ValidateAutomationContext" => new[] { "project-lifecycle.ValidateAutomationContext", "ReadState" },
         "GetProjectUserManagement" or "ManageProjectUserManagement" => new[] { "project-security.ExecuteProjectUsers", "ReadState" },
@@ -256,6 +260,12 @@ internal sealed partial class FoundationTool
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (PlcB4Capabilities.Unsupported(portedRelease!, b4) != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        if (OptionalProductCapabilities.Unsupported(portedRelease!, tool.Name,
+            arguments.TryGetValue("category", out var optionalCategory) ? optionalCategory.GetString() ?? "" : "",
+            arguments.TryGetValue("kind", out var optionalKind) ? optionalKind.GetString() ?? "" : "", actionName,
+            arguments.TryGetValue("executionMode", out var executionMode) ? executionMode.GetString() ?? "" : "",
+            arguments.TryGetValue("password", out var optionalPassword) ? optionalPassword.GetString() ?? "" : "") != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (EngineeringServicesCapabilities.Unsupported(portedRelease!, tool.Name, scope,
             arguments.TryGetValue("customIdentityKey", out var customIdentity) ? customIdentity.GetString() ?? "" : "",
             arguments.TryGetValue("properties", out var engineeringProperties) && engineeringProperties.ValueKind == JsonValueKind.Object ? engineeringProperties.EnumerateObject().Select(p => p.Name) : null) != null)
@@ -336,6 +346,9 @@ internal sealed partial class FoundationTool
             "VersionControlTools" => new VersionControlTools(new VersionControlPortService(call, identity)),
             "TeamcenterTools" => new TeamcenterTools(new TeamcenterPortService(call, identity)),
             "GitWorkflowTools" => new GitWorkflowTools(),
+            "CfcTools" => new CfcTools(new OptionalPorts.CfcPortService(call, identity)),
+            "TestSuiteTools" => new TestSuiteTools(new OptionalPorts.TestSuitePortService(call, identity)),
+            "V20OptionsTools" => new V20OptionsTools(new OptionalPorts.OptionalProductsPortService(call, identity)),
             "EngineeringServicesTools" => new EngineeringServicesTools(new EngineeringServicesPortService(call, identity)),
             "HmiDescribeTools" => new HmiDescribeTools(new HmiDescribeService(call, identity)),
             "HmiExchangeTools" => new HmiExchangeTools(new HmiExchangeService(call, identity)),

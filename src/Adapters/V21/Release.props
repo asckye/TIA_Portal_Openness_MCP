@@ -17,5 +17,7 @@
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.SafetyValidation.dll"><ApiName>Siemens.Engineering.SafetyValidation</ApiName><ExpectedIdentity>Siemens.Engineering.SafetyValidation, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.Sivarc.dll"><ApiName>Siemens.Engineering.Sivarc</ApiName><ExpectedIdentity>Siemens.Engineering.Sivarc, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.DCC.dll"><ApiName>Siemens.Engineering.DCC</ApiName><ExpectedIdentity>Siemens.Engineering.DCC, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.CFC.dll"><ApiName>Siemens.Engineering.CFC</ApiName><ExpectedIdentity>Siemens.Engineering.CFC, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.TestSuite.dll"><ApiName>Siemens.Engineering.TestSuite</ApiName><ExpectedIdentity>Siemens.Engineering.TestSuite, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>
   </ItemGroup>
 </Project>

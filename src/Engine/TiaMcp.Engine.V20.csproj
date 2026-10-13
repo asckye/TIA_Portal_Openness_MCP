@@ -39,6 +39,13 @@
     <Compile Include="../Shared/OnlineDownloadService.cs" />
     <Compile Include="../Shared/Host/ToolJsonArguments.cs" Link="Host/ToolJsonArguments.cs" />
     <Compile Include="../Shared/Host/EngineeringFileNames.cs" Link="Host/EngineeringFileNames.cs" />
+    <Compile Include="../Shared/CfcTools.cs" />
+    <Compile Include="../Shared/TestSuiteTools.cs" />
+    <Compile Include="../Shared/V20OptionsTools.cs" />
+    <Compile Include="../Shared/CfcPortService.cs" />
+    <Compile Include="../Shared/TestSuitePortService.cs" />
+    <Compile Include="../Shared/OptionalProductsPortService.cs" />
+    <Compile Include="../Shared/OptionalProductPort.cs" />
     <Compile Include="../Shared/ProjectSecurityTools.cs" />
     <Compile Include="../Shared/ProjectLifecycleSessionTools.cs" />
     <Compile Include="../Shared/ProjectLifecycleProjectTools.cs" />

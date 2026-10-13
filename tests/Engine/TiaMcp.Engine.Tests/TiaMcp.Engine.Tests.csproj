@@ -47,10 +47,10 @@
     <Compile Include="../../../src/Shared/UnifiedHmiContract.cs" Link="UnifiedHmiContract.cs" />
     <Compile Include="../../../src/Shared/LibraryToolContract.cs" Link="LibraryToolContract.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/CfcTools.cs" Link="CfcTools.cs" />
+    <Compile Include="../../../src/Shared/CfcTools.cs" Link="CfcTools.cs" />
     <Compile Include="../../../src/Shared/OptionalPackageContract.cs" Link="OptionalPackageContract.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
-    <Compile Include="../../../src/Engine/ModelContextProtocol/Tools/V20OptionsTools.cs" Link="V20OptionsTools.cs" />
+    <Compile Include="../../../src/Shared/TestSuiteTools.cs" Link="TestSuiteTools.cs" />
+    <Compile Include="../../../src/Shared/V20OptionsTools.cs" Link="V20OptionsTools.cs" />
     <Compile Include="../../../src/Shared/OptionalEngineeringTools.cs" Link="OptionalEngineeringTools.cs" />
     <Compile Include="../../../src/Shared/SpecializedExchangeTools.cs" Link="SpecializedExchangeTools.cs" />
     <Compile Include="../../../src/Shared/Host/ToolJsonArguments.cs" Link="ToolJsonArguments.cs" />

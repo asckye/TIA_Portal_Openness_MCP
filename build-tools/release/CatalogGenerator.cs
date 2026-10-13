@@ -165,7 +165,7 @@ internal static class CatalogGenerator
         // Publish that validated preparation first; the unchanged roster/count gate still runs below.
         prepareSources?.Invoke(outputs);
         var package = Read(root, "manifest/package-manifest.json"); var original = Copy(package); var roster = Read(root, "manifest/tools-list.json");
-        Require(Set(roster["tools"]!.AsArray().Select(t => Text(t!["name"]))).SetEquals(data.Rosters["21"]), "Regenerate tools-list before package counts");
+        Require(Set(roster["tools"]!.AsArray().Select(t => Text(t!["name"]))).SetEquals(data.Rosters.Values.SelectMany(names => names)), "Regenerate tools-list before package counts");
         package["entrypoints"]!["mcpServerExe"] = "runtime/v21/TiaMcp.FoundationHost.exe"; package["entrypoints"]!["configurator"] = "TiaOpenness.exe";
         package["cli"]!["exe"] = "runtime/v21/worker/TiaMcp.Engine.V21.exe"; package["cli"]!["description"] = "Call runtime/v21/worker/TiaMcp.Engine.V21.exe or runtime/v20/worker/TiaMcp.Engine.V20.exe with a CLI verb. JSON/YAML generation requires no MCP client.";
         package["capabilities"]!["mcpToolCount"] = roster["tools"]!.AsArray().Count; var layers = new JsonObject(); foreach (var tool in roster["tools"]!.AsArray()) { var layer = Text(tool!["layer"]); layers[layer] = (layers[layer]?.GetValue<int>() ?? 0) + 1; } package["capabilities"]!["mcpToolLayers"] = layers;

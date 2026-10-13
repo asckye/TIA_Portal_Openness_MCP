@@ -65,6 +65,7 @@ public sealed class FoundationV4ContractsTests
         Assert.Equal(0, worker.Calls);
     }
 
+
     [Theory]
     [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")]
     [InlineData("17")] [InlineData("18")] [InlineData("19")]

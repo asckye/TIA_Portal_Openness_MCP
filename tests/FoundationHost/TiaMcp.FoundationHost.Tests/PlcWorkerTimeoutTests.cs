@@ -137,6 +137,8 @@ public sealed class PlcWorkerRobustnessTests
         ["hardware-network.HardwareUpdateDeviceItemChannel"] = "default",
         ["hardware-network.ReadHardwareOwnerCandidates"] = "default",
         ["hardware-network.ReadHardwareWhitelistedServices"] = "default",
+        ["cfc-charts.ExecuteOptionalProduct"] = "default",
+        ["optional-products.ExecuteOptionalProduct"] = "default",
         ["hmi-classic.ExecuteHmi"] = "default",
         ["hmi-generic.ExecuteHmi"] = "default",
         ["hmi-unified.ExecuteUnifiedHmi"] = "default",
@@ -176,6 +178,17 @@ public sealed class PlcWorkerRobustnessTests
     };
     private static readonly IReadOnlyDictionary<string, string> PortedCategories = new Dictionary<string, string>(StringComparer.Ordinal)
     {
+        ["ExchangeCfcCharts"] = "default",
+        ["ExchangeTestSuiteCase"] = "default",
+        ["ExportScadaData"] = "importExport",
+        ["ImportSinumerikAlarmTexts"] = "importExport",
+        ["InitializeSimotionScripting"] = "default",
+        ["ListTestSuiteCases"] = "default",
+        ["ManageCfcChartProtection"] = "default",
+        ["ManageSinumerikArchive"] = "archive",
+        ["ManageSinumerikSafetyMode"] = "default",
+        ["ManageTestSuiteCase"] = "default",
+        ["RunTestSuiteCase"] = "default",
         ["ApplyUnifiedHmiLayout"] = "default",
         ["ApplyUnifiedHmiScreenDesign"] = "default",
         ["ApplyUnifiedHmiTheme"] = "default",

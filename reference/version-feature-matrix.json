@@ -3423,6 +3423,14 @@
         "entries": []
       },
       {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "InitializeSimotionScripting"
+        ]
+      },
+      {
         "family": "F05",
         "state": "current",
         "l5": "NOT RUN",
@@ -3923,6 +3931,14 @@
         "l5": "NOT RUN",
         "entries": [
           "ExportPlcWatchTable"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "InitializeSimotionScripting"
         ]
       },
       {
@@ -4474,6 +4490,15 @@
         "l5": "NOT RUN",
         "entries": [
           "ExportPlcWatchTable"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ManageSinumerikArchive",
+          "ManageSinumerikSafetyMode"
         ]
       },
       {
@@ -5052,6 +5077,21 @@
         "l5": "NOT RUN",
         "entries": [
           "ExportPlcWatchTable"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeTestSuiteCase",
+          "ExportScadaData",
+          "InitializeSimotionScripting",
+          "ListTestSuiteCases",
+          "ManageSinumerikArchive",
+          "ManageSinumerikSafetyMode",
+          "ManageTestSuiteCase",
+          "RunTestSuiteCase"
         ]
       },
       {
@@ -5655,6 +5695,31 @@
           "CreateHardwareDevice",
           "ExportPlcWatchTable",
           "SearchHardwareCatalog"
+        ]
+      },
+      {
+        "family": "F32",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeCfcCharts",
+          "ManageCfcChartProtection"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeTestSuiteCase",
+          "ExportScadaData",
+          "ImportSinumerikAlarmTexts",
+          "InitializeSimotionScripting",
+          "ListTestSuiteCases",
+          "ManageSinumerikArchive",
+          "ManageSinumerikSafetyMode",
+          "ManageTestSuiteCase",
+          "RunTestSuiteCase"
         ]
       },
       {
@@ -6274,6 +6339,31 @@
           "CreateHardwareDevice",
           "ExportPlcWatchTable",
           "SearchHardwareCatalog"
+        ]
+      },
+      {
+        "family": "F32",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeCfcCharts",
+          "ManageCfcChartProtection"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeTestSuiteCase",
+          "ExportScadaData",
+          "ImportSinumerikAlarmTexts",
+          "InitializeSimotionScripting",
+          "ListTestSuiteCases",
+          "ManageSinumerikArchive",
+          "ManageSinumerikSafetyMode",
+          "ManageTestSuiteCase",
+          "RunTestSuiteCase"
         ]
       },
       {

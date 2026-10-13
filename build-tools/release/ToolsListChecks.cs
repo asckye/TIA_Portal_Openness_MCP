@@ -38,8 +38,8 @@ internal static class ToolsListChecks
     }
     internal static int Run(string root, string manifestPath)
     {
-        var data = new CatalogData(root); var manifest = Read(root, manifestPath); var expected = Set(data.Rosters["20"].Concat(data.Rosters["21"]));
-        CompareNames(manifest["tools"]!.AsArray().Select(t => Text(t!["name"])), expected, "V20/V21 union"); Require(manifest["toolCount"]!.GetValue<int>() == expected.Count, "toolCount differs from roster");
+        var data = new CatalogData(root); var manifest = Read(root, manifestPath); var expected = Set(data.Rosters.Values.SelectMany(names => names));
+        CompareNames(manifest["tools"]!.AsArray().Select(t => Text(t!["name"])), expected, "eight-release union"); Require(manifest["toolCount"]!.GetValue<int>() == expected.Count, "toolCount differs from roster");
         var listed = manifest["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!);
         var runtime = JsonNode.Parse(XDocument.Load(Path.Combine(root, CatalogGenerator.Resource)).Root!.Elements("data").Single(d => (string?)d.Attribute("name") == "Catalog").Element("value")!.Value)!;
         var baseline = Read(root, "scripts/checks/write-guard-operations-v3.3.0.json")["operations"]!.AsObject(); var review = Read(root, "reference/tool-catalog/operation-review.json"); var withdrawn = review["WITHDRAWN"]!.AsObject(); var newFoundation = review["NEW_FOUNDATION_TOOLS"]!.AsObject();
@@ -68,8 +68,10 @@ internal static class ToolsListChecks
         foreach (var (current, old) in withdrawn) Require(baseline.ContainsKey(Text(old)) && data.Mapping[Text(old)] == current && !listed.ContainsKey(current), "Withdrawn tool exposed: " + current);
         // Batch 4 still owns the snapshot verifier; preserve its source/default/output-schema assertions.
         var snapshot = ProcessRunner.Run(Environment.GetEnvironmentVariable("PYTHON") ?? "python", ["-B", "scripts/checks/Snapshot-ToolContracts.py", "verify"], root); ProcessRunner.RequireSuccess(snapshot, "V4 contract verification");
-        var contracts = Read(root, "manifest/contracts/v4/baseline/21.json")["tools"]!.AsArray().ToDictionary(t => Text(t!["name"]), t => t!);
-        foreach (var p in listed) Require(Set(Strings(p.Value["parameters"])).SetEquals(contracts[p.Key]["inputSchema"]!["properties"]!.AsObject().Select(p => p.Key)), "Guard parameter roster differs: " + p.Key);
+        var contracts = new Dictionary<string, JsonNode?>();
+        foreach (var key in Keys)
+            foreach (var tool in Read(root, $"manifest/contracts/v4/baseline/{key}.json")["tools"]!.AsArray()) contracts[Text(tool!["name"])] = tool;
+        foreach (var p in listed) Require(Set(Strings(p.Value["parameters"])).SetEquals(contracts[p.Key]!["inputSchema"]!["properties"]!.AsObject().Select(p => p.Key)), "Guard parameter roster differs: " + p.Key);
         Console.WriteLine($"Tool list: V20={data.Rosters["20"].Count}, V21={data.Rosters["21"].Count}, union={expected.Count}; names match.");
         Console.WriteLine($"Operation comparison: {baseline.Count} released tools, {seen.Count} runtime mappings, {CatalogData.Merged.Count} merged guides, {withdrawn.Count} withdrawn, {seenNew.Count} reviewed Foundation additions, {data.HostOnly.Count} host-only P8 tools, {review["EXCEPTIONS"]!.AsObject().Count} justified exceptions; 0 unexplained differences."); return 0;
     }

@@ -1,7 +1,10 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Linq.Expressions;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
@@ -18,6 +21,72 @@ namespace PlcExchangeTests
         private static object Call(object target, string method, params object?[] args)
             => target.GetType().GetMethod(method)!.Invoke(target, args)!;
 
+        private static (SessionFake Fake, object Service) CfcFixture()
+        {
+            var assembly = typeof(McpServer).Assembly;
+            var adapterName = assembly.GetReferencedAssemblies().Single(name => name.Name!.StartsWith("TiaMcp.Adapter.", StringComparison.Ordinal));
+            var adapter = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(assembly.Location)!, adapterName.Name + ".dll"));
+            var engineType = adapter.GetType("TiaMcp.Adapters.PlcFoundationEngine", true)!;
+            var sessionType = adapter.GetType("TiaMcp.Adapters.Native.Plc.IPlcOrganisationSession", true)!;
+            var fake = (SessionFake)DispatchProxy.Create(sessionType, typeof(SessionFake));
+            fake.ReleaseKey = adapterName.Name!.Split('.').Last();
+            var native = AppDomain.CurrentDomain.GetAssemblies().Single(item => item.GetType("Siemens.Engineering.TiaPortal") != null);
+            var engine = Activator.CreateInstance(engineType, adapterName.Name!.Split('.').Last(), Path.GetDirectoryName(native.Location)!)!;
+            fake.Engine = engine;
+            engineType.GetProperty("EngineeringPlcOrganisationSession")!.SetValue(engine, fake);
+            engineType.GetProperty("EngineeringServicesStep")!.SetValue(engine,
+                (Func<string, bool, Func<Dictionary<string, object?>, string>, TiaMcp.Adapters.Contracts.HardwareAddressingReply>)((tool, requiresProject, action) =>
+                {
+                    var meta = new Dictionary<string, object?>();
+                    try { action(meta); meta["success"] = !meta.TryGetValue("operationSuccess", out var success) || success is not false; }
+                    catch { meta["success"] = false; }
+                    return new TiaMcp.Adapters.Contracts.HardwareAddressingReply { Meta = meta };
+                }));
+            var portType = assembly.GetType("TiaMcp.Shared.CfcPortService", true)!;
+            var service = Activator.CreateInstance(portType, BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] {
+                (Func<string, JsonObject, JsonNode?>)((operation, args) =>
+                {
+                    Assert.Equal("cfc-charts.ExecuteOptionalProduct", operation);
+                    var request = System.Text.Json.JsonSerializer.Deserialize<TiaMcp.Adapters.Contracts.OptionalProductRequest>(args["request"]!.ToJsonString())!;
+                    var reply = engineType.GetMethod("ExecuteOptionalProduct")!.Invoke(engine, new object[] { request, request.DryRun });
+                    return System.Text.Json.JsonSerializer.SerializeToNode(reply);
+                }), (Func<string>)(() => "fixture.ap21") }, null)!;
+            return (fake, service);
+        }
+
+        [Theory]
+        [InlineData("Siemens.Engineering.CFC.dll")]
+        [InlineData("Siemens.Engineering.TestSuite, Version=21.0.0.0, Culture=neutral")]
+        public void MissingOptionalAssemblyIsRefusedInsideTheFakeWorkerStepBeforeNativeCalls(string assemblyName)
+        {
+            var (fake, _) = CfcFixture();
+            var sessionType = fake.Engine.GetType().Assembly.GetType("TiaMcp.Adapters.Native.Options.OptionalProductSession", true)!;
+            var request = new TiaMcp.Adapters.Contracts.OptionalProductRequest { Operation = "ExchangeCfcCharts", DryRun = true };
+            var session = Activator.CreateInstance(sessionType, BindingFlags.Instance | BindingFlags.NonPublic, null,
+                new object[] { fake.Engine, request }, null)!;
+            var method = sessionType.GetMethod("RunHmiStepTool", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var actionType = method.GetParameters()[1].ParameterType;
+            var parameter = Expression.Parameter(actionType.GetGenericArguments()[0]);
+            var action = Expression.Lambda(actionType,
+                Expression.Throw(Expression.Constant(new FileNotFoundException("fixture optional assembly", assemblyName)), typeof(string)), parameter).Compile();
+            var reply = (TiaMcp.Adapters.Contracts.OptionalProductReply)method.Invoke(session, new object[] { request.Operation, action, true })!;
+            Assert.Equal("UNSUPPORTED_CAPABILITY", reply.Meta["rejectionCode"]);
+            Assert.Equal(true, reply.Meta["operationNotStarted"]);
+            Assert.Equal(false, reply.Meta["operationSuccess"]);
+            Assert.Equal(false, reply.Meta["apiCallSuccess"]);
+            Assert.False(reply.RequiresSessionReset);
+            Assert.Equal(0, fake.NativeCalls);
+            var map = typeof(McpServer).Assembly.GetType("TiaMcpServer.ModelContextProtocol.OptionalPackageContract", true)!
+                .GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Static)!;
+            var body = Body(map.Invoke(null, new object?[] { request.Operation,
+                new ResponseMessage { Message = reply.Message, Meta = System.Text.Json.JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() }, false, null, null })!);
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("none", (string?)body["meta"]?["completeness"]);
+            Assert.Equal(false, (bool?)body["meta"]?["requiresSessionReset"]);
+        }
+
         [Theory]
         [InlineData("read")]
         [InlineData("add")]
@@ -28,8 +97,7 @@ namespace PlcExchangeTests
             foreach (bool preview in new[] { true, false })
                 foreach (bool skip in new[] { true, false })
                 {
-                    var fake = DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SessionFake));
-                    var service = Activator.CreateInstance(EngineType("Siemens.Services.CfcService"), fake)!;
+                    var (fake, service) = CfcFixture();
                     var tool = Activator.CreateInstance(EngineType("ModelContextProtocol.CfcTools"), service)!;
                     var body = Body(Call(tool, "ManageCfcChartProtection", "PLC_1", "Chart_1", action,
                         action == "change" || action == "remove" ? "private" : "", action == "add" || action == "change" ? "hash" : "", preview, "V2.0", skip));
@@ -52,8 +120,7 @@ namespace PlcExchangeTests
             foreach (bool preview in new[] { true, false })
                 foreach (bool skip in new[] { true, false })
                 {
-                    var fake = DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SessionFake));
-                    var service = Activator.CreateInstance(EngineType("Siemens.Services.CfcService"), fake)!;
+                    var (fake, service) = CfcFixture();
                     var tool = Activator.CreateInstance(EngineType("ModelContextProtocol.CfcTools"), service)!;
                     var body = Body(Call(tool, "ExchangeCfcCharts", "PLC_1", action, Path.Combine(Path.GetTempPath(), "new.xml.zip"),
                         action == "exportInstructionData" ? "" : "V2.0", 0L, true, false, preview,
@@ -123,8 +190,7 @@ namespace PlcExchangeTests
         {
             foreach (bool skip in new[] { true, false })
             {
-                var fake = DispatchProxy.Create(EngineType("Siemens.IEngineeringSession"), typeof(SessionFake));
-                var service = Activator.CreateInstance(EngineType("Siemens.Services.CfcService"), fake)!;
+                var (fake, service) = CfcFixture();
                 var tool = Activator.CreateInstance(EngineType("ModelContextProtocol.CfcTools"), service)!;
                 var body = Body(Call(tool, "ExchangeCfcCharts", "PLC_1", "import", Path.Combine(Path.GetTempPath(), "charts.xml.zip"),
                     "V2.0", 0L, true, false, preview, Array.Empty<string>(), skip));
@@ -234,11 +300,14 @@ namespace PlcExchangeTests
 
         public class SessionFake : DispatchProxy
         {
+            public object Engine = null!;
+            public string ReleaseKey = "20";
             public int NativeCalls;
             public string? LastNativeCall;
             protected override object? Invoke(MethodInfo? method, object?[]? args)
             {
-                if (method!.Name != "RunHmiStepTool") { NativeCalls++; LastNativeCall = method.Name; throw new Exception("Native access must not run"); }
+                if (method!.Name == "get_ReleaseKey") return ReleaseKey;
+                if (method.Name != "RunHmiStepTool") { NativeCalls++; LastNativeCall = method.Name; throw new Exception("Native access must not run"); }
                 var meta = new JsonObject();
                 try { ((Func<JsonObject, string>)args![1]!)(meta); meta["success"] = true; }
                 catch { meta["success"] = false; }

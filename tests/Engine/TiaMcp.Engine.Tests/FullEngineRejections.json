@@ -3774,7 +3774,7 @@
           "filter": {
             "type": "long",
             "default": "0",
-            "description": "filter: filter text ('' = all).",
+            "description": "filter: nonnegative Int64 automation-interface filter; 0 = none.",
             "value": 0
           },
           "unattended": {
@@ -3803,7 +3803,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
             "value": false
           }
         },
@@ -10599,7 +10599,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
             "value": false
           }
         },
@@ -22903,7 +22903,7 @@
           "filter": {
             "type": "long",
             "default": "0",
-            "description": "filter: filter text ('' = all).",
+            "description": "filter: nonnegative Int64 automation-interface filter; 0 = none.",
             "value": 0
           },
           "unattended": {
@@ -22932,7 +22932,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
             "value": false
           }
         },
@@ -23990,34 +23990,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Safety.pdf",
-          "dryRun": true
-        },
-        "renamedFrom": [],
-        "typedParameters": {}
-      },
-      {
-        "name": "ExportScadaData",
-        "parameters": {
-          "filePath": {
-            "type": "string",
-            "default": null,
-            "description": "Absolute input/output path on the MCP server, with the documented extension."
-          },
-          "softwarePath": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "Exact PLC software name/path; empty selects project only where documented.",
-            "value": ""
-          },
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "description": "true previews without invoking the native mutation/export; false executes.",
-            "value": true
-          }
-        },
-        "arguments": {
-          "filePath": "C:\\Examples\\exports\\Scada.zip",
           "dryRun": true
         },
         "renamedFrom": [],
@@ -28167,41 +28139,6 @@
         "typedParameters": {}
       },
       {
-        "name": "ImportSinumerikAlarmTexts",
-        "parameters": {
-          "devicePath": {
-            "type": "string[]",
-            "default": null,
-            "description": "Array of exact device-group/device names."
-          },
-          "files": {
-            "type": "string[]",
-            "default": null,
-            "description": "Array of 1..200 existing absolute .ts/.csv alarm-text files."
-          },
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "description": "true previews without invoking the native mutation/export; false executes.",
-            "value": true
-          }
-        },
-        "arguments": {
-          "devicePath": [
-            "<exact device name from GetProjectTree>"
-          ],
-          "files": [
-            "C:\\Examples\\AlarmTexts.csv"
-          ],
-          "dryRun": true
-        },
-        "renamedFrom": [],
-        "typedParameters": {
-          "devicePathJson": "devicePath",
-          "filesJson": "files"
-        }
-      },
-      {
         "name": "ImportTechnologyObject",
         "parameters": {
           "softwarePath": {
@@ -28359,22 +28296,6 @@
         "renamedFrom": [
           "Bootstrap"
         ],
-        "typedParameters": {}
-      },
-      {
-        "name": "InitializeSimotionScripting",
-        "parameters": {
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "description": "true previews without invoking the native mutation/export; false executes.",
-            "value": true
-          }
-        },
-        "arguments": {
-          "dryRun": true
-        },
-        "renamedFrom": [],
         "typedParameters": {}
       },
       {
@@ -29838,7 +29759,7 @@
           "skipChartPreflight": {
             "type": "bool",
             "default": "false",
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
             "value": false
           }
         },
@@ -33900,139 +33821,6 @@
         "renamedFrom": [],
         "typedParameters": {
           "propertiesJson": "properties"
-        }
-      },
-      {
-        "name": "ManageSinumerikArchive",
-        "parameters": {
-          "action": {
-            "type": "string",
-            "default": null,
-            "description": "archive | retrieve | fAddressArchive. Operation name from the supported actions in the tool description."
-          },
-          "filePath": {
-            "type": "string",
-            "default": null,
-            "description": "Absolute input/output path on the MCP server, with the documented extension."
-          },
-          "devicePath": {
-            "type": "string[]",
-            "default": "null!",
-            "description": "Array of exact device-group/device names.",
-            "value": null
-          },
-          "itemPath": {
-            "type": "string[]",
-            "default": "null!",
-            "description": "Array of exact PLC device-item names below the selected device.",
-            "value": null
-          },
-          "modifiedDevicePath": {
-            "type": "string[]",
-            "default": "null!",
-            "description": "Array of exact modified PLC device-group/device names.",
-            "value": null
-          },
-          "modifiedItemPath": {
-            "type": "string[]",
-            "default": "null!",
-            "description": "Array selecting the modified PLC item for F-address archive.",
-            "value": null
-          },
-          "mode": {
-            "type": "string",
-            "default": "\"HardwareAndAllProgramBlocks\"",
-            "description": "For archives OnlyHardware | HardwareAndAllProgramBlocks; for SINUMERIK safety None | NcSI | DbSI.",
-            "value": "HardwareAndAllProgramBlocks"
-          },
-          "comment": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "Optional archive comment.",
-            "value": ""
-          },
-          "author": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "Optional archive author.",
-            "value": ""
-          },
-          "password": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "Optional archive password; passed as SecureString and never logged.",
-            "value": ""
-          },
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "description": "true previews without invoking the native mutation/export; false executes.",
-            "value": true
-          }
-        },
-        "arguments": {
-          "action": "archive",
-          "filePath": "C:\\Examples\\exports\\Example.dsf",
-          "dryRun": true,
-          "devicePath": [
-            "<exact SINUMERIK device from GetProjectTree>"
-          ],
-          "itemPath": [
-            "<exact NCU PLC item>"
-          ]
-        },
-        "renamedFrom": [],
-        "typedParameters": {
-          "devicePathJson": "devicePath",
-          "itemPathJson": "itemPath",
-          "modifiedDevicePathJson": "modifiedDevicePath",
-          "modifiedItemPathJson": "modifiedItemPath"
-        }
-      },
-      {
-        "name": "ManageSinumerikSafetyMode",
-        "parameters": {
-          "devicePath": {
-            "type": "string[]",
-            "default": null,
-            "description": "Array of exact device-group/device names."
-          },
-          "action": {
-            "type": "string",
-            "default": "\"read\"",
-            "description": "read | set. Operation name from the supported actions in the tool description.",
-            "value": "read"
-          },
-          "mode": {
-            "type": "string",
-            "default": "\"\"",
-            "description": "For archives OnlyHardware | HardwareAndAllProgramBlocks; for SINUMERIK safety None | NcSI | DbSI.",
-            "value": ""
-          },
-          "dryRun": {
-            "type": "bool",
-            "default": "true",
-            "description": "true previews without invoking the native mutation/export; false executes.",
-            "value": true
-          },
-          "confirmSafetyChange": {
-            "type": "bool",
-            "default": "false",
-            "description": "Must be true with dryRun=false for a safety-mode write.",
-            "value": false
-          }
-        },
-        "arguments": {
-          "devicePath": [
-            "<exact device name from GetProjectTree>"
-          ],
-          "dryRun": true,
-          "confirmSafetyChange": false,
-          "action": "read"
-        },
-        "renamedFrom": [],
-        "typedParameters": {
-          "devicePathJson": "devicePath"
         }
       },
       {

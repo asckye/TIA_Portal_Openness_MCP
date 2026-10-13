@@ -159808,7 +159808,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f7faf57c0f291b2e71c34a53452830c55bf2fa59789c38ade98fe2b21091ae1b",
+      "descriptionSha256": "7ad3b9a401eb6468016a624e40af4814e00bbbdfca57a51efcd6bab3d5484dfb",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -159845,7 +159845,7 @@
           },
           "filter": {
             "default": 0,
-            "description": "filter: filter text ('' = all).",
+            "description": "filter: nonnegative Int64 automation-interface filter; 0 = none.",
             "type": "integer"
           },
           "modelVersion": {
@@ -159855,7 +159855,7 @@
           },
           "skipChartPreflight": {
             "default": false,
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
             "type": "boolean"
           },
           "softwarePath": {
@@ -166496,7 +166496,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "aecbbab08befd51a6b77efd47924adfae4ef5a738d52fb8bff4adf633c5956b2",
+      "descriptionSha256": "ea53f783f2cd7861337f8beede73606d68eb88e6ec13ae51289f5ebcedd610d4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -198097,7 +198097,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "83d06009beaa7413a72e54de089c764644913b602ca96f7ad7c68f10e20f19c4",
+      "descriptionSha256": "f27b5f8c2ed87d1b9ad9d049daa582774562d7361a0186991cc86a93a1394148",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -359722,7 +359722,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "78df9545d1bb28965809f4126c53307dcca71b41e574afb4db60c4c82ae7d903",
+      "descriptionSha256": "22aba1fb9474530966e13f64a299e98b499a94f722652486801fedadfa9e5efe",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -367585,7 +367585,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a3ab52caab228cd59902bfc59ca7f18e789aa67b6b5ed81c3cf08ce20453aac1",
+      "descriptionSha256": "1d7706366850e325dc293079469c1a7dee4af402f7838793ac92e7223f74a757",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -419085,7 +419085,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "d87bee69eb4f689606c52fd312447c3f8f3c7607da01a79cccbd2c7d50ada433",
+      "descriptionSha256": "e5df271eaa9c0125470ee12776eccb1007e3f8c242d67bd40c3568d543c3f4ce",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -432159,7 +432159,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "439900e043e2b5d33938d9ce008f4890f5bc351ee77faa6ab74fa9faccb1c87c",
+      "descriptionSha256": "42409e457bc84347b190a995beaabbf5216e5e88d61f70383082efe0d7eccee1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -432200,7 +432200,7 @@
           },
           "skipChartPreflight": {
             "default": false,
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V20/V21 crash guard.",
+            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
             "type": "boolean"
           },
           "softwarePath": {
@@ -509696,7 +509696,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c1cc6dd8e503eeb9bf76984b8a86978cc991b1d8a56d564e8946471e65104f40",
+      "descriptionSha256": "d2c669d9b0d8d24b5fdfde1ba95fccb7360628f3b4895d8dd5ddec952bd06f62",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -511056,7 +511056,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f02bd73ea60f5cf76cbd375bc32ee8afe0e5298ee411c7822cae0619b41fd390",
+      "descriptionSha256": "c8015fa9d825559a0a61ee33ec5ea0769bef1f12b42bb715ac2397b99a0eeec6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -528955,7 +528955,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d46f86b1dcd4b96025c4fa74879ca4b2dcd4b71ceb092d7aa9620708b8dc4c80",
+      "descriptionSha256": "558747449cae36982809588fed917ac6f9116eed20191687e71244a72864ac71",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -604029,7 +604029,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "431d0894cb46659ec9f227dbd98b65dbba3405dcf1a746ded3eab2045cae918d",
+      "descriptionSha256": "8489520d3150a21d3ecd332ed11c6514d3eb24a09399d1addaa564d70105d6ba",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

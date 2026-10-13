@@ -19,6 +19,9 @@ namespace TiaMcpServer
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             services.TryAddSingleton(catalog);
+            services.TryAddSingleton<TiaMcp.Shared.CfcPortService>();
+            services.TryAddSingleton<TiaMcp.Shared.TestSuitePortService>();
+            services.TryAddSingleton<TiaMcp.Shared.OptionalProductsPortService>();
             services.TryAddSingleton<IHardwareAddressingService>(_ => new HardwareAddressingService(
                 (operation, arguments) => HardwareAddressWorkerBridge.Call(operation, arguments),
                 () => HardwareAddressWorkerBridge.HasProject(), () => HardwareAddressWorkerBridge.ProjectIdentity()));
@@ -80,7 +83,7 @@ namespace TiaMcpServer
                 provider.GetRequiredService<TiaMcpServer.Siemens.Portal>());
             var assembly = typeof(Siemens.Portal).Assembly;
             var types = ToolCatalog.UsesRegistrationMetadata
-                ? ToolCatalog.ServiceTypeNames.Select(name => assembly.GetType("TiaMcpServer.Siemens.Services." + name, throwOnError: true)!)
+                ? ToolCatalog.ServiceTypeNames.Select(name => assembly.GetType(name.Contains(".") ? name : "TiaMcpServer.Siemens.Services." + name, throwOnError: true)!)
                 : ToolCatalog.LoadableTypes(assembly, "EngineRegistration").Where(type => type.IsClass && !type.IsAbstract
                     && type.Namespace == "TiaMcpServer.Siemens.Services" && type.Name.EndsWith("Service", StringComparison.Ordinal));
             foreach (var type in types)

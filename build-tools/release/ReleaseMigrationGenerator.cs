@@ -68,7 +68,11 @@ internal static class ReleaseMigrationGenerator
             lines.AddRange([$"### Release {key}", "", $"3.x catalog: **{oldTools.Count} tools**; V4 baseline: **{newTools.Count} tools**. Unchanged names: {unchanged}; renamed names: {renamed}; merged legacy entries: {merged.Values.Sum(v => v.Length)}; V4-only tools: {additions.Length}.", "", "| Change | 3.x name(s) | V4 name |", "|---|---|---|"]);
             foreach (var old in Sorted(targets.Keys)) lines.Add($"| {(mergedNames.Contains(old) ? "Merge" : old == targets[old] ? "Unchanged" : "Rename")} | {Code(old)} | {Code(targets[old])} |");
             foreach (var old in Sorted(retired.Keys)) lines.Add($"| Removed duplicate lifecycle (P7-04) | {Code(old)} | {Code(retired[old])} retired; use the shared Foundation session |");
-            foreach (var old in Sorted(withheld.Keys)) lines.Add($"| Removed: no supported action on this release | {Code(old)} | {Code(withheld[old])} is not listed on {key} |");
+            foreach (var old in Sorted(withheld.Keys))
+            {
+                string reason = "Removed: " + PortedFamilies.WithheldReason(families, key, withheld[old]);
+                lines.Add($"| {reason} | {Code(old)} | {Code(withheld[old])} is not listed on {key} |");
+            }
             if (retired.Count == 0 && withheld.Count == 0) lines.Add("| Removed without replacement | None | — |");
             foreach (var name in additions) lines.Add($"| Added in 4.0 | — | {Code(name)} |");
             lines.AddRange(["", "#### Parameter changes", "", "| 3.x input | V4 input |", "|---|---|"]);

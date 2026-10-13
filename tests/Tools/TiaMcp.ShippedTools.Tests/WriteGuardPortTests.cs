@@ -14,8 +14,13 @@ public sealed class WriteGuardPortTests
     public void Product_roster_includes_reviewed_Foundation_tools_and_refuses_withdrawn_names()
     {
         using var fixture = new GuardFixture();
-        var contract = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.RepositoryRoot, "manifest", "contracts", "v4", "baseline", "21.json")))!.AsObject();
-        var tools = contract["tools"]!.AsArray().Select(node => node!.AsObject()).ToArray();
+        var roster = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        {
+            var contract = JsonNode.Parse(File.ReadAllText(Path.Combine(fixture.RepositoryRoot, "manifest", "contracts", "v4", "baseline", release + ".json")))!.AsObject();
+            foreach (var tool in contract["tools"]!.AsArray().Select(node => node!.AsObject())) roster[(string)tool["name"]!] = tool;
+        }
+        var tools = roster.Values.ToArray();
         Assert.Equal(tools.Length, (int)fixture.Manifest["toolCount"]!);
         Assert.Equal(tools.Select(tool => (string)tool["name"]!).Order(),
             fixture.Manifest["tools"]!.AsArray().Select(tool => (string)tool!["name"]!).Order());

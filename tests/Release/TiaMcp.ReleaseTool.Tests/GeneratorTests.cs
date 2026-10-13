@@ -118,6 +118,21 @@ public sealed class GeneratorTests
         }
         Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(kind == "duplicate" ? row + row : kind == "unparsed" ? row + "new Family(other, prefix, releases, tools)" : row + "\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Other\"] = new[] { \"21\" }\n};"));
     }
+
+    [Theory]
+    [InlineData("F34/21", true)]
+    [InlineData("Unknown/21", false)]
+    [InlineData("F34/unknown", false)]
+    public void MigrationUnavailableReasonComesFromReviewedFamilyData(string owner, bool valid)
+    {
+        const string row = "new Family(\"F34\", \"options\", new[] { \"20\", \"21\" }, new[] { \"Tool\" })\nToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) { [\"Tool\"] = new[] { \"20\" }\n};\n";
+        string source = row + "UnavailableReasons = new Dictionary<string, string>(StringComparer.Ordinal) { [\"" + owner + "\"] = \"no API in the supplied V21 SDK\"\n};";
+        if (!valid) { Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(source)); return; }
+        var families = PortedFamilies.Parse(source);
+        Assert.Equal("no API in the supplied V21 SDK", PortedFamilies.WithheldReason(families, "21", "Tool"));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.WithheldReason(families, "20", "Tool"));
+        Assert.Throws<ArgumentException>(() => PortedFamilies.Parse(source.Replace("\"no API in the supplied V21 SDK\"\n};", "\"no API in the supplied V21 SDK\", [\"F34/21\"] = \"duplicate\"\n};", StringComparison.Ordinal)));
+    }
     [Theory]
     [InlineData("missing")]
     [InlineData("double")]

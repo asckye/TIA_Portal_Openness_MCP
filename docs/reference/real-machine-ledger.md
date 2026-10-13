@@ -161,6 +161,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | F22 | current | NOT RUN | CompareSoftwareToOnline, ConnectOnlinePlc, DisconnectOnlinePlc, DisconnectOnlinePlcs, GetOnlineState, ListTransferRoutes |
 | 14sp1 | F31 | current | NOT RUN | GetDriveParameters, ListDriveObjects, ManageDriveTelegrams, ManageStartdriveParameter |
 | 14sp1 | F00 | current | NOT RUN | — |
+| 14sp1 | F34 | current | NOT RUN | InitializeSimotionScripting |
 | 14sp1 | F05 | current | NOT RUN | ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ValidateAutomationContext |
 | 14sp1 | F33 | current | NOT RUN | ManagePlcGitRepository |
 | 14sp1 | F01 | current | NOT RUN | ApplyToolBatch, BuildReleaseDiagnosticReport, BuildReleaseHandoffArtifacts, BuildReleaseManifest, BuildReleaseRunbook, CallTool, CheckProductUpdate, ClearExportHandles, DeleteExportHandle, FindTools, GenerateAcceptanceReport, GenerateErrorReport, GetEnvironmentDiagnostics, GetExportContent, GetNativeInvocationLog, GetOpennessCompatibility, GetOpennessGuidance, GetOpennessWorkerStatus, GetV21EcosystemCatalog, ListExportHandles, ListToolCategories, PreviewToolBatch, PreviewToolCall, RestartOpennessWorker, RunOfflineReleaseValidationSuite, RunOnlineMonitoringSafetySelfTest, RunReadOnlyToolBatch, SaveExportContent |
@@ -198,6 +199,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | F29 | current | NOT RUN | GenerateSivarc, GetSivarcRuleTree, ListSivarcRules, ManageSivarcRule |
 | 15.1 | F31 | current | NOT RUN | GetDriveParameters, GetOnlineDriveParameters, ListDriveObjects, ManageDriveFunctions, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter |
 | 15.1 | F00 | current | NOT RUN | ExportPlcWatchTable |
+| 15.1 | F34 | current | NOT RUN | InitializeSimotionScripting |
 | 15.1 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 15.1 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, ManagePlcProtection, SetPlcPutGetAccess |
 | 15.1 | F33 | current | NOT RUN | ManagePlcGitRepository |
@@ -237,6 +239,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDccChart, ManageDriveFunctions, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter |
 | 16 | F30 | current | NOT RUN | ManageSafetyGlobalSettings |
 | 16 | F00 | current | NOT RUN | ExportPlcWatchTable |
+| 16 | F34 | current | NOT RUN | ManageSinumerikArchive, ManageSinumerikSafetyMode |
 | 16 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 16 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, ManageDeviceUsers, ManagePlcCertificate, ManagePlcProtection, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
 | 16 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, SynchronizeVersionControlWorkspace |
@@ -276,6 +279,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDccChart, ManageDriveFunctions, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter |
 | 17 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ManagePlcSafety, ManageSafetyGlobalSettings |
 | 17 | F00 | current | NOT RUN | ExportPlcWatchTable |
+| 17 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ExportScadaData, InitializeSimotionScripting, ListTestSuiteCases, ManageSinumerikArchive, ManageSinumerikSafetyMode, ManageTestSuiteCase, RunTestSuiteCase |
 | 17 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 17 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
 | 17 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, SynchronizeVersionControlWorkspace |
@@ -315,6 +319,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDcbLibraries, ManageDccBlock, ManageDccChart, ManageDccChartInterface, ManageDccChartPartition, ManageDccPin, ManageDriveFunctions, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter, ManageTechnologyExtensions |
 | 18 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ManagePlcSafety, ManageSafetyGlobalSettings |
 | 18 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
+| 18 | F32 | current | NOT RUN | ExchangeCfcCharts, ManageCfcChartProtection |
+| 18 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ExportScadaData, ImportSinumerikAlarmTexts, InitializeSimotionScripting, ListTestSuiteCases, ManageSinumerikArchive, ManageSinumerikSafetyMode, ManageTestSuiteCase, RunTestSuiteCase |
 | 18 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 18 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
 | 18 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, ManageTeamcenterConnection, ManageTeamcenterDataset, ManageTeamcenterWorkflow, SynchronizeVersionControlWorkspace |
@@ -354,6 +360,8 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDcbLibraries, ManageDccBlock, ManageDccChart, ManageDccChartInterface, ManageDccChartPartition, ManageDccPin, ManageDriveFunctions, ManageDriveHardwareModule, ManageDriveSecurity, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter, ManageTechnologyExtensions |
 | 19 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ManagePlcSafety, ManageSafetyGlobalSettings |
 | 19 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
+| 19 | F32 | current | NOT RUN | ExchangeCfcCharts, ManageCfcChartProtection |
+| 19 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ExportScadaData, ImportSinumerikAlarmTexts, InitializeSimotionScripting, ListTestSuiteCases, ManageSinumerikArchive, ManageSinumerikSafetyMode, ManageTestSuiteCase, RunTestSuiteCase |
 | 19 | F05 | current | NOT RUN | ArchiveSavedProject, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 19 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageSyslogServers, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
 | 19 | F33 | current | NOT RUN | ConnectProjectToWorkspace, CreateVersionControlWorkspace, GetVersionControlStatus, ListVersionControlWorkspaces, ManagePlcGitRepository, ManageTeamcenterConnection, ManageTeamcenterDataset, ManageTeamcenterWorkflow, SynchronizeVersionControlWorkspace |
